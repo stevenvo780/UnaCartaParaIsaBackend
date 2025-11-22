@@ -1,0 +1,15 @@
+{
+  "name": "una-carta-para-isa-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^7.7.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "ssh2-sftp-client": "^12.0.1"
+  }
+}
