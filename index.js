@@ -2,11 +2,15 @@ import express from 'express';
 import cors from 'cors';
 import { Storage } from '@google-cloud/storage';
 import SftpClient from 'ssh2-sftp-client';
+import fs from 'fs/promises';
+import path from 'path';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 const BUCKET_NAME = process.env.BUCKET_NAME || 'una-carta-para-isa-saves';
 const PROJECT_ID = process.env.GCP_PROJECT_ID || 'emergent-enterprises';
+const USE_LOCAL_STORAGE = process.env.USE_LOCAL_STORAGE === 'true' || !process.env.GOOGLE_APPLICATION_CREDENTIALS;
+const LOCAL_SAVES_PATH = process.env.LOCAL_SAVES_PATH || `${process.env.HOME}/.local/share/una-carta-para-isa/saves`;
 
 // Configuración NAS (solo funciona en entorno local)
 const NAS_ENABLED = process.env.NAS_ENABLED === 'true';
@@ -18,11 +22,30 @@ const NAS_CONFIG = {
   backupPath: process.env.NAS_PATH || '/mnt/raid10/backups/una-carta-para-isa'
 };
 
-// Inicializar Cloud Storage
-const storage = new Storage({
-  projectId: PROJECT_ID,
-});
-const bucket = storage.bucket(BUCKET_NAME);
+// Inicializar Cloud Storage (puede fallar si no hay credenciales)
+let bucket = null;
+let useGCS = false;
+
+if (!USE_LOCAL_STORAGE) {
+  try {
+    const storage = new Storage({
+      projectId: PROJECT_ID,
+    });
+    bucket = storage.bucket(BUCKET_NAME);
+    useGCS = true;
+  } catch (error) {
+    console.log('⚠️  GCS not available, using local storage');
+  }
+}
+
+// Asegurar que el directorio local existe
+async function ensureLocalDir() {
+  try {
+    await fs.mkdir(LOCAL_SAVES_PATH, { recursive: true });
+  } catch (error) {
+    // Ignorar si ya existe
+  }
+}
 
 // Función para backup en NAS
 async function backupToNAS(saveId, content) {
@@ -56,9 +79,15 @@ app.use(express.json({ limit: '50mb' }));
 // Health check
 app.get('/health', async (req, res) => {
   try {
-    // Verificar conexión con el bucket
-    await bucket.exists();
-    res.json({ status: 'ok', timestamp: Date.now(), storage: 'gcs' });
+    if (useGCS && bucket) {
+      // Verificar conexión con el bucket
+      await bucket.exists();
+      res.json({ status: 'ok', timestamp: Date.now(), storage: 'gcs' });
+    } else {
+      // Usar almacenamiento local
+      await ensureLocalDir();
+      res.json({ status: 'ok', timestamp: Date.now(), storage: 'local' });
+    }
   } catch (error) {
     res.status(503).json({ status: 'error', message: 'Storage unavailable' });
   }
@@ -67,26 +96,54 @@ app.get('/health', async (req, res) => {
 // Obtener lista de guardados
 app.get('/api/saves', async (req, res) => {
   try {
-    const [files] = await bucket.getFiles({ prefix: 'save_' });
+    let saves = [];
 
-    const saves = await Promise.all(
-      files
-        .filter(f => f.name.endsWith('.json'))
-        .map(async (file) => {
-          const [metadata] = await file.getMetadata();
-          const [content] = await file.download();
-          const data = JSON.parse(content.toString());
+    if (useGCS && bucket) {
+      const [files] = await bucket.getFiles({ prefix: 'save_' });
 
-          return {
-            id: file.name.replace('.json', ''),
-            timestamp: data.timestamp,
-            gameTime: data.gameTime,
-            stats: data.stats,
-            size: parseInt(metadata.size),
-            modified: metadata.updated,
-          };
-        })
-    );
+      saves = await Promise.all(
+        files
+          .filter(f => f.name.endsWith('.json'))
+          .map(async (file) => {
+            const [metadata] = await file.getMetadata();
+            const [content] = await file.download();
+            const data = JSON.parse(content.toString());
+
+            return {
+              id: file.name.replace('.json', ''),
+              timestamp: data.timestamp,
+              gameTime: data.gameTime,
+              stats: data.stats,
+              size: parseInt(metadata.size),
+              modified: metadata.updated,
+            };
+          })
+      );
+    } else {
+      // Almacenamiento local
+      await ensureLocalDir();
+      const files = await fs.readdir(LOCAL_SAVES_PATH);
+
+      saves = await Promise.all(
+        files
+          .filter(f => f.endsWith('.json') && f.startsWith('save_'))
+          .map(async (filename) => {
+            const filepath = path.join(LOCAL_SAVES_PATH, filename);
+            const content = await fs.readFile(filepath, 'utf-8');
+            const stat = await fs.stat(filepath);
+            const data = JSON.parse(content);
+
+            return {
+              id: filename.replace('.json', ''),
+              timestamp: data.timestamp,
+              gameTime: data.gameTime,
+              stats: data.stats,
+              size: stat.size,
+              modified: stat.mtime.toISOString(),
+            };
+          })
+      );
+    }
 
     // Ordenar por timestamp descendente
     saves.sort((a, b) => b.timestamp - a.timestamp);
@@ -102,15 +159,28 @@ app.get('/api/saves', async (req, res) => {
 app.get('/api/saves/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const file = bucket.file(`${id}.json`);
+    let data;
 
-    const [exists] = await file.exists();
-    if (!exists) {
-      return res.status(404).json({ error: 'Save not found' });
+    if (useGCS && bucket) {
+      const file = bucket.file(`${id}.json`);
+
+      const [exists] = await file.exists();
+      if (!exists) {
+        return res.status(404).json({ error: 'Save not found' });
+      }
+
+      const [content] = await file.download();
+      data = JSON.parse(content.toString());
+    } else {
+      // Almacenamiento local
+      const filepath = path.join(LOCAL_SAVES_PATH, `${id}.json`);
+      try {
+        const content = await fs.readFile(filepath, 'utf-8');
+        data = JSON.parse(content);
+      } catch (error) {
+        return res.status(404).json({ error: 'Save not found' });
+      }
     }
-
-    const [content] = await file.download();
-    const data = JSON.parse(content.toString());
 
     res.json({ data });
   } catch (error) {
@@ -130,22 +200,34 @@ app.post('/api/saves', async (req, res) => {
 
     // Usar timestamp como ID
     const saveId = `save_${saveData.timestamp}`;
-    const file = bucket.file(`${saveId}.json`);
-
     const content = JSON.stringify(saveData, null, 2);
-    await file.save(content, {
-      contentType: 'application/json',
-      metadata: {
-        cacheControl: 'no-cache',
-      },
-    });
+    let size;
 
-    const [metadata] = await file.getMetadata();
+    if (useGCS && bucket) {
+      const file = bucket.file(`${saveId}.json`);
+
+      await file.save(content, {
+        contentType: 'application/json',
+        metadata: {
+          cacheControl: 'no-cache',
+        },
+      });
+
+      const [metadata] = await file.getMetadata();
+      size = parseInt(metadata.size);
+    } else {
+      // Almacenamiento local
+      await ensureLocalDir();
+      const filepath = path.join(LOCAL_SAVES_PATH, `${saveId}.json`);
+      await fs.writeFile(filepath, content, 'utf-8');
+      const stat = await fs.stat(filepath);
+      size = stat.size;
+    }
 
     res.json({
       success: true,
       saveId,
-      size: parseInt(metadata.size),
+      size,
       timestamp: saveData.timestamp,
     });
 
@@ -167,14 +249,25 @@ app.post('/api/saves', async (req, res) => {
 app.delete('/api/saves/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const file = bucket.file(`${id}.json`);
 
-    const [exists] = await file.exists();
-    if (!exists) {
-      return res.status(404).json({ error: 'Save not found' });
+    if (useGCS && bucket) {
+      const file = bucket.file(`${id}.json`);
+
+      const [exists] = await file.exists();
+      if (!exists) {
+        return res.status(404).json({ error: 'Save not found' });
+      }
+
+      await file.delete();
+    } else {
+      // Almacenamiento local
+      const filepath = path.join(LOCAL_SAVES_PATH, `${id}.json`);
+      try {
+        await fs.unlink(filepath);
+      } catch (error) {
+        return res.status(404).json({ error: 'Save not found' });
+      }
     }
-
-    await file.delete();
 
     res.json({ success: true, message: 'Save deleted' });
   } catch (error) {
@@ -186,30 +279,64 @@ app.delete('/api/saves/:id', async (req, res) => {
 // Función para limpiar guardados antiguos
 async function cleanOldSaves() {
   try {
-    const [files] = await bucket.getFiles({ prefix: 'save_' });
+    let files = [];
 
-    if (files.length <= 10) return;
+    if (useGCS && bucket) {
+      const [gcsFiles] = await bucket.getFiles({ prefix: 'save_' });
 
-    // Obtener metadata para ordenar por fecha
-    const filesWithMeta = await Promise.all(
-      files.map(async (file) => {
-        const [metadata] = await file.getMetadata();
-        return {
-          file,
-          updated: new Date(metadata.updated).getTime()
-        };
-      })
-    );
+      if (gcsFiles.length <= 10) return;
 
-    // Ordenar por fecha y eliminar los más antiguos
-    filesWithMeta.sort((a, b) => b.updated - a.updated);
-    const toDelete = filesWithMeta.slice(10);
+      // Obtener metadata para ordenar por fecha
+      const filesWithMeta = await Promise.all(
+        gcsFiles.map(async (file) => {
+          const [metadata] = await file.getMetadata();
+          return {
+            file,
+            updated: new Date(metadata.updated).getTime()
+          };
+        })
+      );
 
-    await Promise.all(
-      toDelete.map(({ file }) => file.delete())
-    );
+      // Ordenar por fecha y eliminar los más antiguos
+      filesWithMeta.sort((a, b) => b.updated - a.updated);
+      const toDelete = filesWithMeta.slice(10);
 
-    console.log(`Cleaned ${toDelete.length} old saves from GCS`);
+      await Promise.all(
+        toDelete.map(({ file }) => file.delete())
+      );
+
+      console.log(`Cleaned ${toDelete.length} old saves from GCS`);
+    } else {
+      // Almacenamiento local
+      await ensureLocalDir();
+      const localFiles = await fs.readdir(LOCAL_SAVES_PATH);
+      const saveFiles = localFiles.filter(f => f.endsWith('.json') && f.startsWith('save_'));
+
+      if (saveFiles.length <= 10) return;
+
+      // Obtener timestamps de los archivos
+      const filesWithMeta = await Promise.all(
+        saveFiles.map(async (filename) => {
+          const filepath = path.join(LOCAL_SAVES_PATH, filename);
+          const stat = await fs.stat(filepath);
+          return {
+            filename,
+            filepath,
+            updated: stat.mtime.getTime()
+          };
+        })
+      );
+
+      // Ordenar por fecha y eliminar los más antiguos
+      filesWithMeta.sort((a, b) => b.updated - a.updated);
+      const toDelete = filesWithMeta.slice(10);
+
+      await Promise.all(
+        toDelete.map(({ filepath }) => fs.unlink(filepath))
+      );
+
+      console.log(`Cleaned ${toDelete.length} old saves from local storage`);
+    }
   } catch (error) {
     console.error('Error cleaning old saves:', error);
   }
@@ -217,5 +344,9 @@ async function cleanOldSaves() {
 
 app.listen(PORT, () => {
   console.log(`🎮 Save server running on http://localhost:${PORT}`);
-  console.log(`☁️  Using GCS bucket: ${BUCKET_NAME}`);
+  if (useGCS) {
+    console.log(`☁️  Using GCS bucket: ${BUCKET_NAME}`);
+  } else {
+    console.log(`📁 Using local storage: ${LOCAL_SAVES_PATH}`);
+  }
 });
