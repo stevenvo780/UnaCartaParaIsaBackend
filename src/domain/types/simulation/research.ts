@@ -12,7 +12,8 @@ export interface ResearchCategory {
   description: string;
   prerequisites: string[];
   recipes: string[];
-  tier: number;
+  level: number;
+  icon?: string;
 }
 
 export interface LineageResearchStats {

@@ -13,8 +13,12 @@ export interface CraftingRecipe {
   ingredients: CraftingIngredient[];
   craftingTime: number;
   successRate?: number;
+  difficulty?: number;
   requirements?: {
     workstation?: string;
+    skill?: string;
+    skillLevel?: number;
+    tool?: string;
   };
 }
 

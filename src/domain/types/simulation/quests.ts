@@ -2,7 +2,11 @@ export interface Quest {
   id: string;
   title: string;
   description: string;
-  status: "available" | "active" | "completed" | "failed";
+  loreText?: string;
+  category?: string;
+  difficulty?: "easy" | "medium" | "hard" | "daily";
+  status: "available" | "active" | "completed" | "failed" | "not_started";
+  version?: number;
   objectives: QuestObjective[];
   rewards: QuestReward[];
   requirements: QuestRequirement[];
@@ -10,6 +14,14 @@ export interface Quest {
   timeLimit?: number;
   startedAt?: number;
   completedAt?: number;
+  introText?: string;
+  progressTexts?: string[];
+  completionText?: string;
+  failureText?: string;
+  estimatedDuration?: number;
+  tags?: string[];
+  isHidden?: boolean;
+  isRepeatable?: boolean;
 }
 
 export interface QuestObjective {

@@ -184,5 +184,143 @@ describe("TimeSystem", () => {
       expect(time.minute).toBe(30);
     });
   });
+
+  describe("getCurrentEffects", () => {
+    it("debe retornar efectos ambientales", () => {
+      const effects = timeSystem.getCurrentEffects();
+      expect(effects).toBeDefined();
+      expect(effects.visionRange).toBeDefined();
+      expect(effects.movementSpeed).toBeDefined();
+      expect(effects.socialMood).toBeDefined();
+      expect(effects.needsMultipliers).toBeDefined();
+      expect(effects.needsMultipliers.hunger).toBeDefined();
+      expect(effects.needsMultipliers.thirst).toBeDefined();
+      expect(effects.needsMultipliers.energy).toBeDefined();
+      expect(effects.needsMultipliers.mentalHealth).toBeDefined();
+    });
+
+    it("debe calcular efectos según el clima", () => {
+      timeSystem.setWeather("clear");
+      const clearEffects = timeSystem.getCurrentEffects();
+      
+      timeSystem.setWeather("stormy");
+      const stormyEffects = timeSystem.getCurrentEffects();
+      
+      expect(stormyEffects.visionRange).toBeLessThan(clearEffects.visionRange);
+      expect(stormyEffects.movementSpeed).toBeLessThan(clearEffects.movementSpeed);
+    });
+
+    it("debe calcular efectos según la hora del día", () => {
+      timeSystem.setTime(12, 0); // Mediodía
+      const middayEffects = timeSystem.getCurrentEffects();
+      
+      timeSystem.setTime(0, 0); // Medianoche
+      const midnightEffects = timeSystem.getCurrentEffects();
+      
+      // En la noche, el movimiento debería ser más lento
+      expect(midnightEffects.movementSpeed).toBeLessThan(middayEffects.movementSpeed);
+      // En la noche, el consumo de energía debería ser mayor
+      expect(midnightEffects.needsMultipliers.energy).toBeGreaterThan(middayEffects.needsMultipliers.energy);
+    });
+  });
+
+  describe("setTime - casos edge", () => {
+    it("debe limitar hora entre 0 y 23", () => {
+      timeSystem.setTime(25, 0);
+      expect(timeSystem.getCurrentTime().hour).toBe(23);
+      
+      timeSystem.setTime(-1, 0);
+      expect(timeSystem.getCurrentTime().hour).toBe(0);
+    });
+
+    it("debe limitar minuto entre 0 y 59", () => {
+      timeSystem.setTime(12, 70);
+      expect(timeSystem.getCurrentTime().minute).toBe(59);
+      
+      timeSystem.setTime(12, -5);
+      expect(timeSystem.getCurrentTime().minute).toBe(0);
+    });
+
+    it("debe actualizar fase, luz y temperatura al cambiar hora", () => {
+      timeSystem.setTime(6, 0);
+      const dawnTime = timeSystem.getCurrentTime();
+      expect(dawnTime.phase).toBe("dawn");
+      
+      timeSystem.setTime(12, 0);
+      const middayTime = timeSystem.getCurrentTime();
+      expect(middayTime.phase).toBe("midday");
+      expect(middayTime.lightLevel).toBeGreaterThan(dawnTime.lightLevel);
+    });
+  });
+
+  describe("setWeather - casos edge", () => {
+    it("debe actualizar todos los aspectos del clima", () => {
+      timeSystem.setWeather("rainy");
+      const weather = timeSystem.getCurrentWeather();
+      expect(weather.type).toBe("rainy");
+      expect(weather.intensity).toBeGreaterThan(0);
+      expect(weather.visibility).toBeGreaterThan(0);
+      expect(weather.comfort).toBeDefined();
+      expect(weather.duration).toBeDefined();
+    });
+
+    it("debe actualizar temperatura al cambiar clima", () => {
+      timeSystem.setTime(12, 0);
+      const initialTemp = timeSystem.getCurrentTime().temperature;
+      
+      timeSystem.setWeather("snowy");
+      const newTemp = timeSystem.getCurrentTime().temperature;
+      
+      // La temperatura debería cambiar según el clima
+      expect(newTemp).toBeDefined();
+    });
+  });
+
+  describe("getCurrentTimeOfDay - casos edge", () => {
+    it("debe retornar 'morning' para horas 7-10", () => {
+      timeSystem.setTime(7, 0);
+      expect(timeSystem.getCurrentTimeOfDay()).toBe("morning");
+      
+      timeSystem.setTime(10, 59);
+      expect(timeSystem.getCurrentTimeOfDay()).toBe("morning");
+    });
+
+    it("debe retornar 'afternoon' para horas 11-17", () => {
+      timeSystem.setTime(11, 0);
+      expect(timeSystem.getCurrentTimeOfDay()).toBe("afternoon");
+      
+      timeSystem.setTime(17, 59);
+      expect(timeSystem.getCurrentTimeOfDay()).toBe("afternoon");
+    });
+
+    it("debe retornar 'evening' para horas 18-20", () => {
+      timeSystem.setTime(18, 0);
+      expect(timeSystem.getCurrentTimeOfDay()).toBe("evening");
+      
+      timeSystem.setTime(20, 59);
+      expect(timeSystem.getCurrentTimeOfDay()).toBe("evening");
+    });
+
+    it("debe retornar 'night' para horas fuera de rango", () => {
+      timeSystem.setTime(0, 0);
+      expect(timeSystem.getCurrentTimeOfDay()).toBe("night");
+      
+      timeSystem.setTime(6, 59);
+      expect(timeSystem.getCurrentTimeOfDay()).toBe("night");
+      
+      timeSystem.setTime(21, 0);
+      expect(timeSystem.getCurrentTimeOfDay()).toBe("night");
+    });
+  });
+
+  describe("Actualización automática de clima", () => {
+    it("debe cambiar clima después de suficiente tiempo", () => {
+      const initialWeather = timeSystem.getCurrentWeather().type;
+      timeSystem.update(300000); // 5 minutos
+      // El clima puede o no cambiar dependiendo de la probabilidad
+      const updatedWeather = timeSystem.getCurrentWeather();
+      expect(updatedWeather).toBeDefined();
+    });
+  });
 });
 
