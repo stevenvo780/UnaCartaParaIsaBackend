@@ -292,14 +292,11 @@ export class SimulationRunner {
           height: worldConfig.height,
           tileSize: worldConfig.tileSize,
           seed: 12345,
-          scale: 1,
-          octaves: 4,
-          persistence: 0.5,
-          lacunarity: 2,
-          seaLevel: 0,
-          moistureOffset: 0,
-          temperatureOffset: 0,
-          riverThreshold: 0.8
+          noise: {
+            temperature: { scale: 0.0005, octaves: 4, persistence: 0.5, lacunarity: 2.0 },
+            moisture: { scale: 0.0005, octaves: 3, persistence: 0.6, lacunarity: 2.0 },
+            elevation: { scale: 0.0005, octaves: 5, persistence: 0.4, lacunarity: 2.0 }
+          }
         });
 
         // Process chunk tiles
@@ -312,8 +309,8 @@ export class SimulationRunner {
                 y: tile.y,
                 assetId: tile.assets.terrain,
                 type: tile.biome === BiomeType.OCEAN ? "water" : "grass",
-                biome: tile.biome,
-                isWalkable: tile.isWalkable
+                biome: String(tile.biome),
+                isWalkable: tile.isWalkable ?? true
               });
               biomeMap[tile.y][tile.x] = tile.biome;
             }
@@ -323,7 +320,7 @@ export class SimulationRunner {
     }
 
     this.state.terrainTiles = allTiles;
-    console.log(`Generated ${this.state.terrainTiles.length} terrain tiles.`);
+    console.log(`Generated ${allTiles.length} terrain tiles.`);
 
     // Spawn resources using the generated biome map
     this.worldResourceSystem.spawnResourcesInWorld({

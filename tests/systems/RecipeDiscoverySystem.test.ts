@@ -89,18 +89,80 @@ describe("RecipeDiscoverySystem", () => {
     });
   });
 
-  describe("Registro de uso de recetas", () => {
-    it("debe registrar uso de receta", () => {
+  describe("Gestión de recetas", () => {
+    it("debe retornar recetas conocidas por agente", () => {
+      recipeSystem.teachRecipe("agent-1", "wood_to_plank");
+      recipeSystem.teachRecipe("agent-1", "make_rope");
+      const recipes = recipeSystem.getAgentRecipes("agent-1");
+      expect(recipes.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it("debe retornar array vacío para agente sin recetas", () => {
+      const recipes = recipeSystem.getAgentRecipes("agent-1");
+      expect(recipes).toEqual([]);
+    });
+
+    it("debe retornar recetas disponibles para agente", () => {
+      recipeSystem.teachRecipe("agent-1", "wood_to_plank");
+      const availableItems = new Map([["wood", 10]]);
+      const recipes = recipeSystem.getAvailableRecipes("agent-1", availableItems);
+      expect(Array.isArray(recipes)).toBe(true);
+    });
+
+    it("debe mejorar proficiencia de receta", () => {
       recipeSystem.teachRecipe("agent-1", "wood_to_plank");
       expect(() => {
-        recipeSystem.recordRecipeUse("agent-1", "wood_to_plank", true);
+        recipeSystem.improveRecipeProficiency("agent-1", "wood_to_plank");
       }).not.toThrow();
     });
 
-    it("debe manejar uso de receta no conocida", () => {
+    it("debe compartir receta entre agentes", () => {
+      recipeSystem.teachRecipe("teacher-1", "wood_to_plank");
+      const result = recipeSystem.shareRecipe("teacher-1", "student-1", "wood_to_plank");
+      expect(result).toBeDefined();
+    });
+
+    it("debe retornar recetas descubiertas globalmente", () => {
+      const recipes = recipeSystem.getGloballyDiscoveredRecipes();
+      expect(Array.isArray(recipes)).toBe(true);
+    });
+
+    it("debe heredar conocimiento de padres", () => {
+      recipeSystem.teachRecipe("father-1", "wood_to_plank");
       expect(() => {
-        recipeSystem.recordRecipeUse("agent-1", "nonexistent", true);
+        recipeSystem.inheritKnowledgeFromParents("child-1", "father-1");
       }).not.toThrow();
+    });
+
+    it("debe retornar receta por ID", () => {
+      const recipe = recipeSystem.getRecipeById("wood_to_plank");
+      expect(recipe).toBeDefined();
+      expect(recipe?.id).toBe("wood_to_plank");
+    });
+
+    it("debe retornar undefined para receta inexistente", () => {
+      const recipe = recipeSystem.getRecipeById("nonexistent");
+      expect(recipe).toBeUndefined();
+    });
+
+    it("debe retornar todas las recetas", () => {
+      const recipes = recipeSystem.getAllRecipes();
+      expect(Array.isArray(recipes)).toBe(true);
+      expect(recipes.length).toBeGreaterThan(0);
+    });
+
+    it("debe remover agente", () => {
+      recipeSystem.teachRecipe("agent-1", "wood_to_plank");
+      recipeSystem.removeAgent("agent-1");
+      const knows = recipeSystem.agentKnowsRecipe("agent-1", "wood_to_plank");
+      expect(knows).toBe(false);
+    });
+
+    it("debe limpiar todas las recetas", () => {
+      recipeSystem.teachRecipe("agent-1", "wood_to_plank");
+      recipeSystem.cleanup();
+      const knows = recipeSystem.agentKnowsRecipe("agent-1", "wood_to_plank");
+      expect(knows).toBe(false);
     });
   });
 });
