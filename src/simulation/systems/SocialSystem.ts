@@ -52,4 +52,9 @@ export class SocialSystem {
     const currentB = this.edges.get(b)!.get(a) || 0;
     this.edges.get(b)!.set(a, Math.max(-1, Math.min(1, currentB + delta)));
   }
+
+  public getAffinityBetween(a: string, b: string): number {
+    if (a === b) return 1;
+    return this.edges.get(a)?.get(b) ?? 0;
+  }
 }

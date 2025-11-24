@@ -21,7 +21,10 @@ import { BuildingMaintenanceSystem } from "./systems/BuildingMaintenanceSystem.j
 import { ProductionSystem } from "./systems/ProductionSystem.js";
 import { EnhancedCraftingSystem } from "./systems/EnhancedCraftingSystem.js";
 import { CraftingSystem } from "./systems/CraftingSystem.js";
+import { AnimalSystem } from "./systems/AnimalSystem.js";
+import { ItemGenerationSystem } from "./systems/ItemGenerationSystem.js";
 import { simulationEvents, GameEventNames } from "./events.js";
+import { CombatSystem } from "./systems/CombatSystem.js";
 import type {
   SimulationCommand,
   SimulationConfig,
@@ -63,6 +66,9 @@ export class SimulationRunner {
   private productionSystem: ProductionSystem;
   private enhancedCraftingSystem: EnhancedCraftingSystem;
   private craftingSystem: CraftingSystem;
+  private animalSystem: AnimalSystem;
+  private itemGenerationSystem: ItemGenerationSystem;
+  private combatSystem: CombatSystem;
 
   constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
     this.state = initialState ?? createInitialGameState();
@@ -126,6 +132,17 @@ export class SimulationRunner {
     this.craftingSystem = new CraftingSystem(
       this.state,
       this.enhancedCraftingSystem,
+    );
+    this.animalSystem = new AnimalSystem(
+      this.state,
+      this.worldResourceSystem,
+    );
+    this.itemGenerationSystem = new ItemGenerationSystem(this.state);
+    this.combatSystem = new CombatSystem(
+      this.state,
+      this.inventorySystem,
+      this.lifeCycleSystem,
+      this.socialSystem,
     );
   }
 
@@ -202,6 +219,9 @@ export class SimulationRunner {
     this.buildingMaintenanceSystem.update(scaledDelta);
     this.productionSystem.update(scaledDelta);
     this.enhancedCraftingSystem.update();
+    this.animalSystem.update(scaledDelta);
+    this.itemGenerationSystem.update(scaledDelta);
+    this.combatSystem.update(scaledDelta);
     // Genealogy usually updates on events, but if it has a tick:
     // this.genealogySystem.update(scaledDelta);
 

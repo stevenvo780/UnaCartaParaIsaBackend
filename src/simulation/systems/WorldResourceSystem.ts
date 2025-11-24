@@ -158,8 +158,74 @@ export class WorldResourceSystem {
 
   public getResourcesByType(type: WorldResourceType): WorldResourceInstance[] {
     if (!this.state.worldResources) return [];
-    return Object.values(this.state.worldResources).filter(
-      (r) => r.type === type
-    );
+    return Object.values(this.state.worldResources).filter((r: any) => r.type === type);
+  }
+
+  /**
+   * Get resources near a position (for animal foraging)
+   */
+  public getResourcesNear(position: { x: number; y: number }, radius: number): WorldResourceInstance[] {
+    if (!this.state.worldResources) return [];
+
+    const radiusSq = radius * radius;
+    return Object.values(this.state.worldResources).filter((resource: WorldResourceInstance) => {
+      const dx = resource.position.x - position.x;
+      const dy = resource.position.y - position.y;
+      const distSq = dx * dx + dy * dy;
+      return distSq <= radiusSq && resource.state !== 'depleted';
+    });
+  }
+
+  /**
+   * Harvest/consume a resource (for animals and agents)
+   */
+  public harvestResource(resourceId: string, harvesterId: string): { success: boolean; amount: number } {
+    const resource = this.state.worldResources?.[resourceId];
+    if (!resource || resource.state === 'depleted') {
+      return { success: false, amount: 0 };
+    }
+
+    const config = getResourceConfig(resource.type);
+    if (!config) {
+      return { success: false, amount: 0 };
+    }
+
+    // Increment harvest count
+    resource.harvestCount = (resource.harvestCount || 0) + 1;
+    resource.lastHarvestTime = Date.now();
+
+    // Check if depleted
+    const maxHarvests = config.harvestsUntilDepleted || 5;
+    if (resource.harvestCount >= maxHarvests) {
+      resource.state = 'depleted';
+
+      // Start regeneration if applicable
+      if (config.canRegenerate) {
+        resource.regenerationStartTime = Date.now();
+        this.regenerationTimers.set(resourceId, Date.now());
+      }
+
+      simulationEvents.emit(GameEventNames.RESOURCE_STATE_CHANGE, {
+        resourceId,
+        newState: 'depleted',
+        harvesterId,
+      });
+    } else if (resource.harvestCount >= maxHarvests * 0.7) {
+      resource.state = 'harvested_partial';
+      simulationEvents.emit(GameEventNames.RESOURCE_STATE_CHANGE, {
+        resourceId,
+        newState: 'harvested_partial',
+        harvesterId,
+      });
+    }
+
+    simulationEvents.emit(GameEventNames.RESOURCE_GATHERED, {
+      resourceId,
+      resourceType: resource.type,
+      harvesterId,
+      position: resource.position,
+    });
+
+    return { success: true, amount: 1 || 1 };
   }
 }

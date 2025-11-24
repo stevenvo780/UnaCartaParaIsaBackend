@@ -83,7 +83,7 @@ export class LifeCycleSystem {
     return Array.from(this.agents.values());
   }
 
-  private removeAgent(id: string): void {
+  public removeAgent(id: string): void {
     this.agents.delete(id);
     console.log(`Agent ${id} died of old age`);
     // Remove from GameState
