@@ -11,7 +11,11 @@ router.post("/api/sim/save", async (_req, res) => {
     const saveData = {
       ...snapshot.state,
       timestamp: Date.now(),
-      gameTime: snapshot.state.togetherTime // Assuming togetherTime is gameTime
+      gameTime: snapshot.state.togetherTime, // Assuming togetherTime is gameTime
+      stats: {
+        cycles: snapshot.state.cycles,
+        resonance: snapshot.state.resonance
+      }
     };
 
     const result = await storageService.saveGame(saveData);

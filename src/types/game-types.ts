@@ -104,5 +104,5 @@ export interface GameState {
   dayTime?: number;
   weather?: WeatherState;
   resources?: GameResources;
-  worldResources?: Map<string, WorldResourceInstance>;
+  worldResources?: Record<string, WorldResourceInstance>;
 }

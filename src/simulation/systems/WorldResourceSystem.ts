@@ -12,7 +12,7 @@ export class WorldResourceSystem {
   constructor(state: GameState) {
     this.state = state;
     if (!this.state.worldResources) {
-      this.state.worldResources = new Map();
+      this.state.worldResources = {};
     }
 
     simulationEvents.on(GameEventNames.RESOURCE_GATHERED, this.handleResourceGathered.bind(this));
@@ -31,7 +31,7 @@ export class WorldResourceSystem {
     if (!this.state.worldResources) return;
 
     for (const [resourceId, startTime] of this.regenerationTimers.entries()) {
-      const resource = this.state.worldResources.get(resourceId);
+      const resource = this.state.worldResources[resourceId];
       if (!resource) {
         this.regenerationTimers.delete(resourceId);
         continue;
@@ -60,7 +60,7 @@ export class WorldResourceSystem {
 
   private handleResourceGathered(data: { resourceId: string; amount: number }): void {
     if (!this.state.worldResources) return;
-    const resource = this.state.worldResources.get(data.resourceId);
+    const resource = this.state.worldResources[data.resourceId];
     if (!resource) return;
 
     const config = getResourceConfig(resource.type);

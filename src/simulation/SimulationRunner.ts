@@ -2,6 +2,7 @@ import { EventEmitter } from "node:events";
 import type { GameResources, GameState } from "../types/game-types.js";
 import { cloneGameState, createInitialGameState } from "./defaultState.js";
 import { WorldResourceSystem } from "./systems/WorldResourceSystem.js";
+import { LivingLegendsSystem } from "./systems/LivingLegendsSystem.js";
 import { simulationEvents, GameEventNames } from "./events.js";
 import type {
   SimulationCommand,
@@ -25,12 +26,14 @@ export class SimulationRunner {
   private lastUpdate = Date.now();
   private timeScale = 1;
   private worldResourceSystem: WorldResourceSystem;
+  private livingLegendsSystem: LivingLegendsSystem;
 
   constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
     this.state = initialState ?? createInitialGameState();
     this.tickIntervalMs = config?.tickIntervalMs ?? 200;
     this.maxCommandQueue = config?.maxCommandQueue ?? 200;
     this.worldResourceSystem = new WorldResourceSystem(this.state);
+    this.livingLegendsSystem = new LivingLegendsSystem(this.state);
   }
 
   start(): void {
@@ -83,6 +86,7 @@ export class SimulationRunner {
     this.processCommands();
     this.advanceSimulation(delta * this.timeScale);
     this.worldResourceSystem.update(delta * this.timeScale);
+    this.livingLegendsSystem.update(delta * this.timeScale);
 
     this.tickCounter += 1;
     const snapshot = this.getSnapshot();
