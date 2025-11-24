@@ -314,7 +314,9 @@ export class SimulationRunner {
     // Initialize biome map structure
     const biomeMap: string[][] = Array(worldConfig.height)
       .fill(null)
-      .map((): string[] => Array(worldConfig.width).fill(""));
+      .map((): string[] => {
+        return Array(worldConfig.width).fill("") as string[];
+      });
 
     for (let cy = 0; cy < chunksY; cy++) {
       for (let cx = 0; cx < chunksX; cx++) {
@@ -419,8 +421,8 @@ export class SimulationRunner {
     const events =
       this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
     const snapshotState = cloneGameState(this.state);
-    snapshotState.genealogy = this._genealogySystem.getFamilyTree();
-    
+    snapshotState.genealogy = this._genealogySystem.getSerializedFamilyTree();
+
     // Include legends data in snapshot
     const allLegends = this.livingLegendsSystem.getAllLegends();
     const activeLegends = this.livingLegendsSystem.getActiveLegends();
@@ -428,7 +430,7 @@ export class SimulationRunner {
       records: allLegends,
       activeLegends,
     };
-    
+
     return {
       state: snapshotState,
       tick: this.tickCounter,

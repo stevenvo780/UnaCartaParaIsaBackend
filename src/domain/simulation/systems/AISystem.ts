@@ -141,18 +141,127 @@ export class AISystem extends EventEmitter {
     }
   }
 
-  private createAIState(agent: AgentProfile): AIState {
-    const personality: AgentPersonality = {
-      cooperation: agent.traits.cooperation,
-      diligence: agent.traits.diligence,
-      curiosity: agent.traits.curiosity,
+  /**
+   * Derive full personality from agent traits, considering life stage
+   */
+  private derivePersonalityFromTraits(
+    traits: {
+      cooperation: number;
+      aggression: number;
+      diligence: number;
+      curiosity: number;
+    },
+    lifeStage: "child" | "adult" | "elder",
+  ): AgentPersonality {
+    // Exploration type based on curiosity
+    const explorationType =
+      traits.curiosity > 0.7
+        ? "adventurous"
+        : traits.curiosity < 0.3
+          ? "cautious"
+          : "balanced";
+
+    // Social preference based on cooperation
+    const socialPreference =
+      traits.cooperation > 0.7
+        ? "extroverted"
+        : traits.cooperation < 0.3
+          ? "introverted"
+          : "balanced";
+
+    // Work ethic based on diligence
+    const workEthic =
+      traits.diligence > 0.7
+        ? "workaholic"
+        : traits.diligence < 0.3
+          ? "lazy"
+          : "balanced";
+
+    // Risk tolerance: combines aggression and curiosity, modified by age
+    const ageModifier =
+      lifeStage === "elder" ? -0.2 : lifeStage === "child" ? -0.1 : 0;
+    const riskTolerance = Math.max(
+      0,
+      Math.min(
+        1,
+        traits.aggression * 0.6 + traits.curiosity * 0.4 + ageModifier,
+      ),
+    );
+
+    return {
+      cooperation: traits.cooperation,
+      diligence: traits.diligence,
+      curiosity: traits.curiosity,
+      aggression: traits.aggression,
+      explorationType,
+      socialPreference,
+      workEthic,
+      riskTolerance,
+      neuroticism: Math.max(
+        0,
+        1 - (traits.aggression * 0.5 + traits.curiosity * 0.5),
+      ),
+      extraversion: traits.cooperation,
+      openness: traits.curiosity,
+      conscientiousness: traits.diligence,
+      agreeableness: traits.cooperation,
     };
+  }
+
+  /**
+   * Generate random personality when traits are not available
+   */
+  private generatePersonalityFallback(): AgentPersonality {
+    console.warn("⚠️ Generating personality without traits (fallback)");
+
+    const explorationTypes = ["cautious", "balanced", "adventurous"] as const;
+    const socialPreferences = [
+      "introverted",
+      "balanced",
+      "extroverted",
+    ] as const;
+    const workEthics = ["lazy", "balanced", "workaholic"] as const;
+
+    const cooperation = Math.random();
+    const diligence = Math.random();
+    const curiosity = Math.random();
+    const aggression = Math.random();
+
+    return {
+      cooperation,
+      diligence,
+      curiosity,
+      aggression,
+      explorationType:
+        explorationTypes[Math.floor(Math.random() * explorationTypes.length)],
+      socialPreference:
+        socialPreferences[
+        Math.floor(Math.random() * socialPreferences.length)
+        ],
+      workEthic: workEthics[Math.floor(Math.random() * workEthics.length)],
+      riskTolerance: 0.3 + Math.random() * 0.4,
+      neuroticism: Math.random(),
+      extraversion: Math.random(),
+      openness: Math.random(),
+      conscientiousness: Math.random(),
+      agreeableness: Math.random(),
+    };
+  }
+
+  private createAIState(agent: AgentProfile): AIState {
+    // Derive full personality from traits
+    const personality = agent.traits
+      ? this.derivePersonalityFromTraits(agent.traits, agent.lifeStage)
+      : this.generatePersonalityFallback();
 
     const memory: AgentMemory = {
       lastSeenThreats: [],
       visitedZones: new Set(),
       recentInteractions: [],
       knownResourceLocations: new Map(),
+      successfulActivities: new Map(),
+      failedAttempts: new Map(),
+      lastMemoryCleanup: Date.now(),
     };
 
     return {
@@ -175,7 +284,7 @@ export class AISystem extends EventEmitter {
           getEntityNeeds: (id) => this.needsSystem?.getEntityNeeds(id),
           findNearestResource: this.worldResourceSystem
             ? (entityId: string, resourceType: string) =>
-                this.findNearestResourceForEntity(entityId, resourceType)
+              this.findNearestResourceForEntity(entityId, resourceType)
             : undefined,
         },
         aiState,
@@ -192,7 +301,7 @@ export class AISystem extends EventEmitter {
             this.getPreferredResourceForRole(roleType),
           findNearestResource: this.worldResourceSystem
             ? (entityId: string, resourceType: string) =>
-                this.findNearestResourceForEntity(entityId, resourceType)
+              this.findNearestResourceForEntity(entityId, resourceType)
             : undefined,
         },
         aiState,

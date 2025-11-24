@@ -167,7 +167,8 @@ export interface LegendsState {
 
 export interface InventoryState {
   global: Inventory;
-  stockpiles: Map<string, Inventory>;
+  stockpiles: Record<string, Inventory>;
+  agents: Record<string, Inventory>;
 }
 
 export interface MapElement {

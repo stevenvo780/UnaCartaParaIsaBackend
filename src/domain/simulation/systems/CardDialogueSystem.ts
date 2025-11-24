@@ -1,4 +1,5 @@
 import { GameState } from "../../types/game-types";
+import { simulationEvents, GameEventNames } from "../core/events";
 import { NeedsSystem } from "./NeedsSystem";
 import type { SocialSystem } from "./SocialSystem";
 import type { QuestSystem } from "./QuestSystem";
@@ -126,6 +127,11 @@ export class CardDialogueSystem {
       const card = this.queue.shift();
       if (!card) break;
       this.activeCards.set(card.id, { card, expiresAt: now + card.duration });
+      
+      simulationEvents.emit(GameEventNames.DIALOGUE_SHOW_CARD, {
+        card,
+      });
+
       this.history.push(card);
       if (this.history.length > this.MAX_HISTORY) {
         this.history.shift();
@@ -137,6 +143,9 @@ export class CardDialogueSystem {
     for (const [cardId, entry] of Array.from(this.activeCards.entries())) {
       if (now >= entry.expiresAt) {
         this.activeCards.delete(cardId);
+        simulationEvents.emit(GameEventNames.DIALOGUE_CARD_EXPIRED, {
+          cardId,
+        });
       }
     }
   }
@@ -373,6 +382,11 @@ export class CardDialogueSystem {
 
     // Remove card
     this.activeCards.delete(cardId);
+    
+    simulationEvents.emit(GameEventNames.DIALOGUE_CARD_RESPONDED, {
+      cardId,
+      choiceId,
+    });
 
     // Apply effects
     if (choice.effects) {

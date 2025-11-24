@@ -18,24 +18,24 @@ router.post(
   async (_req: Request, res: Response): Promise<void> => {
     try {
       const snapshot = simulationRunner.getSnapshot();
-    const saveData = {
-      ...snapshot.state,
-      timestamp: Date.now(),
-      gameTime: snapshot.state.togetherTime,
-      stats: {
-        cycles: snapshot.state.cycles,
-        resonance: snapshot.state.resonance ?? 0,
-      },
-    };
+      const saveData = {
+        ...snapshot.state,
+        timestamp: Date.now(),
+        gameTime: snapshot.state.togetherTime,
+        stats: {
+          cycles: snapshot.state.cycles,
+          resonance: snapshot.state.resonance ?? 0,
+        },
+      };
 
-    const result = await storageService.saveGame(saveData);
-    res.json({ success: true, saveId: result.saveId });
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    logger.error("Error saving simulation:", errorMessage);
-    res.status(500).json({ error: "Failed to save simulation" });
-  }
+      const result = await storageService.saveGame(saveData);
+      res.json({ success: true, saveId: result.saveId });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      logger.error("Error saving simulation:", errorMessage);
+      res.status(500).json({ error: "Failed to save simulation" });
+    }
   },
 );
 

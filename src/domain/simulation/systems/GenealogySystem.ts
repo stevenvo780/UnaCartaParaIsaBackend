@@ -116,6 +116,47 @@ export class GenealogySystem {
     return this.familyTree;
   }
 
+  public getSerializedFamilyTree(): any {
+    const ancestorsObj: Record<string, any> = {};
+    this.familyTree.ancestors.forEach((v, k) => {
+      ancestorsObj[k] = v;
+    });
+
+    const lineagesObj: Record<string, any> = {};
+    this.familyTree.lineages.forEach((v, k) => {
+      // researchProgress is also a Map
+      const serializedResearch: Record<string, number> = {};
+      if (v.researchProgress) {
+        v.researchProgress.forEach((val, key) => {
+          serializedResearch[key] = val;
+        });
+      }
+
+      lineagesObj[k] = {
+        ...v,
+        researchProgress: serializedResearch,
+      };
+    });
+
+    const relationshipsObj: Record<string, any> = {};
+    this.familyTree.relationships.forEach((v, k) => {
+       // Relationship value is Map<string, number> ?? No, wait type def
+       // relationships: Map<string, Map<string, number>>; 
+       // Need double serialization
+       const relMap: Record<string, number> = {};
+       v.forEach((val, key) => {
+         relMap[key] = val;
+       });
+       relationshipsObj[k] = relMap;
+    });
+
+    return {
+      ancestors: ancestorsObj,
+      lineages: lineagesObj,
+      relationships: relationshipsObj,
+    };
+  }
+
   public recordDeath(agentId: string): void {
     const ancestor = this.familyTree.ancestors.get(agentId);
     if (!ancestor) return;

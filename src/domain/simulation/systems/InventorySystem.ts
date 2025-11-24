@@ -203,16 +203,24 @@ export class InventorySystem {
             capacity: 0,
             lastUpdateTime: now,
           },
-          stockpiles: new Map(),
+          stockpiles: {},
+          agents: {},
         };
       }
 
-      // Convertir stockpiles Map a Map serializable
-      const stockpilesMap = new Map<string, Inventory>();
+      // Convertir stockpiles Map a Object serializable
+      const stockpilesObj: Record<string, Inventory> = {};
       this.stockpiles.forEach((stockpile) => {
-        stockpilesMap.set(stockpile.id, stockpile.inventory);
+        stockpilesObj[stockpile.id] = stockpile.inventory;
       });
-      this.gameState.inventory.stockpiles = stockpilesMap;
+      this.gameState.inventory.stockpiles = stockpilesObj;
+
+      // Convertir agent inventories a Object serializable
+      const agentsObj: Record<string, Inventory> = {};
+      this.agentInventories.forEach((inv, agentId) => {
+        agentsObj[agentId] = inv;
+      });
+      this.gameState.inventory.agents = agentsObj;
 
       // Calcular inventario global (suma de todos los agentes y stockpiles)
       const stats = this.getSystemStats();
