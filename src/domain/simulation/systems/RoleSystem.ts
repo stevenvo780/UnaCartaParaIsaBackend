@@ -11,6 +11,7 @@ import type {
   RoleAssignment,
   RoleSystemConfig,
 } from "../../types/simulation/roles";
+import { simulationEvents, GameEventNames } from "../core/events";
 
 const ROLE_DEFINITIONS: RoleConfig[] = [
   {
@@ -195,9 +196,19 @@ export class RoleSystem extends EventEmitter {
       const previousShift = this.currentShift;
       this.currentShift = timePhase as WorkShift;
       this.rebuildSchedule();
+      
+      // Emitir evento interno (para compatibilidad)
       this.emit("shiftChanged", {
         previous: previousShift,
         current: this.currentShift,
+      });
+
+      // Emitir evento al sistema de simulación
+      simulationEvents.emit(GameEventNames.ROLE_SHIFT_CHANGED, {
+        previousShift,
+        currentShift: this.currentShift,
+        agentsInShift: this.schedule[this.currentShift],
+        timestamp: Date.now(),
       });
     }
   }
@@ -303,6 +314,15 @@ export class RoleSystem extends EventEmitter {
     logger.info(
       `👷 Rol asignado: ${agent.name || agent.id} → ${selectedRole.name}`,
     );
+
+    // Emitir evento de asignación de rol
+    simulationEvents.emit(GameEventNames.ROLE_ASSIGNED, {
+      agentId: agent.id,
+      roleType: selectedRole.type,
+      roleName: selectedRole.name,
+      efficiency: role.efficiency,
+      timestamp: Date.now(),
+    });
 
     return { success: true, agentId: agent.id, roleType: selectedRole.type };
   }
@@ -416,6 +436,17 @@ export class RoleSystem extends EventEmitter {
     this.rebuildSchedule();
 
     logger.info(`👷 Rol reasignado: ${agentId} → ${roleDef.name}`);
+
+    // Emitir evento de reasignación de rol
+    simulationEvents.emit(GameEventNames.ROLE_REASSIGNED, {
+      agentId,
+      previousRole: existing?.roleType,
+      newRole: newRole,
+      roleName: roleDef.name,
+      efficiency: role.efficiency,
+      timestamp: Date.now(),
+    });
+
     return { success: true, agentId, roleType: newRole };
   }
 }

@@ -1,5 +1,6 @@
 import { GameState } from "../../types/game-types";
 import { Task, TaskCreationParams } from "../../types/simulation/tasks";
+import { simulationEvents, GameEventNames } from "../core/events";
 
 export class TaskSystem {
   private gameState: GameState;
@@ -88,6 +89,15 @@ export class TaskSystem {
 
     this.tasks.set(task.id, task);
 
+    // Emitir evento de creación de tarea
+    simulationEvents.emit(GameEventNames.TASK_CREATED, {
+      taskId: task.id,
+      taskType: task.type,
+      zoneId: task.zoneId,
+      requiredWork: task.requiredWork,
+      timestamp: Date.now(),
+    });
+
     return task;
   }
 
@@ -138,6 +148,27 @@ export class TaskSystem {
     const completed = task.progress >= task.requiredWork;
     if (completed) {
       task.completed = true;
+    }
+
+    // Emitir evento de progreso
+    simulationEvents.emit(GameEventNames.TASK_PROGRESS, {
+      taskId,
+      agentId,
+      progress: task.progress,
+      requiredWork: task.requiredWork,
+      completed,
+      contributors: Array.from(task.contributors.keys()),
+      timestamp: Date.now(),
+    });
+
+    // Emitir evento de completación si se completó
+    if (completed) {
+      simulationEvents.emit(GameEventNames.TASK_COMPLETED, {
+        taskId,
+        completedBy: Array.from(task.contributors.keys()),
+        completedAt: Date.now(),
+        timestamp: Date.now(),
+      });
     }
 
     return {

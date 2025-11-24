@@ -6,6 +6,7 @@ import {
   MediationAttempt,
   ConflictStats,
 } from "../../types/simulation/conflict";
+import { simulationEvents, GameEventNames } from "../core/events";
 
 const CONFLICT_CONFIG = {
   truce: {
@@ -96,6 +97,17 @@ export class ConflictResolutionSystem {
       this.mediationAttempts.shift();
     }
 
+    // Emitir evento de tregua propuesta
+    simulationEvents.emit(GameEventNames.CONFLICT_TRUCE_PROPOSED, {
+      cardId,
+      attackerId: data.attackerId,
+      targetId: data.targetId,
+      reason,
+      remainingHealth: data.remaining,
+      damage: data.damage,
+      timestamp: Date.now(),
+    });
+
     return { shouldProposeTruce: true, cardId, reason };
   }
 
@@ -143,6 +155,24 @@ export class ConflictResolutionSystem {
           : choice === "apologize"
             ? "apologized"
             : "rejected";
+    }
+
+    // Emitir eventos según la resolución
+    if (choice === "truce_accept") {
+      simulationEvents.emit(GameEventNames.CONFLICT_TRUCE_ACCEPTED, {
+        cardId,
+        attackerId: aId,
+        targetId: bId,
+        truceBonus,
+        timestamp: Date.now(),
+      });
+    } else if (choice === "continue") {
+      simulationEvents.emit(GameEventNames.CONFLICT_TRUCE_REJECTED, {
+        cardId,
+        attackerId: aId,
+        targetId: bId,
+        timestamp: Date.now(),
+      });
     }
 
     this.activeCards.delete(cardId);

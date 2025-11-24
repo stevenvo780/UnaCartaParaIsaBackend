@@ -112,51 +112,84 @@ export function cloneGameStateDelta(
   // Crear nuevo objeto y copiar referencias de secciones no dirty
   const cloned: GameState = { ...state };
 
-  // Solo clonar profundamente las secciones marcadas como dirty
+  // Copy-on-write: Solo clonar si realmente cambió el contenido
+  // Verificar por referencia primero (más rápido)
   if (dirtyFlags.agents) {
-    cloned.agents = structuredClone(state.agents);
+    if (state.agents !== previousSnapshot.agents) {
+      cloned.agents = structuredClone(state.agents);
+    } else {
+      cloned.agents = previousSnapshot.agents;
+    }
   } else if (previousSnapshot.agents) {
     cloned.agents = previousSnapshot.agents;
   }
 
   if (dirtyFlags.entities) {
-    cloned.entities = structuredClone(state.entities);
+    if (state.entities !== previousSnapshot.entities) {
+      cloned.entities = structuredClone(state.entities);
+    } else {
+      cloned.entities = previousSnapshot.entities;
+    }
   } else if (previousSnapshot.entities) {
     cloned.entities = previousSnapshot.entities;
   }
 
   if (dirtyFlags.animals) {
-    cloned.animals = structuredClone(state.animals);
+    if (state.animals !== previousSnapshot.animals) {
+      cloned.animals = structuredClone(state.animals);
+    } else {
+      cloned.animals = previousSnapshot.animals;
+    }
   } else if (previousSnapshot.animals) {
     cloned.animals = previousSnapshot.animals;
   }
 
   if (dirtyFlags.zones) {
-    cloned.zones = structuredClone(state.zones);
+    if (state.zones !== previousSnapshot.zones) {
+      cloned.zones = structuredClone(state.zones);
+    } else {
+      cloned.zones = previousSnapshot.zones;
+    }
   } else if (previousSnapshot.zones) {
     cloned.zones = previousSnapshot.zones;
   }
 
   if (dirtyFlags.worldResources) {
-    cloned.worldResources = structuredClone(state.worldResources);
+    if (state.worldResources !== previousSnapshot.worldResources) {
+      cloned.worldResources = structuredClone(state.worldResources);
+    } else {
+      cloned.worldResources = previousSnapshot.worldResources;
+    }
   } else if (previousSnapshot.worldResources) {
     cloned.worldResources = previousSnapshot.worldResources;
   }
 
   if (dirtyFlags.inventory) {
-    cloned.inventory = structuredClone(state.inventory);
+    if (state.inventory !== previousSnapshot.inventory) {
+      cloned.inventory = structuredClone(state.inventory);
+    } else {
+      cloned.inventory = previousSnapshot.inventory;
+    }
   } else if (previousSnapshot.inventory) {
     cloned.inventory = previousSnapshot.inventory;
   }
 
   if (dirtyFlags.socialGraph) {
-    cloned.socialGraph = structuredClone(state.socialGraph);
+    if (state.socialGraph !== previousSnapshot.socialGraph) {
+      cloned.socialGraph = structuredClone(state.socialGraph);
+    } else {
+      cloned.socialGraph = previousSnapshot.socialGraph;
+    }
   } else if (previousSnapshot.socialGraph) {
     cloned.socialGraph = previousSnapshot.socialGraph;
   }
 
   if (dirtyFlags.market) {
-    cloned.market = structuredClone(state.market);
+    if (state.market !== previousSnapshot.market) {
+      cloned.market = structuredClone(state.market);
+    } else {
+      cloned.market = previousSnapshot.market;
+    }
   } else if (previousSnapshot.market) {
     cloned.market = previousSnapshot.market;
   }

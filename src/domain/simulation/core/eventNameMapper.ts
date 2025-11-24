@@ -117,6 +117,20 @@ export const eventNameMapper: Record<string, string> = {
   AGENT_ACTIVITY_STARTED: "agent:activity:started",
   RESOURCES_DEPOSITED: "resources:deposited",
   ITEM_CRAFTED: "item:crafted",
+  TASK_CREATED: "task:created",
+  TASK_PROGRESS: "task:progress",
+  TASK_COMPLETED: "task:completed",
+  QUEST_COMPLETED: "quest:completed",
+  QUEST_STARTED: "quest:started",
+  QUEST_FAILED: "quest:failed",
+  ROLE_ASSIGNED: "role:assigned",
+  ROLE_REASSIGNED: "role:reassigned",
+  ROLE_SHIFT_CHANGED: "role:shift:changed",
+  NORM_VIOLATED: "norm:violated",
+  NORM_SANCTION_APPLIED: "norm:sanction:applied",
+  CONFLICT_TRUCE_PROPOSED: "conflict:truce:proposed",
+  CONFLICT_TRUCE_ACCEPTED: "conflict:truce:accepted",
+  CONFLICT_TRUCE_REJECTED: "conflict:truce:rejected",
 };
 
 /**

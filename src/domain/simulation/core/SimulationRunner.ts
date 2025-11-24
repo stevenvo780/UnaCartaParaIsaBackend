@@ -38,6 +38,7 @@ import { MarriageSystem } from "../systems/MarriageSystem";
 import { ConflictResolutionSystem } from "../systems/ConflictResolutionSystem";
 import { NormsSystem } from "../systems/NormsSystem";
 import { simulationEvents, GameEventNames } from "./events";
+import { BatchedEventEmitter } from "./BatchedEventEmitter";
 import { CombatSystem } from "../systems/CombatSystem";
 import { ResourceAttractionSystem } from "../systems/ResourceAttractionSystem";
 import { CrisisPredictorSystem } from "../systems/CrisisPredictorSystem";
@@ -270,6 +271,9 @@ export class SimulationRunner {
     this.movementSystem = new MovementSystem(this.state);
     this.trailSystem = new TrailSystem(this.state);
     this.appearanceGenerationSystem = new AppearanceGenerationSystem();
+
+    // Distribuir intervalos de actualización para evitar picos de procesamiento
+    this.assignStaggeredPhases();
 
     this.lifeCycleSystem.setDependencies({
       needsSystem: this.needsSystem,
@@ -720,7 +724,11 @@ export class SimulationRunner {
 
   start(): void {
     if (this.tickHandle) return;
-    this.tickHandle = setInterval(() => this.step(), this.tickIntervalMs);
+    this.tickHandle = setInterval(() => {
+      this.step().catch((err) => {
+        logger.error("Error in simulation step:", err);
+      });
+    }, this.tickIntervalMs);
   }
 
   stop(): void {
@@ -813,7 +821,7 @@ export class SimulationRunner {
     return this.getTickSnapshot();
   }
 
-  private step(): void {
+  private async step(): Promise<void> {
     const now = Date.now();
     const delta = now - this.lastUpdate;
     this.lastUpdate = now;
@@ -833,85 +841,80 @@ export class SimulationRunner {
     const dirtySections: string[] = [];
 
     this.advanceSimulation(scaledDelta);
-    this.worldResourceSystem.update(scaledDelta);
-    dirtySections.push("worldResources");
 
-    this.livingLegendsSystem.update(scaledDelta);
-    this.lifeCycleSystem.update(scaledDelta);
-    dirtySections.push("agents", "entities"); // LifeCycle puede cambiar agents/entities
+    // Fase 1: Sistemas independientes que pueden ejecutarse en paralelo
+    await Promise.all([
+      Promise.resolve(this.worldResourceSystem.update(scaledDelta)),
+      Promise.resolve(this.animalSystem.update(scaledDelta)),
+      Promise.resolve(this.timeSystem.update(scaledDelta)),
+      Promise.resolve(this.trailSystem.update(scaledDelta)),
+      Promise.resolve(this.itemGenerationSystem.update(scaledDelta)),
+      Promise.resolve(this.reputationSystem.update()),
+      Promise.resolve(this._researchSystem.update()),
+      Promise.resolve(this._recipeDiscoverySystem.update()),
+      Promise.resolve(this._normsSystem.update()),
+    ]);
+    dirtySections.push("worldResources", "animals", "research", "recipes", "norms");
 
-    this.needsSystem.update(scaledDelta);
-    this.socialSystem.update(scaledDelta);
-    dirtySections.push("socialGraph");
+    // Fase 2: Sistemas que dependen de fase 1 pero son independientes entre sí
+    await Promise.all([
+      Promise.resolve(this.livingLegendsSystem.update(scaledDelta)),
+      Promise.resolve(this.lifeCycleSystem.update(scaledDelta)),
+      Promise.resolve(this.inventorySystem.update()),
+      Promise.resolve(this.resourceReservationSystem.update()),
+    ]);
+    dirtySections.push("agents", "entities", "inventory");
 
-    this.inventorySystem.update();
-    dirtySections.push("inventory");
+    // Fase 3: Sistemas sociales y económicos (pueden ejecutarse en paralelo)
+    await Promise.all([
+      Promise.resolve(this.needsSystem.update(scaledDelta)),
+      Promise.resolve(this.socialSystem.update(scaledDelta)),
+      Promise.resolve(this.economySystem.update(scaledDelta)),
+      Promise.resolve(this.marketSystem.update(scaledDelta)),
+    ]);
+    dirtySections.push("socialGraph", "market");
 
-    this.resourceReservationSystem.update();
-    this.economySystem.update(scaledDelta);
-    this.marketSystem.update(scaledDelta);
-    dirtySections.push("market");
-
+    // Fase 4: Sistemas de roles y AI (AI depende de needs/social)
     this.roleSystem.update(scaledDelta);
     this.aiSystem.update(scaledDelta);
-    dirtySections.push("agents"); // AI puede cambiar agent behavior
+    dirtySections.push("agents");
 
-    this.divineFavorSystem.update(scaledDelta);
-    this.governanceSystem.update(scaledDelta);
-    this.householdSystem.update(scaledDelta);
-    this.buildingSystem.update(scaledDelta);
-    this.buildingMaintenanceSystem.update(scaledDelta);
-    dirtySections.push("zones"); // Buildings pueden cambiar zones
+    // Fase 5: Sistemas de construcción y producción (pueden ejecutarse en paralelo)
+    await Promise.all([
+      Promise.resolve(this.divineFavorSystem.update(scaledDelta)),
+      Promise.resolve(this.governanceSystem.update(scaledDelta)),
+      Promise.resolve(this.householdSystem.update(scaledDelta)),
+      Promise.resolve(this.buildingSystem.update(scaledDelta)),
+      Promise.resolve(this.buildingMaintenanceSystem.update(scaledDelta)),
+      Promise.resolve(this.productionSystem.update(scaledDelta)),
+      Promise.resolve(this.enhancedCraftingSystem.update()),
+    ]);
+    dirtySections.push("zones");
 
-    this.productionSystem.update(scaledDelta);
-    this.enhancedCraftingSystem.update();
-    this.animalSystem.update(scaledDelta);
-    dirtySections.push("animals");
-
-    this.itemGenerationSystem.update(scaledDelta);
+    // Fase 6: Sistemas de combate y tareas
     this.combatSystem.update(scaledDelta);
-    dirtySections.push("entities"); // Combat puede cambiar entities
+    this.taskSystem.update(scaledDelta);
+    dirtySections.push("entities", "tasks");
 
-    this.reputationSystem.update();
-    dirtySections.push("reputation");
+    // Fase 7: Sistemas de interacción y emergencia (pueden ejecutarse en paralelo)
+    await Promise.all([
+      Promise.resolve(this.questSystem.update()),
+      Promise.resolve(this.tradeSystem.update()),
+      Promise.resolve(this.marriageSystem.update()),
+      Promise.resolve(this.conflictResolutionSystem.update()),
+      Promise.resolve(this.resourceAttractionSystem.update(scaledDelta)),
+      Promise.resolve(this.crisisPredictorSystem.update(scaledDelta)),
+      Promise.resolve(this.ambientAwarenessSystem.update(scaledDelta)),
+      Promise.resolve(this.cardDialogueSystem.update(scaledDelta)),
+      Promise.resolve(this.emergenceSystem.update(scaledDelta)),
+      Promise.resolve(this.interactionGameSystem.update(scaledDelta)),
+      Promise.resolve(this.knowledgeNetworkSystem.update(scaledDelta)),
+    ]);
+    dirtySections.push("reputation", "quests", "trade", "marriage", "conflicts", "knowledgeGraph");
 
-    this.questSystem.update();
-    dirtySections.push("quests");
-
-    this.taskSystem.update();
-    dirtySections.push("tasks");
-
-    this.tradeSystem.update();
-    dirtySections.push("trade");
-
-    this.marriageSystem.update();
-    dirtySections.push("marriage");
-
-    this.conflictResolutionSystem.update();
-    dirtySections.push("conflicts");
-
-    this.resourceAttractionSystem.update(scaledDelta);
-    this.crisisPredictorSystem.update(scaledDelta);
-    this.ambientAwarenessSystem.update(scaledDelta);
-    this.cardDialogueSystem.update(scaledDelta);
-    this.timeSystem.update(scaledDelta);
-    this.emergenceSystem.update(scaledDelta);
-    this.interactionGameSystem.update(scaledDelta);
-    this.knowledgeNetworkSystem.update(scaledDelta);
-    dirtySections.push("knowledgeGraph");
-
+    // Fase 8: Sistema de movimiento (debe ejecutarse al final para actualizar posiciones)
     this.movementSystem.update(scaledDelta);
-    dirtySections.push("entities"); // Movement cambia posiciones de entities
-
-    this.trailSystem.update(scaledDelta);
-    this._researchSystem.update();
-    dirtySections.push("research");
-
-    this._recipeDiscoverySystem.update();
-    dirtySections.push("recipes");
-
-    this._normsSystem.update();
-    dirtySections.push("norms");
+    dirtySections.push("entities");
 
     // Marcar todas las secciones afectadas como dirty
     this.stateCache.markDirtyMultiple(dirtySections);
@@ -919,7 +922,6 @@ export class SimulationRunner {
     this.tickCounter += 1;
     
     // Flush eventos antes de crear snapshot
-    const { BatchedEventEmitter } = await import("./BatchedEventEmitter");
     if (simulationEvents instanceof BatchedEventEmitter) {
       simulationEvents.flushEvents();
     }

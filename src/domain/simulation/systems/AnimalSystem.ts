@@ -11,6 +11,7 @@ import { AnimalBehavior } from "./animals/AnimalBehavior";
 import { AnimalSpawning } from "./animals/AnimalSpawning";
 import { simulationEvents, GameEventNames } from "../core/events";
 import type { WorldResourceSystem } from "./WorldResourceSystem";
+import { AnimalBatchProcessor } from "./AnimalBatchProcessor";
 
 const DEFAULT_CONFIG: AnimalSystemConfig = {
   maxAnimals: 500,
@@ -52,6 +53,10 @@ export class AnimalSystem {
   // Aumentado de 5s a 15s para reducir búsquedas espaciales costosas
   private readonly CACHE_DURATION = 15000;
 
+  // Procesador batch optimizado
+  private batchProcessor: AnimalBatchProcessor;
+  private readonly BATCH_THRESHOLD = 30; // Usar batch processing si hay 30+ animales
+
   constructor(
     gameState: GameState,
     config?: Partial<AnimalSystemConfig>,
@@ -60,6 +65,7 @@ export class AnimalSystem {
     this.gameState = gameState;
     this.worldResourceSystem = worldResourceSystem;
     this.config = { ...DEFAULT_CONFIG, ...config };
+    this.batchProcessor = new AnimalBatchProcessor();
 
     this.setupEventListeners();
     logger.info("🐾 AnimalSystem (Backend) initialized");
@@ -101,18 +107,29 @@ export class AnimalSystem {
     const deltaMinutes = (now - this.lastUpdate) / 60000;
     this.lastUpdate = now;
 
-    this.animals.forEach((animal) => {
-      if (animal.isDead) return;
+    // Filtrar animales vivos
+    const liveAnimals = Array.from(this.animals.values()).filter(
+      (a) => !a.isDead,
+    );
 
-      const oldPosition = { ...animal.position };
+    // Usar procesamiento batch si hay suficientes animales
+    if (liveAnimals.length >= this.BATCH_THRESHOLD) {
+      this.updateBatch(deltaSeconds, deltaMinutes, now);
+    } else {
+      // Procesamiento tradicional
+      this.animals.forEach((animal) => {
+        if (animal.isDead) return;
 
-      animal.age += this.config.updateInterval;
-      AnimalNeeds.updateNeeds(animal, deltaMinutes);
+        const oldPosition = { ...animal.position };
 
-      this.updateAnimalBehavior(animal, deltaSeconds);
-      this.updateSpatialGrid(animal, oldPosition);
-      this.checkAnimalDeath(animal);
-    });
+        animal.age += this.config.updateInterval;
+        AnimalNeeds.updateNeeds(animal, deltaMinutes);
+
+        this.updateAnimalBehavior(animal, deltaSeconds);
+        this.updateSpatialGrid(animal, oldPosition);
+        this.checkAnimalDeath(animal);
+      });
+    }
 
     if (now - this.lastCleanup > this.config.cleanupInterval) {
       this.cleanupDeadAnimals();
@@ -121,6 +138,63 @@ export class AnimalSystem {
     }
 
     this.updateGameStateSnapshot();
+  }
+
+  /**
+   * Actualización optimizada en batch
+   */
+  private updateBatch(
+    deltaSeconds: number,
+    deltaMinutes: number,
+    now: number,
+  ): void {
+    // Reconstruir buffers
+    this.batchProcessor.rebuildBuffers(this.animals);
+
+    const animalIdArray = this.batchProcessor.getAnimalIdArray();
+    const animalCount = animalIdArray.length;
+    if (animalCount === 0) return;
+
+    // Preparar arrays de tasas de decaimiento
+    const hungerDecayRates = new Float32Array(animalCount);
+    const thirstDecayRates = new Float32Array(animalCount);
+
+    for (let i = 0; i < animalCount; i++) {
+      const animalId = animalIdArray[i];
+      const animal = this.animals.get(animalId);
+      if (!animal || animal.isDead) continue;
+
+      const config = getAnimalConfig(animal.type);
+      if (config) {
+        hungerDecayRates[i] = config.hungerDecayRate;
+        thirstDecayRates[i] = config.thirstDecayRate;
+      }
+    }
+
+    // Actualizar necesidades en batch
+    this.batchProcessor.updateNeedsBatch(
+      hungerDecayRates,
+      thirstDecayRates,
+      deltaMinutes,
+    );
+
+    // Actualizar edades en batch
+    this.batchProcessor.updateAgesBatch(this.config.updateInterval);
+
+    // Sincronizar de vuelta a los animales
+    this.batchProcessor.syncToAnimals(this.animals);
+
+    // Procesar comportamiento (requiere lógica compleja, no se puede hacer en batch fácilmente)
+    for (let i = 0; i < animalCount; i++) {
+      const animalId = animalIdArray[i];
+      const animal = this.animals.get(animalId);
+      if (!animal || animal.isDead) continue;
+
+      const oldPosition = { ...animal.position };
+      this.updateAnimalBehavior(animal, deltaSeconds);
+      this.updateSpatialGrid(animal, oldPosition);
+      this.checkAnimalDeath(animal);
+    }
   }
 
   private updateAnimalBehavior(animal: Animal, deltaSeconds: number): void {

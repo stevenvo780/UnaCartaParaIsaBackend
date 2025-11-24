@@ -8,6 +8,7 @@ import type { DivineFavorSystem } from "./DivineFavorSystem";
 import type { InventorySystem } from "./InventorySystem";
 import type { SocialSystem } from "./SocialSystem";
 import type { Zone } from "../../types/game-types";
+import { NeedsBatchProcessor } from "./NeedsBatchProcessor";
 
 export class NeedsSystem extends EventEmitter {
   private gameState: GameState;
@@ -25,6 +26,10 @@ export class NeedsSystem extends EventEmitter {
   private zoneCache = new Map<string, { zones: Zone[]; timestamp: number }>();
   // Aumentado de 5s a 15s para reducir búsquedas espaciales costosas
   private readonly ZONE_CACHE_TTL = 15000;
+
+  // Procesador batch optimizado
+  private batchProcessor: NeedsBatchProcessor;
+  private readonly BATCH_THRESHOLD = 20; // Usar batch processing si hay 20+ entidades
 
   constructor(
     gameState: GameState,
@@ -63,6 +68,7 @@ export class NeedsSystem extends EventEmitter {
     };
 
     this.entityNeeds = new Map();
+    this.batchProcessor = new NeedsBatchProcessor();
 
     if (systems) {
       this.lifeCycleSystem = systems.lifeCycleSystem;
@@ -99,6 +105,19 @@ export class NeedsSystem extends EventEmitter {
     const dtSeconds = (now - this.lastUpdate) / 1000;
     this.lastUpdate = now;
 
+    // Usar procesamiento batch si hay suficientes entidades
+    if (this.entityNeeds.size >= this.BATCH_THRESHOLD) {
+      this.updateBatch(dtSeconds, now);
+    } else {
+      // Procesamiento tradicional para pocas entidades
+      this.updateTraditional(dtSeconds, now);
+    }
+  }
+
+  /**
+   * Actualización tradicional (para pocas entidades)
+   */
+  private updateTraditional(dtSeconds: number, now: number): void {
     for (const [entityId, needs] of this.entityNeeds.entries()) {
       this.applyNeedDecay(needs, dtSeconds, entityId);
       this.handleZoneBenefits(entityId, needs, dtSeconds);
@@ -108,6 +127,79 @@ export class NeedsSystem extends EventEmitter {
         this.applyCrossEffects(needs);
       }
 
+      this.checkEmergencyNeeds(entityId, needs);
+
+      if (this.checkForDeath(entityId, needs)) {
+        continue;
+      }
+
+      this.emitNeedEvents(entityId, needs);
+    }
+  }
+
+  /**
+   * Actualización optimizada en batch (para muchas entidades)
+   */
+  private updateBatch(dtSeconds: number, now: number): void {
+    // Reconstruir buffers si es necesario
+    this.batchProcessor.rebuildBuffers(this.entityNeeds);
+
+    const entityCount = this.entityNeeds.size;
+    if (entityCount === 0) return;
+
+    // Preparar arrays de multiplicadores
+    const ageMultipliers = new Float32Array(entityCount);
+    const divineModifiers = new Float32Array(entityCount);
+    const decayRates = new Float32Array(7); // 7 necesidades
+
+    // Llenar tasas de decaimiento base
+    decayRates[0] = this.config.decayRates.hunger;
+    decayRates[1] = this.config.decayRates.thirst;
+    decayRates[2] = this.config.decayRates.energy;
+    decayRates[3] = this.config.decayRates.hygiene;
+    decayRates[4] = this.config.decayRates.social;
+    decayRates[5] = this.config.decayRates.fun;
+    decayRates[6] = this.config.decayRates.mentalHealth;
+
+    // Calcular multiplicadores por entidad
+    const entityIdArray = this.batchProcessor.getEntityIdArray();
+    for (let i = 0; i < entityCount; i++) {
+      const entityId = entityIdArray[i];
+      ageMultipliers[i] = this.getAgeDecayMultiplier(entityId);
+
+      // Calcular modificador divino
+      if (this.divineFavorSystem) {
+        const favorObj = this.divineFavorSystem.getFavor(entityId);
+        if (favorObj) {
+          divineModifiers[i] = 1 - favorObj.favor * 0.3;
+        } else {
+          divineModifiers[i] = 1.0;
+        }
+      } else {
+        divineModifiers[i] = 1.0;
+      }
+    }
+
+    // Aplicar decaimiento en batch
+    this.batchProcessor.applyDecayBatch(
+      decayRates,
+      ageMultipliers,
+      divineModifiers,
+      dtSeconds,
+    );
+
+    // Aplicar cross-effects en batch
+    if (this.config.crossEffectsEnabled) {
+      this.batchProcessor.applyCrossEffectsBatch();
+    }
+
+    // Sincronizar de vuelta al Map
+    this.batchProcessor.syncToMap(this.entityNeeds);
+
+    // Procesar efectos que requieren lógica compleja (zones, social, emergencias)
+    for (const [entityId, needs] of this.entityNeeds.entries()) {
+      this.handleZoneBenefits(entityId, needs, dtSeconds);
+      this.applySocialMoraleBoost(entityId, needs);
       this.checkEmergencyNeeds(entityId, needs);
 
       if (this.checkForDeath(entityId, needs)) {

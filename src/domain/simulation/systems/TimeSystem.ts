@@ -1,5 +1,6 @@
 import { EventEmitter } from "node:events";
 import type { GameState } from "../../types/game-types.js";
+import { simulationEvents, GameEventNames } from "../core/events";
 
 export interface TimeOfDay {
   hour: number;
@@ -152,6 +153,12 @@ export class TimeSystem extends EventEmitter {
         this.gameState.weather.lastChange = Date.now();
         this.gameState.weather.duration = this.currentWeather.duration;
       }
+
+      // Emitir evento de cambio de tiempo
+      simulationEvents.emit(GameEventNames.TIME_CHANGED, {
+        time: { ...this.currentTime },
+        timestamp: Date.now(),
+      });
     }
   }
 
@@ -244,6 +251,15 @@ export class TimeSystem extends EventEmitter {
       this.gameState.weather.lastChange = Date.now();
       this.gameState.weather.duration = this.currentWeather.duration;
     }
+
+    // Emitir evento de cambio de clima
+    const effects = this.calculateEnvironmentalEffects();
+    simulationEvents.emit(GameEventNames.TIME_WEATHER_CHANGED, {
+      weather: { ...this.currentWeather },
+      time: { ...this.currentTime },
+      effects,
+      timestamp: Date.now(),
+    });
   }
 
   private getWeatherProbabilities(): Record<string, number> {

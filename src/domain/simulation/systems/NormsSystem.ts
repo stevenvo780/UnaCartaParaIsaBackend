@@ -5,6 +5,7 @@ import {
   GuardDispatch,
   NormComplianceStats,
 } from "../../types/simulation/norms";
+import { simulationEvents, GameEventNames } from "../core/events";
 
 export class NormsSystem {
   private gameState: GameState;
@@ -66,6 +67,25 @@ export class NormsSystem {
     if (this.sanctionHistory.length > this.MAX_HISTORY) {
       this.sanctionHistory.shift();
     }
+
+    // Emitir eventos de violación y sanción
+    simulationEvents.emit(GameEventNames.NORM_VIOLATED, {
+      violationId: violation.id,
+      attackerId,
+      targetId,
+      zoneId,
+      zoneType,
+      timestamp: Date.now(),
+    });
+
+    simulationEvents.emit(GameEventNames.NORM_SANCTION_APPLIED, {
+      agentId: attackerId,
+      violationType: sanction.violationType,
+      reputationPenalty: sanction.reputationPenalty,
+      trustPenalty: sanction.trustPenalty,
+      truceDuration: sanction.truceDuration,
+      timestamp: Date.now(),
+    });
 
     return {
       violated: true,

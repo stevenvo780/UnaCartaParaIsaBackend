@@ -4,6 +4,7 @@ import {
   QuestProgress,
   QuestEvent,
 } from "../../types/simulation/quests";
+import { simulationEvents, GameEventNames } from "../core/events";
 
 const QUEST_CATALOG: Quest[] = [
   {
@@ -196,6 +197,13 @@ export class QuestSystem {
       timestamp: Date.now(),
     };
 
+    // Emitir evento al sistema de eventos
+    simulationEvents.emit(GameEventNames.QUEST_STARTED, {
+      questId,
+      questTitle: quest.title,
+      timestamp: Date.now(),
+    });
+
     return { success: true, event };
   }
 
@@ -239,6 +247,15 @@ export class QuestSystem {
       questId,
       timestamp: Date.now(),
     };
+
+    // Emitir evento al sistema de eventos
+    simulationEvents.emit(GameEventNames.QUEST_COMPLETED, {
+      questId,
+      questTitle: quest.title,
+      rewards: quest.rewards,
+      unlockedFeatures,
+      timestamp: Date.now(),
+    });
 
     return {
       success: true,
@@ -304,11 +321,21 @@ export class QuestSystem {
       timestamp: Date.now(),
     });
 
-    return {
+    const event: QuestEvent = {
       type: "QUEST_FAILED",
       questId,
       timestamp: Date.now(),
     };
+
+    // Emitir evento al sistema de eventos
+    simulationEvents.emit(GameEventNames.QUEST_FAILED, {
+      questId,
+      questTitle: quest.title,
+      reason: _reason,
+      timestamp: Date.now(),
+    });
+
+    return event;
   }
 
   private applyQuestRewards(quest: Quest): { unlockedFeatures: string[] } {
