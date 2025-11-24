@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { ConflictResolutionSystem } from "../../src/simulation/systems/ConflictResolutionSystem.ts";
+import { ConflictResolutionSystem } from "../../src/domain/simulation/systems/ConflictResolutionSystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 

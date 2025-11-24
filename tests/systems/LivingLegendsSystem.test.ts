@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { LivingLegendsSystem } from "../../src/simulation/systems/LivingLegendsSystem.ts";
+import { LivingLegendsSystem } from "../../src/domain/simulation/systems/LivingLegendsSystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
-import { simulationEvents, GameEventNames } from "../../src/simulation/events.ts";
+import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events.ts";
 
 describe("LivingLegendsSystem", () => {
   let gameState: GameState;

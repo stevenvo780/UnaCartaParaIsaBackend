@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { CraftingSystem } from "../../src/simulation/systems/CraftingSystem.ts";
-import { EnhancedCraftingSystem } from "../../src/simulation/systems/EnhancedCraftingSystem.ts";
-import { InventorySystem } from "../../src/simulation/systems/InventorySystem.ts";
+import { CraftingSystem } from "../../src/domain/simulation/systems/CraftingSystem.ts";
+import { EnhancedCraftingSystem } from "../../src/domain/simulation/systems/EnhancedCraftingSystem.ts";
+import { InventorySystem } from "../../src/domain/simulation/systems/InventorySystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 

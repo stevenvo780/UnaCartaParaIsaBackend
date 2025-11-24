@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { ResearchSystem } from "../../src/simulation/systems/ResearchSystem.ts";
+import { ResearchSystem } from "../../src/domain/simulation/systems/ResearchSystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 

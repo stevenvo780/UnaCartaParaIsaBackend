@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Request, Response } from 'express';
-import saveRoutes from '../../src/routes/saveRoutes.ts";
-import { saveController } from '../../src/controllers/saveController.ts";
+import saveRoutes from "../../src/infrastructure/routes/saveRoutes.ts";
+import { saveController } from "../../src/infrastructure/controllers/saveController.ts";
 
 vi.mock('../../src/controllers/saveController.ts", () => ({
   saveController: {

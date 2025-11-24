@@ -56,6 +56,8 @@ export class TimeSystem extends EventEmitter {
   }
 
   public update(_deltaMs: number): void {
+    // deltaMs parameter kept for API compatibility but not currently used
+    void _deltaMs;
     const now = Date.now();
 
     if (now - this.lastTimeUpdate >= this.TIME_UPDATE_INTERVAL) {

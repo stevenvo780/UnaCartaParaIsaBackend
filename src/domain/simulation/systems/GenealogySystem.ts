@@ -23,6 +23,7 @@ export class GenealogySystem {
 
   constructor(_gameState: GameState, config?: Partial<GenealogyConfig>) {
     // gameState kept for potential future use
+    void _gameState;
     this.config = {
       mutationRate: 0.15,
       trackHistory: true,

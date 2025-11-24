@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { EmergenceSystem } from "../../src/simulation/systems/EmergenceSystem.ts";
-import { NeedsSystem } from "../../src/simulation/systems/NeedsSystem.ts";
-import { LifeCycleSystem } from "../../src/simulation/systems/LifeCycleSystem.ts";
-import { SocialSystem } from "../../src/simulation/systems/SocialSystem.ts";
-import { EconomySystem } from "../../src/simulation/systems/EconomySystem.ts";
+import { EmergenceSystem } from "../../src/domain/simulation/systems/EmergenceSystem.ts";
+import { NeedsSystem } from "../../src/domain/simulation/systems/NeedsSystem.ts";
+import { LifeCycleSystem } from "../../src/domain/simulation/systems/LifeCycleSystem.ts";
+import { SocialSystem } from "../../src/domain/simulation/systems/SocialSystem.ts";
+import { EconomySystem } from "../../src/domain/simulation/systems/EconomySystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 

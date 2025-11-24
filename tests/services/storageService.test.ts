@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import fs from 'fs/promises';
 import path from 'path';
-import { StorageService } from '../../src/services/storageService.ts";
+import { StorageService } from "../../src/infrastructure/services/storageService.ts";
 
 vi.mock('fs/promises');
 vi.mock('@google-cloud/storage', () => ({

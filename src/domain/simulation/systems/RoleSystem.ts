@@ -149,6 +149,8 @@ export class RoleSystem extends EventEmitter {
   }
 
   public update(_delta: number): void {
+    // delta parameter kept for API compatibility but not currently used
+    void _delta;
     const now = Date.now();
     const dt = (now - this.lastUpdate) / 1000;
     if (dt < 1) return;

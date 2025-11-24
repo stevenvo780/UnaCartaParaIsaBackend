@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { DivineFavorSystem } from "../../src/simulation/systems/DivineFavorSystem.ts";
+import { DivineFavorSystem } from "../../src/domain/simulation/systems/DivineFavorSystem.ts";
 
 describe("DivineFavorSystem", () => {
   let divineFavorSystem: DivineFavorSystem;

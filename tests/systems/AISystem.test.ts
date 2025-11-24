@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { AISystem } from "../../src/simulation/systems/AISystem.ts";
-import { NeedsSystem } from "../../src/simulation/systems/NeedsSystem.ts";
-import { RoleSystem } from "../../src/simulation/systems/RoleSystem.ts";
-import { WorldResourceSystem } from "../../src/simulation/systems/WorldResourceSystem.ts";
-import { LifeCycleSystem } from "../../src/simulation/systems/LifeCycleSystem.ts";
+import { AISystem } from "../../src/domain/simulation/systems/AISystem.ts";
+import { NeedsSystem } from "../../src/domain/simulation/systems/NeedsSystem.ts";
+import { RoleSystem } from "../../src/domain/simulation/systems/RoleSystem.ts";
+import { WorldResourceSystem } from "../../src/domain/simulation/systems/WorldResourceSystem.ts";
+import { LifeCycleSystem } from "../../src/domain/simulation/systems/LifeCycleSystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
-import { simulationEvents, GameEventNames } from "../../src/simulation/events.ts";
+import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events.ts";
 
 describe("AISystem", () => {
   let gameState: GameState;

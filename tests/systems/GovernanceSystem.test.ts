@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { GovernanceSystem } from "../../src/simulation/systems/GovernanceSystem.ts";
-import { InventorySystem } from "../../src/simulation/systems/InventorySystem.ts";
-import { LifeCycleSystem } from "../../src/simulation/systems/LifeCycleSystem.ts";
-import { DivineFavorSystem } from "../../src/simulation/systems/DivineFavorSystem.ts";
-import { ResourceReservationSystem } from "../../src/simulation/systems/ResourceReservationSystem.ts";
+import { GovernanceSystem } from "../../src/domain/simulation/systems/GovernanceSystem.ts";
+import { InventorySystem } from "../../src/domain/simulation/systems/InventorySystem.ts";
+import { LifeCycleSystem } from "../../src/domain/simulation/systems/LifeCycleSystem.ts";
+import { DivineFavorSystem } from "../../src/domain/simulation/systems/DivineFavorSystem.ts";
+import { ResourceReservationSystem } from "../../src/domain/simulation/systems/ResourceReservationSystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 

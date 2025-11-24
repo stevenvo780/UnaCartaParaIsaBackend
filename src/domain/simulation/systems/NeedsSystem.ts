@@ -6,6 +6,8 @@ export class NeedsSystem {
 
   constructor(_gameState: unknown, _lifeCycleSystem?: unknown) {
     // Constructor parameters kept for API compatibility but not used internally
+    void _gameState;
+    void _lifeCycleSystem;
     this.config = {
       hungerDecayRate: 0.1,
       thirstDecayRate: 0.15,

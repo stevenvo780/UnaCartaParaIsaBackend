@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import worldRoutes from '../../src/routes/worldRoutes.ts";
-import { worldController } from '../../src/controllers/worldController.ts";
+import worldRoutes from "../../src/infrastructure/routes/worldRoutes.ts";
+import { worldController } from "../../src/infrastructure/controllers/worldController.ts";
 
 describe('WorldRoutes', () => {
   it('debe exportar las rutas', () => {

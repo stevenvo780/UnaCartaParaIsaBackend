@@ -200,6 +200,8 @@ export class BuildingMaintenanceSystem {
   }
 
   public startUpgrade(zoneId: string, _agentId: string): boolean {
+    // agentId parameter kept for API compatibility but not currently used
+    void _agentId;
     const state = this.buildingStates.get(zoneId);
     if (!state) return false;
 

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { CombatSystem } from "../../src/simulation/systems/CombatSystem.ts";
-import { InventorySystem } from "../../src/simulation/systems/InventorySystem.ts";
-import { LifeCycleSystem } from "../../src/simulation/systems/LifeCycleSystem.ts";
-import { SocialSystem } from "../../src/simulation/systems/SocialSystem.ts";
+import { CombatSystem } from "../../src/domain/simulation/systems/CombatSystem.ts";
+import { InventorySystem } from "../../src/domain/simulation/systems/InventorySystem.ts";
+import { LifeCycleSystem } from "../../src/domain/simulation/systems/LifeCycleSystem.ts";
+import { SocialSystem } from "../../src/domain/simulation/systems/SocialSystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Request, Response } from 'express';
-import { worldController } from '../../src/controllers/worldController.ts";
-import { worldGenerationService } from '../../src/services/worldGenerationService.ts";
+import { worldController } from "../../src/infrastructure/controllers/worldController.ts";
+import { worldGenerationService } from "../../src/infrastructure/services/worldGenerationService.ts";
 
 vi.mock('../../src/services/worldGenerationService.ts", () => ({
   worldGenerationService: {

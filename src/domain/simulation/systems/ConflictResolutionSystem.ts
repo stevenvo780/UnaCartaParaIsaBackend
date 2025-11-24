@@ -1,4 +1,5 @@
 import { GameState } from "../../types/game-types";
+import type { ConflictState } from "../../types/game-types";
 import {
   ActiveConflict,
   ConflictRecord,
@@ -163,7 +164,7 @@ export class ConflictResolutionSystem {
 
     // Escribir estado en GameState para sincronización con frontend
     if (!this.gameState.conflicts) {
-      this.gameState.conflicts = {
+      const initialConflictState: ConflictState = {
         active: [],
         history: [],
         stats: {
@@ -174,14 +175,15 @@ export class ConflictResolutionSystem {
           truceAcceptanceRate: 0,
         },
       };
+      this.gameState.conflicts = initialConflictState;
     }
 
     // El frontend espera activeConflicts, no active
     const activeConflicts = this.getActiveConflicts();
     this.gameState.conflicts.active = activeConflicts;
     // También agregar como activeConflicts para compatibilidad con frontend
-    const conflictsWithActiveConflicts = this.gameState.conflicts as unknown as { activeConflicts?: typeof activeConflicts };
-    conflictsWithActiveConflicts.activeConflicts = activeConflicts;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (this.gameState.conflicts as any).activeConflicts = activeConflicts;
     this.gameState.conflicts.history = this.getConflictHistory(50);
     this.gameState.conflicts.stats = this.getConflictStats();
 

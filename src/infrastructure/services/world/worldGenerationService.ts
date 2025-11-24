@@ -20,7 +20,9 @@ export class WorldGenerationService {
     this.noiseGen = new NoiseUtils(config.seed);
     // rng and voronoiGen would be initialized here for future use
     // Currently only noiseGen is used for biome generation
-    void config; // Keep config parameter for potential future use
+    // Config is used via config.seed above, but voronoiGen and rng are not yet implemented
+    void config.width; // Keep for potential future use
+    void config.height; // Keep for potential future use
   }
 
   async generateChunk(x: number, y: number, config: WorldGenConfig): Promise<TerrainTile[][]> {

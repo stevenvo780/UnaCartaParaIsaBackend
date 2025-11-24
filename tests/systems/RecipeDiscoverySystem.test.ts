@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { RecipeDiscoverySystem } from "../../src/simulation/systems/RecipeDiscoverySystem.ts";
+import { RecipeDiscoverySystem } from "../../src/domain/simulation/systems/RecipeDiscoverySystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 

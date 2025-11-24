@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Request, Response } from 'express';
-import { simulationRunner } from '../../src/simulation/index.ts";
-import { storageService } from '../../src/services/storageService.ts";
+import { simulationRunner } from "../../src/domain/simulation/core/index.ts";
+import { storageService } from "../../src/infrastructure/services/storageService.ts";
 
 vi.mock('../../src/simulation/index.ts", () => ({
   simulationRunner: {

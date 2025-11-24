@@ -66,6 +66,8 @@ export class CrisisPredictorSystem {
   }
 
   private computeIndicators(_now: number): CrisisIndicator[] {
+    // now parameter kept for API compatibility but not currently used
+    void _now;
     const needs = this.needsSystem.getAllNeeds();
     const totalAgents = needs.length || 1;
 

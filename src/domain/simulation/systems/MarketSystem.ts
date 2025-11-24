@@ -28,6 +28,8 @@ export class MarketSystem {
     _lifeCycleSystem: LifeCycleSystem,
     config?: Partial<MarketConfig>
   ) {
+    // lifeCycleSystem parameter kept for API compatibility but not currently used
+    void _lifeCycleSystem;
     this.state = state;
     this.inventorySystem = inventorySystem;
     this.config = { ...DEFAULT_MARKET_CONFIG, ...config };

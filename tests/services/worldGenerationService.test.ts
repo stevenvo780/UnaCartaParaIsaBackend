@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { WorldGenerationService } from '../../src/services/worldGenerationService.ts";
+import { WorldGenerationService } from "../../src/infrastructure/services/worldGenerationService.ts";
 
 describe('WorldGenerationService', () => {
   let service: WorldGenerationService;

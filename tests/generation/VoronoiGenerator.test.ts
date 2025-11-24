@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { VoronoiGenerator } from "../../src/generation/VoronoiGenerator.ts";
+import { VoronoiGenerator } from "../../src/domain/world/generation/VoronoiGenerator.ts";
 
 describe("VoronoiGenerator", () => {
   let generator: VoronoiGenerator;

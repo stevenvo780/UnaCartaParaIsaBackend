@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { AnimalSystem } from "../../src/simulation/systems/AnimalSystem.ts";
-import { WorldResourceSystem } from "../../src/simulation/systems/WorldResourceSystem.ts";
+import { AnimalSystem } from "../../src/domain/simulation/systems/AnimalSystem.ts";
+import { WorldResourceSystem } from "../../src/domain/simulation/systems/WorldResourceSystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
-import { simulationEvents, GameEventNames } from "../../src/simulation/events.ts";
+import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events.ts";
 
 describe("AnimalSystem", () => {
   let gameState: GameState;

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { TimeSystem } from "../../src/simulation/systems/TimeSystem.ts";
+import { TimeSystem } from "../../src/domain/simulation/systems/TimeSystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 
