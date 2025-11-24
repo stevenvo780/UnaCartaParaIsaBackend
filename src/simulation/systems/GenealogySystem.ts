@@ -3,10 +3,7 @@ import {
   Ancestor,
   FamilyTree,
   GenealogyEvent,
-  Lineage,
-  TraitInheritance,
 } from "../types/genealogy.js";
-import { AgentProfile, AgentTraits } from "../types/agents.js";
 
 interface GenealogyConfig {
   mutationRate: number;
@@ -15,7 +12,6 @@ interface GenealogyConfig {
 }
 
 export class GenealogySystem {
-  private gameState: GameState;
   private config: GenealogyConfig;
   private familyTree: FamilyTree = {
     lineages: new Map(),

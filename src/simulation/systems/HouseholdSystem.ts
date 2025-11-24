@@ -1,6 +1,5 @@
 import type { GameState, Zone } from '../../types/game-types.js';
 import type { Household, HouseholdMember, HouseholdSystemConfig } from '../types/household.js';
-import type { AgentProfile } from '../types/agents.js';
 import { simulationEvents, GameEventNames } from '../events.js';
 
 const DEFAULT_CONFIG: HouseholdSystemConfig = {
@@ -25,7 +24,7 @@ export class HouseholdSystem {
     console.log('🏠 HouseholdSystem (Backend) initialized');
   }
 
-  public update(deltaMs: number): void {
+  public update(_deltaMs: number): void {
     const now = Date.now();
     if (now - this.lastUpdate < this.config.updateIntervalMs) return;
     this.lastUpdate = now;

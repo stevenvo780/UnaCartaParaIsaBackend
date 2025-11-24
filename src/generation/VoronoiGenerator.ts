@@ -143,8 +143,10 @@ export class VoronoiGenerator {
   }
 
   private computeVoronoi(sites: Point[]): VoronoiCell[] {
-    // @ts-ignore
-    const delaunay = Delaunator.from(sites.map((site) => [site.x, site.y]));
+    // Delaunator works with flat arrays of coordinates
+    const delaunay = Delaunator.from(
+      sites.map((site) => [site.x, site.y])
+    );
 
     const cells: VoronoiCell[] = [];
 
@@ -165,7 +167,7 @@ export class VoronoiGenerator {
   }
 
   private getVoronoiCellVertices(
-    delaunay: any,
+    delaunay: Delaunator<Float64Array>,
     siteIndex: number,
   ): Point[] {
     const vertices: Point[] = [];

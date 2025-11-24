@@ -123,7 +123,7 @@ export class CrisisPredictorSystem {
     return "low";
   }
 
-  private resolveTrend(name: string, value: number): CrisisTrend {
+  private resolveTrend(name: string, _value: number): CrisisTrend {
     const history = this.indicatorHistory.get(name);
     if (!history || history.length < 5) return "stable";
     const recentAvg = history.slice(-3).reduce((acc, v) => acc + v, 0) / 3;

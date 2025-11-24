@@ -25,15 +25,13 @@ const CONFLICT_CONFIG = {
 } as const;
 
 export class ConflictResolutionSystem {
-  private gameState: GameState;
   private activeCards = new Map<string, { aId: string; bId: string }>();
   private conflictHistory: ConflictRecord[] = [];
   private mediationAttempts: MediationAttempt[] = [];
   private readonly MAX_HISTORY = 200;
   private firstConflictTime: number | null = null;
 
-  constructor(gameState: GameState) {
-    this.gameState = gameState;
+  constructor(_gameState: GameState) {
   }
 
   public handleCombatHit(data: {

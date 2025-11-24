@@ -88,11 +88,17 @@ export class WorldResourceSystem {
     const config = getResourceConfig(type);
     if (!config) return null;
 
+    // Validate that type is a valid WorldResourceType
+    const validTypes: WorldResourceType[] = ["tree", "rock", "trash_pile", "water_source", "berry_bush", "mushroom_patch", "wheat_crop"];
+    if (!validTypes.includes(type as WorldResourceType)) {
+      return null;
+    }
+
     const id = `resource_${type}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
 
     const resource: WorldResourceInstance = {
       id,
-      type,
+      type: type as WorldResourceType,
       position,
       state: "pristine",
       harvestCount: 0,

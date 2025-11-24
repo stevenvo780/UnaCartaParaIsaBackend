@@ -313,7 +313,14 @@ export class GovernanceSystem {
 
     const idleAgents = entities.filter((entity) => {
       const activity = entity.state;
-      return activity === "idle" || (typeof activity === 'object' && activity !== null && 'status' in activity && activity.status === "idle");
+      if (typeof activity === 'string') {
+        return activity === "idle";
+      }
+      if (typeof activity === 'object' && activity !== null && 'status' in activity) {
+        const status = (activity as { status?: string }).status;
+        return status === "idle";
+      }
+      return false;
     }).length;
     const workersAvailable = Math.max(0, population - idleAgents);
 

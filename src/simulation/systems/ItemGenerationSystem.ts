@@ -3,7 +3,6 @@ import type {
   GenerationRule,
   GeneratedItem,
   ItemGenerationConfig,
-  ZoneItemState,
 } from '../types/itemGeneration.js';
 import { simulationEvents, GameEventNames } from '../events.js';
 
@@ -37,7 +36,7 @@ export class ItemGenerationSystem {
   /**
    * Main update loop - triggers generation based on interval
    */
-  public update(deltaMs: number): void {
+  public update(_deltaMs: number): void {
     if (!this.config.enableAutoGeneration) return;
 
     const now = Date.now();

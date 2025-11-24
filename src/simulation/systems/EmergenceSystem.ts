@@ -105,7 +105,7 @@ export class EmergenceSystem extends EventEmitter {
     this.currentMetrics = this.createInitialMetrics();
   }
 
-  public update(deltaMs: number): void {
+  public update(_deltaMs: number): void {
     const now = Date.now();
     if (now - this.lastEvaluation >= this.config.evaluationIntervalMs) {
       this.evaluatePatterns();

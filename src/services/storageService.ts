@@ -4,11 +4,18 @@ import fs from 'fs/promises';
 import path from 'path';
 import { CONFIG } from '../config/config.js';
 
+export interface GameStats {
+  population?: number;
+  resources?: Record<string, number>;
+  cycles?: number;
+  [key: string]: unknown;
+}
+
 export interface SaveMetadata {
   id: string;
   timestamp: number;
   gameTime: number;
-  stats: any;
+  stats: GameStats;
   size: number;
   modified: string;
 }
@@ -16,8 +23,8 @@ export interface SaveMetadata {
 export interface SaveData {
   timestamp: number;
   gameTime: number;
-  stats: any;
-  [key: string]: any;
+  stats: GameStats;
+  [key: string]: unknown;
 }
 
 export class StorageService {
@@ -195,8 +202,9 @@ export class StorageService {
 
       console.log(`📦 Backup to NAS: ${remotePath}`);
       return true;
-    } catch (error: any) {
-      console.error('NAS backup failed:', error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('NAS backup failed:', errorMessage);
       return false;
     } finally {
       await sftp.end();

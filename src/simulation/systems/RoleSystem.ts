@@ -283,10 +283,12 @@ export class RoleSystem extends EventEmitter {
       };
     }
 
-    const efficiency = this.calculateEfficiency(agent, bestRole);
+    // TypeScript guard: bestRole is now definitely RoleConfig
+    const selectedRole: RoleConfig = bestRole;
+    const efficiency = this.calculateEfficiency(agent, selectedRole);
     const role: AgentRole = {
       agentId: agent.id,
-      roleType: bestRole.type,
+      roleType: selectedRole.type,
       assignedAt: Date.now(),
       currentShift: this.currentShift,
       efficiency,
@@ -297,9 +299,9 @@ export class RoleSystem extends EventEmitter {
     this.roles.set(agent.id, role);
     this.rebuildSchedule();
 
-    console.log(`👷 Rol asignado: ${agent.name || agent.id} → ${bestRole.name}`);
+    console.log(`👷 Rol asignado: ${agent.name || agent.id} → ${selectedRole.name}`);
 
-    return { success: true, agentId: agent.id, roleType: bestRole.type };
+    return { success: true, agentId: agent.id, roleType: selectedRole.type };
   }
 
   private meetsRequirements(agent: AgentProfile, role: RoleConfig): boolean {

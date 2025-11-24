@@ -33,8 +33,6 @@ export class LifeCycleSystem {
   private gameState: GameState;
   private config: LifeCycleConfig;
   private agents = new Map<string, AgentProfile>();
-  private lastUpdate = 0;
-  private reproductionCooldown = new Map<string, number>();
 
   constructor(gameState: GameState, config?: Partial<LifeCycleConfig>) {
     this.gameState = gameState;
@@ -61,7 +59,6 @@ export class LifeCycleSystem {
   }
 
   public update(deltaTimeMs: number): void {
-    const now = Date.now();
     const dtSec = deltaTimeMs / 1000;
     const yearInc = dtSec / this.config.secondsPerYear;
 

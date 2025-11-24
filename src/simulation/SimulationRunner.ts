@@ -219,21 +219,24 @@ export class SimulationRunner {
       }
     );
 
-    // Setup event capture for snapshot - capture all events
-    this.eventCaptureListener = (eventName: string, payload: unknown) => {
+    // Setup event capture for snapshot - add listeners for all known events
+    const eventCaptureListener = (eventName: string, payload: unknown) => {
       this.capturedEvents.push({
         type: eventName,
         payload,
         timestamp: Date.now(),
       });
     };
+    this.eventCaptureListener = eventCaptureListener;
     
-    // Capture all events by wrapping the emit method
-    const originalEmit = simulationEvents.emit.bind(simulationEvents);
-    simulationEvents.emit = (eventName: string, ...args: unknown[]) => {
-      this.eventCaptureListener(eventName, args[0]);
-      return originalEmit(eventName, ...args);
-    };
+    // Add listeners for all game events to capture them
+    Object.values(GameEventNames).forEach((eventName) => {
+      simulationEvents.on(eventName, (payload: unknown) => {
+        if (this.eventCaptureListener) {
+          this.eventCaptureListener(eventName, payload);
+        }
+      });
+    });
   }
 
   public initializeWorldResources(worldConfig: { width: number; height: number; tileSize: number; biomeMap: string[][] }): void {

@@ -1,10 +1,8 @@
 import type { GameState, Zone } from '../../types/game-types.js';
 import type { EconomyConfig, ResourceType } from '../types/economy.js';
-import type { SimulationEntity } from '../schema.js';
 import { InventorySystem } from './InventorySystem.js';
 import { SocialSystem } from './SocialSystem.js';
 import { LifeCycleSystem } from './LifeCycleSystem.js';
-import { SpatialGrid } from '../../utils/SpatialGrid.js';
 
 const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
   workDurationMs: 5000,
