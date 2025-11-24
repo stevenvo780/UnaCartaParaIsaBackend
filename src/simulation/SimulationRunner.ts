@@ -3,6 +3,10 @@ import type { GameResources, GameState } from "../types/game-types.js";
 import { cloneGameState, createInitialGameState } from "./defaultState.js";
 import { WorldResourceSystem } from "./systems/WorldResourceSystem.js";
 import { LivingLegendsSystem } from "./systems/LivingLegendsSystem.js";
+import { LifeCycleSystem } from "./systems/LifeCycleSystem.js";
+import { NeedsSystem } from "./systems/NeedsSystem.js";
+import { GenealogySystem } from "./systems/GenealogySystem.js";
+import { SocialSystem } from "./systems/SocialSystem.js";
 import { simulationEvents, GameEventNames } from "./events.js";
 import type {
   SimulationCommand,
@@ -27,6 +31,10 @@ export class SimulationRunner {
   private timeScale = 1;
   private worldResourceSystem: WorldResourceSystem;
   private livingLegendsSystem: LivingLegendsSystem;
+  private lifeCycleSystem: LifeCycleSystem;
+  private needsSystem: NeedsSystem;
+  private genealogySystem: GenealogySystem;
+  private socialSystem: SocialSystem;
 
   constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
     this.state = initialState ?? createInitialGameState();
@@ -34,6 +42,10 @@ export class SimulationRunner {
     this.maxCommandQueue = config?.maxCommandQueue ?? 200;
     this.worldResourceSystem = new WorldResourceSystem(this.state);
     this.livingLegendsSystem = new LivingLegendsSystem(this.state);
+    this.lifeCycleSystem = new LifeCycleSystem(this.state);
+    this.needsSystem = new NeedsSystem(this.state, this.lifeCycleSystem);
+    this.genealogySystem = new GenealogySystem(this.state);
+    this.socialSystem = new SocialSystem(this.state);
   }
 
   start(): void {
@@ -84,9 +96,16 @@ export class SimulationRunner {
     this.lastUpdate = now;
 
     this.processCommands();
-    this.advanceSimulation(delta * this.timeScale);
-    this.worldResourceSystem.update(delta * this.timeScale);
-    this.livingLegendsSystem.update(delta * this.timeScale);
+    const scaledDelta = delta * this.timeScale;
+
+    this.advanceSimulation(scaledDelta);
+    this.worldResourceSystem.update(scaledDelta);
+    this.livingLegendsSystem.update(scaledDelta);
+    this.lifeCycleSystem.update(scaledDelta);
+    this.needsSystem.update(scaledDelta);
+    this.socialSystem.update(scaledDelta);
+    // Genealogy usually updates on events, but if it has a tick:
+    // this.genealogySystem.update(scaledDelta);
 
     this.tickCounter += 1;
     const snapshot = this.getSnapshot();
