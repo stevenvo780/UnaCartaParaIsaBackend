@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import worldRoutes from "../../src/infrastructure/routes/worldRoutes.ts";
+import worldRoutes from "../../src/application/routes/worldRoutes.ts";
 import { worldController } from "../../src/infrastructure/controllers/worldController.ts";
 
 describe('WorldRoutes', () => {

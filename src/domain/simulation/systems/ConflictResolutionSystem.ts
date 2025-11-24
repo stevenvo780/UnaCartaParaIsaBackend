@@ -37,6 +37,20 @@ export class ConflictResolutionSystem {
     this.gameState = gameState;
   }
 
+  private createInitialConflictState(): ConflictState {
+    return {
+      active: [],
+      history: [],
+      stats: {
+        totalConflicts: 0,
+        activeNegotiations: 0,
+        totalMediations: 0,
+        mediationSuccessRate: 0,
+        truceAcceptanceRate: 0,
+      },
+    };
+  }
+
   public handleCombatHit(data: {
     attackerId: string;
     targetId: string;
@@ -164,18 +178,7 @@ export class ConflictResolutionSystem {
 
     // Escribir estado en GameState para sincronización con frontend
     if (!this.gameState.conflicts) {
-      const initialConflictState: ConflictState = {
-        active: [],
-        history: [],
-        stats: {
-          totalConflicts: 0,
-          activeNegotiations: 0,
-          totalMediations: 0,
-          mediationSuccessRate: 0,
-          truceAcceptanceRate: 0,
-        },
-      };
-      this.gameState.conflicts = initialConflictState;
+      this.gameState.conflicts = this.createInitialConflictState();
     }
 
     // El frontend espera activeConflicts, no active
