@@ -25,6 +25,18 @@ export interface WeatherCondition {
   duration: number;
 }
 
+export interface EnvironmentalEffects {
+  needsMultipliers: {
+    hunger: number;
+    thirst: number;
+    energy: number;
+    mentalHealth: number;
+  };
+  movementSpeed: number;
+  visionRange: number;
+  socialMood: number;
+}
+
 interface TimeConfig {
   minutesPerGameHour: number;
   startHour: number;
@@ -345,6 +357,40 @@ export class TimeSystem extends EventEmitter {
     );
   }
 
+  private calculateEnvironmentalEffects(): EnvironmentalEffects {
+    const time = this.currentTime;
+    const weather = this.currentWeather;
+
+    const effects: EnvironmentalEffects = {
+      needsMultipliers: {
+        hunger: 1.0,
+        thirst: 1.0,
+        energy: 1.0,
+        mentalHealth: 1.0,
+      },
+      movementSpeed: 1.0,
+      visionRange: weather.visibility,
+      socialMood: weather.comfort * 0.5,
+    };
+    if (time.phase === "night" || time.phase === "deep_night") {
+      effects.needsMultipliers.energy *= 1.3;
+      effects.movementSpeed *= 0.9;
+    } else if (time.phase === "midday") {
+      effects.needsMultipliers.thirst *= 1.2;
+    }
+    if (weather.type === "rainy" || weather.type === "stormy") {
+      effects.needsMultipliers.mentalHealth *= 1.1;
+      effects.movementSpeed *= 0.8;
+    }
+
+    if (weather.type === "clear" && time.phase === "morning") {
+      effects.needsMultipliers.mentalHealth *= 0.9;
+      effects.socialMood += 0.2;
+    }
+
+    return effects;
+  }
+
   private randomFloat(min: number, max: number): number {
     return min + Math.random() * (max - min);
   }
@@ -355,6 +401,10 @@ export class TimeSystem extends EventEmitter {
 
   public getCurrentWeather(): WeatherCondition {
     return { ...this.currentWeather };
+  }
+
+  public getCurrentEffects(): EnvironmentalEffects {
+    return this.calculateEnvironmentalEffects();
   }
 
   public getTimeString(): string {

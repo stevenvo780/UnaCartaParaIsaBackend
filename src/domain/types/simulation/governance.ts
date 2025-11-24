@@ -54,7 +54,8 @@ export interface GovernanceEventDetails {
   reason?: string;
   agentId?: string;
   settlementId?: string;
-  [key: string]: string | number | undefined;
+  enabled?: boolean;
+  [key: string]: string | number | boolean | undefined;
 }
 
 export interface GovernanceEvent {

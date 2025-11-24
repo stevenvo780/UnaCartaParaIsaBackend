@@ -436,20 +436,6 @@ export class QuestSystem {
 
     return false;
   }
-}
-
-export interface QuestEventData {
-  cardId?: string;
-  dialogueId?: string;
-  itemId?: string;
-  itemType?: string;
-  resourceType?: string;
-  structureType?: string;
-  amount?: number;
-  locationId?: string;
-  zoneId?: string;
-  [key: string]: string | number | undefined;
-}
 
   public handleEvent(eventData: {
     type: string;
@@ -515,4 +501,17 @@ export interface QuestEventData {
     this.questProgress.failedQuests.clear();
     this.questProgress.questHistory = [];
   }
+}
+
+export interface QuestEventData {
+  cardId?: string;
+  dialogueId?: string;
+  itemId?: string;
+  itemType?: string;
+  resourceType?: string;
+  structureType?: string;
+  amount?: number;
+  locationId?: string;
+  zoneId?: string;
+  [key: string]: string | number | undefined;
 }

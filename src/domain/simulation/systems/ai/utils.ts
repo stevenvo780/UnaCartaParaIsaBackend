@@ -38,7 +38,8 @@ export function selectBestZone(
       agentId?: string;
       zoneId?: string;
       resourceType?: string;
-      [key: string]: string | number | undefined;
+      underConstruction?: boolean;
+      [key: string]: string | number | boolean | undefined;
     };
   }>;
 
@@ -58,7 +59,7 @@ export function selectBestZone(
     const distancePenalty = isUnvisited ? 0 : distance / 1000;
 
     const underConstructionBonus =
-      zone.metadata?.["underConstruction"] === true ? 1.5 : 0;
+      zone.metadata?.underConstruction === true ? 1.5 : 0;
 
     const score =
       attractiveness +
