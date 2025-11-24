@@ -21,6 +21,9 @@ import type { SocialSystem } from "./SocialSystem";
 import type { EnhancedCraftingSystem } from "./EnhancedCraftingSystem";
 import type { WorldResourceSystem } from "./WorldResourceSystem";
 import type { HouseholdSystem } from "./HouseholdSystem";
+import type { TaskSystem } from "./TaskSystem";
+import type { CombatSystem } from "./CombatSystem";
+import type { AnimalSystem } from "./AnimalSystem";
 
 interface AISystemConfig {
   updateIntervalMs: number;
@@ -43,6 +46,9 @@ export class AISystem extends EventEmitter {
   private socialSystem?: SocialSystem;
   private craftingSystem?: EnhancedCraftingSystem;
   private householdSystem?: HouseholdSystem;
+  private taskSystem?: TaskSystem;
+  private combatSystem?: CombatSystem;
+  private animalSystem?: AnimalSystem;
 
   private _lastMemoryCleanupTime = 0;
   private readonly MEMORY_CLEANUP_INTERVAL = 300000;
@@ -70,6 +76,9 @@ export class AISystem extends EventEmitter {
       socialSystem?: SocialSystem;
       craftingSystem?: EnhancedCraftingSystem;
       householdSystem?: HouseholdSystem;
+      taskSystem?: TaskSystem;
+      combatSystem?: CombatSystem;
+      animalSystem?: AnimalSystem;
     },
   ) {
     super();
@@ -97,6 +106,9 @@ export class AISystem extends EventEmitter {
       this.socialSystem = systems.socialSystem;
       this.craftingSystem = systems.craftingSystem;
       this.householdSystem = systems.householdSystem;
+      this.taskSystem = systems.taskSystem;
+      this.combatSystem = systems.combatSystem;
+      this.animalSystem = systems.animalSystem;
     }
 
     simulationEvents.on(
@@ -113,6 +125,9 @@ export class AISystem extends EventEmitter {
     socialSystem?: SocialSystem;
     craftingSystem?: EnhancedCraftingSystem;
     householdSystem?: HouseholdSystem;
+    taskSystem?: TaskSystem;
+    combatSystem?: CombatSystem;
+    animalSystem?: AnimalSystem;
   }): void {
     if (systems.needsSystem) this.needsSystem = systems.needsSystem;
     if (systems.roleSystem) this.roleSystem = systems.roleSystem;
@@ -122,6 +137,9 @@ export class AISystem extends EventEmitter {
     if (systems.socialSystem) this.socialSystem = systems.socialSystem;
     if (systems.craftingSystem) this.craftingSystem = systems.craftingSystem;
     if (systems.householdSystem) this.householdSystem = systems.householdSystem;
+    if (systems.taskSystem) this.taskSystem = systems.taskSystem;
+    if (systems.combatSystem) this.combatSystem = systems.combatSystem;
+    if (systems.animalSystem) this.animalSystem = systems.animalSystem;
   }
 
   public update(_deltaTimeMs: number): void {

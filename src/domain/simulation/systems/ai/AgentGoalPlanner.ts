@@ -4,12 +4,25 @@ import type { EntityNeedsData } from "../../../types/simulation/needs";
 import type { AgentRole } from "../../../types/simulation/roles";
 import type { PriorityManager } from "./PriorityManager";
 import { evaluateCriticalNeeds } from "./NeedsEvaluator";
-import { evaluateWorkOpportunities } from "./OpportunitiesEvaluator";
+import {
+  evaluateWorkOpportunities,
+  evaluateExplorationOpportunities,
+} from "./OpportunitiesEvaluator";
+import { evaluateAssist } from "./AssistEvaluator";
+import { evaluateCombatGoals } from "./CombatEvaluator";
+import { evaluateConstructionGoals } from "./ConstructionEvaluator";
+import { evaluateDepositGoals } from "./DepositEvaluator";
+import { evaluateCrafting } from "./CraftingEvaluator";
+import {
+  evaluateAttention,
+  evaluateDefaultExploration,
+} from "./AttentionEvaluator";
 import {
   selectBestZone,
   getUnexploredZones,
   prioritizeGoals,
   getEntityPosition,
+  getRecommendedZoneIdsForNeed,
 } from "./utils";
 
 export interface AgentGoalPlannerDeps {
@@ -22,6 +35,23 @@ export interface AgentGoalPlannerDeps {
   ) => { id: string; x: number; y: number } | null;
   getAgentRole?: (agentId: string) => AgentRole | undefined;
   getPreferredResourceForRole?: (roleType: string) => string | undefined;
+
+  // New dependencies for full AI cycle
+  getTasks?: () => any[];
+  getAgentInventory?: (id: string) => any;
+  getCurrentZone?: (id: string) => string | undefined;
+  getEquipped?: (id: string) => string;
+  getSuggestedCraftZone?: () => string | undefined;
+  canCraftWeapon?: (id: string, weaponId: string) => boolean;
+  getAllActiveAgentIds?: () => string[];
+  getEntityStats?: (id: string) => Record<string, number> | null;
+  getStrategy?: (id: string) => "peaceful" | "tit_for_tat" | "bully";
+  isWarrior?: (id: string) => boolean;
+  getEnemiesForAgent?: (id: string, threshold?: number) => string[];
+  getNearbyPredators?: (
+    pos: { x: number; y: number },
+    range: number,
+  ) => Array<{ id: string; position: { x: number; y: number } }>;
 }
 
 export function planGoals(
@@ -33,18 +63,107 @@ export function planGoals(
   const now = Date.now();
   const entityNeeds = deps.getEntityNeeds(aiState.entityId);
 
-  if (!entityNeeds) {
-    return createDefaultExplorationGoals(aiState, deps.gameState, now);
+  // 1. Critical Needs
+  if (entityNeeds) {
+    const needsDeps = {
+      getEntityNeeds: deps.getEntityNeeds,
+      findNearestResource: deps.findNearestResource,
+    };
+    const criticalGoals = evaluateCriticalNeeds(needsDeps, aiState);
+    goals.push(...criticalGoals);
   }
 
-  const needsDeps = {
-    getEntityNeeds: deps.getEntityNeeds,
-    findNearestResource: deps.findNearestResource,
-  };
-  const criticalGoals = evaluateCriticalNeeds(needsDeps, aiState);
-  goals.push(...criticalGoals);
+  // 2. Combat / Threats
+  if (
+    deps.getStrategy &&
+    deps.isWarrior &&
+    deps.getEnemiesForAgent &&
+    deps.getNearbyPredators
+  ) {
+    const combatDeps = {
+      getEntityPosition: (id: string) => getEntityPosition(id, deps.gameState),
+      getEntityStats: deps.getEntityStats || (() => null),
+      getStrategy: deps.getStrategy,
+      isWarrior: deps.isWarrior,
+      getEnemiesForAgent: deps.getEnemiesForAgent,
+      getNearbyPredators: deps.getNearbyPredators,
+    };
+    const combatGoals = evaluateCombatGoals(combatDeps, aiState);
+    goals.push(...combatGoals);
+  }
 
-  if (criticalGoals.length === 0 || criticalGoals[0].priority < 0.7) {
+  // 3. Assist (Social)
+  if (deps.getAllActiveAgentIds && deps.getEntityStats) {
+    const assistDeps = {
+      getAllActiveAgentIds: deps.getAllActiveAgentIds,
+      getEntityPosition: (id: string) => getEntityPosition(id, deps.gameState),
+      getNeeds: deps.getEntityNeeds,
+      getEntityStats: deps.getEntityStats,
+      selectBestZone: (st: AIState, ids: string[], t: string) =>
+        selectBestZone(st, ids, t, deps.gameState, (id) =>
+          getEntityPosition(id, deps.gameState),
+        ),
+      getZoneIdsByType: (types: string[]) =>
+        deps.gameState.zones
+          ?.filter((z) => types.includes(z.type))
+          .map((z) => z.id) || [],
+    };
+    const assistGoals = evaluateAssist(assistDeps, aiState);
+    goals.push(...assistGoals);
+  }
+
+  // 4. Construction
+  if (deps.getTasks) {
+    const constDeps = {
+      gameState: deps.gameState,
+      getEntityPosition: (id: string) => getEntityPosition(id, deps.gameState),
+      getTasks: deps.getTasks,
+    };
+    const constructionGoals = evaluateConstructionGoals(constDeps, aiState);
+    goals.push(...constructionGoals);
+  }
+
+  // 5. Deposit
+  if (deps.getAgentInventory && deps.getCurrentZone) {
+    const depositDeps = {
+      gameState: deps.gameState,
+      getAgentInventory: deps.getAgentInventory,
+      getCurrentZone: deps.getCurrentZone,
+      selectBestZone: (st: AIState, ids: string[], t: string) =>
+        selectBestZone(st, ids, t, deps.gameState, (id) =>
+          getEntityPosition(id, deps.gameState),
+        ),
+    };
+    const depositGoals = evaluateDepositGoals(depositDeps, aiState);
+    goals.push(...depositGoals);
+  }
+
+  // 6. Crafting
+  if (deps.getEquipped && deps.getSuggestedCraftZone && deps.canCraftWeapon) {
+    const craftingDeps = {
+      getEquipped: deps.getEquipped,
+      getSuggestedCraftZone: deps.getSuggestedCraftZone,
+      canCraftWeapon: deps.canCraftWeapon,
+    };
+    const craftingGoals = evaluateCrafting(craftingDeps, aiState);
+    goals.push(...craftingGoals);
+  }
+
+  // 7. Attention / Inspection
+  const attentionDeps = {
+    gameState: deps.gameState,
+    getEntityPosition: (id: string) => getEntityPosition(id, deps.gameState),
+    selectBestZone: (st: AIState, ids: string[], t: string) =>
+      selectBestZone(st, ids, t, deps.gameState, (id) =>
+        getEntityPosition(id, deps.gameState),
+      ),
+  };
+  const attentionGoals = evaluateAttention(attentionDeps, aiState);
+  goals.push(...attentionGoals);
+
+  // 8. Work Opportunities (if not critical)
+  const criticalCount = goals.filter((g) => g.priority > 0.7).length;
+  if (criticalCount === 0) {
     if (deps.getAgentRole && deps.getPreferredResourceForRole) {
       const oppDeps = {
         getAgentRole: deps.getAgentRole,
@@ -56,128 +175,40 @@ export function planGoals(
       goals.push(...workGoals);
     }
 
-    const opportunityGoals = evaluateOpportunities(deps, aiState, now);
+    const opportunityGoals = evaluateExplorationOpportunities(
+      {
+        gameState: deps.gameState,
+        getUnexploredZones,
+        selectBestZone,
+        getEntityPosition: (id) => getEntityPosition(id, deps.gameState),
+      },
+      aiState,
+    );
     goals.push(...opportunityGoals);
   }
 
+  // 9. Default Exploration (Fallback)
   if (goals.length === 0) {
-    const defaultGoals = createDefaultExplorationGoals(
-      aiState,
-      deps.gameState,
-      now,
-    );
+    const defaultDeps = {
+      gameState: deps.gameState,
+      getEntityPosition: (id: string) => getEntityPosition(id, deps.gameState),
+      selectBestZone: (st: AIState, ids: string[], t: string) =>
+        selectBestZone(st, ids, t, deps.gameState, (id) =>
+          getEntityPosition(id, deps.gameState),
+        ),
+    };
+    const defaultGoals = evaluateDefaultExploration(defaultDeps, aiState);
     goals.push(...defaultGoals);
   }
 
+  // Prioritize and filter
   const prioritized = prioritizeGoals(
     goals,
     aiState,
     deps.priorityManager,
     minPriority,
-    0.1,
+    0.1, // Small softmax tau for exploration
   );
 
-  return prioritized.slice(0, 5);
-}
-
-function evaluateOpportunities(
-  deps: AgentGoalPlannerDeps,
-  aiState: AIState,
-  now: number,
-): AIGoal[] {
-  const goals: AIGoal[] = [];
-  const personality = aiState.personality;
-
-  if (
-    personality.openness > 0.5 ||
-    personality.explorationType === "adventurous"
-  ) {
-    const unexploredZones = getUnexploredZones(aiState, deps.gameState);
-    if (unexploredZones.length > 0) {
-      const targetZoneId = selectBestZone(
-        aiState,
-        unexploredZones,
-        "explore",
-        deps.gameState,
-        (id) => getEntityPosition(id, deps.gameState),
-      );
-
-      if (targetZoneId) {
-        const zone = deps.gameState.zones?.find((z) => z.id === targetZoneId);
-        if (zone) {
-          goals.push({
-            id: `explore_${targetZoneId}_${now}`,
-            type: "explore",
-            priority: 0.4 + personality.openness * 0.3,
-            targetZoneId: targetZoneId,
-            targetPosition: {
-              x: zone.bounds.x + zone.bounds.width / 2,
-              y: zone.bounds.y + zone.bounds.height / 2,
-            },
-            data: {
-              explorationType: "discovery",
-            },
-            createdAt: now,
-            expiresAt: now + 60000,
-          });
-        }
-      }
-    }
-  }
-
-  return goals;
-}
-
-function createDefaultExplorationGoals(
-  aiState: AIState,
-  gameState: GameState,
-  now: number,
-): AIGoal[] {
-  const unexploredZones = getUnexploredZones(aiState, gameState);
-
-  if (unexploredZones.length > 0) {
-    const targetZoneId = selectBestZone(
-      aiState,
-      unexploredZones,
-      "explore",
-      gameState,
-      (id) => getEntityPosition(id, gameState),
-    );
-
-    if (targetZoneId) {
-      const zone = gameState.zones?.find((z) => z.id === targetZoneId);
-      if (zone) {
-        return [
-          {
-            id: `default_explore_${targetZoneId}_${now}`,
-            type: "explore",
-            priority: 0.25,
-            targetZoneId: targetZoneId,
-            targetPosition: {
-              x: zone.bounds.x + zone.bounds.width / 2,
-              y: zone.bounds.y + zone.bounds.height / 2,
-            },
-            data: {
-              explorationType: "default",
-            },
-            createdAt: now,
-            expiresAt: now + 60000,
-          },
-        ];
-      }
-    }
-  }
-
-  return [
-    {
-      id: `wander_${aiState.entityId}_${now}`,
-      type: "explore",
-      priority: 0.1,
-      data: {
-        explorationType: "wander",
-      },
-      createdAt: now,
-      expiresAt: now + 30000,
-    },
-  ];
+  return prioritized.slice(0, 5); // Return top 5 goals
 }

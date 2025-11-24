@@ -4,13 +4,15 @@ import type { GameState } from "../../../types/game-types";
 
 export interface DepositContext {
   gameState: GameState;
-  getAgentInventory: (id: string) => {
-    wood: number;
-    stone: number;
-    food: number;
-    water: number;
-    capacity?: number;
-  } | undefined;
+  getAgentInventory: (id: string) =>
+    | {
+        wood: number;
+        stone: number;
+        food: number;
+        water: number;
+        capacity?: number;
+      }
+    | undefined;
   getCurrentZone: (id: string) => string | undefined;
   selectBestZone: (
     aiState: AIState,
@@ -30,7 +32,8 @@ export function evaluateDepositGoals(
     const agentInv = ctx.getAgentInventory(aiState.entityId);
     if (!agentInv) return [];
 
-    const load = agentInv.wood + agentInv.stone + agentInv.food + agentInv.water;
+    const load =
+      agentInv.wood + agentInv.stone + agentInv.food + agentInv.water;
     const cap = agentInv.capacity || 1;
     const loadRatio = load / cap;
 
@@ -54,23 +57,25 @@ export function evaluateDepositGoals(
 
     if (load <= 0 || loadRatio < depositThreshold * 0.75) return [];
 
-    const depositZones = ctx.gameState.zones
-      ?.filter((z) => {
-        if (z.type === "storage") return true;
-        if (z.type === "rest") return true;
-        if (z.type === "food" && agentInv.food > 0) return true;
-        if (z.type === "water" && agentInv.water > 0) return true;
-        if (z.type === "work") return true;
-        return false;
-      })
-      .map((z) => z.id) || [];
+    const depositZones =
+      ctx.gameState.zones
+        ?.filter((z) => {
+          if (z.type === "storage") return true;
+          if (z.type === "rest") return true;
+          if (z.type === "food" && agentInv.food > 0) return true;
+          if (z.type === "water" && agentInv.water > 0) return true;
+          if (z.type === "work") return true;
+          return false;
+        })
+        .map((z) => z.id) || [];
 
     if (depositZones.length === 0) return [];
 
     const bestZone = ctx.selectBestZone(aiState, depositZones, "storage");
     if (!bestZone) return [];
 
-    const priorityBoost = loadRatio >= depositThreshold ? 0.35 : Math.min(0.3, loadRatio);
+    const priorityBoost =
+      loadRatio >= depositThreshold ? 0.35 : Math.min(0.3, loadRatio);
 
     return [
       {
@@ -79,7 +84,7 @@ export function evaluateDepositGoals(
         priority: 0.65 + priorityBoost,
         targetZoneId: bestZone,
         data: {
-            workType: "deposit"
+          workType: "deposit",
         },
         createdAt: now,
         expiresAt: now + 4000,

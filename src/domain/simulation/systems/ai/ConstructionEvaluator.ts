@@ -35,7 +35,7 @@ export function evaluateConstructionGoals(
         !t.completed &&
         t.zoneId,
     );
-    
+
     if (buildTasks.length === 0) return [];
 
     const myPos = ctx.getEntityPosition(aiState.entityId);
@@ -86,8 +86,8 @@ export function evaluateConstructionGoals(
         priority,
         targetZoneId: best.zoneId,
         data: {
-            taskId: best.t.id,
-            workType: "construction"
+          taskId: best.t.id,
+          workType: "construction",
         },
         createdAt: now,
         expiresAt: now + 8000,

@@ -1,5 +1,6 @@
 import type { AIState, AIGoal } from "../../../types/simulation/ai";
 import type { AgentRole } from "../../../types/simulation/roles";
+import type { GameState } from "../../../types/game-types";
 
 export interface OpportunitiesEvaluatorDependencies {
   getAgentRole: (agentId: string) => AgentRole | undefined;
@@ -8,6 +9,19 @@ export interface OpportunitiesEvaluatorDependencies {
     entityId: string,
     resourceType: string,
   ) => { id: string; x: number; y: number } | null;
+}
+
+export interface ExplorationDependencies {
+  gameState: GameState;
+  getUnexploredZones: (aiState: AIState, gameState: GameState) => string[];
+  selectBestZone: (
+    aiState: AIState,
+    zoneIds: string[],
+    zoneType: string,
+    gameState: GameState,
+    getPosition: (id: string) => { x: number; y: number } | null,
+  ) => string | null;
+  getEntityPosition: (id: string) => { x: number; y: number } | null;
 }
 
 export function evaluateWorkOpportunities(
@@ -63,21 +77,49 @@ export function evaluateWorkOpportunities(
   return goals;
 }
 
-export function evaluateExplorationGoals(aiState: AIState): AIGoal[] {
+export function evaluateExplorationOpportunities(
+  deps: ExplorationDependencies,
+  aiState: AIState,
+): AIGoal[] {
   const goals: AIGoal[] = [];
   const now = Date.now();
+  const personality = aiState.personality;
 
-  if (aiState.personality.curiosity > 0.5) {
-    goals.push({
-      id: `explore_${aiState.entityId}_${now}`,
-      type: "explore",
-      priority: 0.3 * aiState.personality.curiosity,
-      data: {
-        reason: "curiosity",
-      },
-      createdAt: now,
-      expiresAt: now + 60000,
-    });
+  if (
+    personality.openness > 0.5 ||
+    personality.explorationType === "adventurous"
+  ) {
+    const unexploredZones = deps.getUnexploredZones(aiState, deps.gameState);
+    if (unexploredZones.length > 0) {
+      const targetZoneId = deps.selectBestZone(
+        aiState,
+        unexploredZones,
+        "explore",
+        deps.gameState,
+        deps.getEntityPosition,
+      );
+
+      if (targetZoneId) {
+        const zone = deps.gameState.zones?.find((z) => z.id === targetZoneId);
+        if (zone) {
+          goals.push({
+            id: `explore_${targetZoneId}_${now}`,
+            type: "explore",
+            priority: 0.4 + personality.openness * 0.3,
+            targetZoneId: targetZoneId,
+            targetPosition: {
+              x: zone.bounds.x + zone.bounds.width / 2,
+              y: zone.bounds.y + zone.bounds.height / 2,
+            },
+            data: {
+              explorationType: "discovery",
+            },
+            createdAt: now,
+            expiresAt: now + 60000,
+          });
+        }
+      }
+    }
   }
 
   return goals;

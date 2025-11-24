@@ -15,10 +15,7 @@ export interface AssistContext {
   getZoneIdsByType: (types: string[]) => string[];
 }
 
-export function evaluateAssist(
-  ctx: AssistContext,
-  aiState: AIState,
-): AIGoal[] {
+export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
   try {
     const { personality } = aiState;
     const now = Date.now();
@@ -57,7 +54,7 @@ export function evaluateAssist(
         (stats.morale ?? 100) < 35 / sensitivity
       )
         need = "rest";
-      
+
       if (need && (!best || d < best.d)) best = { id, d, need } as const;
     }
     if (!best) return [];
@@ -87,7 +84,7 @@ export function evaluateAssist(
         ctx.getZoneIdsByType(["water"]),
         "water",
       );
-    
+
     if (!targetZone) return [];
 
     const priority = 0.4 + personality.agreeableness * 0.4;
@@ -99,9 +96,9 @@ export function evaluateAssist(
         priority,
         targetZoneId: targetZone,
         data: {
-            targetAgentId: best.id,
-            resourceType: best.need,
-            amount: 10
+          targetAgentId: best.id,
+          resourceType: best.need,
+          amount: 10,
         },
         createdAt: now,
         expiresAt: now + 4000,
