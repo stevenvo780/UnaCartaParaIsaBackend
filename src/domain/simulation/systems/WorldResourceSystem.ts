@@ -141,15 +141,12 @@ export class WorldResourceSystem {
 
     this.state.worldResources![id] = resource;
 
-    // Emit creation event so frontend can render
     simulationEvents.emit(GameEventNames.RESOURCE_SPAWNED, { resource });
 
     return resource;
   }
 
   private getResourcesForBiome(biome: string): WorldResourceConfig[] {
-    // Helper to filter configs by biome
-    // In a real implementation this would be imported or cached
     const configs = [
       getResourceConfig("tree"),
       getResourceConfig("rock"),
@@ -209,9 +206,6 @@ export class WorldResourceSystem {
     );
   }
 
-  /**
-   * Get resources near a position (for animal foraging)
-   */
   public getResourcesNear(
     position: { x: number; y: number },
     radius: number,
@@ -229,9 +223,6 @@ export class WorldResourceSystem {
     );
   }
 
-  /**
-   * Harvest/consume a resource (for animals and agents)
-   */
   public harvestResource(
     resourceId: string,
     harvesterId: string,
@@ -246,16 +237,13 @@ export class WorldResourceSystem {
       return { success: false, amount: 0 };
     }
 
-    // Increment harvest count
     resource.harvestCount = (resource.harvestCount || 0) + 1;
     resource.lastHarvestTime = Date.now();
 
-    // Check if depleted
     const maxHarvests = config.harvestsUntilDepleted || 5;
     if (resource.harvestCount >= maxHarvests) {
       resource.state = "depleted";
 
-      // Start regeneration if applicable
       if (config.canRegenerate) {
         resource.regenerationStartTime = Date.now();
         this.regenerationTimers.set(resourceId, Date.now());

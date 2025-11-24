@@ -170,7 +170,6 @@ export class InventorySystem {
     const inv = this.agentInventories.get(agentId);
     if (!inv) return false;
 
-    // 1. Check if agent has enough of all resources
     for (const [resource, amount] of Object.entries(resources)) {
       if (!amount || amount <= 0) continue;
       if ((inv[resource as ResourceType] ?? 0) < amount) {
@@ -178,7 +177,6 @@ export class InventorySystem {
       }
     }
 
-    // 2. Consume resources
     for (const [resource, amount] of Object.entries(resources)) {
       if (!amount || amount <= 0) continue;
       inv[resource as ResourceType] -= amount;
@@ -203,11 +201,9 @@ export class InventorySystem {
     for (const [resource, amount] of entries) {
       if (!amount || amount <= 0) continue;
 
-      // 1. Check agent has resource
       const inv = this.agentInventories.get(agentId);
       if (!inv || inv[resource] <= 0) continue;
 
-      // 2. Check stockpile capacity
       const sp = this.stockpiles.get(stockpileId);
       if (!sp) continue;
 
@@ -220,7 +216,6 @@ export class InventorySystem {
 
       if (availableSpace <= 0) continue;
 
-      // 3. Calculate transfer amount
       const canTake = Math.min(amount, inv[resource]);
       const canStore = Math.min(canTake, availableSpace);
 
@@ -242,7 +237,6 @@ export class InventorySystem {
     const FOOD_DECAY_RATE = 0.02;
     const WATER_DECAY_RATE = 0.01;
 
-    // Deprecate stockpiles
     for (const sp of Array.from(this.stockpiles.values())) {
       const foodLoss = Math.floor(sp.inventory.food * FOOD_DECAY_RATE);
       const waterLoss = Math.floor(sp.inventory.water * WATER_DECAY_RATE);
@@ -253,7 +247,6 @@ export class InventorySystem {
         sp.inventory.water = Math.max(0, sp.inventory.water - waterLoss);
     }
 
-    // Deprecate agent inventories
     for (const inv of Array.from(this.agentInventories.values())) {
       const foodLoss = Math.floor(inv.food * FOOD_DECAY_RATE);
       const waterLoss = Math.floor(inv.water * WATER_DECAY_RATE);
@@ -262,7 +255,6 @@ export class InventorySystem {
       if (waterLoss > 0) inv.water = Math.max(0, inv.water - waterLoss);
     }
 
-    // Escribir estado en GameState para sincronización con frontend
     if (this.gameState) {
       if (!this.gameState.inventory) {
         this.gameState.inventory = {
@@ -279,14 +271,12 @@ export class InventorySystem {
         };
       }
 
-      // Convertir stockpiles Map a Object serializable
       const stockpilesObj: Record<string, Inventory> = {};
       this.stockpiles.forEach((stockpile) => {
         stockpilesObj[stockpile.id] = stockpile.inventory;
       });
       this.gameState.inventory.stockpiles = stockpilesObj;
 
-      // Convertir agent inventories a Object serializable
       const agentsObj: Record<string, Inventory> = {};
       this.agentInventories.forEach((inv, agentId) => {
         agentsObj[agentId] = inv;

@@ -114,7 +114,6 @@ export class EmergenceSystem extends EventEmitter {
       this.lastEvaluation = now;
     }
 
-    // Cleanup expired patterns
     this.cleanupExpiredPatterns();
   }
 
@@ -136,31 +135,26 @@ export class EmergenceSystem extends EventEmitter {
   private evaluatePatterns(): void {
     const newPatterns: EmergencePattern[] = [];
 
-    // Detect social patterns
     if (this.socialSystem) {
       const socialPattern = this.detectSocialPattern();
       if (socialPattern) newPatterns.push(socialPattern);
     }
 
-    // Detect economic patterns
     if (this.economySystem) {
       const economicPattern = this.detectEconomicPattern();
       if (economicPattern) newPatterns.push(economicPattern);
     }
 
-    // Detect population patterns
     if (this.lifeCycleSystem) {
       const populationPattern = this.detectPopulationPattern();
       if (populationPattern) newPatterns.push(populationPattern);
     }
 
-    // Detect needs-based patterns
     if (this.needsSystem) {
       const needsPattern = this.detectNeedsPattern();
       if (needsPattern) newPatterns.push(needsPattern);
     }
 
-    // Register new patterns
     for (const pattern of newPatterns) {
       if (pattern.strength >= this.config.patternMinStrength) {
         this.patterns.set(pattern.id, pattern);
@@ -179,7 +173,6 @@ export class EmergenceSystem extends EventEmitter {
     const entities = this.gameState.entities || [];
     if (entities.length < 3) return null;
 
-    // Detect clustering pattern (agents gathering in groups)
     const positions = entities
       .map((e) => e.position)
       .filter((p): p is { x: number; y: number } => p !== undefined);
@@ -219,7 +212,6 @@ export class EmergenceSystem extends EventEmitter {
       0,
     );
 
-    // Detect resource accumulation pattern
     if (totalResources > 1000) {
       return {
         id: `economic_accumulation_${Date.now()}`,
@@ -349,7 +341,6 @@ export class EmergenceSystem extends EventEmitter {
   }
 
   private updateFeedbackLoops(): void {
-    // Detect positive feedback loops (e.g., resource gathering -> more production -> more resources)
     const resources = this.gameState.resources?.materials || {};
     const totalResources = Object.values(resources).reduce(
       (a, b) => a + (b || 0),
@@ -371,7 +362,6 @@ export class EmergenceSystem extends EventEmitter {
       });
     }
 
-    // Detect negative feedback loops (e.g., population growth -> resource depletion -> population decline)
     const entities = this.gameState.entities || [];
     if (entities.length > 10 && totalResources < 200) {
       if (!this.feedbackLoops.has("population_resource_loop")) {
@@ -395,14 +385,11 @@ export class EmergenceSystem extends EventEmitter {
     const entities = this.gameState.entities || [];
     const entityCount = entities.length;
 
-    // Cohesion: how connected the system is
     const cohesion = this.socialSystem ? Math.min(1.0, entityCount / 20) : 0.5;
 
-    // Novelty: how much new activity is happening
     const novelty =
       this.patterns.size > 0 ? Math.min(1.0, this.patterns.size / 5) : 0.3;
 
-    // Stability: how stable the system state is
     const needsMap = this.needsSystem?.getAllNeeds();
     const needsList = needsMap ? Array.from(needsMap.values()) : [];
     const avgNeeds =

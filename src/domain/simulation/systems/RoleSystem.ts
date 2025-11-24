@@ -221,7 +221,6 @@ export class RoleSystem extends EventEmitter {
         }
       });
 
-      // Update agent's current shift
       if (config.workShifts.includes(this.currentShift)) {
         role.currentShift = this.currentShift;
       } else {
@@ -244,7 +243,6 @@ export class RoleSystem extends EventEmitter {
   }
 
   private getAdultAgents(): AgentProfile[] {
-    // Access agents from gameState
     return this.gameState.agents || [];
   }
 

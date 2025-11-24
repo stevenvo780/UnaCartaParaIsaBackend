@@ -355,7 +355,6 @@ export class ResearchSystem {
     const primaryLineageId = lineageIds[0];
     this.gameState.research.techTree = this.getTechTreeState(primaryLineageId);
 
-    // Actualizar stats de todos los lineages - el frontend espera una estructura específica
     const allLineagesStats = this.getAllLineagesStats();
     this.gameState.research.lineages = allLineagesStats.map(
       ({ lineageId, stats }) => ({
