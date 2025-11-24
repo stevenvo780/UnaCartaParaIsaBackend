@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { storageService } from '../services/storageService.js';
 
 export class SaveController {
-  async healthCheck(req: Request, res: Response) {
+  async healthCheck(_req: Request, res: Response): Promise<void> {
     try {
       const status = await storageService.isHealthy();
       res.json(status);
@@ -11,7 +11,7 @@ export class SaveController {
     }
   }
 
-  async listSaves(req: Request, res: Response) {
+  async listSaves(_req: Request, res: Response): Promise<void> {
     try {
       const saves = await storageService.listSaves();
       res.json({ saves });
@@ -21,13 +21,14 @@ export class SaveController {
     }
   }
 
-  async getSave(req: Request, res: Response) {
+  async getSave(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const data = await storageService.getSave(id);
       
       if (!data) {
-        return res.status(404).json({ error: 'Save not found' });
+        res.status(404).json({ error: 'Save not found' });
+        return;
       }
 
       res.json({ data });
@@ -37,12 +38,13 @@ export class SaveController {
     }
   }
 
-  async saveGame(req: Request, res: Response) {
+  async saveGame(req: Request, res: Response): Promise<void> {
     try {
       const saveData = req.body;
 
       if (!saveData || !saveData.timestamp) {
-        return res.status(400).json({ error: 'Invalid save data' });
+        res.status(400).json({ error: 'Invalid save data' });
+        return;
       }
 
       const result = await storageService.saveGame(saveData);
@@ -59,13 +61,14 @@ export class SaveController {
     }
   }
 
-  async deleteSave(req: Request, res: Response) {
+  async deleteSave(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const success = await storageService.deleteSave(id);
 
       if (!success) {
-        return res.status(404).json({ error: 'Save not found' });
+        res.status(404).json({ error: 'Save not found' });
+        return;
       }
 
       res.json({ success: true, message: 'Save deleted' });

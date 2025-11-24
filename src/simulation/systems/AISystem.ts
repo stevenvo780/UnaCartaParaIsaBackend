@@ -63,7 +63,7 @@ export class AISystem extends EventEmitter {
     console.log('🤖 AISystem (Backend) initialized');
   }
 
-  public update(deltaMs: number): void {
+  public update(_deltaMs: number): void {
     const now = Date.now();
     const timeSinceLastUpdate = now - this.lastUpdate;
 
@@ -183,7 +183,7 @@ export class AISystem extends EventEmitter {
     };
   }
 
-  private planGoals(aiState: AIState, agent: AgentProfile): AIGoal[] {
+  private planGoals(aiState: AIState, _agent: AgentProfile): AIGoal[] {
     const allGoals: AIGoal[] = [];
 
     // 1. Evaluate critical needs (highest priority)
@@ -229,7 +229,7 @@ export class AISystem extends EventEmitter {
   }
 
   private findNearestResourceForEntity(
-    entityId: string,
+    _entityId: string,
     resourceType: string
   ): { id: string; x: number; y: number } | null {
     if (!this.worldResourceSystem) return null;

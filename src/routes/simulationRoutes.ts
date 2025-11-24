@@ -35,15 +35,17 @@ router.get("/api/sim/state", (_req, res) => {
   res.json(snapshot);
 });
 
-router.post("/api/sim/command", (req, res) => {
+router.post("/api/sim/command", (req, res): void => {
   const command = req.body as SimulationCommand;
   if (!command || typeof command.type !== "string") {
-    return res.status(400).json({ error: "Tipo de comando inválido" });
+    res.status(400).json({ error: "Tipo de comando inválido" });
+    return;
   }
 
   const accepted = simulationRunner.enqueueCommand(command);
   if (!accepted) {
-    return res.status(429).json({ error: "Cola de comandos llena" });
+    res.status(429).json({ error: "Cola de comandos llena" });
+    return;
   }
 
   res.json({ status: "queued" });

@@ -65,7 +65,8 @@ export class SimulationRunner {
   private livingLegendsSystem: LivingLegendsSystem;
   private lifeCycleSystem: LifeCycleSystem;
   private needsSystem: NeedsSystem;
-  private genealogySystem: GenealogySystem;
+  // @ts-expect-error - System is event-driven, not used in tick loop
+  private _genealogySystem: GenealogySystem;
   private socialSystem: SocialSystem;
   private inventorySystem: InventorySystem;
   private economySystem: EconomySystem;
@@ -80,19 +81,23 @@ export class SimulationRunner {
   private buildingMaintenanceSystem: BuildingMaintenanceSystem;
   private productionSystem: ProductionSystem;
   private enhancedCraftingSystem: EnhancedCraftingSystem;
-  private craftingSystem: CraftingSystem;
+  // @ts-expect-error - System is event-driven, not used in tick loop
+  private _craftingSystem: CraftingSystem;
   private animalSystem: AnimalSystem;
   private itemGenerationSystem: ItemGenerationSystem;
   private combatSystem: CombatSystem;
   private reputationSystem: ReputationSystem;
-  private researchSystem: ResearchSystem;
-  private recipeDiscoverySystem: RecipeDiscoverySystem;
+  // @ts-expect-error - System is event-driven, not used in tick loop
+  private _researchSystem: ResearchSystem;
+  // @ts-expect-error - System is event-driven, not used in tick loop
+  private _recipeDiscoverySystem: RecipeDiscoverySystem;
   private questSystem: QuestSystem;
   private taskSystem: TaskSystem;
   private tradeSystem: TradeSystem;
   private marriageSystem: MarriageSystem;
   private conflictResolutionSystem: ConflictResolutionSystem;
-  private normsSystem: NormsSystem;
+  // @ts-expect-error - System is event-driven, not used in tick loop
+  private _normsSystem: NormsSystem;
   private resourceAttractionSystem: ResourceAttractionSystem;
   private crisisPredictorSystem: CrisisPredictorSystem;
   private ambientAwarenessSystem: AmbientAwarenessSystem;
@@ -108,7 +113,7 @@ export class SimulationRunner {
     this.livingLegendsSystem = new LivingLegendsSystem(this.state);
     this.lifeCycleSystem = new LifeCycleSystem(this.state);
     this.needsSystem = new NeedsSystem(this.state, this.lifeCycleSystem);
-    this.genealogySystem = new GenealogySystem(this.state);
+    this._genealogySystem = new GenealogySystem(this.state);
     this.socialSystem = new SocialSystem(this.state);
     this.inventorySystem = new InventorySystem();
     this.resourceReservationSystem = new ResourceReservationSystem(
@@ -159,7 +164,7 @@ export class SimulationRunner {
       this.state,
       this.inventorySystem,
     );
-    this.craftingSystem = new CraftingSystem(
+    this._craftingSystem = new CraftingSystem(
       this.state,
       this.enhancedCraftingSystem,
     );
@@ -175,14 +180,14 @@ export class SimulationRunner {
       this.socialSystem,
     );
     this.reputationSystem = new ReputationSystem(this.state);
-    this.researchSystem = new ResearchSystem(this.state);
-    this.recipeDiscoverySystem = new RecipeDiscoverySystem(this.state);
+    this._researchSystem = new ResearchSystem(this.state);
+    this._recipeDiscoverySystem = new RecipeDiscoverySystem(this.state);
     this.questSystem = new QuestSystem(this.state);
     this.taskSystem = new TaskSystem(this.state);
     this.tradeSystem = new TradeSystem(this.state);
     this.marriageSystem = new MarriageSystem(this.state);
     this.conflictResolutionSystem = new ConflictResolutionSystem(this.state);
-    this.normsSystem = new NormsSystem(this.state);
+    this._normsSystem = new NormsSystem(this.state);
     this.resourceAttractionSystem = new ResourceAttractionSystem(
       this.state,
       this.needsSystem,

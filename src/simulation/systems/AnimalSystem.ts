@@ -1,7 +1,6 @@
 import type { GameState } from '../../types/game-types.js';
 import type { Animal, AnimalSystemConfig } from '../types/animals.js';
 import { getAnimalConfig } from '../config/AnimalConfigs.js';
-import { AnimalGenetics } from './animals/AnimalGenetics.js';
 import { AnimalNeeds } from './animals/AnimalNeeds.js';
 import { AnimalBehavior } from './animals/AnimalBehavior.js';
 import { AnimalSpawning } from './animals/AnimalSpawning.js';
@@ -76,7 +75,7 @@ export class AnimalSystem {
   /**
    * Main update loop
    */
-  public update(deltaMs: number): void {
+  public update(_deltaMs: number): void {
     const now = Date.now();
 
     if (now - this.lastUpdate < this.config.updateInterval) {
@@ -253,16 +252,17 @@ export class AnimalSystem {
       return cached.threat;
     }
 
-    const agents = this.gameState.agents || [];
-    for (const agent of agents) {
-      if (!agent.position) continue;
+    const entities = this.gameState.entities || [];
+    for (const entity of entities) {
+      if (!entity.x || !entity.y || entity.isDead) continue;
 
-      const dx = animal.position.x - agent.position.x;
-      const dy = animal.position.y - agent.position.y;
+      const entityPosition = { x: entity.x, y: entity.y };
+      const dx = animal.position.x - entityPosition.x;
+      const dy = animal.position.y - entityPosition.y;
       const distSq = dx * dx + dy * dy;
 
       if (distSq <= range * range) {
-        const result = { id: agent.id, position: agent.position };
+        const result = { id: entity.id, position: entityPosition };
         this.threatSearchCache.set(`human_${animal.id}`, { threat: result, timestamp: Date.now() });
         return result;
       }

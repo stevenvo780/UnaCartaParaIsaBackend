@@ -7,9 +7,7 @@ import seedrandom from 'seedrandom';
 
 export class WorldGenerationService {
   private noiseGen: NoiseUtils;
-  private voronoiGen: VoronoiGenerator | null = null;
   private biomeResolver: BiomeResolver;
-  private rng: seedrandom.PRNG;
   private biomeMap: Map<BiomeType, SimpleBiomeConfig>;
 
   constructor() {
