@@ -275,40 +275,61 @@ export class SimulationRunner {
   }
 
   public async initializeWorldResources(worldConfig: { width: number; height: number; tileSize: number; biomeMap: string[][] }): Promise<void> {
-    console.log("Generating initial world...");
+    console.log(`Generating initial world ${worldConfig.width}x${worldConfig.height}...`);
 
-    // Generate terrain tiles using the service
-    const tiles = await worldGenerationService.generateChunk(0, 0, {
-      width: worldConfig.width,
-      height: worldConfig.height,
-      tileSize: worldConfig.tileSize,
-      seed: 12345, // Fixed seed for now
-      scale: 1,
-      octaves: 4,
-      persistence: 0.5,
-      lacunarity: 2,
-      seaLevel: 0,
-      moistureOffset: 0,
-      temperatureOffset: 0,
-      riverThreshold: 0.8
-    });
+    const CHUNK_SIZE = 16;
+    const chunksX = Math.ceil(worldConfig.width / CHUNK_SIZE);
+    const chunksY = Math.ceil(worldConfig.height / CHUNK_SIZE);
+    const allTiles = [];
 
-    // Flatten the chunk tiles into the game state
-    this.state.terrainTiles = tiles.flat().map(t => ({
-      x: t.x,
-      y: t.y,
-      assetId: t.assets.terrain,
-      type: t.biome === BiomeType.OCEAN ? "water" : "grass", // Simplified mapping
-      biome: t.biome,
-      isWalkable: t.isWalkable
-    }));
+    // Initialize biome map structure
+    const biomeMap: string[][] = Array(worldConfig.height).fill(null).map(() => Array(worldConfig.width).fill(""));
 
+    for (let cy = 0; cy < chunksY; cy++) {
+      for (let cx = 0; cx < chunksX; cx++) {
+        const chunkTiles = await worldGenerationService.generateChunk(cx, cy, {
+          width: worldConfig.width,
+          height: worldConfig.height,
+          tileSize: worldConfig.tileSize,
+          seed: 12345,
+          scale: 1,
+          octaves: 4,
+          persistence: 0.5,
+          lacunarity: 2,
+          seaLevel: 0,
+          moistureOffset: 0,
+          temperatureOffset: 0,
+          riverThreshold: 0.8
+        });
+
+        // Process chunk tiles
+        for (const row of chunkTiles) {
+          for (const tile of row) {
+            // Ensure we don't go out of bounds if world size isn't a multiple of chunk size
+            if (tile.x < worldConfig.width && tile.y < worldConfig.height) {
+              allTiles.push({
+                x: tile.x,
+                y: tile.y,
+                assetId: tile.assets.terrain,
+                type: tile.biome === BiomeType.OCEAN ? "water" : "grass",
+                biome: tile.biome,
+                isWalkable: tile.isWalkable
+              });
+              biomeMap[tile.y][tile.x] = tile.biome;
+            }
+          }
+        }
+      }
+    }
+
+    this.state.terrainTiles = allTiles;
     console.log(`Generated ${this.state.terrainTiles.length} terrain tiles.`);
 
-    // Also spawn resources based on the generated biomes
-    // We need to convert the tile-based biome data to the format expected by worldResourceSystem
-    // For now, we'll just use the passed biomeMap or derive it if empty
-    this.worldResourceSystem.spawnResourcesInWorld(worldConfig);
+    // Spawn resources using the generated biome map
+    this.worldResourceSystem.spawnResourcesInWorld({
+      ...worldConfig,
+      biomeMap
+    });
   }
 
   start(): void {

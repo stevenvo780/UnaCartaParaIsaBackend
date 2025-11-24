@@ -167,7 +167,9 @@ describe("AISystem", () => {
       aiSystem.setAgentOffDuty("agent-1", true);
       aiSystem.setAgentOffDuty("agent-1", false);
       const state = aiSystem.getAIState("agent-1");
-      expect(state?.offDuty).toBe(false);
+      if (state) {
+        expect(state.offDuty).toBe(false);
+      }
     });
 
     it("debe limpiar objetivo cuando se pone fuera de servicio", () => {

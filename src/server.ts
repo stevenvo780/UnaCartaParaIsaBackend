@@ -47,7 +47,6 @@ server.on("upgrade", (request, socket, head) => {
 simulationWss.on("connection", (ws: WebSocket) => {
   console.log("Client connected to simulation");
 
-  // Send initial state
   ws.send(
     JSON.stringify({
       type: "SNAPSHOT",
@@ -70,7 +69,6 @@ simulationWss.on("connection", (ws: WebSocket) => {
   });
 });
 
-// Broadcast ticks
 simulationRunner.on("tick", (snapshot) => {
   const message = JSON.stringify({
     type: "TICK",
