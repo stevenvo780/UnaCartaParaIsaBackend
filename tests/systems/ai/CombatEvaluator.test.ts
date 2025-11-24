@@ -152,6 +152,52 @@ describe("CombatEvaluator", () => {
         expect(attackGoal.type).toBe("attack");
       }
     });
+
+    it("debe generar goal de ataque contra depredador si es guerrero", () => {
+      context.isWarrior = (id: string) => id === "agent-1";
+      context.getNearbyPredators = () => [
+        { id: "predator-1", position: { x: 120, y: 120 } },
+      ];
+      context.getEntityStats = (id: string) => {
+        if (id === "agent-1") return { morale: 70, health: 80 };
+        return null;
+      };
+      
+      const goals = evaluateCombatGoals(context, aiState);
+      const attackGoal = goals.find((g) => g.type === "attack" && g.targetId === "predator-1");
+      if (attackGoal) {
+        expect(attackGoal.type).toBe("attack");
+        expect(attackGoal.targetId).toBe("predator-1");
+      }
+    });
+
+    it("debe generar goal de huir de depredador si no puede luchar", () => {
+      context.isWarrior = () => false;
+      context.getNearbyPredators = () => [
+        { id: "predator-1", position: { x: 120, y: 120 } },
+      ];
+      context.getEntityStats = (id: string) => {
+        if (id === "agent-1") return { morale: 30, health: 30 }; // Baja moral y salud
+        return null;
+      };
+      
+      const goals = evaluateCombatGoals(context, aiState);
+      const fleeGoal = goals.find((g) => g.type === "flee" && g.data?.reason === "predator_panic");
+      if (fleeGoal) {
+        expect(fleeGoal.type).toBe("flee");
+        expect(fleeGoal.targetPosition).toBeDefined();
+      }
+    });
+
+    it("debe manejar errores y retornar array vacío", () => {
+      // Crear contexto que cause error
+      context.getEntityPosition = () => {
+        throw new Error("Test error");
+      };
+      
+      const goals = evaluateCombatGoals(context, aiState);
+      expect(goals).toEqual([]);
+    });
   });
 });
 

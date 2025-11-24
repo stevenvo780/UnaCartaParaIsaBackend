@@ -182,7 +182,8 @@ describe("HouseholdSystem", () => {
       expect(stats.capacity).toBeDefined();
       expect(stats.occupancy).toBeDefined();
       expect(stats.free).toBeDefined();
-      expect(stats.total).toBeDefined();
+      expect(stats.totalHouseholds).toBeDefined();
+      expect(stats.occupied).toBeDefined();
     });
 
     it("debe calcular ocupación correctamente", () => {
