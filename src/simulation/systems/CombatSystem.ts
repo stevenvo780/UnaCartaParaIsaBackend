@@ -1,7 +1,15 @@
 import { randomUUID } from "node:crypto";
 import type { GameState } from "../../types/game-types.js";
 import { simulationEvents, GameEventNames } from "../events.js";
-import type { CombatLogEntry, WeaponId } from "../types/combat.js";
+import type {
+  CombatEngagedLog,
+  CombatHitLog,
+  CombatKillLog,
+  CombatLogEntry,
+  CombatWeaponCraftedLog,
+  CombatWeaponEquippedLog,
+  WeaponId,
+} from "../types/combat.js";
 import { getWeapon } from "../data/WeaponCatalog.js";
 import type { ResourceType } from "../types/economy.js";
 import { InventorySystem } from "./InventorySystem.js";
@@ -118,11 +126,13 @@ export class CombatSystem {
       agentId,
       weapon: weaponId,
     });
-    this.appendLog({
-      type: "weapon_equipped",
-      agentId,
-      weapon: weaponId,
-    });
+    this.appendLog(
+      this.createLogEntry<CombatWeaponEquippedLog>({
+        type: "weapon_equipped",
+        agentId,
+        weapon: weaponId,
+      }),
+    );
   }
 
   public getEquipped(agentId: string): WeaponId {
@@ -154,11 +164,13 @@ export class CombatSystem {
       agentId,
       weapon: weaponId,
     });
-    this.appendLog({
-      type: "weapon_crafted",
-      agentId,
-      weapon: weaponId,
-    });
+    this.appendLog(
+      this.createLogEntry<CombatWeaponCraftedLog>({
+        type: "weapon_crafted",
+        agentId,
+        weapon: weaponId,
+      }),
+    );
     return true;
   }
 
@@ -204,6 +216,7 @@ export class CombatSystem {
   ): void {
     const weapon = getWeapon(weaponId);
     const targetStats = this.ensureStats(target);
+    const attackerStats = this.ensureStats(attacker);
     const attackerProfile = this.lifeCycleSystem.getAgent(attacker.id);
     const aggression = attackerProfile?.traits?.aggression ?? attacker.traits?.aggression ?? 0.3;
 
@@ -222,22 +235,24 @@ export class CombatSystem {
       attackerY: attacker.position?.y,
       targetX: target.position?.x,
       targetY: target.position?.y,
-      attackerHealth: this.ensureStats(attacker).health ?? 100,
+      attackerHealth: attackerStats.health ?? 100,
       targetHealth: newHealth,
       timestamp,
     });
-    this.appendLog({
-      type: "engaged",
-      attackerId: attacker.id,
-      targetId: target.id,
-      weapon: weaponId,
-      attackerX: attacker.position?.x,
-      attackerY: attacker.position?.y,
-      targetX: target.position?.x,
-      targetY: target.position?.y,
-      attackerHealth: this.ensureStats(attacker).health ?? 100,
-      targetHealth: newHealth,
-    });
+    this.appendLog(
+      this.createLogEntry<CombatEngagedLog>({
+        type: "engaged",
+        attackerId: attacker.id,
+        targetId: target.id,
+        weapon: weaponId,
+        attackerX: attacker.position?.x,
+        attackerY: attacker.position?.y,
+        targetX: target.position?.x,
+        targetY: target.position?.y,
+        attackerHealth: attackerStats.health ?? 100,
+        targetHealth: newHealth,
+      }),
+    );
 
     this.applyStatChanges(targetStats, damage);
     targetStats.health = newHealth;
@@ -253,17 +268,19 @@ export class CombatSystem {
       x: target.position?.x,
       y: target.position?.y,
     });
-    this.appendLog({
-      type: "hit",
-      attackerId: attacker.id,
-      targetId: target.id,
-      weapon: weaponId,
-      damage,
-      crit,
-      remainingHealth: newHealth,
-      x: target.position?.x,
-      y: target.position?.y,
-    });
+    this.appendLog(
+      this.createLogEntry<CombatHitLog>({
+        type: "hit",
+        attackerId: attacker.id,
+        targetId: target.id,
+        weapon: weaponId,
+        damage,
+        crit,
+        remainingHealth: newHealth,
+        x: target.position?.x,
+        y: target.position?.y,
+      }),
+    );
 
     if (newHealth <= 0) {
       this.handleKill(attacker, target, weaponId);
@@ -294,12 +311,14 @@ export class CombatSystem {
       targetId: target.id,
       weapon: weaponId,
     });
-    this.appendLog({
-      type: "kill",
-      attackerId: attacker.id,
-      targetId: target.id,
-      weapon: weaponId,
-    });
+    this.appendLog(
+      this.createLogEntry<CombatKillLog>({
+        type: "kill",
+        attackerId: attacker.id,
+        targetId: target.id,
+        weapon: weaponId,
+      }),
+    );
 
     if (target.tags?.includes("animal") || target.type === "animal") {
       simulationEvents.emit(GameEventNames.ANIMAL_HUNTED, {
@@ -317,16 +336,21 @@ export class CombatSystem {
     return entity.stats;
   }
 
-  private appendLog(entry: Omit<CombatLogEntry, "id" | "timestamp">): void {
-    const logEntry: CombatLogEntry = {
-      id: randomUUID(),
-      timestamp: Date.now(),
-      ...entry,
-    };
-    this.combatLog.push(logEntry);
+  private appendLog(entry: CombatLogEntry): void {
+    this.combatLog.push(entry);
     if (this.combatLog.length > this.maxLogEntries) {
       this.combatLog.splice(0, this.combatLog.length - this.maxLogEntries);
     }
     this.state.combatLog = this.combatLog;
+  }
+
+  private createLogEntry<T extends CombatLogEntry>(
+    entry: Omit<T, "id" | "timestamp">,
+  ): T {
+    return {
+      ...entry,
+      id: randomUUID(),
+      timestamp: Date.now(),
+    } as T;
   }
 }

@@ -1,5 +1,6 @@
 import { GameState } from "../../types/game-types.js";
 import { NeedsSystem } from "./NeedsSystem.js";
+import type { NeedsState } from "../types/needs.js";
 import type {
   DialogueCard,
   DialogueChoice,
@@ -13,7 +14,7 @@ interface CardTemplate {
   title: string;
   contentVariations: string[];
   triggers: {
-    needsBased?: Array<{ need: string; threshold: number; operator: "below" | "above" }>;
+    needsBased?: Array<{ need: keyof NeedsState; threshold: number; operator: "below" | "above" }>;
     timeBased?: Array<{ time: "dawn" | "day" | "dusk" | "night"; frequency: "daily" | "hourly" }>;
   };
   choices?: DialogueChoice[];
@@ -106,7 +107,7 @@ export class CardDialogueSystem {
     }
   }
 
-  private matchesTemplate(template: CardTemplate, needs: Record<string, number>, now: number): boolean {
+  private matchesTemplate(template: CardTemplate, needs: NeedsState, now: number): boolean {
     if (template.triggers.needsBased) {
       const satisfied = template.triggers.needsBased.every((trigger) => {
         const value = needs[trigger.need];
