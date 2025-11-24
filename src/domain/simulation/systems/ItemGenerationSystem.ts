@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/utils/logger";
 import type { GameState, Zone } from "../../types/game-types";
 import type {
   GenerationRule,
@@ -23,7 +24,7 @@ export class ItemGenerationSystem {
   constructor(gameState: GameState, config?: Partial<ItemGenerationConfig>) {
     this.gameState = gameState;
     this.config = { ...DEFAULT_CONFIG, ...config };
-    console.log("🎁 ItemGenerationSystem (Backend) initialized");
+    logger.info("🎁 ItemGenerationSystem (Backend) initialized");
   }
 
   public update(_deltaMs: number): void {
@@ -107,7 +108,7 @@ export class ItemGenerationSystem {
       position: zone.bounds,
     });
 
-    console.log(`🎁 Generated ${quantity}x ${rule.itemId} in zone ${zone.id}`);
+    logger.info(`🎁 Generated ${quantity}x ${rule.itemId} in zone ${zone.id}`);
   }
 
   /**
@@ -189,7 +190,7 @@ export class ItemGenerationSystem {
    */
   public addGenerationRule(rule: GenerationRule): void {
     this.generationRules.push(rule);
-    console.log(
+    logger.info(
       `Added generation rule: ${rule.itemId} in ${rule.zoneType} zones`,
     );
   }

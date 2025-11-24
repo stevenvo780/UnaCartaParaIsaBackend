@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/utils/logger";
 import { GameState } from "../../types/game-types";
 import { simulationEvents, GameEventNames } from "../core/events";
 
@@ -25,7 +26,7 @@ export class KnowledgeNetworkSystem {
 
   constructor(gameState: GameState) {
     this.gameState = gameState;
-    console.log("🧠 KnowledgeNetworkSystem (Backend) initialized");
+    logger.info("🧠 KnowledgeNetworkSystem (Backend) initialized");
   }
 
   public update(_deltaTimeMs: number): void {
@@ -126,7 +127,7 @@ export class KnowledgeNetworkSystem {
         nodeId,
         timestamp: Date.now(),
       });
-      console.log(
+      logger.info(
         `🧠 Knowledge shared: ${fromAgentId} -> ${toAgentId} (${nodeId})`,
       );
     }
@@ -134,7 +135,10 @@ export class KnowledgeNetworkSystem {
     return learned;
   }
 
-  public getGraphSnapshot() {
+  public getGraphSnapshot(): {
+    nodes: KnowledgeNode[];
+    edges: KnowledgeEdge[];
+  } {
     return {
       nodes: Array.from(this.nodes.values()),
       edges: this.edges,

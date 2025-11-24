@@ -108,7 +108,7 @@ export class GovernanceSystem {
     );
   };
 
-  private readonly handleNoHouses = () => {
+  private readonly handleNoHouses = (): void => {
     this.createDemand("housing_full", 9, "No hay casas disponibles");
   };
 

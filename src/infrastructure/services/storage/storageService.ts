@@ -65,48 +65,66 @@ export class StorageService {
 
     if (this.useGCS && this.bucket) {
       const [files] = await this.bucket.getFiles({ prefix: "save_" });
-
-      saves = await Promise.all(
+      const gcsEntries = await Promise.all(
         files
           .filter((f) => f.name.endsWith(".json"))
           .map(async (file) => {
             const [metadata] = await file.getMetadata();
             const [content] = await file.download();
-            const data = JSON.parse(content.toString());
+            const parsed = this.safelyParseSaveData(content.toString());
+            if (!parsed) {
+              logger.warn("Skipping invalid save from GCS", {
+                file: file.name,
+              });
+              return null;
+            }
 
             return {
               id: file.name.replace(".json", ""),
-              timestamp: data.timestamp,
-              gameTime: data.gameTime,
-              stats: data.stats,
-              size: parseInt(String(metadata.size || "0")),
-              modified: metadata.updated || new Date().toISOString(),
-            };
+              timestamp: parsed.timestamp,
+              gameTime: parsed.gameTime,
+              stats: parsed.stats,
+              size: Number.parseInt(String(metadata.size ?? "0"), 10),
+              modified: metadata.updated ?? new Date().toISOString(),
+            } satisfies SaveMetadata;
           }),
       );
+
+      saves = gcsEntries.reduce<SaveMetadata[]>((acc, entry) => {
+        if (entry) acc.push(entry);
+        return acc;
+      }, []);
     } else {
       await this.ensureLocalDir();
       const files = await fs.readdir(CONFIG.LOCAL_SAVES_PATH);
-
-      saves = await Promise.all(
+      const localEntries = await Promise.all(
         files
           .filter((f) => f.endsWith(".json") && f.startsWith("save_"))
           .map(async (filename) => {
             const filepath = path.join(CONFIG.LOCAL_SAVES_PATH, filename);
             const content = await fs.readFile(filepath, "utf-8");
             const stat = await fs.stat(filepath);
-            const data = JSON.parse(content);
+            const parsed = this.safelyParseSaveData(content);
+            if (!parsed) {
+              logger.warn("Skipping invalid local save", { filename });
+              return null;
+            }
 
             return {
               id: filename.replace(".json", ""),
-              timestamp: data.timestamp,
-              gameTime: data.gameTime,
-              stats: data.stats,
+              timestamp: parsed.timestamp,
+              gameTime: parsed.gameTime,
+              stats: parsed.stats,
               size: stat.size,
               modified: stat.mtime.toISOString(),
-            };
+            } satisfies SaveMetadata;
           }),
       );
+
+      saves = localEntries.reduce<SaveMetadata[]>((acc, entry) => {
+        if (entry) acc.push(entry);
+        return acc;
+      }, []);
     }
 
     return saves.sort((a, b) => b.timestamp - a.timestamp);
@@ -119,12 +137,22 @@ export class StorageService {
       if (!exists) return null;
 
       const [content] = await file.download();
-      return JSON.parse(content.toString());
+      const parsed = this.safelyParseSaveData(content.toString());
+      if (!parsed) {
+        logger.warn("Invalid save data received from GCS", { id });
+        return null;
+      }
+      return parsed;
     } else {
       const filepath = path.join(CONFIG.LOCAL_SAVES_PATH, `${id}.json`);
       try {
         const content = await fs.readFile(filepath, "utf-8");
-        return JSON.parse(content);
+        const parsed = this.safelyParseSaveData(content);
+        if (!parsed) {
+          logger.warn("Invalid save data read from local storage", { id });
+          return null;
+        }
+        return parsed;
       } catch (_error) {
         return null;
       }
@@ -156,11 +184,13 @@ export class StorageService {
 
     if (CONFIG.NAS.ENABLED) {
       this.backupToNAS(saveId, content).catch((err) =>
-        console.error("NAS backup error:", err),
+        logger.error("NAS backup error:", err),
       );
     }
 
-    this.cleanOldSaves().catch((err) => console.error("Cleanup error:", err));
+    this.cleanOldSaves().catch((err) =>
+      logger.error("Cleanup error:", err),
+    );
 
     return { saveId, size };
   }
@@ -183,7 +213,30 @@ export class StorageService {
     }
   }
 
-  private async ensureLocalDir() {
+  private isSaveData(value: unknown): value is SaveData {
+    if (!value || typeof value !== "object") {
+      return false;
+    }
+
+    const candidate = value as Record<string, unknown>;
+    return (
+      typeof candidate.timestamp === "number" &&
+      typeof candidate.gameTime === "number" &&
+      typeof candidate.stats === "object" &&
+      candidate.stats !== null
+    );
+  }
+
+  private safelyParseSaveData(rawContent: string): SaveData | null {
+    try {
+      const parsed: unknown = JSON.parse(rawContent);
+      return this.isSaveData(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private async ensureLocalDir(): Promise<void> {
     try {
       await fs.mkdir(CONFIG.LOCAL_SAVES_PATH, { recursive: true });
     } catch (_error) {
@@ -209,19 +262,19 @@ export class StorageService {
       const remotePath = `${CONFIG.NAS.BACKUP_PATH}/${saveId}.json`;
       await sftp.put(Buffer.from(content), remotePath);
 
-      console.log(`📦 Backup to NAS: ${remotePath}`);
+      logger.info(`📦 Backup to NAS: ${remotePath}`);
       return true;
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      console.error("NAS backup failed:", errorMessage);
+      logger.error("NAS backup failed:", errorMessage);
       return false;
     } finally {
       await sftp.end();
     }
   }
 
-  private async cleanOldSaves() {
+  private async cleanOldSaves(): Promise<void> {
     try {
       if (this.useGCS && this.bucket) {
         const [gcsFiles] = await this.bucket.getFiles({ prefix: "save_" });
@@ -240,7 +293,7 @@ export class StorageService {
         filesWithMeta.sort((a, b) => b.updated - a.updated);
         const toDelete = filesWithMeta.slice(10);
         await Promise.all(toDelete.map(({ file }) => file.delete()));
-        console.log(`Cleaned ${toDelete.length} old saves from GCS`);
+        logger.info(`Cleaned ${toDelete.length} old saves from GCS`);
       } else {
         await this.ensureLocalDir();
         const localFiles = await fs.readdir(CONFIG.LOCAL_SAVES_PATH);
@@ -265,10 +318,12 @@ export class StorageService {
         filesWithMeta.sort((a, b) => b.updated - a.updated);
         const toDelete = filesWithMeta.slice(10);
         await Promise.all(toDelete.map(({ filepath }) => fs.unlink(filepath)));
-        console.log(`Cleaned ${toDelete.length} old saves from local storage`);
+        logger.info(
+          `Cleaned ${toDelete.length} old saves from local storage`,
+        );
       }
     } catch (error) {
-      console.error("Error cleaning old saves:", error);
+      logger.error("Error cleaning old saves:", error);
     }
   }
 }

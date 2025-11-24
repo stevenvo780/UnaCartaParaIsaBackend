@@ -111,7 +111,7 @@ export class LivingLegendsSystem {
   }
 
   private updateTitles(): void {
-    for (const [agentId, legend] of this.legends.entries()) {
+    for (const [agentId, legend] of Array.from(this.legends.entries())) {
       const agent = this._state.agents.find((a) => a.id === agentId);
       if (!agent) continue;
 
@@ -218,7 +218,7 @@ export class LivingLegendsSystem {
    */
   public getActiveLegends(): string[] {
     const active: string[] = [];
-    for (const [agentId, legend] of this.legends.entries()) {
+    for (const [agentId, legend] of Array.from(this.legends.entries())) {
       if (
         legend.reputation >= this.config.minReputationForLegend ||
         legend.reputation <= this.config.minReputationForVillain

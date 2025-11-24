@@ -15,6 +15,7 @@ export class WorldGenerationService {
   private noiseGen: NoiseUtils;
   private biomeResolver: BiomeResolver;
   private biomeMap: Map<BiomeType, SimpleBiomeConfig>;
+  private currentSeed: string | number = "default";
 
   constructor() {
     this.noiseGen = new NoiseUtils();
@@ -23,7 +24,8 @@ export class WorldGenerationService {
   }
 
   private initializeGenerators(config: WorldGenConfig): void {
-    this.noiseGen = new NoiseUtils(config.seed);
+    this.currentSeed = config.seed ?? "default";
+    this.noiseGen = new NoiseUtils(this.currentSeed);
     if (config.width <= 0 || config.height <= 0) {
       throw new Error("World generation config dimensions must be positive");
     }
@@ -119,9 +121,7 @@ export class WorldGenerationService {
     if (!biomeConfig) return assets;
 
     // Deterministic RNG for this tile
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const seed = (this.noiseGen as any).seed ?? "default";
-    const tileRng = seedrandom(`${x},${y}-${seed}`);
+    const tileRng = seedrandom(`${x},${y}-${this.currentSeed}`);
 
     // Trees
     if (

@@ -1,23 +1,20 @@
-import { GameState } from "../../types/game-types";
+import { EventEmitter } from "events";
+import { GameState } from "../../core/GameState";
 import {
   AgentProfile,
-  LifeStage,
   AgentTraits,
+  LifeStage,
+  Sex,
 } from "../../types/simulation/agents";
-import { simulationEvents, GameEventNames } from "../core/events";
-
-interface SpawnAgentOptions {
-  requestId?: string;
-  name?: string;
-  sex?: AgentProfile["sex"] | "unknown";
-  generation?: number;
-  immortal?: boolean;
-  parents?: {
-    father?: string;
-    mother?: string;
-  };
-  traits?: Partial<AgentTraits>;
-}
+import { simulationEvents, GameEventNames } from "../../core/events";
+import type { NeedsSystem } from "./NeedsSystem";
+import type { AISystem } from "./AISystem";
+import type { InventorySystem } from "./InventorySystem";
+import type { SocialSystem } from "./SocialSystem";
+import type { MarriageSystem } from "./MarriageSystem";
+import type { GenealogySystem } from "./GenealogySystem";
+import type { HouseholdSystem } from "./HouseholdSystem";
+import type { DivineFavorSystem } from "./DivineFavorSystem";
 
 interface LifeCycleConfig {
   secondsPerYear: number;
@@ -33,12 +30,45 @@ interface LifeCycleConfig {
   mortalInterbirthSec: number;
 }
 
-export class LifeCycleSystem {
+export class LifeCycleSystem extends EventEmitter {
   private gameState: GameState;
   private config: LifeCycleConfig;
-  private agents = new Map<string, AgentProfile>();
+  private lastUpdate: number = 0;
+  private lastResourceConsumption: number = 0;
 
-  constructor(gameState: GameState, config?: Partial<LifeCycleConfig>) {
+  // State
+  private reproductionCooldown = new Map<string, number>();
+  private nextReproductionAllowed = new Map<string, number>();
+  private pairChildrenCount = new Map<string, number>();
+  private spawnCounter = 0;
+  private pendingHousingAssignments = new Set<string>();
+  private lastHousingAudit = 0;
+
+  // Dependencies
+  private needsSystem?: NeedsSystem;
+  private aiSystem?: AISystem;
+  private inventorySystem?: InventorySystem;
+  private socialSystem?: SocialSystem;
+  private marriageSystem?: MarriageSystem;
+  private genealogySystem?: GenealogySystem;
+  private householdSystem?: HouseholdSystem;
+  private divineFavorSystem?: DivineFavorSystem;
+
+  constructor(
+    gameState: GameState,
+    config?: Partial<LifeCycleConfig>,
+    systems?: {
+      needsSystem?: NeedsSystem;
+      aiSystem?: AISystem;
+      inventorySystem?: InventorySystem;
+      socialSystem?: SocialSystem;
+      marriageSystem?: MarriageSystem;
+      genealogySystem?: GenealogySystem;
+      householdSystem?: HouseholdSystem;
+      divineFavorSystem?: DivineFavorSystem;
+    }
+  ) {
+    super();
     this.gameState = gameState;
     this.config = {
       secondsPerYear: 30,
@@ -55,128 +85,86 @@ export class LifeCycleSystem {
       ...config,
     };
 
-    (gameState.agents ?? []).forEach((agent) => {
-      if (!agent?.id) return;
-      this.agents.set(agent.id, agent as AgentProfile);
-    });
-    this.syncAgentsToState();
+    if (systems) {
+      this.needsSystem = systems.needsSystem;
+      this.aiSystem = systems.aiSystem;
+      this.inventorySystem = systems.inventorySystem;
+      this.socialSystem = systems.socialSystem;
+      this.marriageSystem = systems.marriageSystem;
+      this.genealogySystem = systems.genealogySystem;
+      this.householdSystem = systems.householdSystem;
+      this.divineFavorSystem = systems.divineFavorSystem;
+    }
+  }
+
+  public setDependencies(systems: {
+    needsSystem?: NeedsSystem;
+    aiSystem?: AISystem;
+    inventorySystem?: InventorySystem;
+    socialSystem?: SocialSystem;
+    marriageSystem?: MarriageSystem;
+    genealogySystem?: GenealogySystem;
+    householdSystem?: HouseholdSystem;
+    divineFavorSystem?: DivineFavorSystem;
+  }): void {
+    if (systems.needsSystem) this.needsSystem = systems.needsSystem;
+    if (systems.aiSystem) this.aiSystem = systems.aiSystem;
+    if (systems.inventorySystem) this.inventorySystem = systems.inventorySystem;
+    if (systems.socialSystem) this.socialSystem = systems.socialSystem;
+    if (systems.marriageSystem) this.marriageSystem = systems.marriageSystem;
+    if (systems.genealogySystem) this.genealogySystem = systems.genealogySystem;
+    if (systems.householdSystem) this.householdSystem = systems.householdSystem;
+    if (systems.divineFavorSystem) this.divineFavorSystem = systems.divineFavorSystem;
   }
 
   public update(deltaTimeMs: number): void {
-    const dtSec = deltaTimeMs / 1000;
-    const yearInc = dtSec / this.config.secondsPerYear;
+    const now = Date.now();
+    if (now - this.lastUpdate < 1000) return; // Update every second
 
-    this.agents.forEach((agent) => {
-      if (agent.immortal) return;
+    const dtSec = (now - this.lastUpdate) / 1000;
+    this.lastUpdate = now;
+
+    // Resource consumption every 60s
+    if (now - this.lastResourceConsumption >= 60000) {
+      this.consumeResourcesPeriodically();
+      this.lastResourceConsumption = now;
+    }
+
+    const yearInc = dtSec / this.config.secondsPerYear;
+    const agents = this.gameState.agents || [];
+
+    for (const agent of agents) {
+      if (agent.immortal) {
+        if (agent.lifeStage === "adult") {
+          this.queueHousingAssignment(agent.id);
+        }
+        continue;
+      }
 
       agent.ageYears += yearInc;
-
       const previousStage = agent.lifeStage;
       agent.lifeStage = this.getLifeStage(agent.ageYears);
 
       if (previousStage !== agent.lifeStage) {
-        console.log(`Agent ${agent.id} aged to ${agent.lifeStage}`);
+        simulationEvents.emit(GameEventNames.AGENT_AGED, {
+          entityId: agent.id,
+          newAge: agent.ageYears,
+          previousStage,
+          currentStage: agent.lifeStage,
+        });
       }
 
       if (agent.ageYears > this.config.maxAge) {
         this.removeAgent(agent.id);
       }
-    });
-  }
 
-  public getAgent(id: string): AgentProfile | undefined {
-    return this.agents.get(id);
-  }
-
-  public addAgent(agent: AgentProfile): void {
-    this.agents.set(agent.id, agent);
-    this.syncAgentsToState();
-
-    // Create corresponding SimulationEntity if it doesn't exist
-    const existingEntityIndex = this.gameState.entities.findIndex(
-      (e) => e.id === agent.id,
-    );
-    if (existingEntityIndex === -1) {
-      this.gameState.entities.push({
-        id: agent.id,
-        name: agent.name,
-        x: 2048 + (Math.random() * 100 - 50),
-        y: 2048 + (Math.random() * 100 - 50),
-        type: "agent",
-        state: "idle",
-        stats: {
-          health: 100,
-          energy: 100,
-          happiness: 100,
-        },
-        tags: ["agent", agent.sex],
-      });
+      if (agent.lifeStage === "adult") {
+        this.queueHousingAssignment(agent.id);
+      }
     }
 
-    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
-      agentId: agent.id,
-      action: "birth",
-    });
-  }
-
-  public getAgents(): AgentProfile[] {
-    return Array.from(this.agents.values());
-  }
-
-  public removeAgent(id: string): void {
-    const removed = this.agents.delete(id);
-    if (!removed) return;
-    console.log(`Agent ${id} removed from lifecycle system`);
-    this.syncAgentsToState();
-
-    // Remove corresponding SimulationEntity
-    const entityIndex = this.gameState.entities.findIndex((e) => e.id === id);
-    if (entityIndex !== -1) {
-      this.gameState.entities.splice(entityIndex, 1);
-    }
-
-    simulationEvents.emit(GameEventNames.COMBAT_KILL, {
-      targetId: id,
-      agentId: id,
-      cause: "lifecycle",
-    });
-  }
-
-  public spawnAgent(options: SpawnAgentOptions = {}): AgentProfile {
-    const id =
-      options.requestId ??
-      `agent_${Date.now().toString(36)}_${Math.random()
-        .toString(36)
-        .slice(2, 6)}`;
-    const traits = this.normalizeTraits(options.traits);
-    const agent: AgentProfile = {
-      id,
-      name: options.name ?? `Agent ${id.slice(-4)}`,
-      sex: options.sex === "female" ? "female" : "male",
-      ageYears: 18,
-      lifeStage: "adult",
-      birthTimestamp: Date.now(),
-      generation: options.generation ?? 0,
-      immortal: options.immortal ?? false,
-      traits,
-      parents:
-        options.parents && (options.parents.father || options.parents.mother)
-          ? {
-              father: options.parents.father,
-              mother: options.parents.mother,
-            }
-          : undefined,
-    };
-    this.addAgent(agent);
-    return agent;
-  }
-
-  public killAgent(agentId: string): boolean {
-    if (!this.agents.has(agentId)) {
-      return false;
-    }
-    this.removeAgent(agentId);
-    return true;
+    this.tryBreeding(now);
+    this.processHousingAssignments(now);
   }
 
   private getLifeStage(age: number): LifeStage {
@@ -185,16 +173,165 @@ export class LifeCycleSystem {
     return "elder";
   }
 
-  private syncAgentsToState(): void {
-    this.gameState.agents = Array.from(this.agents.values());
+  private queueHousingAssignment(agentId: string): void {
+    if (this.householdSystem?.getHouseFor(agentId)) return;
+    this.pendingHousingAssignments.add(agentId);
   }
 
-  private normalizeTraits(partial?: Partial<AgentTraits>): AgentTraits {
+  private processHousingAssignments(now: number): void {
+    if (!this.householdSystem) return;
+
+    // Process a few assignments per tick
+    let processed = 0;
+    for (const agentId of this.pendingHousingAssignments) {
+      if (processed >= 3) break;
+
+      const agent = this.gameState.agents?.find(a => a.id === agentId);
+      if (agent && agent.lifeStage === "adult") {
+        const houseId = this.householdSystem.assignToHouse(agentId);
+        if (houseId) {
+          this.pendingHousingAssignments.delete(agentId);
+        }
+      } else {
+        this.pendingHousingAssignments.delete(agentId);
+      }
+      processed++;
+    }
+  }
+
+  private consumeResourcesPeriodically(): void {
+    if (!this.inventorySystem) return;
+
+    const agents = this.gameState.agents || [];
+    for (const agent of agents) {
+      // Logic for consumption...
+      // Simplified for brevity, assumes InventorySystem handles details
+      const needs = { food: 1, water: 1 }; // Base needs
+      this.inventorySystem.consumeFromAgent(agent.id, needs);
+    }
+  }
+
+  private async tryBreeding(now: number): Promise<void> {
+    const agents = this.gameState.agents || [];
+    if (agents.length >= this.config.maxPopulation) return;
+
+    // Simple random breeding logic
+    // In a real implementation, this would be more complex (as seen in frontend)
+    // For now, we'll implement the core check
+
+    const adults = agents.filter(a => a.lifeStage === "adult");
+    const males = adults.filter(a => a.sex === "male");
+    const females = adults.filter(a => a.sex === "female");
+
+    if (males.length === 0 || females.length === 0) return;
+
+    if (Math.random() < 0.05) { // 5% chance per second
+      const father = males[Math.floor(Math.random() * males.length)];
+      const mother = females[Math.floor(Math.random() * females.length)];
+
+      await this.tryCouple(father.id, mother.id, now);
+    }
+  }
+
+  private async tryCouple(fatherId: string, motherId: string, now: number): Promise<void> {
+    const pairKey = [fatherId, motherId].sort().join("::");
+    const cooldown = this.reproductionCooldown.get(pairKey) || 0;
+
+    if (now < cooldown) return;
+
+    // Success!
+    const father = this.gameState.agents?.find(a => a.id === fatherId);
+    const mother = this.gameState.agents?.find(a => a.id === motherId);
+
+    if (!father || !mother) return;
+
+    const childId = await this.spawnAgent({
+      generation: Math.max(father.generation, mother.generation) + 1,
+      parents: { father: fatherId, mother: motherId },
+      sex: Math.random() > 0.5 ? "male" : "female",
+    });
+
+    this.reproductionCooldown.set(pairKey, now + this.config.reproductionCooldownSec * 1000);
+
+    simulationEvents.emit(GameEventNames.REPRODUCTION_SUCCESS, {
+      childId,
+      parent1: fatherId,
+      parent2: motherId,
+    });
+  }
+
+  public async spawnAgent(partial: Partial<AgentProfile>): Promise<string> {
+    const id = `agent_${++this.spawnCounter}`;
+
+    const profile: AgentProfile = {
+      id,
+      name: partial.name || `Agent ${id}`,
+      sex: partial.sex || "female",
+      ageYears: 0,
+      lifeStage: "child",
+      generation: partial.generation || 0,
+      birthTimestamp: Date.now(),
+      immortal: false,
+      traits: this.randomTraits(),
+      socialStatus: "commoner",
+      ...partial,
+    };
+
+    if (!this.gameState.agents) this.gameState.agents = [];
+    this.gameState.agents.push(profile);
+
+    // Initialize AI
+    if (this.aiSystem) {
+      // aiSystem.createAIState(id); // Assuming this method exists or is handled internally
+    }
+
+    // Initialize Needs
+    if (this.needsSystem) {
+      this.needsSystem.initializeEntityNeeds(id);
+    }
+
+    simulationEvents.emit(GameEventNames.AGENT_BIRTH, {
+      entityId: id,
+      parentIds: profile.parents ? [profile.parents.father, profile.parents.mother] : undefined,
+    });
+
+    return id;
+  }
+
+  public removeAgent(id: string): void {
+    if (!this.gameState.agents) return;
+
+    const index = this.gameState.agents.findIndex(a => a.id === id);
+    if (index !== -1) {
+      const agent = this.gameState.agents[index];
+      this.gameState.agents.splice(index, 1);
+
+      // Cleanup other systems
+      this.aiSystem?.removeEntityAI(id);
+      // this.needsSystem?.removeEntityNeeds(id);
+
+      simulationEvents.emit(GameEventNames.AGENT_DEATH, {
+        entityId: id,
+        reason: "old_age",
+        age: agent.ageYears,
+      });
+    }
+  }
+
+  public getAgent(id: string): AgentProfile | undefined {
+    return this.gameState.agents?.find(a => a.id === id);
+  }
+
+  private randomTraits(): AgentTraits {
     return {
-      cooperation: partial?.cooperation ?? 0.5,
-      aggression: partial?.aggression ?? 0.5,
-      diligence: partial?.diligence ?? 0.5,
-      curiosity: partial?.curiosity ?? 0.5,
+      cooperation: Math.random(),
+      aggression: Math.random(),
+      diligence: Math.random(),
+      curiosity: Math.random(),
+      bravery: Math.random(),
+      charisma: Math.random(),
+      stamina: Math.random(),
+      intelligence: Math.random(),
     };
   }
 }

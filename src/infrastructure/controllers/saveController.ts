@@ -81,7 +81,7 @@ export class SaveController {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      console.error("Error reading save:", errorMessage);
+      logger.error("Error reading save:", errorMessage);
       res.status(500).json({ error: "Failed to read save" });
     }
   }
@@ -105,7 +105,7 @@ export class SaveController {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      console.error("Error saving game:", errorMessage);
+      logger.error("Error saving game:", errorMessage);
       res.status(500).json({ error: "Failed to save game" });
     }
   }
@@ -135,7 +135,7 @@ export class SaveController {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      console.error("Error deleting save:", errorMessage);
+      logger.error("Error deleting save:", errorMessage);
       res.status(500).json({ error: "Failed to delete save" });
     }
   }

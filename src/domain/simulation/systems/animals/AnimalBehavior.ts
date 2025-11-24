@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/utils/logger";
 import type { Animal } from "../../../types/simulation/animals";
 import { getAnimalConfig } from "../../../../infrastructure/services/world/config/AnimalConfigs";
 import { AnimalNeeds } from "./AnimalNeeds";
@@ -393,7 +394,7 @@ export class AnimalBehavior {
 
           onOffspringCreated(offspring);
 
-          console.log(
+          logger.info(
             `👶 Animal ${animal.type} reproduced: ${offspring.id} (gen ${generation})`,
           );
           animal.state = "idle";

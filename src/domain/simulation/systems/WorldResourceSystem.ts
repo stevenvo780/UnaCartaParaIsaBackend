@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/utils/logger";
 import { GameEventNames, simulationEvents } from "../core/events";
 import { getResourceConfig } from "../../../infrastructure/services/world/config/WorldResourceConfigs";
 import type {
@@ -103,7 +104,7 @@ export class WorldResourceSystem {
         }
       }
     }
-    console.log(`[WorldResourceSystem] Spawned ${spawned} resources in world`);
+    logger.info(`[WorldResourceSystem] Spawned ${spawned} resources in world`);
   }
 
   public spawnResource(

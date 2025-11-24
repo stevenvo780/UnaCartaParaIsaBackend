@@ -1,4 +1,5 @@
 import { EventEmitter } from "node:events";
+import { logger } from "@/infrastructure/utils/logger";
 import type { GameState } from "../../types/game-types";
 import type { AgentProfile } from "../../types/simulation/agents";
 import type {
@@ -142,7 +143,7 @@ export class RoleSystem extends EventEmitter {
     this.lastStatsUpdate = now;
     this.lastReassignment = now;
 
-    console.log("👷 RoleSystem (Backend) initialized");
+    logger.info("👷 RoleSystem (Backend) initialized");
   }
 
   public update(_delta: number): void {
@@ -303,7 +304,7 @@ export class RoleSystem extends EventEmitter {
     this.roles.set(agent.id, role);
     this.rebuildSchedule();
 
-    console.log(
+    logger.info(
       `👷 Rol asignado: ${agent.name || agent.id} → ${selectedRole.name}`,
     );
 
@@ -413,7 +414,7 @@ export class RoleSystem extends EventEmitter {
     this.roles.set(agentId, role);
     this.rebuildSchedule();
 
-    console.log(`👷 Rol reasignado: ${agentId} → ${roleDef.name}`);
+    logger.info(`👷 Rol reasignado: ${agentId} → ${roleDef.name}`);
     return { success: true, agentId, roleType: newRole };
   }
 }

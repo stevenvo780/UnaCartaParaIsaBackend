@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/utils/logger";
 import type { GameState } from "../../types/game-types";
 import type {
   Animal,
@@ -60,7 +61,7 @@ export class AnimalSystem {
     this.config = { ...DEFAULT_CONFIG, ...config };
 
     this.setupEventListeners();
-    console.log("🐾 AnimalSystem (Backend) initialized");
+    logger.info("🐾 AnimalSystem (Backend) initialized");
   }
 
   private setupEventListeners(): void {
@@ -528,7 +529,7 @@ export class AnimalSystem {
       cause,
     });
 
-    console.log(`💀 Animal died: ${animalId} (${cause})`);
+    logger.warn(`💀 Animal died: ${animalId} (${cause})`);
   }
 
   /**
@@ -585,7 +586,7 @@ export class AnimalSystem {
     });
 
     if (toRemove.length > 0) {
-      console.log(`🧹 Cleaned up ${toRemove.length} dead animals`);
+      logger.info(`🧹 Cleaned up ${toRemove.length} dead animals`);
     }
   }
 

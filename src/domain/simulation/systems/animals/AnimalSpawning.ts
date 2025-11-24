@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/utils/logger";
 import type {
   Animal,
   AnimalType,
@@ -25,7 +26,7 @@ export class AnimalSpawning {
     let spawned = 0;
 
     if (!biomeMap || biomeMap.length === 0) {
-      console.warn("⚠️ No biomeMap, skipping animal spawn");
+      logger.warn("⚠️ No biomeMap, skipping animal spawn");
       return 0;
     }
 
@@ -76,7 +77,7 @@ export class AnimalSpawning {
     }
 
     const duration = performance.now() - startTime;
-    console.log(`🐰 Spawned ${spawned} animals in ${duration.toFixed(2)}ms`);
+    logger.info(`🐰 Spawned ${spawned} animals in ${duration.toFixed(2)}ms`);
     return spawned;
   }
 
@@ -143,7 +144,7 @@ export class AnimalSpawning {
     }
 
     if (spawned > 0) {
-      console.log(
+      logger.info(
         `🐰 Spawned ${spawned} animals in chunk (${chunkX}, ${chunkY})`,
       );
     }
@@ -163,7 +164,7 @@ export class AnimalSpawning {
   ): Animal | null {
     const config = getAnimalConfig(type);
     if (!config) {
-      console.error(`❌ No config for animal type: ${type}`);
+      logger.error(`❌ No config for animal type: ${type}`);
       return null;
     }
 

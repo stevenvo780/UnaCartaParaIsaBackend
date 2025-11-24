@@ -1,20 +1,20 @@
-import { EventEmitter } from "node:events";
-import type { GameState } from "../../types/game-types";
-import type { AgentProfile } from "../../types/simulation/agents";
-import type {
-  AIState,
-  AIGoal,
-  AgentAction,
-  AISystemConfig,
-  AgentMemory,
-} from "../../types/simulation/ai";
-import { AgentPersonality } from "../../types/simulation/ai";
-import { simulationEvents, GameEventNames } from "../core/events";
-import { evaluateCriticalNeeds } from "./ai/NeedsEvaluator";
+import { EventEmitter } from "events";
+import { GameState } from "../../core/GameState";
 import {
-  evaluateWorkOpportunities,
-  evaluateExplorationGoals,
-} from "./ai/OpportunitiesEvaluator";
+  AIGoal,
+  AIState,
+  AgentAction,
+  AgentMemory,
+  AgentPersonality,
+  GoalType,
+  AgentProfile,
+  AgentTraits,
+  LifeStage,
+} from "../../types/simulation/ai";
+import { NeedsEvaluator } from "../evaluators/NeedsEvaluator";
+import { OpportunitiesEvaluator } from "../evaluators/OpportunitiesEvaluator";
+import { GameEventNames } from "../../core/events";
+import { simulationEvents } from "../../core/events";
 import type { NeedsSystem } from "./NeedsSystem";
 import type { RoleSystem } from "./RoleSystem";
 import type { WorldResourceSystem } from "./WorldResourceSystem";
@@ -22,33 +22,45 @@ import type { InventorySystem } from "./InventorySystem";
 import type { SocialSystem } from "./SocialSystem";
 import type { CraftingSystem } from "./CraftingSystem";
 import type { HouseholdSystem } from "./HouseholdSystem";
-import type { WorldResourceType } from "../../types/simulation/worldResources";
 
-const DEFAULT_AI_CONFIG: AISystemConfig = {
-  decisionIntervalMs: 500,
-  goalTimeoutMs: 15000,
-  minPriorityThreshold: 0.3,
-  batchSize: 5,
-};
+interface AISystemConfig {
+  updateIntervalMs: number;
+  enablePersonality: boolean;
+  enableMemory: boolean;
+  maxMemoryItems: number;
+}
 
 export class AISystem extends EventEmitter {
   private gameState: GameState;
   private config: AISystemConfig;
-  private aiStates = new Map<string, AIState>();
-  private lastUpdate = 0;
-  private currentBatchIndex = 0;
+  private aiStates: Map<string, AIState>;
+  private needsEvaluator: NeedsEvaluator;
+  private opportunitiesEvaluator: OpportunitiesEvaluator;
+  private lastUpdate: number = 0;
 
+  // Dependencies
   private needsSystem?: NeedsSystem;
   private roleSystem?: RoleSystem;
   private worldResourceSystem?: WorldResourceSystem;
-  // TODO: These systems are kept for potential future use - will be used for advanced AI decision making
-  private _inventorySystem?: InventorySystem;
-  // TODO: Social system for future social AI interactions
-  private _socialSystem?: SocialSystem;
-  // TODO: Crafting system for future crafting AI decisions
-  private _craftingSystem?: CraftingSystem;
-  // TODO: Household system for future household management AI
-  private _householdSystem?: HouseholdSystem;
+  private inventorySystem?: InventorySystem;
+  private socialSystem?: SocialSystem;
+  private craftingSystem?: CraftingSystem;
+  private householdSystem?: HouseholdSystem;
+
+  // Phase 3: Memory Cleanup Tracking
+  private _lastMemoryCleanupTime = 0;
+  private readonly MEMORY_CLEANUP_INTERVAL = 300000; // 5 minutes
+
+  // Phase 4: Advanced Features
+  private agentStrategies = new Map<string, "peaceful" | "tit_for_tat" | "bully">();
+  private playerControlledAgents = new Set<string>();
+  private agentPriorities = new Map<string, "survival" | "normal" | "social">();
+
+  // Statistics
+  private _decisionTimeTotalMs = 0;
+  private _decisionCount = 0;
+  private _goalsCompleted = 0;
+  private _goalsFailed = 0;
 
   constructor(
     gameState: GameState,
@@ -65,8 +77,17 @@ export class AISystem extends EventEmitter {
   ) {
     super();
     this.gameState = gameState;
-    this.config = { ...DEFAULT_AI_CONFIG, ...config };
-    this.lastUpdate = Date.now();
+    this.config = {
+      updateIntervalMs: 1000,
+      enablePersonality: true,
+      enableMemory: true,
+      maxMemoryItems: 50,
+      ...config,
+    };
+
+    this.aiStates = new Map();
+    this.needsEvaluator = new NeedsEvaluator();
+    this.opportunitiesEvaluator = new OpportunitiesEvaluator();
 
     if (systems) {
       this.needsSystem = systems.needsSystem;
@@ -77,373 +98,600 @@ export class AISystem extends EventEmitter {
       this.craftingSystem = systems.craftingSystem;
       this.householdSystem = systems.householdSystem;
     }
-
-    console.log("🤖 AISystem (Backend) initialized");
   }
 
-  public update(_deltaMs: number): void {
-    const now = Date.now();
-    const timeSinceLastUpdate = now - this.lastUpdate;
+  public setDependencies(systems: {
+    needsSystem?: NeedsSystem;
+    roleSystem?: RoleSystem;
+    worldResourceSystem?: WorldResourceSystem;
+    inventorySystem?: InventorySystem;
+    socialSystem?: SocialSystem;
+    craftingSystem?: CraftingSystem;
+    householdSystem?: HouseholdSystem;
+  }): void {
+    if (systems.needsSystem) this.needsSystem = systems.needsSystem;
+    if (systems.roleSystem) this.roleSystem = systems.roleSystem;
+    if (systems.worldResourceSystem) this.worldResourceSystem = systems.worldResourceSystem;
+    if (systems.inventorySystem) this.inventorySystem = systems.inventorySystem;
+    if (systems.socialSystem) this.socialSystem = systems.socialSystem;
+    if (systems.craftingSystem) this.craftingSystem = systems.craftingSystem;
+    if (systems.householdSystem) this.householdSystem = systems.householdSystem;
+  }
 
-    if (timeSinceLastUpdate < this.config.decisionIntervalMs) {
+  public update(deltaTimeMs: number): void {
+    const now = Date.now();
+    if (now - this.lastUpdate < this.config.updateIntervalMs) {
       return;
+    }
+
+    // Phase 3: Periodic Memory Cleanup
+    if (now - this._lastMemoryCleanupTime >= this.MEMORY_CLEANUP_INTERVAL) {
+      this.cleanupAgentMemory(now);
+      this._lastMemoryCleanupTime = now;
     }
 
     this.lastUpdate = now;
+    const agents = this.gameState.agents || [];
 
-    const agents = this.getAdultAgents();
-    const batchStart = this.currentBatchIndex;
-    const batchEnd = Math.min(
-      batchStart + this.config.batchSize,
-      agents.length,
-    );
+    // Process agents in batches to avoid lag spikes
+    const BATCH_SIZE = 10;
+    let processed = 0;
 
-    for (let i = batchStart; i < batchEnd; i++) {
-      const agent = agents[i];
-      this.processAgentDecision(agent, now);
-    }
+    for (const agent of agents) {
+      // Skip player controlled agents
+      if (this.playerControlledAgents.has(agent.id)) continue;
 
-    this.currentBatchIndex = batchEnd;
-    if (this.currentBatchIndex >= agents.length) {
-      this.currentBatchIndex = 0;
+      if (processed >= BATCH_SIZE) break; // Simple time slicing for now
+
+      let aiState = this.aiStates.get(agent.id);
+      if (!aiState) {
+        aiState = this.createAIState(agent.id);
+        this.aiStates.set(agent.id, aiState);
+      }
+
+      if (aiState.offDuty) continue;
+
+      this.processAgent(agent.id, aiState, now);
+      processed++;
     }
   }
 
-  private getAdultAgents(): AgentProfile[] {
-    return (this.gameState.agents || []).filter(
-      (e) => e.lifeStage === "adult" && !e.immortal,
-    );
-  }
-
-  private processAgentDecision(agent: AgentProfile, now: number): void {
-    let aiState = this.aiStates.get(agent.id);
-
-    if (!aiState) {
-      aiState = this.createAIState(agent);
-      this.aiStates.set(agent.id, aiState);
-    }
-
-    if (aiState.offDuty) {
-      return;
-    }
-
+  private processAgent(agentId: string, aiState: AIState, now: number): void {
+    // 1. Check if current goal is completed or invalid
     if (aiState.currentGoal) {
-      const goalAge = now - aiState.currentGoal.createdAt;
-      if (goalAge > this.config.goalTimeoutMs) {
-        aiState.currentGoal = null;
-        this.emit("goalExpired", { agentId: agent.id });
+      if (this.isGoalCompleted(aiState.currentGoal, agentId)) {
+        this.completeGoal(aiState, agentId);
+      } else if (this.isGoalInvalid(aiState.currentGoal, agentId)) {
+        this.failGoal(aiState, agentId);
       } else {
+        // Continue current goal
         return;
       }
     }
 
-    const goals = this.planGoals(aiState, agent);
+    // 2. Formulate new goal if needed
+    if (!aiState.currentGoal) {
+      const startTime = performance.now();
+      const newGoal = this.makeDecision(agentId, aiState);
+      const endTime = performance.now();
 
-    if (goals.length === 0) {
-      return;
+      this._decisionTimeTotalMs += (endTime - startTime);
+      this._decisionCount++;
+
+      if (newGoal) {
+        aiState.currentGoal = newGoal;
+        simulationEvents.emit(GameEventNames.AGENT_GOAL_CHANGED, {
+          agentId,
+          newGoal,
+          timestamp: now,
+        });
+      }
     }
 
-    const selectedGoal = goals[0];
-    aiState.currentGoal = selectedGoal;
-    aiState.lastDecisionTime = now;
-
-    simulationEvents.emit(GameEventNames.AGENT_GOAL_CHANGED, {
-      agentId: agent.id,
-      goal: selectedGoal,
-    });
-
-    const action = this.goalToAction(selectedGoal, agent.id, now);
-
-    if (action) {
-      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMMANDED, {
-        action,
-      });
+    // 3. Execute action for current goal
+    if (aiState.currentGoal) {
+      const action = this.planAction(agentId, aiState.currentGoal);
+      if (action) {
+        aiState.currentAction = action;
+        simulationEvents.emit(GameEventNames.AGENT_ACTION_COMMANDED, {
+          agentId,
+          action,
+          timestamp: now,
+        });
+      }
     }
   }
 
-  /**
-   * Derive full personality from agent traits, considering life stage
-   */
-  private derivePersonalityFromTraits(
-    traits: {
-      cooperation: number;
-      aggression: number;
-      diligence: number;
-      curiosity: number;
-    },
-    lifeStage: "child" | "adult" | "elder",
-  ): AgentPersonality {
-    // Exploration type based on curiosity
-    const explorationType =
-      traits.curiosity > 0.7
-        ? "adventurous"
-        : traits.curiosity < 0.3
-          ? "cautious"
-          : "balanced";
+  private makeDecision(agentId: string, aiState: AIState): AIGoal | null {
+    // 1. Check critical needs first (Survival Priority)
+    const priority = this.agentPriorities.get(agentId) || "normal";
 
-    // Social preference based on cooperation
-    const socialPreference =
-      traits.cooperation > 0.7
-        ? "extroverted"
-        : traits.cooperation < 0.3
-          ? "introverted"
-          : "balanced";
+    if (this.needsSystem) {
+      const needs = this.needsSystem.getNeeds(agentId);
+      if (needs) {
+        const criticalGoal = this.needsEvaluator.evaluateCriticalNeeds(
+          agentId,
+          needs,
+          aiState.personality,
+        );
+        if (criticalGoal) return criticalGoal;
+      }
+    }
 
-    // Work ethic based on diligence
-    const workEthic =
-      traits.diligence > 0.7
-        ? "workaholic"
-        : traits.diligence < 0.3
-          ? "lazy"
-          : "balanced";
+    // If in survival mode, only focus on needs
+    if (priority === "survival") return null;
 
-    // Risk tolerance: combines aggression and curiosity, modified by age
-    const ageModifier =
-      lifeStage === "elder" ? -0.2 : lifeStage === "child" ? -0.1 : 0;
-    const riskTolerance = Math.max(
-      0,
-      Math.min(
-        1,
-        traits.aggression * 0.6 + traits.curiosity * 0.4 + ageModifier,
-      ),
+    // 2. Evaluate opportunities
+    // Pass available systems to evaluator
+    const opportunities = this.opportunitiesEvaluator.evaluateOpportunities(
+      agentId,
+      this.gameState,
+      aiState.personality,
+      {
+        roleSystem: this.roleSystem,
+        worldResourceSystem: this.worldResourceSystem,
+        socialSystem: this.socialSystem,
+      }
     );
 
+    if (opportunities.length > 0) {
+      // Sort by utility and pick best
+      opportunities.sort((a, b) => b.utility - a.utility);
+      return opportunities[0];
+    }
+
+    // 3. Default/Idle behavior
     return {
-      cooperation: traits.cooperation,
-      diligence: traits.diligence,
-      curiosity: traits.curiosity,
-      aggression: traits.aggression,
-      explorationType,
-      socialPreference,
-      workEthic,
-      riskTolerance,
-      neuroticism: Math.max(
-        0,
-        1 - (traits.aggression * 0.5 + traits.curiosity * 0.5),
-      ),
-      extraversion: traits.cooperation,
-      openness: traits.curiosity,
-      conscientiousness: traits.diligence,
-      agreeableness: traits.cooperation,
+      id: `idle_${Date.now()}`,
+      type: "idle",
+      priority: 0,
+      description: "Idling",
+      createdAt: Date.now(),
     };
   }
 
   /**
-   * Generate random personality when traits are not available
+   * PHASE 1: Personality System
    */
-  private generatePersonalityFallback(): AgentPersonality {
-    console.warn("⚠️ Generating personality without traits (fallback)");
+  private derivePersonalityFromTraits(
+    traits: AgentTraits,
+    lifeStage: LifeStage,
+  ): AgentPersonality {
+    const isChild = lifeStage === "child";
 
-    const explorationTypes = ["cautious", "balanced", "adventurous"] as const;
-    const socialPreferences = [
-      "introverted",
-      "balanced",
-      "extroverted",
-    ] as const;
-    const workEthics = ["lazy", "balanced", "workaholic"] as const;
-
-    const cooperation = Math.random();
-    const diligence = Math.random();
-    const curiosity = Math.random();
-    const aggression = Math.random();
+    // Derive Big Five from traits
+    const openness = (traits.curiosity + (traits.intelligence || 0.5)) / 2;
+    const conscientiousness =
+      (traits.diligence + (traits.cooperation || 0.5)) / 2;
+    const extraversion =
+      (traits.charisma || 0.5) + (traits.aggression || 0.5) / 2;
+    const agreeableness =
+      (traits.cooperation || 0.5) - (traits.aggression || 0.5) / 2;
+    const neuroticism = 1 - (traits.bravery || 0.5);
 
     return {
-      cooperation,
-      diligence,
-      curiosity,
-      aggression,
+      openness,
+      conscientiousness,
+      extraversion,
+      agreeableness,
+      neuroticism,
+      // Derived behavioral tendencies
+      riskTolerance: (traits.bravery || 0.5) * 0.7 + (traits.curiosity || 0.5) * 0.3,
+      socialPreference: isChild
+        ? 0.8
+        : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4,
+      workEthic: isChild
+        ? 0.3
+        : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2,
       explorationType:
-        explorationTypes[Math.floor(Math.random() * explorationTypes.length)],
-      socialPreference:
-        socialPreferences[Math.floor(Math.random() * socialPreferences.length)],
-      workEthic: workEthics[Math.floor(Math.random() * workEthics.length)],
-      riskTolerance: 0.3 + Math.random() * 0.4,
-      neuroticism: Math.random(),
-      extraversion: Math.random(),
-      openness: Math.random(),
-      conscientiousness: Math.random(),
-      agreeableness: Math.random(),
+        (traits.curiosity || 0.5) > 0.7 ? "adventurous" : "cautious",
     };
   }
 
-  private createAIState(agent: AgentProfile): AIState {
-    // Derive full personality from traits
-    const personality = agent.traits
-      ? this.derivePersonalityFromTraits(agent.traits, agent.lifeStage)
-      : this.generatePersonalityFallback();
-
-    const memory: AgentMemory = {
-      lastSeenThreats: [],
-      visitedZones: new Set(),
-      recentInteractions: [],
-      knownResourceLocations: new Map(),
-      successfulActivities: new Map(),
-      failedAttempts: new Map(),
-      lastMemoryCleanup: Date.now(),
+  private generatePersonalityFallback(): AgentPersonality {
+    return {
+      openness: 0.5,
+      conscientiousness: 0.5,
+      extraversion: 0.5,
+      agreeableness: 0.5,
+      neuroticism: 0.5,
+      riskTolerance: 0.5,
+      socialPreference: 0.5,
+      workEthic: 0.5,
+      explorationType: "balanced",
     };
+  }
+
+  private createAIState(agentId: string): AIState {
+    const agent = this.gameState.agents?.find((a) => a.id === agentId);
+    let personality: AgentPersonality;
+
+    if (agent && agent.traits) {
+      personality = this.derivePersonalityFromTraits(
+        agent.traits,
+        agent.lifeStage || "adult",
+      );
+    } else {
+      personality = this.generatePersonalityFallback();
+    }
 
     return {
-      entityId: agent.id,
-      currentGoal: null,
-      goalQueue: [],
-      lastDecisionTime: Date.now(),
+      agentId,
       personality,
-      memory,
+      memory: {
+        lastInteractionTime: {},
+        visitedZones: new Set(),
+        knownResources: new Map(),
+        // Extended memory fields
+        homeZoneId: undefined,
+        successfulActivities: new Map(),
+        failedAttempts: new Map(),
+        lastExplorationTime: 0,
+        lastMemoryCleanup: Date.now(),
+      },
+      currentGoal: null,
+      currentAction: null,
       offDuty: false,
     };
   }
 
-  private planGoals(aiState: AIState, _agent: AgentProfile): AIGoal[] {
-    const allGoals: AIGoal[] = [];
+  /**
+   * PHASE 2: Entity Arrival Logic
+   */
+  public notifyEntityArrived(entityId: string, zoneId: string): void {
+    const aiState = this.aiStates.get(entityId);
+    if (!aiState || !aiState.currentGoal) return;
 
-    if (this.needsSystem) {
-      const needsGoals = evaluateCriticalNeeds(
-        {
-          getEntityNeeds: (id) => this.needsSystem?.getEntityNeeds(id),
-          findNearestResource: this.worldResourceSystem
-            ? (entityId: string, resourceType: string) =>
-              this.findNearestResourceForEntity(entityId, resourceType)
-            : undefined,
-        },
-        aiState,
-      );
-      allGoals.push(...needsGoals);
+    const goal = aiState.currentGoal;
+
+    // Mark zone as visited
+    aiState.memory.visitedZones.add(zoneId);
+
+    // Handle assist goals
+    if (goal.type.startsWith("assist_") && goal.data?.targetAgentId) {
+      const targetId = goal.data.targetAgentId as string;
+      const resourceType = goal.data.resourceType as string;
+      const amount = (goal.data.amount as number) || 10;
+
+      if (this.inventorySystem && this.socialSystem) {
+        const inv = this.inventorySystem.getAgentInventory(entityId);
+        if (inv && inv[resourceType as keyof typeof inv] >= amount) {
+          this.inventorySystem.removeFromAgent(entityId, resourceType as any, amount);
+          this.inventorySystem.addResource(targetId, resourceType as any, amount);
+          this.socialSystem.registerFriendlyInteraction(entityId, targetId);
+        }
+      }
+      aiState.currentGoal = null;
+      return;
     }
 
-    // 2. Evaluate work opportunities (if not critical needs)
-    if (allGoals.length === 0 && this.roleSystem) {
-      const workGoals = evaluateWorkOpportunities(
-        {
-          getAgentRole: (id) => this.roleSystem?.getAgentRole(id),
-          getPreferredResourceForRole: (roleType) =>
-            this.getPreferredResourceForRole(roleType),
-          findNearestResource: this.worldResourceSystem
-            ? (entityId: string, resourceType: string) =>
-              this.findNearestResourceForEntity(entityId, resourceType)
-            : undefined,
-        },
-        aiState,
-      );
-      allGoals.push(...workGoals);
+    // Handle crafting weapon goals
+    if (goal.type === "craft" && goal.data?.itemType === "weapon") {
+      if (this.craftingSystem) {
+        const weaponId = this.craftingSystem.craftBestWeapon(entityId);
+        if (weaponId) {
+          simulationEvents.emit(GameEventNames.ITEM_CRAFTED, {
+            agentId: entityId,
+            itemId: weaponId,
+          });
+        }
+      }
+      aiState.currentGoal = null;
+      return;
     }
 
-    // 3. Default exploration (lowest priority)
-    if (allGoals.length === 0) {
-      const explorationGoals = evaluateExplorationGoals(aiState);
-      allGoals.push(...explorationGoals);
+    // Handle deposit goals
+    if (goal.type === "deposit" && zoneId) {
+      this.tryDepositResources(entityId, zoneId);
+      aiState.currentGoal = null;
+      return;
     }
 
-    // Sort by priority
-    return allGoals.sort((a, b) => b.priority - a.priority);
-  }
-
-  private findNearestResourceForEntity(
-    entityId: string,
-    resourceType: string,
-  ): { id: string; x: number; y: number } | null {
-    if (!this.worldResourceSystem) return null;
-
-    // Get all resources of this type
-    const resources = this.worldResourceSystem.getResourcesByType(
-      resourceType as WorldResourceType,
-    );
-    if (resources.length === 0) return null;
-
-    // Get entity position
-    const entity = this.gameState.entities?.find((e) => e.id === entityId);
-    if (!entity) {
-      // Fallback to first available if entity not found
-      const resource = resources[0];
-      return {
-        id: resource.id,
-        x: resource.position.x,
-        y: resource.position.y,
-      };
-    }
-
-    const entityPos = entity.position || { x: entity.x, y: entity.y };
-
-    // Calculate distance to each resource and find nearest
-    let nearestResource = resources[0];
-    let minDistance = Infinity;
-
-    for (const resource of resources) {
-      const dx = resource.position.x - entityPos.x;
-      const dy = resource.position.y - entityPos.y;
-      const distance = Math.hypot(dx, dy);
-
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestResource = resource;
+    // Handle guard duties
+    if (this.roleSystem && this.socialSystem) {
+      const role = this.roleSystem.getAgentRole(entityId);
+      if (
+        role?.type === "guard" &&
+        (goal.targetZoneId || "").toLowerCase().includes("defense")
+      ) {
+        this.socialSystem.imposeLocalTruces(entityId, 140, 45000);
       }
     }
 
-    return {
-      id: nearestResource.id,
-      x: nearestResource.position.x,
-      y: nearestResource.position.y,
-    };
+    // Pick appropriate activity for zone type
+    const zone = this.gameState.zones?.find((z) => z.id === zoneId);
+    if (zone) {
+      const activity = this.pickActivityForZone(zone.type, goal);
+      const duration = this.estimateActivityDuration(entityId, zone.type, goal);
+
+      simulationEvents.emit(GameEventNames.AGENT_ACTIVITY_STARTED, {
+        agentId: entityId,
+        zoneId,
+        activity,
+        duration,
+      });
+
+      // Record successful visit
+      const successCount = aiState.memory.successfulActivities?.get(zoneId) || 0;
+      aiState.memory.successfulActivities?.set(zoneId, successCount + 1);
+    }
+
+    // Complete current goal
+    aiState.currentGoal = null;
+    this._goalsCompleted++;
   }
 
-  private getPreferredResourceForRole(roleType: string): string | null {
-    const roleResourceMap: Record<string, string> = {
-      logger: "tree",
-      quarryman: "rock",
-      farmer: "wheat",
-      gatherer: "berry_bush",
+  private tryDepositResources(entityId: string, zoneId: string): void {
+    if (!this.inventorySystem) return;
+
+    const inv = this.inventorySystem.getAgentInventory(entityId);
+    if (!inv) return;
+
+    let stockpiles = this.inventorySystem.getStockpilesInZone(zoneId);
+    if (stockpiles.length === 0) {
+      const stockpile = this.inventorySystem.createStockpile(zoneId, "general");
+      stockpiles = [stockpile];
+    }
+
+    const stockpile = stockpiles[0];
+    const resourcesToTransfer = {
+      wood: inv.wood,
+      stone: inv.stone,
+      food: inv.food,
+      water: inv.water,
     };
-    return roleResourceMap[roleType] || null;
+
+    const transferred = this.inventorySystem.transferToStockpile(
+      entityId,
+      stockpile.id,
+      resourcesToTransfer,
+    );
+
+    const totalTransferred =
+      transferred.wood +
+      transferred.stone +
+      transferred.food +
+      transferred.water;
+
+    if (totalTransferred > 0) {
+      simulationEvents.emit(GameEventNames.RESOURCES_DEPOSITED, {
+        agentId: entityId,
+        zoneId,
+        stockpileId: stockpile.id,
+        resources: transferred,
+      });
+    }
   }
 
-  private goalToAction(
+  private pickActivityForZone(
+    zoneType: string,
+    _goal: AIGoal,
+  ): "eating" | "resting" | "socializing" | "working" | "idle" {
+    switch (zoneType) {
+      case "food":
+      case "water":
+        return "eating";
+      case "rest":
+      case "shelter":
+      case "house":
+        return "resting";
+      case "social":
+      case "market":
+      case "gathering":
+        return "socializing";
+      case "work":
+      case "production":
+      case "crafting":
+        return "working";
+      default:
+        return "idle";
+    }
+  }
+
+  private estimateActivityDuration(
+    entityId: string,
+    zoneType: string,
     goal: AIGoal,
-    agentId: string,
-    timestamp: number,
-  ): AgentAction | null {
-    // Convert AI goals to concrete agent actions
+  ): number {
+    const baseDurations: Record<string, number> = {
+      food: 4000,
+      water: 2500,
+      rest: 4000,
+      shelter: 4000,
+      social: 4000,
+      work: 6000,
+      default: 3000,
+    };
+
+    let baseDuration = baseDurations[zoneType] || baseDurations.default;
+
+    if (this.needsSystem && goal.data?.need) {
+      const needs = this.needsSystem.getNeeds(entityId);
+      if (needs) {
+        const needValue = needs[goal.data.need as keyof typeof needs] || 100;
+        if (needValue < 30) {
+          baseDuration *= 1.5;
+        } else if (needValue < 50) {
+          baseDuration *= 1.25;
+        }
+      }
+    }
+
+    return baseDuration;
+  }
+
+  /**
+   * PHASE 3: Memory Management
+   */
+  private cleanupAgentMemory(now: number): void {
+    for (const [agentId, aiState] of this.aiStates) {
+      // 1. Limit visited zones
+      if (aiState.memory.visitedZones.size > 100) {
+        const zones = Array.from(aiState.memory.visitedZones);
+        aiState.memory.visitedZones = new Set(zones.slice(-100));
+      }
+
+      // 2. Limit successful activities history
+      if (aiState.memory.successfulActivities && aiState.memory.successfulActivities.size > 50) {
+        const sorted = Array.from(aiState.memory.successfulActivities.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 50);
+        aiState.memory.successfulActivities = new Map(sorted);
+      }
+
+      aiState.memory.lastMemoryCleanup = now;
+    }
+  }
+
+  private selectBestZone(
+    aiState: AIState,
+    zoneIds: string[],
+    _zoneType: string,
+  ): string | null {
+    if (zoneIds.length === 0) return null;
+
+    let bestZone = zoneIds[0];
+    let bestScore = -Infinity;
+
+    for (const zoneId of zoneIds) {
+      let score = 0;
+
+      // Bonus for successful history
+      const successes = aiState.memory.successfulActivities?.get(zoneId) || 0;
+      score += successes * 0.1;
+
+      // Bonus for unvisited (exploration)
+      if (!aiState.memory.visitedZones.has(zoneId)) {
+        score += 0.3;
+      }
+
+      // Penalty for failures
+      const failures = aiState.memory.failedAttempts?.get(zoneId) || 0;
+      score -= failures * 0.15;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestZone = zoneId;
+      }
+    }
+
+    return bestZone;
+  }
+
+  /**
+   * PHASE 4: Advanced Features
+   */
+  public setPlayerControl(entityId: string, controlled: boolean): void {
+    if (controlled) {
+      this.playerControlledAgents.add(entityId);
+      // Clear current goal when player takes over
+      const aiState = this.aiStates.get(entityId);
+      if (aiState) {
+        aiState.currentGoal = null;
+        aiState.currentAction = null;
+      }
+    } else {
+      this.playerControlledAgents.delete(entityId);
+    }
+  }
+
+  public isPlayerControlled(entityId: string): boolean {
+    return this.playerControlledAgents.has(entityId);
+  }
+
+  public setEntityPriority(
+    entityId: string,
+    priority: "survival" | "normal" | "social",
+  ): void {
+    this.agentPriorities.set(entityId, priority);
+  }
+
+  public getStatusSnapshot() {
+    return {
+      totalAgents: this.aiStates.size,
+      activeGoals: Array.from(this.aiStates.values()).filter(s => s.currentGoal).length,
+      playerControlled: this.playerControlledAgents.size,
+      offDuty: Array.from(this.aiStates.values()).filter(s => s.offDuty).length,
+      avgDecisionTime: this._decisionCount > 0 ? this._decisionTimeTotalMs / this._decisionCount : 0,
+    };
+  }
+
+  public getPerformanceMetrics() {
+    return {
+      totalDecisions: this._decisionCount,
+      avgDecisionTimeMs: this._decisionCount > 0 ? this._decisionTimeTotalMs / this._decisionCount : 0,
+      goalsCompleted: this._goalsCompleted,
+      goalsFailed: this._goalsFailed,
+    };
+  }
+
+  public removeEntityAI(entityId: string): void {
+    this.aiStates.delete(entityId);
+    this.playerControlledAgents.delete(entityId);
+    this.agentPriorities.delete(entityId);
+    this.agentStrategies.delete(entityId);
+  }
+
+  public cleanup(): void {
+    this.aiStates.clear();
+    this.removeAllListeners();
+  }
+
+  // Helper methods
+  private isGoalCompleted(goal: AIGoal, _agentId: string): boolean {
+    // Simple check: if goal has been active too long, force complete/fail
+    // In a real system, this would check world state
+    return Date.now() - goal.createdAt > 60000; // 1 minute timeout
+  }
+
+  private isGoalInvalid(goal: AIGoal, _agentId: string): boolean {
+    return false; // Placeholder
+  }
+
+  private completeGoal(aiState: AIState, _agentId: string): void {
+    aiState.currentGoal = null;
+    this._goalsCompleted++;
+  }
+
+  private failGoal(aiState: AIState, agentId: string): void {
+    if (aiState.currentGoal?.targetZoneId) {
+      const zoneId = aiState.currentGoal.targetZoneId;
+      const fails = aiState.memory.failedAttempts?.get(zoneId) || 0;
+      aiState.memory.failedAttempts?.set(zoneId, fails + 1);
+    }
+    aiState.currentGoal = null;
+    this._goalsFailed++;
+  }
+
+  private planAction(agentId: string, goal: AIGoal): AgentAction | null {
+    const timestamp = Date.now();
 
     switch (goal.type) {
-      case "explore":
+      case "satisfy_hunger":
+      case "satisfy_thirst":
+      case "satisfy_energy":
+      case "satisfy_social":
+      case "satisfy_fun":
         return {
           actionType: "move",
           agentId,
+          targetZoneId: goal.targetZoneId,
           targetPosition: goal.targetPosition,
           timestamp,
-          data: { goalType: goal.type },
         };
 
-      case "satisfy_need":
-        if (goal.data?.action === "rest") {
-          return {
-            actionType: "sleep",
-            agentId,
-            timestamp,
-            data: { need: "energy" },
-          };
-        }
-
-        if (goal.targetId && goal.targetPosition) {
-          let actionType: "eat" | "drink" | "harvest" = "harvest";
-          if (goal.data?.need === "hunger") actionType = "eat";
-          if (goal.data?.need === "thirst") actionType = "drink";
-
-          return {
-            actionType,
-            agentId,
-            targetId: goal.targetId,
-            targetPosition: goal.targetPosition,
-            timestamp,
-            data: {
-              resourceType: goal.data?.resourceType,
-              need: goal.data?.need,
-            },
-          };
-        }
-        return null;
-
+      case "gather":
       case "work":
         return {
           actionType: "work",
+          agentId,
+          targetZoneId: goal.targetZoneId,
+          timestamp,
+        };
+
+      case "deposit":
+        return {
+          actionType: "move",
           agentId,
           targetZoneId: goal.targetZoneId,
           timestamp,

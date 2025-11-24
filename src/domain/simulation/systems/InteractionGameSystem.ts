@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/utils/logger";
 import { GameState } from "../../types/game-types";
 import { simulationEvents, GameEventNames } from "../core/events";
 
@@ -20,7 +21,7 @@ export class InteractionGameSystem {
     // Parameters kept for API compatibility but not currently used
     void _gameState;
     void _config;
-    console.log("🎲 InteractionGameSystem (Backend) initialized");
+    logger.info("🎲 InteractionGameSystem (Backend) initialized");
   }
 
   public update(_deltaTimeMs: number): void {}
@@ -47,7 +48,7 @@ export class InteractionGameSystem {
       timestamp: Date.now(),
     });
 
-    console.log(
+    logger.info(
       `🎲 Interaction started: ${initiatorId} -> ${targetId} (${type})`,
     );
     return true;
@@ -66,6 +67,6 @@ export class InteractionGameSystem {
     });
 
     this.activeInteractions.delete(interactionId);
-    console.log(`🎲 Interaction resolved: ${interactionId}`);
+    logger.info(`🎲 Interaction resolved: ${interactionId}`);
   }
 }

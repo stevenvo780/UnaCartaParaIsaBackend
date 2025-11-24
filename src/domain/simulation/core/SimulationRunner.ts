@@ -117,33 +117,11 @@ export class SimulationRunner {
     this.maxCommandQueue = config?.maxCommandQueue ?? 200;
     this.worldResourceSystem = new WorldResourceSystem(this.state);
     this.livingLegendsSystem = new LivingLegendsSystem(this.state);
+
+    // 1. Initialize core systems (without circular dependencies)
     this.lifeCycleSystem = new LifeCycleSystem(this.state);
-    this.needsSystem = new NeedsSystem(this.state, this.lifeCycleSystem);
+    this.needsSystem = new NeedsSystem(this.state); // Pass state only initially
     this._genealogySystem = new GenealogySystem(this.state);
-
-    // Connect genealogy system to lifecycle events
-    simulationEvents.on(
-      GameEventNames.AGENT_ACTION_COMPLETE,
-      (data: { agentId: string; action: string }) => {
-        if (data.action === "birth") {
-          const agent = this.state.agents.find((a) => a.id === data.agentId);
-          if (agent) {
-            this._genealogySystem.registerBirth(
-              agent,
-              agent.parents?.father,
-              agent.parents?.mother,
-            );
-          }
-        }
-      },
-    );
-
-    simulationEvents.on(
-      GameEventNames.COMBAT_KILL,
-      (data: { targetId: string }) => {
-        this._genealogySystem.recordDeath(data.targetId);
-      },
-    );
     this.socialSystem = new SocialSystem(this.state);
     this.inventorySystem = new InventorySystem(this.state);
     this.resourceReservationSystem = new ResourceReservationSystem(
@@ -151,6 +129,11 @@ export class SimulationRunner {
       this.inventorySystem,
     );
     this.divineFavorSystem = new DivineFavorSystem();
+    this.householdSystem = new HouseholdSystem(this.state);
+    this.marriageSystem = new MarriageSystem(this.state);
+    this.roleSystem = new RoleSystem(this.state);
+
+    // 2. Initialize dependent systems
     this.governanceSystem = new GovernanceSystem(
       this.state,
       this.inventorySystem,
@@ -169,14 +152,11 @@ export class SimulationRunner {
       this.inventorySystem,
       this.lifeCycleSystem,
     );
-    this.roleSystem = new RoleSystem(this.state);
-    this.aiSystem = new AISystem(this.state, undefined, {
-      needsSystem: this.needsSystem,
-      roleSystem: this.roleSystem,
-      worldResourceSystem: this.worldResourceSystem,
-    });
 
-    this.householdSystem = new HouseholdSystem(this.state);
+    // 3. Initialize AI System
+    this.aiSystem = new AISystem(this.state);
+
+    // 4. Initialize other systems
     this.buildingMaintenanceSystem = new BuildingMaintenanceSystem(
       this.state,
       this.inventorySystem,
@@ -208,7 +188,6 @@ export class SimulationRunner {
     this.questSystem = new QuestSystem(this.state);
     this.taskSystem = new TaskSystem(this.state);
     this.tradeSystem = new TradeSystem(this.state);
-    this.marriageSystem = new MarriageSystem(this.state);
     this.conflictResolutionSystem = new ConflictResolutionSystem(this.state);
     this._normsSystem = new NormsSystem(this.state);
     this.resourceAttractionSystem = new ResourceAttractionSystem(
@@ -238,6 +217,59 @@ export class SimulationRunner {
     });
     this.interactionGameSystem = new InteractionGameSystem(this.state);
     this.knowledgeNetworkSystem = new KnowledgeNetworkSystem(this.state);
+
+    // 5. Wire up circular dependencies using setDependencies
+    this.lifeCycleSystem.setDependencies({
+      needsSystem: this.needsSystem,
+      aiSystem: this.aiSystem,
+      inventorySystem: this.inventorySystem,
+      socialSystem: this.socialSystem,
+      marriageSystem: this.marriageSystem,
+      genealogySystem: this._genealogySystem,
+      householdSystem: this.householdSystem,
+      divineFavorSystem: this.divineFavorSystem,
+    });
+
+    this.needsSystem.setDependencies({
+      lifeCycleSystem: this.lifeCycleSystem,
+      divineFavorSystem: this.divineFavorSystem,
+      inventorySystem: this.inventorySystem,
+      socialSystem: this.socialSystem,
+    });
+
+    this.aiSystem.setDependencies({
+      needsSystem: this.needsSystem,
+      roleSystem: this.roleSystem,
+      worldResourceSystem: this.worldResourceSystem,
+      inventorySystem: this.inventorySystem,
+      socialSystem: this.socialSystem,
+      craftingSystem: this.enhancedCraftingSystem, // Use enhanced crafting
+      householdSystem: this.householdSystem,
+    });
+
+    // Connect genealogy system to lifecycle events
+    simulationEvents.on(
+      GameEventNames.AGENT_ACTION_COMPLETE,
+      (data: { agentId: string; action: string }) => {
+        if (data.action === "birth") {
+          const agent = this.state.agents.find((a) => a.id === data.agentId);
+          if (agent) {
+            this._genealogySystem.registerBirth(
+              agent,
+              agent.parents?.father,
+              agent.parents?.mother,
+            );
+          }
+        }
+      },
+    );
+
+    simulationEvents.on(
+      GameEventNames.COMBAT_KILL,
+      (data: { targetId: string }) => {
+        this._genealogySystem.recordDeath(data.targetId);
+      },
+    );
 
     // Setup event capture for snapshot - add listeners for all known events
     const eventCaptureListener = (
@@ -821,14 +853,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                  resources?: {
-                    wood?: number;
-                    stone?: number;
-                    food?: number;
-                    water?: number;
-                  };
-                  minWorkers?: number;
-                }
+                resources?: {
+                  wood?: number;
+                  stone?: number;
+                  food?: number;
+                  water?: number;
+                };
+                minWorkers?: number;
+              }
               | undefined,
             metadata: payload.metadata as Record<string, unknown> | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,

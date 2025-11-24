@@ -1,3 +1,4 @@
+import { logger } from "@/infrastructure/utils/logger";
 import type { GameState, Zone } from "../../types/game-types";
 import type {
   Household,
@@ -22,7 +23,7 @@ export class HouseholdSystem {
     this.gameState = gameState;
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.rebuildFromZones();
-    console.log("🏠 HouseholdSystem (Backend) initialized");
+    logger.info("🏠 HouseholdSystem (Backend) initialized");
   }
 
   public update(_deltaMs: number): void {
@@ -147,7 +148,7 @@ export class HouseholdSystem {
       occupancy: free.members.length / free.capacity,
     });
 
-    console.log(`🏠 Agent ${agentId} assigned to house ${free.zoneId}`);
+    logger.info(`🏠 Agent ${agentId} assigned to house ${free.zoneId}`);
     return free.zoneId;
   }
 
