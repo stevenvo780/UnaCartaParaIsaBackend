@@ -28,7 +28,7 @@ export class BatchedEventEmitter extends EventEmitter {
     if (this.eventQueue.length === 0) return;
 
     const batch = this.eventQueue.splice(0);
-    
+
     // Procesar eventos de forma asíncrona para no bloquear el tick
     setImmediate(() => {
       for (const event of batch) {
@@ -43,7 +43,6 @@ export class BatchedEventEmitter extends EventEmitter {
   public setBatchingEnabled(enabled: boolean): void {
     this.batchingEnabled = enabled;
     if (!enabled) {
-      // Si se deshabilita, procesar eventos pendientes
       this.flushEvents();
     }
   }
@@ -62,4 +61,3 @@ export class BatchedEventEmitter extends EventEmitter {
     return this.eventQueue.length;
   }
 }
-

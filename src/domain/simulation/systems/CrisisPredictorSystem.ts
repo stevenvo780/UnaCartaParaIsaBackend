@@ -78,7 +78,7 @@ export class CrisisPredictorSystem {
     // Emit events for new predictions
     for (const prediction of predictions) {
       const previous = this.previousPredictions.get(prediction.id);
-      
+
       if (!previous) {
         // New prediction
         if (prediction.probability >= 0.7) {
@@ -102,7 +102,7 @@ export class CrisisPredictorSystem {
           });
         }
       }
-      
+
       this.previousPredictions.set(prediction.id, prediction);
     }
 

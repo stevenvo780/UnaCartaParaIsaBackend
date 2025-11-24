@@ -9,7 +9,6 @@ export class OptimizedSpatialGrid<T = string> {
   private readonly cols: number;
   private readonly rows: number;
 
-  // Buffers optimizados para procesamiento batch
   private positionBuffer: Float32Array | null = null;
   private entityIdArray: T[] = [];
   private bufferDirty = true;
@@ -46,8 +45,7 @@ export class OptimizedSpatialGrid<T = string> {
       return;
     }
 
-    // Crear arrays con capacidad suficiente
-    this.positionBuffer = new Float32Array(entityCount * 2); // x, y por entidad
+    this.positionBuffer = new Float32Array(entityCount * 2);
     this.entityIdArray = new Array(entityCount);
 
     let index = 0;
@@ -123,7 +121,6 @@ export class OptimizedSpatialGrid<T = string> {
     const centerX = center.x;
     const centerY = center.y;
 
-    // Usar el método tradicional para celdas cercanas (más eficiente para pocas entidades)
     const { col: centerCol, row: centerRow } = this.worldToCell(
       center.x,
       center.y,
@@ -186,12 +183,14 @@ export class OptimizedSpatialGrid<T = string> {
       () => [],
     );
 
-    // Procesar en batches para evitar sobrecarga de memoria
-    for (let batchStart = 0; batchStart < queries.length; batchStart += this.BATCH_SIZE) {
+    for (
+      let batchStart = 0;
+      batchStart < queries.length;
+      batchStart += this.BATCH_SIZE
+    ) {
       const batchEnd = Math.min(batchStart + this.BATCH_SIZE, queries.length);
       const batch = queries.slice(batchStart, batchEnd);
 
-      // Para cada query en el batch, usar el método optimizado
       for (let q = 0; q < batch.length; q++) {
         const query = batch[q];
         const queryResults = this.queryRadius(query.center, query.radius);
@@ -224,7 +223,6 @@ export class OptimizedSpatialGrid<T = string> {
     const centerY = center.y;
     const entityCount = this.entityIdArray.length;
 
-    // Procesar en batches para mejor uso de cache
     for (let i = 0; i < entityCount; i++) {
       const x = this.positionBuffer[i * 2];
       const y = this.positionBuffer[i * 2 + 1];
@@ -300,4 +298,3 @@ export class OptimizedSpatialGrid<T = string> {
     return this.entityIdArray;
   }
 }
-

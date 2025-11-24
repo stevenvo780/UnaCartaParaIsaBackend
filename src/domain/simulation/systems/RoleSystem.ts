@@ -112,6 +112,10 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
   },
 ];
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class RoleSystem extends EventEmitter {
   private gameState: GameState;
   private config: RoleSystemConfig;
@@ -128,7 +132,7 @@ export class RoleSystem extends EventEmitter {
   private lastStatsUpdate = 0;
   private lastReassignment = 0;
 
-  constructor(gameState: GameState, config?: Partial<RoleSystemConfig>) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     super();
     this.gameState = gameState;
     this.config = {
@@ -136,7 +140,6 @@ export class RoleSystem extends EventEmitter {
       reassignmentIntervalSec: 120,
       experienceGainPerSecond: 0.001,
       satisfactionDecayPerSecond: 0.0005,
-      ...config,
     };
 
     const now = Date.now();
@@ -196,7 +199,7 @@ export class RoleSystem extends EventEmitter {
       const previousShift = this.currentShift;
       this.currentShift = timePhase as WorkShift;
       this.rebuildSchedule();
-      
+
       // Emitir evento interno (para compatibilidad)
       this.emit("shiftChanged", {
         previous: previousShift,

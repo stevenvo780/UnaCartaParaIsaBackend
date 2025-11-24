@@ -72,6 +72,10 @@ const DEMAND_SOLUTIONS: Partial<
 
 const DEFAULT_LINEAGE = "community";
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class GovernanceSystem {
   private config: GovernanceConfig;
   private demands = new Map<string, SettlementDemand>();
@@ -113,18 +117,20 @@ export class GovernanceSystem {
   };
 
   constructor(
-    private readonly state: GameState,
+    @inject(TYPES.GameState) private readonly state: GameState,
+    @inject(TYPES.InventorySystem)
     private readonly inventorySystem: InventorySystem,
+    @inject(TYPES.LifeCycleSystem)
     private readonly lifeCycleSystem: LifeCycleSystem,
+    @inject(TYPES.DivineFavorSystem)
     private readonly divineFavorSystem: DivineFavorSystem,
+    @inject(TYPES.ResourceReservationSystem)
     private readonly reservationSystem: ResourceReservationSystem,
-    config?: Partial<GovernanceConfig>,
   ) {
     this.config = {
       checkIntervalMs: 30_000,
       demandExpirationMs: 5 * 60_000,
       autoGenerateProjects: true,
-      ...config,
     };
 
     DEFAULT_POLICIES.forEach((policy) =>

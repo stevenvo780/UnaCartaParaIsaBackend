@@ -20,6 +20,10 @@ const DEFAULT_CONFIG: AnimalSystemConfig = {
   cleanupInterval: 30000,
 };
 
+import { injectable, inject, optional } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class AnimalSystem {
   private gameState: GameState;
   private config: AnimalSystemConfig;
@@ -50,21 +54,18 @@ export class AnimalSystem {
       timestamp: number;
     }
   >();
-  // Aumentado de 5s a 15s para reducir búsquedas espaciales costosas
   private readonly CACHE_DURATION = 15000;
 
-  // Procesador batch optimizado
   private batchProcessor: AnimalBatchProcessor;
   private readonly BATCH_THRESHOLD = 30; // Usar batch processing si hay 30+ animales
 
   constructor(
-    gameState: GameState,
-    config?: Partial<AnimalSystemConfig>,
-    worldResourceSystem?: WorldResourceSystem,
+    @inject(TYPES.GameState) gameState: GameState,
+    @inject(TYPES.WorldResourceSystem) @optional() worldResourceSystem?: WorldResourceSystem,
   ) {
     this.gameState = gameState;
     this.worldResourceSystem = worldResourceSystem;
-    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.config = DEFAULT_CONFIG;
     this.batchProcessor = new AnimalBatchProcessor();
 
     this.setupEventListeners();
@@ -107,16 +108,13 @@ export class AnimalSystem {
     const deltaMinutes = (now - this.lastUpdate) / 60000;
     this.lastUpdate = now;
 
-    // Filtrar animales vivos
     const liveAnimals = Array.from(this.animals.values()).filter(
       (a) => !a.isDead,
     );
 
-    // Usar procesamiento batch si hay suficientes animales
     if (liveAnimals.length >= this.BATCH_THRESHOLD) {
       this.updateBatch(deltaSeconds, deltaMinutes, now);
     } else {
-      // Procesamiento tradicional
       this.animals.forEach((animal) => {
         if (animal.isDead) return;
 
@@ -140,22 +138,17 @@ export class AnimalSystem {
     this.updateGameStateSnapshot();
   }
 
-  /**
-   * Actualización optimizada en batch
-   */
   private updateBatch(
     deltaSeconds: number,
     deltaMinutes: number,
     now: number,
   ): void {
-    // Reconstruir buffers
     this.batchProcessor.rebuildBuffers(this.animals);
 
     const animalIdArray = this.batchProcessor.getAnimalIdArray();
     const animalCount = animalIdArray.length;
     if (animalCount === 0) return;
 
-    // Preparar arrays de tasas de decaimiento
     const hungerDecayRates = new Float32Array(animalCount);
     const thirstDecayRates = new Float32Array(animalCount);
 
@@ -171,20 +164,16 @@ export class AnimalSystem {
       }
     }
 
-    // Actualizar necesidades en batch
     this.batchProcessor.updateNeedsBatch(
       hungerDecayRates,
       thirstDecayRates,
       deltaMinutes,
     );
 
-    // Actualizar edades en batch
     this.batchProcessor.updateAgesBatch(this.config.updateInterval);
 
-    // Sincronizar de vuelta a los animales
     this.batchProcessor.syncToAnimals(this.animals);
 
-    // Procesar comportamiento (requiere lógica compleja, no se puede hacer en batch fácilmente)
     for (let i = 0; i < animalCount; i++) {
       const animalId = animalIdArray[i];
       const animal = this.animals.get(animalId);
@@ -513,9 +502,7 @@ export class AnimalSystem {
       };
     }
 
-    const liveAnimals = [...this.animals.values()].filter(
-      (a) => !a.isDead,
-    );
+    const liveAnimals = [...this.animals.values()].filter((a) => !a.isDead);
 
     const byType: Record<string, number> = {};
     liveAnimals.forEach((animal) => {

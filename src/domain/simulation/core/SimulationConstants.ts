@@ -61,4 +61,3 @@ export const SIM_CONSTANTS = {
   WATER_DECAY_RATE: 0.01,
   DEPRECATION_INTERVAL: 10000,
 } as const;
-

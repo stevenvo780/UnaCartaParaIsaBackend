@@ -8,6 +8,10 @@ import {
 } from "../../types/simulation/marriage";
 import { simulationEvents, GameEventNames } from "../core/events";
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class MarriageSystem {
   private gameState: GameState;
   private config: MarriageConfig;
@@ -19,14 +23,13 @@ export class MarriageSystem {
   private readonly MAX_HISTORY = 200;
   private readonly PROPOSAL_EXPIRATION_MS = 300000;
 
-  constructor(gameState: GameState, config?: Partial<MarriageConfig>) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
     this.config = {
       maxGroupSize: 8,
       baseDifficultyPerMember: 0.15,
       divorceChanceBase: 0.001,
       cohesionDecayPerMember: 0.08,
-      ...config,
     };
   }
 
@@ -82,7 +85,7 @@ export class MarriageSystem {
       );
 
       this.addHistoryEvent("joined", targetId, group.id, proposal.proposerId);
-      
+
       simulationEvents.emit(GameEventNames.MARRIAGE_MEMBER_JOINED, {
         agentId: targetId,
         groupId: group.id,
@@ -92,7 +95,7 @@ export class MarriageSystem {
     } else {
       group = this.createMarriageGroup([proposal.proposerId, targetId]);
       this.addHistoryEvent("formed", targetId, group.id, proposal.proposerId);
-      
+
       simulationEvents.emit(GameEventNames.MARRIAGE_GROUP_FORMED, {
         groupId: group.id,
         members: group.members,
@@ -165,7 +168,7 @@ export class MarriageSystem {
 
     for (const memberId of group.members) {
       this.addHistoryEvent("widowed", memberId, groupId, deceasedId, "death");
-      
+
       simulationEvents.emit(GameEventNames.WIDOWHOOD_REGISTERED, {
         agentId: memberId,
         deceasedId,

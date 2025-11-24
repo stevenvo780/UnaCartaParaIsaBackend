@@ -15,6 +15,23 @@ import type { AgentRole } from "./simulation/roles";
 import type { LegendRecord } from "./simulation/legends";
 import type { FamilyTree, SerializedFamilyTree } from "./simulation/genealogy";
 import type { Inventory } from "./simulation/economy";
+export interface EconomyState {
+  totalWorkActions: number;
+  totalResourcesProduced: {
+    wood: number;
+    stone: number;
+    food: number;
+    water: number;
+  };
+  averageYield: {
+    wood: number;
+    stone: number;
+    food: number;
+    water: number;
+  };
+  totalSalariesPaid: number;
+  activeWorkers: number;
+}
 import type { TradeOffer, TradeRecord } from "./simulation/trade";
 import type { MarriageGroup } from "./simulation/marriage";
 import type { Quest } from "./simulation/quests";
@@ -394,6 +411,7 @@ export interface GameState {
   socialGraph?: SocialGraphState;
   market?: MarketState;
   inventory?: InventoryState;
+  economy?: EconomyState;
   roles?: RolesState;
   legends?: LegendsState;
   genealogy?: FamilyTree | SerializedFamilyTree;

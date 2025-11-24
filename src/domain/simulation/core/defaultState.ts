@@ -104,16 +104,12 @@ export function cloneGameStateDelta(
   },
   previousSnapshot?: GameState,
 ): GameState {
-  // Si no hay snapshot previo o todos los flags están dirty, clonar todo
   if (!previousSnapshot || Object.values(dirtyFlags).every((dirty) => dirty)) {
     return cloneGameState(state);
   }
 
-  // Crear nuevo objeto y copiar referencias de secciones no dirty
   const cloned: GameState = { ...state };
 
-  // Copy-on-write: Solo clonar si realmente cambió el contenido
-  // Verificar por referencia primero (más rápido)
   if (dirtyFlags.agents) {
     if (state.agents !== previousSnapshot.agents) {
       cloned.agents = structuredClone(state.agents);

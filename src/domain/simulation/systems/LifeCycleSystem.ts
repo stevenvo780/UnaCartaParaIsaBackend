@@ -31,6 +31,10 @@ interface LifeCycleConfig {
   mortalInterbirthSec: number;
 }
 
+import { injectable, inject, optional } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class LifeCycleSystem extends EventEmitter {
   private gameState: GameState;
   private config: LifeCycleConfig;
@@ -52,21 +56,7 @@ export class LifeCycleSystem extends EventEmitter {
   private _movementSystem?: MovementSystem;
   private dependenciesChecked = false;
 
-  constructor(
-    gameState: GameState,
-    config?: Partial<LifeCycleConfig>,
-    systems?: {
-      needsSystem?: NeedsSystem;
-      aiSystem?: AISystem;
-      inventorySystem?: InventorySystem;
-      socialSystem?: SocialSystem;
-      marriageSystem?: MarriageSystem;
-      genealogySystem?: GenealogySystem;
-      householdSystem?: HouseholdSystem;
-      divineFavorSystem?: DivineFavorSystem;
-      movementSystem?: MovementSystem;
-    },
-  ) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     super();
     this.gameState = gameState;
     this.config = {
@@ -81,20 +71,7 @@ export class LifeCycleSystem extends EventEmitter {
       godMaxChildren: 6,
       godInterbirthSec: 600,
       mortalInterbirthSec: 240,
-      ...config,
     };
-
-    if (systems) {
-      this.needsSystem = systems.needsSystem;
-      this._aiSystem = systems.aiSystem;
-      this.inventorySystem = systems.inventorySystem;
-      this._socialSystem = systems.socialSystem;
-      this._marriageSystem = systems.marriageSystem;
-      this._genealogySystem = systems.genealogySystem;
-      this.householdSystem = systems.householdSystem;
-      this._divineFavorSystem = systems.divineFavorSystem;
-      this._movementSystem = systems.movementSystem;
-    }
   }
 
   public setDependencies(systems: {

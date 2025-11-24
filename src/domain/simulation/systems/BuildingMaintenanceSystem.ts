@@ -33,6 +33,10 @@ type MutableZone = Zone & {
 
 type AgentInventory = Inventory;
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class BuildingMaintenanceSystem {
   private readonly config: BuildingMaintenanceConfig;
   private readonly now: () => number;
@@ -41,13 +45,11 @@ export class BuildingMaintenanceSystem {
   private readonly updateIntervalMs = 5_000;
 
   constructor(
-    private readonly state: GameState,
-    private readonly inventorySystem: InventorySystem,
-    config?: Partial<BuildingMaintenanceConfig>,
-    nowProvider: () => number = () => Date.now(),
+    @inject(TYPES.GameState) private readonly state: GameState,
+    @inject(TYPES.InventorySystem) private readonly inventorySystem: InventorySystem,
   ) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
-    this.now = nowProvider;
+    this.config = DEFAULT_CONFIG;
+    this.now = () => Date.now();
 
     this.bootstrapExistingZones();
     simulationEvents.on(

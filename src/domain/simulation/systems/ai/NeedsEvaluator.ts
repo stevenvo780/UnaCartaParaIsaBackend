@@ -7,7 +7,14 @@ export interface NeedsEvaluatorDependencies {
     entityId: string,
     resourceType: string,
   ) => { id: string; x: number; y: number } | null;
-  getCurrentTimeOfDay?: () => "dawn" | "morning" | "midday" | "afternoon" | "dusk" | "night" | "deep_night";
+  getCurrentTimeOfDay?: () =>
+    | "dawn"
+    | "morning"
+    | "midday"
+    | "afternoon"
+    | "dusk"
+    | "night"
+    | "deep_night";
 }
 
 export function calculateNeedPriority(
@@ -40,7 +47,7 @@ export function evaluateCriticalNeeds(
   // At night, energy needs are more critical
   // During day, hunger/thirst are more critical
   let hungerThreshold = 45;
-  let thirstThreshold = 40;
+  const thirstThreshold = 40;
   let energyThreshold = 35;
 
   if (timeOfDay === "night" || timeOfDay === "deep_night") {

@@ -9,6 +9,10 @@ interface Reservation {
   timestamp: number;
 }
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class ResourceReservationSystem {
   private reservations = new Map<string, Reservation>();
   private readonly now: () => number;
@@ -16,11 +20,11 @@ export class ResourceReservationSystem {
   private readonly cleanupIntervalMs = 60_000;
 
   constructor(
-    private readonly state: GameState,
+    @inject(TYPES.GameState) private readonly state: GameState,
+    @inject(TYPES.InventorySystem)
     private readonly inventorySystem: InventorySystem,
-    nowProvider?: () => number,
   ) {
-    this.now = nowProvider ?? ((): number => Date.now());
+    this.now = (): number => Date.now();
   }
 
   public reserve(taskId: string, cost: ResourceCost): boolean {

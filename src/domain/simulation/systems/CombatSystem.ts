@@ -46,6 +46,10 @@ const WEAPON_COSTS: Record<WeaponId, Partial<Record<ResourceType, number>>> = {
   stone_dagger: { stone: 8 },
 };
 
+import { injectable, inject, optional } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class CombatSystem {
   private readonly config: CombatConfig;
   private readonly spatialGrid: SpatialGrid<string>;
@@ -59,17 +63,16 @@ export class CombatSystem {
   private normsSystem?: NormsSystem;
 
   constructor(
-    private readonly state: GameState,
-    private readonly inventorySystem: InventorySystem,
-    private readonly lifeCycleSystem: LifeCycleSystem,
-    private readonly socialSystem: SocialSystem,
-    config?: Partial<CombatConfig>,
-    animalSystem?: AnimalSystem,
-    normsSystem?: NormsSystem,
+    @inject(TYPES.GameState) private readonly state: GameState,
+    @inject(TYPES.InventorySystem) private readonly inventorySystem: InventorySystem,
+    @inject(TYPES.LifeCycleSystem) private readonly lifeCycleSystem: LifeCycleSystem,
+    @inject(TYPES.SocialSystem) private readonly socialSystem: SocialSystem,
+    @inject(TYPES.AnimalSystem) @optional() animalSystem?: AnimalSystem,
+    @inject(TYPES.NormsSystem) @optional() normsSystem?: NormsSystem,
   ) {
     this.animalSystem = animalSystem;
     this.normsSystem = normsSystem;
-    this.config = { ...DEFAULT_COMBAT_CONFIG, ...config };
+    this.config = DEFAULT_COMBAT_CONFIG;
     const worldWidth = state.worldSize?.width ?? 2000;
     const worldHeight = state.worldSize?.height ?? 2000;
     this.spatialGrid = new SpatialGrid(
@@ -94,22 +97,17 @@ export class CombatSystem {
     this.spatialGrid.clear();
     const entitiesById = new Map<string, SimulationEntity>();
 
-    // Filtrar entidades vivas con posición
-    const validEntities = entities.filter(
-      (e) => !e.isDead && e.position,
-    );
+    const validEntities = entities.filter((e) => !e.isDead && e.position);
 
     for (const entity of validEntities) {
       entitiesById.set(entity.id, entity);
       this.spatialGrid.insert(entity.id, entity.position!);
     }
 
-    // Add animals as potential targets
     if (this.animalSystem) {
       const animals = this.animalSystem.getAnimals();
       for (const [animalId, animal] of animals) {
         if (animal.isDead || !animal.position) continue;
-        // Create a temporary entity representation for animals
         const animalX = animal.position.x;
         const animalY = animal.position.y;
         const animalEntity: SimulationEntity = {
@@ -130,7 +128,6 @@ export class CombatSystem {
       }
     }
 
-    // Optimización: procesar en batch si hay muchos atacantes
     const potentialAttackers = validEntities.filter(
       (e) => e.position && !e.isDead,
     );
@@ -138,7 +135,6 @@ export class CombatSystem {
     if (potentialAttackers.length > 10) {
       this.updateBatch(potentialAttackers, entitiesById, now);
     } else {
-      // Procesamiento tradicional para pocos atacantes
       for (const attacker of potentialAttackers) {
         if (!attacker.position) continue;
         const weaponId = this.getEquipped(attacker.id);
@@ -167,31 +163,27 @@ export class CombatSystem {
     }
   }
 
-  /**
-   * Actualización optimizada en batch para muchos atacantes
-   */
   private updateBatch(
     attackers: SimulationEntity[],
     entitiesById: Map<string, SimulationEntity>,
     now: number,
   ): void {
-    // Preparar queries en batch usando SpatialGrid optimizado
-    const queries = attackers.map((attacker) => {
-      if (!attacker.position) return null;
-      const weaponId = this.getEquipped(attacker.id);
-      const weapon = getWeapon(weaponId);
-      return {
-        center: attacker.position,
-        radius: Math.max(this.config.engagementRadius, weapon.range),
-        attacker,
-      };
-    }).filter((q): q is NonNullable<typeof q> => q !== null);
+    const queries = attackers
+      .map((attacker) => {
+        if (!attacker.position) return null;
+        const weaponId = this.getEquipped(attacker.id);
+        const weapon = getWeapon(weaponId);
+        return {
+          center: attacker.position,
+          radius: Math.max(this.config.engagementRadius, weapon.range),
+          attacker,
+        };
+      })
+      .filter((q): q is NonNullable<typeof q> => q !== null);
 
-    // Procesar cada atacante
     for (const query of queries) {
       const { attacker, center, radius } = query;
 
-      // Usar queryRadius optimizado del SpatialGrid
       const nearby = this.spatialGrid
         .queryRadius(center, radius)
         .filter((candidate) => candidate.entity !== attacker.id)
@@ -374,7 +366,6 @@ export class CombatSystem {
           attacker.position,
         );
         if (violation.violated && violation.sanction) {
-          // Apply sanctions if needed (reputation penalty already applied by NormsSystem)
           if (violation.sanction.truceDuration && this.socialSystem) {
             this.socialSystem.imposeTruce(
               attacker.id,
@@ -517,9 +508,10 @@ export class CombatSystem {
     }
   }
 
-  private findZoneAtPosition(
-    position: { x: number; y: number },
-  ): { id: string; type: string } | null {
+  private findZoneAtPosition(position: {
+    x: number;
+    y: number;
+  }): { id: string; type: string } | null {
     const zones = this.state.zones || [];
     for (const zone of zones) {
       if (

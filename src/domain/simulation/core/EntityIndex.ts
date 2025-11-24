@@ -128,4 +128,3 @@ export class EntityIndex {
     return this.entityIndex.has(entityId);
   }
 }
-

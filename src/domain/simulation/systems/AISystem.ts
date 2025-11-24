@@ -43,6 +43,10 @@ interface AISystemConfig {
   maxMemoryItems: number;
 }
 
+import { injectable, inject, optional } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class AISystem extends EventEmitter {
   private gameState: GameState;
   private config: AISystemConfig;
@@ -84,27 +88,36 @@ export class AISystem extends EventEmitter {
   private _goalsFailed = 0;
 
   constructor(
-    gameState: GameState,
-    config?: Partial<AISystemConfig>,
-    systems?: {
-      needsSystem?: NeedsSystem;
-      roleSystem?: RoleSystem;
-      worldResourceSystem?: WorldResourceSystem;
-      inventorySystem?: InventorySystem;
-      socialSystem?: SocialSystem;
-      craftingSystem?: EnhancedCraftingSystem;
-      householdSystem?: HouseholdSystem;
-      taskSystem?: TaskSystem;
-      combatSystem?: CombatSystem;
-      animalSystem?: AnimalSystem;
-      movementSystem?: MovementSystem;
-      questSystem?: QuestSystem;
-      timeSystem?: TimeSystem;
-      buildingSystem?: BuildingSystem;
-      productionSystem?: ProductionSystem;
-      tradeSystem?: TradeSystem;
-      reputationSystem?: ReputationSystem;
-    },
+    @inject(TYPES.GameState) gameState: GameState,
+    @inject(TYPES.NeedsSystem) @optional() needsSystem?: NeedsSystem,
+    @inject(TYPES.RoleSystem) @optional() roleSystem?: RoleSystem,
+    @inject(TYPES.WorldResourceSystem)
+    @optional()
+    worldResourceSystem?: WorldResourceSystem,
+    @inject(TYPES.InventorySystem)
+    @optional()
+    inventorySystem?: InventorySystem,
+    @inject(TYPES.SocialSystem) @optional() socialSystem?: SocialSystem,
+    @inject(TYPES.EnhancedCraftingSystem)
+    @optional()
+    craftingSystem?: EnhancedCraftingSystem,
+    @inject(TYPES.HouseholdSystem)
+    @optional()
+    householdSystem?: HouseholdSystem,
+    @inject(TYPES.TaskSystem) @optional() taskSystem?: TaskSystem,
+    @inject(TYPES.CombatSystem) @optional() combatSystem?: CombatSystem,
+    @inject(TYPES.AnimalSystem) @optional() animalSystem?: AnimalSystem,
+    @inject(TYPES.MovementSystem) @optional() movementSystem?: MovementSystem,
+    @inject(TYPES.QuestSystem) @optional() questSystem?: QuestSystem,
+    @inject(TYPES.TimeSystem) @optional() timeSystem?: TimeSystem,
+    @inject(TYPES.BuildingSystem) @optional() buildingSystem?: BuildingSystem,
+    @inject(TYPES.ProductionSystem)
+    @optional()
+    productionSystem?: ProductionSystem,
+    @inject(TYPES.TradeSystem) @optional() tradeSystem?: TradeSystem,
+    @inject(TYPES.ReputationSystem)
+    @optional()
+    reputationSystem?: ReputationSystem,
   ) {
     super();
     this.gameState = gameState;
@@ -113,35 +126,32 @@ export class AISystem extends EventEmitter {
       enablePersonality: true,
       enableMemory: true,
       maxMemoryItems: 50,
-      ...config,
     };
 
     this.aiStates = new Map();
     this.priorityManager = new PriorityManager(
       gameState,
       undefined,
-      systems?.roleSystem,
+      roleSystem,
     );
 
-    if (systems) {
-      this.needsSystem = systems.needsSystem;
-      this.roleSystem = systems.roleSystem;
-      this.worldResourceSystem = systems.worldResourceSystem;
-      this.inventorySystem = systems.inventorySystem;
-      this.socialSystem = systems.socialSystem;
-      this.craftingSystem = systems.craftingSystem;
-      this.householdSystem = systems.householdSystem;
-      this.taskSystem = systems.taskSystem;
-      this.combatSystem = systems.combatSystem;
-      this.animalSystem = systems.animalSystem;
-      this._movementSystem = systems.movementSystem;
-      this.questSystem = systems.questSystem;
-      this.timeSystem = systems.timeSystem;
-      this.buildingSystem = systems.buildingSystem;
-      this.productionSystem = systems.productionSystem;
-      this.tradeSystem = systems.tradeSystem;
-      this.reputationSystem = systems.reputationSystem;
-    }
+    this.needsSystem = needsSystem;
+    this.roleSystem = roleSystem;
+    this.worldResourceSystem = worldResourceSystem;
+    this.inventorySystem = inventorySystem;
+    this.socialSystem = socialSystem;
+    this.craftingSystem = craftingSystem;
+    this.householdSystem = householdSystem;
+    this.taskSystem = taskSystem;
+    this.combatSystem = combatSystem;
+    this.animalSystem = animalSystem;
+    this._movementSystem = movementSystem;
+    this.questSystem = questSystem;
+    this.timeSystem = timeSystem;
+    this.buildingSystem = buildingSystem;
+    this.productionSystem = productionSystem;
+    this.tradeSystem = tradeSystem;
+    this.reputationSystem = reputationSystem;
 
     simulationEvents.on(
       GameEventNames.AGENT_ACTION_COMPLETE,
@@ -209,7 +219,6 @@ export class AISystem extends EventEmitter {
     const batchSize = Math.min(BATCH_SIZE, agents.length);
     let processed = 0;
 
-    // Round-robin: procesar batchSize agentes empezando desde agentIndex
     for (let i = 0; i < batchSize; i++) {
       const idx = (this.agentIndex + i) % agents.length;
       const agent = agents[idx];
@@ -378,7 +387,7 @@ export class AISystem extends EventEmitter {
       getEnemiesForAgent: (id: string, threshold?: number): string[] => {
         if (!this.combatSystem) return [];
         // Suppress unsafe type warning - CombatSystem.getNearbyEnemies returns string[]
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+
         return this.combatSystem.getNearbyEnemies(id, threshold);
       },
       getTasks: this.taskSystem
@@ -772,12 +781,10 @@ export class AISystem extends EventEmitter {
   public getStatusSnapshot(): Record<string, number> {
     return {
       totalAgents: this.aiStates.size,
-      activeGoals: [...this.aiStates.values()].filter(
-        (s) => s.currentGoal,
-      ).length,
-      playerControlled: this.playerControlledAgents.size,
-      offDuty: [...this.aiStates.values()].filter((s) => s.offDuty)
+      activeGoals: [...this.aiStates.values()].filter((s) => s.currentGoal)
         .length,
+      playerControlled: this.playerControlledAgents.size,
+      offDuty: [...this.aiStates.values()].filter((s) => s.offDuty).length,
       avgDecisionTime:
         this._decisionCount > 0
           ? this._decisionTimeTotalMs / this._decisionCount

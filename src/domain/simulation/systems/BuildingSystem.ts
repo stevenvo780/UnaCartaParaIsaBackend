@@ -47,6 +47,10 @@ type MutableZone = Zone & {
   maxDurability?: number;
 };
 
+import { injectable, inject, optional } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class BuildingSystem {
   private readonly config: BuildingSystemConfig;
   private readonly now: () => number;
@@ -55,13 +59,13 @@ export class BuildingSystem {
   private taskSystem?: TaskSystem;
 
   constructor(
-    private readonly state: GameState,
-    private readonly reservationSystem: ResourceReservationSystem,
-    config?: Partial<BuildingSystemConfig>,
-    nowProvider: () => number = () => Date.now(),
+    @inject(TYPES.GameState) private readonly state: GameState,
+    @inject(TYPES.ResourceReservationSystem) private readonly reservationSystem: ResourceReservationSystem,
+    @inject(TYPES.TaskSystem) @optional() taskSystem?: TaskSystem,
   ) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
-    this.now = nowProvider;
+    this.config = DEFAULT_CONFIG;
+    this.now = () => Date.now();
+    this.taskSystem = taskSystem;
   }
 
   public setTaskSystem(taskSystem: TaskSystem): void {

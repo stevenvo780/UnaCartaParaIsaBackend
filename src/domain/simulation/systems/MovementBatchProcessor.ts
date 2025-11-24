@@ -18,7 +18,9 @@ export class MovementBatchProcessor {
   /**
    * Reconstruye los buffers desde un Map de estados de movimiento
    */
-  public rebuildBuffers(movementStates: Map<string, EntityMovementState>): void {
+  public rebuildBuffers(
+    movementStates: Map<string, EntityMovementState>,
+  ): void {
     const entityCount = movementStates.size;
     if (entityCount === 0) {
       this.positionBuffer = null;
@@ -41,11 +43,9 @@ export class MovementBatchProcessor {
       const posOffset = index * 2;
       const velOffset = index * 2;
 
-      // Posición actual
       this.positionBuffer[posOffset] = state.currentPosition.x;
       this.positionBuffer[posOffset + 1] = state.currentPosition.y;
 
-      // Target (o posición actual si no hay target)
       if (state.targetPosition) {
         this.targetBuffer[posOffset] = state.targetPosition.x;
         this.targetBuffer[posOffset + 1] = state.targetPosition.y;
@@ -54,11 +54,9 @@ export class MovementBatchProcessor {
         this.targetBuffer[posOffset + 1] = state.currentPosition.y;
       }
 
-      // Velocidad inicial (se calculará en update)
       this.velocityBuffer[velOffset] = 0;
       this.velocityBuffer[velOffset + 1] = 0;
 
-      // Fatiga
       this.fatigueBuffer[index] = state.fatigue;
 
       this.entityIdArray[index] = entityId;
@@ -75,7 +73,11 @@ export class MovementBatchProcessor {
     updated: boolean[];
     arrived: boolean[];
   } {
-    if (!this.positionBuffer || !this.targetBuffer || this.entityIdArray.length === 0) {
+    if (
+      !this.positionBuffer ||
+      !this.targetBuffer ||
+      this.entityIdArray.length === 0
+    ) {
       return { updated: [], arrived: [] };
     }
 
@@ -92,12 +94,10 @@ export class MovementBatchProcessor {
       const targetX = this.targetBuffer[posOffset];
       const targetY = this.targetBuffer[posOffset + 1];
 
-      // Calcular distancia al objetivo
       const dx = targetX - currentX;
       const dy = targetY - currentY;
       const distanceRemaining = Math.sqrt(dx * dx + dy * dy);
 
-      // Si ya llegó
       if (distanceRemaining < 2) {
         this.positionBuffer[posOffset] = targetX;
         this.positionBuffer[posOffset + 1] = targetY;
@@ -106,14 +106,12 @@ export class MovementBatchProcessor {
         continue;
       }
 
-      // Calcular velocidad efectiva considerando fatiga
       const fatigue = this.fatigueBuffer[i];
       const fatigueMultiplier =
         1 / (1 + (fatigue / 100) * this.FATIGUE_PENALTY_MULTIPLIER);
       const effectiveSpeed = this.BASE_MOVEMENT_SPEED * fatigueMultiplier;
       const moveDistance = (effectiveSpeed * deltaMs) / 1000;
 
-      // Actualizar posición
       if (moveDistance >= distanceRemaining) {
         this.positionBuffer[posOffset] = targetX;
         this.positionBuffer[posOffset + 1] = targetY;
@@ -124,11 +122,12 @@ export class MovementBatchProcessor {
         this.positionBuffer[posOffset + 1] += dy * ratio;
       }
 
-      // Calcular velocidad para referencia
       const deltaX = this.positionBuffer[posOffset] - currentX;
       const deltaY = this.positionBuffer[posOffset + 1] - currentY;
-      this.velocityBuffer[velOffset] = (deltaX / deltaMs) * 1000;
-      this.velocityBuffer[velOffset + 1] = (deltaY / deltaMs) * 1000;
+      if (this.velocityBuffer) {
+        this.velocityBuffer[velOffset] = (deltaX / deltaMs) * 1000;
+        this.velocityBuffer[velOffset + 1] = (deltaY / deltaMs) * 1000;
+      }
 
       updated[i] = true;
     }
@@ -155,9 +154,15 @@ export class MovementBatchProcessor {
       if (isMoving[i]) {
         this.fatigueBuffer[i] = Math.min(100, this.fatigueBuffer[i] + 0.1);
       } else if (isResting[i]) {
-        this.fatigueBuffer[i] = Math.max(0, this.fatigueBuffer[i] - fatigueRestRate);
+        this.fatigueBuffer[i] = Math.max(
+          0,
+          this.fatigueBuffer[i] - fatigueRestRate,
+        );
       } else {
-        this.fatigueBuffer[i] = Math.max(0, this.fatigueBuffer[i] - fatigueDecayRate);
+        this.fatigueBuffer[i] = Math.max(
+          0,
+          this.fatigueBuffer[i] - fatigueDecayRate,
+        );
       }
     }
 
@@ -168,7 +173,11 @@ export class MovementBatchProcessor {
    * Sincroniza los buffers de vuelta a los estados de movimiento
    */
   public syncToStates(movementStates: Map<string, EntityMovementState>): void {
-    if (!this.positionBuffer || !this.fatigueBuffer || this.entityIdArray.length === 0) {
+    if (
+      !this.positionBuffer ||
+      !this.fatigueBuffer ||
+      this.entityIdArray.length === 0
+    ) {
       return;
     }
 
@@ -181,11 +190,9 @@ export class MovementBatchProcessor {
 
       const posOffset = i * 2;
 
-      // Actualizar posición
       state.currentPosition.x = this.positionBuffer[posOffset];
       state.currentPosition.y = this.positionBuffer[posOffset + 1];
 
-      // Actualizar fatiga
       state.fatigue = this.fatigueBuffer[i];
     }
   }
@@ -232,4 +239,3 @@ export class MovementBatchProcessor {
     return this.bufferDirty;
   }
 }
-

@@ -140,4 +140,3 @@ export const eventNameMapper: Record<string, string> = {
 export function mapEventName(backendEventName: string): string {
   return eventNameMapper[backendEventName] || backendEventName;
 }
-

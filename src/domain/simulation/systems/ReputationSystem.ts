@@ -38,6 +38,10 @@ const REPUTATION_CONFIG = {
   },
 } as const;
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class ReputationSystem {
   private gameState: GameState;
   private trust = new Map<string, Map<string, TrustEdge>>();
@@ -53,7 +57,7 @@ export class ReputationSystem {
     lastUpdate: 0,
   };
 
-  constructor(gameState: GameState) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
     this.lastUpdate = Date.now();
   }
@@ -206,8 +210,8 @@ export class ReputationSystem {
       data.aId,
       data.bId,
       REPUTATION_CONFIG.impacts.socialRelation.trust *
-        sign *
-        Math.abs(data.delta),
+      sign *
+      Math.abs(data.delta),
     );
     this.updateReputation(
       data.aId,

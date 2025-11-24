@@ -6,6 +6,10 @@ import type {
   LegendDeed,
 } from "../../types/simulation/legends";
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class LivingLegendsSystem {
   private _state: GameState;
   private legends = new Map<string, LegendRecord>();
@@ -22,7 +26,7 @@ export class LivingLegendsSystem {
     titleUpdateInterval: 5000,
   };
 
-  constructor(state: GameState) {
+  constructor(@inject(TYPES.GameState) state: GameState) {
     this._state = state;
     this.setupEventListeners();
   }

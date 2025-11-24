@@ -14,6 +14,10 @@ interface GenealogyConfig {
   maxHistoryEvents: number;
 }
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class GenealogySystem {
   private config: GenealogyConfig;
   private familyTree: FamilyTree = {
@@ -23,13 +27,12 @@ export class GenealogySystem {
   };
   private history: GenealogyEvent[] = [];
 
-  constructor(_gameState: GameState, config?: Partial<GenealogyConfig>) {
+  constructor(@inject(TYPES.GameState) _gameState: GameState) {
     void _gameState;
     this.config = {
       mutationRate: 0.15,
       trackHistory: true,
       maxHistoryEvents: 500,
-      ...config,
     };
   }
 

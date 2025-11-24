@@ -9,7 +9,14 @@ export interface OpportunitiesEvaluatorDependencies {
     entityId: string,
     resourceType: string,
   ) => { id: string; x: number; y: number } | null;
-  getCurrentTimeOfDay?: () => "dawn" | "morning" | "midday" | "afternoon" | "dusk" | "night" | "deep_night";
+  getCurrentTimeOfDay?: () =>
+    | "dawn"
+    | "morning"
+    | "midday"
+    | "afternoon"
+    | "dusk"
+    | "night"
+    | "deep_night";
 }
 
 export interface ExplorationDependencies {

@@ -8,13 +8,17 @@ import type {
 } from "../../types/simulation/worldResources";
 import type { GameState, Zone } from "../../types/game-types";
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class WorldResourceSystem {
   private state: GameState;
   private regenerationTimers = new Map<string, number>();
   private readonly REGENERATION_CHECK_INTERVAL = 5000;
   private lastRegenerationCheck = 0;
 
-  constructor(state: GameState) {
+  constructor(@inject(TYPES.GameState) state: GameState) {
     this.state = state;
     if (!this.state.worldResources) {
       this.state.worldResources = {};

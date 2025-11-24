@@ -34,9 +34,10 @@ export function evaluateTradeGoals(
   if (!hasExcess) return goals;
 
   // Find market zones
-  const marketZones = deps.gameState.zones?.filter(
-    (z) => z.type === "market" || z.type === "trade",
-  ) || [];
+  const marketZones =
+    deps.gameState.zones?.filter(
+      (z) => z.type === "market" || z.type === "trade",
+    ) || [];
 
   if (marketZones.length === 0) return goals;
 
@@ -44,7 +45,7 @@ export function evaluateTradeGoals(
   if (!myPos) return goals;
 
   // Find nearest market
-  let nearestMarket: typeof marketZones[0] | null = null;
+  let nearestMarket: (typeof marketZones)[0] | null = null;
   let minDist = Infinity;
 
   for (const zone of marketZones) {
@@ -74,4 +75,3 @@ export function evaluateTradeGoals(
 
   return goals;
 }
-

@@ -6,7 +6,6 @@ import { GameEventNames, simulationEvents } from "../core/events";
 import {
   estimateTravelTime,
   assessRouteDifficultyByDistance,
-  // findAccessibleDestination, // Reserved for future use
   calculateZoneDistance,
   worldToGrid,
   Difficulty,
@@ -91,7 +90,6 @@ export class MovementSystem extends EventEmitter {
   private readonly gridSize = MOVEMENT_CONSTANTS.PATHFINDING.GRID_SIZE;
   private gridWidth: number;
   private gridHeight: number;
-  // private gridInitialized = false; // Reserved for future use
   private occupiedTiles = new Set<string>();
   private cachedGrid: number[][] | null = null;
   private gridCacheTime: number = 0;
@@ -102,11 +100,9 @@ export class MovementSystem extends EventEmitter {
     { result: PathfindingResult; timestamp: number }
   >();
   private readonly GRID_CACHE_DURATION = 30000;
-  // Aumentado de 10s a 30s para reducir recálculos de pathfinding costosos
   private readonly PATH_CACHE_DURATION = 30000;
   private lastCacheCleanup: number = 0;
 
-  // Procesador batch optimizado
   private batchProcessor: MovementBatchProcessor;
   private readonly BATCH_THRESHOLD = 15; // Usar batch processing si hay 15+ entidades moviéndose
 
@@ -141,16 +137,13 @@ export class MovementSystem extends EventEmitter {
   public update(deltaMs: number): void {
     const now = Date.now();
 
-    // Contar entidades moviéndose
     const movingCount = Array.from(this.movementStates.values()).filter(
       (s) => s.isMoving,
     ).length;
 
-    // Usar procesamiento batch si hay suficientes entidades moviéndose
     if (movingCount >= this.BATCH_THRESHOLD) {
       this.updateBatch(deltaMs, now);
     } else {
-      // Procesamiento tradicional
       this.movementStates.forEach((state) => {
         this.updateEntityMovement(state, now, deltaMs);
         this.updateEntityActivity(state, now);
@@ -167,20 +160,14 @@ export class MovementSystem extends EventEmitter {
     this.pathfinder.calculate();
   }
 
-  /**
-   * Actualización optimizada en batch
-   */
   private updateBatch(deltaMs: number, now: number): void {
-    // Reconstruir buffers si es necesario
     this.batchProcessor.rebuildBuffers(this.movementStates);
 
-    // Preparar arrays de estado
     const entityIdArray = this.batchProcessor.getEntityIdArray();
     const entityCount = entityIdArray.length;
     const isMoving = new Array<boolean>(entityCount);
     const isResting = new Array<boolean>(entityCount);
 
-    // Llenar arrays de estado
     for (let i = 0; i < entityCount; i++) {
       const entityId = entityIdArray[i];
       const state = this.movementStates.get(entityId);
@@ -193,16 +180,13 @@ export class MovementSystem extends EventEmitter {
       }
     }
 
-    // Actualizar posiciones en batch
-    const { updated, arrived } = this.batchProcessor.updatePositionsBatch(deltaMs);
+    const { updated, arrived } =
+      this.batchProcessor.updatePositionsBatch(deltaMs);
 
-    // Actualizar fatiga en batch
     this.batchProcessor.updateFatigueBatch(isMoving, isResting, deltaMs);
 
-    // Sincronizar de vuelta a los estados
     this.batchProcessor.syncToStates(this.movementStates);
 
-    // Procesar llegadas y actividades
     for (let i = 0; i < entityCount; i++) {
       if (!updated[i]) continue;
 
@@ -210,16 +194,13 @@ export class MovementSystem extends EventEmitter {
       const state = this.movementStates.get(entityId);
       if (!state) continue;
 
-      // Si llegó al destino
       if (arrived[i] && state.isMoving) {
         this.completeMovement(state);
       }
 
-      // Actualizar actividad y fatiga (ya actualizado en batch, pero verificar eventos)
       this.updateEntityActivity(state, now);
       this.maybeStartIdleWander(state, now);
 
-      // Actualizar posición en el agente
       const agent = this.gameState.agents.find((a) => a.id === entityId);
       if (agent) {
         agent.position = { ...state.currentPosition };
@@ -243,8 +224,7 @@ export class MovementSystem extends EventEmitter {
       return;
     }
 
-    // const lifeStage = "adult"; // TODO: Get from agent profile - Reserved for future use
-    const ageSpeedMultiplier = 1.0; // Simplified for now
+    const ageSpeedMultiplier = 1.0;
     const fatigueMultiplier =
       1 /
       (1 +
@@ -447,7 +427,6 @@ export class MovementSystem extends EventEmitter {
     state.estimatedArrivalTime = now + travelTime;
     state.currentActivity = "moving";
 
-    // Emit MOVEMENT_ACTIVITY_STARTED event for TrailSystem
     simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
       entityId,
       activityType: "moving",

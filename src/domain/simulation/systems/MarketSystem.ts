@@ -19,21 +19,22 @@ const DEFAULT_MARKET_CONFIG: MarketConfig = {
   },
 };
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class MarketSystem {
   private state: GameState;
   private inventorySystem: InventorySystem;
   private config: MarketConfig;
 
   constructor(
-    state: GameState,
-    inventorySystem: InventorySystem,
-    _lifeCycleSystem: LifeCycleSystem,
-    config?: Partial<MarketConfig>,
+    @inject(TYPES.GameState) state: GameState,
+    @inject(TYPES.InventorySystem) inventorySystem: InventorySystem,
   ) {
-    void _lifeCycleSystem;
     this.state = state;
     this.inventorySystem = inventorySystem;
-    this.config = { ...DEFAULT_MARKET_CONFIG, ...config };
+    this.config = DEFAULT_MARKET_CONFIG;
   }
 
   public update(_delta: number): void {

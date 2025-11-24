@@ -40,17 +40,14 @@ export class AnimalBatchProcessor {
       const posOffset = index * 2;
       const needsOffset = index * this.NEED_COUNT;
 
-      // Posición
       this.positionBuffer[posOffset] = animal.position.x;
       this.positionBuffer[posOffset + 1] = animal.position.y;
 
-      // Necesidades
       this.needsBuffer[needsOffset + 0] = animal.needs.hunger;
       this.needsBuffer[needsOffset + 1] = animal.needs.thirst;
       this.needsBuffer[needsOffset + 2] = animal.needs.fear;
       this.needsBuffer[needsOffset + 3] = animal.needs.reproductiveUrge;
 
-      // Edad y salud
       this.ageBuffer[index] = animal.age;
       this.healthBuffer[index] = animal.health;
 
@@ -76,28 +73,22 @@ export class AnimalBatchProcessor {
     for (let i = 0; i < animalCount; i++) {
       const needsOffset = i * this.NEED_COUNT;
 
-      // Decaimiento de hambre
       const hungerDecay = hungerDecayRates[i] * deltaMinutes;
       this.needsBuffer[needsOffset + 0] = Math.max(
         0,
         this.needsBuffer[needsOffset + 0] - hungerDecay,
       );
 
-      // Decaimiento de sed
       const thirstDecay = thirstDecayRates[i] * deltaMinutes;
       this.needsBuffer[needsOffset + 1] = Math.max(
         0,
         this.needsBuffer[needsOffset + 1] - thirstDecay,
       );
 
-      // Decaimiento de miedo (más lento)
       this.needsBuffer[needsOffset + 2] = Math.max(
         0,
         this.needsBuffer[needsOffset + 2] - 0.5 * deltaMinutes,
       );
-
-      // Aumento de impulso reproductivo (si no está en cooldown)
-      // Esto se maneja en la lógica de comportamiento, no aquí
     }
 
     this.bufferDirty = true;
@@ -142,17 +133,14 @@ export class AnimalBatchProcessor {
       const posOffset = i * 2;
       const needsOffset = i * this.NEED_COUNT;
 
-      // Actualizar posición
       animal.position.x = this.positionBuffer[posOffset];
       animal.position.y = this.positionBuffer[posOffset + 1];
 
-      // Actualizar necesidades
       animal.needs.hunger = this.needsBuffer[needsOffset + 0];
       animal.needs.thirst = this.needsBuffer[needsOffset + 1];
       animal.needs.fear = this.needsBuffer[needsOffset + 2];
       animal.needs.reproductiveUrge = this.needsBuffer[needsOffset + 3];
 
-      // Actualizar edad y salud
       animal.age = this.ageBuffer[i];
       animal.health = this.healthBuffer[i];
     }
@@ -193,4 +181,3 @@ export class AnimalBatchProcessor {
     return this.bufferDirty;
   }
 }
-

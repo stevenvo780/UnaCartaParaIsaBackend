@@ -79,6 +79,9 @@ const BLESSING_DEFINITIONS: Record<
   },
 };
 
+import { injectable } from "inversify";
+
+@injectable()
 export class DivineFavorSystem {
   private config: DivineFavorConfig;
   private favors = new Map<string, DivineFavor>();
@@ -86,8 +89,8 @@ export class DivineFavorSystem {
   private divinePowers: Record<GodId, DivinePower>;
   private lastBlessingId = 0;
 
-  constructor(config?: Partial<DivineFavorConfig>) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
+  constructor() {
+    this.config = DEFAULT_CONFIG;
     this.divinePowers = {
       isa: {
         godId: "isa",

@@ -19,7 +19,6 @@ const server = app.listen(CONFIG.PORT, () => {
 const simulationWss = new WebSocketServer({ noServer: true });
 const chunkStreamServer = new ChunkStreamServer({ maxInflight: 128 });
 
-// Cache del mensaje serializado por tick para evitar múltiples serializaciones
 let cachedTickMessage: string | null = null;
 let cachedTickNumber = -1;
 
@@ -52,7 +51,6 @@ server.on("upgrade", (request, socket, head) => {
 simulationWss.on("connection", (ws: WebSocket) => {
   logger.info("Client connected to simulation");
 
-  // Enviar snapshot inicial con todos los datos estáticos (terrainTiles, roads, etc.)
   ws.send(
     JSON.stringify({
       type: "SNAPSHOT",
@@ -121,9 +119,7 @@ simulationWss.on("connection", (ws: WebSocket) => {
   });
 });
 
-// Listener global que serializa el snapshot UNA SOLA VEZ por tick
 simulationRunner.on("tick", (snapshot) => {
-  // Solo serializar si el tick cambió (evitar re-serializar el mismo tick)
   const currentTick = (snapshot as { tick?: number }).tick ?? 0;
   if (currentTick !== cachedTickNumber || !cachedTickMessage) {
     cachedTickMessage = JSON.stringify({
@@ -133,7 +129,6 @@ simulationRunner.on("tick", (snapshot) => {
     cachedTickNumber = currentTick;
   }
 
-  // Enviar el mensaje serializado en cache a todos los clientes
   simulationWss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(cachedTickMessage!);

@@ -13,6 +13,10 @@ const DEFAULT_CONFIG: ItemGenerationConfig = {
   maxItemsPerZone: 10,
 };
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class ItemGenerationSystem {
   private gameState: GameState;
   private config: ItemGenerationConfig;
@@ -21,9 +25,9 @@ export class ItemGenerationSystem {
   private lastGeneration = new Map<string, number>();
   private nextItemId = 1;
 
-  constructor(gameState: GameState, config?: Partial<ItemGenerationConfig>) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
-    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.config = DEFAULT_CONFIG;
     logger.info("🎁 ItemGenerationSystem (Backend) initialized");
   }
 

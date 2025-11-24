@@ -16,11 +16,7 @@ export class SharedSpatialIndex {
   private dirty = true;
   private readonly cellSize: number;
 
-  constructor(
-    worldWidth: number,
-    worldHeight: number,
-    cellSize: number = 70,
-  ) {
+  constructor(worldWidth: number, worldHeight: number, cellSize: number = 70) {
     this.cellSize = cellSize;
     this.grid = new SpatialGrid(worldWidth, worldHeight, cellSize);
   }
@@ -147,4 +143,3 @@ export class SharedSpatialIndex {
     return this.dirty;
   }
 }
-

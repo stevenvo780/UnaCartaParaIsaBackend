@@ -58,7 +58,14 @@ export interface AgentGoalPlannerDeps {
   ) => Array<{ id: string; position: { x: number; y: number } }>;
   getActiveQuests?: () => Quest[];
   getAvailableQuests?: () => Quest[];
-  getCurrentTimeOfDay?: () => "dawn" | "morning" | "midday" | "afternoon" | "dusk" | "night" | "deep_night";
+  getCurrentTimeOfDay?: () =>
+    | "dawn"
+    | "morning"
+    | "midday"
+    | "afternoon"
+    | "dusk"
+    | "night"
+    | "deep_night";
   getEntityPosition?: (id: string) => { x: number; y: number } | null;
 }
 
@@ -167,10 +174,7 @@ export function planGoals(
   }
 
   // Trade goals
-  if (
-    deps.getAgentInventory &&
-    deps.getAllActiveAgentIds
-  ) {
+  if (deps.getAgentInventory && deps.getAllActiveAgentIds) {
     const tradeDeps = {
       getAgentInventory: deps.getAgentInventory,
       getEntityPosition: positionFor,

@@ -22,7 +22,6 @@ export class NeedsBatchProcessor {
       return;
     }
 
-    // Crear buffer: [entity0_hunger, entity0_thirst, ..., entity1_hunger, ...]
     this.needsBuffer = new Float32Array(entityCount * this.NEED_COUNT);
     this.entityIdArray = new Array(entityCount);
 
@@ -57,14 +56,12 @@ export class NeedsBatchProcessor {
 
     const entityCount = this.entityIdArray.length;
 
-    // Procesar todas las entidades en batch
     for (let i = 0; i < entityCount; i++) {
       const offset = i * this.NEED_COUNT;
       const ageMult = ageMultipliers[i] || 1.0;
       const divineMult = divineModifiers[i] || 1.0;
       const finalMultiplier = ageMult * divineMult;
 
-      // Aplicar decaimiento a cada necesidad
       for (let needIdx = 0; needIdx < this.NEED_COUNT; needIdx++) {
         const rate = decayRates[needIdx] * finalMultiplier;
         const currentValue = this.needsBuffer[offset + needIdx];
@@ -89,29 +86,47 @@ export class NeedsBatchProcessor {
     for (let i = 0; i < entityCount; i++) {
       const offset = i * this.NEED_COUNT;
 
-      // energy < 30 afecta social, fun, mentalHealth
       const energy = this.needsBuffer[offset + 2];
       if (energy < 30) {
         const penalty = (30 - energy) * 0.02;
-        this.needsBuffer[offset + 4] = Math.max(0, this.needsBuffer[offset + 4] - penalty); // social
-        this.needsBuffer[offset + 5] = Math.max(0, this.needsBuffer[offset + 5] - penalty); // fun
-        this.needsBuffer[offset + 6] = Math.max(0, this.needsBuffer[offset + 6] - penalty * 1.5); // mentalHealth
+        this.needsBuffer[offset + 4] = Math.max(
+          0,
+          this.needsBuffer[offset + 4] - penalty,
+        );
+        this.needsBuffer[offset + 5] = Math.max(
+          0,
+          this.needsBuffer[offset + 5] - penalty,
+        );
+        this.needsBuffer[offset + 6] = Math.max(
+          0,
+          this.needsBuffer[offset + 6] - penalty * 1.5,
+        );
       }
 
-      // hunger < 40 afecta energy, mentalHealth
       const hunger = this.needsBuffer[offset + 0];
       if (hunger < 40) {
         const hungerPenalty = (40 - hunger) * 0.03;
-        this.needsBuffer[offset + 2] = Math.max(0, this.needsBuffer[offset + 2] - hungerPenalty); // energy
-        this.needsBuffer[offset + 6] = Math.max(0, this.needsBuffer[offset + 6] - hungerPenalty * 0.5); // mentalHealth
+        this.needsBuffer[offset + 2] = Math.max(
+          0,
+          this.needsBuffer[offset + 2] - hungerPenalty,
+        );
+        this.needsBuffer[offset + 6] = Math.max(
+          0,
+          this.needsBuffer[offset + 6] - hungerPenalty * 0.5,
+        );
       }
 
-      // thirst < 30 afecta energy, mentalHealth
       const thirst = this.needsBuffer[offset + 1];
       if (thirst < 30) {
         const thirstPenalty = (30 - thirst) * 0.05;
-        this.needsBuffer[offset + 2] = Math.max(0, this.needsBuffer[offset + 2] - thirstPenalty * 2); // energy
-        this.needsBuffer[offset + 6] = Math.max(0, this.needsBuffer[offset + 6] - thirstPenalty); // mentalHealth
+        this.needsBuffer[offset + 2] = Math.max(
+          0,
+          this.needsBuffer[offset + 2] - thirstPenalty * 2,
+        );
+        this.needsBuffer[offset + 6] = Math.max(
+          0,
+          this.needsBuffer[offset + 6] - thirstPenalty,
+        );
       }
     }
 
@@ -160,7 +175,11 @@ export class NeedsBatchProcessor {
    * Obtiene el valor de una necesidad específica para una entidad
    */
   public getNeedValue(entityIndex: number, needIndex: number): number {
-    if (!this.needsBuffer || entityIndex < 0 || entityIndex >= this.entityIdArray.length) {
+    if (
+      !this.needsBuffer ||
+      entityIndex < 0 ||
+      entityIndex >= this.entityIdArray.length
+    ) {
       return 0;
     }
     const offset = entityIndex * this.NEED_COUNT;
@@ -170,8 +189,16 @@ export class NeedsBatchProcessor {
   /**
    * Establece el valor de una necesidad específica para una entidad
    */
-  public setNeedValue(entityIndex: number, needIndex: number, value: number): void {
-    if (!this.needsBuffer || entityIndex < 0 || entityIndex >= this.entityIdArray.length) {
+  public setNeedValue(
+    entityIndex: number,
+    needIndex: number,
+    value: number,
+  ): void {
+    if (
+      !this.needsBuffer ||
+      entityIndex < 0 ||
+      entityIndex >= this.entityIdArray.length
+    ) {
       return;
     }
     const offset = entityIndex * this.NEED_COUNT;
@@ -193,4 +220,3 @@ export class NeedsBatchProcessor {
     return this.bufferDirty;
   }
 }
-

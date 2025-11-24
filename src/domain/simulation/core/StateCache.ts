@@ -39,19 +39,16 @@ export class StateCache {
    * Si no, clona todo el estado
    */
   public getSnapshot(state: GameState, currentTick: number): GameState {
-    // Si es un nuevo tick, resetear flags
     if (currentTick !== this.lastTick) {
       this.lastTick = currentTick;
     }
 
-    // Si no hay snapshot previo o todo está dirty, clonar todo
     if (!this.previousSnapshot || this.isEverythingDirty()) {
       this.previousSnapshot = cloneGameState(state);
       this.clearDirtyFlags();
       return this.previousSnapshot;
     }
 
-    // Usar clonación delta para solo clonar lo que cambió
     const dirtyObj: Record<string, boolean> = {};
     for (const [section, isDirty] of this.dirtyFlags.entries()) {
       dirtyObj[section] = isDirty;
@@ -72,12 +69,10 @@ export class StateCache {
    * Verifica si todas las secciones están marcadas como dirty
    */
   private isEverythingDirty(): boolean {
-    // Si no hay flags, asumir que todo está dirty
     if (this.dirtyFlags.size === 0) {
       return true;
     }
 
-    // Lista de todas las secciones posibles
     const allSections = [
       "agents",
       "entities",
@@ -99,7 +94,6 @@ export class StateCache {
       "tasks",
     ];
 
-    // Si todas las secciones están marcadas como dirty, clonar todo
     return allSections.every((section) => this.dirtyFlags.get(section));
   }
 
@@ -119,4 +113,3 @@ export class StateCache {
     return this.previousSnapshot;
   }
 }
-

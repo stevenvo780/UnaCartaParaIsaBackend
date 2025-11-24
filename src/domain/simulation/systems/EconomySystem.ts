@@ -26,6 +26,10 @@ const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
   },
 };
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class EconomySystem {
   private state: GameState;
   private inventorySystem: InventorySystem;
@@ -41,15 +45,14 @@ export class EconomySystem {
   private readonly SALARY_INTERVAL_MS = 60000; // Pay salaries every minute
 
   constructor(
-    state: GameState,
-    inventorySystem: InventorySystem,
-    socialSystem: SocialSystem,
-    config?: Partial<EconomyConfig>,
+    @inject(TYPES.GameState) state: GameState,
+    @inject(TYPES.InventorySystem) inventorySystem: InventorySystem,
+    @inject(TYPES.SocialSystem) socialSystem: SocialSystem,
   ) {
     this.state = state;
     this.inventorySystem = inventorySystem;
     this.socialSystem = socialSystem;
-    this.config = { ...DEFAULT_ECONOMY_CONFIG, ...config };
+    this.config = DEFAULT_ECONOMY_CONFIG;
   }
 
   public setDependencies(deps: {
@@ -64,7 +67,7 @@ export class EconomySystem {
 
   public update(delta: number): void {
     const now = Date.now();
-    
+
     // Periodic updates
     if (now - this.lastUpdate >= this.UPDATE_INTERVAL_MS) {
       this.cleanupOldResiduals();
@@ -83,7 +86,7 @@ export class EconomySystem {
     // Clean residuals older than 1 hour
     const maxAge = 3600000;
     const now = Date.now();
-    
+
     // Since we don't track timestamps per residual, we'll just limit the map size
     if (this.yieldResiduals.size > 100) {
       // Keep only the most recent entries (simplified cleanup)

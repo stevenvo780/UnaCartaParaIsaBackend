@@ -363,11 +363,7 @@ export class SimulationRunner {
 
     simulationEvents.on(
       GameEventNames.ANIMAL_HUNTED,
-      (data: {
-        animalId: string;
-        hunterId: string;
-        foodValue?: number;
-      }) => {
+      (data: { animalId: string; hunterId: string; foodValue?: number }) => {
         if (data.hunterId && data.foodValue) {
           // Give food to the hunter
           const inventory = this.inventorySystem.getAgentInventory(
@@ -375,11 +371,7 @@ export class SimulationRunner {
           );
           if (inventory) {
             const foodToAdd = Math.floor(data.foodValue || 5);
-            this.inventorySystem.addResource(
-              data.hunterId,
-              "food",
-              foodToAdd,
-            );
+            this.inventorySystem.addResource(data.hunterId, "food", foodToAdd);
           }
         }
       },
@@ -753,7 +745,6 @@ export class SimulationRunner {
   getInitialSnapshot(): SimulationSnapshot {
     const events =
       this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
-    // Para el snapshot inicial, clonar todo incluyendo datos estáticos
     const snapshotState = cloneGameState(this.state);
     snapshotState.genealogy = this._genealogySystem.getSerializedFamilyTree();
 
@@ -786,7 +777,6 @@ export class SimulationRunner {
       this.tickCounter,
     );
 
-    // Actualizar campos que siempre cambian
     snapshotState.genealogy = this._genealogySystem.getSerializedFamilyTree();
 
     const allLegends = this.livingLegendsSystem.getAllLegends();
@@ -796,13 +786,10 @@ export class SimulationRunner {
       activeLegends,
     };
 
-    // Excluir datos estáticos del snapshot de tick (no cambian)
-    // Estos se envían solo en el snapshot inicial
     const tickState = { ...snapshotState };
     delete tickState.terrainTiles;
     delete tickState.roads;
     delete tickState.objectLayers;
-    // worldSize puede cambiar pero es raro, mantenerlo por ahora
 
     return {
       state: tickState,
@@ -829,15 +816,12 @@ export class SimulationRunner {
     this.processCommands();
     const scaledDelta = delta * this.timeScale;
 
-    // Reconstruir índices si hay cambios en agents/entities
     this.entityIndex.rebuild(this.state);
     this.sharedSpatialIndex.rebuildIfNeeded(
       this.state.entities || [],
       this.animalSystem.getAnimals(),
     );
 
-    // Marcar secciones como dirty antes de actualizar sistemas
-    // Esto permite al StateCache saber qué partes del estado cambiaron
     const dirtySections: string[] = [];
 
     this.advanceSimulation(scaledDelta);
@@ -854,7 +838,13 @@ export class SimulationRunner {
       Promise.resolve(this._recipeDiscoverySystem.update()),
       Promise.resolve(this._normsSystem.update()),
     ]);
-    dirtySections.push("worldResources", "animals", "research", "recipes", "norms");
+    dirtySections.push(
+      "worldResources",
+      "animals",
+      "research",
+      "recipes",
+      "norms",
+    );
 
     // Fase 2: Sistemas que dependen de fase 1 pero son independientes entre sí
     await Promise.all([
@@ -910,7 +900,14 @@ export class SimulationRunner {
       Promise.resolve(this.interactionGameSystem.update(scaledDelta)),
       Promise.resolve(this.knowledgeNetworkSystem.update(scaledDelta)),
     ]);
-    dirtySections.push("reputation", "quests", "trade", "marriage", "conflicts", "knowledgeGraph");
+    dirtySections.push(
+      "reputation",
+      "quests",
+      "trade",
+      "marriage",
+      "conflicts",
+      "knowledgeGraph",
+    );
 
     // Fase 8: Sistema de movimiento (debe ejecutarse al final para actualizar posiciones)
     this.movementSystem.update(scaledDelta);
@@ -920,12 +917,11 @@ export class SimulationRunner {
     this.stateCache.markDirtyMultiple(dirtySections);
 
     this.tickCounter += 1;
-    
-    // Flush eventos antes de crear snapshot
+
     if (simulationEvents instanceof BatchedEventEmitter) {
       simulationEvents.flushEvents();
     }
-    
+
     const snapshot = this.getTickSnapshot();
     this.emitter.emit("tick", snapshot);
 

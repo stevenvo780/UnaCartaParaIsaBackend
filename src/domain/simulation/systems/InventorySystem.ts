@@ -5,6 +5,10 @@ import {
 } from "../../types/simulation/economy";
 import type { GameState } from "../../types/game-types";
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class InventorySystem {
   private gameState?: GameState;
   private agentInventories = new Map<string, Inventory>();
@@ -16,7 +20,7 @@ export class InventorySystem {
   private readonly DEFAULT_AGENT_CAPACITY = 50;
   private readonly DEFAULT_STOCKPILE_CAPACITY = 1000;
 
-  constructor(gameState?: GameState) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
   }
 

@@ -34,6 +34,10 @@ const BASIC_RECIPE_IDS = [
   "wooden_club",
 ];
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class EnhancedCraftingSystem {
   private readonly config: EnhancedCraftingConfig;
   private readonly now: () => number;
@@ -45,13 +49,11 @@ export class EnhancedCraftingSystem {
   private readonly equippedWeapons = new Map<string, WeaponId>();
 
   constructor(
-    private readonly state: GameState,
-    private readonly inventorySystem: InventorySystem,
-    config?: Partial<EnhancedCraftingConfig>,
-    nowProvider: () => number = () => Date.now(),
+    @inject(TYPES.GameState) private readonly state: GameState,
+    @inject(TYPES.InventorySystem) private readonly inventorySystem: InventorySystem,
   ) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
-    this.now = nowProvider;
+    this.config = DEFAULT_CONFIG;
+    this.now = () => Date.now();
   }
 
   public update(): void {

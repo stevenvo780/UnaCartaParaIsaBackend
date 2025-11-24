@@ -13,15 +13,19 @@ const DEFAULT_CONFIG: HouseholdSystemConfig = {
   defaultInventoryCapacity: 100,
 };
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class HouseholdSystem {
   private gameState: GameState;
   private config: HouseholdSystemConfig;
   private households = new Map<string, Household>();
   private lastUpdate = 0;
 
-  constructor(gameState: GameState, config?: Partial<HouseholdSystemConfig>) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
-    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.config = DEFAULT_CONFIG;
     this.rebuildFromZones();
     logger.info("🏠 HouseholdSystem (Backend) initialized");
   }

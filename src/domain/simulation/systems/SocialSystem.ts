@@ -4,6 +4,10 @@ import { SpatialGrid } from "../../../utils/SpatialGrid";
 import { SocialGroup } from "../../../shared/types/simulation/agents";
 import { simulationEvents, GameEventNames } from "../core/events";
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class SocialSystem {
   private gameState: GameState;
   private config: SocialConfig;
@@ -19,14 +23,13 @@ export class SocialSystem {
   private zoneHeat = new Map<string, number>();
   private lastUpdate = 0;
 
-  constructor(gameState: GameState, config?: Partial<SocialConfig>) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
     this.config = {
       proximityRadius: 100,
       reinforcementPerSecond: 0.05,
       decayPerSecond: 0.01,
       groupThreshold: 0.6,
-      ...config,
     };
 
     const worldWidth = gameState.worldSize?.width ?? 2000;

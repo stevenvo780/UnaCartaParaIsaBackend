@@ -30,6 +30,10 @@ type MutableZone = Zone & {
   metadata?: ProductionMetadata;
 };
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class ProductionSystem {
   private readonly config: ProductionConfig;
   private readonly lastProduction = new Map<string, number>();
@@ -37,12 +41,11 @@ export class ProductionSystem {
   private lastUpdate = 0;
 
   constructor(
-    private readonly state: GameState,
-    private readonly inventorySystem: InventorySystem,
-    private readonly lifeCycleSystem: LifeCycleSystem,
-    config?: Partial<ProductionConfig>,
+    @inject(TYPES.GameState) private readonly state: GameState,
+    @inject(TYPES.InventorySystem) private readonly inventorySystem: InventorySystem,
+    @inject(TYPES.LifeCycleSystem) private readonly lifeCycleSystem: LifeCycleSystem,
   ) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.config = DEFAULT_CONFIG;
   }
 
   public update(_deltaMs: number): void {

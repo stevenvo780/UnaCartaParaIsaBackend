@@ -4,12 +4,14 @@ import type { GameState } from "../../../types/game-types";
 export interface BuildingContributionDependencies {
   gameState: GameState;
   getEntityPosition: (id: string) => { x: number; y: number } | null;
-  getAgentInventory: (id: string) => {
-    wood?: number;
-    stone?: number;
-    food?: number;
-    water?: number;
-  } | undefined;
+  getAgentInventory: (id: string) =>
+    | {
+        wood?: number;
+        stone?: number;
+        food?: number;
+        water?: number;
+      }
+    | undefined;
 }
 
 export function evaluateBuildingContributionGoals(
@@ -20,13 +22,15 @@ export function evaluateBuildingContributionGoals(
   const now = Date.now();
 
   // Find zones under construction
-  const constructionZones = deps.gameState.zones?.filter(
-    (z) =>
-      z.metadata &&
-      typeof z.metadata === "object" &&
-      "underConstruction" in z.metadata &&
-      (z.metadata as { underConstruction?: boolean }).underConstruction === true,
-  ) || [];
+  const constructionZones =
+    deps.gameState.zones?.filter(
+      (z) =>
+        z.metadata &&
+        typeof z.metadata === "object" &&
+        "underConstruction" in z.metadata &&
+        (z.metadata as { underConstruction?: boolean }).underConstruction ===
+          true,
+    ) || [];
 
   if (constructionZones.length === 0) return goals;
 
@@ -55,7 +59,8 @@ export function evaluateBuildingContributionGoals(
           ? (zone.metadata as { building?: string }).building
           : undefined;
 
-      const needsWood = buildingType === "house" || buildingType === "workbench";
+      const needsWood =
+        buildingType === "house" || buildingType === "workbench";
       const needsStone = buildingType === "mine";
 
       const canContribute =
@@ -89,11 +94,12 @@ export function evaluateBuildingContributionGoals(
     targetZoneId: best.zone.id,
     data: {
       action: "contribute_resources",
-      buildingType: best.zone.metadata &&
+      buildingType:
+        best.zone.metadata &&
         typeof best.zone.metadata === "object" &&
         "building" in best.zone.metadata
-        ? (best.zone.metadata as { building?: string }).building
-        : undefined,
+          ? (best.zone.metadata as { building?: string }).building
+          : undefined,
     },
     createdAt: now,
     expiresAt: now + 15000,
@@ -101,4 +107,3 @@ export function evaluateBuildingContributionGoals(
 
   return goals;
 }
-
