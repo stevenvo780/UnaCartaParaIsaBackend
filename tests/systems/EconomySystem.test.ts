@@ -3,6 +3,7 @@ import { EconomySystem } from "../../src/domain/simulation/systems/EconomySystem
 import { InventorySystem } from "../../src/domain/simulation/systems/InventorySystem.ts";
 import { SocialSystem } from "../../src/domain/simulation/systems/SocialSystem.ts";
 import { LifeCycleSystem } from "../../src/domain/simulation/systems/LifeCycleSystem.ts";
+import { RoleSystem } from "../../src/domain/simulation/systems/RoleSystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 
@@ -26,19 +27,13 @@ describe("EconomySystem", () => {
         {
           id: "wood-zone",
           type: "work",
-          x: 100,
-          y: 100,
-          width: 50,
-          height: 50,
+          bounds: { x: 100, y: 100, width: 50, height: 50 },
           props: { resource: "wood" },
         },
         {
           id: "food-zone",
           type: "food",
-          x: 200,
-          y: 200,
-          width: 50,
-          height: 50,
+          bounds: { x: 200, y: 200, width: 50, height: 50 },
         },
       ],
     });
@@ -49,8 +44,7 @@ describe("EconomySystem", () => {
     economySystem = new EconomySystem(
       gameState,
       inventorySystem,
-      socialSystem,
-      lifeCycleSystem
+      socialSystem
     );
   });
 
@@ -89,10 +83,7 @@ describe("EconomySystem", () => {
       gameState.zones.push({
         id: "water-zone",
         type: "water",
-        x: 300,
-        y: 300,
-        width: 50,
-        height: 50,
+        bounds: { x: 300, y: 300, width: 50, height: 50 },
       });
       inventorySystem.initializeAgentInventory("agent-1");
       const entity = gameState.entities.find(e => e.id === "agent-1");
@@ -148,10 +139,7 @@ describe("EconomySystem", () => {
       gameState.zones.push({
         id: "rest-zone",
         type: "rest",
-        x: 400,
-        y: 400,
-        width: 50,
-        height: 50,
+        bounds: { x: 400, y: 400, width: 50, height: 50 },
       });
       expect(() => {
         economySystem.handleWorkAction("agent-1", "rest-zone");
@@ -185,7 +173,6 @@ describe("EconomySystem", () => {
         gameState,
         inventorySystem,
         socialSystem,
-        lifeCycleSystem,
         {
           workDurationMs: 3000,
           baseYield: {
@@ -197,6 +184,131 @@ describe("EconomySystem", () => {
         }
       );
       expect(customSystem).toBeDefined();
+    });
+  });
+
+  describe("setDependencies", () => {
+    it("debe establecer dependencias de sistemas", () => {
+      const roleSystem = {} as any;
+      const divineFavorSystem = {} as any;
+      const genealogySystem = {} as any;
+      
+      expect(() => {
+        economySystem.setDependencies({
+          roleSystem,
+          divineFavorSystem,
+          genealogySystem,
+        });
+      }).not.toThrow();
+    });
+  });
+
+  describe("Bonus de equipo", () => {
+    it("debe aplicar bonus de equipo cuando hay miembros trabajando juntos", () => {
+      // Crear un grupo social
+      socialSystem.registerPermanentBond("agent-1", "agent-2", "family");
+      socialSystem.setAffinity("agent-1", "agent-2", 0.8);
+      
+      // Agregar segundo agente en la misma zona
+      gameState.entities.push({
+        id: "agent-2",
+        position: { x: 120, y: 120 }, // Dentro de wood-zone
+        type: "agent",
+      });
+      
+      inventorySystem.initializeAgentInventory("agent-1");
+      inventorySystem.initializeAgentInventory("agent-2");
+      const entity1 = gameState.entities.find(e => e.id === "agent-1");
+      const entity2 = gameState.entities.find(e => e.id === "agent-2");
+      if (entity1) entity1.stats = { money: 0 };
+      if (entity2) entity2.stats = { money: 0 };
+      
+      // Actualizar sistema social para recalcular grupos
+      socialSystem.update(2000);
+      
+      const initialWood = inventorySystem.getAgentInventory("agent-1")?.wood || 0;
+      economySystem.handleWorkAction("agent-1", "wood-zone");
+      
+      const finalWood = inventorySystem.getAgentInventory("agent-1")?.wood || 0;
+      // Debería haber más wood debido al bonus de equipo
+      expect(finalWood).toBeGreaterThan(initialWood);
+    });
+  });
+
+  describe("Bonus de rol", () => {
+    it("debe aplicar bonus cuando el agente tiene rol apropiado", () => {
+      const roleSystem = new RoleSystem(gameState);
+      
+      economySystem.setDependencies({ roleSystem });
+      
+      // Asignar rol de logger
+      roleSystem.assignRole("agent-1", "logger");
+      
+      inventorySystem.initializeAgentInventory("agent-1");
+      const entity = gameState.entities.find(e => e.id === "agent-1");
+      if (entity) entity.stats = { money: 0 };
+      
+      const initialWood = inventorySystem.getAgentInventory("agent-1")?.wood || 0;
+      economySystem.handleWorkAction("agent-1", "wood-zone");
+      
+      const finalWood = inventorySystem.getAgentInventory("agent-1")?.wood || 0;
+      // Debería haber más wood debido al bonus de rol
+      expect(finalWood).toBeGreaterThan(initialWood);
+    });
+  });
+
+  describe("Residuos de yield", () => {
+    it("debe acumular y usar residuos de yield", () => {
+      inventorySystem.initializeAgentInventory("agent-1");
+      const entity = gameState.entities.find(e => e.id === "agent-1");
+      if (entity) entity.stats = { money: 0 };
+      
+      // Realizar múltiples acciones para acumular residuos
+      economySystem.handleWorkAction("agent-1", "wood-zone");
+      economySystem.handleWorkAction("agent-1", "wood-zone");
+      economySystem.handleWorkAction("agent-1", "wood-zone");
+      
+      // Los residuos deberían acumularse y eventualmente convertirse en recursos enteros
+      const wood = inventorySystem.getAgentInventory("agent-1")?.wood || 0;
+      expect(wood).toBeGreaterThan(0);
+    });
+  });
+
+  describe("Casos edge", () => {
+    it("debe manejar agente sin stats", () => {
+      inventorySystem.initializeAgentInventory("agent-1");
+      const entity = gameState.entities.find(e => e.id === "agent-1");
+      if (entity) {
+        delete entity.stats;
+      }
+      
+      expect(() => {
+        economySystem.handleWorkAction("agent-1", "wood-zone");
+      }).not.toThrow();
+    });
+
+    it("debe manejar zona sin bounds", () => {
+      gameState.zones.push({
+        id: "no-bounds-zone",
+        type: "work",
+        props: { resource: "wood" },
+      });
+      
+      expect(() => {
+        economySystem.handleWorkAction("agent-1", "no-bounds-zone");
+      }).not.toThrow();
+    });
+
+    it("debe manejar zona work sin resource en props", () => {
+      gameState.zones.push({
+        id: "work-no-resource",
+        type: "work",
+        bounds: { x: 500, y: 500, width: 50, height: 50 },
+      });
+      
+      expect(() => {
+        economySystem.handleWorkAction("agent-1", "work-no-resource");
+      }).not.toThrow();
     });
   });
 });

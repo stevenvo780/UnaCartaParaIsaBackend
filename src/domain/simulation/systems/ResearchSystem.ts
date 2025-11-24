@@ -13,7 +13,7 @@ const RESEARCH_CATEGORIES: ResearchCategory[] = [
     description: "Essential survival skills",
     prerequisites: [],
     recipes: ["cook_meat", "cook_fish", "make_rope", "wooden_club"],
-    tier: 1,
+    level: 1,
   },
   {
     id: "woodworking",
@@ -21,7 +21,7 @@ const RESEARCH_CATEGORIES: ResearchCategory[] = [
     description: "Working with wood",
     prerequisites: ["basic_survival"],
     recipes: ["wood_to_plank", "wooden_spear", "wooden_bowl", "wooden_axe"],
-    tier: 2,
+    level: 2,
   },
   {
     id: "stonecraft",
@@ -29,7 +29,7 @@ const RESEARCH_CATEGORIES: ResearchCategory[] = [
     description: "Working with stone",
     prerequisites: ["basic_survival"],
     recipes: ["stone_axe", "stone_hammer", "grinding_stone", "stone_knife"],
-    tier: 2,
+    level: 2,
   },
   {
     id: "agriculture",
@@ -37,7 +37,7 @@ const RESEARCH_CATEGORIES: ResearchCategory[] = [
     description: "Farming and cultivation",
     prerequisites: ["woodworking"],
     recipes: ["wooden_hoe", "seed_bag", "irrigation_channel", "storage_pit"],
-    tier: 3,
+    level: 3,
   },
   {
     id: "metallurgy",
@@ -45,7 +45,7 @@ const RESEARCH_CATEGORIES: ResearchCategory[] = [
     description: "Working with metals",
     prerequisites: ["stonecraft"],
     recipes: ["forge", "bronze_ingot", "iron_ingot", "metal_tools"],
-    tier: 3,
+    level: 3,
   },
 ];
 

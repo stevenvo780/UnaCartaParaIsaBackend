@@ -372,9 +372,7 @@ export class LifeCycleSystem extends EventEmitter {
     const index = this.gameState.agents.findIndex((a) => a.id === id);
     if (index !== -1) {
       this.gameState.agents.splice(index, 1);
-      if (this._movementSystem && typeof this._movementSystem.removeEntityMovement === 'function') {
-        this._movementSystem.removeEntityMovement(id);
-      }
+      // MovementSystem limpia automáticamente cuando la entidad se elimina
       simulationEvents.emit(GameEventNames.ANIMAL_DIED, { entityId: id });
     }
   }

@@ -245,6 +245,6 @@ export function getResourceConfig(
 
 export function getResourcesForBiome(biome: string): WorldResourceConfig[] {
   return Object.values(WORLD_RESOURCE_CONFIGS).filter((config) =>
-    config.suitableBiomes.includes(biome),
+    (config.suitableBiomes ?? []).includes(biome),
   );
 }

@@ -53,6 +53,16 @@ import type {
   SimulationConfig,
   SimulationSnapshot,
   SimulationEvent,
+  SimulationEventPayload,
+  NeedsCommandPayload,
+  RecipeCommandPayload,
+  SocialCommandPayload,
+  ResearchCommandPayload,
+  WorldResourceCommandPayload,
+  DialogueCommandPayload,
+  BuildingCommandPayload,
+  ReputationCommandPayload,
+  TaskCommandPayload,
 } from "../../../shared/types/commands/SimulationCommand";
 import type { NeedsConfig } from "../../types/simulation/needs";
 import type { TaskType, TaskMetadata } from "../../types/simulation/tasks";
@@ -310,7 +320,7 @@ export class SimulationRunner {
     ): void => {
       this.capturedEvents.push({
         type: eventName,
-        payload,
+        payload: payload as SimulationEventPayload | undefined,
         timestamp: Date.now(),
       });
     };
@@ -688,7 +698,7 @@ export class SimulationRunner {
   private handleNeedsCommand(
     command: Extract<SimulationCommand, { type: "NEEDS_COMMAND" }>,
   ): void {
-    const payload = command.payload;
+    const payload = command.payload ?? ({} as NeedsCommandPayload);
     switch (command.command) {
       case "SATISFY_NEED":
         if (
@@ -725,7 +735,7 @@ export class SimulationRunner {
   private handleRecipeCommand(
     command: Extract<SimulationCommand, { type: "RECIPE_COMMAND" }>,
   ): void {
-    const payload = command.payload;
+    const payload = command.payload ?? ({} as RecipeCommandPayload);
     switch (command.command) {
       case "TEACH_RECIPE":
         if ((payload.agentId || payload.teacherId) && payload.recipeId) {
@@ -763,7 +773,7 @@ export class SimulationRunner {
   private handleSocialCommand(
     command: Extract<SimulationCommand, { type: "SOCIAL_COMMAND" }>,
   ): void {
-    const payload = command.payload;
+    const payload = command.payload ?? ({} as SocialCommandPayload);
     switch (command.command) {
       case "IMPOSE_TRUCE":
         if (
@@ -843,7 +853,7 @@ export class SimulationRunner {
   private handleResearchCommand(
     command: Extract<SimulationCommand, { type: "RESEARCH_COMMAND" }>,
   ): void {
-    const payload = command.payload;
+    const payload = command.payload ?? ({} as ResearchCommandPayload);
     switch (command.command) {
       case "INITIALIZE_LINEAGE":
         if (payload.lineageId) {
@@ -871,7 +881,7 @@ export class SimulationRunner {
   private handleWorldResourceCommand(
     command: Extract<SimulationCommand, { type: "WORLD_RESOURCE_COMMAND" }>,
   ): void {
-    const payload = command.payload;
+    const payload = command.payload ?? ({} as WorldResourceCommandPayload);
     switch (command.command) {
       case "SPAWN_RESOURCE":
         if (payload.type && payload.position) {
@@ -896,7 +906,7 @@ export class SimulationRunner {
   private handleDialogueCommand(
     command: Extract<SimulationCommand, { type: "DIALOGUE_COMMAND" }>,
   ): void {
-    const payload = command.payload;
+    const payload = command.payload ?? ({} as DialogueCommandPayload);
     switch (command.command) {
       case "RESPOND_TO_CARD":
         if (payload.cardId && payload.choiceId) {
@@ -912,7 +922,7 @@ export class SimulationRunner {
   private handleBuildingCommand(
     command: Extract<SimulationCommand, { type: "BUILDING_COMMAND" }>,
   ): void {
-    const payload = command.payload;
+    const payload = command.payload ?? ({} as BuildingCommandPayload);
     switch (command.command) {
       case "START_UPGRADE":
         if (payload.zoneId && payload.agentId) {
@@ -950,7 +960,7 @@ export class SimulationRunner {
   private handleReputationCommand(
     command: Extract<SimulationCommand, { type: "REPUTATION_COMMAND" }>,
   ): void {
-    const payload = command.payload;
+    const payload = command.payload ?? ({} as ReputationCommandPayload);
     switch (command.command) {
       case "UPDATE_TRUST":
         if (
@@ -971,7 +981,7 @@ export class SimulationRunner {
   private handleTaskCommand(
     command: Extract<SimulationCommand, { type: "TASK_COMMAND" }>,
   ): void {
-    const payload = command.payload;
+    const payload = command.payload ?? ({} as TaskCommandPayload);
     switch (command.command) {
       case "CREATE_TASK":
         if (payload.type && typeof payload.requiredWork === "number") {

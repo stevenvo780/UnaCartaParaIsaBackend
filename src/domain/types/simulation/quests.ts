@@ -55,6 +55,7 @@ export interface QuestReward {
   statsBoost?: Record<string, number>;
   title?: string;
   unlockId?: string;
+  description?: string;
 }
 
 export interface QuestRequirement {
@@ -65,6 +66,7 @@ export interface QuestRequirement {
   value?: number;
   duration?: number;
   itemId?: string;
+  statsRequired?: Record<string, number>;
 }
 
 export interface QuestDialogue {
@@ -72,6 +74,7 @@ export interface QuestDialogue {
   speaker: string;
   text: string;
   mood?: string;
+  conditions?: Record<string, unknown>;
 }
 
 export interface QuestProgress {

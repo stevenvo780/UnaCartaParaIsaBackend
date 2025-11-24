@@ -61,6 +61,19 @@ export function planGoals(
 ): AIGoal[] {
   const goals: AIGoal[] = [];
   const entityNeeds = deps.getEntityNeeds(aiState.entityId);
+  const positionFor = (id: string): { x: number; y: number } =>
+    getEntityPosition(id, deps.gameState);
+  const defaultStats = (): Record<string, number> | null => null;
+  const selectZone = (
+    state: AIState,
+    ids: string[],
+    type: string,
+  ): string | null =>
+    selectBestZone(state, ids, type, deps.gameState, positionFor);
+  const zoneIdsByType = (types: string[]): string[] =>
+    deps.gameState.zones
+      ?.filter((z) => types.includes(z.type))
+      .map((z) => z.id) || [];
 
   if (entityNeeds) {
     const needsDeps = {
@@ -78,8 +91,8 @@ export function planGoals(
     deps.getNearbyPredators
   ) {
     const combatDeps = {
-      getEntityPosition: (id: string) => getEntityPosition(id, deps.gameState),
-      getEntityStats: deps.getEntityStats || (() => null),
+      getEntityPosition: positionFor,
+      getEntityStats: deps.getEntityStats ?? defaultStats,
       getStrategy: deps.getStrategy,
       isWarrior: deps.isWarrior,
       getEnemiesForAgent: deps.getEnemiesForAgent,
@@ -92,17 +105,11 @@ export function planGoals(
   if (deps.getAllActiveAgentIds && deps.getEntityStats) {
     const assistDeps = {
       getAllActiveAgentIds: deps.getAllActiveAgentIds,
-      getEntityPosition: (id: string) => getEntityPosition(id, deps.gameState),
+      getEntityPosition: positionFor,
       getNeeds: deps.getEntityNeeds,
       getEntityStats: deps.getEntityStats,
-      selectBestZone: (st: AIState, ids: string[], t: string) =>
-        selectBestZone(st, ids, t, deps.gameState, (id) =>
-          getEntityPosition(id, deps.gameState),
-        ),
-      getZoneIdsByType: (types: string[]) =>
-        deps.gameState.zones
-          ?.filter((z) => types.includes(z.type))
-          .map((z) => z.id) || [],
+      selectBestZone: selectZone,
+      getZoneIdsByType: zoneIdsByType,
     };
     const assistGoals = evaluateAssist(assistDeps, aiState);
     goals.push(...assistGoals);
@@ -111,7 +118,7 @@ export function planGoals(
   if (deps.getTasks) {
     const constDeps = {
       gameState: deps.gameState,
-      getEntityPosition: (id: string) => getEntityPosition(id, deps.gameState),
+      getEntityPosition: positionFor,
       getTasks: deps.getTasks,
     };
     const constructionGoals = evaluateConstructionGoals(constDeps, aiState);
@@ -123,10 +130,7 @@ export function planGoals(
       gameState: deps.gameState,
       getAgentInventory: deps.getAgentInventory,
       getCurrentZone: deps.getCurrentZone,
-      selectBestZone: (st: AIState, ids: string[], t: string) =>
-        selectBestZone(st, ids, t, deps.gameState, (id) =>
-          getEntityPosition(id, deps.gameState),
-        ),
+      selectBestZone: selectZone,
     };
     const depositGoals = evaluateDepositGoals(depositDeps, aiState);
     goals.push(...depositGoals);
@@ -144,11 +148,8 @@ export function planGoals(
 
   const attentionDeps = {
     gameState: deps.gameState,
-    getEntityPosition: (id: string) => getEntityPosition(id, deps.gameState),
-    selectBestZone: (st: AIState, ids: string[], t: string) =>
-      selectBestZone(st, ids, t, deps.gameState, (id) =>
-        getEntityPosition(id, deps.gameState),
-      ),
+    getEntityPosition: positionFor,
+    selectBestZone: selectZone,
   };
   const attentionGoals = evaluateAttention(attentionDeps, aiState);
   goals.push(...attentionGoals);
@@ -158,7 +159,7 @@ export function planGoals(
     if (deps.getAgentRole && deps.getPreferredResourceForRole) {
       const oppDeps = {
         getAgentRole: deps.getAgentRole,
-        getPreferredResourceForRole: (role: string) =>
+        getPreferredResourceForRole: (role: string): string | null =>
           deps.getPreferredResourceForRole!(role) || null,
         findNearestResource: deps.findNearestResource,
       };
@@ -171,7 +172,7 @@ export function planGoals(
         gameState: deps.gameState,
         getUnexploredZones,
         selectBestZone,
-        getEntityPosition: (id) => getEntityPosition(id, deps.gameState),
+        getEntityPosition: positionFor,
       },
       aiState,
     );
@@ -181,11 +182,8 @@ export function planGoals(
   if (goals.length === 0) {
     const defaultDeps = {
       gameState: deps.gameState,
-      getEntityPosition: (id: string) => getEntityPosition(id, deps.gameState),
-      selectBestZone: (st: AIState, ids: string[], t: string) =>
-        selectBestZone(st, ids, t, deps.gameState, (id) =>
-          getEntityPosition(id, deps.gameState),
-        ),
+      getEntityPosition: positionFor,
+      selectBestZone: selectZone,
     };
     const defaultGoals = evaluateDefaultExploration(defaultDeps, aiState);
     goals.push(...defaultGoals);

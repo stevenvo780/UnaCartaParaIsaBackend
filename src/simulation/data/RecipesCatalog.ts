@@ -409,9 +409,10 @@ export class RecipesCatalog {
     minDiff: number,
     maxDiff: number,
   ): CraftingRecipe[] {
-    return this.recipes.filter(
-      (r) => (r.difficulty || 1) >= minDiff && (r.difficulty || 1) <= maxDiff,
-    );
+    return this.recipes.filter((r) => {
+      const difficulty = r.difficulty ?? 1;
+      return difficulty >= minDiff && difficulty <= maxDiff;
+    });
   }
 
   static getRecipesRequiringWorkstation(workstation: string): CraftingRecipe[] {
