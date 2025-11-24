@@ -127,7 +127,6 @@ export class SocialSystem {
 
     const radiusSq = radius * radius;
 
-    // Find all entities within radius
     const nearbyEntities = entities.filter((e) => {
       if (e.id === centerAgentId || !e.position) return false;
       const dx = e.position.x - centerEntity.position!.x;
@@ -135,7 +134,6 @@ export class SocialSystem {
       return dx * dx + dy * dy <= radiusSq;
     });
 
-    // Impose truce between all pairs
     for (let i = 0; i < nearbyEntities.length; i++) {
       for (let j = i + 1; j < nearbyEntities.length; j++) {
         this.imposeTruce(

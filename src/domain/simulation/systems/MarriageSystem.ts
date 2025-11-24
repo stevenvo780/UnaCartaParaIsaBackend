@@ -196,7 +196,6 @@ export class MarriageSystem {
       }
     }
 
-    // Escribir estado en GameState para sincronización con frontend
     if (!this.gameState.marriage) {
       this.gameState.marriage = {
         groups: [],

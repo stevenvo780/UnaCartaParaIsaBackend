@@ -303,7 +303,6 @@ export class RecipeDiscoverySystem {
   }
 
   public update(): void {
-    // Escribir estado en GameState para sincronización con frontend
     if (!this.gameState.recipes) {
       this.gameState.recipes = {
         discovered: [],
@@ -313,14 +312,12 @@ export class RecipeDiscoverySystem {
 
     const discovered = this.getGloballyDiscoveredRecipes();
     this.gameState.recipes.discovered = discovered;
-    // El frontend también espera globalDiscovered
     (
       this.gameState.recipes as unknown as {
         globalDiscovered?: typeof discovered;
       }
     ).globalDiscovered = discovered;
 
-    // Convertir Map a objeto para serialización
     const agentRecipesObj: Record<
       string,
       Array<{

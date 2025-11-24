@@ -379,7 +379,6 @@ export class CardDialogueSystem {
     const choice = card.choices?.find((c) => c.id === choiceId);
     if (!choice) return false;
 
-    // Remove card
     this.activeCards.delete(cardId);
 
     simulationEvents.emit(GameEventNames.DIALOGUE_CARD_RESPONDED, {
@@ -387,7 +386,6 @@ export class CardDialogueSystem {
       choiceId,
     });
 
-    // Apply effects
     if (choice.effects) {
       const entityId = card.participants[0];
       if (choice.effects.needs) {
@@ -398,13 +396,11 @@ export class CardDialogueSystem {
         }
       }
 
-      // Apply relationship effects
       if (
         typeof choice.effects.relationship === "number" &&
         this.socialSystem
       ) {
         const relationshipDelta = choice.effects.relationship;
-        // Apply relationship changes with all participants
         for (const participantId of card.participants) {
           if (participantId === entityId) continue;
           this.socialSystem.modifyAffinity(
@@ -415,7 +411,6 @@ export class CardDialogueSystem {
         }
       }
 
-      // Handle mission/quest unlocks
       if (choice.effects?.unlocksMission && this.questSystem) {
         const questId = choice.effects.unlocksMission;
         if (typeof questId === "string") {

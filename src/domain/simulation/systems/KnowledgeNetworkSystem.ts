@@ -30,7 +30,6 @@ export class KnowledgeNetworkSystem {
   }
 
   public update(_deltaTimeMs: number): void {
-    // Escribir estado en GameState para sincronización con frontend
     if (!this.gameState.knowledgeGraph) {
       this.gameState.knowledgeGraph = {
         nodes: [],

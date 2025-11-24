@@ -104,9 +104,6 @@ export class NormsSystem {
   }
 
   public update(): void {
-    // Could implement time-based violation decay or guard return logic
-
-    // Escribir estado en GameState para sincronización con frontend
     if (!this.gameState.norms) {
       this.gameState.norms = {
         violations: [],
@@ -126,7 +123,6 @@ export class NormsSystem {
     this.gameState.norms.violations = this.getNormViolations(50);
     this.gameState.norms.sanctions = this.getRecentSanctions(50);
     this.gameState.norms.stats = this.getNormCompliance();
-    // Los truces vienen del ConflictResolutionSystem, se actualizarán allí
   }
 
   public getNormViolations(limit = 50): NormViolation[] {

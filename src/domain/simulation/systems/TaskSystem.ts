@@ -33,7 +33,6 @@ export class TaskSystem {
       }
     });
 
-    // Escribir estado en GameState para sincronización con frontend
     if (!this.gameState.tasks) {
       this.gameState.tasks = {
         tasks: [],
@@ -121,10 +120,7 @@ export class TaskSystem {
       return { progressMade: false, completed: false, blocked: true };
     }
 
-    // Apply social synergy bonus
     let finalContribution = contribution * socialSynergyMultiplier;
-
-    // Apply cooperative bonus for multi-worker tasks
     if (minWorkers > 1 && activeWorkers >= minWorkers) {
       const coopBonus = 1 + Math.min(0.4, 0.1 * (activeWorkers - 1));
       finalContribution *= coopBonus;

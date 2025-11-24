@@ -332,7 +332,6 @@ export class ResearchSystem {
   }
 
   public update(): void {
-    // Escribir estado en GameState para sincronización con frontend
     if (!this.gameState.research) {
       this.gameState.research = {
         techTree: { nodes: [], connections: [] },
@@ -340,10 +339,8 @@ export class ResearchSystem {
       };
     }
 
-    // Obtener el primer lineage disponible o crear uno por defecto
     const lineageIds = Array.from(this.lineageResearch.keys());
     if (lineageIds.length === 0) {
-      // Si no hay lineages, usar un ID por defecto
       const defaultLineageId = "default";
       if (!this.lineageResearch.has(defaultLineageId)) {
         this.initializeLineage(defaultLineageId);
@@ -351,7 +348,6 @@ export class ResearchSystem {
       lineageIds.push(defaultLineageId);
     }
 
-    // Actualizar tech tree del primer lineage (o se puede extender para múltiples)
     const primaryLineageId = lineageIds[0];
     this.gameState.research.techTree = this.getTechTreeState(primaryLineageId);
 
@@ -360,7 +356,6 @@ export class ResearchSystem {
       ({ lineageId, stats }) => ({
         lineageId,
         stats,
-        // Agregar datos adicionales que el frontend puede necesitar
         nodes: Array.from(
           this.getResearchProgress(lineageId)?.values() || [],
         ).map((node) => ({

@@ -180,15 +180,12 @@ export class ConflictResolutionSystem {
       }
     }
 
-    // Escribir estado en GameState para sincronización con frontend
     if (!this.gameState.conflicts) {
       this.gameState.conflicts = this.createInitialConflictState();
     }
 
-    // El frontend espera activeConflicts, no active
     const activeConflicts = this.getActiveConflicts();
     this.gameState.conflicts.active = activeConflicts;
-    // También agregar como activeConflicts para compatibilidad con frontend
     const conflictsState = this.gameState
       .conflicts as unknown as ConflictState & {
       activeConflicts?: ActiveConflict[];
@@ -197,7 +194,6 @@ export class ConflictResolutionSystem {
     this.gameState.conflicts.history = this.getConflictHistory(50);
     this.gameState.conflicts.stats = this.getConflictStats();
 
-    // También escribir truces en norms para ClientNormsSystem
     if (!this.gameState.norms) {
       this.gameState.norms = {
         violations: [],
@@ -213,7 +209,6 @@ export class ConflictResolutionSystem {
         truces: [],
       };
     }
-    // Convertir active conflicts a truces para norms
     this.gameState.norms.truces = activeConflicts.map(
       (conflict: ActiveConflict) => ({
         cardId: conflict.cardId,

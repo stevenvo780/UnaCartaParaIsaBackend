@@ -41,7 +41,6 @@ export class MarketSystem {
   public update(_delta: number): void {
     this.autoTradeAmongAgents();
 
-    // Escribir estado en GameState para sincronización con frontend
     if (!this.state.market) {
       this.state.market = {
         orders: [],
@@ -50,7 +49,6 @@ export class MarketSystem {
       };
     }
 
-    // Actualizar precios en el estado
     const prices: Record<string, number> = {};
     const resourceTypes: Array<"wood" | "stone" | "food" | "water"> = [
       "wood",

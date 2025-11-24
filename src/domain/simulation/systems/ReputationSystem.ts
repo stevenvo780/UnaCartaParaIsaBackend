@@ -161,7 +161,6 @@ export class ReputationSystem {
     this.statsCache.trustEdges = trustEdges;
     this.statsCache.lastUpdate = now;
 
-    // Escribir estado en GameState para sincronización con frontend
     if (!this.gameState.reputation) {
       this.gameState.reputation = {
         data: {
@@ -180,7 +179,6 @@ export class ReputationSystem {
     this.gameState.reputation.data = this.serialize();
     this.gameState.reputation.stats = this.getSystemStats();
 
-    // El frontend espera reputations y trust en formato diferente
     const allReputations = this.getAllReputations();
     const trustArray = Array.from(this.trust.entries()).map(
       ([sourceId, targetMap]) => ({
@@ -193,7 +191,6 @@ export class ReputationSystem {
       }),
     );
 
-    // Agregar formato compatible con frontend
     (
       this.gameState.reputation as unknown as {
         reputations?: typeof allReputations;

@@ -108,24 +108,17 @@ export class AnimalSystem {
       animal.age += this.config.updateInterval;
       AnimalNeeds.updateNeeds(animal, deltaMinutes);
 
-      // Update behavior based on state
       this.updateAnimalBehavior(animal, deltaSeconds);
-
-      // Update spatial grid if moved
       this.updateSpatialGrid(animal, oldPosition);
-
-      // Check for death conditions
       this.checkAnimalDeath(animal);
     });
 
-    // Periodic cleanup
     if (now - this.lastCleanup > this.config.cleanupInterval) {
       this.cleanupDeadAnimals();
       this.cleanCaches();
       this.lastCleanup = now;
     }
 
-    // Escribir estado en GameState para sincronización con frontend
     if (!this.gameState.animals) {
       this.gameState.animals = {
         animals: [],
@@ -136,12 +129,10 @@ export class AnimalSystem {
       };
     }
 
-    // Convertir Map a Array para serialización
     this.gameState.animals.animals = Array.from(this.animals.values()).filter(
       (a) => !a.isDead,
     );
 
-    // Calcular estadísticas
     const byType: Record<string, number> = {};
     let total = 0;
     this.gameState.animals.animals.forEach((animal) => {
@@ -364,7 +355,6 @@ export class AnimalSystem {
 
     if (!this.worldResourceSystem) return [];
 
-    // Get harvestable resources near animal
     const resources =
       this.worldResourceSystem
         .getResourcesNear?.(animal.position, range)
@@ -411,7 +401,6 @@ export class AnimalSystem {
     const result: Animal[] = [];
     const radiusSq = radius * radius;
 
-    // Get grid cells to check
     const minX = Math.floor((position.x - radius) / this.GRID_CELL_SIZE);
     const maxX = Math.floor((position.x + radius) / this.GRID_CELL_SIZE);
     const minY = Math.floor((position.y - radius) / this.GRID_CELL_SIZE);
@@ -491,19 +480,16 @@ export class AnimalSystem {
     const config = getAnimalConfig(animal.type);
     if (!config) return;
 
-    // Death by starvation
     if (AnimalNeeds.isStarving(animal)) {
       this.killAnimal(animal.id, "starvation");
       return;
     }
 
-    // Death by dehydration
     if (AnimalNeeds.isDehydrated(animal)) {
       this.killAnimal(animal.id, "dehydration");
       return;
     }
 
-    // Death by old age
     if (animal.age > config.lifespan) {
       this.killAnimal(animal.id, "old_age");
     }
@@ -559,7 +545,6 @@ export class AnimalSystem {
    */
   private consumeResource(resourceId: string, consumerId: string): void {
     if (this.worldResourceSystem) {
-      // Delegate to WorldResourceSystem
       this.worldResourceSystem.harvestResource?.(resourceId, consumerId);
     }
   }

@@ -153,7 +153,6 @@ export class QuestSystem {
       });
     });
 
-    // Escribir estado en GameState para sincronización con frontend
     if (!this.gameState.quests) {
       this.gameState.quests = {
         active: [],
