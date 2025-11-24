@@ -1,9 +1,10 @@
-import { GameState } from "../../types/game-types.js";
-import {
+import type { GameState } from "../../types/game-types.js";
+import type {
   Ancestor,
   FamilyTree,
   GenealogyEvent,
 } from "../types/genealogy.js";
+import type { AgentProfile } from "../types/agents.js";
 
 interface GenealogyConfig {
   mutationRate: number;
@@ -12,6 +13,7 @@ interface GenealogyConfig {
 }
 
 export class GenealogySystem {
+  private _gameState: GameState;
   private config: GenealogyConfig;
   private familyTree: FamilyTree = {
     lineages: new Map(),
@@ -21,7 +23,7 @@ export class GenealogySystem {
   private history: GenealogyEvent[] = [];
 
   constructor(gameState: GameState, config?: Partial<GenealogyConfig>) {
-    this.gameState = gameState;
+    this._gameState = gameState;
     this.config = {
       mutationRate: 0.15,
       trackHistory: true,

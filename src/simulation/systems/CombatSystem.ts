@@ -12,6 +12,7 @@ import type {
 } from "../types/combat.js";
 import { getWeapon } from "../data/WeaponCatalog.js";
 import type { ResourceType } from "../types/economy.js";
+import type { SimulationEntity } from "../schema.js";
 import { InventorySystem } from "./InventorySystem.js";
 import { LifeCycleSystem } from "./LifeCycleSystem.js";
 import { SocialSystem } from "./SocialSystem.js";
@@ -21,17 +22,6 @@ interface CombatConfig {
   decisionIntervalMs: number;
   engagementRadius: number;
   baseCooldownMs: number;
-}
-
-interface SimulationEntity {
-  id: string;
-  position?: { x: number; y: number };
-  stats?: EntityStats;
-  tags?: string[];
-  type?: string;
-  traits?: { aggression?: number };
-  immortal?: boolean;
-  isDead?: boolean;
 }
 
 interface EntityStats {
@@ -85,7 +75,7 @@ export class CombatSystem {
     }
     this.lastUpdate = now;
 
-    const entities = this.state.entities as SimulationEntity[];
+    const entities = this.state.entities;
     if (!entities || entities.length === 0) return;
 
     this.spatialGrid.clear();

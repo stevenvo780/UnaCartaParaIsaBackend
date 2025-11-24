@@ -43,7 +43,7 @@ describe("MarriageSystem", () => {
       marriageSystem.proposeMarriage("proposer-1", "target-1");
       marriageSystem.acceptProposal("target-1");
       
-      const groups = marriageSystem.getMarriageGroups();
+      const groups = marriageSystem.getAllMarriageGroups();
       expect(groups.length).toBeGreaterThan(0);
     });
 
@@ -72,10 +72,10 @@ describe("MarriageSystem", () => {
 
   describe("Estadísticas", () => {
     it("debe retornar estadísticas", () => {
-      const stats = marriageSystem.getStats();
+      const stats = marriageSystem.getMarriageStats();
       expect(stats).toBeDefined();
-      expect(stats.totalGroups).toBeDefined();
       expect(stats.totalMarriages).toBeDefined();
+      expect(stats.totalMembers).toBeDefined();
     });
   });
 });
