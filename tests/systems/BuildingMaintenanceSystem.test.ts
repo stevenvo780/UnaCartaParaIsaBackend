@@ -20,6 +20,8 @@ describe("BuildingMaintenanceSystem", () => {
           width: 50,
           height: 50,
           metadata: { building: "house" },
+          durability: 100, // Durabilidad inicial
+          maxDurability: 100,
         },
       ],
     });
@@ -66,7 +68,20 @@ describe("BuildingMaintenanceSystem", () => {
 
     it("debe retornar false si no hay recursos suficientes", () => {
       inventorySystem.initializeAgentInventory("agent-1");
-      const repaired = buildingMaintenanceSystem.repairBuilding("building-1", "agent-1");
+      // Crear un nuevo edificio con durabilidad baja que requiera recursos
+      gameState.zones.push({
+        id: "building-2",
+        type: "rest",
+        x: 200,
+        y: 200,
+        width: 50,
+        height: 50,
+        metadata: { building: "house" },
+        durability: 50, // Durabilidad baja requiere recursos
+        maxDurability: 100,
+      });
+      const buildingMaintenanceSystem2 = new BuildingMaintenanceSystem(gameState, inventorySystem);
+      const repaired = buildingMaintenanceSystem2.repairBuilding("building-2", "agent-1");
       expect(repaired).toBe(false);
     });
   });

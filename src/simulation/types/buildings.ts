@@ -19,6 +19,8 @@ export interface BuildingState {
   isAbandoned: boolean;
   timeSinceLastUse: number;
   deteriorationRate: number;
+  isUpgrading?: boolean;
+  upgradeStartTime?: number;
 }
 
 export interface BuildingMaintenanceConfig {

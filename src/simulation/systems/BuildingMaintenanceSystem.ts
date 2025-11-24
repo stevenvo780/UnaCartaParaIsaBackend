@@ -199,6 +199,25 @@ export class BuildingMaintenanceSystem {
     }
   }
 
+  public startUpgrade(zoneId: string, agentId: string): boolean {
+    const state = this.buildingStates.get(zoneId);
+    if (!state) return false;
+
+    // Iniciar proceso de mejora (simplificado)
+    state.isUpgrading = true;
+    state.upgradeStartTime = this.now();
+    return true;
+  }
+
+  public cancelUpgrade(zoneId: string): boolean {
+    const state = this.buildingStates.get(zoneId);
+    if (!state || !state.isUpgrading) return false;
+
+    state.isUpgrading = false;
+    state.upgradeStartTime = undefined;
+    return true;
+  }
+
   private findZone(zoneId: string): MutableZone | undefined {
     return ((this.state.zones || []) as MutableZone[]).find((z) => z.id === zoneId);
   }

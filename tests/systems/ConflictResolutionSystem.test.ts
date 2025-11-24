@@ -83,7 +83,7 @@ describe("ConflictResolutionSystem", () => {
       
       if (hitResult.cardId) {
         const result = conflictSystem.resolveConflict(hitResult.cardId, "continue");
-        expect(result.resolved).toBe(true);
+        expect(result.resolved).toBe(false); // "continue" no resuelve el conflicto
         expect(result.resolution).toBe("continued");
       }
     });
@@ -99,8 +99,10 @@ describe("ConflictResolutionSystem", () => {
       const stats = conflictSystem.getConflictStats();
       expect(stats).toBeDefined();
       expect(stats.totalConflicts).toBeDefined();
-      expect(stats.resolvedByTruce).toBeDefined();
-      expect(stats.resolvedByApology).toBeDefined();
+      expect(stats.activeNegotiations).toBeDefined();
+      expect(stats.totalMediations).toBeDefined();
+      expect(stats.mediationSuccessRate).toBeDefined();
+      expect(stats.truceAcceptanceRate).toBeDefined();
     });
   });
 

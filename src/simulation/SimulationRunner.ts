@@ -457,10 +457,217 @@ export class SimulationRunner {
         case "KILL_AGENT":
           this.lifeCycleSystem.killAgent(command.agentId);
           break;
+        case "NEEDS_COMMAND":
+          this.handleNeedsCommand(command);
+          break;
+        case "RECIPE_COMMAND":
+          this.handleRecipeCommand(command);
+          break;
+        case "SOCIAL_COMMAND":
+          this.handleSocialCommand(command);
+          break;
+        case "RESEARCH_COMMAND":
+          this.handleResearchCommand(command);
+          break;
+        case "WORLD_RESOURCE_COMMAND":
+          this.handleWorldResourceCommand(command);
+          break;
+        case "DIALOGUE_COMMAND":
+          this.handleDialogueCommand(command);
+          break;
+        case "BUILDING_COMMAND":
+          this.handleBuildingCommand(command);
+          break;
+        case "REPUTATION_COMMAND":
+          this.handleReputationCommand(command);
+          break;
         case "PING":
         default:
           break;
       }
+    }
+  }
+
+  private handleNeedsCommand(command: Extract<SimulationCommand, { type: "NEEDS_COMMAND" }>): void {
+    const payload = command.payload as Record<string, unknown>;
+    switch (command.command) {
+      case "SATISFY_NEED":
+        if (payload.entityId && payload.needType && typeof payload.amount === "number") {
+          this.needsSystem.satisfyNeed(
+            payload.entityId as string,
+            payload.needType as string,
+            payload.amount
+          );
+        }
+        break;
+      case "MODIFY_NEED":
+        if (payload.entityId && payload.needType && typeof payload.delta === "number") {
+          this.needsSystem.modifyNeed(
+            payload.entityId as string,
+            payload.needType as string,
+            payload.delta
+          );
+        }
+        break;
+      case "UPDATE_CONFIG":
+        this.needsSystem.updateConfig(payload as Partial<import("./types/needs.js").NeedsConfig>);
+        break;
+    }
+  }
+
+  private handleRecipeCommand(command: Extract<SimulationCommand, { type: "RECIPE_COMMAND" }>): void {
+    const payload = command.payload as Record<string, unknown>;
+    switch (command.command) {
+      case "TEACH_RECIPE":
+        if (payload.agentId && payload.recipeId) {
+          this._recipeDiscoverySystem.teachRecipe(
+            payload.agentId as string,
+            payload.recipeId as string
+          );
+        }
+        break;
+      case "SHARE_RECIPE":
+        if (payload.teacherId && payload.studentId && payload.recipeId) {
+          this._recipeDiscoverySystem.shareRecipe(
+            payload.teacherId as string,
+            payload.studentId as string,
+            payload.recipeId as string
+          );
+        }
+        break;
+    }
+  }
+
+  private handleSocialCommand(command: Extract<SimulationCommand, { type: "SOCIAL_COMMAND" }>): void {
+    const payload = command.payload as Record<string, unknown>;
+    switch (command.command) {
+      case "IMPOSE_TRUCE":
+        if (payload.aId && payload.bId && typeof payload.durationMs === "number") {
+          this.socialSystem.imposeTruce(
+            payload.aId as string,
+            payload.bId as string,
+            payload.durationMs
+          );
+        }
+        break;
+      case "SET_AFFINITY":
+        if (payload.aId && payload.bId && typeof payload.value === "number") {
+          this.socialSystem.setAffinity(
+            payload.aId as string,
+            payload.bId as string,
+            payload.value
+          );
+        }
+        break;
+      case "MODIFY_AFFINITY":
+        if (payload.aId && payload.bId && typeof payload.delta === "number") {
+          this.socialSystem.modifyAffinity(
+            payload.aId as string,
+            payload.bId as string,
+            payload.delta
+          );
+        }
+        break;
+      case "REMOVE_RELATIONSHIPS":
+        if (payload.agentId) {
+          this.socialSystem.removeRelationships(payload.agentId as string);
+        }
+        break;
+      case "FRIENDLY_INTERACTION":
+      case "HOSTILE_ENCOUNTER":
+        // Estos se manejan a través de eventos del sistema de interacción
+        break;
+    }
+  }
+
+  private handleResearchCommand(command: Extract<SimulationCommand, { type: "RESEARCH_COMMAND" }>): void {
+    const payload = command.payload as Record<string, unknown>;
+    switch (command.command) {
+      case "INITIALIZE_LINEAGE":
+        if (payload.lineageId) {
+          this._researchSystem.initializeLineage(payload.lineageId as string);
+        }
+        break;
+      case "RECIPE_DISCOVERED":
+        if (payload.lineageId && payload.recipeId && payload.discoveredBy) {
+          this._researchSystem.onRecipeDiscovered(
+            payload.lineageId as string,
+            payload.recipeId as string,
+            payload.discoveredBy as string
+          );
+        }
+        break;
+    }
+  }
+
+  private handleWorldResourceCommand(command: Extract<SimulationCommand, { type: "WORLD_RESOURCE_COMMAND" }>): void {
+    const payload = command.payload as Record<string, unknown>;
+    switch (command.command) {
+      case "SPAWN_RESOURCE":
+        if (payload.type && payload.position) {
+          this.worldResourceSystem.spawnResource(
+            payload.type as string,
+            payload.position as { x: number; y: number },
+            (payload.biome as string) || "grass"
+          );
+        }
+        break;
+      case "HARVEST_RESOURCE":
+        if (payload.resourceId && payload.agentId) {
+          this.worldResourceSystem.harvestResource(
+            payload.resourceId as string,
+            payload.agentId as string
+          );
+        }
+        break;
+    }
+  }
+
+  private handleDialogueCommand(command: Extract<SimulationCommand, { type: "DIALOGUE_COMMAND" }>): void {
+    const payload = command.payload as Record<string, unknown>;
+    switch (command.command) {
+      case "RESPOND_TO_CARD":
+        if (payload.cardId && payload.choiceId) {
+          this.cardDialogueSystem.respondToCard(
+            payload.cardId as string,
+            payload.choiceId as string
+          );
+        }
+        break;
+    }
+  }
+
+  private handleBuildingCommand(command: Extract<SimulationCommand, { type: "BUILDING_COMMAND" }>): void {
+    const payload = command.payload as Record<string, unknown>;
+    switch (command.command) {
+      case "START_UPGRADE":
+        if (payload.zoneId && payload.agentId) {
+          this.buildingMaintenanceSystem.startUpgrade(
+            payload.zoneId as string,
+            payload.agentId as string
+          );
+        }
+        break;
+      case "CANCEL_UPGRADE":
+        if (payload.zoneId) {
+          this.buildingMaintenanceSystem.cancelUpgrade(payload.zoneId as string);
+        }
+        break;
+    }
+  }
+
+  private handleReputationCommand(command: Extract<SimulationCommand, { type: "REPUTATION_COMMAND" }>): void {
+    const payload = command.payload as Record<string, unknown>;
+    switch (command.command) {
+      case "UPDATE_TRUST":
+        if (payload.agentA && payload.agentB && typeof payload.delta === "number") {
+          this.reputationSystem.updateTrust(
+            payload.agentA as string,
+            payload.agentB as string,
+            payload.delta
+          );
+        }
+        break;
     }
   }
 

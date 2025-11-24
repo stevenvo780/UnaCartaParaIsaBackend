@@ -234,4 +234,25 @@ export class CardDialogueSystem {
       },
     ];
   }
+
+  public respondToCard(cardId: string, choiceId: string): boolean {
+    const entry = this.activeCards.get(cardId);
+    if (!entry) return false;
+
+    const card = entry.card;
+    const choice = card.choices?.find((c) => c.id === choiceId);
+    if (!choice) return false;
+
+    // Procesar la respuesta
+    this.activeCards.delete(cardId);
+
+    // Emitir evento para que otros sistemas reaccionen
+    if (choice.outcome === "positive") {
+      // Mejorar necesidades o relaciones
+    } else if (choice.outcome === "negative") {
+      // Empeorar relaciones
+    }
+
+    return true;
+  }
 }

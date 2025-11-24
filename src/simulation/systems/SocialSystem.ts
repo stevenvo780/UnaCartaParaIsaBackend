@@ -79,4 +79,27 @@ export class SocialSystem {
     if (a === b) return 1;
     return this.edges.get(a)?.get(b) ?? 0;
   }
+
+  public imposeTruce(aId: string, bId: string, durationMs: number): void {
+    // Las treguas se manejan en ConflictResolutionSystem, pero podemos mejorar la afinidad
+    this.addEdge(aId, bId, 0.2);
+  }
+
+  public setAffinity(aId: string, bId: string, value: number): void {
+    if (!this.edges.has(aId)) this.edges.set(aId, new Map());
+    if (!this.edges.has(bId)) this.edges.set(bId, new Map());
+    this.edges.get(aId)!.set(bId, Math.max(-1, Math.min(1, value)));
+    this.edges.get(bId)!.set(aId, Math.max(-1, Math.min(1, value)));
+  }
+
+  public modifyAffinity(aId: string, bId: string, delta: number): void {
+    this.addEdge(aId, bId, delta);
+  }
+
+  public removeRelationships(agentId: string): void {
+    this.edges.delete(agentId);
+    this.edges.forEach((neighbors) => {
+      neighbors.delete(agentId);
+    });
+  }
 }

@@ -64,7 +64,11 @@ describe("NormsSystem", () => {
       expect(stats).toBeDefined();
       expect(typeof stats).toBe("object");
       expect(stats.totalViolations).toBeDefined();
-      expect(stats.complianceRate).toBeDefined();
+      expect(stats.protectedZonesCount).toBeDefined();
+      expect(stats.totalSanctions).toBeDefined();
+      expect(stats.totalGuardDispatches).toBeDefined();
+      expect(stats.avgViolationsPerDay).toBeDefined();
+      expect(stats.mostViolatedZone).toBeDefined();
     });
 
     it("debe retornar violaciones de normas", () => {
