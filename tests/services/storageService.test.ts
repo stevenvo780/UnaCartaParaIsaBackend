@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import fs from 'fs/promises';
 import path from 'path';
 import { StorageService } from '../../src/services/storageService.js';
-import { CONFIG } from '../../src/config/config.js';
 
 vi.mock('fs/promises');
 vi.mock('@google-cloud/storage', () => ({
@@ -11,6 +10,20 @@ vi.mock('@google-cloud/storage', () => ({
 vi.mock('ssh2-sftp-client', () => ({
   default: vi.fn(),
 }));
+vi.mock('../../src/config/config.js', () => ({
+  CONFIG: {
+    USE_LOCAL_STORAGE: true,
+    LOCAL_SAVES_PATH: '/tmp/test-saves',
+    NAS: {
+      ENABLED: false,
+      HOST: '',
+      PORT: 22,
+      USERNAME: '',
+      PASSWORD: '',
+      BACKUP_PATH: '',
+    },
+  },
+}));
 
 describe('StorageService', () => {
   let storageService: StorageService;
@@ -18,27 +31,11 @@ describe('StorageService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock CONFIG para usar almacenamiento local
-    vi.mock('../../src/config/config.js', () => ({
-      CONFIG: {
-        USE_LOCAL_STORAGE: true,
-        LOCAL_SAVES_PATH: mockLocalPath,
-        NAS: {
-          ENABLED: false,
-          HOST: '',
-          PORT: 22,
-          USERNAME: '',
-          PASSWORD: '',
-          BACKUP_PATH: '',
-        },
-      },
-    }));
   });
 
   describe('isHealthy', () => {
     it('debe retornar estado saludable con almacenamiento local', async () => {
       vi.mocked(fs.mkdir).mockResolvedValue(undefined);
-      storageService = new StorageService();
       
       const result = await storageService.isHealthy();
       
@@ -63,7 +60,6 @@ describe('StorageService', () => {
         .mockResolvedValueOnce({ size: 100, mtime: new Date('2024-01-01') } as never)
         .mockResolvedValueOnce({ size: 200, mtime: new Date('2024-01-02') } as never);
       
-      storageService = new StorageService();
       const saves = await storageService.listSaves();
       
       expect(saves).toHaveLength(2);
@@ -75,7 +71,6 @@ describe('StorageService', () => {
       vi.mocked(fs.mkdir).mockResolvedValue(undefined);
       vi.mocked(fs.readdir).mockResolvedValue([]);
       
-      storageService = new StorageService();
       const saves = await storageService.listSaves();
       
       expect(saves).toEqual([]);
@@ -89,7 +84,6 @@ describe('StorageService', () => {
       vi.mocked(fs.mkdir).mockResolvedValue(undefined);
       vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockSaveData));
       
-      storageService = new StorageService();
       const save = await storageService.getSave('save_1000');
       
       expect(save).toEqual(mockSaveData);
@@ -103,7 +97,6 @@ describe('StorageService', () => {
       vi.mocked(fs.mkdir).mockResolvedValue(undefined);
       vi.mocked(fs.readFile).mockRejectedValue(new Error('File not found'));
       
-      storageService = new StorageService();
       const save = await storageService.getSave('save_nonexistent');
       
       expect(save).toBeNull();
