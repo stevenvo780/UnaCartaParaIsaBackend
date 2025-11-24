@@ -5,13 +5,14 @@ import { CONFIG } from "../config/config";
 import { simulationRunner } from "../domain/simulation/core/index";
 import type { SimulationCommand } from "../shared/types/commands/SimulationCommand";
 import { ChunkStreamServer } from "../infrastructure/services/chunk/chunk/ChunkStreamServer";
+import { logger } from "../infrastructure/utils/logger.js";
 
 const server = app.listen(CONFIG.PORT, () => {
-  console.log(`🎮 Save server running on http://localhost:${CONFIG.PORT}`);
+  logger.info(`Save server running on http://localhost:${CONFIG.PORT}`);
   if (!CONFIG.USE_LOCAL_STORAGE) {
-    console.log(`☁️  Using GCS bucket: ${CONFIG.BUCKET_NAME}`);
+    logger.info(`Using GCS bucket: ${CONFIG.BUCKET_NAME}`);
   } else {
-    console.log(`📁 Using local storage: ${CONFIG.LOCAL_SAVES_PATH}`);
+    logger.info(`Using local storage: ${CONFIG.LOCAL_SAVES_PATH}`);
   }
 });
 
@@ -46,7 +47,7 @@ server.on("upgrade", (request, socket, head) => {
 });
 
 simulationWss.on("connection", (ws: WebSocket) => {
-  console.log("Client connected to simulation");
+  logger.info("Client connected to simulation");
 
   ws.send(
     JSON.stringify({
@@ -94,7 +95,7 @@ simulationWss.on("connection", (ws: WebSocket) => {
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
-      console.error("Failed to parse command:", errorMessage);
+      logger.error("Failed to parse command:", errorMessage);
       ws.send(
         JSON.stringify({
           type: "ERROR",

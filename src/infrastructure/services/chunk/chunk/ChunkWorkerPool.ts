@@ -139,7 +139,7 @@ export class ChunkWorkerPool extends EventEmitter {
         }
         signal.addEventListener("abort", handleAbort, { once: true });
         job.signal = signal;
-        job.cleanupSignal = () =>
+        job.cleanupSignal = (): void =>
           signal.removeEventListener("abort", handleAbort);
       }
 

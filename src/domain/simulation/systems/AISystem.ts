@@ -174,7 +174,7 @@ export class AISystem extends EventEmitter {
         {
           getEntityNeeds: (id) => this.needsSystem?.getEntityNeeds(id),
           findNearestResource: this.worldResourceSystem
-            ? (entityId, resourceType) =>
+            ? (entityId: string, resourceType: string) =>
                 this.findNearestResourceForEntity(entityId, resourceType)
             : undefined,
         },
@@ -191,7 +191,7 @@ export class AISystem extends EventEmitter {
           getPreferredResourceForRole: (roleType) =>
             this.getPreferredResourceForRole(roleType),
           findNearestResource: this.worldResourceSystem
-            ? (entityId, resourceType) =>
+            ? (entityId: string, resourceType: string) =>
                 this.findNearestResourceForEntity(entityId, resourceType)
             : undefined,
         },
@@ -211,7 +211,7 @@ export class AISystem extends EventEmitter {
   }
 
   private findNearestResourceForEntity(
-    _entityId: string,
+    entityId: string,
     resourceType: string,
   ): { id: string; x: number; y: number } | null {
     if (!this.worldResourceSystem) return null;
@@ -222,12 +222,39 @@ export class AISystem extends EventEmitter {
     );
     if (resources.length === 0) return null;
 
-    // For now, return first available (TODO: implement spatial distance)
-    const resource = resources[0];
+    // Get entity position
+    const entity = this.gameState.entities?.find((e) => e.id === entityId);
+    if (!entity) {
+      // Fallback to first available if entity not found
+      const resource = resources[0];
+      return {
+        id: resource.id,
+        x: resource.position.x,
+        y: resource.position.y,
+      };
+    }
+
+    const entityPos = entity.position || { x: entity.x, y: entity.y };
+
+    // Calculate distance to each resource and find nearest
+    let nearestResource = resources[0];
+    let minDistance = Infinity;
+
+    for (const resource of resources) {
+      const dx = resource.position.x - entityPos.x;
+      const dy = resource.position.y - entityPos.y;
+      const distance = Math.hypot(dx, dy);
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestResource = resource;
+      }
+    }
+
     return {
-      id: resource.id,
-      x: resource.position.x,
-      y: resource.position.y,
+      id: nearestResource.id,
+      x: nearestResource.position.x,
+      y: nearestResource.position.y,
     };
   }
 
@@ -246,8 +273,7 @@ export class AISystem extends EventEmitter {
     agentId: string,
     timestamp: number,
   ): AgentAction | null {
-    // TODO: Implement goal-to-action conversion
-    // For now, create basic action
+    // Convert AI goals to concrete agent actions
 
     switch (goal.type) {
       case "explore":

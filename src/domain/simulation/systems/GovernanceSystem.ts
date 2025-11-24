@@ -85,7 +85,7 @@ export class GovernanceSystem {
     occupancy?: number;
     free?: number;
     totalCapacity?: number;
-  }) => {
+  }): void => {
     const occupancy = payload.occupancy ?? 1;
     const priority = 7 + Math.min(3, Math.max(0, (occupancy - 0.8) * 10));
     this.createDemand("housing_full", priority, "Ocupación de viviendas alta", {
@@ -95,7 +95,7 @@ export class GovernanceSystem {
     });
   };
 
-  private readonly handleHomeless = (payload: { count?: number }) => {
+  private readonly handleHomeless = (payload: { count?: number }): void => {
     const count = payload.count ?? 1;
     const priority = 8 + Math.min(4, Math.floor(count / 2));
     this.createDemand(

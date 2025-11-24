@@ -1,5 +1,6 @@
 import { SimulationRunner } from "./SimulationRunner";
 import type { SimulationCommand } from "../../../shared/types/commands/SimulationCommand";
+import { logger } from "../../../infrastructure/utils/logger";
 
 export const simulationRunner = new SimulationRunner();
 
@@ -13,11 +14,12 @@ simulationRunner
     biomeMap: [], // Will be generated
   })
   .then(() => {
-    console.log("World initialized, starting simulation loop...");
+    logger.info("World initialized, starting simulation loop...");
     simulationRunner.start();
   })
-  .catch((err) => {
-    console.error("Failed to initialize world:", err);
+  .catch((err: unknown) => {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    logger.error("Failed to initialize world:", errorMessage);
   });
 
 export type { SimulationCommand };

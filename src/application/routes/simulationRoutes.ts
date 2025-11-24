@@ -18,24 +18,24 @@ router.post(
   async (_req: Request, res: Response): Promise<void> => {
     try {
       const snapshot = simulationRunner.getSnapshot();
-      const saveData = {
-        ...snapshot.state,
-        timestamp: Date.now(),
-        gameTime: snapshot.state.togetherTime,
-        stats: {
-          cycles: snapshot.state.cycles,
-          resonance: snapshot.state.resonance ?? 0,
-        },
-      };
+    const saveData = {
+      ...snapshot.state,
+      timestamp: Date.now(),
+      gameTime: snapshot.state.togetherTime,
+      stats: {
+        cycles: snapshot.state.cycles,
+        resonance: snapshot.state.resonance ?? 0,
+      },
+    };
 
-      const result = await storageService.saveGame(saveData);
-      res.json({ success: true, saveId: result.saveId });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      console.error("Error saving simulation:", errorMessage);
-      res.status(500).json({ error: "Failed to save simulation" });
-    }
+    const result = await storageService.saveGame(saveData);
+    res.json({ success: true, saveId: result.saveId });
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    logger.error("Error saving simulation:", errorMessage);
+    res.status(500).json({ error: "Failed to save simulation" });
+  }
   },
 );
 
@@ -46,7 +46,7 @@ router.get("/api/sim/health", (_req: Request, res: Response): void => {
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    console.error("Error getting simulation health:", errorMessage);
+    logger.error("Error getting simulation health:", errorMessage);
     res.status(500).json({ error: "Failed to get simulation health" });
   }
 });
@@ -58,7 +58,7 @@ router.get("/api/sim/state", (_req: Request, res: Response): void => {
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    console.error("Error getting simulation state:", errorMessage);
+    logger.error("Error getting simulation state:", errorMessage);
     res.status(500).json({ error: "Failed to get simulation state" });
   }
 });
@@ -81,7 +81,7 @@ router.post("/api/sim/command", (req: Request, res: Response): void => {
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    console.error("Error processing command:", errorMessage);
+    logger.error("Error processing command:", errorMessage);
     res.status(500).json({ error: "Failed to process command" });
   }
 });

@@ -7,7 +7,6 @@ import type {
 } from "../../types/simulation/legends";
 
 export class LivingLegendsSystem {
-  // @ts-ignore - Kept for potential future use
   private _state: GameState;
   private legends = new Map<string, LegendRecord>();
   private reputationEvents: ReputationEvent[] = [];
@@ -112,13 +111,77 @@ export class LivingLegendsSystem {
   }
 
   private updateTitles(): void {
-    // Placeholder for title update logic
+    for (const [agentId, legend] of this.legends.entries()) {
+      const agent = this._state.agents.find((a) => a.id === agentId);
+      if (!agent) continue;
+
+      const newTitles: string[] = [];
+      let newTier: LegendRecord["legendTier"] = "unknown";
+
+      // Determine tier and titles based on reputation
+      if (legend.reputation >= 0.9) {
+        newTier = "mythical";
+        newTitles.push("Mythical Being");
+      } else if (legend.reputation >= 0.8) {
+        newTier = "legendary";
+        newTitles.push("Legend");
+      } else if (legend.reputation >= 0.7) {
+        newTier = "renowned";
+        newTitles.push("Renowned");
+      } else if (legend.reputation >= 0.5) {
+        newTier = "respected";
+        newTitles.push("Respected");
+      } else if (legend.reputation >= 0.2) {
+        newTier = "known";
+        newTitles.push("Known");
+      } else if (legend.reputation <= -0.5) {
+        newTier = "unknown";
+        newTitles.push("Villain");
+      }
+
+      // Update based on deeds
+      if (legend.deeds.length >= 10) {
+        newTitles.push("Accomplished");
+      }
+      if (legend.deeds.length >= 20) {
+        newTitles.push("Hero");
+      }
+
+      legend.titles = newTitles;
+      legend.currentTitle = newTitles[0] || "";
+      legend.legendTier = newTier;
+
+      // Update aura based on tier
+      if (newTier === "mythical" || newTier === "legendary") {
+        legend.auraColor = 0xffdd00;
+        legend.auraIntensity = 0.8;
+        legend.glowRadius = 50;
+      } else if (newTier === "renowned") {
+        legend.auraColor = 0x00ddff;
+        legend.auraIntensity = 0.6;
+        legend.glowRadius = 35;
+      } else if (newTier === "respected") {
+        legend.auraColor = 0x88ff88;
+        legend.auraIntensity = 0.4;
+        legend.glowRadius = 25;
+      } else if (legend.reputation <= -0.5) {
+        legend.auraColor = 0xff0000;
+        legend.auraIntensity = 0.5;
+        legend.glowRadius = 30;
+      } else {
+        legend.auraIntensity = 0;
+        legend.glowRadius = 0;
+      }
+    }
   }
 
   private createLegendRecord(agentId: string): LegendRecord {
+    const agent = this._state.agents.find((a) => a.id === agentId);
+    const agentName = agent?.name || "Unknown";
+
     return {
       agentId,
-      agentName: "Unknown", // Should fetch name from state
+      agentName,
       reputation: 0,
       reputationTrend: "stable",
       titles: [],
@@ -134,5 +197,35 @@ export class LivingLegendsSystem {
       firstSeen: Date.now(),
       lastUpdate: Date.now(),
     };
+  }
+
+  /**
+   * Get legend record for a specific agent
+   */
+  public getLegend(agentId: string): LegendRecord | undefined {
+    return this.legends.get(agentId);
+  }
+
+  /**
+   * Get all legend records
+   */
+  public getAllLegends(): Map<string, LegendRecord> {
+    return new Map(this.legends);
+  }
+
+  /**
+   * Get active legends (those with significant reputation)
+   */
+  public getActiveLegends(): string[] {
+    const active: string[] = [];
+    for (const [agentId, legend] of this.legends.entries()) {
+      if (
+        legend.reputation >= this.config.minReputationForLegend ||
+        legend.reputation <= this.config.minReputationForVillain
+      ) {
+        active.push(agentId);
+      }
+    }
+    return active;
   }
 }

@@ -283,6 +283,6 @@ export class WorldResourceSystem {
       position: resource.position,
     });
 
-    return { success: true, amount: 1 || 1 };
+    return { success: true, amount: 1 };
   }
 }

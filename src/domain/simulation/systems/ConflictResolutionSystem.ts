@@ -189,7 +189,7 @@ export class ConflictResolutionSystem {
     const activeConflicts = this.getActiveConflicts();
     this.gameState.conflicts.active = activeConflicts;
     // También agregar como activeConflicts para compatibilidad con frontend
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (this.gameState.conflicts as Record<string, unknown>).activeConflicts =
       activeConflicts;
     this.gameState.conflicts.history = this.getConflictHistory(50);

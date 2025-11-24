@@ -165,7 +165,26 @@ export class HouseholdSystem {
     return (zones.find((z: Zone) => z.id === hhEntry.zoneId) as Zone) || null;
   }
 
-  public getSystemStats() {
+  public getSystemStats(): {
+    totalHouseholds: number;
+    capacity: number;
+    occupied: number;
+    free: number;
+    occupancy: number;
+    households: Array<{
+      zoneId: string;
+      members: Array<{ agentId: string; role: string }>;
+      capacity: number;
+      sharedInventory: {
+        wood: number;
+        stone: number;
+        food: number;
+        water: number;
+        capacity: number;
+      };
+      marriageGroupId: string | null;
+    }>;
+  } {
     const households = Array.from(this.households.values());
     const totalHouseholds = households.length;
     const capacity = households.reduce((sum, h) => sum + h.capacity, 0);
@@ -248,7 +267,13 @@ export class HouseholdSystem {
     return withdrawn;
   }
 
-  public getHouseholdInventory(householdId: string) {
+  public getHouseholdInventory(householdId: string): {
+    wood: number;
+    stone: number;
+    food: number;
+    water: number;
+    capacity: number;
+  } | null {
     const household = this.households.get(householdId);
     return household ? household.sharedInventory : null;
   }

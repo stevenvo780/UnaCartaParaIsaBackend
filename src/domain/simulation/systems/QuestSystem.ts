@@ -418,6 +418,34 @@ export class QuestSystem {
     );
   }
 
+  /**
+   * Make a quest available if it's not already available, active, completed, or failed
+   */
+  public makeQuestAvailable(questId: string): boolean {
+    // Check if quest is already in any state
+    if (this.getQuest(questId)) {
+      return false;
+    }
+
+    // Find quest in catalog
+    const questTemplate = QUEST_CATALOG.find((q) => q.id === questId);
+    if (!questTemplate) {
+      return false;
+    }
+
+    // Create a copy of the quest
+    const questCopy = JSON.parse(JSON.stringify(questTemplate)) as Quest;
+    questCopy.status = "available";
+
+    // Check if requirements are met
+    if (this.checkQuestRequirements(questCopy)) {
+      this.questProgress.availableQuests.set(questId, questCopy);
+      return true;
+    }
+
+    return false;
+  }
+
   public handleEvent(eventData: {
     type: string;
     entityId: string;

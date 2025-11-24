@@ -20,7 +20,7 @@ export class ResourceReservationSystem {
     private readonly inventorySystem: InventorySystem,
     nowProvider?: () => number,
   ) {
-    this.now = nowProvider ?? (() => Date.now());
+    this.now = nowProvider ?? ((): number => Date.now());
   }
 
   public reserve(taskId: string, cost: ResourceCost): boolean {

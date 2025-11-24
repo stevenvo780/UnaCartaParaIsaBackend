@@ -3,6 +3,7 @@ import type { GameResources, GameState } from "../../types/game-types";
 import { cloneGameState, createInitialGameState } from "./defaultState";
 import { worldGenerationService } from "../../../infrastructure/services/world/worldGenerationService";
 import { BiomeType } from "../../world/generation/types";
+import { logger } from "../../../infrastructure/utils/logger";
 import { WorldResourceSystem } from "../systems/WorldResourceSystem";
 import { LivingLegendsSystem } from "../systems/LivingLegendsSystem";
 import { LifeCycleSystem } from "../systems/LifeCycleSystem";
@@ -225,6 +226,8 @@ export class SimulationRunner {
     this.cardDialogueSystem = new CardDialogueSystem(
       this.state,
       this.needsSystem,
+      this.socialSystem,
+      this.questSystem,
     );
     this.timeSystem = new TimeSystem(this.state);
     this.emergenceSystem = new EmergenceSystem(this.state, undefined, {
@@ -292,7 +295,7 @@ export class SimulationRunner {
     tileSize: number;
     biomeMap: string[][];
   }): Promise<void> {
-    console.log(
+    logger.info(
       `Generating initial world ${worldConfig.width}x${worldConfig.height}...`,
     );
 
@@ -369,7 +372,7 @@ export class SimulationRunner {
       width: worldConfig.width,
       height: worldConfig.height,
     };
-    console.log(`Generated ${allTiles.length} terrain tiles.`);
+    logger.info(`Generated ${allTiles.length} terrain tiles.`);
 
     // Spawn resources using the generated biome map
     this.worldResourceSystem.spawnResourcesInWorld({
@@ -417,6 +420,15 @@ export class SimulationRunner {
       this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
     const snapshotState = cloneGameState(this.state);
     snapshotState.genealogy = this._genealogySystem.getFamilyTree();
+    
+    // Include legends data in snapshot
+    const allLegends = this.livingLegendsSystem.getAllLegends();
+    const activeLegends = this.livingLegendsSystem.getActiveLegends();
+    snapshotState.legends = {
+      records: allLegends,
+      activeLegends,
+    };
+    
     return {
       state: snapshotState,
       tick: this.tickCounter,

@@ -227,7 +227,22 @@ export class InventorySystem {
     }
   }
 
-  public getSystemStats() {
+  public getSystemStats(): {
+    totalStockpiles: number;
+    totalAgentInventories: number;
+    stockpiled: {
+      wood: number;
+      stone: number;
+      food: number;
+      water: number;
+    };
+    inAgents: {
+      wood: number;
+      stone: number;
+      food: number;
+      water: number;
+    };
+  } {
     const totalStockpiled = { wood: 0, stone: 0, food: 0, water: 0 };
     for (const sp of Array.from(this.stockpiles.values())) {
       totalStockpiled.wood += sp.inventory.wood;

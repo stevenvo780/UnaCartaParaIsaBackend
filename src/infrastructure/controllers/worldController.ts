@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { worldGenerationService } from "../services/world/worldGenerationService.js";
+import { logger } from "../utils/logger.js";
 
 interface ChunkRequest {
   x?: number;
@@ -82,7 +83,7 @@ export class WorldController {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      console.error("Error generating chunk:", errorMessage);
+      logger.error("Error generating chunk:", errorMessage);
       res.status(500).json({ error: "Failed to generate chunk" });
     }
   }

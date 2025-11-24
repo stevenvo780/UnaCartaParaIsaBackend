@@ -1,5 +1,7 @@
 import { GameState } from "../../types/game-types";
 import { NeedsSystem } from "./NeedsSystem";
+import type { SocialSystem } from "./SocialSystem";
+import type { QuestSystem } from "./QuestSystem";
 import type { NeedsState } from "../../types/simulation/needs";
 import type {
   DialogueCard,
@@ -60,6 +62,8 @@ export class CardDialogueSystem {
   constructor(
     private readonly gameState: GameState,
     private readonly needsSystem: NeedsSystem,
+    private readonly socialSystem?: SocialSystem,
+    private readonly questSystem?: QuestSystem,
   ) {}
 
   public update(_deltaMs: number): void {
@@ -91,7 +95,7 @@ export class CardDialogueSystem {
     for (const data of needs) {
       const entityId = data.entityId;
       const matchingTemplates = this.cardTemplates.filter((template) =>
-        this.matchesTemplate(template, data.needs, now),
+        this.matchesTemplate(template, data.needs, now, entityId),
       );
 
       if (matchingTemplates.length === 0) continue;
@@ -141,6 +145,7 @@ export class CardDialogueSystem {
     template: CardTemplate,
     needs: NeedsState,
     now: number,
+    entityId?: string,
   ): boolean {
     if (template.triggers.needsBased) {
       const satisfied = template.triggers.needsBased.every((trigger) => {
@@ -162,9 +167,35 @@ export class CardDialogueSystem {
       if (!satisfied) return false;
     }
 
-    // Placeholder for relationship/event triggers (requires more system access)
-    if (template.triggers.relationshipBased) {
-      // TODO: Check relationships
+    // Check relationship-based triggers
+    if (template.triggers.relationshipBased && entityId && this.socialSystem) {
+      const satisfied = template.triggers.relationshipBased.some((trigger) => {
+        // Check relationships with all other agents
+        const agents = this.gameState.agents || [];
+        for (const agent of agents) {
+          if (agent.id === entityId) continue;
+
+          // Check role filter if specified
+          if (trigger.withRole) {
+            const roleSystem = this.gameState.roles?.assignments?.get(agent.id);
+            if (!roleSystem || roleSystem.roleType !== trigger.withRole) {
+              continue;
+            }
+          }
+
+          // Check relationship level
+          const affinity =
+            this.socialSystem?.getAffinityBetween(entityId, agent.id) ?? 0;
+          // Convert affinity (-1 to 1) to relationship level (0 to 100)
+          const relationshipLevel = ((affinity + 1) / 2) * 100;
+
+          if (relationshipLevel >= trigger.minLevel) {
+            return true;
+          }
+        }
+        return false;
+      });
+      if (!satisfied) return false;
     }
 
     return true;
@@ -353,7 +384,43 @@ export class CardDialogueSystem {
           }
         }
       }
-      // TODO: Apply relationship effects, mission unlocks, etc.
+
+      // Apply relationship effects
+      if (
+        typeof choice.effects.relationship === "number" &&
+        this.socialSystem
+      ) {
+        const relationshipDelta = choice.effects.relationship;
+        // Apply relationship changes with all participants
+        for (const participantId of card.participants) {
+          if (participantId === entityId) continue;
+          this.socialSystem.modifyAffinity(
+            entityId,
+            participantId,
+            relationshipDelta,
+          );
+        }
+      }
+
+      // Handle mission/quest unlocks
+      if (choice.effects?.unlocksMission && this.questSystem) {
+        const questId = choice.effects.unlocksMission;
+        if (typeof questId === "string") {
+          // Check if quest already exists
+          const existingQuest = this.questSystem.getQuest(questId);
+          if (!existingQuest) {
+            // Make quest available if it doesn't exist
+            this.questSystem.makeQuestAvailable(questId);
+          } else if (
+            existingQuest.status === "available" &&
+            card.participants.length > 0
+          ) {
+            // Optionally auto-start the quest if it's available
+            // For now, we just make it available
+            // this.questSystem.startQuest(questId);
+          }
+        }
+      }
     }
 
     return true;

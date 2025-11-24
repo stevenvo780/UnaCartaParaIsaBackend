@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { storageService } from "../services/storage/storageService.js";
 import type { SaveData } from "../services/storage/storageService.js";
+import { logger } from "../utils/logger.js";
 
 const MAX_SAVE_ID_LENGTH = 200;
 const SAVE_ID_PATTERN = /^save_\d+$/;
@@ -38,7 +39,7 @@ export class SaveController {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      console.error("Health check failed:", errorMessage);
+      logger.error("Health check failed:", errorMessage);
       res.status(503).json({ status: "error", message: "Storage unavailable" });
     }
   }
@@ -50,7 +51,7 @@ export class SaveController {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      console.error("Error listing saves:", errorMessage);
+      logger.error("Error listing saves:", errorMessage);
       res.status(500).json({ error: "Failed to list saves" });
     }
   }

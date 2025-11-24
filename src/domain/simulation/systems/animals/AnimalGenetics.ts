@@ -4,7 +4,8 @@ const MUTATION_RATE = 0.1;
 
 export class AnimalGenetics {
   public static generateRandomGenes(seed?: number): AnimalGenes {
-    const random = seed !== undefined ? () => Math.random() : Math.random;
+    const random =
+      seed !== undefined ? (): number => Math.random() : Math.random;
 
     return {
       color: Math.floor(random() * 0xffffff),

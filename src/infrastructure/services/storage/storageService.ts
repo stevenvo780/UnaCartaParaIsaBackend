@@ -3,6 +3,7 @@ import SftpClient from "ssh2-sftp-client";
 import fs from "fs/promises";
 import path from "path";
 import { CONFIG } from "../../../config/config.js";
+import { logger } from "../utils/logger.js";
 
 export interface GameStats {
   population?: number;
@@ -40,7 +41,7 @@ export class StorageService {
         this.bucket = storage.bucket(CONFIG.BUCKET_NAME);
         this.useGCS = true;
       } catch (_error) {
-        console.log("⚠️  GCS not available, using local storage");
+        logger.warn("GCS not available, using local storage");
       }
     }
   }

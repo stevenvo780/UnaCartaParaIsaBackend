@@ -7,6 +7,7 @@ import cors from "cors";
 import saveRoutes from "./routes/saveRoutes.js";
 import worldRoutes from "./routes/worldRoutes.js";
 import simulationRoutes from "./routes/simulationRoutes.js";
+import { logger } from "../infrastructure/utils/logger.js";
 
 const app = express();
 
@@ -24,7 +25,7 @@ app.use(express.json({ limit: "50mb" }));
 // Request logging middleware (optional, can be removed in production)
 if (process.env.NODE_ENV !== "production") {
   app.use((req: Request, _res: Response, next: NextFunction) => {
-    console.log(`${req.method} ${req.path}`);
+    logger.debug(`${req.method} ${req.path}`);
     next();
   });
 }
@@ -41,7 +42,7 @@ app.use(
       process.env.NODE_ENV === "production"
         ? "Internal server error"
         : err.message;
-    console.error("Unhandled error:", err);
+    logger.error("Unhandled error:", err.message);
     res.status(500).json({ error: errorMessage });
   },
 );
