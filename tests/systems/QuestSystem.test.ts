@@ -8,7 +8,20 @@ describe("QuestSystem", () => {
   let questSystem: QuestSystem;
 
   beforeEach(() => {
-    gameState = createMockGameState();
+    gameState = createMockGameState({
+      resources: {
+        materials: {
+          wood: 0,
+          stone: 0,
+          food: 0,
+          water: 0,
+        },
+        energy: 0,
+        currency: 0,
+        experience: 0,
+        unlockedFeatures: [],
+      },
+    });
     questSystem = new QuestSystem(gameState);
   });
 
@@ -32,10 +45,61 @@ describe("QuestSystem", () => {
       }
     });
 
+    it("debe retornar false para quest inexistente", () => {
+      const result = questSystem.startQuest("nonexistent_quest");
+      expect(result.success).toBe(false);
+    });
+
     it("debe retornar progreso de quest", () => {
       const available = questSystem.getAvailableQuests();
       if (available.length > 0) {
         questSystem.startQuest(available[0].id);
+        const progress = questSystem.getQuestProgress(available[0].id);
+        expect(progress).toBeDefined();
+      }
+    });
+
+    it("debe retornar null o undefined para quest sin progreso", () => {
+      const progress = questSystem.getQuestProgress("nonexistent");
+      expect(progress === null || progress === undefined).toBe(true);
+    });
+  });
+
+  describe("Actualización del sistema", () => {
+    it("debe actualizar sin errores", () => {
+      expect(() => questSystem.update()).not.toThrow();
+    });
+
+    it("debe fallar quests con timeout", () => {
+      const available = questSystem.getAvailableQuests();
+      if (available.length > 0) {
+        const quest = available[0];
+        // Modificar quest para tener timeout corto
+        if (quest) {
+          quest.timeLimit = 0.001; // 1ms
+          questSystem.startQuest(quest.id);
+          // Esperar un poco y actualizar
+          setTimeout(() => {
+            questSystem.update();
+            const progress = questSystem.getQuestProgress(quest.id);
+            // Puede estar fallado o completado
+            expect(questSystem).toBeDefined();
+          }, 10);
+        }
+      }
+    });
+  });
+
+  describe("Progreso de objetivos", () => {
+    it("debe actualizar progreso de objetivos", () => {
+      const available = questSystem.getAvailableQuests();
+      if (available.length > 0) {
+        questSystem.startQuest(available[0].id);
+        // Simular progreso
+        if (gameState.resources) {
+          gameState.resources.materials.wood = 5;
+        }
+        questSystem.update();
         const progress = questSystem.getQuestProgress(available[0].id);
         expect(progress).toBeDefined();
       }

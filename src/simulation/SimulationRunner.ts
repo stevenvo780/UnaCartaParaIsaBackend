@@ -272,167 +272,205 @@ export class SimulationRunner {
     }
   }
 
-  public initializeWorldResources(worldConfig: { width: number; height: number; tileSize: number; biomeMap: string[][] }): void {
-    this.worldResourceSystem.spawnResourcesInWorld(worldConfig);
-  }
+import { worldGenerationService } from "../services/worldGenerationService.js";
+import { BiomeType } from "../generation/types.js";
 
-  start(): void {
-    if (this.tickHandle) return;
-    this.tickHandle = setInterval(() => this.step(), this.tickIntervalMs);
-  }
+// ... existing imports ...
 
-  stop(): void {
-    if (!this.tickHandle) return;
-    clearInterval(this.tickHandle);
-    this.tickHandle = undefined;
-  }
+  public async initializeWorldResources(worldConfig: { width: number; height: number; tileSize: number; biomeMap: string[][] }): Promise < void> {
+  console.log("Generating initial world...");
 
-  on<K extends keyof SimulationEventMap>(
-    event: K,
-    listener: (payload: SimulationEventMap[K]) => void,
-  ): void {
-    this.emitter.on(event, listener as (payload: unknown) => void);
-  }
+  // Generate terrain tiles using the service
+  const tiles = await worldGenerationService.generateChunk(0, 0, {
+    width: worldConfig.width,
+    height: worldConfig.height,
+    tileSize: worldConfig.tileSize,
+    seed: 12345, // Fixed seed for now
+    scale: 1,
+    octaves: 4,
+    persistence: 0.5,
+    lacunarity: 2,
+    seaLevel: 0,
+    moistureOffset: 0,
+    temperatureOffset: 0,
+    riverThreshold: 0.8
+  });
 
-  off<K extends keyof SimulationEventMap>(
-    event: K,
-    listener: (payload: SimulationEventMap[K]) => void,
-  ): void {
-    this.emitter.off(event, listener as (payload: unknown) => void);
-  }
+  // Flatten the chunk tiles into the game state
+  this.state.terrainTiles = tiles.flat().map(t => ({
+    x: t.x,
+    y: t.y,
+    assetId: t.assets.terrain,
+    type: t.biome === BiomeType.OCEAN ? "water" : "grass", // Simplified mapping
+    biome: t.biome,
+    isWalkable: t.isWalkable
+  }));
 
-  enqueueCommand(command: SimulationCommand): boolean {
-    if (this.commands.length >= this.maxCommandQueue) {
-      this.emitter.emit("commandRejected", command);
-      return false;
-    }
-    this.commands.push(command);
-    return true;
-  }
+  console.log(`Generated ${this.state.terrainTiles.length} terrain tiles.`);
 
-  getSnapshot(): SimulationSnapshot {
-    const events = this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
-    return {
-      state: cloneGameState(this.state),
-      tick: this.tickCounter,
-      updatedAt: this.lastUpdate,
-      events,
-    };
+  // Also spawn resources based on the generated biomes
+  // We need to convert the tile-based biome data to the format expected by worldResourceSystem
+  // For now, we'll just use the passed biomeMap or derive it if empty
+  this.worldResourceSystem.spawnResourcesInWorld(worldConfig);
+}
+
+start(): void {
+  if(this.tickHandle) return;
+  this.tickHandle = setInterval(() => this.step(), this.tickIntervalMs);
+}
+
+stop(): void {
+  if(!this.tickHandle) return;
+  clearInterval(this.tickHandle);
+  this.tickHandle = undefined;
+}
+
+on<K extends keyof SimulationEventMap>(
+  event: K,
+  listener: (payload: SimulationEventMap[K]) => void,
+): void {
+  this.emitter.on(event, listener as (payload: unknown) => void);
+}
+
+off<K extends keyof SimulationEventMap>(
+  event: K,
+  listener: (payload: SimulationEventMap[K]) => void,
+): void {
+  this.emitter.off(event, listener as (payload: unknown) => void);
+}
+
+enqueueCommand(command: SimulationCommand): boolean {
+  if (this.commands.length >= this.maxCommandQueue) {
+    this.emitter.emit("commandRejected", command);
+    return false;
   }
+  this.commands.push(command);
+  return true;
+}
+
+getSnapshot(): SimulationSnapshot {
+  const events = this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
+  return {
+    state: cloneGameState(this.state),
+    tick: this.tickCounter,
+    updatedAt: this.lastUpdate,
+    events,
+  };
+}
 
   private step(): void {
-    const now = Date.now();
-    const delta = now - this.lastUpdate;
-    this.lastUpdate = now;
+  const now = Date.now();
+  const delta = now - this.lastUpdate;
+  this.lastUpdate = now;
 
-    this.processCommands();
-    const scaledDelta = delta * this.timeScale;
+  this.processCommands();
+  const scaledDelta = delta * this.timeScale;
 
-    this.advanceSimulation(scaledDelta);
-    this.worldResourceSystem.update(scaledDelta);
-    this.livingLegendsSystem.update(scaledDelta);
-    this.lifeCycleSystem.update(scaledDelta);
-    this.needsSystem.update(scaledDelta);
-    this.socialSystem.update(scaledDelta);
-    this.inventorySystem.update();
-    this.resourceReservationSystem.update();
-    this.economySystem.update(scaledDelta);
-    this.marketSystem.update(scaledDelta);
-    this.roleSystem.update(scaledDelta);
-    this.aiSystem.update(scaledDelta);
-    this.divineFavorSystem.update(scaledDelta);
-    this.governanceSystem.update(scaledDelta);
-    this.householdSystem.update(scaledDelta);
-    this.buildingSystem.update(scaledDelta);
-    this.buildingMaintenanceSystem.update(scaledDelta);
-    this.productionSystem.update(scaledDelta);
-    this.enhancedCraftingSystem.update();
-    this.animalSystem.update(scaledDelta);
-    this.itemGenerationSystem.update(scaledDelta);
-    this.combatSystem.update(scaledDelta);
-    this.reputationSystem.update();
-    this.questSystem.update();
-    this.taskSystem.update();
-    this.tradeSystem.update();
-    this.marriageSystem.update();
-    this.conflictResolutionSystem.update();
-    this.resourceAttractionSystem.update(scaledDelta);
-    this.crisisPredictorSystem.update(scaledDelta);
-    this.ambientAwarenessSystem.update(scaledDelta);
-    this.cardDialogueSystem.update(scaledDelta);
-    this.timeSystem.update(scaledDelta);
-    this.emergenceSystem.update(scaledDelta);
-    this.interactionGameSystem.update(scaledDelta);
-    this.knowledgeNetworkSystem.update(scaledDelta);
-    // NormsSystem is event-driven, no tick needed
-    // Genealogy usually updates on events, but if it has a tick:
-    // this.genealogySystem.update(scaledDelta);
-    // ResearchSystem and RecipeDiscoverySystem are event-driven, no tick needed
+  this.advanceSimulation(scaledDelta);
+  this.worldResourceSystem.update(scaledDelta);
+  this.livingLegendsSystem.update(scaledDelta);
+  this.lifeCycleSystem.update(scaledDelta);
+  this.needsSystem.update(scaledDelta);
+  this.socialSystem.update(scaledDelta);
+  this.inventorySystem.update();
+  this.resourceReservationSystem.update();
+  this.economySystem.update(scaledDelta);
+  this.marketSystem.update(scaledDelta);
+  this.roleSystem.update(scaledDelta);
+  this.aiSystem.update(scaledDelta);
+  this.divineFavorSystem.update(scaledDelta);
+  this.governanceSystem.update(scaledDelta);
+  this.householdSystem.update(scaledDelta);
+  this.buildingSystem.update(scaledDelta);
+  this.buildingMaintenanceSystem.update(scaledDelta);
+  this.productionSystem.update(scaledDelta);
+  this.enhancedCraftingSystem.update();
+  this.animalSystem.update(scaledDelta);
+  this.itemGenerationSystem.update(scaledDelta);
+  this.combatSystem.update(scaledDelta);
+  this.reputationSystem.update();
+  this.questSystem.update();
+  this.taskSystem.update();
+  this.tradeSystem.update();
+  this.marriageSystem.update();
+  this.conflictResolutionSystem.update();
+  this.resourceAttractionSystem.update(scaledDelta);
+  this.crisisPredictorSystem.update(scaledDelta);
+  this.ambientAwarenessSystem.update(scaledDelta);
+  this.cardDialogueSystem.update(scaledDelta);
+  this.timeSystem.update(scaledDelta);
+  this.emergenceSystem.update(scaledDelta);
+  this.interactionGameSystem.update(scaledDelta);
+  this.knowledgeNetworkSystem.update(scaledDelta);
+  // NormsSystem is event-driven, no tick needed
+  // Genealogy usually updates on events, but if it has a tick:
+  // this.genealogySystem.update(scaledDelta);
+  // ResearchSystem and RecipeDiscoverySystem are event-driven, no tick needed
 
-    this.tickCounter += 1;
-    const snapshot = this.getSnapshot();
-    this.emitter.emit("tick", snapshot);
+  this.tickCounter += 1;
+  const snapshot = this.getSnapshot();
+  this.emitter.emit("tick", snapshot);
 
-    // Clear captured events after snapshot
-    this.capturedEvents = [];
-  }
+  // Clear captured events after snapshot
+  this.capturedEvents = [];
+}
 
   private processCommands(): void {
-    while (this.commands.length > 0) {
-      const command = this.commands.shift();
-      if (!command) break;
-      switch (command.type) {
-        case "SET_TIME_SCALE":
-          this.timeScale = Math.max(0.1, Math.min(10, command.multiplier));
-          break;
-        case "APPLY_RESOURCE_DELTA":
-          this.applyResourceDelta(command.delta);
-          break;
-        case "GATHER_RESOURCE":
-          simulationEvents.emit(GameEventNames.RESOURCE_GATHERED, {
-            resourceId: command.resourceId,
-            amount: command.amount,
-          });
-          break;
-        case "SPAWN_AGENT":
-          this.lifeCycleSystem.spawnAgent(command.payload);
-          break;
-        case "KILL_AGENT":
-          this.lifeCycleSystem.killAgent(command.agentId);
-          break;
-        case "PING":
-        default:
-          break;
-      }
-    }
+  while(this.commands.length > 0) {
+  const command = this.commands.shift();
+  if (!command) break;
+  switch (command.type) {
+    case "SET_TIME_SCALE":
+      this.timeScale = Math.max(0.1, Math.min(10, command.multiplier));
+      break;
+    case "APPLY_RESOURCE_DELTA":
+      this.applyResourceDelta(command.delta);
+      break;
+    case "GATHER_RESOURCE":
+      simulationEvents.emit(GameEventNames.RESOURCE_GATHERED, {
+        resourceId: command.resourceId,
+        amount: command.amount,
+      });
+      break;
+    case "SPAWN_AGENT":
+      this.lifeCycleSystem.spawnAgent(command.payload);
+      break;
+    case "KILL_AGENT":
+      this.lifeCycleSystem.killAgent(command.agentId);
+      break;
+    case "PING":
+    default:
+      break;
+  }
+}
   }
 
   private applyResourceDelta(delta: Partial<GameResources["materials"]>): void {
-    if (!this.state.resources) {
-      return;
-    }
-    const materials = this.state.resources.materials;
-    for (const [key, value] of Object.entries(delta)) {
-      const materialKey = key as keyof GameResources["materials"];
-      const current = materials[materialKey] ?? 0;
-      materials[materialKey] = current + (value ?? 0);
-    }
+  if(!this.state.resources) {
+  return;
+}
+const materials = this.state.resources.materials;
+for (const [key, value] of Object.entries(delta)) {
+  const materialKey = key as keyof GameResources["materials"];
+  const current = materials[materialKey] ?? 0;
+  materials[materialKey] = current + (value ?? 0);
+}
   }
 
   private advanceSimulation(deltaMs: number): void {
-    this.state.togetherTime += deltaMs;
-    this.state.dayTime = ((this.state.dayTime ?? 0) + deltaMs) % 86400000;
+  this.state.togetherTime += deltaMs;
+  this.state.dayTime = ((this.state.dayTime ?? 0) + deltaMs) % 86400000;
 
-    // Simple cycle counter until real systems hook in
-    this.state.cycles += 1;
+  // Simple cycle counter until real systems hook in
+  this.state.cycles += 1;
 
-    // Decay / regen stub for resources
-    if (this.state.resources) {
-      const regenRate = deltaMs / 1000;
-      this.state.resources.energy = Math.min(
-        100,
-        this.state.resources.energy + regenRate * 0.1,
-      );
-    }
+  // Decay / regen stub for resources
+  if(this.state.resources) {
+  const regenRate = deltaMs / 1000;
+  this.state.resources.energy = Math.min(
+    100,
+    this.state.resources.energy + regenRate * 0.1,
+  );
+}
   }
 }

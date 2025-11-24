@@ -1,3 +1,5 @@
+import type { Zone, MapElement, TerrainTile, RoadPolyline, ObjectLayer } from "../types/game-types.js";
+
 export type MaterialType = "wood" | "stone" | "food" | "water";
 
 export interface MaterialsState {
@@ -69,12 +71,12 @@ export interface SimulationGameState {
   lastSave: number;
   togetherTime: number;
   connectionAnimation: ConnectionAnimationState;
-  zones: unknown[];
-  mapElements: unknown[];
+  zones: Zone[];
+  mapElements: MapElement[];
   currentConversation: ConversationState;
-  terrainTiles: unknown[];
-  roads: unknown[];
-  objectLayers: unknown[];
+  terrainTiles: TerrainTile[];
+  roads: RoadPolyline[];
+  objectLayers: ObjectLayer[];
   worldSize: Size2D;
   generatorVersion: string;
   dayTime: number;
