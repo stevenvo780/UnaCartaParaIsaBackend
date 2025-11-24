@@ -39,7 +39,7 @@ export class NeedsSystem {
     needs.energy = Math.max(0, needs.energy - this.config.energyDecayRate * dtSec);
     needs.mentalHealth = Math.max(0, needs.mentalHealth - this.config.mentalHealthDecayRate * dtSec);
   }
-  }
+
 
   public initializeEntityNeeds(entityId: string): void {
     this.entityNeeds.set(entityId, {

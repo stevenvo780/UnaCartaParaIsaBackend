@@ -67,6 +67,20 @@ describe("QuestSystem", () => {
       expect(progress.completedQuests).toBeDefined();
       expect(progress.availableQuests).toBeDefined();
     });
+
+    it("debe retornar quest por ID", () => {
+      const available = questSystem.getAvailableQuests();
+      if (available.length > 0) {
+        const quest = questSystem.getQuest(available[0].id);
+        expect(quest).toBeDefined();
+        expect(quest?.id).toBe(available[0].id);
+      }
+    });
+
+    it("debe retornar undefined para quest inexistente", () => {
+      const quest = questSystem.getQuest("nonexistent");
+      expect(quest).toBeUndefined();
+    });
   });
 
   describe("Actualización del sistema", () => {
