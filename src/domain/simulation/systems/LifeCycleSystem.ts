@@ -1,10 +1,10 @@
+import { logger } from "../../../infrastructure/utils/logger";
 import { EventEmitter } from "events";
 import { GameState } from "../../types/game-types";
 import {
   AgentProfile,
   AgentTraits,
   LifeStage,
-  Sex,
 } from "../../types/simulation/agents";
 import { simulationEvents, GameEventNames } from "../core/events";
 import type { NeedsSystem } from "./NeedsSystem";
@@ -38,20 +38,17 @@ export class LifeCycleSystem extends EventEmitter {
 
   // State
   private reproductionCooldown = new Map<string, number>();
-  private nextReproductionAllowed = new Map<string, number>();
-  private pairChildrenCount = new Map<string, number>();
   private spawnCounter = 0;
   private pendingHousingAssignments = new Set<string>();
-  private lastHousingAudit = 0;
 
   // Dependencies
   private needsSystem?: NeedsSystem;
   private aiSystem?: AISystem;
   private inventorySystem?: InventorySystem;
+  private householdSystem?: HouseholdSystem;
   private socialSystem?: SocialSystem;
   private marriageSystem?: MarriageSystem;
   private genealogySystem?: GenealogySystem;
-  private householdSystem?: HouseholdSystem;
   private divineFavorSystem?: DivineFavorSystem;
 
   constructor(
@@ -118,9 +115,29 @@ export class LifeCycleSystem extends EventEmitter {
       this.divineFavorSystem = systems.divineFavorSystem;
   }
 
-  public update(deltaTimeMs: number): void {
+  private checkDependencies(): void {
+    if (!this.needsSystem) logger.warn("LifeCycleSystem: NeedsSystem missing");
+    if (!this.aiSystem) logger.warn("LifeCycleSystem: AISystem missing");
+    if (!this.inventorySystem)
+      logger.warn("LifeCycleSystem: InventorySystem missing");
+    if (!this.householdSystem)
+      logger.warn("LifeCycleSystem: HouseholdSystem missing");
+    if (!this.socialSystem)
+      logger.warn("LifeCycleSystem: SocialSystem missing");
+    if (!this.marriageSystem)
+      logger.warn("LifeCycleSystem: MarriageSystem missing");
+    if (!this.genealogySystem)
+      logger.warn("LifeCycleSystem: GenealogySystem missing");
+    if (!this.divineFavorSystem)
+      logger.warn("LifeCycleSystem: DivineFavorSystem missing");
+  }
+
+  public update(_deltaTimeMs: number): void {
     const now = Date.now();
-    if (now - this.lastUpdate < 1000) return; // Update every second
+    if (now - this.lastUpdate < 1000) {
+      this.checkDependencies(); // Ensure dependencies are checked at least once or periodically
+      return;
+    }
 
     const dtSec = (now - this.lastUpdate) / 1000;
     this.lastUpdate = now;
@@ -269,7 +286,7 @@ export class LifeCycleSystem extends EventEmitter {
     });
   }
 
-  public async spawnAgent(partial: Partial<AgentProfile>): Promise<string> {
+  public spawnAgent(partial: Partial<AgentProfile> = {}): AgentProfile {
     const id = `agent_${++this.spawnCounter}`;
 
     const profile: AgentProfile = {
@@ -289,11 +306,6 @@ export class LifeCycleSystem extends EventEmitter {
     if (!this.gameState.agents) this.gameState.agents = [];
     this.gameState.agents.push(profile);
 
-    // Initialize AI
-    if (this.aiSystem) {
-      // aiSystem.createAIState(id); // Assuming this method exists or is handled internally
-    }
-
     // Initialize Needs
     if (this.needsSystem) {
       this.needsSystem.initializeEntityNeeds(id);
@@ -306,27 +318,20 @@ export class LifeCycleSystem extends EventEmitter {
         : undefined,
     });
 
-    return id;
+    return profile;
   }
 
-  public removeAgent(id: string): void {
-    if (!this.gameState.agents) return;
-
-    const index = this.gameState.agents.findIndex((a) => a.id === id);
-    if (index !== -1) {
-      const agent = this.gameState.agents[index];
-      this.gameState.agents.splice(index, 1);
-
-      // Cleanup other systems
-      this.aiSystem?.removeEntityAI(id);
-      // this.needsSystem?.removeEntityNeeds(id);
-
-      simulationEvents.emit(GameEventNames.AGENT_DEATH, {
-        entityId: id,
-        reason: "old_age",
-        age: agent.ageYears,
-      });
-    }
+  private randomTraits(): AgentTraits {
+    return {
+      cooperation: Math.random(),
+      diligence: Math.random(),
+      curiosity: Math.random(),
+      aggression: Math.random(),
+      bravery: Math.random(),
+      intelligence: Math.random(),
+      charisma: Math.random(),
+      stamina: Math.random(),
+    };
   }
 
   public getAgent(id: string): AgentProfile | undefined {
@@ -337,16 +342,28 @@ export class LifeCycleSystem extends EventEmitter {
     return this.gameState.agents || [];
   }
 
-  private randomTraits(): AgentTraits {
-    return {
-      cooperation: Math.random(),
-      aggression: Math.random(),
-      diligence: Math.random(),
-      curiosity: Math.random(),
-      bravery: Math.random(),
-      charisma: Math.random(),
-      stamina: Math.random(),
-      intelligence: Math.random(),
-    };
+  public removeAgent(id: string): void {
+    if (!this.gameState.agents) return;
+
+    const index = this.gameState.agents.findIndex((a) => a.id === id);
+    if (index !== -1) {
+      this.gameState.agents.splice(index, 1);
+      simulationEvents.emit(GameEventNames.ANIMAL_DIED, { entityId: id }); // Using ANIMAL_DIED as generic death or add AGENT_DEATH if exists
+    }
+  }
+
+  public killAgent(id: string): boolean {
+    if (!this.gameState.agents) return false;
+    const index = this.gameState.agents.findIndex((a) => a.id === id);
+    if (index === -1) return false;
+
+    this.gameState.agents.splice(index, 1);
+
+    simulationEvents.emit(GameEventNames.AGENT_DEATH, {
+      entityId: id,
+      reason: "killed",
+    });
+
+    return true;
   }
 }

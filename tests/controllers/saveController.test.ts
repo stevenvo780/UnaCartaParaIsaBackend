@@ -92,7 +92,7 @@ describe('SaveController', () => {
     });
 
     it('debe retornar 404 si el save no existe', async () => {
-      mockReq.params = { id: 'save_nonexistent' };
+      mockReq.params = { id: 'save_999' };
       vi.mocked(storageService.getSave).mockResolvedValue(null);
 
       await saveController.getSave(mockReq as Request, mockRes as Response);
@@ -136,7 +136,7 @@ describe('SaveController', () => {
       await saveController.saveGame(mockReq as Request, mockRes as Response);
 
       expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Invalid save data' });
+      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Invalid save data format' });
     });
 
     it('debe retornar 400 si el body está vacío', async () => {
@@ -145,11 +145,11 @@ describe('SaveController', () => {
       await saveController.saveGame(mockReq as Request, mockRes as Response);
 
       expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Invalid save data' });
+      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Invalid save data format' });
     });
 
     it('debe manejar errores', async () => {
-      mockReq.body = { timestamp: 1000 };
+      mockReq.body = { timestamp: 1000, gameTime: 100 };
       vi.mocked(storageService.saveGame).mockRejectedValue(new Error('Save error'));
 
       await saveController.saveGame(mockReq as Request, mockRes as Response);
@@ -171,7 +171,7 @@ describe('SaveController', () => {
     });
 
     it('debe retornar 404 si el save no existe', async () => {
-      mockReq.params = { id: 'save_nonexistent' };
+      mockReq.params = { id: 'save_999' };
       vi.mocked(storageService.deleteSave).mockResolvedValue(false);
 
       await saveController.deleteSave(mockReq as Request, mockRes as Response);

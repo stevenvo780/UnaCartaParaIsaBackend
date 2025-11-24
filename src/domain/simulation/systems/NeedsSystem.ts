@@ -2,6 +2,7 @@ import { EventEmitter } from "events";
 import { GameState } from "../../types/game-types";
 import { EntityNeedsData, NeedsConfig } from "../../types/simulation/needs";
 import { simulationEvents, GameEventNames } from "../core/events";
+import { logger } from "@/infrastructure/utils/logger";
 import type { LifeCycleSystem } from "./LifeCycleSystem";
 import type { DivineFavorSystem } from "./DivineFavorSystem";
 import type { InventorySystem } from "./InventorySystem";
@@ -87,7 +88,7 @@ export class NeedsSystem extends EventEmitter {
     if (systems.socialSystem) this.socialSystem = systems.socialSystem;
   }
 
-  public update(deltaTimeMs: number): void {
+  public update(_deltaTimeMs: number): void {
     const now = Date.now();
 
     // Process respawn queue
@@ -150,42 +151,47 @@ export class NeedsSystem extends EventEmitter {
 
       switch (zone.type) {
         case "food":
-        case "kitchen":
+        case "kitchen": {
           const hungerBonus = 15 * deltaSeconds * multiplier;
           needs.hunger = Math.min(100, needs.hunger + hungerBonus);
           break;
+        }
 
         case "water":
-        case "well":
+        case "well": {
           const thirstBonus = 20 * deltaSeconds * multiplier;
           needs.thirst = Math.min(100, needs.thirst + thirstBonus);
           break;
+        }
 
         case "rest":
         case "bed":
         case "shelter":
-        case "house":
+        case "house": {
           const energyBonus = 12 * deltaSeconds * multiplier;
           needs.energy = Math.min(100, needs.energy + energyBonus);
           break;
+        }
 
         case "hygiene":
-        case "bath":
+        case "bath": {
           const hygieneBonus = 25 * deltaSeconds * multiplier;
           needs.hygiene = Math.min(100, needs.hygiene + hygieneBonus);
           break;
+        }
 
         case "social":
         case "market":
-        case "gathering":
+        case "gathering": {
           const socialBonus = 8 * deltaSeconds * multiplier;
           const funBonus = 10 * deltaSeconds * multiplier;
           needs.social = Math.min(100, needs.social + socialBonus);
           needs.fun = Math.min(100, needs.fun + funBonus);
           break;
+        }
 
         case "entertainment":
-        case "festival":
+        case "festival": {
           const entertainmentBonus = 20 * deltaSeconds * multiplier;
           needs.fun = Math.min(100, needs.fun + entertainmentBonus);
           needs.mentalHealth = Math.min(
@@ -193,13 +199,15 @@ export class NeedsSystem extends EventEmitter {
             needs.mentalHealth + entertainmentBonus * 0.5,
           );
           break;
+        }
 
         case "temple":
-        case "sanctuary":
+        case "sanctuary": {
           const mentalBonus = 15 * deltaSeconds * multiplier;
           needs.mentalHealth = Math.min(100, needs.mentalHealth + mentalBonus);
           needs.social = Math.min(100, needs.social + mentalBonus * 0.3);
           break;
+        }
       }
     }
   }
@@ -228,7 +236,7 @@ export class NeedsSystem extends EventEmitter {
     needs: EntityNeedsData,
     cause: "starvation" | "dehydration" | "exhaustion",
   ): void {
-    console.log(`💀 Entity ${entityId} died from ${cause}`);
+    logger.info(`💀 Entity ${entityId} died from ${cause}`);
 
     simulationEvents.emit(GameEventNames.AGENT_DEATH, {
       agentId: entityId,
@@ -271,7 +279,7 @@ export class NeedsSystem extends EventEmitter {
     needs.fun = 70;
     needs.mentalHealth = 80;
 
-    console.log(`✨ Entity ${entityId} respawned`);
+    logger.info(`✨ Entity ${entityId} respawned`);
 
     simulationEvents.emit(GameEventNames.AGENT_RESPAWNED, {
       agentId: entityId,
@@ -318,7 +326,7 @@ export class NeedsSystem extends EventEmitter {
     }
   }
 
-  private applyEmergencyRest(entityId: string, needs: EntityNeedsData): void {
+  private applyEmergencyRest(_entityId: string, needs: EntityNeedsData): void {
     const emergencyRest = 2;
     needs.energy = Math.min(100, needs.energy + emergencyRest);
   }
@@ -388,8 +396,8 @@ export class NeedsSystem extends EventEmitter {
    * Feature 5: Social Integration
    */
   private applySocialMoraleBoost(
-    entityId: string,
-    needs: EntityNeedsData,
+    _entityId: string,
+    _needs: EntityNeedsData,
   ): void {
     if (!this.socialSystem) return;
 
@@ -509,6 +517,10 @@ export class NeedsSystem extends EventEmitter {
 
   public getNeeds(entityId: string): EntityNeedsData | undefined {
     return this.entityNeeds.get(entityId);
+  }
+
+  public getEntityNeeds(entityId: string): EntityNeedsData | undefined {
+    return this.getNeeds(entityId);
   }
 
   public getAllNeeds(): Map<string, EntityNeedsData> {

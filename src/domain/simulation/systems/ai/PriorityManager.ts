@@ -1,5 +1,6 @@
 import type { GameState } from "../../../types/game-types";
 import type { RoleSystem } from "../RoleSystem";
+import { logger } from "@/infrastructure/utils/logger";
 
 export type GoalDomain =
   | "survival"
@@ -99,7 +100,7 @@ export class PriorityManager {
         }
       }
     } catch (error) {
-      console.warn("[PriorityManager] Failed to adjust for resource scarcity", {
+      logger.warn("[PriorityManager] Failed to adjust for resource scarcity", {
         error,
         agentId,
         domain,
@@ -119,7 +120,7 @@ export class PriorityManager {
         if (domain === "combat") adjusted *= 0.8;
       }
     } catch (error: unknown) {
-      console.warn("[PriorityManager] Failed to adjust for role", {
+      logger.warn("[PriorityManager] Failed to adjust for role", {
         error,
         agentId,
         domain,

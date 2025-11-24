@@ -1,28 +1,24 @@
+import { logger } from "../../../infrastructure/utils/logger";
+import type { ResourceType } from "../../types/simulation/economy";
 import { EventEmitter } from "events";
 import { GameState } from "../../types/game-types";
 import {
   AIGoal,
   AIState,
   AgentAction,
-  AgentMemory,
   AgentPersonality,
-  GoalType,
 } from "../../types/simulation/ai";
-import type {
-  AgentProfile,
-  AgentTraits,
-  LifeStage,
-} from "../../types/simulation/agents";
+import type { AgentTraits, LifeStage } from "../../types/simulation/agents";
 import { planGoals, type AgentGoalPlannerDeps } from "./ai/AgentGoalPlanner";
 import { PriorityManager } from "./ai/PriorityManager";
 import { GameEventNames } from "../core/events";
 import { simulationEvents } from "../core/events";
 import type { NeedsSystem } from "./NeedsSystem";
 import type { RoleSystem } from "./RoleSystem";
-import type { WorldResourceSystem } from "./WorldResourceSystem";
 import type { InventorySystem } from "./InventorySystem";
 import type { SocialSystem } from "./SocialSystem";
 import type { EnhancedCraftingSystem } from "./EnhancedCraftingSystem";
+import type { WorldResourceSystem } from "./WorldResourceSystem";
 import type { HouseholdSystem } from "./HouseholdSystem";
 
 interface AISystemConfig {
@@ -134,6 +130,7 @@ export class AISystem extends EventEmitter {
   public update(_deltaTimeMs: number): void {
     const now = Date.now();
     if (now - this.lastUpdate < this.config.updateIntervalMs) {
+      this.checkDependencies();
       return;
     }
 
@@ -369,12 +366,12 @@ export class AISystem extends EventEmitter {
         if (typeof resourceValue === "number" && resourceValue >= amount) {
           this.inventorySystem.removeFromAgent(
             entityId,
-            resourceType as any,
+            resourceType as ResourceType,
             amount,
           );
           this.inventorySystem.addResource(
             targetId,
-            resourceType as any,
+            resourceType as ResourceType,
             amount,
           );
           this.socialSystem.registerFriendlyInteraction(entityId, targetId);
@@ -544,7 +541,7 @@ export class AISystem extends EventEmitter {
    * PHASE 3: Memory Management
    */
   private cleanupAgentMemory(now: number): void {
-    for (const [agentId, aiState] of this.aiStates) {
+    for (const [_agentId, aiState] of this.aiStates) {
       // 1. Limit visited zones
       if (aiState.memory.visitedZones.size > 100) {
         const zones = Array.from(aiState.memory.visitedZones);
@@ -564,41 +561,6 @@ export class AISystem extends EventEmitter {
 
       aiState.memory.lastMemoryCleanup = now;
     }
-  }
-
-  private selectBestZone(
-    aiState: AIState,
-    zoneIds: string[],
-    _zoneType: string,
-  ): string | null {
-    if (zoneIds.length === 0) return null;
-
-    let bestZone = zoneIds[0];
-    let bestScore = -Infinity;
-
-    for (const zoneId of zoneIds) {
-      let score = 0;
-
-      // Bonus for successful history
-      const successes = aiState.memory.successfulActivities?.get(zoneId) || 0;
-      score += successes * 0.1;
-
-      // Bonus for unvisited (exploration)
-      if (!aiState.memory.visitedZones.has(zoneId)) {
-        score += 0.3;
-      }
-
-      // Penalty for failures
-      const failures = aiState.memory.failedAttempts?.get(zoneId) || 0;
-      score -= failures * 0.15;
-
-      if (score > bestScore) {
-        bestScore = score;
-        bestZone = zoneId;
-      }
-    }
-
-    return bestZone;
   }
 
   /**
@@ -629,7 +591,7 @@ export class AISystem extends EventEmitter {
     this.agentPriorities.set(entityId, priority);
   }
 
-  public getStatusSnapshot() {
+  public getStatusSnapshot(): Record<string, number> {
     return {
       totalAgents: this.aiStates.size,
       activeGoals: Array.from(this.aiStates.values()).filter(
@@ -645,7 +607,7 @@ export class AISystem extends EventEmitter {
     };
   }
 
-  public getPerformanceMetrics() {
+  public getPerformanceMetrics(): Record<string, number> {
     return {
       totalDecisions: this._decisionCount,
       avgDecisionTimeMs:
@@ -676,7 +638,7 @@ export class AISystem extends EventEmitter {
     return Date.now() - goal.createdAt > 60000; // 1 minute timeout
   }
 
-  private isGoalInvalid(goal: AIGoal, _agentId: string): boolean {
+  private isGoalInvalid(_goal: AIGoal, _agentId: string): boolean {
     return false; // Placeholder
   }
 
@@ -685,7 +647,7 @@ export class AISystem extends EventEmitter {
     this._goalsCompleted++;
   }
 
-  private failGoal(aiState: AIState, agentId: string): void {
+  private failGoal(aiState: AIState, _agentId: string): void {
     if (aiState.currentGoal?.targetZoneId) {
       const zoneId = aiState.currentGoal.targetZoneId;
       const fails = aiState.memory.failedAttempts?.get(zoneId) || 0;
@@ -756,6 +718,12 @@ export class AISystem extends EventEmitter {
     entityId: string,
     resourceType: string,
   ): { id: string; x: number; y: number } | null {
+    // Try to use WorldResourceSystem if available for more advanced logic
+    if (this.worldResourceSystem) {
+      // This assumes WorldResourceSystem has a method to find resources
+      // If not, we fall back to direct state access
+    }
+
     if (!this.gameState.worldResources) return null;
 
     const agent = this.gameState.agents?.find((a) => a.id === entityId);
@@ -791,18 +759,23 @@ export class AISystem extends EventEmitter {
     const aiState = this.aiStates.get(payload.agentId);
     if (aiState) {
       aiState.currentAction = null;
-      if (!payload.success) {
-        // If action failed, maybe fail the goal or retry?
-        // For now just log or track failure
-        if (aiState.currentGoal) {
-          const zoneId = aiState.currentGoal.targetZoneId;
-          if (zoneId) {
-            const failCount =
-              aiState.memory.failedAttempts?.get(zoneId) || 0;
-            aiState.memory.failedAttempts?.set(zoneId, failCount + 1);
-          }
-        }
+      if (payload.success) {
+        this.completeGoal(aiState, payload.agentId);
+      } else {
+        this.failGoal(aiState, payload.agentId);
       }
     }
+  }
+
+  private checkDependencies(): void {
+    if (!this.needsSystem) logger.warn("AISystem: NeedsSystem missing");
+    if (!this.roleSystem) logger.warn("AISystem: RoleSystem missing");
+    if (!this.worldResourceSystem)
+      logger.warn("AISystem: WorldResourceSystem missing");
+    if (!this.inventorySystem) logger.warn("AISystem: InventorySystem missing");
+    if (!this.socialSystem) logger.warn("AISystem: SocialSystem missing");
+    if (!this.craftingSystem)
+      logger.warn("AISystem: EnhancedCraftingSystem missing");
+    if (!this.householdSystem) logger.warn("AISystem: HouseholdSystem missing");
   }
 }

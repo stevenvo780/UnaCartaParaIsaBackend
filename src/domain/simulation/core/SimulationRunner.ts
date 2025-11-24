@@ -240,11 +240,9 @@ export class SimulationRunner {
     this.aiSystem.setDependencies({
       needsSystem: this.needsSystem,
       roleSystem: this.roleSystem,
-      worldResourceSystem: this.worldResourceSystem,
       inventorySystem: this.inventorySystem,
       socialSystem: this.socialSystem,
       craftingSystem: this.enhancedCraftingSystem, // Use enhanced crafting
-      householdSystem: this.householdSystem,
     });
 
     // Connect genealogy system to lifecycle events

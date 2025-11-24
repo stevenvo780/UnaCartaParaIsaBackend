@@ -82,7 +82,7 @@ export class CrisisPredictorSystem {
     let energyStress = 0;
     let criticalCount = 0;
 
-    for (const [entityId, data] of needs) {
+    for (const [, data] of needs) {
       if (data.hunger > 80) hungerStress++;
       if (data.thirst > 80) thirstStress++;
       if (data.energy < 25) energyStress++;

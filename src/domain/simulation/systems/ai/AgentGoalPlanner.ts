@@ -1,9 +1,5 @@
 import type { GameState } from "../../../types/game-types";
-import type {
-  AIGoal,
-  AIState,
-  AgentPersonality,
-} from "../../../types/simulation/ai";
+import type { AIGoal, AIState } from "../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../types/simulation/needs";
 import type { PriorityManager } from "./PriorityManager";
 import {
