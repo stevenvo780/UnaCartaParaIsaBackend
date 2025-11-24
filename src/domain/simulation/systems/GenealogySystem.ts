@@ -99,7 +99,7 @@ export class GenealogySystem {
       researchProgress: new Map(),
       specializations: [],
       culturalBonus: 0,
-      knowledgeLevel: 0
+      knowledgeLevel: 0,
     });
     return id;
   }

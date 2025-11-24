@@ -62,7 +62,7 @@ export class CardDialogueSystem {
   constructor(
     private readonly gameState: GameState,
     private readonly needsSystem: NeedsSystem,
-  ) { }
+  ) {}
 
   public update(_deltaMs: number): void {
     const now = Date.now();
@@ -204,13 +204,15 @@ export class CardDialogueSystem {
   private createCard(
     template: CardTemplate,
     entityId: string,
+    needs: NeedsState,
     now: number,
   ): DialogueCard {
     const contentVariation =
       template.contentVariations[
-      Math.floor(Math.random() * template.contentVariations.length)
+        Math.floor(Math.random() * template.contentVariations.length)
       ];
-    const priority = this.resolvePriority(template);
+    const priority = this.resolvePriority(template, needs);
+    const duration = this.calculateDuration(priority);
 
     return {
       id: `${template.id}_${entityId}_${now}`,
@@ -222,15 +224,30 @@ export class CardDialogueSystem {
       triggerCondition: template.id,
       choices: template.choices,
       emotionalTone: template.emotionalTone,
-      duration: DEFAULT_DURATION,
+      duration,
       timestamp: now,
     };
   }
 
-  private resolvePriority(template: CardTemplate, needs: NeedsState): DialoguePriority {
+  private calculateDuration(priority: DialoguePriority): number {
+    // Migrated from Frontend helpers
+    const durations = {
+      urgent: 30000,
+      high: 45000,
+      medium: 60000,
+      low: 90000,
+    } as const;
+    return durations[priority];
+  }
+
+  private resolvePriority(
+    template: CardTemplate,
+    needs: NeedsState,
+  ): DialoguePriority {
     // Priority based on needs severity (migrated from Frontend helpers)
     if (needs.hunger < 15 || needs.thirst < 15) return "urgent";
-    if (needs.hunger < 30 || needs.thirst < 25 || needs.energy < 20) return "high";
+    if (needs.hunger < 30 || needs.thirst < 25 || needs.energy < 20)
+      return "high";
     if (needs.mentalHealth < 40) return "medium";
 
     // Fallback to template-based priority
