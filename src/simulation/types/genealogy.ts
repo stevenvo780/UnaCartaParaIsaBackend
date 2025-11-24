@@ -41,12 +41,21 @@ export interface FamilyTree {
   relationships: Map<string, string[]>;
 }
 
+export interface GenealogyEventDetails {
+  fatherId?: string;
+  motherId?: string;
+  spouseId?: string;
+  children?: string[];
+  reason?: string;
+  [key: string]: unknown;
+}
+
 export interface GenealogyEvent {
   type: "birth" | "death" | "marriage" | "divorce" | "adoption";
   timestamp: number;
   agentId: string;
   lineageId?: string;
-  details?: any;
+  details?: GenealogyEventDetails;
 }
 
 export interface TraitInheritance {

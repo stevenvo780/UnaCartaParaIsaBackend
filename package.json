@@ -18,16 +18,20 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "@types/cors": "^2.8.19",
     "@types/delaunator": "^5.0.3",
     "@types/express": "^5.0.5",
     "@types/node": "^24.10.1",
     "@types/seedrandom": "^3.0.8",
     "@types/ssh2-sftp-client": "^9.0.5",
+    "eslint-plugin-prettier": "^5.5.4",
     "nodemon": "^3.1.11",
+    "prettier": "^3.6.2",
     "rimraf": "^6.1.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.47.0"
   }
 }

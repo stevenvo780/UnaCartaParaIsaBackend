@@ -7,6 +7,14 @@ import type {
   DialogueStateSnapshot,
   ResourceAttractionSnapshot,
 } from "../simulation/types/ambient.js";
+import type { AgentProfile } from "../simulation/types/agents.js";
+import type { SimulationEntity } from "../simulation/schema.js";
+import type { SocialGroup } from "../simulation/types/social.js";
+import type { MarketOrder, Transaction } from "../simulation/types/economy.js";
+import type { AgentRole } from "../simulation/types/roles.js";
+import type { LegendRecord } from "../simulation/types/legends.js";
+import type { FamilyTree } from "../simulation/types/genealogy.js";
+import type { Inventory } from "../simulation/types/economy.js";
 
 export interface Position {
   x: number;
@@ -24,7 +32,7 @@ export interface Zone {
   id: string;
   type: string;
   bounds: { x: number; y: number; width: number; height: number };
-  props?: any;
+  props?: Record<string, unknown>;
 }
 
 export interface Size {
@@ -43,11 +51,17 @@ export type InteractionType =
   | "WAKE_UP"
   | "LET_SLEEP";
 
+export interface DialogueEntry {
+  speaker: string;
+  text: string;
+  timestamp: number;
+}
+
 export interface ConversationState {
   isActive: boolean;
   participants: string[];
   lastSpeaker: string | null;
-  lastDialogue: any | null;
+  lastDialogue: DialogueEntry | null;
   startTime: number;
 }
 
@@ -91,18 +105,59 @@ export interface RoadPolyline {
   type: "main" | "secondary" | "path";
 }
 
+export interface MapObject {
+  id: string;
+  type: string;
+  x: number;
+  y: number;
+  properties?: Record<string, unknown>;
+}
+
 export interface ObjectLayer {
   id: string;
   name: string;
-  objects: any[];
+  objects: MapObject[];
   zIndex: number;
   visible: boolean;
 }
 
+export interface MarketState {
+  orders: MarketOrder[];
+  transactions: Transaction[];
+  prices: Record<string, number>;
+}
+
+export interface SocialGraphState {
+  groups: SocialGroup[];
+  relationships: Map<string, Map<string, number>>;
+}
+
+export interface RolesState {
+  assignments: Map<string, AgentRole>;
+  schedules: Map<string, string[]>;
+}
+
+export interface LegendsState {
+  records: Map<string, LegendRecord>;
+  activeLegends: string[];
+}
+
+export interface InventoryState {
+  global: Inventory;
+  stockpiles: Map<string, Inventory>;
+}
+
+export interface MapElement {
+  id: string;
+  type: string;
+  position: Position;
+  properties?: Record<string, unknown>;
+}
+
 export interface GameState {
-  agents: any[]; // Ideally typed as AgentProfile[]
-  entities: any[];
-  zones: any[];
+  agents: AgentProfile[];
+  entities: SimulationEntity[];
+  zones: Zone[];
   resources: GameResources;
   time: number;
   dayTime: number;
@@ -110,12 +165,12 @@ export interface GameState {
   cycles: number;
   weather: WeatherState;
   worldResources?: Record<string, WorldResourceInstance>;
-  socialGraph?: any;
-  market?: any;
-  inventory?: any;
-  roles?: any;
-  legends?: any;
-  genealogy?: any;
+  socialGraph?: SocialGraphState;
+  market?: MarketState;
+  inventory?: InventoryState;
+  roles?: RolesState;
+  legends?: LegendsState;
+  genealogy?: FamilyTree;
   governance?: GovernanceSnapshot;
   combatLog?: CombatLogEntry[];
   resourceAttraction?: ResourceAttractionSnapshot;
@@ -132,7 +187,7 @@ export interface GameState {
     type: InteractionType;
     entityId?: string;
   };
-  mapElements?: any[];
+  mapElements?: MapElement[];
   mapSeed?: string;
   currentConversation?: ConversationState;
   terrainTiles?: TerrainTile[];

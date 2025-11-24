@@ -11,7 +11,7 @@ import type {
   RoleSystemConfig,
 } from '../types/roles.js';
 
-const ROLE_DEFINITIONS: any[] = [
+const ROLE_DEFINITIONS: RoleConfig[] = [
   {
     type: 'logger' as RoleType,
     name: 'Leñador',
