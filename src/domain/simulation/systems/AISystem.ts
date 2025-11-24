@@ -25,6 +25,7 @@ import type { HouseholdSystem } from "./HouseholdSystem";
 import type { TaskSystem } from "./TaskSystem";
 import type { CombatSystem } from "./CombatSystem";
 import type { AnimalSystem } from "./AnimalSystem";
+import type { MovementSystem } from "./MovementSystem";
 
 interface AISystemConfig {
   updateIntervalMs: number;
@@ -50,6 +51,7 @@ export class AISystem extends EventEmitter {
   private taskSystem?: TaskSystem;
   private combatSystem?: CombatSystem;
   private animalSystem?: AnimalSystem;
+  private movementSystem?: MovementSystem;
 
   private _lastMemoryCleanupTime = 0;
   private readonly MEMORY_CLEANUP_INTERVAL = 300000;
@@ -80,6 +82,7 @@ export class AISystem extends EventEmitter {
       taskSystem?: TaskSystem;
       combatSystem?: CombatSystem;
       animalSystem?: AnimalSystem;
+      movementSystem?: MovementSystem;
     },
   ) {
     super();
@@ -110,6 +113,7 @@ export class AISystem extends EventEmitter {
       this.taskSystem = systems.taskSystem;
       this.combatSystem = systems.combatSystem;
       this.animalSystem = systems.animalSystem;
+      this.movementSystem = systems.movementSystem;
     }
 
     simulationEvents.on(
@@ -129,6 +133,7 @@ export class AISystem extends EventEmitter {
     taskSystem?: TaskSystem;
     combatSystem?: CombatSystem;
     animalSystem?: AnimalSystem;
+    movementSystem?: MovementSystem;
   }): void {
     if (systems.needsSystem) this.needsSystem = systems.needsSystem;
     if (systems.roleSystem) this.roleSystem = systems.roleSystem;
@@ -141,6 +146,7 @@ export class AISystem extends EventEmitter {
     if (systems.taskSystem) this.taskSystem = systems.taskSystem;
     if (systems.combatSystem) this.combatSystem = systems.combatSystem;
     if (systems.animalSystem) this.animalSystem = systems.animalSystem;
+    if (systems.movementSystem) this.movementSystem = systems.movementSystem;
   }
 
   public update(_deltaTimeMs: number): void {
