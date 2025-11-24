@@ -36,11 +36,11 @@ export function selectBestZone(
   const validZones = zoneIds
     .map((id) => gameState.zones?.find((z) => z.id === id))
     .filter(Boolean) as Array<{
-      id: string;
-      attractiveness?: number;
-      bounds: { x: number; y: number; width: number; height: number };
-      metadata?: Record<string, unknown>;
-    }>;
+    id: string;
+    attractiveness?: number;
+    bounds: { x: number; y: number; width: number; height: number };
+    metadata?: Record<string, unknown>;
+  }>;
 
   if (validZones.length === 0) return null;
 
@@ -77,7 +77,10 @@ export function selectBestZone(
   const randomChance =
     0.1 + personality.openness * 0.3 - personality.neuroticism * 0.2;
 
-  if (evaluatedZones.length >= 3 && Math.random() < Math.max(0.05, randomChance)) {
+  if (
+    evaluatedZones.length >= 3 &&
+    Math.random() < Math.max(0.05, randomChance)
+  ) {
     const topThree = evaluatedZones.slice(0, 3);
     const randomPick = topThree[Math.floor(Math.random() * topThree.length)];
     return randomPick.zone.id;
@@ -245,9 +248,9 @@ export function getEntityPosition(
   }
 
   // Fallback to entity if agent not found
-  const entity = gameState.entities?.find((e: { id: string }) => e.id === entityId) as
-    | { position?: { x: number; y: number } }
-    | undefined;
+  const entity = gameState.entities?.find(
+    (e: { id: string }) => e.id === entityId,
+  ) as { position?: { x: number; y: number } } | undefined;
 
   return entity?.position || { x: 0, y: 0 };
 }

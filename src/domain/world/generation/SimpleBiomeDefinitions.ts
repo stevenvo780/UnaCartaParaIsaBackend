@@ -152,4 +152,68 @@ export const SIMPLE_BIOMES: SimpleBiomeConfig[] = [
     clustering: 0.0,
     transitionWidth: 8,
   },
+
+  {
+    id: BiomeType.MYSTICAL,
+    name: "Bosque Místico",
+    color: "#7B1FA2",
+    isWalkable: true,
+    temperature: [0.2, 0.4],
+    moisture: [0.4, 0.7],
+    elevation: [0.1, 0.5],
+    density: {
+      trees: 0.3,
+      props: 0.12,
+    },
+    clustering: 0.45,
+    transitionWidth: 5,
+  },
+
+  {
+    id: BiomeType.WETLAND,
+    name: "Humedal",
+    color: "#00695C",
+    isWalkable: true,
+    temperature: [0.4, 0.7],
+    moisture: [0.8, 1.0],
+    elevation: [0.0, 0.3],
+    density: {
+      trees: 0.25,
+      props: 0.33,
+    },
+    clustering: 0.55,
+    transitionWidth: 6,
+  },
+
+  {
+    id: BiomeType.MOUNTAINOUS,
+    name: "Zona Montañosa",
+    color: "#5D4037",
+    isWalkable: true,
+    temperature: [0.1, 0.4],
+    moisture: [0.1, 0.4],
+    elevation: [0.7, 1.0],
+    density: {
+      trees: 0.13,
+      rocks: 0.42,
+    },
+    clustering: 0.25,
+    transitionWidth: 4,
+  },
+
+  {
+    id: BiomeType.VILLAGE,
+    name: "Zona de Pueblo",
+    color: "#8D6E63",
+    isWalkable: true,
+    temperature: [0.4, 0.7],
+    moisture: [0.4, 0.7],
+    elevation: [0.3, 0.6],
+    density: {
+      trees: 0.13,
+      props: 0.22,
+    },
+    clustering: 0.15,
+    transitionWidth: 3,
+  },
 ];

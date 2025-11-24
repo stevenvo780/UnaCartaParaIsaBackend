@@ -81,7 +81,8 @@ export class NeedsSystem extends EventEmitter {
     socialSystem?: SocialSystem;
   }): void {
     if (systems.lifeCycleSystem) this.lifeCycleSystem = systems.lifeCycleSystem;
-    if (systems.divineFavorSystem) this.divineFavorSystem = systems.divineFavorSystem;
+    if (systems.divineFavorSystem)
+      this.divineFavorSystem = systems.divineFavorSystem;
     if (systems.inventorySystem) this.inventorySystem = systems.inventorySystem;
     if (systems.socialSystem) this.socialSystem = systems.socialSystem;
   }
@@ -187,7 +188,10 @@ export class NeedsSystem extends EventEmitter {
         case "festival":
           const entertainmentBonus = 20 * deltaSeconds * multiplier;
           needs.fun = Math.min(100, needs.fun + entertainmentBonus);
-          needs.mentalHealth = Math.min(100, needs.mentalHealth + entertainmentBonus * 0.5);
+          needs.mentalHealth = Math.min(
+            100,
+            needs.mentalHealth + entertainmentBonus * 0.5,
+          );
           break;
 
         case "temple":
@@ -247,7 +251,9 @@ export class NeedsSystem extends EventEmitter {
   }
 
   private processRespawnQueue(now: number): void {
-    for (const [entityId, respawnTime] of Array.from(this.respawnQueue.entries())) {
+    for (const [entityId, respawnTime] of Array.from(
+      this.respawnQueue.entries(),
+    )) {
       if (now >= respawnTime) {
         this.respawnEntity(entityId);
         this.respawnQueue.delete(entityId);
@@ -335,7 +341,10 @@ export class NeedsSystem extends EventEmitter {
       const finalRate = rate * ageMultiplier;
       const key = need as keyof EntityNeedsData;
       if (typeof needs[key] === "number") {
-        needs[key] = Math.max(0, (needs[key] as number) - finalRate * deltaSeconds);
+        needs[key] = Math.max(
+          0,
+          (needs[key] as number) - finalRate * deltaSeconds,
+        );
       }
     }
   }
@@ -346,10 +355,14 @@ export class NeedsSystem extends EventEmitter {
     if (!agent) return 1.0;
 
     switch (agent.lifeStage) {
-      case "child": return 0.7;
-      case "adult": return 1.0;
-      case "elder": return 1.4;
-      default: return 1.0;
+      case "child":
+        return 0.7;
+      case "adult":
+        return 1.0;
+      case "elder":
+        return 1.4;
+      default:
+        return 1.0;
     }
   }
 
@@ -359,7 +372,7 @@ export class NeedsSystem extends EventEmitter {
   ): Record<string, number> {
     if (!this.divineFavorSystem) return decayRates;
     const favor = this.divineFavorSystem.getFavor(entityId);
-    const modifier = 1 - (favor * 0.3);
+    const modifier = 1 - favor * 0.3;
 
     const result: Record<string, number> = {};
     for (const [key, val] of Object.entries(decayRates)) {
@@ -371,7 +384,10 @@ export class NeedsSystem extends EventEmitter {
   /**
    * Feature 5: Social Integration
    */
-  private applySocialMoraleBoost(entityId: string, needs: EntityNeedsData): void {
+  private applySocialMoraleBoost(
+    entityId: string,
+    needs: EntityNeedsData,
+  ): void {
     if (!this.socialSystem) return;
 
     // Placeholder for truce check
@@ -435,7 +451,10 @@ export class NeedsSystem extends EventEmitter {
     if (needs.hunger < 40) {
       const hungerPenalty = (40 - needs.hunger) * 0.03;
       needs.energy = Math.max(0, needs.energy - hungerPenalty);
-      needs.mentalHealth = Math.max(0, needs.mentalHealth - hungerPenalty * 0.5);
+      needs.mentalHealth = Math.max(
+        0,
+        needs.mentalHealth - hungerPenalty * 0.5,
+      );
     }
 
     if (needs.thirst < 30) {

@@ -87,10 +87,7 @@ export class CrisisPredictorSystem {
       if (data.thirst > 80) thirstStress++;
       if (data.energy < 25) energyStress++;
 
-      if (
-        (data.hunger > 90) ||
-        (data.thirst > 90)
-      ) {
+      if (data.hunger > 90 || data.thirst > 90) {
         criticalCount++;
       }
     }

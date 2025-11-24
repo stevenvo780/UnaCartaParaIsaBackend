@@ -65,7 +65,7 @@ export class CardDialogueSystem {
     private readonly needsSystem: NeedsSystem,
     private readonly socialSystem?: SocialSystem,
     private readonly questSystem?: QuestSystem,
-  ) { }
+  ) {}
 
   public update(_deltaMs: number): void {
     const now = Date.now();
@@ -246,7 +246,7 @@ export class CardDialogueSystem {
   ): DialogueCard {
     const contentVariation =
       template.contentVariations[
-      Math.floor(Math.random() * template.contentVariations.length)
+        Math.floor(Math.random() * template.contentVariations.length)
       ];
     const priority = this.resolvePriority(template, needs);
     const duration = this.calculateDuration(priority);

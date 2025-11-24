@@ -8,7 +8,11 @@ import {
   AgentPersonality,
   GoalType,
 } from "../../types/simulation/ai";
-import type { AgentProfile, AgentTraits, LifeStage } from "../../types/simulation/agents";
+import type {
+  AgentProfile,
+  AgentTraits,
+  LifeStage,
+} from "../../types/simulation/agents";
 import {
   evaluateCriticalNeeds,
   type NeedsEvaluatorDependencies,
@@ -55,7 +59,10 @@ export class AISystem extends EventEmitter {
   private readonly MEMORY_CLEANUP_INTERVAL = 300000; // 5 minutes
 
   // Phase 4: Advanced Features
-  private agentStrategies = new Map<string, "peaceful" | "tit_for_tat" | "bully">();
+  private agentStrategies = new Map<
+    string,
+    "peaceful" | "tit_for_tat" | "bully"
+  >();
   private playerControlledAgents = new Set<string>();
   private agentPriorities = new Map<string, "survival" | "normal" | "social">();
 
@@ -112,7 +119,8 @@ export class AISystem extends EventEmitter {
   }): void {
     if (systems.needsSystem) this.needsSystem = systems.needsSystem;
     if (systems.roleSystem) this.roleSystem = systems.roleSystem;
-    if (systems.worldResourceSystem) this.worldResourceSystem = systems.worldResourceSystem;
+    if (systems.worldResourceSystem)
+      this.worldResourceSystem = systems.worldResourceSystem;
     if (systems.inventorySystem) this.inventorySystem = systems.inventorySystem;
     if (systems.socialSystem) this.socialSystem = systems.socialSystem;
     if (systems.craftingSystem) this.craftingSystem = systems.craftingSystem;
@@ -176,7 +184,7 @@ export class AISystem extends EventEmitter {
       const newGoal = this.makeDecision(agentId, aiState);
       const endTime = performance.now();
 
-      this._decisionTimeTotalMs += (endTime - startTime);
+      this._decisionTimeTotalMs += endTime - startTime;
       this._decisionCount++;
 
       if (newGoal) {
@@ -231,7 +239,7 @@ export class AISystem extends EventEmitter {
 
     // 2. Evaluate opportunities
     const opportunities: AIGoal[] = [];
-    
+
     // Work opportunities
     if (this.roleSystem) {
       const deps: OpportunitiesEvaluatorDependencies = {
@@ -247,7 +255,7 @@ export class AISystem extends EventEmitter {
       };
       opportunities.push(...evaluateWorkOpportunities(deps, aiState));
     }
-    
+
     // Exploration opportunities
     opportunities.push(...evaluateExplorationGoals(aiState));
 
@@ -300,19 +308,23 @@ export class AISystem extends EventEmitter {
       agreeableness,
       neuroticism,
       // Derived behavioral tendencies
-      riskTolerance: (traits.bravery || 0.5) * 0.7 + (traits.curiosity || 0.5) * 0.3,
+      riskTolerance:
+        (traits.bravery || 0.5) * 0.7 + (traits.curiosity || 0.5) * 0.3,
       socialPreference: isChild
         ? "extroverted"
-        : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 > 0.6
+        : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 >
+            0.6
           ? "extroverted"
-          : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 < 0.4
+          : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 <
+              0.4
             ? "introverted"
             : "balanced",
       workEthic: isChild
         ? "lazy"
         : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 > 0.7
           ? "workaholic"
-          : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 < 0.3
+          : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 <
+              0.3
             ? "lazy"
             : "balanced",
       explorationType:
@@ -386,7 +398,11 @@ export class AISystem extends EventEmitter {
     aiState.memory.visitedZones.add(zoneId);
 
     // Handle assist goals
-    if (goal.type.startsWith("assist_") && goal.data && goal.data.targetAgentId) {
+    if (
+      goal.type.startsWith("assist_") &&
+      goal.data &&
+      goal.data.targetAgentId
+    ) {
       const targetId = goal.data.targetAgentId as string;
       const resourceType = goal.data.resourceType as string;
       const amount = (goal.data.amount as number) || 10;
@@ -396,8 +412,16 @@ export class AISystem extends EventEmitter {
         if (!inv) return;
         const resourceValue = inv[resourceType as keyof typeof inv];
         if (typeof resourceValue === "number" && resourceValue >= amount) {
-          this.inventorySystem.removeFromAgent(entityId, resourceType as any, amount);
-          this.inventorySystem.addResource(targetId, resourceType as any, amount);
+          this.inventorySystem.removeFromAgent(
+            entityId,
+            resourceType as any,
+            amount,
+          );
+          this.inventorySystem.addResource(
+            targetId,
+            resourceType as any,
+            amount,
+          );
           this.socialSystem.registerFriendlyInteraction(entityId, targetId);
         }
       }
@@ -452,7 +476,8 @@ export class AISystem extends EventEmitter {
       });
 
       // Record successful visit
-      const successCount = aiState.memory.successfulActivities?.get(zoneId) || 0;
+      const successCount =
+        aiState.memory.successfulActivities?.get(zoneId) || 0;
       aiState.memory.successfulActivities?.set(zoneId, successCount + 1);
     }
 
@@ -572,7 +597,10 @@ export class AISystem extends EventEmitter {
       }
 
       // 2. Limit successful activities history
-      if (aiState.memory.successfulActivities && aiState.memory.successfulActivities.size > 50) {
+      if (
+        aiState.memory.successfulActivities &&
+        aiState.memory.successfulActivities.size > 50
+      ) {
         const sorted = Array.from(aiState.memory.successfulActivities.entries())
           .sort((a, b) => b[1] - a[1])
           .slice(0, 50);
@@ -649,17 +677,26 @@ export class AISystem extends EventEmitter {
   public getStatusSnapshot() {
     return {
       totalAgents: this.aiStates.size,
-      activeGoals: Array.from(this.aiStates.values()).filter(s => s.currentGoal).length,
+      activeGoals: Array.from(this.aiStates.values()).filter(
+        (s) => s.currentGoal,
+      ).length,
       playerControlled: this.playerControlledAgents.size,
-      offDuty: Array.from(this.aiStates.values()).filter(s => s.offDuty).length,
-      avgDecisionTime: this._decisionCount > 0 ? this._decisionTimeTotalMs / this._decisionCount : 0,
+      offDuty: Array.from(this.aiStates.values()).filter((s) => s.offDuty)
+        .length,
+      avgDecisionTime:
+        this._decisionCount > 0
+          ? this._decisionTimeTotalMs / this._decisionCount
+          : 0,
     };
   }
 
   public getPerformanceMetrics() {
     return {
       totalDecisions: this._decisionCount,
-      avgDecisionTimeMs: this._decisionCount > 0 ? this._decisionTimeTotalMs / this._decisionCount : 0,
+      avgDecisionTimeMs:
+        this._decisionCount > 0
+          ? this._decisionTimeTotalMs / this._decisionCount
+          : 0,
       goalsCompleted: this._goalsCompleted,
       goalsFailed: this._goalsFailed,
     };

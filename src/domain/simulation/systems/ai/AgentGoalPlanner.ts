@@ -1,5 +1,9 @@
 import type { GameState } from "../../../types/game-types";
-import type { AIGoal, AIState, AgentPersonality } from "../../../types/simulation/ai";
+import type {
+  AIGoal,
+  AIState,
+  AgentPersonality,
+} from "../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../types/simulation/needs";
 import type { PriorityManager } from "./PriorityManager";
 import {
@@ -214,7 +218,10 @@ function evaluateOpportunities(
   const personality = aiState.personality;
 
   // Exploration goal (based on curiosity/openness)
-  if (personality.openness > 0.5 || personality.explorationType === "adventurous") {
+  if (
+    personality.openness > 0.5 ||
+    personality.explorationType === "adventurous"
+  ) {
     const unexploredZones = getUnexploredZones(aiState, deps.gameState);
     if (unexploredZones.length > 0) {
       const targetZoneId = selectBestZone(
@@ -249,12 +256,17 @@ function evaluateOpportunities(
   }
 
   // Work goal (based on diligence)
-  if (personality.conscientiousness > 0.6 || personality.workEthic === "workaholic") {
+  if (
+    personality.conscientiousness > 0.6 ||
+    personality.workEthic === "workaholic"
+  ) {
     const workZones =
-      deps.gameState.zones?.filter((z) => z.type === "work" || z.type === "resource") ||
-      [];
+      deps.gameState.zones?.filter(
+        (z) => z.type === "work" || z.type === "resource",
+      ) || [];
     if (workZones.length > 0) {
-      const targetZone = workZones[Math.floor(Math.random() * workZones.length)];
+      const targetZone =
+        workZones[Math.floor(Math.random() * workZones.length)];
       goals.push({
         id: `work_${targetZone.id}_${now}`,
         type: "work",

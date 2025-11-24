@@ -283,11 +283,7 @@ export class EmergenceSystem extends EventEmitter {
     if (allNeedsValues.length === 0) return null;
 
     const criticalCount = allNeedsValues.filter((n) => {
-      return (
-        n.hunger > 80 ||
-        n.thirst > 80 ||
-        n.energy < 20
-      );
+      return n.hunger > 80 || n.thirst > 80 || n.energy < 20;
     }).length;
 
     const criticalRatio = criticalCount / allNeedsValues.length;
@@ -410,9 +406,9 @@ export class EmergenceSystem extends EventEmitter {
     const avgNeeds =
       needs.length > 0
         ? needs.reduce((sum, n) => {
-          const nv = n.needs;
-          return sum + (nv.hunger + nv.thirst + nv.energy + nv.hygiene) / 4;
-        }, 0) / needs.length
+            const nv = n.needs;
+            return sum + (nv.hunger + nv.thirst + nv.energy + nv.hygiene) / 4;
+          }, 0) / needs.length
         : 50;
     const stability = 1.0 - Math.abs(avgNeeds - 50) / 50;
 

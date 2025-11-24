@@ -100,10 +100,11 @@ export class PriorityManager {
         }
       }
     } catch (error) {
-      console.warn(
-        "[PriorityManager] Failed to adjust for resource scarcity",
-        { error, agentId, domain },
-      );
+      console.warn("[PriorityManager] Failed to adjust for resource scarcity", {
+        error,
+        agentId,
+        domain,
+      });
     }
 
     // Adjust for role

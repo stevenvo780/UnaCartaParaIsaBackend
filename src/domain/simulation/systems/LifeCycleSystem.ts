@@ -66,7 +66,7 @@ export class LifeCycleSystem extends EventEmitter {
       genealogySystem?: GenealogySystem;
       householdSystem?: HouseholdSystem;
       divineFavorSystem?: DivineFavorSystem;
-    }
+    },
   ) {
     super();
     this.gameState = gameState;
@@ -114,7 +114,8 @@ export class LifeCycleSystem extends EventEmitter {
     if (systems.marriageSystem) this.marriageSystem = systems.marriageSystem;
     if (systems.genealogySystem) this.genealogySystem = systems.genealogySystem;
     if (systems.householdSystem) this.householdSystem = systems.householdSystem;
-    if (systems.divineFavorSystem) this.divineFavorSystem = systems.divineFavorSystem;
+    if (systems.divineFavorSystem)
+      this.divineFavorSystem = systems.divineFavorSystem;
   }
 
   public update(deltaTimeMs: number): void {
@@ -186,7 +187,7 @@ export class LifeCycleSystem extends EventEmitter {
     for (const agentId of this.pendingHousingAssignments) {
       if (processed >= 3) break;
 
-      const agent = this.gameState.agents?.find(a => a.id === agentId);
+      const agent = this.gameState.agents?.find((a) => a.id === agentId);
       if (agent && agent.lifeStage === "adult") {
         const houseId = this.householdSystem.assignToHouse(agentId);
         if (houseId) {
@@ -219,13 +220,14 @@ export class LifeCycleSystem extends EventEmitter {
     // In a real implementation, this would be more complex (as seen in frontend)
     // For now, we'll implement the core check
 
-    const adults = agents.filter(a => a.lifeStage === "adult");
-    const males = adults.filter(a => a.sex === "male");
-    const females = adults.filter(a => a.sex === "female");
+    const adults = agents.filter((a) => a.lifeStage === "adult");
+    const males = adults.filter((a) => a.sex === "male");
+    const females = adults.filter((a) => a.sex === "female");
 
     if (males.length === 0 || females.length === 0) return;
 
-    if (Math.random() < 0.05) { // 5% chance per second
+    if (Math.random() < 0.05) {
+      // 5% chance per second
       const father = males[Math.floor(Math.random() * males.length)];
       const mother = females[Math.floor(Math.random() * females.length)];
 
@@ -233,15 +235,19 @@ export class LifeCycleSystem extends EventEmitter {
     }
   }
 
-  private async tryCouple(fatherId: string, motherId: string, now: number): Promise<void> {
+  private async tryCouple(
+    fatherId: string,
+    motherId: string,
+    now: number,
+  ): Promise<void> {
     const pairKey = [fatherId, motherId].sort().join("::");
     const cooldown = this.reproductionCooldown.get(pairKey) || 0;
 
     if (now < cooldown) return;
 
     // Success!
-    const father = this.gameState.agents?.find(a => a.id === fatherId);
-    const mother = this.gameState.agents?.find(a => a.id === motherId);
+    const father = this.gameState.agents?.find((a) => a.id === fatherId);
+    const mother = this.gameState.agents?.find((a) => a.id === motherId);
 
     if (!father || !mother) return;
 
@@ -251,7 +257,10 @@ export class LifeCycleSystem extends EventEmitter {
       sex: Math.random() > 0.5 ? "male" : "female",
     });
 
-    this.reproductionCooldown.set(pairKey, now + this.config.reproductionCooldownSec * 1000);
+    this.reproductionCooldown.set(
+      pairKey,
+      now + this.config.reproductionCooldownSec * 1000,
+    );
 
     simulationEvents.emit(GameEventNames.REPRODUCTION_SUCCESS, {
       childId,
@@ -292,7 +301,9 @@ export class LifeCycleSystem extends EventEmitter {
 
     simulationEvents.emit(GameEventNames.AGENT_BIRTH, {
       entityId: id,
-      parentIds: profile.parents ? [profile.parents.father, profile.parents.mother] : undefined,
+      parentIds: profile.parents
+        ? [profile.parents.father, profile.parents.mother]
+        : undefined,
     });
 
     return id;
@@ -301,7 +312,7 @@ export class LifeCycleSystem extends EventEmitter {
   public removeAgent(id: string): void {
     if (!this.gameState.agents) return;
 
-    const index = this.gameState.agents.findIndex(a => a.id === id);
+    const index = this.gameState.agents.findIndex((a) => a.id === id);
     if (index !== -1) {
       const agent = this.gameState.agents[index];
       this.gameState.agents.splice(index, 1);
@@ -319,7 +330,7 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   public getAgent(id: string): AgentProfile | undefined {
-    return this.gameState.agents?.find(a => a.id === id);
+    return this.gameState.agents?.find((a) => a.id === id);
   }
 
   public getAgents(): AgentProfile[] {
