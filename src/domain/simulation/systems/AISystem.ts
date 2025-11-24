@@ -206,12 +206,15 @@ export class AISystem extends EventEmitter {
     const agents = this.gameState.agents || [];
 
     const BATCH_SIZE = 10;
+    const batchSize = Math.min(BATCH_SIZE, agents.length);
     let processed = 0;
 
-    for (const agent of agents) {
-      if (this.playerControlledAgents.has(agent.id)) continue;
+    // Round-robin: procesar batchSize agentes empezando desde agentIndex
+    for (let i = 0; i < batchSize; i++) {
+      const idx = (this.agentIndex + i) % agents.length;
+      const agent = agents[idx];
 
-      if (processed >= BATCH_SIZE) break;
+      if (this.playerControlledAgents.has(agent.id)) continue;
 
       let aiState = this.aiStates.get(agent.id);
       if (!aiState) {
@@ -224,6 +227,9 @@ export class AISystem extends EventEmitter {
       this.processAgent(agent.id, aiState, now);
       processed++;
     }
+
+    // Avanzar índice para el siguiente batch
+    this.agentIndex = (this.agentIndex + batchSize) % agents.length;
   }
 
   private processAgent(agentId: string, aiState: AIState, now: number): void {
@@ -721,7 +727,7 @@ export class AISystem extends EventEmitter {
   private cleanupAgentMemory(now: number): void {
     for (const [_agentId, aiState] of this.aiStates) {
       if (aiState.memory.visitedZones.size > 100) {
-        const zones = Array.from(aiState.memory.visitedZones);
+        const zones = [...aiState.memory.visitedZones];
         aiState.memory.visitedZones = new Set(zones.slice(-100));
       }
 
@@ -729,7 +735,7 @@ export class AISystem extends EventEmitter {
         aiState.memory.successfulActivities &&
         aiState.memory.successfulActivities.size > 50
       ) {
-        const sorted = Array.from(aiState.memory.successfulActivities.entries())
+        const sorted = [...aiState.memory.successfulActivities.entries()]
           .sort((a, b) => b[1] - a[1])
           .slice(0, 50) as Array<[string, number]>;
         aiState.memory.successfulActivities = new Map(sorted);
@@ -766,11 +772,11 @@ export class AISystem extends EventEmitter {
   public getStatusSnapshot(): Record<string, number> {
     return {
       totalAgents: this.aiStates.size,
-      activeGoals: Array.from(this.aiStates.values()).filter(
+      activeGoals: [...this.aiStates.values()].filter(
         (s) => s.currentGoal,
       ).length,
       playerControlled: this.playerControlledAgents.size,
-      offDuty: Array.from(this.aiStates.values()).filter((s) => s.offDuty)
+      offDuty: [...this.aiStates.values()].filter((s) => s.offDuty)
         .length,
       avgDecisionTime:
         this._decisionCount > 0

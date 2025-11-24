@@ -110,6 +110,8 @@ export class CombatSystem {
         const animalEntity: SimulationEntity = {
           id: animalId,
           type: "animal",
+          x: animal.position.x,
+          y: animal.position.y,
           position: animal.position,
           isDead: false,
           tags: ["animal"],

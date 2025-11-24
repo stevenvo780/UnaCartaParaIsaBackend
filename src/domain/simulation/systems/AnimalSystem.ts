@@ -439,7 +439,7 @@ export class AnimalSystem {
       };
     }
 
-    const liveAnimals = Array.from(this.animals.values()).filter(
+    const liveAnimals = [...this.animals.values()].filter(
       (a) => !a.isDead,
     );
 
@@ -602,13 +602,13 @@ export class AnimalSystem {
   private cleanCaches(): void {
     const now = Date.now();
 
-    for (const [key, cache] of Array.from(this.resourceSearchCache.entries())) {
+    for (const [key, cache] of this.resourceSearchCache.entries()) {
       if (now - cache.timestamp > this.CACHE_DURATION) {
         this.resourceSearchCache.delete(key);
       }
     }
 
-    for (const [key, cache] of Array.from(this.threatSearchCache.entries())) {
+    for (const [key, cache] of this.threatSearchCache.entries()) {
       if (now - cache.timestamp > this.CACHE_DURATION) {
         this.threatSearchCache.delete(key);
       }

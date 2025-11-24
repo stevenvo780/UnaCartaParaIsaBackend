@@ -323,6 +323,14 @@ export class MovementSystem extends EventEmitter {
         state.movementStartTime = now;
         state.estimatedArrivalTime = now + travelTime;
         state.currentActivity = "moving";
+
+        // Emit MOVEMENT_ACTIVITY_STARTED event for TrailSystem
+        simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
+          entityId,
+          activityType: "moving",
+          destination: state.targetPosition,
+          path: pathResult.path,
+        });
       })
       .catch((err) => {
         state.isPathfinding = false;
@@ -361,6 +369,14 @@ export class MovementSystem extends EventEmitter {
     state.movementStartTime = now;
     state.estimatedArrivalTime = now + travelTime;
     state.currentActivity = "moving";
+
+    // Emit MOVEMENT_ACTIVITY_STARTED event for TrailSystem
+    simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
+      entityId,
+      activityType: "moving",
+      destination: { x: tx, y: ty },
+      path: state.currentPath,
+    });
 
     return true;
   }

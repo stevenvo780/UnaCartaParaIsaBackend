@@ -14,6 +14,7 @@ export const eventNameMapper: Record<string, string> = {
   AGENT_BIRTH: "agent:birth",
   AGENT_DEATH: "agent:death",
   AGENT_AGED: "agent:aged",
+  AGENT_RESPAWNED: "agent:respawned",
   AGENT_ACTION_COMPLETE: "agent:action:complete",
   AGENT_ACTION_COMMANDED: "agent:action:commanded",
   AGENT_GOAL_CHANGED: "agent:goal:changed",
@@ -82,6 +83,7 @@ export const eventNameMapper: Record<string, string> = {
   CRISIS_IMMEDIATE_WARNING: "crisis:immediate:warning",
 
   // Other events
+  CHUNK_RENDERED: "chunk:rendered",
   TIME_CHANGED: "time:changed",
   TIME_WEATHER_CHANGED: "time:weather:changed",
   LEGEND_UPDATE: "legend:update",

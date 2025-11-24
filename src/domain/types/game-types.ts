@@ -349,6 +349,36 @@ export interface TaskState {
   };
 }
 
+export interface TrailSegment {
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  intensity: number;
+  lastUsed: number;
+  purpose: "work" | "rest" | "trade" | "social" | "emergency" | "unknown";
+  usageCount: number;
+}
+
+export interface HeatMapCell {
+  x: number;
+  y: number;
+  heat: number;
+  lastUpdate: number;
+}
+
+export interface TrailState {
+  trails: TrailSegment[];
+  heatMap: HeatMapCell[];
+  stats: {
+    totalTrails: number;
+    activeTrails: number;
+    hottestPath: string;
+    averageIntensity: number;
+    totalCells: number;
+  };
+}
+
 export interface GameState {
   agents: AgentProfile[];
   entities: SimulationEntity[];
@@ -384,6 +414,7 @@ export interface GameState {
   animals?: AnimalState;
   knowledgeGraph?: KnowledgeGraphState;
   tasks?: TaskState;
+  trails?: TrailState;
 
   resonance?: number;
   lastSave?: number;

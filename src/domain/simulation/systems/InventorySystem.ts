@@ -84,7 +84,7 @@ export class InventorySystem {
   }
 
   public getAllStockpiles(): Stockpile[] {
-    return Array.from(this.stockpiles.values());
+    return [...this.stockpiles.values()];
   }
 
   public addResource(
@@ -237,7 +237,7 @@ export class InventorySystem {
     const FOOD_DECAY_RATE = 0.02;
     const WATER_DECAY_RATE = 0.01;
 
-    for (const sp of Array.from(this.stockpiles.values())) {
+    for (const sp of this.stockpiles.values()) {
       const foodLoss = Math.floor(sp.inventory.food * FOOD_DECAY_RATE);
       const waterLoss = Math.floor(sp.inventory.water * WATER_DECAY_RATE);
 
@@ -247,7 +247,7 @@ export class InventorySystem {
         sp.inventory.water = Math.max(0, sp.inventory.water - waterLoss);
     }
 
-    for (const inv of Array.from(this.agentInventories.values())) {
+    for (const inv of this.agentInventories.values()) {
       const foodLoss = Math.floor(inv.food * FOOD_DECAY_RATE);
       const waterLoss = Math.floor(inv.water * WATER_DECAY_RATE);
 
@@ -312,7 +312,7 @@ export class InventorySystem {
     };
   } {
     const totalStockpiled = { wood: 0, stone: 0, food: 0, water: 0 };
-    for (const sp of Array.from(this.stockpiles.values())) {
+    for (const sp of this.stockpiles.values()) {
       totalStockpiled.wood += sp.inventory.wood;
       totalStockpiled.stone += sp.inventory.stone;
       totalStockpiled.food += sp.inventory.food;
@@ -320,7 +320,7 @@ export class InventorySystem {
     }
 
     const totalInAgents = { wood: 0, stone: 0, food: 0, water: 0 };
-    for (const inv of Array.from(this.agentInventories.values())) {
+    for (const inv of this.agentInventories.values()) {
       totalInAgents.wood += inv.wood;
       totalInAgents.stone += inv.stone;
       totalInAgents.food += inv.food;

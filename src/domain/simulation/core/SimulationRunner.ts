@@ -2,6 +2,8 @@ import { EventEmitter } from "node:events";
 import type { GameResources, GameState, Zone } from "../../types/game-types";
 import { cloneGameState, createInitialGameState } from "./defaultState";
 import { StateCache } from "./StateCache";
+import { EntityIndex } from "./EntityIndex";
+import { SharedSpatialIndex } from "./SharedSpatialIndex";
 import { worldGenerationService } from "../../../infrastructure/services/world/worldGenerationService";
 import { BiomeType } from "../../world/generation/types";
 import { logger } from "../../../infrastructure/utils/logger";
@@ -135,12 +137,23 @@ export class SimulationRunner {
   private capturedEvents: SimulationEvent[] = [];
   private eventCaptureListener?: (eventName: string, payload: unknown) => void;
   private stateCache: StateCache;
+  private entityIndex: EntityIndex;
+  private sharedSpatialIndex: SharedSpatialIndex;
 
   constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
     this.state = initialState ?? createInitialGameState();
     this.tickIntervalMs = config?.tickIntervalMs ?? 200;
     this.maxCommandQueue = config?.maxCommandQueue ?? 200;
     this.stateCache = new StateCache();
+    this.entityIndex = new EntityIndex();
+    this.entityIndex.rebuild(this.state);
+    const worldWidth = this.state.worldSize?.width ?? 2000;
+    const worldHeight = this.state.worldSize?.height ?? 2000;
+    this.sharedSpatialIndex = new SharedSpatialIndex(
+      worldWidth,
+      worldHeight,
+      70,
+    );
     this.worldResourceSystem = new WorldResourceSystem(this.state);
     this.livingLegendsSystem = new LivingLegendsSystem(this.state);
 
@@ -301,7 +314,7 @@ export class SimulationRunner {
       GameEventNames.AGENT_ACTION_COMPLETE,
       (data: { agentId: string; action: string }) => {
         if (data.action === "birth") {
-          const agent = this.state.agents.find((a) => a.id === data.agentId);
+          const agent = this.entityIndex.getAgent(data.agentId);
           if (agent) {
             this._genealogySystem.registerBirth(
               agent,
@@ -316,7 +329,7 @@ export class SimulationRunner {
     simulationEvents.on(
       GameEventNames.AGENT_BIRTH,
       (data: { entityId: string; parentIds: [string, string] | null }) => {
-        const agent = this.state.agents.find((a) => a.id === data.entityId);
+        const agent = this.entityIndex.getAgent(data.entityId);
         if (agent) {
           const fatherId = data.parentIds ? data.parentIds[0] : undefined;
           const motherId = data.parentIds ? data.parentIds[1] : undefined;
@@ -808,6 +821,13 @@ export class SimulationRunner {
     this.processCommands();
     const scaledDelta = delta * this.timeScale;
 
+    // Reconstruir índices si hay cambios en agents/entities
+    this.entityIndex.rebuild(this.state);
+    this.sharedSpatialIndex.rebuildIfNeeded(
+      this.state.entities || [],
+      this.animalSystem.getAnimals(),
+    );
+
     // Marcar secciones como dirty antes de actualizar sistemas
     // Esto permite al StateCache saber qué partes del estado cambiaron
     const dirtySections: string[] = [];
@@ -897,6 +917,13 @@ export class SimulationRunner {
     this.stateCache.markDirtyMultiple(dirtySections);
 
     this.tickCounter += 1;
+    
+    // Flush eventos antes de crear snapshot
+    const { BatchedEventEmitter } = await import("./BatchedEventEmitter");
+    if (simulationEvents instanceof BatchedEventEmitter) {
+      simulationEvents.flushEvents();
+    }
+    
     const snapshot = this.getTickSnapshot();
     this.emitter.emit("tick", snapshot);
 
@@ -1397,7 +1424,7 @@ export class SimulationRunner {
       return true;
     }
 
-    const agent = this.state.agents.find((a) => a.id === agentId);
+    const agent = this.entityIndex.getAgent(agentId);
     if (!agent || !agent.position) {
       return false;
     }

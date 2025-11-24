@@ -1,24 +1,14 @@
-import { GameState } from "../../types/game-types";
+import {
+  GameState,
+  TrailSegment,
+  HeatMapCell,
+  TrailState,
+} from "../../types/game-types";
 import { logger } from "../../../infrastructure/utils/logger";
 import { GameEventNames, simulationEvents } from "../core/events";
 
-export interface TrailSegment {
-  startX: number;
-  startY: number;
-  endX: number;
-  endY: number;
-  intensity: number;
-  lastUsed: number;
-  purpose: "work" | "rest" | "trade" | "social" | "emergency" | "unknown";
-  usageCount: number;
-}
-
-export interface HeatMapCell {
-  x: number;
-  y: number;
-  heat: number;
-  lastUpdate: number;
-}
+// Re-export interfaces for backward compatibility
+export type { TrailSegment, HeatMapCell };
 
 export class TrailSystem {
   private gameState: GameState;
@@ -251,6 +241,16 @@ export class TrailSystem {
     this.stats.averageIntensity =
       activeCount > 0 ? totalIntensity / activeCount : 0;
     this.stats.hottestPath = hottestId;
+
+    // Write trails data to gameState for synchronization
+    this.gameState.trails = {
+      trails: Array.from(this.trails.values()),
+      heatMap: Array.from(this.heatMap.values()),
+      stats: {
+        ...this.stats,
+        totalCells: this.heatMap.size,
+      },
+    };
   }
 
   public getStats(): {

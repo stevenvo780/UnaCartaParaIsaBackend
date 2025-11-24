@@ -99,7 +99,7 @@ export class NeedsSystem extends EventEmitter {
     const dtSeconds = (now - this.lastUpdate) / 1000;
     this.lastUpdate = now;
 
-    for (const [entityId, needs] of Array.from(this.entityNeeds.entries())) {
+    for (const [entityId, needs] of this.entityNeeds.entries()) {
       this.applyNeedDecay(needs, dtSeconds, entityId);
       this.handleZoneBenefits(entityId, needs, dtSeconds);
       this.applySocialMoraleBoost(entityId, needs);
@@ -447,7 +447,7 @@ export class NeedsSystem extends EventEmitter {
   }
 
   private cleanZoneCache(now: number): void {
-    for (const [key, cache] of Array.from(this.zoneCache.entries())) {
+    for (const [key, cache] of this.zoneCache.entries()) {
       if (now - cache.timestamp > this.ZONE_CACHE_TTL) {
         this.zoneCache.delete(key);
       }

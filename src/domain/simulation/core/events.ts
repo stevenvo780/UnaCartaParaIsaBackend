@@ -1,6 +1,8 @@
 import { EventEmitter } from "node:events";
+import { BatchedEventEmitter } from "./BatchedEventEmitter";
 
-export const simulationEvents = new EventEmitter();
+// Usar BatchedEventEmitter para mejor rendimiento
+export const simulationEvents = new BatchedEventEmitter();
 
 export const GameEventNames = {
   RESOURCE_GATHERED: "RESOURCE_GATHERED",
