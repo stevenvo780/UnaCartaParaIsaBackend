@@ -6,7 +6,6 @@ import {
   QuestEvent,
 } from "../types/quests.js";
 
-// Simplified catalog - in production would be loaded from data files
 const QUEST_CATALOG: Quest[] = [
   {
     id: "tutorial_survival",

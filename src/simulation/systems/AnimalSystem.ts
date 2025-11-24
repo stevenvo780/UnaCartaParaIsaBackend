@@ -102,14 +102,10 @@ export class AnimalSystem {
     }
   }
 
-  /**
-   * Update animal behavior AI
-   */
   private updateAnimalBehavior(animal: Animal, deltaSeconds: number): void {
     const config = getAnimalConfig(animal.type);
     if (!config) return;
 
-    // 1. Check for nearby predators (highest priority)
     const nearbyPredator = this.findNearbyPredator(animal, config.detectionRange);
     if (nearbyPredator) {
       animal.state = 'fleeing';
@@ -121,7 +117,6 @@ export class AnimalSystem {
       return;
     }
 
-    // 2. Check for nearby humans (if animal flees from humans)
     if (config.fleeFromHumans) {
       const nearbyHuman = this.findNearbyHuman(animal, config.detectionRange);
       if (nearbyHuman) {
@@ -135,7 +130,6 @@ export class AnimalSystem {
       }
     }
 
-    // 3. Handle hunger - critical need
     if (animal.needs.hunger < 30) {
       if (config.isPredator) {
         animal.state = 'hunting';
@@ -154,7 +148,6 @@ export class AnimalSystem {
       }
     }
 
-    // 4. Handle thirst - critical need
     if (animal.needs.thirst < 30 && config.consumesWater) {
       animal.state = 'seeking_water';
       const waterResources = this.findNearbyWater(animal, config.detectionRange);
@@ -164,7 +157,6 @@ export class AnimalSystem {
       return;
     }
 
-    // 5. Handle reproduction urge
     if (animal.needs.reproductiveUrge > 80) {
       animal.state = 'mating';
       const mates = this.getAnimalsInRadius(animal.position, 60);
@@ -174,9 +166,7 @@ export class AnimalSystem {
       return;
     }
 
-    // 6. Default: wander or idle
     if (animal.state === 'eating' || animal.state === 'drinking') {
-      // Still consuming, check if time to finish
       if (animal.stateEndTime && Date.now() > animal.stateEndTime) {
         animal.state = 'idle';
         animal.stateEndTime = undefined;
@@ -194,9 +184,6 @@ export class AnimalSystem {
     }
   }
 
-  /**
-   * Find nearby predator that preys on this animal
-   */
   private findNearbyPredator(
     animal: Animal,
     range: number
@@ -226,9 +213,6 @@ export class AnimalSystem {
     return null;
   }
 
-  /**
-   * Find nearby human (from game state agents)
-   */
   private findNearbyHuman(
     animal: Animal,
     range: number

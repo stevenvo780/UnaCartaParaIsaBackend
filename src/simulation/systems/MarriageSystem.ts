@@ -169,7 +169,6 @@ export class MarriageSystem {
   public update(): void {
     const now = Date.now();
 
-    // Cleanup expired proposals
     if (now - this.lastProposalCleanup >= 60000) {
       for (const [targetId, proposal] of Array.from(this.pendingProposals.entries())) {
         if (now - proposal.timestamp > this.PROPOSAL_EXPIRATION_MS) {
@@ -179,7 +178,6 @@ export class MarriageSystem {
       this.lastProposalCleanup = now;
     }
 
-    // Decay cohesion and check for auto-divorce
     for (const group of Array.from(this.marriageGroups.values())) {
       group.cohesion = Math.max(0, group.cohesion - 0.0001);
 

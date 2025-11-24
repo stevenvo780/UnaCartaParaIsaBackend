@@ -120,7 +120,6 @@ export class TimeSystem extends EventEmitter {
       );
       this.currentTime.timestamp = Date.now();
 
-      // Update game state
       this.gameState.timeOfDay = this.currentTime.phase;
       if (this.gameState.weather) {
         this.gameState.weather.current = this.currentWeather.type;

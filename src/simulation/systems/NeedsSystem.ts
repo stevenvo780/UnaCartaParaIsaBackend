@@ -34,17 +34,11 @@ export class NeedsSystem {
   private updateEntityNeeds(data: EntityNeedsData, dtSec: number): void {
     const { needs } = data;
 
-    // Simple decay for now
     needs.hunger = Math.max(0, needs.hunger - this.config.hungerDecayRate * dtSec);
     needs.thirst = Math.max(0, needs.thirst - this.config.thirstDecayRate * dtSec);
     needs.energy = Math.max(0, needs.energy - this.config.energyDecayRate * dtSec);
     needs.mentalHealth = Math.max(0, needs.mentalHealth - this.config.mentalHealthDecayRate * dtSec);
-
-    // Check death
-    if (needs.hunger <= 0 || needs.thirst <= 0) {
-      // data.isDead = true; // Uncomment when ready to kill
-      // console.log(`Entity ${data.entityId} is starving/dehydrated`);
-    }
+  }
   }
 
   public initializeEntityNeeds(entityId: string): void {

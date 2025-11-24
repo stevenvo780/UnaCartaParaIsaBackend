@@ -154,14 +154,12 @@ export class RoleSystem extends EventEmitter {
     if (dt < 1) return;
     this.lastUpdate = now;
 
-    // Update role stats (experience, satisfaction)
     if (now - this.lastStatsUpdate > 10000) {
       const dtStats = (now - this.lastStatsUpdate) / 1000;
       this.updateRoleStats(dtStats);
       this.lastStatsUpdate = now;
     }
 
-    // Auto-reassign roles periodically
     if (
       this.config.autoAssignRoles &&
       now - this.lastReassignment > this.config.reassignmentIntervalSec * 1000
@@ -173,7 +171,6 @@ export class RoleSystem extends EventEmitter {
 
   private updateRoleStats(dt: number): void {
     this.roles.forEach((role) => {
-      // Gain experience when on duty
       if (role.currentShift === this.currentShift && role.currentShift !== 'rest') {
         role.experience = Math.min(
           1,
@@ -181,7 +178,6 @@ export class RoleSystem extends EventEmitter {
         );
       }
 
-      // Decay satisfaction
       role.satisfaction = Math.max(
         0,
         role.satisfaction - this.config.satisfactionDecayPerSecond * dt

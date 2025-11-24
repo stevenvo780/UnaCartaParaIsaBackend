@@ -23,12 +23,7 @@ export class SocialSystem {
     const now = Date.now();
     const dt = deltaTimeMs / 1000;
 
-    // 1. Decay existing bonds
     this.decayEdges(dt);
-
-    // 2. Proximity updates (Simple O(N^2) for now, optimize with spatial hash later)
-    // We need access to entity positions. In a real system, we'd query the spatial index.
-    // For this migration, we'll iterate through the GameState entities directly.
     this.updateProximity(dt);
   }
 
@@ -36,7 +31,6 @@ export class SocialSystem {
     this.edges.forEach((neighbors, a) => {
       neighbors.forEach((affinity, b) => {
         if (affinity > 0) {
-          // Decay towards 0
           const newAffinity = Math.max(0, affinity - this.config.decayPerSecond * dt);
           neighbors.set(b, newAffinity);
         }
@@ -63,7 +57,6 @@ export class SocialSystem {
         const distSq = dx * dx + dy * dy;
 
         if (distSq <= radiusSq) {
-          // They are close! Reinforce bond.
           this.addEdge(a.id, b.id, reinforcement);
         }
       }

@@ -37,7 +37,6 @@ export class TaskSystem {
   }
 
   public createTask(params: TaskCreationParams): Task | null {
-    // Check resource requirements
     if (params.requirements?.resources && this.gameState.resources) {
       const res = this.gameState.resources;
       const req = params.requirements.resources;
@@ -93,7 +92,6 @@ export class TaskSystem {
       task.contributors = new Map<string, number>();
     }
 
-    // Check minimum workers requirement
     const minWorkers = task.requirements?.minWorkers ?? 1;
     const activeWorkers = task.contributors.size + 1;
 

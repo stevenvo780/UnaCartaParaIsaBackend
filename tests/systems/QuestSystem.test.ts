@@ -54,14 +54,18 @@ describe("QuestSystem", () => {
       const available = questSystem.getAvailableQuests();
       if (available.length > 0) {
         questSystem.startQuest(available[0].id);
-        const progress = questSystem.getQuestProgress(available[0].id);
+        const progress = questSystem.getQuestProgress();
         expect(progress).toBeDefined();
+        expect(progress.activeQuests).toBeDefined();
       }
     });
 
-    it("debe retornar null o undefined para quest sin progreso", () => {
-      const progress = questSystem.getQuestProgress("nonexistent");
-      expect(progress === null || progress === undefined).toBe(true);
+    it("debe retornar progreso completo del sistema", () => {
+      const progress = questSystem.getQuestProgress();
+      expect(progress).toBeDefined();
+      expect(progress.activeQuests).toBeDefined();
+      expect(progress.completedQuests).toBeDefined();
+      expect(progress.availableQuests).toBeDefined();
     });
   });
 
