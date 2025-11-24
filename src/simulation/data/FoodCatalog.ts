@@ -1,4 +1,7 @@
-import type { FoodItem, FoodCategory } from "../../domain/types/simulation/food";
+import type {
+  FoodItem,
+  FoodCategory,
+} from "../../domain/types/simulation/food";
 // import { LazyFoodAssetLoader } from "../managers/assets/LazyFoodAssetLoader"; // Removed frontend dependency
 // import { gameRandom } from "../utils/deterministicRandom"; // Removed frontend dependency
 

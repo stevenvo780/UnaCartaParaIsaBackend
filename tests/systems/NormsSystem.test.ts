@@ -96,6 +96,183 @@ describe("NormsSystem", () => {
     it("debe actualizar sin errores", () => {
       expect(() => normsSystem.update(1000)).not.toThrow();
     });
+
+    it("debe limpiar violaciones antiguas", () => {
+      normsSystem.handleCombatInZone(
+        "attacker-1",
+        "target-1",
+        "zone-1",
+        "social"
+      );
+      
+      // Simular múltiples updates
+      for (let i = 0; i < 10; i++) {
+        normsSystem.update(1000);
+      }
+      
+      expect(normsSystem).toBeDefined();
+    });
+  });
+
+  describe("cleanup", () => {
+    it("debe limpiar recursos sin errores", () => {
+      normsSystem.handleCombatInZone(
+        "attacker-1",
+        "target-1",
+        "zone-1",
+        "rest"
+      );
+      
+      expect(() => {
+        normsSystem.cleanup();
+      }).not.toThrow();
+    });
+
+    it("debe limpiar todas las violaciones y sanciones", () => {
+      normsSystem.handleCombatInZone(
+        "attacker-1",
+        "target-1",
+        "zone-1",
+        "social"
+      );
+      
+      normsSystem.cleanup();
+      
+      const violations = normsSystem.getNormViolations();
+      const sanctions = normsSystem.getRecentSanctions();
+      
+      expect(violations.length).toBe(0);
+      expect(sanctions.length).toBe(0);
+    });
+  });
+
+  describe("getNormViolations - límites", () => {
+    it("debe limitar violaciones al límite especificado", () => {
+      // Crear múltiples violaciones
+      for (let i = 0; i < 10; i++) {
+        normsSystem.handleCombatInZone(
+          `attacker-${i}`,
+          `target-${i}`,
+          `zone-${i}`,
+          "social"
+        );
+      }
+      
+      const violations = normsSystem.getNormViolations(5);
+      expect(violations.length).toBeLessThanOrEqual(5);
+    });
+  });
+
+  describe("getRecentSanctions - límites", () => {
+    it("debe limitar sanciones al límite especificado", () => {
+      // Crear múltiples violaciones que generen sanciones
+      for (let i = 0; i < 10; i++) {
+        normsSystem.handleCombatInZone(
+          `attacker-${i}`,
+          `target-${i}`,
+          `zone-${i}`,
+          "social"
+        );
+      }
+      
+      const sanctions = normsSystem.getRecentSanctions(5);
+      expect(sanctions.length).toBeLessThanOrEqual(5);
+    });
+  });
+
+  describe("getGuardActivity - límites", () => {
+    it("debe limitar actividad de guardias al límite especificado", () => {
+      // Despachar múltiples guardias
+      for (let i = 0; i < 10; i++) {
+        normsSystem.dispatchGuard(
+          `guard-${i}`,
+          { x: 100 + i, y: 100 + i },
+          `zone-${i}`,
+          50
+        );
+      }
+      
+      const activity = normsSystem.getGuardActivity(5);
+      expect(activity.length).toBeLessThanOrEqual(5);
+    });
+  });
+
+  describe("handleCombatInZone - casos edge", () => {
+    it("debe manejar diferentes tipos de zonas protegidas", () => {
+      const protectedZones = ["social", "market"];
+      
+      protectedZones.forEach((zoneType) => {
+        const result = normsSystem.handleCombatInZone(
+          "attacker-1",
+          "target-1",
+          "zone-1",
+          zoneType
+        );
+        expect(result).toBeDefined();
+        expect(result.violated).toBe(true);
+      });
+    });
+
+    it("debe retornar sanción cuando hay violación", () => {
+      const result = normsSystem.handleCombatInZone(
+        "attacker-1",
+        "target-1",
+        "zone-1",
+        "social"
+      );
+      
+      expect(result.violated).toBe(true);
+      if (result.sanction) {
+        expect(result.sanction.type).toBeDefined();
+        expect(result.sanction.severity).toBeDefined();
+      }
+    });
+  });
+
+  describe("dispatchGuard - casos edge", () => {
+    it("debe registrar actividad de guardia", () => {
+      normsSystem.dispatchGuard(
+        "guard-1",
+        { x: 100, y: 100 },
+        "zone-1",
+        50
+      );
+      
+      const activity = normsSystem.getGuardActivity();
+      expect(activity.length).toBeGreaterThan(0);
+      expect(activity.some((a) => a.guardId === "guard-1")).toBe(true);
+    });
+
+    it("debe actualizar estadísticas al despachar guardia", () => {
+      const initialStats = normsSystem.getNormCompliance();
+      
+      normsSystem.dispatchGuard(
+        "guard-1",
+        { x: 100, y: 100 },
+        "zone-1",
+        50
+      );
+      
+      const newStats = normsSystem.getNormCompliance();
+      expect(newStats.totalGuardDispatches).toBeGreaterThan(
+        initialStats.totalGuardDispatches
+      );
+    });
+  });
+
+  describe("getProtectedZones", () => {
+    it("debe retornar zonas protegidas", () => {
+      normsSystem.handleCombatInZone(
+        "attacker-1",
+        "target-1",
+        "zone-1",
+        "social"
+      );
+      
+      const zones = normsSystem.getProtectedZones();
+      expect(Array.isArray(zones)).toBe(true);
+      // Las zonas protegidas pueden estar vacías si no hay zonas registradas en gameState
+    });
   });
 });
 

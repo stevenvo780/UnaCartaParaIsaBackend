@@ -273,5 +273,78 @@ describe("NeedsSystem", () => {
       );
     });
   });
+
+  describe("setDependencies", () => {
+    it("debe establecer dependencias de sistemas", () => {
+      const mockSystems = {
+        socialSystem: {} as any,
+        divineFavorSystem: {} as any,
+      };
+      
+      expect(() => {
+        needsSystem.setDependencies(mockSystems);
+      }).not.toThrow();
+    });
+  });
+
+  describe("getNeeds", () => {
+    it("debe retornar necesidades (alias de getEntityNeeds)", () => {
+      needsSystem.initializeEntityNeeds("entity-19");
+      const needs = needsSystem.getNeeds("entity-19");
+      expect(needs).toBeDefined();
+      expect(needs?.hunger).toBe(100);
+    });
+
+    it("debe retornar undefined para entidad inexistente", () => {
+      const needs = needsSystem.getNeeds("nonexistent");
+      expect(needs).toBeUndefined();
+    });
+  });
+
+
+
+  describe("Casos edge de satisfyNeed", () => {
+    it("debe limitar necesidad a máximo 100", () => {
+      needsSystem.initializeEntityNeeds("entity-25");
+      needsSystem.satisfyNeed("entity-25", "hunger", 150);
+      const needs = needsSystem.getEntityNeeds("entity-25");
+      expect(needs?.hunger).toBe(100);
+    });
+
+    it("debe retornar false para necesidad inexistente", () => {
+      needsSystem.initializeEntityNeeds("entity-26");
+      const result = needsSystem.satisfyNeed("entity-26", "nonexistent", 10);
+      expect(result).toBe(false);
+    });
+
+    it("debe retornar false para entidad inexistente", () => {
+      const result = needsSystem.satisfyNeed("nonexistent", "hunger", 10);
+      expect(result).toBe(false);
+    });
+  });
+
+  describe("Casos edge de modifyNeed", () => {
+    it("debe limitar necesidad entre 0 y 100", () => {
+      needsSystem.initializeEntityNeeds("entity-27");
+      needsSystem.modifyNeed("entity-27", "hunger", 150);
+      const needs = needsSystem.getEntityNeeds("entity-27");
+      expect(needs?.hunger).toBe(100);
+      
+      needsSystem.modifyNeed("entity-27", "hunger", -200);
+      const needs2 = needsSystem.getEntityNeeds("entity-27");
+      expect(needs2?.hunger).toBe(0);
+    });
+
+    it("debe retornar false para necesidad inexistente", () => {
+      needsSystem.initializeEntityNeeds("entity-28");
+      const result = needsSystem.modifyNeed("entity-28", "nonexistent", 10);
+      expect(result).toBe(false);
+    });
+
+    it("debe retornar false para entidad inexistente", () => {
+      const result = needsSystem.modifyNeed("nonexistent", "hunger", 10);
+      expect(result).toBe(false);
+    });
+  });
 });
 
