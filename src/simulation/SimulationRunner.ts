@@ -23,6 +23,15 @@ import { EnhancedCraftingSystem } from "./systems/EnhancedCraftingSystem.js";
 import { CraftingSystem } from "./systems/CraftingSystem.js";
 import { AnimalSystem } from "./systems/AnimalSystem.js";
 import { ItemGenerationSystem } from "./systems/ItemGenerationSystem.js";
+import { ReputationSystem } from "./systems/ReputationSystem.js";
+import { ResearchSystem } from "./systems/ResearchSystem.js";
+import { RecipeDiscoverySystem } from "./systems/RecipeDiscoverySystem.js";
+import { QuestSystem } from "./systems/QuestSystem.js";
+import { TaskSystem } from "./systems/TaskSystem.js";
+import { TradeSystem } from "./systems/TradeSystem.js";
+import { MarriageSystem } from "./systems/MarriageSystem.js";
+import { ConflictResolutionSystem } from "./systems/ConflictResolutionSystem.js";
+import { NormsSystem } from "./systems/NormsSystem.js";
 import { simulationEvents, GameEventNames } from "./events.js";
 import { CombatSystem } from "./systems/CombatSystem.js";
 import type {
@@ -69,6 +78,15 @@ export class SimulationRunner {
   private animalSystem: AnimalSystem;
   private itemGenerationSystem: ItemGenerationSystem;
   private combatSystem: CombatSystem;
+  private reputationSystem: ReputationSystem;
+  private researchSystem: ResearchSystem;
+  private recipeDiscoverySystem: RecipeDiscoverySystem;
+  private questSystem: QuestSystem;
+  private taskSystem: TaskSystem;
+  private tradeSystem: TradeSystem;
+  private marriageSystem: MarriageSystem;
+  private conflictResolutionSystem: ConflictResolutionSystem;
+  private normsSystem: NormsSystem;
 
   constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
     this.state = initialState ?? createInitialGameState();
@@ -144,6 +162,15 @@ export class SimulationRunner {
       this.lifeCycleSystem,
       this.socialSystem,
     );
+    this.reputationSystem = new ReputationSystem(this.state);
+    this.researchSystem = new ResearchSystem(this.state);
+    this.recipeDiscoverySystem = new RecipeDiscoverySystem(this.state);
+    this.questSystem = new QuestSystem(this.state);
+    this.taskSystem = new TaskSystem(this.state);
+    this.tradeSystem = new TradeSystem(this.state);
+    this.marriageSystem = new MarriageSystem(this.state);
+    this.conflictResolutionSystem = new ConflictResolutionSystem(this.state);
+    this.normsSystem = new NormsSystem(this.state);
   }
 
   public initializeWorldResources(worldConfig: { width: number; height: number; tileSize: number; biomeMap: string[][] }): void {
@@ -222,8 +249,16 @@ export class SimulationRunner {
     this.animalSystem.update(scaledDelta);
     this.itemGenerationSystem.update(scaledDelta);
     this.combatSystem.update(scaledDelta);
+    this.reputationSystem.update();
+    this.questSystem.update();
+    this.taskSystem.update();
+    this.tradeSystem.update();
+    this.marriageSystem.update();
+    this.conflictResolutionSystem.update();
+    // NormsSystem is event-driven, no tick needed
     // Genealogy usually updates on events, but if it has a tick:
     // this.genealogySystem.update(scaledDelta);
+    // ResearchSystem and RecipeDiscoverySystem are event-driven, no tick needed
 
     this.tickCounter += 1;
     const snapshot = this.getSnapshot();
