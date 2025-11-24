@@ -8,8 +8,8 @@ Estos sistemas existían en el monolito y son esenciales para la simulación, pe
 
 | Sistema | Estado | Impacto |
 | :--- | :--- | :--- |
-| **MovementSystem** | ❌ **FALTANTE** | Los agentes no actualizarán su posición física en el servidor. La IA puede decidir moverse, pero la ejecución del movimiento no ocurre. |
-| **TrailSystem** | ❌ **FALTANTE** | Lógica de rastros (huellas, caminos) perdida. Puede afectar la navegación o mecánicas de rastreo. |
+| **MovementSystem** | ✅ | Migrado y ahora responde a `AGENT_COMMAND` para mover/detener agentes desde el frontend. |
+| **TrailSystem** | ✅ | Lógica de rastros disponible en backend; el frontend la consume vía snapshots. |
 
 ## 📋 Checklist de Sistemas
 
@@ -95,9 +95,14 @@ Estos sistemas son puramente visuales y es correcto que permanezcan solo en el F
 *   `VisualDiversityCoordinator`
 *   `WaterRipplePipeline`
 
+## 🔄 Integración Backend/Frontend
+
+- **Puente de comandos**: `AGENT_COMMAND`, `ANIMAL_COMMAND`, `FORCE_EMERGENCE_EVALUATION`, y nuevos comandos de construcción ya son atendidos por el backend.
+- **Snapshots enriquecidos**: Los adaptadores de entidades, necesidades, economía, social, edificios, tiempo y emergencia ahora leen directamente `snapshot.state`, garantizando que los datos del servidor lleguen al cliente aun sin eventos dedicados.
+- **Compatibilidad**: Se mantienen caídas amigables para payloads antiguos mientras el frontend termina de actualizarse.
+
 ## 📝 Acciones Recomendadas
 
-1.  **Implementar `MovementSystem` en Backend**: Es urgente portar la lógica de movimiento (actualización de coordenadas `x, y` basada en velocidad y delta time) al Backend. Sin esto, los agentes estarán estáticos lógicamente aunque la IA intente moverlos.
-2.  **Revisar `TrailSystem`**: Decidir si la lógica de rastros (impacto en gameplay) es necesaria en Backend o si se queda como efecto visual.
-3.  **Verificar `AgingSystem`**: Confirmar que toda la lógica de envejecimiento está cubierta en `LifeCycleSystem`.
-4.  **Sincronización**: Asegurar que los `Client*System` en Frontend estén recibiendo correctamente los estados del Backend (especialmente posiciones si se arregla el movimiento).
+1.  **Probar comandos de control**: Validar `AGENT_COMMAND`, `ANIMAL_COMMAND` y `BUILDING_COMMAND` desde la UI para asegurar que las nuevas rutas funcionan (mover agentes, spawnear animales, encolar construcciones).
+2.  **Monitorear snapshots**: Revisar que los adaptadores (social, economía, edificios, tiempo, emergencia) reaccionan correctamente ante cambios en `snapshot.state` y eventos agregados.
+3.  **Documentar payloads**: Actualizar la guía de integración para reflejar los nuevos nombres de campos (`teacherId`, `studentId`, `buildingType`, etc.) y evitar regresiones en futuros clientes.

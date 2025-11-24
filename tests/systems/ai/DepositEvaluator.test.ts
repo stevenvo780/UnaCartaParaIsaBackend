@@ -122,7 +122,7 @@ describe("DepositEvaluator", () => {
     it("debe considerar personalidad conscientiousness para umbral", () => {
       aiState.personality.conscientiousness = 0.2; // Baja conciencia
       context.getAgentInventory = () => ({
-        wood: 70,
+        wood: 50,
         stone: 0,
         food: 0,
         water: 0,
@@ -130,7 +130,8 @@ describe("DepositEvaluator", () => {
       });
       const goals = evaluateDepositGoals(context, aiState);
       // Con baja conciencia, el umbral es más alto (0.8 - 0.2*0.3 = 0.74)
-      // 70/100 = 0.7, que es menor que 0.74, así que no debería depositar
+      // El umbral mínimo es depositThreshold * 0.75 = 0.74 * 0.75 = 0.555
+      // 50/100 = 0.5, que es menor que 0.555, así que no debería depositar
       expect(goals.length).toBe(0);
     });
 
