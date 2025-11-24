@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
     "outDir": "./dist",
     "rootDir": "./src",
     "baseUrl": "./src",
@@ -22,7 +22,15 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "paths": {
+      "@/*": ["./*"],
+      "@/application/*": ["./application/*"],
+      "@/domain/*": ["./domain/*"],
+      "@/infrastructure/*": ["./infrastructure/*"],
+      "@/shared/*": ["./shared/*"],
+      "@/config/*": ["./config/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"]

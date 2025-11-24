@@ -1,5 +1,5 @@
-import type { GameResources, GameState } from "../domain/types/game-types";
-import type { AgentTraits } from "../domain/types/simulation/agents";
+import type { GameResources, GameState } from "../../../domain/types/game-types";
+import type { AgentTraits } from "../simulation/agents";
 
 export type ResourcesState = NonNullable<GameState["resources"]>;
 

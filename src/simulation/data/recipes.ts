@@ -1,4 +1,4 @@
-import type { CraftingRecipe } from "../types/crafting.js";
+import type { CraftingRecipe } from "../../domain/types/simulation/crafting";
 
 export const BASIC_RECIPES: CraftingRecipe[] = [
   {

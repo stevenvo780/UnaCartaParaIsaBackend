@@ -1,4 +1,4 @@
-import type { Weapon, WeaponId } from "../types/combat.js";
+import type { Weapon, WeaponId } from "../../domain/types/simulation/combat";
 
 export const WEAPON_CATALOG: Record<WeaponId, Weapon> = {
   unarmed: {
