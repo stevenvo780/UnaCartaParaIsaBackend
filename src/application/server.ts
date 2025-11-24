@@ -55,9 +55,37 @@ simulationWss.on("connection", (ws: WebSocket) => {
     }),
   );
 
-  ws.on("message", (data: string) => {
+  ws.on("message", (data: Buffer) => {
     try {
-      const command = JSON.parse(data.toString()) as SimulationCommand;
+      const message = data.toString();
+      // Limit message size to prevent DoS
+      if (message.length > 10000) {
+        ws.send(
+          JSON.stringify({
+            type: "ERROR",
+            message: "Message too large",
+          }),
+        );
+        return;
+      }
+
+      const parsed = JSON.parse(message) as unknown;
+      if (
+        !parsed ||
+        typeof parsed !== "object" ||
+        !("type" in parsed) ||
+        typeof (parsed as { type: unknown }).type !== "string"
+      ) {
+        ws.send(
+          JSON.stringify({
+            type: "ERROR",
+            message: "Invalid command format",
+          }),
+        );
+        return;
+      }
+
+      const command = parsed as SimulationCommand;
       const accepted = simulationRunner.enqueueCommand(command);
       if (!accepted) {
         ws.send(
@@ -65,7 +93,15 @@ simulationWss.on("connection", (ws: WebSocket) => {
         );
       }
     } catch (err) {
-      console.error("Failed to parse command:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown error";
+      console.error("Failed to parse command:", errorMessage);
+      ws.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: "Failed to parse command",
+        }),
+      );
     }
   });
 });

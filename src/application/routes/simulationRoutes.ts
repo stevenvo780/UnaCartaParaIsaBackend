@@ -5,9 +5,7 @@ import type { SimulationCommand } from "@/shared/types/commands/SimulationComman
 
 const router = Router();
 
-function validateSimulationCommand(
-  body: unknown,
-): body is SimulationCommand {
+function validateSimulationCommand(body: unknown): body is SimulationCommand {
   if (!body || typeof body !== "object") {
     return false;
   }
@@ -15,7 +13,9 @@ function validateSimulationCommand(
   return typeof command.type === "string" && command.type.length > 0;
 }
 
-router.post("/api/sim/save", async (_req: Request, res: Response): Promise<void> => {
+router.post(
+  "/api/sim/save",
+  async (_req: Request, res: Response): Promise<void> => {
   try {
     const snapshot = simulationRunner.getSnapshot();
     const saveData = {
