@@ -178,7 +178,7 @@ export class LifeCycleSystem extends EventEmitter {
     this.pendingHousingAssignments.add(agentId);
   }
 
-  private processHousingAssignments(now: number): void {
+  private processHousingAssignments(): void {
     if (!this.householdSystem) return;
 
     // Process a few assignments per tick

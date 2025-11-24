@@ -74,17 +74,16 @@ export class CrisisPredictorSystem {
   private computeIndicators(_now: number): CrisisIndicator[] {
     // now parameter kept for API compatibility
     void _now;
-    void _now;
     const needs = this.needsSystem.getAllNeeds();
-    const totalAgents = needs.length || 1;
-
     const totalAgents = needs.size || 1;
 
+    let hungerStress = 0;
     let thirstStress = 0;
     let energyStress = 0;
     let criticalCount = 0;
 
     for (const [entityId, data] of needs) {
+      if (data.hunger > 80) hungerStress++;
       if (data.thirst > 80) thirstStress++;
       if (data.energy < 25) energyStress++;
 

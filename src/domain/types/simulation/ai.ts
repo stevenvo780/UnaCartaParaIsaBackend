@@ -7,7 +7,8 @@ export type GoalType =
   | "craft"
   | "deposit"
   | "assist"
-  | "construction";
+  | "construction"
+  | "idle";
 
 export type ActionType =
   | "move"
@@ -43,6 +44,7 @@ export interface AIState {
   offDuty: boolean;
   isInCombat?: boolean;
   lastActionTime?: number;
+  currentAction?: AgentAction | null;
 }
 
 export interface AgentPersonality {

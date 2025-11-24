@@ -296,7 +296,6 @@ export class SimulationRunner {
     // Spawn initial agents if none exist
     if (this.state.agents.length === 0) {
       this.lifeCycleSystem.spawnAgent({
-        requestId: "isa",
         name: "Isa",
         sex: "female",
         traits: {
@@ -308,7 +307,6 @@ export class SimulationRunner {
       });
 
       this.lifeCycleSystem.spawnAgent({
-        requestId: "stev",
         name: "Stev",
         sex: "male",
         traits: {
@@ -548,7 +546,7 @@ export class SimulationRunner {
           this.lifeCycleSystem.spawnAgent(command.payload);
           break;
         case "KILL_AGENT":
-          this.lifeCycleSystem.killAgent(command.agentId);
+          this.lifeCycleSystem.removeAgent(command.agentId);
           break;
         case "NEEDS_COMMAND":
           this.handleNeedsCommand(command);

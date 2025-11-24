@@ -7,12 +7,10 @@ import {
   AgentMemory,
   AgentPersonality,
   GoalType,
-  AgentProfile,
-  AgentTraits,
-  LifeStage,
 } from "../../types/simulation/ai";
-import { NeedsEvaluator } from "../evaluators/NeedsEvaluator";
-import { OpportunitiesEvaluator } from "../evaluators/OpportunitiesEvaluator";
+import type { AgentProfile, AgentTraits, LifeStage } from "../../types/simulation/agents";
+import { NeedsEvaluator } from "./ai/NeedsEvaluator";
+import { OpportunitiesEvaluator } from "./ai/OpportunitiesEvaluator";
 import { GameEventNames } from "../core/events";
 import { simulationEvents } from "../core/events";
 import type { NeedsSystem } from "./NeedsSystem";

@@ -279,12 +279,15 @@ export class EmergenceSystem extends EventEmitter {
     if (!this.needsSystem) return null;
 
     const allNeeds = this.needsSystem.getAllNeeds();
-    const allNeedsValues = Array.from(allNeeds.values());
+    const allNeedsValues = Array.from(allNeeds.values()) as EntityNeedsData[];
     if (allNeedsValues.length === 0) return null;
 
     const criticalCount = allNeedsValues.filter((n) => {
-      const needs = n.needs;
-      return needs.hunger > 80 || needs.thirst > 80 || needs.energy < 20;
+      return (
+        n.hunger > 80 ||
+        n.thirst > 80 ||
+        n.energy < 20
+      );
     }).length;
 
     const criticalRatio = criticalCount / allNeedsValues.length;

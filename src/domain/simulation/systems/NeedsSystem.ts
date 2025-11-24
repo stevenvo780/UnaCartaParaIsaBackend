@@ -103,7 +103,7 @@ export class NeedsSystem extends EventEmitter {
     this.lastUpdate = now;
 
     // Process all entities
-    for (const [entityId, needs] of this.entityNeeds.entries()) {
+    for (const [entityId, needs] of Array.from(this.entityNeeds.entries())) {
       // 1. Apply Decay
       this.applyNeedDecay(needs, dtSeconds, entityId);
 
@@ -247,7 +247,7 @@ export class NeedsSystem extends EventEmitter {
   }
 
   private processRespawnQueue(now: number): void {
-    for (const [entityId, respawnTime] of this.respawnQueue.entries()) {
+    for (const [entityId, respawnTime] of Array.from(this.respawnQueue.entries())) {
       if (now >= respawnTime) {
         this.respawnEntity(entityId);
         this.respawnQueue.delete(entityId);
@@ -414,7 +414,7 @@ export class NeedsSystem extends EventEmitter {
   }
 
   private cleanZoneCache(now: number): void {
-    for (const [key, cache] of this.zoneCache.entries()) {
+    for (const [key, cache] of Array.from(this.zoneCache.entries())) {
       if (now - cache.timestamp > this.ZONE_CACHE_TTL) {
         this.zoneCache.delete(key);
       }
