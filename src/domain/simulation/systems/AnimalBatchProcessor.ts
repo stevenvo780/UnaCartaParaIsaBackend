@@ -1,4 +1,4 @@
-import type { Animal, AnimalNeeds } from "../../types/simulation/animals";
+import type { Animal } from "../../types/simulation/animals";
 
 /**
  * Procesador batch optimizado para animales

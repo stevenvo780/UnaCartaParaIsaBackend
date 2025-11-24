@@ -94,11 +94,14 @@ export class CombatSystem {
     this.spatialGrid.clear();
     const entitiesById = new Map<string, SimulationEntity>();
 
-    for (const entity of entities) {
-      if (entity.isDead) continue;
-      if (!entity.position) continue;
+    // Filtrar entidades vivas con posición
+    const validEntities = entities.filter(
+      (e) => !e.isDead && e.position,
+    );
+
+    for (const entity of validEntities) {
       entitiesById.set(entity.id, entity);
-      this.spatialGrid.insert(entity.id, entity.position);
+      this.spatialGrid.insert(entity.id, entity.position!);
     }
 
     // Add animals as potential targets
@@ -107,12 +110,14 @@ export class CombatSystem {
       for (const [animalId, animal] of animals) {
         if (animal.isDead || !animal.position) continue;
         // Create a temporary entity representation for animals
+        const animalX = animal.position.x;
+        const animalY = animal.position.y;
         const animalEntity: SimulationEntity = {
           id: animalId,
           type: "animal",
-          x: animal.position.x,
-          y: animal.position.y,
-          position: animal.position,
+          x: animalX,
+          y: animalY,
+          position: { x: animalX, y: animalY },
           isDead: false,
           tags: ["animal"],
           stats: {
@@ -125,16 +130,70 @@ export class CombatSystem {
       }
     }
 
-    for (const attacker of entities) {
-      if (attacker.isDead || !attacker.position) continue;
+    // Optimización: procesar en batch si hay muchos atacantes
+    const potentialAttackers = validEntities.filter(
+      (e) => e.position && !e.isDead,
+    );
+
+    if (potentialAttackers.length > 10) {
+      this.updateBatch(potentialAttackers, entitiesById, now);
+    } else {
+      // Procesamiento tradicional para pocos atacantes
+      for (const attacker of potentialAttackers) {
+        if (!attacker.position) continue;
+        const weaponId = this.getEquipped(attacker.id);
+        const weapon = getWeapon(weaponId);
+
+        const nearby = this.spatialGrid
+          .queryRadius(
+            attacker.position,
+            Math.max(this.config.engagementRadius, weapon.range),
+          )
+          .filter((candidate) => candidate.entity !== attacker.id)
+          .map((candidate) => entitiesById.get(candidate.entity))
+          .filter((candidate): candidate is SimulationEntity =>
+            Boolean(candidate && !candidate.isDead),
+          );
+
+        for (const target of nearby) {
+          if (!this.shouldAttack(attacker, target)) continue;
+          if (!this.isOffCooldown(attacker.id, weaponId, now)) continue;
+
+          this.resolveAttack(attacker, target, weaponId, now);
+          this.lastAttackAt.set(attacker.id, now);
+          break;
+        }
+      }
+    }
+  }
+
+  /**
+   * Actualización optimizada en batch para muchos atacantes
+   */
+  private updateBatch(
+    attackers: SimulationEntity[],
+    entitiesById: Map<string, SimulationEntity>,
+    now: number,
+  ): void {
+    // Preparar queries en batch usando SpatialGrid optimizado
+    const queries = attackers.map((attacker) => {
+      if (!attacker.position) return null;
       const weaponId = this.getEquipped(attacker.id);
       const weapon = getWeapon(weaponId);
+      return {
+        center: attacker.position,
+        radius: Math.max(this.config.engagementRadius, weapon.range),
+        attacker,
+      };
+    }).filter((q): q is NonNullable<typeof q> => q !== null);
 
+    // Procesar cada atacante
+    for (const query of queries) {
+      const { attacker, center, radius } = query;
+
+      // Usar queryRadius optimizado del SpatialGrid
       const nearby = this.spatialGrid
-        .queryRadius(
-          attacker.position,
-          Math.max(this.config.engagementRadius, weapon.range),
-        )
+        .queryRadius(center, radius)
         .filter((candidate) => candidate.entity !== attacker.id)
         .map((candidate) => entitiesById.get(candidate.entity))
         .filter((candidate): candidate is SimulationEntity =>
@@ -143,6 +202,8 @@ export class CombatSystem {
 
       for (const target of nearby) {
         if (!this.shouldAttack(attacker, target)) continue;
+
+        const weaponId = this.getEquipped(attacker.id);
         if (!this.isOffCooldown(attacker.id, weaponId, now)) continue;
 
         this.resolveAttack(attacker, target, weaponId, now);
