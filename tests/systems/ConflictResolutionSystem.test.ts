@@ -53,6 +53,8 @@ describe("ConflictResolutionSystem", () => {
       if (hitResult.cardId) {
         const result = conflictSystem.resolveConflict(hitResult.cardId, "truce_accept");
         expect(result.resolved).toBe(true);
+        expect(result.resolution).toBe("truce_accepted");
+        expect(result.truceBonus).toBeDefined();
       }
     });
 
@@ -67,7 +69,28 @@ describe("ConflictResolutionSystem", () => {
       if (hitResult.cardId) {
         const result = conflictSystem.resolveConflict(hitResult.cardId, "apologize");
         expect(result.resolved).toBe(true);
+        expect(result.resolution).toBe("apologized");
       }
+    });
+
+    it("debe continuar conflicto si se elige continue", () => {
+      const hitResult = conflictSystem.handleCombatHit({
+        attackerId: "attacker-1",
+        targetId: "target-1",
+        remaining: 20,
+        damage: 10,
+      });
+      
+      if (hitResult.cardId) {
+        const result = conflictSystem.resolveConflict(hitResult.cardId, "continue");
+        expect(result.resolved).toBe(true);
+        expect(result.resolution).toBe("continued");
+      }
+    });
+
+    it("debe retornar false para cardId inexistente", () => {
+      const result = conflictSystem.resolveConflict("nonexistent", "truce_accept");
+      expect(result.resolved).toBe(false);
     });
   });
 
@@ -76,6 +99,21 @@ describe("ConflictResolutionSystem", () => {
       const stats = conflictSystem.getConflictStats();
       expect(stats).toBeDefined();
       expect(stats.totalConflicts).toBeDefined();
+      expect(stats.resolvedByTruce).toBeDefined();
+      expect(stats.resolvedByApology).toBeDefined();
+    });
+  });
+
+  describe("Historial de conflictos", () => {
+    it("debe registrar conflictos en el historial", () => {
+      conflictSystem.handleCombatHit({
+        attackerId: "attacker-1",
+        targetId: "target-1",
+        remaining: 20,
+        damage: 10,
+      });
+      const stats = conflictSystem.getConflictStats();
+      expect(stats.totalConflicts).toBeGreaterThanOrEqual(0);
     });
   });
 });

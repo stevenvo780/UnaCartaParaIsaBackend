@@ -152,6 +152,23 @@ export class QuestSystem {
         }
       });
     });
+
+    // Escribir estado en GameState para sincronización con frontend
+    if (!this.gameState.quests) {
+      this.gameState.quests = {
+        active: [],
+        available: [],
+        completed: [],
+        totalCompleted: 0,
+        totalExperience: 0,
+      };
+    }
+
+    this.gameState.quests.active = this.getActiveQuests();
+    this.gameState.quests.available = this.getAvailableQuests();
+    this.gameState.quests.completed = this.getCompletedQuests();
+    this.gameState.quests.totalCompleted = this.questProgress.totalQuestsCompleted;
+    this.gameState.quests.totalExperience = this.questProgress.totalExperienceGained;
   }
 
   public startQuest(questId: string): { success: boolean; event?: QuestEvent } {

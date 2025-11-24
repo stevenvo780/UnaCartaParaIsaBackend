@@ -330,6 +330,34 @@ export class ResearchSystem {
     return lineages;
   }
 
+  public update(): void {
+    // Escribir estado en GameState para sincronización con frontend
+    if (!this.gameState.research) {
+      this.gameState.research = {
+        techTree: { nodes: [], connections: [] },
+        lineages: [],
+      };
+    }
+
+    // Obtener el primer lineage disponible o crear uno por defecto
+    const lineageIds = Array.from(this.lineageResearch.keys());
+    if (lineageIds.length === 0) {
+      // Si no hay lineages, usar un ID por defecto
+      const defaultLineageId = "default";
+      if (!this.lineageResearch.has(defaultLineageId)) {
+        this.initializeLineage(defaultLineageId);
+      }
+      lineageIds.push(defaultLineageId);
+    }
+
+    // Actualizar tech tree del primer lineage (o se puede extender para múltiples)
+    const primaryLineageId = lineageIds[0];
+    this.gameState.research.techTree = this.getTechTreeState(primaryLineageId);
+
+    // Actualizar stats de todos los lineages
+    this.gameState.research.lineages = this.getAllLineagesStats();
+  }
+
   public cleanup(): void {
     this.lineageResearch.clear();
     this.unlockedCategories.clear();

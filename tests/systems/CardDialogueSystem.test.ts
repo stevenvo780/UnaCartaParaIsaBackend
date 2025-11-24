@@ -9,34 +9,49 @@ describe("CardDialogueSystem", () => {
   let gameState: GameState;
   let needsSystem: NeedsSystem;
   let lifeCycleSystem: LifeCycleSystem;
-  let cardDialogueSystem: CardDialogueSystem;
+  let cardSystem: CardDialogueSystem;
 
   beforeEach(() => {
-    gameState = createMockGameState();
+    gameState = createMockGameState({
+      entities: [
+        {
+          id: "agent-1",
+          position: { x: 100, y: 100 },
+          type: "agent",
+        },
+      ],
+    });
     lifeCycleSystem = new LifeCycleSystem(gameState);
     needsSystem = new NeedsSystem(gameState, lifeCycleSystem);
-    cardDialogueSystem = new CardDialogueSystem(gameState, needsSystem);
+    cardSystem = new CardDialogueSystem(gameState, needsSystem);
   });
 
   describe("Inicialización", () => {
     it("debe inicializar correctamente", () => {
-      expect(cardDialogueSystem).toBeDefined();
+      expect(cardSystem).toBeDefined();
     });
   });
 
   describe("Actualización del sistema", () => {
     it("debe actualizar sin errores", () => {
-      expect(() => cardDialogueSystem.update(1000)).not.toThrow();
+      expect(() => cardSystem.update(1000)).not.toThrow();
+    });
+
+    it("debe generar tarjetas después del intervalo", () => {
+      needsSystem.initializeEntityNeeds("agent-1");
+      cardSystem.update(31000); // Más del GENERATION_INTERVAL
+      const snapshot = cardSystem.getSnapshot();
+      expect(snapshot).toBeDefined();
     });
   });
 
-  describe("Snapshot", () => {
+  describe("getSnapshot", () => {
     it("debe retornar snapshot del estado", () => {
-      const snapshot = cardDialogueSystem.getSnapshot();
+      const snapshot = cardSystem.getSnapshot();
       expect(snapshot).toBeDefined();
       expect(Array.isArray(snapshot.active)).toBe(true);
       expect(Array.isArray(snapshot.history)).toBe(true);
+      expect(snapshot.queueSize).toBeDefined();
     });
   });
 });
-

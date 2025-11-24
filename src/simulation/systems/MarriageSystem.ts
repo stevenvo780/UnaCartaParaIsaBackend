@@ -194,6 +194,26 @@ export class MarriageSystem {
         }
       }
     }
+
+    // Escribir estado en GameState para sincronización con frontend
+    if (!this.gameState.marriage) {
+      this.gameState.marriage = {
+        groups: [],
+        proposals: [],
+        stats: {
+          totalMarriages: 0,
+          totalMembers: 0,
+          avgGroupSize: 0,
+          avgCohesion: 0,
+          largestGroup: 0,
+          activeProposals: 0,
+        },
+      };
+    }
+
+    this.gameState.marriage.groups = this.getAllMarriageGroups();
+    this.gameState.marriage.proposals = this.getPendingProposals();
+    this.gameState.marriage.stats = this.getMarriageStats();
   }
 
   public getMarriageGroup(groupId: string): MarriageGroup | undefined {

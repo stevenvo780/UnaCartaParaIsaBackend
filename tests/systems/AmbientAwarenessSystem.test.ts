@@ -9,34 +9,65 @@ describe("AmbientAwarenessSystem", () => {
   let gameState: GameState;
   let needsSystem: NeedsSystem;
   let lifeCycleSystem: LifeCycleSystem;
-  let ambientAwarenessSystem: AmbientAwarenessSystem;
+  let ambientSystem: AmbientAwarenessSystem;
 
   beforeEach(() => {
-    gameState = createMockGameState();
+    gameState = createMockGameState({
+      entities: [
+        {
+          id: "agent-1",
+          position: { x: 100, y: 100 },
+          type: "agent",
+        },
+      ],
+    });
     lifeCycleSystem = new LifeCycleSystem(gameState);
     needsSystem = new NeedsSystem(gameState, lifeCycleSystem);
-    ambientAwarenessSystem = new AmbientAwarenessSystem(gameState, needsSystem);
+    ambientSystem = new AmbientAwarenessSystem(gameState, needsSystem);
   });
 
   describe("Inicialización", () => {
     it("debe inicializar correctamente", () => {
-      expect(ambientAwarenessSystem).toBeDefined();
+      expect(ambientSystem).toBeDefined();
     });
   });
 
   describe("Actualización del sistema", () => {
     it("debe actualizar sin errores", () => {
-      expect(() => ambientAwarenessSystem.update(1000)).not.toThrow();
+      expect(() => ambientSystem.update(1000)).not.toThrow();
+    });
+
+    it("debe calcular wellbeing basado en necesidades", () => {
+      needsSystem.initializeEntityNeeds("agent-1");
+      ambientSystem.update(1000);
+      const snapshot = ambientSystem.getSnapshot();
+      expect(snapshot.wellbeing).toBeDefined();
+      expect(snapshot.wellbeing.average).toBeGreaterThanOrEqual(0);
+    });
+
+    it("debe calcular estado ambiental basado en wellbeing", () => {
+      needsSystem.initializeEntityNeeds("agent-1");
+      ambientSystem.update(1000);
+      const snapshot = ambientSystem.getSnapshot();
+      expect(snapshot.ambientState).toBeDefined();
+      expect(snapshot.ambientState.musicMood).toBeDefined();
     });
   });
 
-  describe("Snapshot", () => {
+  describe("getSnapshot", () => {
     it("debe retornar snapshot del estado", () => {
-      const snapshot = ambientAwarenessSystem.getSnapshot();
+      const snapshot = ambientSystem.getSnapshot();
       expect(snapshot).toBeDefined();
       expect(snapshot.wellbeing).toBeDefined();
       expect(snapshot.ambientState).toBeDefined();
+      expect(snapshot.lastUpdated).toBeDefined();
+    });
+
+    it("debe actualizar timestamp en snapshot", () => {
+      const snapshot1 = ambientSystem.getSnapshot();
+      ambientSystem.update(1000);
+      const snapshot2 = ambientSystem.getSnapshot();
+      expect(snapshot2.lastUpdated).toBeGreaterThanOrEqual(snapshot1.lastUpdated);
     });
   });
 });
-

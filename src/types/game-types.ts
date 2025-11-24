@@ -15,6 +15,15 @@ import type { AgentRole } from "../simulation/types/roles.js";
 import type { LegendRecord } from "../simulation/types/legends.js";
 import type { FamilyTree } from "../simulation/types/genealogy.js";
 import type { Inventory } from "../simulation/types/economy.js";
+import type { TradeOffer, TradeRecord } from "../simulation/types/trade.js";
+import type { MarriageGroup, MarriageProposal } from "../simulation/types/marriage.js";
+import type { Quest } from "../simulation/types/quests.js";
+import type { ActiveConflict, ConflictRecord, ConflictStats } from "../simulation/types/conflict.js";
+import type { Animal } from "../simulation/types/animals.js";
+import type { TechTreeState } from "../simulation/types/research.js";
+import type { CraftingRecipe } from "../simulation/types/recipes.js";
+import type { SerializedReputationData } from "../simulation/types/reputation.js";
+import type { NormViolation, SanctionRecord, NormComplianceStats } from "../simulation/types/norms.js";
 
 export interface Position {
   x: number;
@@ -160,6 +169,101 @@ export interface MapElement {
   properties?: Record<string, unknown>;
 }
 
+export interface TradeState {
+  offers: TradeOffer[];
+  history: TradeRecord[];
+  stats: {
+    activeOffers: number;
+    totalTrades: number;
+    avgTradeValue: number;
+  };
+}
+
+export interface MarriageState {
+  groups: MarriageGroup[];
+  proposals: Array<{
+    targetId: string;
+    proposerId: string;
+    timestamp: number;
+  }>;
+  stats: {
+    totalMarriages: number;
+    totalMembers: number;
+    avgGroupSize: number;
+    avgCohesion: number;
+    largestGroup: number;
+    activeProposals: number;
+  };
+}
+
+export interface QuestState {
+  active: Quest[];
+  available: Quest[];
+  completed: Quest[];
+  totalCompleted: number;
+  totalExperience: number;
+}
+
+export interface ConflictState {
+  active: ActiveConflict[];
+  history: ConflictRecord[];
+  stats: ConflictStats;
+}
+
+export interface ResearchState {
+  techTree: TechTreeState;
+  lineages: Array<{
+    lineageId: string;
+    stats: {
+      totalCategories: number;
+      unlockedCategories: number;
+      completedCategories: number;
+      totalProgress: number;
+      specializations: string[];
+    };
+  }>;
+}
+
+export interface RecipeState {
+  discovered: string[];
+  agentRecipes: Record<string, Array<{
+    recipeId: string;
+    discoveredAt: number;
+    timesUsed: number;
+    successRate: number;
+    proficiency: number;
+  }>>;
+}
+
+export interface ReputationState {
+  data: SerializedReputationData;
+  stats: {
+    agents: number;
+    avgReputation: number;
+    trustEdges: number;
+  };
+}
+
+export interface NormsState {
+  violations: NormViolation[];
+  sanctions: SanctionRecord[];
+  stats: NormComplianceStats;
+  truces: Array<{
+    cardId: string;
+    attackerId: string;
+    targetId: string;
+    expiresAt: number;
+  }>;
+}
+
+export interface AnimalState {
+  animals: Animal[];
+  stats: {
+    total: number;
+    byType: Record<string, number>;
+  };
+}
+
 export interface GameState {
   agents: AgentProfile[];
   entities: SimulationEntity[];
@@ -184,6 +288,15 @@ export interface GameState {
   crisisForecast?: CrisisSnapshot;
   ambientMood?: AmbientSnapshot;
   dialogueState?: DialogueStateSnapshot;
+  trade?: TradeState;
+  marriage?: MarriageState;
+  quests?: QuestState;
+  conflicts?: ConflictState;
+  research?: ResearchState;
+  recipes?: RecipeState;
+  reputation?: ReputationState;
+  norms?: NormsState;
+  animals?: AnimalState;
 
   // Legacy/Frontend fields (kept for compatibility if needed)
   resonance?: number;

@@ -179,6 +179,23 @@ export class TradeSystem {
     if (Date.now() % 60000 < 100) {
       this.cleanupExpiredOffers();
     }
+
+    // Escribir estado en GameState para sincronización con frontend
+    if (!this.gameState.trade) {
+      this.gameState.trade = {
+        offers: [],
+        history: [],
+        stats: {
+          activeOffers: 0,
+          totalTrades: 0,
+          avgTradeValue: 0,
+        },
+      };
+    }
+
+    this.gameState.trade.offers = this.getAllOffers();
+    this.gameState.trade.history = this.tradeHistory;
+    this.gameState.trade.stats = this.getTradeStats();
   }
 
   public getAllOffers(): TradeOffer[] {

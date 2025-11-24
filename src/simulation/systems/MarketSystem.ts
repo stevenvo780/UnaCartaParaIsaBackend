@@ -36,6 +36,23 @@ export class MarketSystem {
 
   public update(_delta: number): void {
     this.autoTradeAmongAgents();
+
+    // Escribir estado en GameState para sincronización con frontend
+    if (!this.state.market) {
+      this.state.market = {
+        orders: [],
+        transactions: [],
+        prices: {},
+      };
+    }
+
+    // Actualizar precios en el estado
+    const prices: Record<string, number> = {};
+    const resourceTypes: Array<"wood" | "stone" | "food" | "water"> = ["wood", "stone", "food", "water"];
+    for (const resource of resourceTypes) {
+      prices[resource] = this.getResourcePrice(resource);
+    }
+    this.state.market.prices = prices;
   }
 
   public getResourcePrice(resource: ResourceType): number {

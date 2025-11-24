@@ -63,6 +63,8 @@ describe("NormsSystem", () => {
       const stats = normsSystem.getNormCompliance();
       expect(stats).toBeDefined();
       expect(typeof stats).toBe("object");
+      expect(stats.totalViolations).toBeDefined();
+      expect(stats.complianceRate).toBeDefined();
     });
 
     it("debe retornar violaciones de normas", () => {
@@ -73,6 +75,22 @@ describe("NormsSystem", () => {
     it("debe retornar zonas protegidas", () => {
       const zones = normsSystem.getProtectedZones();
       expect(Array.isArray(zones)).toBe(true);
+    });
+
+    it("debe retornar sanciones recientes", () => {
+      const sanctions = normsSystem.getRecentSanctions();
+      expect(Array.isArray(sanctions)).toBe(true);
+    });
+
+    it("debe retornar actividad de guardias", () => {
+      const activity = normsSystem.getGuardActivity();
+      expect(Array.isArray(activity)).toBe(true);
+    });
+  });
+
+  describe("Actualización del sistema", () => {
+    it("debe actualizar sin errores", () => {
+      expect(() => normsSystem.update(1000)).not.toThrow();
     });
   });
 });

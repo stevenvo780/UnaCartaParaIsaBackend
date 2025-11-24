@@ -299,6 +299,33 @@ export class RecipeDiscoverySystem {
     return [...RECIPES_CATALOG];
   }
 
+  public update(): void {
+    // Escribir estado en GameState para sincronización con frontend
+    if (!this.gameState.recipes) {
+      this.gameState.recipes = {
+        discovered: [],
+        agentRecipes: {},
+      };
+    }
+
+    this.gameState.recipes.discovered = this.getGloballyDiscoveredRecipes();
+
+    // Convertir Map a objeto para serialización
+    const agentRecipesObj: Record<string, Array<{
+      recipeId: string;
+      discoveredAt: number;
+      timesUsed: number;
+      successRate: number;
+      proficiency: number;
+    }>> = {};
+
+    this.agentRecipes.forEach((recipeMap, agentId) => {
+      agentRecipesObj[agentId] = Array.from(recipeMap.values());
+    });
+
+    this.gameState.recipes.agentRecipes = agentRecipesObj;
+  }
+
   public removeAgent(agentId: string): void {
     this.agentRecipes.delete(agentId);
   }

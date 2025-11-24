@@ -156,6 +156,25 @@ export class ReputationSystem {
         : REPUTATION_CONFIG.initialValues.reputation;
     this.statsCache.trustEdges = trustEdges;
     this.statsCache.lastUpdate = now;
+
+    // Escribir estado en GameState para sincronización con frontend
+    if (!this.gameState.reputation) {
+      this.gameState.reputation = {
+        data: {
+          trust: [],
+          reputation: [],
+          reputationHistory: [],
+        },
+        stats: {
+          agents: 0,
+          avgReputation: 0.5,
+          trustEdges: 0,
+        },
+      };
+    }
+
+    this.gameState.reputation.data = this.serialize();
+    this.gameState.reputation.stats = this.getSystemStats();
   }
 
   public handleSocialRelationChanged(data: {

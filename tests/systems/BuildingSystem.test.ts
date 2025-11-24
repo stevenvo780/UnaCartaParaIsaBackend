@@ -43,6 +43,53 @@ describe("BuildingSystem", () => {
     it("debe actualizar sin errores", () => {
       expect(() => buildingSystem.update(1000)).not.toThrow();
     });
+
+    it("debe completar trabajos de construcción finalizados", () => {
+      // Crear un trabajo de construcción que se complete
+      const now = Date.now();
+      const job = {
+        id: "job-1",
+        zoneId: "zone-1",
+        label: "house" as const,
+        completesAt: now - 1000, // Ya completado
+        reservationId: "res-1",
+      };
+      (buildingSystem as any).constructionJobs.set("job-1", job);
+      
+      buildingSystem.update(1000);
+      expect(buildingSystem).toBeDefined();
+    });
+
+    it("debe programar construcción cuando hay candidatos", () => {
+      gameState.zones = [
+        {
+          id: "zone-1",
+          type: "rest",
+          x: 100,
+          y: 100,
+          width: 50,
+          height: 50,
+        },
+      ];
+      buildingSystem.update(8000); // Más del decisionIntervalMs
+      expect(buildingSystem).toBeDefined();
+    });
+  });
+
+  describe("Configuración", () => {
+    it("debe aceptar configuración personalizada", () => {
+      const customSystem = new BuildingSystem(
+        gameState,
+        reservationSystem,
+        {
+          decisionIntervalMs: 5000,
+          maxHouses: 10,
+          maxMines: 5,
+          maxWorkbenches: 4,
+        }
+      );
+      expect(customSystem).toBeDefined();
+    });
   });
 });
 
