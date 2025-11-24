@@ -132,25 +132,18 @@ export class LifeCycleSystem extends EventEmitter {
       logger.warn("LifeCycleSystem: DivineFavorSystem missing");
   }
 
-  public update(_deltaTimeMs: number): void {
-    const now = Date.now();
-    if (now - this.lastUpdate < 1000) {
-      this.checkDependencies(); // Ensure dependencies are checked at least once or periodically
-      return;
-    }
+  public update(deltaTimeMs: number): void {
+    const dtSec = deltaTimeMs / 1000;
 
-    const dtSec = (now - this.lastUpdate) / 1000;
-    this.lastUpdate = now;
-
-    // Resource consumption every 60s
-    if (now - this.lastResourceConsumption >= 60000) {
+    // Resource consumption every 60s (simulated time)
+    this.lastResourceConsumption += deltaTimeMs;
+    if (this.lastResourceConsumption >= 60000) {
       this.consumeResourcesPeriodically();
-      this.lastResourceConsumption = now;
+      this.lastResourceConsumption = 0;
     }
 
     const yearInc = dtSec / this.config.secondsPerYear;
     const agents = this.gameState.agents || [];
-    console.log(`[LifeCycleSystem] Updating ${agents.length} agents. dtSec=${dtSec}, yearInc=${yearInc}`);
 
     for (const agent of agents) {
       if (agent.immortal) {
@@ -161,7 +154,6 @@ export class LifeCycleSystem extends EventEmitter {
       }
 
       agent.ageYears += yearInc;
-      console.log(`[LifeCycleSystem] Agent ${agent.id} aged to ${agent.ageYears}`);
       const previousStage = agent.lifeStage;
       agent.lifeStage = this.getLifeStage(agent.ageYears);
 
@@ -175,7 +167,6 @@ export class LifeCycleSystem extends EventEmitter {
       }
 
       if (agent.ageYears > this.config.maxAge) {
-        console.log(`[LifeCycleSystem] Agent ${agent.id} died of old age (${agent.ageYears} > ${this.config.maxAge})`);
         this.removeAgent(agent.id);
       }
 
@@ -184,7 +175,7 @@ export class LifeCycleSystem extends EventEmitter {
       }
     }
 
-    this.tryBreeding(now);
+    this.tryBreeding(Date.now());
     this.processHousingAssignments();
   }
 

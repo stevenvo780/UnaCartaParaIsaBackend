@@ -8,7 +8,7 @@ export class TradeSystem {
   private tradeHistory: TradeRecord[] = [];
   private merchantReputation = new Map<string, number>();
   private inventorySystem?: InventorySystem;
-  
+
   // Background trade constants for automated trading between agents
   private readonly BACKGROUND_TRADE_INTERVAL = 30000; // 30 seconds
   private readonly BACKGROUND_TRADE_PROBABILITY = 0.1; // 10% chance per interval
@@ -186,7 +186,7 @@ export class TradeSystem {
 
   public update(): void {
     const now = Date.now();
-    
+
     // Cleanup expired offers periodically
     if (now % 60000 < 100) {
       this.cleanupExpiredOffers();

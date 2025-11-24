@@ -36,7 +36,6 @@ export class AISystem extends EventEmitter {
   private lastUpdate: number = 0;
   private priorityManager: PriorityManager;
 
-  // Dependencies
   private needsSystem?: NeedsSystem;
   private roleSystem?: RoleSystem;
   private worldResourceSystem?: WorldResourceSystem;
@@ -45,11 +44,9 @@ export class AISystem extends EventEmitter {
   private craftingSystem?: EnhancedCraftingSystem;
   private householdSystem?: HouseholdSystem;
 
-  // Phase 3: Memory Cleanup Tracking
   private _lastMemoryCleanupTime = 0;
-  private readonly MEMORY_CLEANUP_INTERVAL = 300000; // 5 minutes
+  private readonly MEMORY_CLEANUP_INTERVAL = 300000;
 
-  // Phase 4: Advanced Features
   private agentStrategies = new Map<
     string,
     "peaceful" | "tit_for_tat" | "bully"
@@ -57,7 +54,6 @@ export class AISystem extends EventEmitter {
   private playerControlledAgents = new Set<string>();
   private agentPriorities = new Map<string, "survival" | "normal" | "social">();
 
-  // Statistics
   private _decisionTimeTotalMs = 0;
   private _decisionCount = 0;
   private _goalsCompleted = 0;
@@ -135,7 +131,6 @@ export class AISystem extends EventEmitter {
       return;
     }
 
-    // Phase 3: Periodic Memory Cleanup
     if (now - this._lastMemoryCleanupTime >= this.MEMORY_CLEANUP_INTERVAL) {
       this.cleanupAgentMemory(now);
       this._lastMemoryCleanupTime = now;
@@ -144,15 +139,13 @@ export class AISystem extends EventEmitter {
     this.lastUpdate = now;
     const agents = this.gameState.agents || [];
 
-    // Process agents in batches to avoid lag spikes
     const BATCH_SIZE = 10;
     let processed = 0;
 
     for (const agent of agents) {
-      // Skip player controlled agents
       if (this.playerControlledAgents.has(agent.id)) continue;
 
-      if (processed >= BATCH_SIZE) break; // Simple time slicing for now
+      if (processed >= BATCH_SIZE) break;
 
       let aiState = this.aiStates.get(agent.id);
       if (!aiState) {
@@ -168,19 +161,16 @@ export class AISystem extends EventEmitter {
   }
 
   private processAgent(agentId: string, aiState: AIState, now: number): void {
-    // 1. Check if current goal is completed or invalid
     if (aiState.currentGoal) {
       if (this.isGoalCompleted(aiState.currentGoal, agentId)) {
         this.completeGoal(aiState, agentId);
       } else if (this.isGoalInvalid(aiState.currentGoal, agentId)) {
         this.failGoal(aiState, agentId);
       } else {
-        // Continue current goal
         return;
       }
     }
 
-    // 2. Formulate new goal if needed
     if (!aiState.currentGoal) {
       const startTime = performance.now();
       const newGoal = this.makeDecision(agentId, aiState);
@@ -199,7 +189,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // 3. Execute action for current goal
     if (aiState.currentGoal) {
       const action = this.planAction(agentId, aiState.currentGoal);
       if (action) {
@@ -232,16 +221,12 @@ export class AISystem extends EventEmitter {
     return null;
   }
 
-  /**
-   * PHASE 1: Personality System
-   */
   private derivePersonalityFromTraits(
     traits: AgentTraits,
     lifeStage: LifeStage,
   ): AgentPersonality {
     const isChild = lifeStage === "child";
 
-    // Derive Big Five from traits
     const openness = (traits.curiosity + (traits.intelligence || 0.5)) / 2;
     const conscientiousness =
       (traits.diligence + (traits.cooperation || 0.5)) / 2;
@@ -260,7 +245,6 @@ export class AISystem extends EventEmitter {
       extraversion,
       agreeableness,
       neuroticism,
-      // Derived behavioral tendencies
       riskTolerance:
         (traits.bravery || 0.5) * 0.7 + (traits.curiosity || 0.5) * 0.3,
       socialPreference: isChild
@@ -323,7 +307,6 @@ export class AISystem extends EventEmitter {
         visitedZones: new Set(),
         recentInteractions: [],
         knownResourceLocations: new Map(),
-        // Extended memory fields
         homeZoneId: undefined,
         successfulActivities: new Map(),
         failedAttempts: new Map(),
@@ -338,19 +321,14 @@ export class AISystem extends EventEmitter {
     };
   }
 
-  /**
-   * PHASE 2: Entity Arrival Logic
-   */
   public notifyEntityArrived(entityId: string, zoneId: string): void {
     const aiState = this.aiStates.get(entityId);
     if (!aiState || !aiState.currentGoal) return;
 
     const goal = aiState.currentGoal;
 
-    // Mark zone as visited
     aiState.memory.visitedZones.add(zoneId);
 
-    // Handle assist goals
     if (
       goal.type.startsWith("assist_") &&
       goal.data &&
@@ -382,7 +360,6 @@ export class AISystem extends EventEmitter {
       return;
     }
 
-    // Handle crafting weapon goals
     if (goal.type === "craft" && goal.data?.itemType === "weapon") {
       if (this.craftingSystem) {
         const weaponId = this.craftingSystem.craftBestWeapon(entityId);
@@ -397,14 +374,12 @@ export class AISystem extends EventEmitter {
       return;
     }
 
-    // Handle deposit goals
     if (goal.type === "deposit" && zoneId) {
       this.tryDepositResources(entityId, zoneId);
       aiState.currentGoal = null;
       return;
     }
 
-    // Handle guard duties
     if (this.roleSystem && this.socialSystem) {
       const role = this.roleSystem.getAgentRole(entityId);
       if (
@@ -415,7 +390,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Pick appropriate activity for zone type
     const zone = this.gameState.zones?.find((z) => z.id === zoneId);
     if (zone) {
       const activity = this.pickActivityForZone(zone.type, goal);
@@ -428,13 +402,11 @@ export class AISystem extends EventEmitter {
         duration,
       });
 
-      // Record successful visit
       const successCount =
         aiState.memory.successfulActivities?.get(zoneId) || 0;
       aiState.memory.successfulActivities?.set(zoneId, successCount + 1);
     }
 
-    // Complete current goal
     aiState.currentGoal = null;
     this._goalsCompleted++;
   }
@@ -538,18 +510,13 @@ export class AISystem extends EventEmitter {
     return baseDuration;
   }
 
-  /**
-   * PHASE 3: Memory Management
-   */
   private cleanupAgentMemory(now: number): void {
     for (const [_agentId, aiState] of this.aiStates) {
-      // 1. Limit visited zones
       if (aiState.memory.visitedZones.size > 100) {
         const zones = Array.from(aiState.memory.visitedZones);
         aiState.memory.visitedZones = new Set(zones.slice(-100));
       }
 
-      // 2. Limit successful activities history
       if (
         aiState.memory.successfulActivities &&
         aiState.memory.successfulActivities.size > 50
@@ -564,13 +531,9 @@ export class AISystem extends EventEmitter {
     }
   }
 
-  /**
-   * PHASE 4: Advanced Features
-   */
   public setPlayerControl(entityId: string, controlled: boolean): void {
     if (controlled) {
       this.playerControlledAgents.add(entityId);
-      // Clear current goal when player takes over
       const aiState = this.aiStates.get(entityId);
       if (aiState) {
         aiState.currentGoal = null;
@@ -632,28 +595,23 @@ export class AISystem extends EventEmitter {
     this.removeAllListeners();
   }
 
-  // Helper methods
   private isGoalCompleted(goal: AIGoal, agentId: string): boolean {
     const now = Date.now();
 
-    // Check if goal has expired
     if (goal.expiresAt && now > goal.expiresAt) {
-      return true; // Goal expired, consider it completed (or failed, handled by caller)
+      return true;
     }
 
-    // Check timeout (fallback safety)
     if (now - goal.createdAt > 60000) {
-      return true; // 1 minute timeout
+      return true;
     }
 
-    // Check if need-based goals are satisfied
     if (goal.type.startsWith("satisfy_")) {
       const needType = goal.data?.need as string;
       if (needType && this.needsSystem) {
         const needs = this.needsSystem.getNeeds(agentId);
         if (needs) {
           const needValue = needs[needType as keyof typeof needs] as number;
-          // Goal is completed if the need is above threshold
           if (needValue > 70) {
             return true;
           }
@@ -661,69 +619,15 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Check if target zone still exists (for zone-based goals)
     if (goal.targetZoneId) {
       const zone = this.gameState.zones?.find(
         (z) => z.id === goal.targetZoneId,
       );
       if (!zone) {
-        return false; // Zone doesn't exist, goal is invalid (not completed)
+        return false;
       }
     }
 
-    // Check if target resource still exists (for resource-based goals)
-    if (goal.targetId && goal.data?.resourceType) {
-      const resourceTypeStr = goal.data.resourceType as string;
-      if (this.worldResourceSystem) {
-        if (this.isValidWorldResourceType(resourceTypeStr)) {
-          const resources = this.worldResourceSystem.getResourcesByType(
-            resourceTypeStr,
-          );
-          const targetResource = resources.find((r) => r.id === goal.targetId);
-          if (!targetResource || targetResource.state !== "pristine") {
-            return false; // Resource doesn't exist or is depleted
-          }
-        } else {
-          // Resource type not valid, goal not completed
-          return false;
-        }
-      } else if (this.gameState.worldResources) {
-        const resource = this.gameState.worldResources[goal.targetId];
-        if (!resource || resource.state !== "pristine") {
-          return false; // Resource doesn't exist or is depleted
-        }
-      }
-    }
-
-    // For assist goals, check if target agent still exists
-    if (goal.type.startsWith("assist_") && goal.data?.targetAgentId) {
-      const targetId = goal.data.targetAgentId as string;
-      const targetAgent = this.gameState.agents?.find((a) => a.id === targetId);
-      if (!targetAgent) {
-        return false; // Target agent doesn't exist
-      }
-    }
-
-    return false; // Goal is still active
-  }
-
-  private isGoalInvalid(goal: AIGoal, agentId: string): boolean {
-    // Check if goal has expired
-    if (goal.expiresAt && Date.now() > goal.expiresAt) {
-      return true;
-    }
-
-    // Check if target zone exists (for zone-based goals)
-    if (goal.targetZoneId) {
-      const zone = this.gameState.zones?.find(
-        (z) => z.id === goal.targetZoneId,
-      );
-      if (!zone) {
-        return true; // Zone doesn't exist, goal is invalid
-      }
-    }
-
-    // Check if target resource exists and is available (for resource-based goals)
     if (goal.targetId && goal.data?.resourceType) {
       const resourceTypeStr = goal.data.resourceType as string;
       if (this.worldResourceSystem) {
@@ -732,21 +636,65 @@ export class AISystem extends EventEmitter {
             this.worldResourceSystem.getResourcesByType(resourceTypeStr);
           const targetResource = resources.find((r) => r.id === goal.targetId);
           if (!targetResource || targetResource.state !== "pristine") {
-            return true; // Resource doesn't exist or is depleted
+            return false;
           }
         } else {
-          // Resource type not valid, goal is invalid
+          return false;
+        }
+      } else if (this.gameState.worldResources) {
+        const resource = this.gameState.worldResources[goal.targetId];
+        if (!resource || resource.state !== "pristine") {
+          return false;
+        }
+      }
+    }
+
+    if (goal.type.startsWith("assist_") && goal.data?.targetAgentId) {
+      const targetId = goal.data.targetAgentId as string;
+      const targetAgent = this.gameState.agents?.find((a) => a.id === targetId);
+      if (!targetAgent) {
+        return false;
+      }
+    }
+
+    return false;
+  }
+
+  private isGoalInvalid(goal: AIGoal, agentId: string): boolean {
+    if (goal.expiresAt && Date.now() > goal.expiresAt) {
+      return true;
+    }
+
+    if (goal.targetZoneId) {
+      const zone = this.gameState.zones?.find(
+        (z) => z.id === goal.targetZoneId,
+      );
+      if (!zone) {
+        return true;
+      }
+    }
+
+    if (goal.targetId && goal.data?.resourceType) {
+      const resourceTypeStr = goal.data.resourceType as string;
+      if (this.worldResourceSystem) {
+        if (this.isValidWorldResourceType(resourceTypeStr)) {
+          const resources =
+            this.worldResourceSystem.getResourcesByType(resourceTypeStr);
+          const targetResource = resources.find((r) => r.id === goal.targetId);
+          if (!targetResource || targetResource.state !== "pristine") {
+            return true;
+          }
+        } else {
           return true;
         }
       } else if (this.gameState.worldResources) {
         const resource = this.gameState.worldResources[goal.targetId];
         if (!resource || resource.state !== "pristine") {
-          return true; // Resource doesn't exist or is depleted
+          return true;
         }
       }
     }
 
-    // Check if target agent exists (for assist goals)
     if (goal.type.startsWith("assist_") && goal.data?.targetAgentId) {
       const targetId = goal.data.targetAgentId as string;
       const targetAgent = this.gameState.agents?.find((a) => a.id === targetId);
