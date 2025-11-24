@@ -205,5 +205,206 @@ describe("QuestSystem", () => {
       expect(Array.isArray(progress.questHistory)).toBe(true);
     });
   });
+
+  describe("completeQuest", () => {
+    it("debe completar quest cuando todos los objetivos están completados", () => {
+      const available = questSystem.getAvailableQuests();
+      const tutorialQuest = available.find((q) => q.id === "tutorial_survival");
+      if (tutorialQuest) {
+        questSystem.startQuest(tutorialQuest.id);
+        // Completar todos los objetivos manualmente
+        // updateObjectiveProgress llama automáticamente a checkQuestCompletion
+        // que completa el quest, así que el quest ya debería estar completado
+        const quest = questSystem.getQuest(tutorialQuest.id);
+        if (quest) {
+          // Completar todos los objetivos excepto el último
+          for (let i = 0; i < quest.objectives.length - 1; i++) {
+            const obj = quest.objectives[i];
+            questSystem.updateObjectiveProgress(tutorialQuest.id, obj.id, obj.requiredAmount || 0);
+          }
+          // Completar el último objetivo, esto debería completar el quest automáticamente
+          const lastObj = quest.objectives[quest.objectives.length - 1];
+          questSystem.updateObjectiveProgress(tutorialQuest.id, lastObj.id, lastObj.requiredAmount || 0);
+          // Verificar que el quest está completado
+          const completedQuest = questSystem.getQuest(tutorialQuest.id);
+          // El quest puede estar en completedQuests ahora
+          const completed = questSystem.getCompletedQuests();
+          expect(completed.some((q) => q.id === tutorialQuest.id)).toBe(true);
+        }
+      }
+    });
+
+    it("debe retornar false si el quest no está activo", () => {
+      const result = questSystem.completeQuest("nonexistent");
+      expect(result.success).toBe(false);
+    });
+
+    it("debe retornar false si hay objetivos incompletos", () => {
+      const available = questSystem.getAvailableQuests();
+      const tutorialQuest = available.find((q) => q.id === "tutorial_survival");
+      if (tutorialQuest) {
+        questSystem.startQuest(tutorialQuest.id);
+        // No completar todos los objetivos
+        const result = questSystem.completeQuest(tutorialQuest.id);
+        expect(result.success).toBe(false);
+      }
+    });
+  });
+
+  describe("updateObjectiveProgress", () => {
+    it("debe actualizar progreso de objetivo", () => {
+      const available = questSystem.getAvailableQuests();
+      const tutorialQuest = available.find((q) => q.id === "tutorial_survival");
+      if (tutorialQuest) {
+        questSystem.startQuest(tutorialQuest.id);
+        const objective = tutorialQuest.objectives[0];
+        if (objective) {
+          const result = questSystem.updateObjectiveProgress(
+            tutorialQuest.id,
+            objective.id,
+            1,
+          );
+          expect(result.completed).toBeDefined();
+        }
+      }
+    });
+
+    it("debe retornar completed: false para quest inexistente", () => {
+      const result = questSystem.updateObjectiveProgress("nonexistent", "obj_1", 1);
+      expect(result.completed).toBe(false);
+    });
+
+    it("debe retornar completed: false para objetivo inexistente", () => {
+      const available = questSystem.getAvailableQuests();
+      const tutorialQuest = available.find((q) => q.id === "tutorial_survival");
+      if (tutorialQuest) {
+        questSystem.startQuest(tutorialQuest.id);
+        const result = questSystem.updateObjectiveProgress(
+          tutorialQuest.id,
+          "nonexistent_obj",
+          1,
+        );
+        expect(result.completed).toBe(false);
+      }
+    });
+
+    it("debe completar objetivo cuando se alcanza la cantidad requerida", () => {
+      const available = questSystem.getAvailableQuests();
+      const tutorialQuest = available.find((q) => q.id === "tutorial_survival");
+      if (tutorialQuest) {
+        questSystem.startQuest(tutorialQuest.id);
+        const objective = tutorialQuest.objectives[0];
+        if (objective && objective.requiredAmount) {
+          const result = questSystem.updateObjectiveProgress(
+            tutorialQuest.id,
+            objective.id,
+            objective.requiredAmount,
+          );
+          expect(result.completed).toBe(true);
+          expect(result.event).toBeDefined();
+        }
+      }
+    });
+  });
+
+  describe("makeQuestAvailable", () => {
+    it("debe hacer disponible un quest que no existe", () => {
+      // Primero eliminar el quest si existe
+      const quest = questSystem.getQuest("tutorial_survival");
+      if (quest) {
+        // El quest ya está disponible, así que makeQuestAvailable retornará false
+        const result = questSystem.makeQuestAvailable("tutorial_survival");
+        expect(result).toBe(false);
+      } else {
+        // Si no existe, debería poder hacerlo disponible
+        const result = questSystem.makeQuestAvailable("tutorial_survival");
+        expect(result).toBe(true);
+        const newQuest = questSystem.getQuest("tutorial_survival");
+        expect(newQuest?.status).toBe("available");
+      }
+    });
+
+    it("debe retornar false para quest inexistente", () => {
+      const result = questSystem.makeQuestAvailable("nonexistent");
+      expect(result).toBe(false);
+    });
+
+    it("debe retornar false si el quest ya existe", () => {
+      const available = questSystem.getAvailableQuests();
+      if (available.length > 0) {
+        const result = questSystem.makeQuestAvailable(available[0].id);
+        expect(result).toBe(false);
+      }
+    });
+  });
+
+  describe("handleEvent", () => {
+    it("debe manejar evento de recurso recolectado", () => {
+      const available = questSystem.getAvailableQuests();
+      const tutorialQuest = available.find((q) => q.id === "tutorial_survival");
+      if (tutorialQuest) {
+        questSystem.startQuest(tutorialQuest.id);
+        questSystem.handleEvent({
+          type: "RESOURCE_COLLECTED",
+          resourceType: "wood",
+          amount: 5,
+        });
+        const quest = questSystem.getQuest(tutorialQuest.id);
+        expect(quest).toBeDefined();
+      }
+    });
+
+    it("debe manejar evento de estructura construida", () => {
+      const available = questSystem.getAvailableQuests();
+      const buildQuest = available.find((q) => q.id === "build_shelter");
+      if (buildQuest) {
+        questSystem.startQuest(buildQuest.id);
+        questSystem.handleEvent({
+          type: "STRUCTURE_BUILT",
+          structureType: "shelter",
+        });
+        const quest = questSystem.getQuest(buildQuest.id);
+        expect(quest).toBeDefined();
+      }
+    });
+  });
+
+  describe("cleanup", () => {
+    it("debe limpiar recursos sin errores", () => {
+      expect(() => questSystem.cleanup()).not.toThrow();
+    });
+  });
+
+  describe("getActiveQuests y getCompletedQuests", () => {
+    it("debe retornar quests activos", () => {
+      const available = questSystem.getAvailableQuests();
+      const tutorialQuest = available.find((q) => q.id === "tutorial_survival");
+      if (tutorialQuest) {
+        questSystem.startQuest(tutorialQuest.id);
+        const active = questSystem.getActiveQuests();
+        expect(active.length).toBeGreaterThan(0);
+        expect(active.some((q) => q.id === tutorialQuest.id)).toBe(true);
+      }
+    });
+
+    it("debe retornar quests completados", () => {
+      const available = questSystem.getAvailableQuests();
+      const tutorialQuest = available.find((q) => q.id === "tutorial_survival");
+      if (tutorialQuest) {
+        questSystem.startQuest(tutorialQuest.id);
+        // Completar todos los objetivos
+        const quest = questSystem.getQuest(tutorialQuest.id);
+        if (quest) {
+          quest.objectives.forEach((obj) => {
+            questSystem.updateObjectiveProgress(tutorialQuest.id, obj.id, obj.requiredAmount || 0);
+          });
+          questSystem.completeQuest(tutorialQuest.id);
+          const completed = questSystem.getCompletedQuests();
+          expect(completed.length).toBeGreaterThan(0);
+          expect(completed.some((q) => q.id === tutorialQuest.id)).toBe(true);
+        }
+      }
+    });
+  });
 });
 

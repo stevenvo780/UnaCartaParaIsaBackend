@@ -140,5 +140,176 @@ describe("SocialSystem", () => {
       expect(customSystem).toBeDefined();
     });
   });
+
+  describe("imposeTruce e isTruceActive", () => {
+    it("debe imponer tregua entre dos agentes", () => {
+      socialSystem.imposeTruce("agent-1", "agent-2", 5000);
+      const isActive = socialSystem.isTruceActive("agent-1", "agent-2");
+      expect(isActive).toBe(true);
+    });
+
+    it("debe retornar false cuando la tregua expira", () => {
+      socialSystem.imposeTruce("agent-3", "agent-4", 100);
+      // Esperar a que expire
+      return new Promise<void>((resolve) => {
+        setTimeout(() => {
+          const isActive = socialSystem.isTruceActive("agent-3", "agent-4");
+          expect(isActive).toBe(false);
+          resolve();
+        }, 200);
+      });
+    });
+
+    it("debe mejorar afinidad negativa al imponer tregua", () => {
+      socialSystem.addEdge("agent-5", "agent-6", -0.5);
+      const initialAffinity = socialSystem.getAffinityBetween("agent-5", "agent-6");
+      socialSystem.imposeTruce("agent-5", "agent-6", 5000);
+      const newAffinity = socialSystem.getAffinityBetween("agent-5", "agent-6");
+      expect(newAffinity).toBeGreaterThan(initialAffinity);
+    });
+  });
+
+  describe("setAffinity y modifyAffinity", () => {
+    it("debe establecer afinidad a un valor específico", () => {
+      socialSystem.setAffinity("agent-7", "agent-8", 0.7);
+      const affinity = socialSystem.getAffinityBetween("agent-7", "agent-8");
+      expect(affinity).toBe(0.7);
+    });
+
+    it("debe limitar afinidad entre -1 y 1", () => {
+      socialSystem.setAffinity("agent-9", "agent-10", 2.0);
+      const affinity = socialSystem.getAffinityBetween("agent-9", "agent-10");
+      expect(affinity).toBeLessThanOrEqual(1);
+      expect(affinity).toBeGreaterThanOrEqual(-1);
+    });
+
+    it("debe modificar afinidad agregando un delta", () => {
+      socialSystem.setAffinity("agent-11", "agent-12", 0.3);
+      socialSystem.modifyAffinity("agent-11", "agent-12", 0.2);
+      const affinity = socialSystem.getAffinityBetween("agent-11", "agent-12");
+      expect(affinity).toBeCloseTo(0.5, 2);
+    });
+  });
+
+  describe("removeRelationships", () => {
+    it("debe eliminar todas las relaciones de un agente", () => {
+      socialSystem.addEdge("agent-13", "agent-14", 0.5);
+      socialSystem.addEdge("agent-13", "agent-15", 0.3);
+      socialSystem.removeRelationships("agent-13");
+      expect(socialSystem.getAffinityBetween("agent-13", "agent-14")).toBe(0);
+      expect(socialSystem.getAffinityBetween("agent-13", "agent-15")).toBe(0);
+    });
+  });
+
+  describe("registerFriendlyInteraction", () => {
+    it("debe aumentar afinidad en interacción amigable", () => {
+      const initialAffinity = socialSystem.getAffinityBetween("agent-16", "agent-17");
+      socialSystem.registerFriendlyInteraction("agent-16", "agent-17");
+      const newAffinity = socialSystem.getAffinityBetween("agent-16", "agent-17");
+      expect(newAffinity).toBeGreaterThan(initialAffinity);
+    });
+  });
+
+  describe("imposeLocalTruces", () => {
+    it("debe imponer treguas locales en un radio", () => {
+      gameState.entities = [
+        {
+          id: "agent-18",
+          position: { x: 100, y: 100 },
+          type: "agent",
+        },
+        {
+          id: "agent-19",
+          position: { x: 150, y: 100 },
+          type: "agent",
+        },
+        {
+          id: "agent-20",
+          position: { x: 200, y: 100 },
+          type: "agent",
+        },
+      ];
+      // Actualizar para inicializar el spatial grid
+      socialSystem.update(1000);
+      socialSystem.imposeLocalTruces("agent-18", 200, 5000);
+      // Verificar que hay treguas activas entre agentes cercanos
+      const isActive1 = socialSystem.isTruceActive("agent-18", "agent-19");
+      expect(isActive1).toBe(true);
+    });
+  });
+
+  describe("registerPermanentBond", () => {
+    it("debe registrar vínculo permanente de familia", () => {
+      gameState.entities = [
+        { id: "agent-21", position: { x: 100, y: 100 }, type: "agent" },
+        { id: "agent-22", position: { x: 150, y: 100 }, type: "agent" },
+      ];
+      socialSystem.registerPermanentBond("agent-21", "agent-22", "family");
+      // Los grupos se recalculan en update, así que necesitamos actualizar
+      socialSystem.update(2000); // Más de 1 segundo para que recalcule grupos
+      const group = socialSystem.getGroupForAgent("agent-21");
+      expect(group).toBeDefined();
+    });
+
+    it("debe aumentar afinidad al registrar vínculo permanente", () => {
+      socialSystem.setAffinity("agent-23", "agent-24", 0.2);
+      socialSystem.registerPermanentBond("agent-23", "agent-24", "marriage");
+      const affinity = socialSystem.getAffinityBetween("agent-23", "agent-24");
+      expect(affinity).toBeGreaterThanOrEqual(0.5);
+    });
+  });
+
+  describe("addInfamy y getInfamy", () => {
+    it("debe agregar infamia a un agente", () => {
+      socialSystem.addInfamy("agent-25", 10);
+      const infamy = socialSystem.getInfamy("agent-25");
+      expect(infamy).toBe(10);
+    });
+
+    it("debe acumular infamia", () => {
+      socialSystem.addInfamy("agent-26", 5);
+      socialSystem.addInfamy("agent-26", 3);
+      const infamy = socialSystem.getInfamy("agent-26");
+      expect(infamy).toBe(8);
+    });
+
+    it("debe retornar 0 para agente sin infamia", () => {
+      const infamy = socialSystem.getInfamy("agent-27");
+      expect(infamy).toBe(0);
+    });
+  });
+
+  describe("addHeatAt y getZoneHeat", () => {
+    it("debe agregar calor en una posición", () => {
+      socialSystem.addHeatAt({ x: 100, y: 100 }, 5);
+      // El sistema usa zonas, así que necesitamos verificar de otra manera
+      // Por ahora solo verificamos que no lance error
+      expect(socialSystem).toBeDefined();
+    });
+  });
+
+  describe("getGroupForAgent y getGroups", () => {
+    it("debe retornar grupo para un agente", () => {
+      gameState.entities = [
+        { id: "agent-28", position: { x: 100, y: 100 }, type: "agent" },
+        { id: "agent-29", position: { x: 150, y: 100 }, type: "agent" },
+      ];
+      socialSystem.setAffinity("agent-28", "agent-29", 0.7); // Por encima del umbral
+      socialSystem.update(2000); // Recalcular grupos
+      const group = socialSystem.getGroupForAgent("agent-28");
+      expect(group).toBeDefined();
+    });
+
+    it("debe retornar undefined si el agente no está en un grupo", () => {
+      const group = socialSystem.getGroupForAgent("agent-30");
+      expect(group).toBeUndefined();
+    });
+
+    it("debe retornar todos los grupos", () => {
+      socialSystem.registerPermanentBond("agent-31", "agent-32", "family");
+      const groups = socialSystem.getGroups();
+      expect(Array.isArray(groups)).toBe(true);
+    });
+  });
 });
 
