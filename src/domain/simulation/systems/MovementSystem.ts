@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import * as EasyStar from "easystarjs";
-import { GameState, Zone } from "../../types/game-types";
+import { GameState, MapElement } from "../../types/game-types";
 import { logger } from "../../../infrastructure/utils/logger";
 import { GameEventNames, simulationEvents } from "../core/events";
 import {
@@ -502,7 +502,7 @@ export class MovementSystem extends EventEmitter {
     this.gridDirty = true;
   }
 
-  private isObstacle(element: any): boolean {
+  private isObstacle(element: MapElement): boolean {
     const type = element.type || "";
     return (
       type === "obstacle" ||

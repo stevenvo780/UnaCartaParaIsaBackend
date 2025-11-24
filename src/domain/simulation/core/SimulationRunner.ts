@@ -243,6 +243,7 @@ export class SimulationRunner {
       inventorySystem: this.inventorySystem,
       socialSystem: this.socialSystem,
       craftingSystem: this.enhancedCraftingSystem,
+      movementSystem: this.movementSystem,
     });
 
     simulationEvents.on(

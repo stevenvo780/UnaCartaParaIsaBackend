@@ -175,6 +175,8 @@ export interface MapElement {
   id: string;
   type: string;
   position: Position;
+  width?: number;
+  height?: number;
   properties?: Record<string, unknown>;
 }
 

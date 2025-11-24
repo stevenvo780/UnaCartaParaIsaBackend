@@ -176,7 +176,6 @@ export function planGoals(
     goals.push(...opportunityGoals);
   }
 
-  // 9. Default Exploration (Fallback)
   if (goals.length === 0) {
     const defaultDeps = {
       gameState: deps.gameState,
