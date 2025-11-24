@@ -46,7 +46,8 @@ export type SimulationCommand =
   | { type: "WORLD_RESOURCE_COMMAND"; command: "SPAWN_RESOURCE" | "HARVEST_RESOURCE"; payload?: Record<string, unknown> }
   | { type: "DIALOGUE_COMMAND"; command: "RESPOND_TO_CARD"; payload?: Record<string, unknown> }
   | { type: "BUILDING_COMMAND"; command: "START_UPGRADE" | "CANCEL_UPGRADE"; payload?: Record<string, unknown> }
-  | { type: "REPUTATION_COMMAND"; command: "UPDATE_TRUST"; payload?: Record<string, unknown> };
+  | { type: "REPUTATION_COMMAND"; command: "UPDATE_TRUST"; payload?: Record<string, unknown> }
+  | { type: "TASK_COMMAND"; command: "CREATE_TASK" | "CONTRIBUTE_TO_TASK" | "REMOVE_TASK"; payload?: Record<string, unknown> };
 
 export interface SimulationConfig {
   tickIntervalMs: number;

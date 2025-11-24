@@ -264,6 +264,41 @@ export interface AnimalState {
   };
 }
 
+export interface KnowledgeGraphState {
+  nodes: Array<{
+    id: string;
+    type: 'fact' | 'recipe' | 'location' | 'person';
+    data: unknown;
+    discoveredBy: string[];
+    discoveryTime: number;
+  }>;
+  links: Array<{
+    source: string;
+    target: string;
+    weight: number;
+    type: 'related' | 'prerequisite' | 'derived';
+  }>;
+}
+
+export interface TaskState {
+  tasks: Array<{
+    id: string;
+    type: string;
+    progress: number;
+    requiredWork: number;
+    completed: boolean;
+    zoneId?: string;
+    bounds?: { x: number; y: number; width: number; height: number };
+  }>;
+  stats: {
+    total: number;
+    active: number;
+    completed: number;
+    stalled: number;
+    avgProgress: number;
+  };
+}
+
 export interface GameState {
   agents: AgentProfile[];
   entities: SimulationEntity[];
@@ -297,6 +332,8 @@ export interface GameState {
   reputation?: ReputationState;
   norms?: NormsState;
   animals?: AnimalState;
+  knowledgeGraph?: KnowledgeGraphState;
+  tasks?: TaskState;
 
   // Legacy/Frontend fields (kept for compatibility if needed)
   resonance?: number;

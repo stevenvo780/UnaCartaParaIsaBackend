@@ -1,5 +1,5 @@
 import { GameState } from "../../types/game-types.js";
-import { simulationEvents } from "../events.js";
+import { simulationEvents, GameEventNames } from "../events.js";
 
 export interface KnowledgeNode {
   id: string;
@@ -27,7 +27,19 @@ export class KnowledgeNetworkSystem {
     console.log('🧠 KnowledgeNetworkSystem (Backend) initialized');
   }
 
-  public update(_deltaTimeMs: number): void {}
+  public update(_deltaTimeMs: number): void {
+    // Escribir estado en GameState para sincronización con frontend
+    if (!this.gameState.knowledgeGraph) {
+      this.gameState.knowledgeGraph = {
+        nodes: [],
+        links: [],
+      };
+    }
+
+    const snapshot = this.getGraphSnapshot();
+    this.gameState.knowledgeGraph.nodes = snapshot.nodes;
+    this.gameState.knowledgeGraph.links = snapshot.edges;
+  }
 
   public addKnowledge(id: string, type: KnowledgeNode['type'], data: unknown, discovererId?: string): void {
     if (this.nodes.has(id)) return;
@@ -67,7 +79,7 @@ export class KnowledgeNetworkSystem {
       node.discoveredBy.push(agentId);
     }
 
-    simulationEvents.emit('KNOWLEDGE_LEARNED', {
+    simulationEvents.emit(GameEventNames.KNOWLEDGE_LEARNED, {
       agentId,
       nodeId,
       timestamp: Date.now()
@@ -83,7 +95,7 @@ export class KnowledgeNetworkSystem {
     const learned = this.learnKnowledge(toAgentId, nodeId);
 
     if (learned) {
-      simulationEvents.emit('KNOWLEDGE_SHARED', {
+      simulationEvents.emit(GameEventNames.KNOWLEDGE_SHARED, {
         fromAgentId,
         toAgentId,
         nodeId,

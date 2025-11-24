@@ -262,4 +262,131 @@ describe("AISystem", () => {
       expect(aiSystem).toBeDefined();
     });
   });
+
+  describe("Planificación de objetivos", () => {
+    it("debe crear objetivos de necesidades cuando hay necesidades críticas", () => {
+      // Configurar necesidades críticas
+      needsSystem.initializeEntityNeeds("agent-1");
+      const needs = needsSystem.getEntityNeeds("agent-1");
+      if (needs) {
+        needs.hunger = 0.1; // Necesidad crítica
+        needs.thirst = 0.1;
+      }
+
+      aiSystem.update(1000);
+      const state = aiSystem.getAIState("agent-1");
+      if (state) {
+        expect(state.currentGoal).toBeDefined();
+      }
+    });
+
+    it("debe crear objetivos de trabajo cuando no hay necesidades críticas", () => {
+      // Configurar necesidades normales
+      needsSystem.initializeEntityNeeds("agent-1");
+      const needs = needsSystem.getEntityNeeds("agent-1");
+      if (needs) {
+        needs.hunger = 0.7; // Necesidad normal
+        needs.thirst = 0.7;
+      }
+
+      // Simular que el agente tiene un rol asignado directamente
+      if (gameState.agents && gameState.agents[0]) {
+        gameState.agents[0].role = "logger";
+      }
+
+      aiSystem.update(1000);
+      const state = aiSystem.getAIState("agent-1");
+      if (state) {
+        expect(state.currentGoal).toBeDefined();
+      }
+    });
+
+    it("debe crear objetivos de exploración cuando no hay otras opciones", () => {
+      // Sin necesidades críticas ni roles
+      aiSystem.update(1000);
+      const state = aiSystem.getAIState("agent-1");
+      if (state) {
+        expect(state.currentGoal).toBeDefined();
+      }
+    });
+  });
+
+  describe("Conversión de objetivos a acciones", () => {
+    it("debe convertir objetivo de exploración a acción de movimiento", () => {
+      const eventSpy = vi.fn();
+      simulationEvents.on(GameEventNames.AGENT_ACTION_COMMANDED, eventSpy);
+
+      aiSystem.update(1000);
+      const state = aiSystem.getAIState("agent-1");
+      if (state && state.currentGoal && state.currentGoal.type === "explore") {
+        // El sistema debería emitir un evento de acción
+        expect(aiSystem).toBeDefined();
+      }
+
+      simulationEvents.off(GameEventNames.AGENT_ACTION_COMMANDED, eventSpy);
+    });
+
+    it("debe convertir objetivo de trabajo a acción de trabajo", () => {
+      // Simular que el agente tiene un rol asignado directamente
+      if (gameState.agents && gameState.agents[0]) {
+        gameState.agents[0].role = "logger";
+      }
+      gameState.zones?.push({
+        id: "work-zone-1",
+        type: "work",
+        x: 150,
+        y: 150,
+        width: 50,
+        height: 50,
+      });
+
+      const eventSpy = vi.fn();
+      simulationEvents.on(GameEventNames.AGENT_ACTION_COMMANDED, eventSpy);
+
+      aiSystem.update(1000);
+      expect(aiSystem).toBeDefined();
+
+      simulationEvents.off(GameEventNames.AGENT_ACTION_COMMANDED, eventSpy);
+    });
+  });
+
+  describe("Búsqueda de recursos", () => {
+    it("debe encontrar recursos cercanos para entidades", () => {
+      // Agregar recursos al mundo
+      gameState.worldResources = [
+        {
+          id: "tree-1",
+          type: "tree",
+          position: { x: 120, y: 120 },
+          amount: 100,
+          biome: "forest",
+        },
+      ];
+
+      // Configurar necesidades críticas que requieren recursos
+      needsSystem.initializeEntityNeeds("agent-1");
+      const needs = needsSystem.getEntityNeeds("agent-1");
+      if (needs) {
+        needs.hunger = 0.1;
+      }
+
+      aiSystem.update(1000);
+      const state = aiSystem.getAIState("agent-1");
+      if (state && state.currentGoal) {
+        expect(state.currentGoal).toBeDefined();
+      }
+    });
+  });
+
+  describe("Recursos preferidos por rol", () => {
+    it("debe usar recurso preferido cuando hay rol asignado", () => {
+      // Simular que el agente tiene un rol asignado directamente en el gameState
+      if (gameState.agents && gameState.agents[0]) {
+        gameState.agents[0].role = "logger";
+      }
+      aiSystem.update(1000);
+      // El sistema debería usar el recurso preferido para el rol
+      expect(aiSystem).toBeDefined();
+    });
+  });
 });

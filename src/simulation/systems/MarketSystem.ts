@@ -120,8 +120,59 @@ export class MarketSystem {
   }
 
   private autoTradeAmongAgents(): void {
-    // Simplified auto-trade logic
-    // In a real implementation, agents would check needs and trade with each other
-    // For now, stubbed
+    // Simplified auto-trade logic: agents with excess resources can sell to those in need
+    const entities = this.state.entities || [];
+    if (entities.length < 2) return;
+
+    // Simple implementation: find agents with excess and those in need
+    // This is a basic version - can be enhanced with more sophisticated matching
+    for (let i = 0; i < entities.length; i++) {
+      const seller = entities[i];
+      if (!seller || !seller.id) continue;
+
+      const sellerInv = this.inventorySystem.getAgentInventory(seller.id);
+      if (!sellerInv) continue;
+
+      // Check if seller has excess of any resource
+      for (const resource of ["wood", "stone", "food", "water"] as ResourceType[]) {
+        const sellerStock = sellerInv[resource] || 0;
+        if (sellerStock < 10) continue; // Not enough to trade
+
+        // Find a buyer who needs this resource
+        for (let j = 0; j < entities.length; j++) {
+          if (i === j) continue;
+          const buyer = entities[j];
+          if (!buyer || !buyer.id) continue;
+
+          const buyerInv = this.inventorySystem.getAgentInventory(buyer.id);
+          if (!buyerInv || (buyerInv[resource] || 0) > 5) continue; // Buyer already has enough
+
+          // Attempt trade
+          const tradeAmount = Math.min(5, sellerStock);
+          const price = this.getResourcePrice(resource);
+          const cost = price * tradeAmount;
+
+          const buyerMoney = buyer.stats && typeof buyer.stats.money === 'number' 
+            ? buyer.stats.money 
+            : 0;
+
+          if (buyerMoney >= cost) {
+            const removed = this.inventorySystem.removeFromAgent(seller.id, resource, tradeAmount);
+            if (removed > 0) {
+              this.inventorySystem.addResource(buyer.id, resource, removed);
+              if (buyer.stats) {
+                buyer.stats.money = buyerMoney - cost;
+              }
+              if (seller.stats) {
+                const sellerMoney = typeof seller.stats.money === 'number' ? seller.stats.money : 0;
+                seller.stats.money = sellerMoney + cost;
+              }
+              // Only one trade per update cycle
+              return;
+            }
+          }
+        }
+      }
+    }
   }
 }

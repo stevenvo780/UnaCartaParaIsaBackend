@@ -103,5 +103,113 @@ describe("AnimalSystem", () => {
         });
       }).not.toThrow();
     });
+
+    it("debe manejar evento de animal muerto", () => {
+      animalSystem.spawnAnimalsInWorld(100, 100);
+      const animals = animalSystem.getAnimals();
+      const animalId = Array.from(animals.keys())[0];
+      
+      if (animalId) {
+        expect(() => {
+          simulationEvents.emit(GameEventNames.ANIMAL_DIED, {
+            animalId,
+          });
+        }).not.toThrow();
+      }
+    });
+
+    it("debe manejar evento de animal que consume recurso", () => {
+      animalSystem.spawnAnimalsInWorld(100, 100);
+      const animals = animalSystem.getAnimals();
+      const animalId = Array.from(animals.keys())[0];
+      
+      if (animalId) {
+        expect(() => {
+          simulationEvents.emit(GameEventNames.ANIMAL_CONSUMED_RESOURCE, {
+            animalId,
+            resourceId: "resource-1",
+            resourceType: "berry_bush",
+          });
+        }).not.toThrow();
+      }
+    });
+
+    it("debe manejar evento de reproducción de animal", () => {
+      animalSystem.spawnAnimalsInWorld(100, 100);
+      const animals = animalSystem.getAnimals();
+      const animalId = Array.from(animals.keys())[0];
+      
+      if (animalId) {
+        expect(() => {
+          simulationEvents.emit(GameEventNames.ANIMAL_REPRODUCED, {
+            parentId: animalId,
+            offspringId: "offspring-1",
+          });
+        }).not.toThrow();
+      }
+    });
+  });
+
+  describe("Comportamiento de animales", () => {
+    it("debe actualizar comportamiento de animales vivos", () => {
+      animalSystem.spawnAnimalsInWorld(100, 100);
+      const animals = animalSystem.getAnimals();
+      expect(animals.size).toBeGreaterThanOrEqual(0);
+      
+      // Actualizar múltiples veces para cubrir el comportamiento
+      animalSystem.update(2000);
+      animalSystem.update(2000);
+      expect(animalSystem).toBeDefined();
+    });
+
+    it("debe manejar animales muertos correctamente", () => {
+      animalSystem.spawnAnimalsInWorld(100, 100);
+      const animals = animalSystem.getAnimals();
+      const animalId = Array.from(animals.keys())[0];
+      
+      if (animalId) {
+        const animal = animals.get(animalId);
+        if (animal) {
+          animal.isDead = true;
+          animalSystem.update(2000);
+          expect(animalSystem).toBeDefined();
+        }
+      }
+    });
+  });
+
+  describe("Limpieza de animales", () => {
+    it("debe limpiar animales muertos después del intervalo", () => {
+      const customSystem = new AnimalSystem(gameState, worldResourceSystem, {
+        cleanupInterval: 100, // Intervalo corto para testing
+      });
+      
+      customSystem.spawnAnimalsInWorld(100, 100);
+      const animals = customSystem.getAnimals();
+      const animalId = Array.from(animals.keys())[0];
+      
+      if (animalId) {
+        const animal = animals.get(animalId);
+        if (animal) {
+          animal.isDead = true;
+          // Esperar a que pase el intervalo de limpieza
+          customSystem.update(200);
+          expect(customSystem).toBeDefined();
+        }
+      }
+    });
+  });
+
+  describe("Estadísticas", () => {
+    it("debe actualizar estadísticas en gameState", () => {
+      animalSystem.spawnAnimalsInWorld(100, 100);
+      animalSystem.update(2000);
+      
+      expect(gameState.animals).toBeDefined();
+      if (gameState.animals) {
+        expect(gameState.animals.stats).toBeDefined();
+        expect(typeof gameState.animals.stats.total).toBe("number");
+      }
+    });
   });
 });

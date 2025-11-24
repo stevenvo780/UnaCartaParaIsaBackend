@@ -481,6 +481,9 @@ export class SimulationRunner {
         case "REPUTATION_COMMAND":
           this.handleReputationCommand(command);
           break;
+        case "TASK_COMMAND":
+          this.handleTaskCommand(command);
+          break;
         case "PING":
         default:
           break;
@@ -574,8 +577,36 @@ export class SimulationRunner {
         }
         break;
       case "FRIENDLY_INTERACTION":
+        if (payload.agentA && payload.agentB && typeof payload.magnitude === "number") {
+          // Mejorar afinidad entre agentes
+          this.socialSystem.modifyAffinity(
+            payload.agentA as string,
+            payload.agentB as string,
+            (payload.magnitude as number) || 0.1
+          );
+          // También puede iniciar una interacción de juego
+          this.interactionGameSystem.startInteraction(
+            payload.agentA as string,
+            payload.agentB as string,
+            "friendly"
+          );
+        }
+        break;
       case "HOSTILE_ENCOUNTER":
-        // Estos se manejan a través de eventos del sistema de interacción
+        if (payload.agentA && payload.agentB && typeof payload.magnitude === "number") {
+          // Empeorar afinidad entre agentes
+          this.socialSystem.modifyAffinity(
+            payload.agentA as string,
+            payload.agentB as string,
+            -(payload.magnitude as number) || -0.1
+          );
+          // También puede iniciar una interacción de juego hostil
+          this.interactionGameSystem.startInteraction(
+            payload.agentA as string,
+            payload.agentB as string,
+            "hostile"
+          );
+        }
         break;
     }
   }
@@ -666,6 +697,43 @@ export class SimulationRunner {
             payload.agentB as string,
             payload.delta
           );
+        }
+        break;
+    }
+  }
+
+  private handleTaskCommand(command: Extract<SimulationCommand, { type: "TASK_COMMAND" }>): void {
+    const payload = command.payload as Record<string, unknown>;
+    switch (command.command) {
+      case "CREATE_TASK":
+        if (payload.type && typeof payload.requiredWork === "number") {
+          this.taskSystem.createTask({
+            type: payload.type as import("./types/tasks.js").TaskType,
+            requiredWork: payload.requiredWork,
+            bounds: payload.bounds as { x: number; y: number; width: number; height: number } | undefined,
+            zoneId: payload.zoneId as string | undefined,
+            requirements: payload.requirements as {
+              resources?: { wood?: number; stone?: number; food?: number; water?: number };
+              minWorkers?: number;
+            } | undefined,
+            metadata: payload.metadata as Record<string, unknown> | undefined,
+            targetAnimalId: payload.targetAnimalId as string | undefined,
+          });
+        }
+        break;
+      case "CONTRIBUTE_TO_TASK":
+        if (payload.taskId && payload.agentId && typeof payload.contribution === "number") {
+          this.taskSystem.contributeToTask(
+            payload.taskId as string,
+            payload.agentId as string,
+            payload.contribution,
+            (payload.socialSynergyMultiplier as number) || 1.0
+          );
+        }
+        break;
+      case "REMOVE_TASK":
+        if (payload.taskId) {
+          this.taskSystem.removeTask(payload.taskId as string);
         }
         break;
     }

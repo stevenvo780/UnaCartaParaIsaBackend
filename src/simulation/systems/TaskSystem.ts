@@ -33,7 +33,33 @@ export class TaskSystem {
       }
     });
 
-    return;
+    // Escribir estado en GameState para sincronización con frontend
+    if (!this.gameState.tasks) {
+      this.gameState.tasks = {
+        tasks: [],
+        stats: {
+          total: 0,
+          active: 0,
+          completed: 0,
+          stalled: 0,
+          avgProgress: 0,
+        },
+      };
+    }
+
+    const stats = this.getTaskStats();
+    this.gameState.tasks.stats = stats;
+
+    // Convertir Map a Array para serialización
+    this.gameState.tasks.tasks = Array.from(this.tasks.values()).map(task => ({
+      id: task.id,
+      type: task.type,
+      progress: task.progress,
+      requiredWork: task.requiredWork,
+      completed: task.completed,
+      zoneId: task.zoneId,
+      bounds: task.bounds,
+    }));
   }
 
   public createTask(params: TaskCreationParams): Task | null {
