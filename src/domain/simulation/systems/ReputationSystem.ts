@@ -256,7 +256,6 @@ export class ReputationSystem {
     const pb = evt.payoffs[b] || 0;
     const scale = REPUTATION_CONFIG.impacts.interactionGame.scale;
 
-    // Emitir evento para que el frontend pueda visualizarlo
     simulationEvents.emit(GameEventNames.INTERACTION_GAME_PLAYED, {
       game: evt.game,
       agentA: a,
