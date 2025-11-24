@@ -6,6 +6,20 @@ export interface Position {
   y: number;
 }
 
+export interface GameMap {
+  width: number;
+  height: number;
+  tileSize: number;
+  biomeMap: string[][];
+}
+
+export interface Zone {
+  id: string;
+  type: string;
+  bounds: { x: number; y: number; width: number; height: number };
+  props?: any;
+}
+
 export interface Size {
   width: number;
   height: number;

@@ -15,6 +15,7 @@ import { AISystem } from "./systems/AISystem.js";
 import { ResourceReservationSystem } from "./systems/ResourceReservationSystem.js";
 import { GovernanceSystem } from "./systems/GovernanceSystem.js";
 import { DivineFavorSystem } from "./systems/DivineFavorSystem.js";
+import { HouseholdSystem } from './systems/HouseholdSystem.js';
 import { simulationEvents, GameEventNames } from "./events.js";
 import type {
   SimulationCommand,
@@ -51,6 +52,7 @@ export class SimulationRunner {
   private resourceReservationSystem: ResourceReservationSystem;
   private governanceSystem: GovernanceSystem;
   private divineFavorSystem: DivineFavorSystem;
+  private householdSystem: HouseholdSystem;
 
   constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
     this.state = initialState ?? createInitialGameState();
@@ -92,6 +94,8 @@ export class SimulationRunner {
       roleSystem: this.roleSystem,
       worldResourceSystem: this.worldResourceSystem,
     });
+
+    this.householdSystem = new HouseholdSystem(this.state);
   }
 
   public initializeWorldResources(worldConfig: { width: number; height: number; tileSize: number; biomeMap: string[][] }): void {
@@ -162,6 +166,7 @@ export class SimulationRunner {
     this.aiSystem.update(scaledDelta);
     this.divineFavorSystem.update(scaledDelta);
     this.governanceSystem.update(scaledDelta);
+    this.householdSystem.update(scaledDelta);
     // Genealogy usually updates on events, but if it has a tick:
     // this.genealogySystem.update(scaledDelta);
 
