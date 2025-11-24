@@ -218,6 +218,7 @@ export interface ConflictState {
   active: ActiveConflict[];
   history: ConflictRecord[];
   stats: ConflictStats;
+  activeConflicts?: ActiveConflict[];
 }
 
 export interface ResearchState {
@@ -246,6 +247,7 @@ export interface RecipeState {
       proficiency: number;
     }>
   >;
+  globalDiscovered?: string[];
 }
 
 export interface ReputationState {

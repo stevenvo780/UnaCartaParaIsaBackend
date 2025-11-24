@@ -237,10 +237,15 @@ export class AISystem extends EventEmitter {
       },
       getAgentRole: (id: string) => this.roleSystem?.getAgentRole(id),
       getPreferredResourceForRole: (role: string): string | undefined => {
-        if (!this.roleSystem) {
+        const roleSys = this.roleSystem;
+        if (!roleSys) {
           return undefined;
         }
-        return this.roleSystem.getPreferredResourceForRole(role);
+        // Type assertion needed due to TypeScript inference issue
+        const method = roleSys.getPreferredResourceForRole as (
+          roleType: string,
+        ) => string | undefined;
+        return method(role);
       },
       getStrategy: (id: string) => this.agentStrategies.get(id) || "peaceful",
       isWarrior: (id: string) => {
