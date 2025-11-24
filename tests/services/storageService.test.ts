@@ -31,6 +31,7 @@ describe('StorageService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    storageService = new StorageService();
   });
 
   describe('isHealthy', () => {
@@ -111,7 +112,6 @@ describe('StorageService', () => {
       vi.mocked(fs.writeFile).mockResolvedValue(undefined);
       vi.mocked(fs.stat).mockResolvedValue({ size: 500 } as never);
       
-      storageService = new StorageService();
       const result = await storageService.saveGame(mockSaveData);
       
       expect(result.saveId).toBe('save_1000');
@@ -125,7 +125,6 @@ describe('StorageService', () => {
       vi.mocked(fs.mkdir).mockResolvedValue(undefined);
       vi.mocked(fs.unlink).mockResolvedValue(undefined);
       
-      storageService = new StorageService();
       const result = await storageService.deleteSave('save_1000');
       
       expect(result).toBe(true);
@@ -138,7 +137,6 @@ describe('StorageService', () => {
       vi.mocked(fs.mkdir).mockResolvedValue(undefined);
       vi.mocked(fs.unlink).mockRejectedValue(new Error('File not found'));
       
-      storageService = new StorageService();
       const result = await storageService.deleteSave('save_nonexistent');
       
       expect(result).toBe(false);
