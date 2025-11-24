@@ -99,7 +99,6 @@ export class AnimalSpawning {
 
     for (let x = chunkX; x < chunkX + width; x += sampleStep) {
       for (let y = chunkY; y < chunkY + height; y += sampleStep) {
-        // Simple biome detection (could be improved with actual biome map)
         const biomeNoise = Math.sin(x * 0.02) + Math.cos(y * 0.02);
         let biome = "grassland";
         if (biomeNoise > 0.6) biome = "mystical";

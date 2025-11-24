@@ -20,7 +20,6 @@ export class SpatialGrid<T> {
   }
 
   public insert(item: T, x: number, y: number): void {
-    // Validate bounds if dimensions are set
     if (this.width > 0 && this.height > 0) {
       if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
         return; // Out of bounds, ignore

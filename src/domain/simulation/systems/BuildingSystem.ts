@@ -184,7 +184,6 @@ export class BuildingSystem {
 
     const consumed = this.reservationSystem.consume(job.reservationId);
     if (!consumed) {
-      // Refund reservation if consumption fails
       this.reservationSystem.release(job.reservationId);
     }
 

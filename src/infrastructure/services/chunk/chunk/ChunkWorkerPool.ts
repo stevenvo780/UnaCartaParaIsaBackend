@@ -171,7 +171,6 @@ export class ChunkWorkerPool extends EventEmitter {
 
   private assignJob(workerEnvelope: WorkerEnvelope, job: ChunkJob): void {
     if (job.cleanupSignal) {
-      // Switch from queue abort handling to inflight detection
       job.cleanupSignal();
       job.cleanupSignal = undefined;
     }
@@ -188,7 +187,6 @@ export class ChunkWorkerPool extends EventEmitter {
 
   private removeJob(job: ChunkJob): void {
     if (job.workerId !== undefined) {
-      // Inflight job: mark as aborted so the response is discarded
       job.aborted = true;
       return;
     }
@@ -208,7 +206,7 @@ export class ChunkWorkerPool extends EventEmitter {
         return jsUrl;
       }
     } catch {
-      // Ignore
+      // Error resolving JS path, fallback to TS
     }
     return tsUrl;
   }
@@ -302,7 +300,6 @@ export class ChunkWorkerPool extends EventEmitter {
     if (!job) return;
     if (job.cleanupSignal) job.cleanupSignal();
     if (job.aborted) {
-      // job was cancelled; drop result silently
       return;
     }
 

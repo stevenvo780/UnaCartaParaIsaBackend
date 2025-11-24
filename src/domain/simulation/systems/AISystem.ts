@@ -16,7 +16,7 @@ import { PriorityManager } from "./ai/PriorityManager";
 import { GameEventNames } from "../core/events";
 import { simulationEvents } from "../core/events";
 import type { NeedsSystem } from "./NeedsSystem";
-import type { RoleSystem } from "./RoleSystem";
+import { RoleSystem } from "./RoleSystem";
 import type { InventorySystem } from "./InventorySystem";
 import type { SocialSystem } from "./SocialSystem";
 import type { EnhancedCraftingSystem } from "./EnhancedCraftingSystem";
@@ -237,11 +237,10 @@ export class AISystem extends EventEmitter {
       },
       getAgentRole: (id: string) => this.roleSystem?.getAgentRole(id),
       getPreferredResourceForRole: (role: string): string | undefined => {
-        const roleSys = this.roleSystem;
-        if (!roleSys) {
+        if (!this.roleSystem) {
           return undefined;
         }
-        return roleSys.getPreferredResourceForRole(role);
+        return this.roleSystem.getPreferredResourceForRole(role);
       },
       getStrategy: (id: string) => this.agentStrategies.get(id) || "peaceful",
       isWarrior: (id: string) => {
