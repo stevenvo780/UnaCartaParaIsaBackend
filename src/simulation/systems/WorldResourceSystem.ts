@@ -49,13 +49,79 @@ export class WorldResourceSystem {
         resource.harvestCount = 0;
         resource.regenerationStartTime = undefined;
         this.regenerationTimers.delete(resourceId);
-        
+
         simulationEvents.emit(GameEventNames.RESOURCE_STATE_CHANGE, {
           resourceId,
           newState: "pristine"
         });
       }
     }
+  }
+
+  public spawnResourcesInWorld(worldConfig: { width: number; height: number; tileSize: number; biomeMap: string[][] }): void {
+    const { width, height, tileSize, biomeMap } = worldConfig;
+    let spawned = 0;
+    const sampleStep = 64;
+
+    for (let x = 0; x < width; x += sampleStep) {
+      for (let y = 0; y < height; y += sampleStep) {
+        const tileX = Math.floor(x / tileSize);
+        const tileY = Math.floor(y / tileSize);
+
+        if (tileY >= 0 && tileY < biomeMap.length && tileX >= 0 && tileX < biomeMap[0].length) {
+          const biome = biomeMap[tileY][tileX];
+          const resourceConfigs = this.getResourcesForBiome(biome);
+
+          for (const config of resourceConfigs) {
+            if (Math.random() < config.spawnProbability!) {
+              const resource = this.spawnResource(config.type, { x, y }, biome);
+              if (resource) spawned++;
+            }
+          }
+        }
+      }
+    }
+    console.log(`[WorldResourceSystem] Spawned ${spawned} resources in world`);
+  }
+
+  public spawnResource(type: string, position: { x: number; y: number }, biome: string): WorldResourceInstance | null {
+    const config = getResourceConfig(type);
+    if (!config) return null;
+
+    const id = `resource_${type}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+
+    const resource: WorldResourceInstance = {
+      id,
+      type: type as any,
+      position,
+      state: "pristine",
+      harvestCount: 0,
+      lastHarvestTime: 0,
+      biome,
+      spawnedAt: Date.now()
+    };
+
+    this.state.worldResources![id] = resource;
+
+    // Emit creation event so frontend can render
+    simulationEvents.emit(GameEventNames.RESOURCE_SPAWNED, { resource });
+
+    return resource;
+  }
+
+  private getResourcesForBiome(biome: string): any[] {
+    // Helper to filter configs by biome
+    // In a real implementation this would be imported or cached
+    const configs = [
+      getResourceConfig("tree"),
+      getResourceConfig("rock"),
+      getResourceConfig("berry_bush"),
+      getResourceConfig("water_source"),
+      getResourceConfig("mushroom_patch"),
+      getResourceConfig("wheat_crop"),
+      getResourceConfig("trash_pile")
+    ];
+    return configs.filter(c => c && c.suitableBiomes?.includes(biome));
   }
 
   private handleResourceGathered(data: { resourceId: string; amount: number }): void {

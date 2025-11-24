@@ -26,14 +26,17 @@ export function createInitialConversation(now: number): ConversationState {
 export function createInitialGameState(): GameState {
   const now = Date.now();
   return {
+    agents: [],
     entities: [],
     resonance: 0,
     cycles: 0,
-    lastSave: now,
+    lastSave: Date.now(),
+    time: 0,
+    dayTime: 0,
     togetherTime: 0,
     connectionAnimation: {
       active: false,
-      startTime: now,
+      startTime: 0,
       type: "NOURISH",
     },
     zones: [],
@@ -48,7 +51,6 @@ export function createInitialGameState(): GameState {
     playerLevel: 1,
     exploredBiomes: [],
     unlockedAssets: [],
-    dayTime: 0,
     weather: {
       current: "sunny",
       temperature: 24,

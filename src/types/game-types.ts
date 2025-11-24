@@ -10,7 +10,7 @@ export interface Size {
   height: number;
 }
 
-export interface Rect extends Position, Size {}
+export interface Rect extends Position, Size { }
 
 export type InteractionType =
   | "NOURISH"
@@ -78,31 +78,41 @@ export interface ObjectLayer {
 }
 
 export interface GameState {
-  entities: any[]; // Stubbed
-  resonance: number;
-  cycles: number;
-  lastSave: number;
+  agents: any[]; // Ideally typed as AgentProfile[]
+  entities: any[];
+  zones: any[];
+  resources: GameResources;
+  time: number;
+  dayTime: number;
   togetherTime: number;
-  connectionAnimation: {
+  cycles: number;
+  weather: WeatherState;
+  worldResources?: Record<string, WorldResourceInstance>;
+  socialGraph?: any;
+  market?: any;
+  inventory?: any;
+  roles?: any;
+  legends?: any;
+  genealogy?: any;
+
+  // Legacy/Frontend fields (kept for compatibility if needed)
+  resonance?: number;
+  lastSave?: number;
+  connectionAnimation?: {
     active: boolean;
     startTime: number;
     type: InteractionType;
     entityId?: string;
   };
-  zones: any[]; // Stubbed
-  mapElements: any[]; // Stubbed
+  mapElements?: any[];
   mapSeed?: string;
-  currentConversation: ConversationState;
-  terrainTiles: TerrainTile[];
-  roads: RoadPolyline[];
-  objectLayers: ObjectLayer[];
-  worldSize: Size;
-  generatorVersion: string;
+  currentConversation?: ConversationState;
+  terrainTiles?: TerrainTile[];
+  roads?: RoadPolyline[];
+  objectLayers?: ObjectLayer[];
+  worldSize?: Size;
+  generatorVersion?: string;
   playerLevel?: number;
   exploredBiomes?: string[];
   unlockedAssets?: string[];
-  dayTime?: number;
-  weather?: WeatherState;
-  resources?: GameResources;
-  worldResources?: Record<string, WorldResourceInstance>;
 }

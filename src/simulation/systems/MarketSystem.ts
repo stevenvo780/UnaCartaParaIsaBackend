@@ -1,7 +1,7 @@
-import { GameState } from "../../types/game-types";
-import { MarketConfig, ResourceType } from "../types/economy";
-import { InventorySystem } from "./InventorySystem";
-import { LifeCycleSystem } from "./LifeCycleSystem";
+import type { GameState } from "../../types/game-types.js";
+import type { MarketConfig, MarketOrder, ResourceType } from "../types/economy.js";
+import { InventorySystem } from "./InventorySystem.js";
+import { LifeCycleSystem } from "./LifeCycleSystem.js";
 
 const DEFAULT_MARKET_CONFIG: MarketConfig = {
   scarcityThresholds: { low: 20, high: 100 },

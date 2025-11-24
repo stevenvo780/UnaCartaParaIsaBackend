@@ -1,9 +1,9 @@
-import { GameState } from "../../types/game-types";
-import { EconomyConfig, ResourceType } from "../types/economy";
-import { InventorySystem } from "./InventorySystem";
-import { SocialSystem } from "./SocialSystem";
-import { LifeCycleSystem } from "./LifeCycleSystem";
-import { SpatialGrid } from "../../utils/SpatialGrid";
+import type { GameState } from '../../types/game-types.js';
+import type { EconomyConfig, ResourceType, Transaction } from '../types/economy.js';
+import { InventorySystem } from './InventorySystem.js';
+import { SocialSystem } from './SocialSystem.js';
+import { LifeCycleSystem } from './LifeCycleSystem.js';
+import { SpatialGrid } from '../../utils/SpatialGrid.js';
 
 const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
   workDurationMs: 5000,

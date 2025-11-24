@@ -1,4 +1,4 @@
-import { Inventory, Stockpile, ResourceType } from "../types/economy";
+import { Inventory, Stockpile, ResourceType } from "../types/economy.js";
 
 export class InventorySystem {
   private agentInventories = new Map<string, Inventory>();

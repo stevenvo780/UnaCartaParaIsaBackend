@@ -71,6 +71,7 @@ export interface WorldResourceInstance {
   lastHarvestTime?: number;
   regenerationStartTime?: number;
   biome?: string;
+  spawnedAt?: number;
 }
 
 export interface HarvestResult {

@@ -44,3 +44,37 @@ export interface MarketConfig {
   normalMultiplier: number;
   basePrices: Record<ResourceType, number>;
 }
+
+export interface Transaction {
+  id: string;
+  buyerId: string;
+  sellerId: string;
+  resource: ResourceType;
+  amount: number;
+  pricePerUnit: number;
+  totalPrice: number;
+  timestamp: number;
+}
+
+export interface MarketOrder {
+  id: string;
+  agentId: string;
+  type: "buy" | "sell";
+  resource: ResourceType;
+  amount: number;
+  priceLimit?: number;
+  timestamp: number;
+  status: "active" | "completed" | "cancelled";
+}
+
+export interface InventoryItem {
+  type: ResourceType;
+  amount: number;
+  quality?: number;
+}
+
+export interface StorageContainer {
+  id: string;
+  capacity: number;
+  items: InventoryItem[];
+}
