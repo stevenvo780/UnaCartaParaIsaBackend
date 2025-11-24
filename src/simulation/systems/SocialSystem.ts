@@ -56,6 +56,8 @@ export class SocialSystem {
         const a = entities[i];
         const b = entities[j];
 
+        if (!a.position || !b.position) continue;
+
         const dx = a.position.x - b.position.x;
         const dy = a.position.y - b.position.y;
         const distSq = dx * dx + dy * dy;
