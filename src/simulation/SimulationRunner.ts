@@ -7,6 +7,9 @@ import { LifeCycleSystem } from "./systems/LifeCycleSystem.js";
 import { NeedsSystem } from "./systems/NeedsSystem.js";
 import { GenealogySystem } from "./systems/GenealogySystem.js";
 import { SocialSystem } from "./systems/SocialSystem.js";
+import { InventorySystem } from "./systems/InventorySystem.js";
+import { EconomySystem } from "./systems/EconomySystem.js";
+import { MarketSystem } from "./systems/MarketSystem.js";
 import { simulationEvents, GameEventNames } from "./events.js";
 import type {
   SimulationCommand,
@@ -35,6 +38,9 @@ export class SimulationRunner {
   private needsSystem: NeedsSystem;
   private genealogySystem: GenealogySystem;
   private socialSystem: SocialSystem;
+  private inventorySystem: InventorySystem;
+  private economySystem: EconomySystem;
+  private marketSystem: MarketSystem;
 
   constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
     this.state = initialState ?? createInitialGameState();
@@ -46,6 +52,18 @@ export class SimulationRunner {
     this.needsSystem = new NeedsSystem(this.state, this.lifeCycleSystem);
     this.genealogySystem = new GenealogySystem(this.state);
     this.socialSystem = new SocialSystem(this.state);
+    this.inventorySystem = new InventorySystem();
+    this.economySystem = new EconomySystem(
+      this.state,
+      this.inventorySystem,
+      this.socialSystem,
+      this.lifeCycleSystem
+    );
+    this.marketSystem = new MarketSystem(
+      this.state,
+      this.inventorySystem,
+      this.lifeCycleSystem
+    );
   }
 
   start(): void {
@@ -104,6 +122,9 @@ export class SimulationRunner {
     this.lifeCycleSystem.update(scaledDelta);
     this.needsSystem.update(scaledDelta);
     this.socialSystem.update(scaledDelta);
+    this.inventorySystem.update();
+    this.economySystem.update(scaledDelta);
+    this.marketSystem.update(scaledDelta);
     // Genealogy usually updates on events, but if it has a tick:
     // this.genealogySystem.update(scaledDelta);
 
