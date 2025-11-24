@@ -54,18 +54,20 @@ export class ResourceAttractionSystem {
     >();
     const emergencies: ResourceEmergencyRequest[] = [];
 
-    for (const data of needs) {
-      const zoneId = data.currentZone ?? "global";
+    for (const [entityId, data] of needs) {
+      const zoneId = "global"; // Simplified as currentZone was removed from needs data
       (Object.keys(DESIRE_THRESHOLDS) as NeedType[]).forEach((needType) => {
         const thresholds = DESIRE_THRESHOLDS[needType];
-        const value = data.needs[needType];
+        const value = data[needType] as number;
+        if (typeof value !== "number") return;
+
         if (needType === "energy" || needType === "hygiene") {
           if (typeof thresholds.low === "number" && value < thresholds.low) {
             const intensity = thresholds.low - value;
             this.addDesire(
               desires,
               fieldMap,
-              data.entityId,
+              entityId,
               needType,
               zoneId,
               intensity,
@@ -73,7 +75,7 @@ export class ResourceAttractionSystem {
             );
             if (value < 10) {
               emergencies.push({
-                agentId: data.entityId,
+                agentId: entityId,
                 resourceType: RESOURCE_MAPPING[needType],
                 urgency: 1 - value / 100,
                 zoneId,
@@ -86,7 +88,7 @@ export class ResourceAttractionSystem {
           this.addDesire(
             desires,
             fieldMap,
-            data.entityId,
+            entityId,
             needType,
             zoneId,
             intensity,
@@ -94,7 +96,7 @@ export class ResourceAttractionSystem {
           );
           if (value > 95) {
             emergencies.push({
-              agentId: data.entityId,
+              agentId: entityId,
               resourceType: RESOURCE_MAPPING[needType],
               urgency: value / 100,
               zoneId,

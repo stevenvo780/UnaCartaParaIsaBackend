@@ -1,4 +1,4 @@
-export interface NeedsState {
+export interface EntityNeedsData {
   hunger: number;
   thirst: number;
   energy: number;
@@ -6,25 +6,28 @@ export interface NeedsState {
   social: number;
   fun: number;
   mentalHealth: number;
-  lastUpdate: number;
-}
-
-export interface EntityNeedsData {
-  entityId: string;
-  needs: NeedsState;
-  currentZone?: string;
-  satisfactionSources: Record<string, number>;
-  emergencyLevel: "none" | "warning" | "critical" | "dying";
-  isDead?: boolean;
-  deathTime?: number;
+  [key: string]: number | undefined; // Allow for dynamic access
 }
 
 export interface NeedsConfig {
-  hungerDecayRate: number;
-  thirstDecayRate: number;
-  energyDecayRate: number;
-  mentalHealthDecayRate: number;
+  decayRates: {
+    hunger: number;
+    thirst: number;
+    energy: number;
+    hygiene: number;
+    social: number;
+    fun: number;
+    mentalHealth: number;
+  };
   criticalThreshold: number;
-  warningThreshold: number;
-  recoveryMultiplier: number;
+  emergencyThreshold: number;
+  updateIntervalMs: number;
+  allowRespawn: boolean;
+  deathThresholds: {
+    hunger: number;
+    thirst: number;
+    energy: number;
+  };
+  zoneBonusMultiplier: number;
+  crossEffectsEnabled: boolean;
 }

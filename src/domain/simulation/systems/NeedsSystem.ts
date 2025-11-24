@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
-import { GameState } from "../../core/GameState";
+import { GameState } from "../../types/game-types";
 import { EntityNeedsData, NeedsConfig } from "../../types/simulation/needs";
-import { simulationEvents, GameEventNames } from "../../core/events";
+import { simulationEvents, GameEventNames } from "../core/events";
 import type { LifeCycleSystem } from "./LifeCycleSystem";
 import type { DivineFavorSystem } from "./DivineFavorSystem";
 import type { InventorySystem } from "./InventorySystem";
@@ -226,7 +226,7 @@ export class NeedsSystem extends EventEmitter {
   ): void {
     console.log(`💀 Entity ${entityId} died from ${cause}`);
 
-    simulationEvents.emit(GameEventNames.AGENT_DIED, {
+    simulationEvents.emit(GameEventNames.AGENT_DEATH, {
       agentId: entityId,
       cause,
       needs: { ...needs },
@@ -487,6 +487,10 @@ export class NeedsSystem extends EventEmitter {
 
   public getNeeds(entityId: string): EntityNeedsData | undefined {
     return this.entityNeeds.get(entityId);
+  }
+
+  public getAllNeeds(): Map<string, EntityNeedsData> {
+    return this.entityNeeds;
   }
 
   public updateConfig(partial: Partial<NeedsConfig>): void {

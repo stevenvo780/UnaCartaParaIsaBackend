@@ -56,44 +56,41 @@ export class AmbientAwarenessSystem {
 
   private computeWellbeing(): CollectiveWellbeing {
     const samples = this.needsSystem.getAllNeeds();
-    if (samples.length === 0) {
+    const samplesList = Array.from(samples.values());
+    if (samplesList.length === 0) {
       return this.snapshot.wellbeing;
     }
 
     let total = 0;
     let critical = 0;
 
-    for (const data of samples) {
+    for (const data of samplesList) {
       const wellbeing =
         100 -
-        (data.needs.hunger +
-          data.needs.thirst +
-          (100 - data.needs.energy) +
-          (100 - data.needs.hygiene)) /
-          4;
+        (data.hunger +
+          data.thirst +
+          (100 - data.energy) +
+          (100 - data.hygiene)) /
+        4;
       total += wellbeing;
-      if (
-        data.needs.hunger > 80 ||
-        data.needs.thirst > 80 ||
-        data.needs.energy < 20
-      ) {
+      if (data.hunger > 80 || data.thirst > 80 || data.energy < 20) {
         critical++;
       }
     }
 
-    const average = total / samples.length;
+    const average = total / samplesList.length;
     let varianceSum = 0;
-    for (const data of samples) {
+    for (const data of samplesList) {
       const wellbeing =
         100 -
-        (data.needs.hunger +
-          data.needs.thirst +
-          (100 - data.needs.energy) +
-          (100 - data.needs.hygiene)) /
-          4;
+        (data.hunger +
+          data.thirst +
+          (100 - data.energy) +
+          (100 - data.hygiene)) /
+        4;
       varianceSum += Math.pow(wellbeing - average, 2);
     }
-    const variance = Math.sqrt(varianceSum / samples.length) / 100;
+    const variance = Math.sqrt(varianceSum / samplesList.length) / 100;
 
     this.wellbeingHistory.push(average);
     if (this.wellbeingHistory.length > this.HISTORY_SIZE) {

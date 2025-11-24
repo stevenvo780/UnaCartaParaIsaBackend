@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { GameState } from "../../core/GameState";
+import { GameState } from "../../types/game-types";
 import {
   AIGoal,
   AIState,
@@ -13,14 +13,14 @@ import {
 } from "../../types/simulation/ai";
 import { NeedsEvaluator } from "../evaluators/NeedsEvaluator";
 import { OpportunitiesEvaluator } from "../evaluators/OpportunitiesEvaluator";
-import { GameEventNames } from "../../core/events";
-import { simulationEvents } from "../../core/events";
+import { GameEventNames } from "../core/events";
+import { simulationEvents } from "../core/events";
 import type { NeedsSystem } from "./NeedsSystem";
 import type { RoleSystem } from "./RoleSystem";
 import type { WorldResourceSystem } from "./WorldResourceSystem";
 import type { InventorySystem } from "./InventorySystem";
 import type { SocialSystem } from "./SocialSystem";
-import type { CraftingSystem } from "./CraftingSystem";
+import type { EnhancedCraftingSystem } from "./EnhancedCraftingSystem";
 import type { HouseholdSystem } from "./HouseholdSystem";
 
 interface AISystemConfig {
@@ -44,7 +44,7 @@ export class AISystem extends EventEmitter {
   private worldResourceSystem?: WorldResourceSystem;
   private inventorySystem?: InventorySystem;
   private socialSystem?: SocialSystem;
-  private craftingSystem?: CraftingSystem;
+  private craftingSystem?: EnhancedCraftingSystem;
   private householdSystem?: HouseholdSystem;
 
   // Phase 3: Memory Cleanup Tracking
@@ -71,7 +71,7 @@ export class AISystem extends EventEmitter {
       worldResourceSystem?: WorldResourceSystem;
       inventorySystem?: InventorySystem;
       socialSystem?: SocialSystem;
-      craftingSystem?: CraftingSystem;
+      craftingSystem?: EnhancedCraftingSystem;
       householdSystem?: HouseholdSystem;
     },
   ) {
@@ -106,7 +106,7 @@ export class AISystem extends EventEmitter {
     worldResourceSystem?: WorldResourceSystem;
     inventorySystem?: InventorySystem;
     socialSystem?: SocialSystem;
-    craftingSystem?: CraftingSystem;
+    craftingSystem?: EnhancedCraftingSystem;
     householdSystem?: HouseholdSystem;
   }): void {
     if (systems.needsSystem) this.needsSystem = systems.needsSystem;

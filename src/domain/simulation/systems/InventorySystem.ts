@@ -163,6 +163,30 @@ export class InventorySystem {
     return removed;
   }
 
+  public consumeFromAgent(
+    agentId: string,
+    resources: Partial<Record<ResourceType, number>>,
+  ): boolean {
+    const inv = this.agentInventories.get(agentId);
+    if (!inv) return false;
+
+    // 1. Check if agent has enough of all resources
+    for (const [resource, amount] of Object.entries(resources)) {
+      if (!amount || amount <= 0) continue;
+      if ((inv[resource as ResourceType] ?? 0) < amount) {
+        return false;
+      }
+    }
+
+    // 2. Consume resources
+    for (const [resource, amount] of Object.entries(resources)) {
+      if (!amount || amount <= 0) continue;
+      inv[resource as ResourceType] -= amount;
+    }
+
+    return true;
+  }
+
   public transferToStockpile(
     agentId: string,
     stockpileId: string,

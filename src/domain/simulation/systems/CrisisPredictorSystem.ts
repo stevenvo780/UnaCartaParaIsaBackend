@@ -78,20 +78,21 @@ export class CrisisPredictorSystem {
     const needs = this.needsSystem.getAllNeeds();
     const totalAgents = needs.length || 1;
 
-    let hungerStress = 0;
+    const totalAgents = needs.size || 1;
+
     let thirstStress = 0;
     let energyStress = 0;
-    let emergencyCount = 0;
+    let criticalCount = 0;
 
-    for (const data of needs) {
-      if (data.needs.hunger > 80) hungerStress++;
-      if (data.needs.thirst > 80) thirstStress++;
-      if (data.needs.energy < 25) energyStress++;
+    for (const [entityId, data] of needs) {
+      if (data.thirst > 80) thirstStress++;
+      if (data.energy < 25) energyStress++;
+
       if (
-        data.emergencyLevel === "critical" ||
-        data.emergencyLevel === "dying"
+        (data.hunger > 90) ||
+        (data.thirst > 90)
       ) {
-        emergencyCount++;
+        criticalCount++;
       }
     }
 

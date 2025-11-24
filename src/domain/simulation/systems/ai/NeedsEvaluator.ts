@@ -32,7 +32,7 @@ export function evaluateCriticalNeeds(
     return goals;
   }
 
-  const { needs } = entityNeeds;
+  const needs = entityNeeds;
   const now = Date.now();
 
   // Thresholds based on personality

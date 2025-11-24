@@ -6,6 +6,10 @@ export interface AgentTraits {
   aggression: number;
   diligence: number;
   curiosity: number;
+  bravery?: number;
+  intelligence?: number;
+  charisma?: number;
+  stamina?: number;
 }
 
 export interface AgentProfile {
@@ -23,4 +27,5 @@ export interface AgentProfile {
     father?: string;
     mother?: string;
   };
+  position?: { x: number; y: number };
 }

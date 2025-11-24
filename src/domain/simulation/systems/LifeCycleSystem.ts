@@ -1,12 +1,12 @@
 import { EventEmitter } from "events";
-import { GameState } from "../../core/GameState";
+import { GameState } from "../../types/game-types";
 import {
   AgentProfile,
   AgentTraits,
   LifeStage,
   Sex,
 } from "../../types/simulation/agents";
-import { simulationEvents, GameEventNames } from "../../core/events";
+import { simulationEvents, GameEventNames } from "../core/events";
 import type { NeedsSystem } from "./NeedsSystem";
 import type { AISystem } from "./AISystem";
 import type { InventorySystem } from "./InventorySystem";
@@ -320,6 +320,10 @@ export class LifeCycleSystem extends EventEmitter {
 
   public getAgent(id: string): AgentProfile | undefined {
     return this.gameState.agents?.find(a => a.id === id);
+  }
+
+  public getAgents(): AgentProfile[] {
+    return this.gameState.agents || [];
   }
 
   private randomTraits(): AgentTraits {

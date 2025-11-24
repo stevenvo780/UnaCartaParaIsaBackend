@@ -188,9 +188,7 @@ export class StorageService {
       );
     }
 
-    this.cleanOldSaves().catch((err) =>
-      logger.error("Cleanup error:", err),
-    );
+    this.cleanOldSaves().catch((err) => logger.error("Cleanup error:", err));
 
     return { saveId, size };
   }
@@ -318,9 +316,7 @@ export class StorageService {
         filesWithMeta.sort((a, b) => b.updated - a.updated);
         const toDelete = filesWithMeta.slice(10);
         await Promise.all(toDelete.map(({ filepath }) => fs.unlink(filepath)));
-        logger.info(
-          `Cleaned ${toDelete.length} old saves from local storage`,
-        );
+        logger.info(`Cleaned ${toDelete.length} old saves from local storage`);
       }
     } catch (error) {
       logger.error("Error cleaning old saves:", error);
