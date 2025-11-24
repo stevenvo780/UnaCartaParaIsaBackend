@@ -48,10 +48,11 @@ export class AISystem extends EventEmitter {
   private socialSystem?: SocialSystem;
   private craftingSystem?: EnhancedCraftingSystem;
   private householdSystem?: HouseholdSystem;
-  private taskSystem?: TaskSystem;
-  private combatSystem?: CombatSystem;
-  private animalSystem?: AnimalSystem;
-  private movementSystem?: MovementSystem;
+  // Dependencies available for future use
+  // private taskSystem?: TaskSystem;
+  // private combatSystem?: CombatSystem;
+  // private animalSystem?: AnimalSystem;
+  // private movementSystem?: MovementSystem;
 
   private _lastMemoryCleanupTime = 0;
   private readonly MEMORY_CLEANUP_INTERVAL = 300000;

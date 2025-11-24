@@ -12,6 +12,12 @@ import type {
   DialoguePriority,
 } from "../../types/simulation/ambient";
 
+interface EmotionalContext {
+  overallMood: number;
+  recentEvents: string[];
+  relationshipLevel: number;
+}
+
 interface CardTemplate {
   id: string;
   title: string;
@@ -59,13 +65,40 @@ export class CardDialogueSystem {
     queueSize: 0,
     lastGeneratedAt: 0,
   };
+  
+  private recentEvents: string[] = [];
 
   constructor(
     private readonly gameState: GameState,
     private readonly needsSystem: NeedsSystem,
     private readonly socialSystem?: SocialSystem,
     private readonly questSystem?: QuestSystem,
-  ) {}
+  ) {
+      this.setupEventListeners();
+  }
+  
+  private setupEventListeners(): void {
+      const significantEvents = [
+          GameEventNames.SOCIAL_RALLY,
+          GameEventNames.COMBAT_ENGAGED,
+          GameEventNames.NEED_CRITICAL,
+          GameEventNames.AGENT_DEATH,
+          GameEventNames.REPRODUCTION_SUCCESS
+      ];
+      
+      significantEvents.forEach(eventName => {
+          simulationEvents.on(eventName, () => {
+              this.addRecentEvent(eventName);
+          });
+      });
+  }
+  
+  private addRecentEvent(event: string): void {
+      this.recentEvents.push(event);
+      if (this.recentEvents.length > 20) {
+          this.recentEvents.shift();
+      }
+  }
 
   public update(_deltaMs: number): void {
     const now = Date.now();
@@ -94,15 +127,21 @@ export class CardDialogueSystem {
   private generateCards(now: number): void {
     const needs = this.needsSystem.getAllNeeds();
     for (const [entityId, data] of needs.entries()) {
+      const ctx: EmotionalContext = {
+          overallMood: 0.5,
+          recentEvents: [...this.recentEvents],
+          relationshipLevel: 0
+      };
+      
       const matchingTemplates = this.cardTemplates.filter((template) =>
-        this.matchesTemplate(template, data, now, entityId),
+        this.matchesTemplate(template, data, now, entityId, ctx),
       );
 
       if (matchingTemplates.length === 0) continue;
 
       const scoredTemplates = matchingTemplates.map((template) => ({
         template,
-        score: this.computeTemplateScore(template, data),
+        score: this.computeTemplateScore(template, data, ctx),
       }));
 
       scoredTemplates.sort((a, b) => b.score - a.score);
@@ -152,6 +191,7 @@ export class CardDialogueSystem {
     needs: EntityNeedsData,
     now: number,
     entityId?: string,
+    ctx?: EmotionalContext
   ): boolean {
     if (template.triggers.needsBased) {
       const satisfied = template.triggers.needsBased.every((trigger) => {
@@ -198,6 +238,13 @@ export class CardDialogueSystem {
       });
       if (!satisfied) return false;
     }
+    
+    if (template.triggers.eventBased && ctx) {
+        const satisfied = template.triggers.eventBased.some(trigger => 
+            ctx.recentEvents.includes(trigger.event)
+        );
+        if (!satisfied) return false;
+    }
 
     return true;
   }
@@ -205,6 +252,7 @@ export class CardDialogueSystem {
   private computeTemplateScore(
     template: CardTemplate,
     needs: EntityNeedsData,
+    ctx?: EmotionalContext
   ): number {
     let score = 0.5;
 
@@ -220,6 +268,10 @@ export class CardDialogueSystem {
     }
 
     if (template.emotionalTone === "worried") score += 0.2;
+    
+    if (ctx && template.emotionalTone === "worried" && ctx.overallMood < 0.3) {
+        score += 0.3;
+    }
 
     return score;
   }

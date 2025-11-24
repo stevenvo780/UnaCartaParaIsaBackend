@@ -89,7 +89,7 @@ export class CombatSystem {
       if (entity.isDead) continue;
       if (!entity.position) continue;
       entitiesById.set(entity.id, entity);
-      this.spatialGrid.insert(entity.id, entity.position.x, entity.position.y);
+      this.spatialGrid.insert(entity.id, entity.position);
     }
 
     for (const attacker of entities) {
@@ -102,8 +102,8 @@ export class CombatSystem {
           attacker.position,
           Math.max(this.config.engagementRadius, weapon.range),
         )
-        .filter((candidate) => candidate.item !== attacker.id)
-        .map((candidate) => entitiesById.get(candidate.item))
+        .filter((candidate) => candidate.entity !== attacker.id)
+        .map((candidate) => entitiesById.get(candidate.entity))
         .filter((candidate): candidate is SimulationEntity =>
           Boolean(candidate && !candidate.isDead),
         );

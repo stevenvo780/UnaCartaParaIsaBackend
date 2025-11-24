@@ -53,7 +53,7 @@ import type {
   SimulationEvent,
 } from "../../../shared/types/commands/SimulationCommand";
 import type { NeedsConfig } from "../../types/simulation/needs";
-import type { TaskType } from "../../types/simulation/tasks";
+import type { TaskType, TaskMetadata } from "../../types/simulation/tasks";
 
 interface SimulationEventMap {
   tick: SimulationSnapshot;
@@ -855,7 +855,7 @@ export class SimulationRunner {
                   minWorkers?: number;
                 }
               | undefined,
-            metadata: payload.metadata as Record<string, unknown> | undefined,
+            metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,
           });
         }

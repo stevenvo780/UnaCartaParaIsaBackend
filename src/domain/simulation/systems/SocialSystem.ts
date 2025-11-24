@@ -1,10 +1,23 @@
 import { GameState } from "../../types/game-types";
 import { SocialConfig } from "../../types/simulation/social";
+import { SpatialGrid } from "../../../utils/SpatialGrid";
+import { SocialGroup } from "../../../shared/types/simulation/agents";
+import { simulationEvents, GameEventNames } from "../core/events";
 
 export class SocialSystem {
   private gameState: GameState;
   private config: SocialConfig;
   private edges = new Map<string, Map<string, number>>();
+  private permanentBonds = new Map<
+    string,
+    Map<string, "family" | "marriage">
+  >();
+  private groups: SocialGroup[] = [];
+  private spatialGrid: SpatialGrid<string>;
+  private truces = new Map<string, number>();
+  private infamy = new Map<string, number>();
+  private zoneHeat = new Map<string, number>();
+  private lastUpdate = 0;
 
   constructor(gameState: GameState, config?: Partial<SocialConfig>) {
     this.gameState = gameState;
@@ -15,50 +28,83 @@ export class SocialSystem {
       groupThreshold: 0.6,
       ...config,
     };
+
+    const worldWidth = gameState.worldSize?.width ?? 2000;
+    const worldHeight = gameState.worldSize?.height ?? 2000;
+    this.spatialGrid = new SpatialGrid(
+      worldWidth,
+      worldHeight,
+      this.config.proximityRadius,
+    );
   }
 
   public update(deltaTimeMs: number): void {
     const dt = deltaTimeMs / 1000;
+    this.lastUpdate += deltaTimeMs;
 
-    this.decayEdges(dt);
+    // Update spatial grid
+    this.spatialGrid.clear();
+    const entities = this.gameState.entities || [];
+    for (const entity of entities) {
+      if (entity.position) {
+        this.spatialGrid.insert(entity.id, entity.position);
+      }
+    }
+
     this.updateProximity(dt);
+    this.decayEdges(dt);
+
+    // Recompute groups periodically (every ~1s)
+    if (this.lastUpdate > 1000) {
+      this.recomputeGroups();
+      this.lastUpdate = 0;
+    }
+
+    this.updateTruces(Date.now());
   }
 
   private decayEdges(dt: number): void {
-    this.edges.forEach((neighbors) => {
-      neighbors.forEach((affinity, neighborId) => {
-        if (affinity > 0) {
-          const newAffinity = Math.max(
-            0,
-            affinity - this.config.decayPerSecond * dt,
-          );
-          neighbors.set(neighborId, newAffinity);
+    this.edges.forEach((neighbors, aId) => {
+      neighbors.forEach((affinity, bId) => {
+        if (affinity !== 0) {
+          // Check for permanent bonds
+          const bondType =
+            this.permanentBonds.get(aId)?.get(bId) ||
+            this.permanentBonds.get(bId)?.get(aId);
+          
+          let decayRate = this.config.decayPerSecond;
+          if (bondType) {
+            decayRate *= 0.05; // Slower decay for family/marriage
+          }
+
+          let newAffinity = affinity;
+          if (affinity > 0) {
+            newAffinity = Math.max(0, affinity - decayRate * dt);
+          } else {
+            newAffinity = Math.min(0, affinity + decayRate * dt);
+          }
+          
+          neighbors.set(bId, newAffinity);
         }
       });
     });
   }
 
   private updateProximity(dt: number): void {
-    const entities = this.gameState.entities;
-    if (!entities || entities.length < 2) return;
-
-    const radiusSq = this.config.proximityRadius * this.config.proximityRadius;
+    const entities = this.gameState.entities || [];
     const reinforcement = this.config.reinforcementPerSecond * dt;
 
-    for (let i = 0; i < entities.length; i++) {
-      for (let j = i + 1; j < entities.length; j++) {
-        const a = entities[i];
-        const b = entities[j];
+    for (const entity of entities) {
+      if (!entity.position) continue;
 
-        if (!a.position || !b.position) continue;
+      const nearby = this.spatialGrid.queryRadius(
+        entity.position,
+        this.config.proximityRadius,
+      );
 
-        const dx = a.position.x - b.position.x;
-        const dy = a.position.y - b.position.y;
-        const distSq = dx * dx + dy * dy;
-
-        if (distSq <= radiusSq) {
-          this.addEdge(a.id, b.id, reinforcement);
-        }
+      for (const { entity: otherId } of nearby) {
+        if (entity.id >= otherId) continue; // Avoid duplicates and self
+        this.addEdge(entity.id, otherId, reinforcement);
       }
     }
   }
@@ -80,9 +126,44 @@ export class SocialSystem {
     return this.edges.get(a)?.get(b) ?? 0;
   }
 
-  public imposeTruce(aId: string, bId: string, _durationMs: number): void {
-    void _durationMs;
-    this.addEdge(aId, bId, 0.2);
+  public imposeTruce(aId: string, bId: string, durationMs: number): void {
+    const key = this.pairKey(aId, bId);
+    this.truces.set(key, Date.now() + durationMs);
+    
+    // Reset negative affinity slightly towards neutral
+    const current = this.getAffinityBetween(aId, bId);
+    if (current < 0) {
+        this.addEdge(aId, bId, Math.abs(current) * 0.5);
+    }
+
+    simulationEvents.emit(GameEventNames.SOCIAL_TRUCE_IMPOSED, {
+      aId,
+      bId,
+      durationMs,
+    });
+  }
+
+  private pairKey(a: string, b: string): string {
+    return a < b ? `${a}::${b}` : `${b}::${a}`;
+  }
+
+  private updateTruces(now: number): void {
+    for (const [key, expiresAt] of this.truces.entries()) {
+      if (now >= expiresAt) {
+        this.truces.delete(key);
+        const [a, b] = key.split("::");
+        simulationEvents.emit(GameEventNames.SOCIAL_TRUCE_EXPIRED, {
+          aId: a,
+          bId: b,
+        });
+      }
+    }
+  }
+
+  public isTruceActive(aId: string, bId: string): boolean {
+    const key = this.pairKey(aId, bId);
+    const expiresAt = this.truces.get(key);
+    return !!expiresAt && expiresAt > Date.now();
   }
 
   public setAffinity(aId: string, bId: string, value: number): void {
@@ -101,18 +182,21 @@ export class SocialSystem {
     this.edges.forEach((neighbors) => {
       neighbors.delete(agentId);
     });
+    this.permanentBonds.delete(agentId);
+    this.permanentBonds.forEach((bonds) => bonds.delete(agentId));
+    
+    // Remove from truces
+    for (const key of this.truces.keys()) {
+        if (key.includes(agentId)) {
+            this.truces.delete(key);
+        }
+    }
   }
 
-  /**
-   * Register a friendly interaction between two agents (used when agents help each other)
-   */
   public registerFriendlyInteraction(aId: string, bId: string): void {
     this.addEdge(aId, bId, 0.15);
   }
 
-  /**
-   * Impose local truces around a center position (used by guards in defense zones)
-   */
   public imposeLocalTruces(
     centerAgentId: string,
     radius: number,
@@ -124,23 +208,138 @@ export class SocialSystem {
     const centerEntity = entities.find((e) => e.id === centerAgentId);
     if (!centerEntity?.position) return;
 
-    const radiusSq = radius * radius;
+    const nearby = this.spatialGrid.queryRadius(centerEntity.position, radius);
 
-    const nearbyEntities = entities.filter((e) => {
-      if (e.id === centerAgentId || !e.position) return false;
-      const dx = e.position.x - centerEntity.position!.x;
-      const dy = e.position.y - centerEntity.position!.y;
-      return dx * dx + dy * dy <= radiusSq;
-    });
-
-    for (let i = 0; i < nearbyEntities.length; i++) {
-      for (let j = i + 1; j < nearbyEntities.length; j++) {
+    for (let i = 0; i < nearby.length; i++) {
+      for (let j = i + 1; j < nearby.length; j++) {
         this.imposeTruce(
-          nearbyEntities[i].id,
-          nearbyEntities[j].id,
+          nearby[i].entity,
+          nearby[j].entity,
           durationMs,
         );
       }
     }
+  }
+
+  public registerPermanentBond(
+    aId: string,
+    bId: string,
+    type: "family" | "marriage",
+  ): void {
+    if (!this.permanentBonds.has(aId)) this.permanentBonds.set(aId, new Map());
+    if (!this.permanentBonds.has(bId)) this.permanentBonds.set(bId, new Map());
+
+    this.permanentBonds.get(aId)!.set(bId, type);
+    this.permanentBonds.get(bId)!.set(aId, type);
+
+    // Boost affinity
+    const current = this.getAffinityBetween(aId, bId);
+    if (current < 0.5) {
+        this.addEdge(aId, bId, 0.5 - current);
+    }
+  }
+
+  public addInfamy(agentId: string, amount: number): void {
+    const current = this.infamy.get(agentId) || 0;
+    this.infamy.set(agentId, current + amount);
+  }
+
+  public getInfamy(agentId: string): number {
+    return this.infamy.get(agentId) || 0;
+  }
+
+  public addHeatAt(pos: { x: number; y: number }, amount: number): void {
+    // Simple zone-based heat map
+    const zone = this.gameState.zones?.find(z => 
+        pos.x >= z.bounds.x && pos.x <= z.bounds.x + z.bounds.width &&
+        pos.y >= z.bounds.y && pos.y <= z.bounds.y + z.bounds.height
+    );
+    
+    if (zone) {
+        const current = this.zoneHeat.get(zone.id) || 0;
+        this.zoneHeat.set(zone.id, Math.min(10000, current + amount));
+    }
+  }
+
+  public getZoneHeat(zoneId: string): number {
+    return this.zoneHeat.get(zoneId) || 0;
+  }
+
+  private recomputeGroups(): void {
+    const visited = new Set<string>();
+    const newGroups: SocialGroup[] = [];
+    const entities = this.gameState.entities?.map(e => e.id) || [];
+
+    for (const u of entities) {
+      if (visited.has(u)) continue;
+      
+      const groupMembers: string[] = [];
+      const queue = [u];
+      visited.add(u);
+
+      while (queue.length > 0) {
+        const current = queue.shift()!;
+        groupMembers.push(current);
+
+        const neighbors = this.edges.get(current);
+        if (neighbors) {
+          for (const [v, affinity] of neighbors.entries()) {
+            if (affinity >= this.config.groupThreshold && !visited.has(v)) {
+              visited.add(v);
+              queue.push(v);
+            }
+          }
+        }
+      }
+
+      if (groupMembers.length > 1) {
+        // Calculate cohesion and leader
+        let totalAffinity = 0;
+        let edgeCount = 0;
+        let bestLeader = { id: groupMembers[0], score: -Infinity };
+
+        for (const member of groupMembers) {
+            let leadershipScore = 0;
+            const memberEdges = this.edges.get(member);
+            
+            if (memberEdges) {
+                for (const other of groupMembers) {
+                    if (member === other) continue;
+                    const aff = memberEdges.get(other) || 0;
+                    if (aff > 0) {
+                        totalAffinity += aff;
+                        edgeCount++;
+                        leadershipScore += aff;
+                    }
+                }
+            }
+            
+            if (leadershipScore > bestLeader.score) {
+                bestLeader = { id: member, score: leadershipScore };
+            }
+        }
+
+        const cohesion = edgeCount > 0 ? totalAffinity / edgeCount : 0;
+        
+        newGroups.push({
+            id: `group_${groupMembers[0]}`,
+            members: groupMembers,
+            leader: bestLeader.id,
+            cohesion,
+            morale: 100 // Default morale for now
+        });
+      }
+    }
+
+    this.groups = newGroups;
+    
+    simulationEvents.emit(GameEventNames.SOCIAL_GROUPS_UPDATE, {
+        groups: this.groups,
+        count: this.groups.length
+    });
+  }
+
+  public getGroups(): SocialGroup[] {
+    return this.groups;
   }
 }

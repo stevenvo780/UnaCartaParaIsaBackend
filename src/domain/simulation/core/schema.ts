@@ -45,6 +45,30 @@ export interface ConnectionAnimationState {
   entityId?: string;
 }
 
+export interface EntityStats {
+  health?: number;
+  morale?: number;
+  stress?: number;
+  stamina?: number;
+  wounds?: number;
+  energy?: number;
+  hunger?: number;
+  thirst?: number;
+  [key: string]: number | undefined;
+}
+
+export interface EntityTraits {
+  aggression?: number;
+  cooperation?: number;
+  diligence?: number;
+  curiosity?: number;
+  bravery?: number;
+  intelligence?: number;
+  charisma?: number;
+  stamina?: number;
+  [key: string]: number | undefined;
+}
+
 export interface SimulationEntity {
   id: string;
   name?: string;
@@ -53,15 +77,10 @@ export interface SimulationEntity {
   state?: string;
   position?: { x: number; y: number };
   isDead?: boolean;
-  stats?: {
-    health?: number;
-    morale?: number;
-    stress?: number;
-    [key: string]: unknown;
-  };
+  stats?: EntityStats;
   tags?: string[];
   type?: string;
-  traits?: { aggression?: number; [key: string]: unknown };
+  traits?: EntityTraits;
   immortal?: boolean;
 }
 

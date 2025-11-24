@@ -2,10 +2,16 @@ import { logger } from "@/infrastructure/utils/logger";
 import { GameState } from "../../types/game-types";
 import { simulationEvents, GameEventNames } from "../core/events";
 
+export type KnowledgeNodeData =
+  | { type: "fact"; content: string; category?: string }
+  | { type: "recipe"; recipeId: string; ingredients: string[] }
+  | { type: "location"; x: number; y: number; zoneId?: string }
+  | { type: "person"; agentId: string; relationship?: string };
+
 export interface KnowledgeNode {
   id: string;
   type: "fact" | "recipe" | "location" | "person";
-  data: unknown;
+  data: KnowledgeNodeData;
   discoveredBy: string[];
   discoveryTime: number;
 }
@@ -60,7 +66,7 @@ export class KnowledgeNetworkSystem {
   public addKnowledge(
     id: string,
     type: KnowledgeNode["type"],
-    data: unknown,
+    data: KnowledgeNodeData,
     discovererId?: string,
   ): void {
     if (this.nodes.has(id)) return;

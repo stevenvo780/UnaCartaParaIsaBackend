@@ -12,6 +12,16 @@ export type TaskType =
   | "research"
   | "custom";
 
+export interface TaskMetadata {
+  priority?: number;
+  assignedAgentId?: string;
+  buildingType?: string;
+  itemType?: string;
+  resourceType?: string;
+  quality?: number;
+  [key: string]: string | number | undefined;
+}
+
 export interface Task {
   id: string;
   type: TaskType;
@@ -34,7 +44,7 @@ export interface Task {
     };
     minWorkers?: number;
   };
-  metadata?: Record<string, unknown>;
+  metadata?: TaskMetadata;
   completed: boolean;
   contributors?: Map<string, number>;
   lastContribution?: number;
@@ -60,6 +70,6 @@ export interface TaskCreationParams {
     };
     minWorkers?: number;
   };
-  metadata?: Record<string, unknown>;
+  metadata?: TaskMetadata;
   targetAnimalId?: string;
 }

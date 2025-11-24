@@ -33,6 +33,15 @@ export type ActionType =
   | "deposit"
   | "build";
 
+export interface AIGoalData {
+  need?: "hunger" | "thirst" | "energy" | "social" | "fun" | "mentalHealth";
+  targetAgentId?: string;
+  resourceType?: string;
+  amount?: number;
+  itemType?: string;
+  [key: string]: string | number | undefined;
+}
+
 export interface AIGoal {
   id: string;
   type: GoalType;
@@ -40,7 +49,7 @@ export interface AIGoal {
   targetId?: string;
   targetPosition?: { x: number; y: number };
   targetZoneId?: string;
-  data?: Record<string, unknown>;
+  data?: AIGoalData;
   createdAt: number;
   expiresAt?: number;
 }
@@ -99,6 +108,13 @@ export interface AgentMemory {
   lastMemoryCleanup?: number;
 }
 
+export interface AgentActionData {
+  resourceType?: string;
+  amount?: number;
+  itemId?: string;
+  [key: string]: string | number | undefined;
+}
+
 export interface AgentAction {
   actionType: ActionType;
   agentId: string;
@@ -106,7 +122,7 @@ export interface AgentAction {
   targetPosition?: { x: number; y: number };
   targetZoneId?: string;
   duration?: number;
-  data?: Record<string, unknown>;
+  data?: AgentActionData;
   timestamp: number;
 }
 

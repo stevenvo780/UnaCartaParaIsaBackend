@@ -47,7 +47,10 @@ export interface GenealogyEventDetails {
   spouseId?: string;
   children?: string[];
   reason?: string;
-  [key: string]: unknown;
+  cause?: string;
+  location?: string;
+  age?: number;
+  [key: string]: string | number | string[] | undefined;
 }
 
 export interface GenealogyEvent {

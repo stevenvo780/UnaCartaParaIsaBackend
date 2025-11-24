@@ -47,7 +47,11 @@ export interface GameMap {
 export interface ZoneProps {
   resource?: "wood" | "stone" | "food" | "water";
   capacity?: number;
-  [key: string]: unknown;
+  efficiency?: number;
+  quality?: number;
+  ownerId?: string;
+  accessLevel?: "public" | "private" | "restricted";
+  [key: string]: string | number | undefined;
 }
 
 export interface Zone {
@@ -127,12 +131,21 @@ export interface RoadPolyline {
   type: "main" | "secondary" | "path";
 }
 
+export interface MapObjectProperties {
+  name?: string;
+  description?: string;
+  interactable?: boolean;
+  resourceType?: string;
+  capacity?: number;
+  [key: string]: string | number | boolean | undefined;
+}
+
 export interface MapObject {
   id: string;
   type: string;
   x: number;
   y: number;
-  properties?: Record<string, unknown>;
+  properties?: MapObjectProperties;
 }
 
 export interface ObjectLayer {
@@ -176,7 +189,7 @@ export interface MapElement {
   position: Position;
   width?: number;
   height?: number;
-  properties?: Record<string, unknown>;
+  properties?: MapObjectProperties;
 }
 
 export interface TradeState {
@@ -294,11 +307,17 @@ export interface AnimalState {
   };
 }
 
+export type KnowledgeNodeData =
+  | { type: "fact"; content: string; category?: string }
+  | { type: "recipe"; recipeId: string; ingredients: string[] }
+  | { type: "location"; x: number; y: number; zoneId?: string }
+  | { type: "person"; agentId: string; relationship?: string };
+
 export interface KnowledgeGraphState {
   nodes: Array<{
     id: string;
     type: "fact" | "recipe" | "location" | "person";
-    data: unknown;
+    data: KnowledgeNodeData;
     discoveredBy: string[];
     discoveryTime: number;
   }>;

@@ -6,7 +6,7 @@ import { GameEventNames, simulationEvents } from "../core/events";
 import {
   estimateTravelTime,
   assessRouteDifficultyByDistance,
-  findAccessibleDestination,
+  // findAccessibleDestination, // Reserved for future use
   calculateZoneDistance,
   worldToGrid,
   Difficulty,
@@ -90,7 +90,7 @@ export class MovementSystem extends EventEmitter {
   private readonly gridSize = MOVEMENT_CONSTANTS.PATHFINDING.GRID_SIZE;
   private gridWidth: number;
   private gridHeight: number;
-  private gridInitialized = false;
+  // private gridInitialized = false; // Reserved for future use
   private occupiedTiles = new Set<string>();
   private cachedGrid: number[][] | null = null;
   private gridCacheTime: number = 0;
@@ -151,7 +151,7 @@ export class MovementSystem extends EventEmitter {
 
   private updateEntityMovement(
     state: EntityMovementState,
-    now: number,
+    _now: number,
     deltaMs: number,
   ): void {
     if (!state.isMoving || !state.targetPosition) return;
@@ -165,7 +165,7 @@ export class MovementSystem extends EventEmitter {
       return;
     }
 
-    const lifeStage = "adult"; // TODO: Get from agent profile
+    // const lifeStage = "adult"; // TODO: Get from agent profile - Reserved for future use
     const ageSpeedMultiplier = 1.0; // Simplified for now
     const fatigueMultiplier =
       1 /

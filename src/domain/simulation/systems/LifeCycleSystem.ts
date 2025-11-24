@@ -33,7 +33,7 @@ interface LifeCycleConfig {
 export class LifeCycleSystem extends EventEmitter {
   private gameState: GameState;
   private config: LifeCycleConfig;
-  private lastUpdate: number = 0;
+  // private lastUpdate: number = 0; // Reserved for future use
   private lastResourceConsumption: number = 0;
 
   private reproductionCooldown = new Map<string, number>();
@@ -113,22 +113,23 @@ export class LifeCycleSystem extends EventEmitter {
       this.divineFavorSystem = systems.divineFavorSystem;
   }
 
-  private checkDependencies(): void {
-    if (!this.needsSystem) logger.warn("LifeCycleSystem: NeedsSystem missing");
-    if (!this.aiSystem) logger.warn("LifeCycleSystem: AISystem missing");
-    if (!this.inventorySystem)
-      logger.warn("LifeCycleSystem: InventorySystem missing");
-    if (!this.householdSystem)
-      logger.warn("LifeCycleSystem: HouseholdSystem missing");
-    if (!this.socialSystem)
-      logger.warn("LifeCycleSystem: SocialSystem missing");
-    if (!this.marriageSystem)
-      logger.warn("LifeCycleSystem: MarriageSystem missing");
-    if (!this.genealogySystem)
-      logger.warn("LifeCycleSystem: GenealogySystem missing");
-    if (!this.divineFavorSystem)
-      logger.warn("LifeCycleSystem: DivineFavorSystem missing");
-  }
+  // Reserved for future dependency validation
+  // private checkDependencies(): void {
+  //   if (!this.needsSystem) logger.warn("LifeCycleSystem: NeedsSystem missing");
+  //   if (!this.aiSystem) logger.warn("LifeCycleSystem: AISystem missing");
+  //   if (!this.inventorySystem)
+  //     logger.warn("LifeCycleSystem: InventorySystem missing");
+  //   if (!this.householdSystem)
+  //     logger.warn("LifeCycleSystem: HouseholdSystem missing");
+  //   if (!this.socialSystem)
+  //     logger.warn("LifeCycleSystem: SocialSystem missing");
+  //   if (!this.marriageSystem)
+  //     logger.warn("LifeCycleSystem: MarriageSystem missing");
+  //   if (!this.genealogySystem)
+  //     logger.warn("LifeCycleSystem: GenealogySystem missing");
+  //   if (!this.divineFavorSystem)
+  //     logger.warn("LifeCycleSystem: DivineFavorSystem missing");
+  // }
 
   public update(deltaTimeMs: number): void {
     const dtSec = deltaTimeMs / 1000;
@@ -271,6 +272,11 @@ export class LifeCycleSystem extends EventEmitter {
   public spawnAgent(partial: Partial<AgentProfile> = {}): AgentProfile {
     const id = `agent_${++this.spawnCounter}`;
 
+    let traits = this.randomTraits();
+    if (partial.parents?.father && partial.parents?.mother) {
+        traits = this.inheritTraits(partial.parents.father, partial.parents.mother);
+    }
+
     const profile: AgentProfile = {
       id,
       name: partial.name || `Agent ${id}`,
@@ -280,7 +286,7 @@ export class LifeCycleSystem extends EventEmitter {
       generation: partial.generation || 0,
       birthTimestamp: Date.now(),
       immortal: false,
-      traits: this.randomTraits(),
+      traits,
       socialStatus: "commoner",
       ...partial,
     };
@@ -308,11 +314,27 @@ export class LifeCycleSystem extends EventEmitter {
       diligence: Math.random(),
       curiosity: Math.random(),
       aggression: Math.random(),
-      bravery: Math.random(),
-      intelligence: Math.random(),
-      charisma: Math.random(),
-      stamina: Math.random(),
     };
+  }
+
+  private inheritTraits(fatherId: string, motherId: string): AgentTraits {
+      const father = this.getAgent(fatherId);
+      const mother = this.getAgent(motherId);
+      
+      if (!father || !mother) return this.randomTraits();
+      
+      const mix = (a: number, b: number) => {
+          const base = (a + b) / 2;
+          const mutation = (Math.random() - 0.5) * 0.2;
+          return Math.max(0, Math.min(1, base + mutation));
+      };
+      
+      return {
+          cooperation: mix(father.traits.cooperation, mother.traits.cooperation),
+          aggression: mix(father.traits.aggression, mother.traits.aggression),
+          diligence: mix(father.traits.diligence, mother.traits.diligence),
+          curiosity: mix(father.traits.curiosity, mother.traits.curiosity),
+      };
   }
 
   public getAgent(id: string): AgentProfile | undefined {
