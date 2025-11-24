@@ -200,10 +200,13 @@ export class HouseholdSystem {
       occupancy,
       households: households.map((h) => ({
         zoneId: h.zoneId,
-        members: [...h.members],
+        members: h.members.map((m) => ({
+          agentId: m.agentId,
+          role: m.role,
+        })),
         capacity: h.capacity,
         sharedInventory: { ...h.sharedInventory },
-        marriageGroupId: h.marriageGroupId,
+        marriageGroupId: h.marriageGroupId ?? null,
       })),
     };
   }

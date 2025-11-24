@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from "express";
 import { simulationRunner } from "@/domain/simulation/core/index";
 import { storageService } from "@/infrastructure/services/storage/storageService";
 import type { SimulationCommand } from "@/shared/types/commands/SimulationCommand";
+import { logger } from "@/infrastructure/utils/logger";
 
 const router = Router();
 

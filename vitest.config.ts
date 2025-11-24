@@ -29,7 +29,7 @@ export default defineConfig({
           lines: 90,
           statements: 90,
         },
-        "src/simulation/systems/**": {
+        "src/domain/simulation/systems/**": {
           branches: 90,
           functions: 90,
           lines: 90,

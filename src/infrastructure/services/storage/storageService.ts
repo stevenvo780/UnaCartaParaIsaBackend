@@ -3,7 +3,7 @@ import SftpClient from "ssh2-sftp-client";
 import fs from "fs/promises";
 import path from "path";
 import { CONFIG } from "../../../config/config.js";
-import { logger } from "../utils/logger.js";
+import { logger } from "@/infrastructure/utils/logger";
 
 export interface GameStats {
   population?: number;

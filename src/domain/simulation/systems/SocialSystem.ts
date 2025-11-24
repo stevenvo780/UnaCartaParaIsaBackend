@@ -104,4 +104,48 @@ export class SocialSystem {
       neighbors.delete(agentId);
     });
   }
+
+  /**
+   * Register a friendly interaction between two agents (used when agents help each other)
+   */
+  public registerFriendlyInteraction(aId: string, bId: string): void {
+    // Friendly interactions boost affinity
+    this.addEdge(aId, bId, 0.15);
+  }
+
+  /**
+   * Impose local truces around a center position (used by guards in defense zones)
+   */
+  public imposeLocalTruces(
+    centerAgentId: string,
+    radius: number,
+    durationMs: number,
+  ): void {
+    const entities = this.gameState.entities;
+    if (!entities) return;
+
+    const centerEntity = entities.find((e) => e.id === centerAgentId);
+    if (!centerEntity?.position) return;
+
+    const radiusSq = radius * radius;
+
+    // Find all entities within radius
+    const nearbyEntities = entities.filter((e) => {
+      if (e.id === centerAgentId || !e.position) return false;
+      const dx = e.position.x - centerEntity.position!.x;
+      const dy = e.position.y - centerEntity.position!.y;
+      return dx * dx + dy * dy <= radiusSq;
+    });
+
+    // Impose truce between all pairs
+    for (let i = 0; i < nearbyEntities.length; i++) {
+      for (let j = i + 1; j < nearbyEntities.length; j++) {
+        this.imposeTruce(
+          nearbyEntities[i].id,
+          nearbyEntities[j].id,
+          durationMs,
+        );
+      }
+    }
+  }
 }

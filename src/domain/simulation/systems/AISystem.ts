@@ -6,9 +6,9 @@ import type {
   AIGoal,
   AgentAction,
   AISystemConfig,
-  AgentPersonality,
   AgentMemory,
 } from "../../types/simulation/ai";
+import { AgentPersonality } from "../../types/simulation/ai";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { evaluateCriticalNeeds } from "./ai/NeedsEvaluator";
 import {
@@ -18,6 +18,10 @@ import {
 import type { NeedsSystem } from "./NeedsSystem";
 import type { RoleSystem } from "./RoleSystem";
 import type { WorldResourceSystem } from "./WorldResourceSystem";
+import type { InventorySystem } from "./InventorySystem";
+import type { SocialSystem } from "./SocialSystem";
+import type { CraftingSystem } from "./CraftingSystem";
+import type { HouseholdSystem } from "./HouseholdSystem";
 import type { WorldResourceType } from "../../types/simulation/worldResources";
 
 const DEFAULT_AI_CONFIG: AISystemConfig = {
@@ -37,6 +41,14 @@ export class AISystem extends EventEmitter {
   private needsSystem?: NeedsSystem;
   private roleSystem?: RoleSystem;
   private worldResourceSystem?: WorldResourceSystem;
+  // TODO: These systems are kept for potential future use - will be used for advanced AI decision making
+  private _inventorySystem?: InventorySystem;
+  // TODO: Social system for future social AI interactions
+  private _socialSystem?: SocialSystem;
+  // TODO: Crafting system for future crafting AI decisions
+  private _craftingSystem?: CraftingSystem;
+  // TODO: Household system for future household management AI
+  private _householdSystem?: HouseholdSystem;
 
   constructor(
     gameState: GameState,
@@ -45,6 +57,10 @@ export class AISystem extends EventEmitter {
       needsSystem?: NeedsSystem;
       roleSystem?: RoleSystem;
       worldResourceSystem?: WorldResourceSystem;
+      inventorySystem?: InventorySystem;
+      socialSystem?: SocialSystem;
+      craftingSystem?: CraftingSystem;
+      householdSystem?: HouseholdSystem;
     },
   ) {
     super();
@@ -56,6 +72,10 @@ export class AISystem extends EventEmitter {
       this.needsSystem = systems.needsSystem;
       this.roleSystem = systems.roleSystem;
       this.worldResourceSystem = systems.worldResourceSystem;
+      this.inventorySystem = systems.inventorySystem;
+      this.socialSystem = systems.socialSystem;
+      this.craftingSystem = systems.craftingSystem;
+      this.householdSystem = systems.householdSystem;
     }
 
     console.log("🤖 AISystem (Backend) initialized");
@@ -235,9 +255,7 @@ export class AISystem extends EventEmitter {
       explorationType:
         explorationTypes[Math.floor(Math.random() * explorationTypes.length)],
       socialPreference:
-        socialPreferences[
-        Math.floor(Math.random() * socialPreferences.length)
-        ],
+        socialPreferences[Math.floor(Math.random() * socialPreferences.length)],
       workEthic: workEthics[Math.floor(Math.random() * workEthics.length)],
       riskTolerance: 0.3 + Math.random() * 0.4,
       neuroticism: Math.random(),

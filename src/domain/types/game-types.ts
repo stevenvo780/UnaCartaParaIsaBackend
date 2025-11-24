@@ -13,9 +13,9 @@ import type { SocialGroup } from "./simulation/social";
 import type { MarketOrder, Transaction } from "./simulation/economy";
 import type { AgentRole } from "./simulation/roles";
 import type { LegendRecord } from "./simulation/legends";
-import type { FamilyTree } from "./simulation/genealogy";
+import type { FamilyTree, SerializedFamilyTree } from "./simulation/genealogy";
 import type { Inventory } from "./simulation/economy";
-import type { TradeRecord } from "./simulation/trade";
+import type { TradeOffer, TradeRecord } from "./simulation/trade";
 import type { MarriageGroup } from "./simulation/marriage";
 import type { Quest } from "./simulation/quests";
 // MarriageProposal and CraftingRecipe are used in type definitions, not directly imported
@@ -289,7 +289,7 @@ export interface KnowledgeGraphState {
     target: string;
     weight: number;
     type: "related" | "prerequisite" | "derived";
-    cor;
+    cor: number;
   }>;
 }
 
@@ -329,7 +329,7 @@ export interface GameState {
   inventory?: InventoryState;
   roles?: RolesState;
   legends?: LegendsState;
-  genealogy?: FamilyTree;
+  genealogy?: FamilyTree | SerializedFamilyTree;
   governance?: GovernanceSnapshot;
   combatLog?: CombatLogEntry[];
   resourceAttraction?: ResourceAttractionSnapshot;

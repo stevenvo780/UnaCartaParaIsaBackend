@@ -14,6 +14,7 @@ export interface KnowledgeEdge {
   target: string;
   weight: number;
   type: "related" | "prerequisite" | "derived";
+  cor: number;
 }
 
 export class KnowledgeNetworkSystem {
@@ -38,7 +39,22 @@ export class KnowledgeNetworkSystem {
 
     const snapshot = this.getGraphSnapshot();
     this.gameState.knowledgeGraph.nodes = snapshot.nodes;
-    this.gameState.knowledgeGraph.links = snapshot.edges;
+    this.gameState.knowledgeGraph.links = snapshot.edges.map((edge) => {
+      const edgeWithCor: KnowledgeEdge = {
+        source: edge.source,
+        target: edge.target,
+        weight: edge.weight,
+        type: edge.type,
+        cor: edge.cor ?? 0,
+      };
+      return {
+        source: edgeWithCor.source,
+        target: edgeWithCor.target,
+        weight: edgeWithCor.weight,
+        type: edgeWithCor.type,
+        cor: edgeWithCor.cor,
+      };
+    });
   }
 
   public addKnowledge(

@@ -3,6 +3,8 @@ import type {
   Ancestor,
   FamilyTree,
   GenealogyEvent,
+  Lineage,
+  SerializedFamilyTree,
 } from "../../types/simulation/genealogy";
 import type { AgentProfile } from "../../types/simulation/agents";
 
@@ -116,38 +118,33 @@ export class GenealogySystem {
     return this.familyTree;
   }
 
-  public getSerializedFamilyTree(): any {
-    const ancestorsObj: Record<string, any> = {};
+  public getSerializedFamilyTree(): SerializedFamilyTree {
+    const ancestorsObj: Record<string, Ancestor> = {};
     this.familyTree.ancestors.forEach((v, k) => {
       ancestorsObj[k] = v;
     });
 
-    const lineagesObj: Record<string, any> = {};
-    this.familyTree.lineages.forEach((v, k) => {
+    const lineagesObj: SerializedFamilyTree["lineages"] = {};
+    this.familyTree.lineages.forEach((v: Lineage, k: string) => {
       // researchProgress is also a Map
       const serializedResearch: Record<string, number> = {};
       if (v.researchProgress) {
-        v.researchProgress.forEach((val, key) => {
+        v.researchProgress.forEach((val: number, key: string) => {
           serializedResearch[key] = val;
         });
       }
 
+      const { researchProgress: _unused, ...lineageWithoutResearch } = v;
       lineagesObj[k] = {
-        ...v,
+        ...lineageWithoutResearch,
         researchProgress: serializedResearch,
       };
     });
 
-    const relationshipsObj: Record<string, any> = {};
-    this.familyTree.relationships.forEach((v, k) => {
-       // Relationship value is Map<string, number> ?? No, wait type def
-       // relationships: Map<string, Map<string, number>>; 
-       // Need double serialization
-       const relMap: Record<string, number> = {};
-       v.forEach((val, key) => {
-         relMap[key] = val;
-       });
-       relationshipsObj[k] = relMap;
+    const relationshipsObj: Record<string, string[]> = {};
+    this.familyTree.relationships.forEach((v: string[], k: string) => {
+      // relationships is Map<string, string[]>
+      relationshipsObj[k] = v;
     });
 
     return {

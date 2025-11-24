@@ -6,9 +6,15 @@ export class TradeSystem {
   private activeOffers = new Map<string, TradeOffer>();
   private tradeHistory: TradeRecord[] = [];
   private merchantReputation = new Map<string, number>();
-  // Background trade constants kept for potential future implementation
+  // TODO: Background trade constants kept for potential future implementation
+  // These will be used for automated background trading between agents
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private readonly BACKGROUND_TRADE_INTERVAL = 30000;
+  // TODO: Probability of background trade occurring
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private readonly BACKGROUND_TRADE_PROBABILITY = 0.1;
+  // TODO: Timestamp of last background trade for rate limiting
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private lastBackgroundTrade = 0;
 
   constructor(gameState: GameState) {

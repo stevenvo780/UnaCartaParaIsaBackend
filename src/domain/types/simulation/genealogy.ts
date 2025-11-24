@@ -75,3 +75,14 @@ export interface LineageStats {
   avgAggression: number;
   favor: number;
 }
+
+export interface SerializedFamilyTree {
+  ancestors: Record<string, Ancestor>;
+  lineages: Record<
+    string,
+    Omit<Lineage, "researchProgress"> & {
+      researchProgress: Record<string, number>;
+    }
+  >;
+  relationships: Record<string, string[]>;
+}

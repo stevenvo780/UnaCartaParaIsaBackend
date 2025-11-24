@@ -127,7 +127,7 @@ export class CardDialogueSystem {
       const card = this.queue.shift();
       if (!card) break;
       this.activeCards.set(card.id, { card, expiresAt: now + card.duration });
-      
+
       simulationEvents.emit(GameEventNames.DIALOGUE_SHOW_CARD, {
         card,
       });
@@ -382,7 +382,7 @@ export class CardDialogueSystem {
 
     // Remove card
     this.activeCards.delete(cardId);
-    
+
     simulationEvents.emit(GameEventNames.DIALOGUE_CARD_RESPONDED, {
       cardId,
       choiceId,

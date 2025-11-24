@@ -163,6 +163,53 @@ export class InventorySystem {
     return removed;
   }
 
+  public transferToStockpile(
+    agentId: string,
+    stockpileId: string,
+    resources: Partial<Record<ResourceType, number>>,
+  ): Record<ResourceType, number> {
+    const transferred: Record<ResourceType, number> = {
+      wood: 0,
+      stone: 0,
+      food: 0,
+      water: 0,
+    };
+
+    const entries = Object.entries(resources) as [ResourceType, number][];
+    for (const [resource, amount] of entries) {
+      if (!amount || amount <= 0) continue;
+
+      // 1. Check agent has resource
+      const inv = this.agentInventories.get(agentId);
+      if (!inv || inv[resource] <= 0) continue;
+
+      // 2. Check stockpile capacity
+      const sp = this.stockpiles.get(stockpileId);
+      if (!sp) continue;
+
+      const currentLoad =
+        sp.inventory.wood +
+        sp.inventory.stone +
+        sp.inventory.food +
+        sp.inventory.water;
+      const availableSpace = sp.capacity - currentLoad;
+
+      if (availableSpace <= 0) continue;
+
+      // 3. Calculate transfer amount
+      const canTake = Math.min(amount, inv[resource]);
+      const canStore = Math.min(canTake, availableSpace);
+
+      if (canStore > 0) {
+        this.removeFromAgent(agentId, resource, canStore);
+        this.addToStockpile(stockpileId, resource, canStore);
+        transferred[resource] = canStore;
+      }
+    }
+
+    return transferred;
+  }
+
   public update(): void {
     const now = Date.now();
     if (now - this.lastDeprecationCheck < this.DEPRECATION_INTERVAL) return;
