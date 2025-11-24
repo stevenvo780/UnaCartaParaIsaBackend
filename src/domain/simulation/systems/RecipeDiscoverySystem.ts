@@ -1,67 +1,10 @@
 import { GameState } from "../../types/game-types";
 import {
-  CraftingRecipe,
   AgentKnownRecipe,
   RecipeDiscoveryEvent,
 } from "../../types/simulation/recipes";
-
-const RECIPES_CATALOG: CraftingRecipe[] = [
-  {
-    id: "wood_to_plank",
-    name: "Wood Plank",
-    description: "Convert wood into planks",
-    ingredients: [{ itemId: "wood", quantity: 2 }],
-    outputs: [{ itemId: "plank", quantity: 4 }],
-    difficulty: 1,
-    successRate: 0.9,
-    craftingTime: 5000,
-    category: "woodworking",
-  },
-  {
-    id: "make_rope",
-    name: "Rope",
-    description: "Make rope from plant fibers",
-    ingredients: [{ itemId: "fiber", quantity: 3 }],
-    outputs: [{ itemId: "rope", quantity: 1 }],
-    difficulty: 1,
-    successRate: 0.85,
-    craftingTime: 3000,
-    category: "basic_survival",
-  },
-  {
-    id: "cook_meat",
-    name: "Cooked Meat",
-    description: "Cook raw meat",
-    ingredients: [{ itemId: "raw_meat", quantity: 1 }],
-    outputs: [{ itemId: "cooked_meat", quantity: 1 }],
-    difficulty: 1,
-    successRate: 0.8,
-    craftingTime: 4000,
-    category: "basic_survival",
-  },
-  {
-    id: "cook_fish",
-    name: "Cooked Fish",
-    description: "Cook raw fish",
-    ingredients: [{ itemId: "raw_fish", quantity: 1 }],
-    outputs: [{ itemId: "cooked_fish", quantity: 1 }],
-    difficulty: 1,
-    successRate: 0.8,
-    craftingTime: 4000,
-    category: "basic_survival",
-  },
-  {
-    id: "wooden_club",
-    name: "Wooden Club",
-    description: "A simple wooden weapon",
-    ingredients: [{ itemId: "wood", quantity: 3 }],
-    outputs: [{ itemId: "wooden_club", quantity: 1 }],
-    difficulty: 2,
-    successRate: 0.75,
-    craftingTime: 6000,
-    category: "basic_survival",
-  },
-];
+import { CraftingRecipe } from "../../types/simulation/crafting";
+import { RecipesCatalog } from "../../../simulation/data/RecipesCatalog";
 
 const BASIC_RECIPES = [
   "wood_to_plank",
@@ -93,7 +36,7 @@ export class RecipeDiscoverySystem {
     agentId: string,
     recipeId: string,
   ): RecipeDiscoveryEvent | null {
-    const recipe = RECIPES_CATALOG.find((r) => r.id === recipeId);
+    const recipe = RecipesCatalog.getRecipeById(recipeId);
     if (!recipe) return null;
 
     let agentRecipeMap = this.agentRecipes.get(agentId);
@@ -108,7 +51,7 @@ export class RecipeDiscoverySystem {
       recipeId,
       discoveredAt: Date.now(),
       timesUsed: 0,
-      successRate: recipe.successRate,
+      successRate: recipe.successRate || 1.0,
       proficiency: 0,
     };
 
@@ -134,7 +77,8 @@ export class RecipeDiscoverySystem {
   } {
     const duration = 10000 + this.random() * 5000;
 
-    const matchingRecipes = RECIPES_CATALOG.filter((recipe) => {
+    const allRecipes = RecipesCatalog.getAllRecipes();
+    const matchingRecipes = allRecipes.filter((recipe) => {
       const recipeIngredients = recipe.ingredients.map((i) => i.itemId).sort();
       const providedIngredients = [...ingredients].sort();
 
@@ -155,7 +99,7 @@ export class RecipeDiscoverySystem {
       return { success: false, duration };
     }
 
-    const baseChance = Math.max(0.1, 1 - recipe.difficulty / 15);
+    const baseChance = Math.max(0.1, 1 - (recipe.difficulty || 1) / 15);
     const discoveryChance = Math.min(0.95, baseChance);
 
     const success = this.random() < discoveryChance;
@@ -199,7 +143,7 @@ export class RecipeDiscoverySystem {
     const availableRecipes: CraftingRecipe[] = [];
 
     for (const knownRecipe of knownRecipes) {
-      const recipe = RECIPES_CATALOG.find((r) => r.id === knownRecipe.recipeId);
+      const recipe = RecipesCatalog.getRecipeById(knownRecipe.recipeId);
       if (!recipe) continue;
 
       const canCraft = recipe.ingredients.every((ingredient) => {
@@ -294,11 +238,11 @@ export class RecipeDiscoverySystem {
   }
 
   public getRecipeById(recipeId: string): CraftingRecipe | undefined {
-    return RECIPES_CATALOG.find((r) => r.id === recipeId);
+    return RecipesCatalog.getRecipeById(recipeId) || undefined;
   }
 
   public getAllRecipes(): CraftingRecipe[] {
-    return [...RECIPES_CATALOG];
+    return RecipesCatalog.getAllRecipes();
   }
 
   public update(): void {

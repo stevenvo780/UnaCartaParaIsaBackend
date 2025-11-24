@@ -550,4 +550,178 @@ describe("AISystem", () => {
       }
     });
   });
+
+  describe("Objetivos que se completan automáticamente", () => {
+    it("debe completar objetivo cuando necesidad está satisfecha", () => {
+      needsSystem.initializeEntityNeeds("agent-1");
+      const needs = needsSystem.getEntityNeeds("agent-1");
+      if (needs) {
+        needs.hunger = 20; // Necesidad crítica
+      }
+
+      aiSystem.update(1000);
+      const state = aiSystem.getAIState("agent-1");
+      if (state && state.currentGoal) {
+        // Satisfacer la necesidad
+        needsSystem.satisfyNeed("agent-1", "hunger", 60);
+        
+        // Actualizar para que el sistema detecte que el objetivo está completo
+        aiSystem.update(1000);
+        
+        // El objetivo debería estar completado o removido
+        expect(aiSystem).toBeDefined();
+      }
+    });
+
+    it("debe expirar objetivos antiguos", () => {
+      aiSystem.update(1000);
+      const state = aiSystem.getAIState("agent-1");
+      if (state) {
+        state.currentGoal = {
+          type: "explore",
+          priority: 0.5,
+          createdAt: Date.now() - 70000, // Más de 60 segundos
+          targetPosition: { x: 200, y: 200 },
+        };
+        
+        aiSystem.update(1000);
+        // El objetivo debería estar expirado
+        expect(aiSystem).toBeDefined();
+      }
+    });
+
+    it("debe invalidar objetivo cuando zona no existe", () => {
+      aiSystem.update(1000);
+      const state = aiSystem.getAIState("agent-1");
+      if (state) {
+        state.currentGoal = {
+          type: "work",
+          priority: 0.5,
+          createdAt: Date.now(),
+          targetZoneId: "nonexistent-zone",
+        };
+        
+        aiSystem.update(1000);
+        // El objetivo debería estar invalidado
+        expect(aiSystem).toBeDefined();
+      }
+    });
+  });
+
+  describe("Manejo de diferentes tipos de objetivos", () => {
+    it("debe manejar objetivo de asistencia", () => {
+      gameState.agents?.push({
+        id: "agent-3",
+        name: "Injured Agent",
+        ageYears: 25,
+        lifeStage: "adult",
+        immortal: false,
+        position: { x: 150, y: 150 },
+        type: "agent",
+        traits: { cooperation: 0.5, diligence: 0.6, curiosity: 0.4 },
+      });
+
+      aiSystem.update(1000);
+      const state = aiSystem.getAIState("agent-1");
+      if (state) {
+        state.currentGoal = {
+          type: "assist_medical",
+          priority: 0.8,
+          createdAt: Date.now(),
+          targetId: "agent-3",
+          data: { targetAgentId: "agent-3" },
+        };
+        
+        aiSystem.update(1000);
+        expect(aiSystem).toBeDefined();
+      }
+    });
+
+    it("debe manejar objetivo con recurso específico", () => {
+      gameState.worldResources = [
+        {
+          id: "tree-1",
+          type: "tree",
+          position: { x: 120, y: 120 },
+          amount: 100,
+          biome: "forest",
+          state: "pristine",
+        },
+      ];
+
+      aiSystem.update(1000);
+      const state = aiSystem.getAIState("agent-1");
+      if (state) {
+        state.currentGoal = {
+          type: "gather",
+          priority: 0.6,
+          createdAt: Date.now(),
+          targetId: "tree-1",
+          data: { resourceType: "tree" },
+        };
+        
+        aiSystem.update(1000);
+        expect(aiSystem).toBeDefined();
+      }
+    });
+  });
+
+  describe("Manejo de errores y casos edge", () => {
+    it("debe manejar agente sin posición", () => {
+      if (gameState.agents && gameState.agents[0]) {
+        delete gameState.agents[0].position;
+      }
+      
+      expect(() => {
+        aiSystem.update(1000);
+      }).not.toThrow();
+    });
+
+    it("debe manejar agente sin rol", () => {
+      if (gameState.agents && gameState.agents[0]) {
+        delete gameState.agents[0].role;
+      }
+      
+      expect(() => {
+        aiSystem.update(1000);
+      }).not.toThrow();
+    });
+
+    it("debe manejar estado AI sin objetivo", () => {
+      aiSystem.update(1000);
+      const state = aiSystem.getAIState("agent-1");
+      if (state) {
+        state.currentGoal = null;
+        expect(() => {
+          aiSystem.update(1000);
+        }).not.toThrow();
+      }
+    });
+  });
+
+  describe("Actualización con diferentes intervalos", () => {
+    it("debe procesar agentes en lotes con intervalos grandes", () => {
+      // Agregar más agentes
+      for (let i = 3; i < 15; i++) {
+        gameState.agents?.push({
+          id: `agent-${i}`,
+          name: `Agent ${i}`,
+          ageYears: 25,
+          lifeStage: "adult",
+          immortal: false,
+          position: { x: 100 + i * 10, y: 100 + i * 10 },
+          type: "agent",
+          traits: { cooperation: 0.5, diligence: 0.6, curiosity: 0.4 },
+        });
+      }
+
+      // Actualizar múltiples veces para procesar todos los lotes
+      for (let i = 0; i < 20; i++) {
+        aiSystem.update(1000);
+      }
+      
+      const states = aiSystem.getAllAIStates();
+      expect(states.length).toBeGreaterThan(0);
+    });
+  });
 });

@@ -15,6 +15,7 @@ import type { MarriageSystem } from "./MarriageSystem";
 import type { GenealogySystem } from "./GenealogySystem";
 import type { HouseholdSystem } from "./HouseholdSystem";
 import type { DivineFavorSystem } from "./DivineFavorSystem";
+import type { MovementSystem } from "./MovementSystem";
 
 interface LifeCycleConfig {
   secondsPerYear: number;
@@ -48,6 +49,7 @@ export class LifeCycleSystem extends EventEmitter {
   private _marriageSystem?: MarriageSystem;
   private _genealogySystem?: GenealogySystem;
   private _divineFavorSystem?: DivineFavorSystem;
+  private _movementSystem?: MovementSystem;
 
   constructor(
     gameState: GameState,
@@ -61,6 +63,7 @@ export class LifeCycleSystem extends EventEmitter {
       genealogySystem?: GenealogySystem;
       householdSystem?: HouseholdSystem;
       divineFavorSystem?: DivineFavorSystem;
+      movementSystem?: MovementSystem;
     },
   ) {
     super();
@@ -89,6 +92,7 @@ export class LifeCycleSystem extends EventEmitter {
       this._genealogySystem = systems.genealogySystem;
       this.householdSystem = systems.householdSystem;
       this._divineFavorSystem = systems.divineFavorSystem;
+      this._movementSystem = systems.movementSystem;
     }
   }
 
@@ -101,6 +105,7 @@ export class LifeCycleSystem extends EventEmitter {
     genealogySystem?: GenealogySystem;
     householdSystem?: HouseholdSystem;
     divineFavorSystem?: DivineFavorSystem;
+    movementSystem?: MovementSystem;
   }): void {
     if (systems.needsSystem) this.needsSystem = systems.needsSystem;
     if (systems.aiSystem) this._aiSystem = systems.aiSystem;
@@ -112,6 +117,7 @@ export class LifeCycleSystem extends EventEmitter {
     if (systems.householdSystem) this.householdSystem = systems.householdSystem;
     if (systems.divineFavorSystem)
       this._divineFavorSystem = systems.divineFavorSystem;
+    if (systems.movementSystem) this._movementSystem = systems.movementSystem;
   }
 
   // Reserved for future dependency validation
@@ -295,11 +301,22 @@ export class LifeCycleSystem extends EventEmitter {
       ...partial,
     };
 
+    const world = this.gameState.worldSize ?? { width: 2000, height: 2000 };
+    if (!profile.position) {
+      profile.position = {
+        x: Math.floor(world.width / 2 + (Math.random() - 0.5) * 200),
+        y: Math.floor(world.height / 2 + (Math.random() - 0.5) * 200),
+      };
+    }
+
     if (!this.gameState.agents) this.gameState.agents = [];
     this.gameState.agents.push(profile);
 
     if (this.needsSystem) {
       this.needsSystem.initializeEntityNeeds(id);
+    }
+    if (profile.position) {
+      this._movementSystem?.initializeEntityMovement(id, profile.position);
     }
 
     simulationEvents.emit(GameEventNames.AGENT_BIRTH, {
@@ -355,6 +372,7 @@ export class LifeCycleSystem extends EventEmitter {
     const index = this.gameState.agents.findIndex((a) => a.id === id);
     if (index !== -1) {
       this.gameState.agents.splice(index, 1);
+      this._movementSystem?.removeEntityMovement(id);
       simulationEvents.emit(GameEventNames.ANIMAL_DIED, { entityId: id });
     }
   }

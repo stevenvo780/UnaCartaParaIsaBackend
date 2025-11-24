@@ -240,6 +240,14 @@ export class MovementSystem extends EventEmitter {
         zoneId: arrivedZone,
       });
     }
+
+    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      agentId: state.entityId,
+      actionType: "move",
+      success: true,
+      position: { ...state.currentPosition },
+      targetZone: arrivedZone,
+    });
   }
 
   private completeActivity(state: EntityMovementState): void {

@@ -226,10 +226,14 @@ export class ResearchTreeCatalog {
       byLevel[i] = { total: 0, unlocked: 0 };
     }
 
-    Object.values(this.categories).forEach((cat) => {
-      byLevel[cat.level].total++;
+    Object.values(this.categories).forEach((cat: ResearchCategory) => {
+      const level = cat.level;
+      if (!byLevel[level]) {
+        byLevel[level] = { total: 0, unlocked: 0 };
+      }
+      byLevel[level].total++;
       if (unlockedCategories.includes(cat.id)) {
-        byLevel[cat.level].unlocked++;
+        byLevel[level].unlocked++;
       }
     });
 

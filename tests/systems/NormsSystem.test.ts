@@ -222,9 +222,11 @@ describe("NormsSystem", () => {
       );
       
       expect(result.violated).toBe(true);
+      expect(result.sanction).toBeDefined();
       if (result.sanction) {
-        expect(result.sanction.type).toBeDefined();
-        expect(result.sanction.severity).toBeDefined();
+        expect(result.sanction.violationType).toBeDefined();
+        expect(result.sanction.reputationPenalty).toBeDefined();
+        expect(result.sanction.trustPenalty).toBeDefined();
       }
     });
   });

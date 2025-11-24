@@ -1,0 +1,299 @@
+import type { ZoneType } from "../../domain/types/simulation/zones";
+import type { EntityStats } from "../../domain/simulation/core/schema";
+
+export interface ZonePropertyConfig {
+  name: string;
+  color: string;
+  attractiveness: number;
+  effects?: Partial<Record<keyof EntityStats, number>>;
+  spriteKey: string;
+  capacity?: number;
+  stockpileCapacity?: number;
+}
+
+export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
+  shelter: {
+    name: "Shelter",
+    color: "#8B7355",
+    attractiveness: 5,
+    effects: { energy: 4, comfort: 2 },
+    spriteKey: "agent_built_shelter",
+    capacity: 4,
+    stockpileCapacity: 50,
+  },
+
+  bedroom: {
+    name: "Bedroom",
+    color: "#9370DB",
+    attractiveness: 8,
+    effects: { energy: 7, comfort: 5, happiness: 2 },
+    spriteKey: "agent_built_bedroom",
+    capacity: 2,
+    stockpileCapacity: 30,
+  },
+
+  living: {
+    name: "Living Room",
+    color: "#FFB347",
+    attractiveness: 7,
+    effects: { comfort: 4, happiness: 3, resonance: 2 },
+    spriteKey: "agent_built_living",
+    capacity: 6,
+  },
+
+  bathroom: {
+    name: "Bathroom",
+    color: "#87CEEB",
+    attractiveness: 6,
+    effects: { hygiene: 8, comfort: 2 },
+    spriteKey: "agent_built_bathroom",
+    capacity: 1,
+  },
+
+  work: {
+    name: "Workshop",
+    color: "#CC8844",
+    attractiveness: 6,
+    effects: { stamina: 2, focus: 3 },
+    spriteKey: "agent_built_workbench",
+    capacity: 4,
+    stockpileCapacity: 200,
+  },
+
+  kitchen: {
+    name: "Kitchen",
+    color: "#FF6B6B",
+    attractiveness: 7,
+    effects: { hunger: 8, happiness: 3 },
+    spriteKey: "agent_built_kitchen",
+    capacity: 3,
+    stockpileCapacity: 150,
+  },
+
+  office: {
+    name: "Office",
+    color: "#4ECDC4",
+    attractiveness: 5,
+    effects: { focus: 5, energy: -1 },
+    spriteKey: "agent_built_office",
+    capacity: 2,
+  },
+
+  medical: {
+    name: "Medical Bay",
+    color: "#E74C3C",
+    attractiveness: 8,
+    effects: { health: 10, stamina: 3 },
+    spriteKey: "agent_built_medical",
+    capacity: 3,
+    stockpileCapacity: 100,
+  },
+
+  gym: {
+    name: "Gym",
+    color: "#3498DB",
+    attractiveness: 6,
+    effects: { stamina: 5, health: 3, energy: -2 },
+    spriteKey: "agent_built_gym",
+    capacity: 5,
+  },
+
+  rest: {
+    name: "Rest Area",
+    color: "#AA66FF",
+    attractiveness: 7,
+    effects: { energy: 6, comfort: 3, happiness: 2 },
+    spriteKey: "agent_built_house",
+    capacity: 4,
+    stockpileCapacity: 100,
+  },
+
+  library: {
+    name: "Library",
+    color: "#8E44AD",
+    attractiveness: 6,
+    effects: { focus: 7, knowledge: 5, resonance: 2 },
+    spriteKey: "agent_built_library",
+    capacity: 8,
+  },
+
+  education: {
+    name: "School",
+    color: "#27AE60",
+    attractiveness: 7,
+    effects: { knowledge: 8, focus: 4, resonance: 3 },
+    spriteKey: "agent_built_education",
+    capacity: 12,
+  },
+
+  training: {
+    name: "Training Hall",
+    color: "#E67E22",
+    attractiveness: 6,
+    effects: { stamina: 4, focus: 3, health: 2 },
+    spriteKey: "agent_built_training",
+    capacity: 8,
+  },
+
+  knowledge: {
+    name: "Knowledge Center",
+    color: "#9B59B6",
+    attractiveness: 7,
+    effects: { knowledge: 9, focus: 5, resonance: 4 },
+    spriteKey: "agent_built_knowledge",
+    capacity: 6,
+  },
+
+  social: {
+    name: "Social Hub",
+    color: "#F39C12",
+    attractiveness: 8,
+    effects: { happiness: 6, resonance: 5, comfort: 2 },
+    spriteKey: "agent_built_social",
+    capacity: 10,
+  },
+
+  recreation: {
+    name: "Recreation Center",
+    color: "#1ABC9C",
+    attractiveness: 8,
+    effects: { happiness: 7, energy: 3, resonance: 3 },
+    spriteKey: "agent_built_recreation",
+    capacity: 12,
+  },
+
+  entertainment: {
+    name: "Entertainment Hall",
+    color: "#E91E63",
+    attractiveness: 9,
+    effects: { happiness: 8, energy: 2, resonance: 4 },
+    spriteKey: "agent_built_entertainment",
+    capacity: 15,
+  },
+
+  fun: {
+    name: "Fun Zone",
+    color: "#FF5722",
+    attractiveness: 9,
+    effects: { happiness: 9, energy: 2 },
+    spriteKey: "agent_built_fun",
+    capacity: 10,
+  },
+
+  play: {
+    name: "Playground",
+    color: "#FFEB3B",
+    attractiveness: 8,
+    effects: { happiness: 7, energy: 4, comfort: 2 },
+    spriteKey: "agent_built_play",
+    capacity: 8,
+  },
+
+  food: {
+    name: "Food Storage",
+    color: "#8BC34A",
+    attractiveness: 5,
+    effects: { hunger: 5 },
+    spriteKey: "agent_built_food",
+    capacity: 2,
+    stockpileCapacity: 500,
+  },
+
+  water: {
+    name: "Water Storage",
+    color: "#03A9F4",
+    attractiveness: 5,
+    effects: { thirst: 5 },
+    spriteKey: "agent_built_water",
+    capacity: 2,
+    stockpileCapacity: 400,
+  },
+
+  storage: {
+    name: "Warehouse",
+    color: "#795548",
+    attractiveness: 3,
+    effects: {},
+    spriteKey: "agent_built_storage",
+    capacity: 2,
+    stockpileCapacity: 1000,
+  },
+
+  market: {
+    name: "Market",
+    color: "#FFC107",
+    attractiveness: 7,
+    effects: { happiness: 4, resonance: 3 },
+    spriteKey: "agent_built_market",
+    capacity: 8,
+    stockpileCapacity: 300,
+  },
+
+  defense: {
+    name: "Defense Tower",
+    color: "#607D8B",
+    attractiveness: 4,
+    effects: { stamina: 3, focus: 4 },
+    spriteKey: "agent_built_defense",
+    capacity: 3,
+    stockpileCapacity: 100,
+  },
+
+  security: {
+    name: "Security Post",
+    color: "#424242",
+    attractiveness: 4,
+    effects: { stamina: 2, focus: 5 },
+    spriteKey: "agent_built_security",
+    capacity: 2,
+  },
+
+  spiritual: {
+    name: "Spiritual Sanctuary",
+    color: "#7E57C2",
+    attractiveness: 7,
+    effects: { resonance: 8, happiness: 4, comfort: 3 },
+    spriteKey: "agent_built_spiritual",
+    capacity: 10,
+  },
+
+  energy: {
+    name: "Energy Generator",
+    color: "#FFEB3B",
+    attractiveness: 3,
+    effects: { energy: 5 },
+    spriteKey: "agent_built_energy",
+    capacity: 1,
+  },
+
+  hygiene: {
+    name: "Hygiene Station",
+    color: "#B2DFDB",
+    attractiveness: 6,
+    effects: { hygiene: 10, health: 2 },
+    spriteKey: "agent_built_hygiene",
+    capacity: 2,
+  },
+
+  comfort: {
+    name: "Comfort Lounge",
+    color: "#BCAAA4",
+    attractiveness: 8,
+    effects: { comfort: 8, happiness: 3, energy: 2 },
+    spriteKey: "agent_built_comfort",
+    capacity: 6,
+  },
+};
+
+export function getZoneProperties(zoneType: ZoneType): ZonePropertyConfig {
+  return (
+    ZONE_PROPERTIES[zoneType] || {
+      name: "Unknown Building",
+      color: "#808080",
+      attractiveness: 3,
+      effects: {},
+      spriteKey: "house",
+      capacity: 2,
+    }
+  );
+}

@@ -5,7 +5,7 @@ import type {
   CraftingRecipe,
   CraftingJob,
 } from "../../types/simulation/crafting";
-import { BASIC_RECIPES, getRecipeById } from "../../../simulation/data/recipes";
+import { RecipesCatalog } from "../../../simulation/data/RecipesCatalog";
 import { simulationEvents, GameEventNames } from "../core/events";
 import type { ResourceType } from "../../types/simulation/economy";
 
@@ -25,6 +25,14 @@ type AgentRecipeState = {
 };
 
 const BASE_WEAPONS: WeaponId[] = ["stone_dagger", "wooden_club"];
+
+const BASIC_RECIPE_IDS = [
+  "wood_to_plank",
+  "make_rope",
+  "cook_meat",
+  "cook_fish",
+  "wooden_club",
+];
 
 export class EnhancedCraftingSystem {
   private readonly config: EnhancedCraftingConfig;
@@ -56,7 +64,7 @@ export class EnhancedCraftingSystem {
   }
 
   public canCraftWeapon(agentId: string, weaponId: WeaponId): boolean {
-    const recipe = getRecipeById(weaponId);
+    const recipe = RecipesCatalog.getRecipeById(weaponId);
     if (!recipe) return false;
 
     if (this.config.requireWorkstation && !this.hasCraftingStation()) {
@@ -83,7 +91,7 @@ export class EnhancedCraftingSystem {
   }
 
   private startCrafting(agentId: string, recipeId: string): boolean {
-    const recipe = getRecipeById(recipeId);
+    const recipe = RecipesCatalog.getRecipeById(recipeId);
     if (!recipe) return false;
     if (!this.hasIngredients(agentId, recipe)) return false;
 
@@ -109,7 +117,7 @@ export class EnhancedCraftingSystem {
 
   private finishJob(job: CraftingJob): void {
     this.activeJobs.delete(job.agentId);
-    const recipe = getRecipeById(job.recipeId);
+    const recipe = RecipesCatalog.getRecipeById(job.recipeId);
     if (!recipe) return;
 
     const successRate =
@@ -191,7 +199,7 @@ export class EnhancedCraftingSystem {
   ): void {
     const recipes = this.getOrCreateRecipeMap(agentId);
     const state = recipes.get(recipeId) ?? {
-      successRate: getRecipeById(recipeId)?.successRate ?? 0.6,
+      successRate: RecipesCatalog.getRecipeById(recipeId)?.successRate ?? 0.6,
       timesUsed: 0,
     };
 
@@ -220,11 +228,14 @@ export class EnhancedCraftingSystem {
     let map = this.knownRecipes.get(agentId);
     if (!map) {
       map = new Map();
-      BASIC_RECIPES.forEach((recipe) => {
-        map!.set(recipe.id, {
-          successRate: recipe.successRate ?? 0.6,
-          timesUsed: 0,
-        });
+      BASIC_RECIPE_IDS.forEach((recipeId) => {
+        const recipe = RecipesCatalog.getRecipeById(recipeId);
+        if (recipe) {
+          map!.set(recipe.id, {
+            successRate: recipe.successRate ?? 0.6,
+            timesUsed: 0,
+          });
+        }
       });
       this.knownRecipes.set(agentId, map);
     }

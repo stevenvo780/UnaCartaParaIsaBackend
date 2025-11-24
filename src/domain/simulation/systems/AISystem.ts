@@ -219,6 +219,7 @@ export class AISystem extends EventEmitter {
       const action = this.planAction(agentId, aiState.currentGoal);
       if (action) {
         aiState.currentAction = action;
+        this.executeAction(action);
         simulationEvents.emit(GameEventNames.AGENT_ACTION_COMMANDED, {
           agentId,
           action,
@@ -951,5 +952,36 @@ export class AISystem extends EventEmitter {
       "wheat_crop",
     ];
     return validTypes.includes(value as WorldResourceType);
+  }
+
+  private executeAction(action: AgentAction): void {
+    if (!this._movementSystem) return;
+
+    switch (action.actionType) {
+      case "move":
+        if (action.targetZoneId) {
+          this._movementSystem.moveToZone(
+            action.agentId,
+            action.targetZoneId,
+          );
+        } else if (action.targetPosition) {
+          this._movementSystem.moveToPoint(
+            action.agentId,
+            action.targetPosition.x,
+            action.targetPosition.y,
+          );
+        }
+        break;
+      case "work":
+        if (action.targetZoneId) {
+          this._movementSystem.moveToZone(
+            action.agentId,
+            action.targetZoneId,
+          );
+        }
+        break;
+      default:
+        break;
+    }
   }
 }

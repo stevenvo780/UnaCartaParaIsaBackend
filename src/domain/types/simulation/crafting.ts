@@ -20,6 +20,7 @@ export interface CraftingRecipe {
     skillLevel?: number;
     tool?: string;
   };
+  discoveredBy?: string[];
 }
 
 export interface CraftingJob {
