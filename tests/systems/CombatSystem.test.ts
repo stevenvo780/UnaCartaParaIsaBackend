@@ -54,8 +54,7 @@ describe("CombatSystem", () => {
       inventorySystem.initializeAgentInventory("attacker-1");
       inventorySystem.addResource("attacker-1", "wood", 10);
       
-      const equipped = combatSystem.equip("attacker-1", "wooden_club");
-      expect(equipped).toBe(true);
+      expect(() => combatSystem.equip("attacker-1", "wooden_club")).not.toThrow();
     });
 
     it("debe retornar arma equipada", () => {
@@ -65,6 +64,11 @@ describe("CombatSystem", () => {
       
       const weapon = combatSystem.getEquipped("attacker-1");
       expect(weapon).toBe("wooden_club");
+    });
+
+    it("debe retornar unarmed si no hay arma equipada", () => {
+      const weapon = combatSystem.getEquipped("agent-without-weapon");
+      expect(weapon).toBe("unarmed");
     });
   });
 

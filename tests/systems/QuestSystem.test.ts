@@ -27,8 +27,8 @@ describe("QuestSystem", () => {
     it("debe iniciar quest", () => {
       const available = questSystem.getAvailableQuests();
       if (available.length > 0) {
-        const started = questSystem.startQuest(available[0].id);
-        expect(started).toBe(true);
+        const result = questSystem.startQuest(available[0].id);
+        expect(result.success).toBe(true);
       }
     });
 
