@@ -23,10 +23,10 @@ const DEFAULT_CONFIG: BuildingMaintenanceConfig = {
   destructionThreshold: 0,
 };
 
+import type { BuildingMetadata } from "./BuildingSystem";
+
 type MutableZone = Zone & {
-  metadata?: Record<string, unknown> & {
-    building?: string;
-  };
+  metadata?: BuildingMetadata;
   durability?: number;
   maxDurability?: number;
 };

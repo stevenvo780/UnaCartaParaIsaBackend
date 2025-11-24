@@ -6,10 +6,15 @@ interface CraftingSystemConfig {
   requireCraftingStation: boolean;
 }
 
+export interface CraftingMetadata {
+  craftingStation?: boolean;
+  craftingType?: string;
+  efficiency?: number;
+  [key: string]: string | number | boolean | undefined;
+}
+
 type MutableZone = Zone & {
-  metadata?: Record<string, unknown> & {
-    craftingStation?: boolean;
-  };
+  metadata?: CraftingMetadata;
 };
 
 const DEFAULT_CONFIG: CraftingSystemConfig = {

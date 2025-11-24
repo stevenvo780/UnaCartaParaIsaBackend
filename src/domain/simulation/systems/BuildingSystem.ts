@@ -28,12 +28,18 @@ const DEFAULT_CONFIG: BuildingSystemConfig = {
   maxWorkbenches: 3,
 };
 
+export interface BuildingMetadata {
+  building?: string;
+  buildingType?: string;
+  underConstruction?: boolean;
+  craftingStation?: boolean;
+  constructionProgress?: number;
+  ownerId?: string;
+  [key: string]: string | number | boolean | undefined;
+}
+
 type MutableZone = Zone & {
-  metadata?: Record<string, unknown> & {
-    building?: string;
-    underConstruction?: boolean;
-    craftingStation?: boolean;
-  };
+  metadata?: BuildingMetadata;
   durability?: number;
   maxDurability?: number;
 };

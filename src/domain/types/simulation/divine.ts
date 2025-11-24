@@ -38,12 +38,24 @@ export interface BlessingEffect {
   multiplier: number;
 }
 
+export interface DivineFavorEventDetails {
+  blessingId?: string;
+  blessingType?: BlessingType;
+  favorChange?: number;
+  previousFavor?: number;
+  newFavor?: number;
+  agentId?: string;
+  reason?: string;
+  miracleType?: string;
+  [key: string]: string | number | undefined;
+}
+
 export interface DivineFavorEvent {
   timestamp: number;
   type: "blessing_granted" | "favor_increased" | "favor_decreased" | "miracle";
   godId: GodId;
   lineageId?: string;
-  details?: Record<string, unknown>;
+  details?: DivineFavorEventDetails;
 }
 
 export interface DivineFavor {

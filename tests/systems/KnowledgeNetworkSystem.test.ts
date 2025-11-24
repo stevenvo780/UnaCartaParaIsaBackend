@@ -133,8 +133,10 @@ describe("KnowledgeNetworkSystem", () => {
       const learned = knowledgeSystem.learnKnowledge("agent-1", "fact-1");
       expect(learned).toBe(true);
 
-      const agentKnowledge = knowledgeSystem.getAgentKnowledge("agent-1");
-      expect(agentKnowledge?.has("fact-1")).toBe(true);
+      // Verificar que el agente aprendió el conocimiento revisando el nodo
+      const snapshot = knowledgeSystem.getGraphSnapshot();
+      const node = snapshot.nodes.find((n) => n.id === "fact-1");
+      expect(node?.discoveredBy).toContain("agent-1");
     });
 
     it("debe emitir evento cuando se aprende conocimiento", () => {
@@ -177,8 +179,10 @@ describe("KnowledgeNetworkSystem", () => {
       const shared = knowledgeSystem.shareKnowledge("agent-1", "agent-2", "fact-1");
       expect(shared).toBe(true);
 
-      const agent2Knowledge = knowledgeSystem.getAgentKnowledge("agent-2");
-      expect(agent2Knowledge?.has("fact-1")).toBe(true);
+      // Verificar que el agente 2 aprendió el conocimiento
+      const snapshot = knowledgeSystem.getGraphSnapshot();
+      const node = snapshot.nodes.find((n) => n.id === "fact-1");
+      expect(node?.discoveredBy).toContain("agent-2");
     });
 
     it("debe emitir evento cuando se comparte conocimiento", () => {
@@ -216,8 +220,8 @@ describe("KnowledgeNetworkSystem", () => {
     });
   });
 
-  describe("Obtener conocimiento del agente", () => {
-    it("debe retornar el conocimiento de un agente", () => {
+  describe("Verificar conocimiento del agente", () => {
+    it("debe registrar que un agente aprendió conocimiento", () => {
       knowledgeSystem.addKnowledge(
         "fact-1",
         "fact",
@@ -225,14 +229,21 @@ describe("KnowledgeNetworkSystem", () => {
       );
       knowledgeSystem.learnKnowledge("agent-1", "fact-1");
 
-      const knowledge = knowledgeSystem.getAgentKnowledge("agent-1");
-      expect(knowledge).toBeDefined();
-      expect(knowledge?.has("fact-1")).toBe(true);
+      const snapshot = knowledgeSystem.getGraphSnapshot();
+      const node = snapshot.nodes.find((n) => n.id === "fact-1");
+      expect(node?.discoveredBy).toContain("agent-1");
     });
 
-    it("debe retornar undefined para agente sin conocimiento", () => {
-      const knowledge = knowledgeSystem.getAgentKnowledge("non-existent");
-      expect(knowledge).toBeUndefined();
+    it("debe mostrar que un agente no tiene conocimiento si no lo aprendió", () => {
+      knowledgeSystem.addKnowledge(
+        "fact-1",
+        "fact",
+        { type: "fact", content: "El fuego quema" },
+      );
+
+      const snapshot = knowledgeSystem.getGraphSnapshot();
+      const node = snapshot.nodes.find((n) => n.id === "fact-1");
+      expect(node?.discoveredBy).not.toContain("non-existent");
     });
   });
 

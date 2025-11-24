@@ -48,11 +48,11 @@ export class AISystem extends EventEmitter {
   private socialSystem?: SocialSystem;
   private craftingSystem?: EnhancedCraftingSystem;
   private householdSystem?: HouseholdSystem;
-  // Dependencies available for future use
-  // private taskSystem?: TaskSystem;
-  // private combatSystem?: CombatSystem;
-  // private animalSystem?: AnimalSystem;
-  // private movementSystem?: MovementSystem;
+  // Reserved for future use in decision making
+  private _taskSystem?: TaskSystem;
+  private _combatSystem?: CombatSystem;
+  private animalSystem?: AnimalSystem;
+  private _movementSystem?: MovementSystem;
 
   private _lastMemoryCleanupTime = 0;
   private readonly MEMORY_CLEANUP_INTERVAL = 300000;
@@ -111,10 +111,10 @@ export class AISystem extends EventEmitter {
       this.socialSystem = systems.socialSystem;
       this.craftingSystem = systems.craftingSystem;
       this.householdSystem = systems.householdSystem;
-      this.taskSystem = systems.taskSystem;
-      this.combatSystem = systems.combatSystem;
+      this._taskSystem = systems.taskSystem;
+      this._combatSystem = systems.combatSystem;
       this.animalSystem = systems.animalSystem;
-      this.movementSystem = systems.movementSystem;
+      this._movementSystem = systems.movementSystem;
     }
 
     simulationEvents.on(
@@ -144,10 +144,10 @@ export class AISystem extends EventEmitter {
     if (systems.socialSystem) this.socialSystem = systems.socialSystem;
     if (systems.craftingSystem) this.craftingSystem = systems.craftingSystem;
     if (systems.householdSystem) this.householdSystem = systems.householdSystem;
-    if (systems.taskSystem) this.taskSystem = systems.taskSystem;
-    if (systems.combatSystem) this.combatSystem = systems.combatSystem;
+    if (systems.taskSystem) this._taskSystem = systems.taskSystem;
+    if (systems.combatSystem) this._combatSystem = systems.combatSystem;
     if (systems.animalSystem) this.animalSystem = systems.animalSystem;
-    if (systems.movementSystem) this.movementSystem = systems.movementSystem;
+    if (systems.movementSystem) this._movementSystem = systems.movementSystem;
   }
 
   public update(_deltaTimeMs: number): void {

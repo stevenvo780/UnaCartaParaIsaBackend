@@ -18,10 +18,16 @@ const DEFAULT_CONFIG: ProductionConfig = {
   baseYieldPerWorker: 4,
 };
 
+export interface ProductionMetadata {
+  productionResource?: ResourceType;
+  productionRate?: number;
+  workers?: number;
+  efficiency?: number;
+  [key: string]: string | number | undefined;
+}
+
 type MutableZone = Zone & {
-  metadata?: Record<string, unknown> & {
-    productionResource?: ResourceType;
-  };
+  metadata?: ProductionMetadata;
 };
 
 export class ProductionSystem {

@@ -1,4 +1,4 @@
-import { logger } from "../../../infrastructure/utils/logger";
+// import { logger } from "../../../infrastructure/utils/logger"; // Reserved for future use
 import { EventEmitter } from "events";
 import { GameState } from "../../types/game-types";
 import {
@@ -41,13 +41,13 @@ export class LifeCycleSystem extends EventEmitter {
   private pendingHousingAssignments = new Set<string>();
 
   private needsSystem?: NeedsSystem;
-  private aiSystem?: AISystem;
+  private _aiSystem?: AISystem;
   private inventorySystem?: InventorySystem;
   private householdSystem?: HouseholdSystem;
-  private socialSystem?: SocialSystem;
-  private marriageSystem?: MarriageSystem;
-  private genealogySystem?: GenealogySystem;
-  private divineFavorSystem?: DivineFavorSystem;
+  private _socialSystem?: SocialSystem;
+  private _marriageSystem?: MarriageSystem;
+  private _genealogySystem?: GenealogySystem;
+  private _divineFavorSystem?: DivineFavorSystem;
 
   constructor(
     gameState: GameState,
@@ -82,13 +82,13 @@ export class LifeCycleSystem extends EventEmitter {
 
     if (systems) {
       this.needsSystem = systems.needsSystem;
-      this.aiSystem = systems.aiSystem;
+      this._aiSystem = systems.aiSystem;
       this.inventorySystem = systems.inventorySystem;
-      this.socialSystem = systems.socialSystem;
-      this.marriageSystem = systems.marriageSystem;
-      this.genealogySystem = systems.genealogySystem;
+      this._socialSystem = systems.socialSystem;
+      this._marriageSystem = systems.marriageSystem;
+      this._genealogySystem = systems.genealogySystem;
       this.householdSystem = systems.householdSystem;
-      this.divineFavorSystem = systems.divineFavorSystem;
+      this._divineFavorSystem = systems.divineFavorSystem;
     }
   }
 
@@ -103,14 +103,14 @@ export class LifeCycleSystem extends EventEmitter {
     divineFavorSystem?: DivineFavorSystem;
   }): void {
     if (systems.needsSystem) this.needsSystem = systems.needsSystem;
-    if (systems.aiSystem) this.aiSystem = systems.aiSystem;
+    if (systems.aiSystem) this._aiSystem = systems.aiSystem;
     if (systems.inventorySystem) this.inventorySystem = systems.inventorySystem;
-    if (systems.socialSystem) this.socialSystem = systems.socialSystem;
-    if (systems.marriageSystem) this.marriageSystem = systems.marriageSystem;
-    if (systems.genealogySystem) this.genealogySystem = systems.genealogySystem;
+    if (systems.socialSystem) this._socialSystem = systems.socialSystem;
+    if (systems.marriageSystem) this._marriageSystem = systems.marriageSystem;
+    if (systems.genealogySystem) this._genealogySystem = systems.genealogySystem;
     if (systems.householdSystem) this.householdSystem = systems.householdSystem;
     if (systems.divineFavorSystem)
-      this.divineFavorSystem = systems.divineFavorSystem;
+      this._divineFavorSystem = systems.divineFavorSystem;
   }
 
   // Reserved for future dependency validation

@@ -232,6 +232,8 @@ export class EnhancedCraftingSystem {
   }
 }
 
+import type { CraftingMetadata } from "./CraftingSystem";
+
 type ZoneWithMetadata = GameState["zones"][number] & {
-  metadata?: Record<string, unknown> & { craftingStation?: boolean };
+  metadata?: CraftingMetadata;
 };

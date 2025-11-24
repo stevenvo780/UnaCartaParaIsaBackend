@@ -7,6 +7,17 @@ import type { LifeCycleSystem } from "./LifeCycleSystem.js";
 import type { EconomySystem } from "./EconomySystem.js";
 import type { EntityNeedsData } from "../../types/simulation/needs.js";
 
+export interface AIModifiers {
+  priorityBoost?: number;
+  cooperationModifier?: number;
+  aggressionModifier?: number;
+  decisionSpeed?: number;
+  goalTimeout?: number;
+  socialPreference?: "introverted" | "balanced" | "extroverted";
+  workEthic?: "lazy" | "balanced" | "workaholic";
+  [key: string]: string | number | undefined;
+}
+
 export interface EmergencePattern {
   id: string;
   name: string;
@@ -19,7 +30,7 @@ export interface EmergencePattern {
   participants?: string[];
   effects: {
     needsModifiers?: Record<string, number>;
-    aiModifiers?: Record<string, unknown>;
+    aiModifiers?: AIModifiers;
     worldModifiers?: Record<string, number>;
   };
   conditions: {

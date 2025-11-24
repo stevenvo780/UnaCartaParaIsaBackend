@@ -68,7 +68,7 @@ describe("TrailSystem", () => {
   });
 
   describe("Obtener senderos", () => {
-    it("debe retornar senderos cercanos", () => {
+    it("debe retornar todos los senderos", () => {
       // Primero registrar un movimiento
       simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
         entityId: "agent-1",
@@ -80,11 +80,41 @@ describe("TrailSystem", () => {
         ],
       });
 
-      // Esperar un poco para que se procese
-      setTimeout(() => {
-        const trails = trailSystem.getTrailsNear(150, 150, 100);
-        expect(trails.length).toBeGreaterThanOrEqual(0);
-      }, 10);
+      // Actualizar el sistema
+      trailSystem.update(100);
+
+      const trails = trailSystem.getAllTrails();
+      expect(Array.isArray(trails)).toBe(true);
+    });
+
+    it("debe retornar los senderos más usados", () => {
+      simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
+        entityId: "agent-1",
+        activityType: "work",
+        destination: { x: 200, y: 200 },
+        path: [
+          { x: 100, y: 100 },
+          { x: 200, y: 200 },
+        ],
+      });
+
+      trailSystem.update(100);
+
+      const mostUsed = trailSystem.getMostUsedTrails(5);
+      expect(Array.isArray(mostUsed)).toBe(true);
+    });
+
+    it("debe retornar hotspots de tráfico", () => {
+      simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
+        entityId: "agent-1",
+        activityType: "work",
+        destination: { x: 200, y: 200 },
+      });
+
+      trailSystem.update(100);
+
+      const hotspots = trailSystem.getTrafficHotspots(5);
+      expect(Array.isArray(hotspots)).toBe(true);
     });
   });
 

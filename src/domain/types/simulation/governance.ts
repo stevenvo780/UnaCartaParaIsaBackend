@@ -44,6 +44,19 @@ export interface SettlementStats {
   housingOccupancy: number;
 }
 
+export interface GovernanceEventDetails {
+  demandId?: string;
+  demandType?: DemandType;
+  policyId?: string;
+  policyName?: string;
+  projectId?: string;
+  projectType?: string;
+  reason?: string;
+  agentId?: string;
+  settlementId?: string;
+  [key: string]: string | number | undefined;
+}
+
 export interface GovernanceEvent {
   timestamp: number;
   type:
@@ -52,7 +65,7 @@ export interface GovernanceEvent {
     | "policy_changed"
     | "project_started"
     | "project_failed";
-  details: Record<string, unknown>;
+  details: GovernanceEventDetails;
 }
 
 export interface GovernanceSnapshot {

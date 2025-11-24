@@ -132,6 +132,16 @@ export interface DialogueChoice {
   };
 }
 
+export interface DialogueConsequences {
+  needsModifier?: Partial<Record<string, number>>;
+  relationshipChange?: number;
+  unlocksFeature?: string;
+  triggersEvent?: string;
+  changesMood?: string;
+  grantsItem?: string;
+  [key: string]: string | number | Partial<Record<string, number>> | undefined;
+}
+
 export interface DialogueCard {
   id: string;
   title: string;
@@ -143,7 +153,7 @@ export interface DialogueCard {
   choices?: DialogueChoice[];
   emotionalTone: DialogueTone;
   duration: number;
-  consequences?: Record<string, unknown>;
+  consequences?: DialogueConsequences;
   timestamp: number;
 }
 
