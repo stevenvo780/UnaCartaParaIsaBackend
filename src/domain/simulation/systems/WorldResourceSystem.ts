@@ -18,7 +18,7 @@ export class WorldResourceSystem {
     simulationEvents.on(GameEventNames.RESOURCE_GATHERED, this.handleResourceGathered.bind(this));
   }
 
-  public update(delta: number): void {
+  public update(_delta: number): void {
     const now = Date.now();
     if (now - this.lastRegenerationCheck < this.REGENERATION_CHECK_INTERVAL) {
       return;

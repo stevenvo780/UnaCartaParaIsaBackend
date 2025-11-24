@@ -55,7 +55,7 @@ export class TimeSystem extends EventEmitter {
     this.lastWeatherChange = Date.now();
   }
 
-  public update(deltaMs: number): void {
+  public update(_deltaMs: number): void {
     const now = Date.now();
 
     if (now - this.lastTimeUpdate >= this.TIME_UPDATE_INTERVAL) {

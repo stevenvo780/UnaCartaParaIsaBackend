@@ -65,7 +65,7 @@ export class CrisisPredictorSystem {
     return this.snapshot;
   }
 
-  private computeIndicators(now: number): CrisisIndicator[] {
+  private computeIndicators(_now: number): CrisisIndicator[] {
     const needs = this.needsSystem.getAllNeeds();
     const totalAgents = needs.length || 1;
 

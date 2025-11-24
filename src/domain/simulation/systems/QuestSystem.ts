@@ -1,7 +1,6 @@
 import { GameState } from "../../types/game-types";
 import {
   Quest,
-  QuestObjective,
   QuestProgress,
   QuestEvent,
 } from "../../types/simulation/quests";
@@ -289,7 +288,7 @@ export class QuestSystem {
     return { completed: false };
   }
 
-  private failQuest(questId: string, reason: string): QuestEvent | null {
+  private failQuest(questId: string, _reason: string): QuestEvent | null {
     const quest = this.questProgress.activeQuests.get(questId);
     if (!quest) return null;
 

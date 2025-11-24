@@ -6,9 +6,6 @@ export class TradeSystem {
   private activeOffers = new Map<string, TradeOffer>();
   private tradeHistory: TradeRecord[] = [];
   private merchantReputation = new Map<string, number>();
-  private lastBackgroundTrade = 0;
-  private readonly BACKGROUND_TRADE_INTERVAL = 15000;
-  private readonly BACKGROUND_TRADE_PROBABILITY = 0.05;
 
   constructor(gameState: GameState) {
     this.gameState = gameState;

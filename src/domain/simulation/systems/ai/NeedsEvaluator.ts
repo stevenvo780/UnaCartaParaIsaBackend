@@ -1,4 +1,4 @@
-import type { AIState, AIGoal, AgentPersonality } from '../../../types/simulation/ai';
+import type { AIState, AIGoal } from '../../../types/simulation/ai';
 import type { EntityNeedsData } from '../../../types/simulation/needs';
 
 export interface NeedsEvaluatorDependencies {
@@ -32,7 +32,6 @@ export function evaluateCriticalNeeds(
   }
 
   const { needs } = entityNeeds;
-  const { personality } = aiState;
   const now = Date.now();
 
   // Thresholds based on personality

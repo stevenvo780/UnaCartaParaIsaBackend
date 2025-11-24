@@ -1,12 +1,10 @@
 import { GameState } from "../../types/game-types";
-import { SocialConfig, SocialGroup } from "../../types/simulation/social";
+import { SocialConfig } from "../../types/simulation/social";
 
 export class SocialSystem {
   private gameState: GameState;
   private config: SocialConfig;
   private edges = new Map<string, Map<string, number>>();
-  private groups: SocialGroup[] = [];
-  private lastUpdate = 0;
 
   constructor(gameState: GameState, config?: Partial<SocialConfig>) {
     this.gameState = gameState;
@@ -20,7 +18,6 @@ export class SocialSystem {
   }
 
   public update(deltaTimeMs: number): void {
-    const now = Date.now();
     const dt = deltaTimeMs / 1000;
 
     this.decayEdges(dt);
@@ -28,7 +25,7 @@ export class SocialSystem {
   }
 
   private decayEdges(dt: number): void {
-    this.edges.forEach((neighbors, a) => {
+    this.edges.forEach((neighbors) => {
       neighbors.forEach((affinity, b) => {
         if (affinity > 0) {
           const newAffinity = Math.max(0, affinity - this.config.decayPerSecond * dt);
@@ -80,7 +77,7 @@ export class SocialSystem {
     return this.edges.get(a)?.get(b) ?? 0;
   }
 
-  public imposeTruce(aId: string, bId: string, durationMs: number): void {
+  public imposeTruce(aId: string, bId: string, _durationMs: number): void {
     // Las treguas se manejan en ConflictResolutionSystem, pero podemos mejorar la afinidad
     this.addEdge(aId, bId, 0.2);
   }

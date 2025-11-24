@@ -1,16 +1,11 @@
-import { GameState } from "../../types/game-types";
-import { NeedsConfig, EntityNeedsData, NeedsState } from "../../types/simulation/needs";
-import { LifeCycleSystem } from "./LifeCycleSystem";
+import { NeedsConfig, EntityNeedsData } from "../../types/simulation/needs";
 
 export class NeedsSystem {
-  private gameState: GameState;
   private entityNeeds = new Map<string, EntityNeedsData>();
   private config: NeedsConfig;
-  private lifeCycleSystem?: LifeCycleSystem;
 
-  constructor(gameState: GameState, lifeCycleSystem?: LifeCycleSystem) {
-    this.gameState = gameState;
-    this.lifeCycleSystem = lifeCycleSystem;
+  constructor(_gameState: unknown, _lifeCycleSystem?: unknown) {
+    // Constructor parameters kept for API compatibility but not used internally
     this.config = {
       hungerDecayRate: 0.1,
       thirstDecayRate: 0.15,

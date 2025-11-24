@@ -13,7 +13,6 @@ interface GenealogyConfig {
 }
 
 export class GenealogySystem {
-  private _gameState: GameState;
   private config: GenealogyConfig;
   private familyTree: FamilyTree = {
     lineages: new Map(),
@@ -22,8 +21,8 @@ export class GenealogySystem {
   };
   private history: GenealogyEvent[] = [];
 
-  constructor(gameState: GameState, config?: Partial<GenealogyConfig>) {
-    this._gameState = gameState;
+  constructor(_gameState: GameState, config?: Partial<GenealogyConfig>) {
+    // gameState kept for potential future use
     this.config = {
       mutationRate: 0.15,
       trackHistory: true,

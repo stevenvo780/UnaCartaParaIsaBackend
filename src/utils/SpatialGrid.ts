@@ -1,12 +1,8 @@
 export class SpatialGrid<T> {
   private grid: Map<string, Set<{ item: T; x: number; y: number }>> = new Map();
   private cellSize: number;
-  private width: number;
-  private height: number;
 
-  constructor(width: number, height: number, cellSize: number) {
-    this.width = width;
-    this.height = height;
+  constructor(_width: number, _height: number, cellSize: number) {
     this.cellSize = cellSize;
   }
 

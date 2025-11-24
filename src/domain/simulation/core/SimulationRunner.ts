@@ -72,7 +72,7 @@ export class SimulationRunner {
   private livingLegendsSystem: LivingLegendsSystem;
   private lifeCycleSystem: LifeCycleSystem;
   private needsSystem: NeedsSystem;
-  // @ts-expect-error - System is event-driven, not used in tick loop
+  // @ts-ignore - System is event-driven, kept for potential future use
   private _genealogySystem: GenealogySystem;
   private socialSystem: SocialSystem;
   private inventorySystem: InventorySystem;
@@ -88,7 +88,7 @@ export class SimulationRunner {
   private buildingMaintenanceSystem: BuildingMaintenanceSystem;
   private productionSystem: ProductionSystem;
   private enhancedCraftingSystem: EnhancedCraftingSystem;
-  // @ts-expect-error - System is event-driven, not used in tick loop
+  // @ts-ignore - System is event-driven, kept for potential future use
   private _craftingSystem: CraftingSystem;
   private animalSystem: AnimalSystem;
   private itemGenerationSystem: ItemGenerationSystem;

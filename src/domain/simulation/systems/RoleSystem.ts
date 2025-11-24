@@ -148,7 +148,7 @@ export class RoleSystem extends EventEmitter {
     console.log('👷 RoleSystem (Backend) initialized');
   }
 
-  public update(delta: number): void {
+  public update(_delta: number): void {
     const now = Date.now();
     const dt = (now - this.lastUpdate) / 1000;
     if (dt < 1) return;

@@ -173,7 +173,7 @@ export class ConflictResolutionSystem {
           mediationSuccessRate: 0,
           truceAcceptanceRate: 0,
         },
-      } as typeof this.gameState.conflicts & { activeConflicts?: ActiveConflict[] };
+      };
     }
 
     // El frontend espera activeConflicts, no active

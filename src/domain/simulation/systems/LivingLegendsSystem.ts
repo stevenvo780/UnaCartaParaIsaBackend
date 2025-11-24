@@ -3,7 +3,8 @@ import type { GameState } from "../../types/game-types";
 import type { LegendRecord, ReputationEvent, LegendDeed } from "../../types/simulation/legends";
 
 export class LivingLegendsSystem {
-  private state: GameState;
+  // @ts-ignore - Kept for potential future use
+  private _state: GameState;
   private legends = new Map<string, LegendRecord>();
   private reputationEvents: ReputationEvent[] = [];
   private readonly MAX_EVENT_HISTORY = 50;
@@ -19,7 +20,7 @@ export class LivingLegendsSystem {
   };
 
   constructor(state: GameState) {
-    this.state = state;
+    this._state = state;
     this.setupEventListeners();
   }
 

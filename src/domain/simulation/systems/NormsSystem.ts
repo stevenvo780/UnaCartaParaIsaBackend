@@ -23,7 +23,7 @@ export class NormsSystem {
     targetId: string,
     zoneId: string,
     zoneType: string,
-    position?: { x: number; y: number }
+    _position?: { x: number; y: number }
   ): {
     violated: boolean;
     sanction?: SanctionRecord;

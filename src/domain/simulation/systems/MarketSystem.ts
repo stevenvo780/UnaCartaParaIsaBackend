@@ -1,5 +1,5 @@
 import type { GameState } from "../../types/game-types";
-import type { MarketConfig, MarketOrder, ResourceType } from "../../types/simulation/economy";
+import type { MarketConfig, ResourceType } from "../../types/simulation/economy";
 import { InventorySystem } from "./InventorySystem";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 
@@ -19,18 +19,16 @@ const DEFAULT_MARKET_CONFIG: MarketConfig = {
 export class MarketSystem {
   private state: GameState;
   private inventorySystem: InventorySystem;
-  private lifeCycleSystem: LifeCycleSystem;
   private config: MarketConfig;
 
   constructor(
     state: GameState,
     inventorySystem: InventorySystem,
-    lifeCycleSystem: LifeCycleSystem,
+    _lifeCycleSystem: LifeCycleSystem,
     config?: Partial<MarketConfig>
   ) {
     this.state = state;
     this.inventorySystem = inventorySystem;
-    this.lifeCycleSystem = lifeCycleSystem;
     this.config = { ...DEFAULT_MARKET_CONFIG, ...config };
   }
 

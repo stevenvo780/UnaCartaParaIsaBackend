@@ -7,21 +7,13 @@ export interface InteractionConfig {
 }
 
 export class InteractionGameSystem {
-  private gameState: GameState;
-  private config: InteractionConfig;
   private activeInteractions = new Map<string, {
     participants: string[];
     type: string;
     startTime: number;
   }>();
 
-  constructor(gameState: GameState, config?: Partial<InteractionConfig>) {
-    this.gameState = gameState;
-    this.config = {
-      interactionCooldownMs: 5000,
-      maxInteractionsPerDay: 10,
-      ...config,
-    };
+  constructor(_gameState: GameState, _config?: Partial<InteractionConfig>) {
     console.log('🎲 InteractionGameSystem (Backend) initialized');
   }
 

@@ -128,7 +128,7 @@ export class ItemGenerationSystem {
     const collected: Array<{ itemId: string; quantity: number }> = [];
     const now = Date.now();
 
-    zoneItemMap.forEach((item, key) => {
+    zoneItemMap.forEach((item) => {
       if (!item.collectedBy) {
         // Mark as collected
         item.collectedBy = agentId;

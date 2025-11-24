@@ -16,12 +16,11 @@ import type { LegendRecord } from "./simulation/legends";
 import type { FamilyTree } from "./simulation/genealogy";
 import type { Inventory } from "./simulation/economy";
 import type { TradeOffer, TradeRecord } from "./simulation/trade";
-import type { MarriageGroup, MarriageProposal } from "./simulation/marriage";
+import type { MarriageGroup } from "./simulation/marriage";
 import type { Quest } from "./simulation/quests";
 import type { ActiveConflict, ConflictRecord, ConflictStats } from "./simulation/conflict";
 import type { Animal } from "./simulation/animals";
 import type { TechTreeState } from "./simulation/research";
-import type { CraftingRecipe } from "./simulation/crafting";
 import type { SerializedReputationData } from "./simulation/reputation";
 import type { NormViolation, SanctionRecord, NormComplianceStats } from "./simulation/norms";
 

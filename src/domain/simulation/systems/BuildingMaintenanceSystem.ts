@@ -199,7 +199,7 @@ export class BuildingMaintenanceSystem {
     }
   }
 
-  public startUpgrade(zoneId: string, agentId: string): boolean {
+  public startUpgrade(zoneId: string, _agentId: string): boolean {
     const state = this.buildingStates.get(zoneId);
     if (!state) return false;
 
