@@ -6,6 +6,7 @@ import {
   MarriageConfig,
   MarriageStats,
 } from "../../types/simulation/marriage";
+import { simulationEvents, GameEventNames } from "../core/events";
 
 export class MarriageSystem {
   private gameState: GameState;
@@ -51,6 +52,13 @@ export class MarriageSystem {
       timestamp: Date.now(),
     });
 
+    simulationEvents.emit(GameEventNames.MARRIAGE_PROPOSED, {
+      proposerId,
+      targetId,
+      groupId: proposerGroup?.id,
+      timestamp: Date.now(),
+    });
+
     return true;
   }
 
@@ -74,12 +82,34 @@ export class MarriageSystem {
       );
 
       this.addHistoryEvent("joined", targetId, group.id, proposal.proposerId);
+      
+      simulationEvents.emit(GameEventNames.MARRIAGE_MEMBER_JOINED, {
+        agentId: targetId,
+        groupId: group.id,
+        proposerId: proposal.proposerId,
+        timestamp: Date.now(),
+      });
     } else {
       group = this.createMarriageGroup([proposal.proposerId, targetId]);
       this.addHistoryEvent("formed", targetId, group.id, proposal.proposerId);
+      
+      simulationEvents.emit(GameEventNames.MARRIAGE_GROUP_FORMED, {
+        groupId: group.id,
+        members: group.members,
+        proposerId: proposal.proposerId,
+        targetId,
+        timestamp: Date.now(),
+      });
     }
 
     this.pendingProposals.delete(targetId);
+
+    simulationEvents.emit(GameEventNames.MARRIAGE_ACCEPTED, {
+      proposerId: proposal.proposerId,
+      targetId,
+      groupId: group.id,
+      timestamp: Date.now(),
+    });
 
     return { success: true, groupId: group.id };
   }
@@ -90,6 +120,12 @@ export class MarriageSystem {
 
     this.addHistoryEvent("rejected", targetId, undefined, proposal.proposerId);
     this.pendingProposals.delete(targetId);
+
+    simulationEvents.emit(GameEventNames.MARRIAGE_REJECTED, {
+      proposerId: proposal.proposerId,
+      targetId,
+      timestamp: Date.now(),
+    });
 
     return true;
   }
@@ -110,6 +146,14 @@ export class MarriageSystem {
 
     this.addHistoryEvent("dissolved", agentId, groupId, undefined, reason);
 
+    simulationEvents.emit(GameEventNames.DIVORCE_COMPLETED, {
+      agentId,
+      groupId,
+      reason,
+      remainingMembers: group.members,
+      timestamp: Date.now(),
+    });
+
     return true;
   }
 
@@ -121,6 +165,13 @@ export class MarriageSystem {
 
     for (const memberId of group.members) {
       this.addHistoryEvent("widowed", memberId, groupId, deceasedId, "death");
+      
+      simulationEvents.emit(GameEventNames.WIDOWHOOD_REGISTERED, {
+        agentId: memberId,
+        deceasedId,
+        groupId,
+        timestamp: Date.now(),
+      });
     }
 
     if (group.members.length <= 1) {

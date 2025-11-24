@@ -19,12 +19,16 @@ import {
   evaluateAttention,
   evaluateDefaultExploration,
 } from "./AttentionEvaluator";
+import { evaluateQuestGoals } from "./QuestEvaluator";
+import { evaluateTradeGoals } from "./TradeEvaluator";
+import { evaluateBuildingContributionGoals } from "./BuildingContributionEvaluator";
 import {
   selectBestZone,
   getUnexploredZones,
   prioritizeGoals,
   getEntityPosition,
 } from "./utils";
+import type { Quest } from "../../../types/simulation/quests";
 
 export interface AgentGoalPlannerDeps {
   gameState: GameState;
@@ -52,6 +56,10 @@ export interface AgentGoalPlannerDeps {
     pos: { x: number; y: number },
     range: number,
   ) => Array<{ id: string; position: { x: number; y: number } }>;
+  getActiveQuests?: () => Quest[];
+  getAvailableQuests?: () => Quest[];
+  getCurrentTimeOfDay?: () => "dawn" | "morning" | "midday" | "afternoon" | "dusk" | "night" | "deep_night";
+  getEntityPosition?: (id: string) => { x: number; y: number } | null;
 }
 
 export function planGoals(
@@ -79,6 +87,7 @@ export function planGoals(
     const needsDeps = {
       getEntityNeeds: deps.getEntityNeeds,
       findNearestResource: deps.findNearestResource,
+      getCurrentTimeOfDay: deps.getCurrentTimeOfDay,
     };
     const criticalGoals = evaluateCriticalNeeds(needsDeps, aiState);
     goals.push(...criticalGoals);
@@ -146,6 +155,46 @@ export function planGoals(
     goals.push(...craftingGoals);
   }
 
+  // Quest goals
+  if (deps.getActiveQuests && deps.getAvailableQuests) {
+    const questDeps = {
+      getActiveQuests: deps.getActiveQuests,
+      getAvailableQuests: deps.getAvailableQuests,
+      getEntityPosition: positionFor,
+    };
+    const questGoals = evaluateQuestGoals(questDeps, aiState);
+    goals.push(...questGoals);
+  }
+
+  // Trade goals
+  if (
+    deps.getAgentInventory &&
+    deps.getAllActiveAgentIds
+  ) {
+    const tradeDeps = {
+      getAgentInventory: deps.getAgentInventory,
+      getEntityPosition: positionFor,
+      getAllActiveAgentIds: deps.getAllActiveAgentIds,
+      gameState: deps.gameState,
+    };
+    const tradeGoals = evaluateTradeGoals(tradeDeps, aiState);
+    goals.push(...tradeGoals);
+  }
+
+  // Building contribution goals
+  if (deps.getAgentInventory && deps.getEntityPosition) {
+    const buildingDeps = {
+      gameState: deps.gameState,
+      getEntityPosition: positionFor,
+      getAgentInventory: deps.getAgentInventory,
+    };
+    const buildingGoals = evaluateBuildingContributionGoals(
+      buildingDeps,
+      aiState,
+    );
+    goals.push(...buildingGoals);
+  }
+
   const attentionDeps = {
     gameState: deps.gameState,
     getEntityPosition: positionFor,
@@ -162,6 +211,7 @@ export function planGoals(
         getPreferredResourceForRole: (role: string): string | null =>
           deps.getPreferredResourceForRole!(role) || null,
         findNearestResource: deps.findNearestResource,
+        getCurrentTimeOfDay: deps.getCurrentTimeOfDay,
       };
       const workGoals = evaluateWorkOpportunities(oppDeps, aiState);
       goals.push(...workGoals);

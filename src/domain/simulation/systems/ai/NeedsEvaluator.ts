@@ -7,6 +7,7 @@ export interface NeedsEvaluatorDependencies {
     entityId: string,
     resourceType: string,
   ) => { id: string; x: number; y: number } | null;
+  getCurrentTimeOfDay?: () => "dawn" | "morning" | "midday" | "afternoon" | "dusk" | "night" | "deep_night";
 }
 
 export function calculateNeedPriority(
@@ -33,10 +34,22 @@ export function evaluateCriticalNeeds(
 
   const needs = entityNeeds;
   const now = Date.now();
+  const timeOfDay = deps.getCurrentTimeOfDay?.() || "midday";
 
-  const hungerThreshold = 45;
-  const thirstThreshold = 40;
-  const energyThreshold = 35;
+  // Adjust thresholds based on time of day
+  // At night, energy needs are more critical
+  // During day, hunger/thirst are more critical
+  let hungerThreshold = 45;
+  let thirstThreshold = 40;
+  let energyThreshold = 35;
+
+  if (timeOfDay === "night" || timeOfDay === "deep_night") {
+    energyThreshold = 50; // More critical at night
+    hungerThreshold = 35; // Less critical at night
+  } else if (timeOfDay === "morning" || timeOfDay === "dawn") {
+    hungerThreshold = 50; // More critical in morning
+    energyThreshold = 40; // Less critical after rest
+  }
 
   if (needs.thirst < thirstThreshold) {
     let waterTarget = null;

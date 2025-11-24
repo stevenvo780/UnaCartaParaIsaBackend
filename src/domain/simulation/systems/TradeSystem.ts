@@ -1,6 +1,7 @@
 import { GameState } from "../../types/game-types";
 import { TradeOffer, TradeRecord } from "../../types/simulation/trade";
 import type { InventorySystem } from "./InventorySystem";
+import { simulationEvents, GameEventNames } from "../core/events";
 
 export class TradeSystem {
   private gameState: GameState;
@@ -41,6 +42,16 @@ export class TradeSystem {
     };
 
     this.activeOffers.set(offerId, offer);
+
+    simulationEvents.emit(GameEventNames.TRADE_OFFER_CREATED, {
+      offerId,
+      sellerId,
+      offering,
+      requesting,
+      createdAt: offer.createdAt,
+      expiresAt: offer.expiresAt,
+    });
+
     return offerId;
   }
 
@@ -61,12 +72,23 @@ export class TradeSystem {
     this.updateReputation(buyerId, 1);
 
     const value = this.calculateOfferValue(offer.offering);
-    this.tradeHistory.push({
+    const tradeRecord: TradeRecord = {
       sellerId: offer.sellerId,
       buyerId,
       timestamp: Date.now(),
       items: offer.offering.map((o) => o.itemId),
       value,
+    };
+    this.tradeHistory.push(tradeRecord);
+
+    simulationEvents.emit(GameEventNames.TRADE_COMPLETED, {
+      offerId: offer.id,
+      sellerId: offer.sellerId,
+      buyerId,
+      offering: offer.offering,
+      requesting: offer.requesting,
+      value,
+      timestamp: tradeRecord.timestamp,
     });
 
     return true;
@@ -78,6 +100,14 @@ export class TradeSystem {
 
     offer.status = "rejected";
     offer.buyerId = buyerId;
+
+    simulationEvents.emit(GameEventNames.TRADE_REJECTED, {
+      offerId,
+      sellerId: offer.sellerId,
+      buyerId,
+      timestamp: Date.now(),
+    });
+
     return true;
   }
 
@@ -275,6 +305,17 @@ export class TradeSystem {
 
           this.updateReputation(seller.id, 1);
           this.updateReputation(buyer.id, 0.5);
+
+          simulationEvents.emit(GameEventNames.TRADE_COMPLETED, {
+            offerId: `background_${Date.now()}`,
+            sellerId: seller.id,
+            buyerId: buyer.id,
+            offering: [{ itemId: resourceType, quantity: removed }],
+            requesting: { value },
+            value,
+            timestamp: Date.now(),
+            isBackgroundTrade: true,
+          });
 
           return;
         }

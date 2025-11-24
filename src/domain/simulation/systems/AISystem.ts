@@ -13,6 +13,7 @@ import type { WorldResourceType } from "../../types/simulation/worldResources";
 import { getAnimalConfig } from "../../../infrastructure/services/world/config/AnimalConfigs";
 import type { Task } from "../../types/simulation/tasks";
 import type { WeaponId as CraftingWeaponId } from "../../types/simulation/crafting";
+import type { Quest } from "../../types/simulation/quests";
 import { planGoals, type AgentGoalPlannerDeps } from "./ai/AgentGoalPlanner";
 import { PriorityManager } from "./ai/PriorityManager";
 import { GameEventNames } from "../core/events";
@@ -28,6 +29,12 @@ import type { TaskSystem } from "./TaskSystem";
 import type { CombatSystem } from "./CombatSystem";
 import type { AnimalSystem } from "./AnimalSystem";
 import type { MovementSystem } from "./MovementSystem";
+import type { QuestSystem } from "./QuestSystem";
+import type { TimeSystem } from "./TimeSystem";
+import type { BuildingSystem } from "./BuildingSystem";
+import type { ProductionSystem } from "./ProductionSystem";
+import type { TradeSystem } from "./TradeSystem";
+import type { ReputationSystem } from "./ReputationSystem";
 
 interface AISystemConfig {
   updateIntervalMs: number;
@@ -54,6 +61,12 @@ export class AISystem extends EventEmitter {
   private combatSystem?: CombatSystem;
   private animalSystem?: AnimalSystem;
   private _movementSystem?: MovementSystem;
+  private questSystem?: QuestSystem;
+  private timeSystem?: TimeSystem;
+  private buildingSystem?: BuildingSystem;
+  private productionSystem?: ProductionSystem;
+  private tradeSystem?: TradeSystem;
+  private reputationSystem?: ReputationSystem;
 
   private _lastMemoryCleanupTime = 0;
   private readonly MEMORY_CLEANUP_INTERVAL = 300000;
@@ -85,6 +98,12 @@ export class AISystem extends EventEmitter {
       combatSystem?: CombatSystem;
       animalSystem?: AnimalSystem;
       movementSystem?: MovementSystem;
+      questSystem?: QuestSystem;
+      timeSystem?: TimeSystem;
+      buildingSystem?: BuildingSystem;
+      productionSystem?: ProductionSystem;
+      tradeSystem?: TradeSystem;
+      reputationSystem?: ReputationSystem;
     },
   ) {
     super();
@@ -116,6 +135,12 @@ export class AISystem extends EventEmitter {
       this.combatSystem = systems.combatSystem;
       this.animalSystem = systems.animalSystem;
       this._movementSystem = systems.movementSystem;
+      this.questSystem = systems.questSystem;
+      this.timeSystem = systems.timeSystem;
+      this.buildingSystem = systems.buildingSystem;
+      this.productionSystem = systems.productionSystem;
+      this.tradeSystem = systems.tradeSystem;
+      this.reputationSystem = systems.reputationSystem;
     }
 
     simulationEvents.on(
@@ -136,6 +161,12 @@ export class AISystem extends EventEmitter {
     combatSystem?: CombatSystem;
     animalSystem?: AnimalSystem;
     movementSystem?: MovementSystem;
+    questSystem?: QuestSystem;
+    timeSystem?: TimeSystem;
+    buildingSystem?: BuildingSystem;
+    productionSystem?: ProductionSystem;
+    tradeSystem?: TradeSystem;
+    reputationSystem?: ReputationSystem;
   }): void {
     if (systems.needsSystem) this.needsSystem = systems.needsSystem;
     if (systems.roleSystem) this.roleSystem = systems.roleSystem;
@@ -149,6 +180,14 @@ export class AISystem extends EventEmitter {
     if (systems.combatSystem) this.combatSystem = systems.combatSystem;
     if (systems.animalSystem) this.animalSystem = systems.animalSystem;
     if (systems.movementSystem) this._movementSystem = systems.movementSystem;
+    if (systems.questSystem) this.questSystem = systems.questSystem;
+    if (systems.timeSystem) this.timeSystem = systems.timeSystem;
+    if (systems.buildingSystem) this.buildingSystem = systems.buildingSystem;
+    if (systems.productionSystem)
+      this.productionSystem = systems.productionSystem;
+    if (systems.tradeSystem) this.tradeSystem = systems.tradeSystem;
+    if (systems.reputationSystem)
+      this.reputationSystem = systems.reputationSystem;
   }
 
   public update(_deltaTimeMs: number): void {
@@ -339,6 +378,46 @@ export class AISystem extends EventEmitter {
       getTasks: this.taskSystem
         ? (): Task[] => this.taskSystem!.getActiveTasks()
         : undefined,
+      getActiveQuests: this.questSystem
+        ? (): Quest[] => this.questSystem!.getActiveQuests()
+        : undefined,
+      getAvailableQuests: this.questSystem
+        ? (): Quest[] => this.questSystem!.getAvailableQuests()
+        : undefined,
+      getCurrentTimeOfDay: this.timeSystem
+        ? ():
+            | "dawn"
+            | "morning"
+            | "midday"
+            | "afternoon"
+            | "dusk"
+            | "night"
+            | "deep_night" => {
+            const time = this.timeSystem!.getCurrentTimeOfDay();
+            // Map TimeSystem return type to expected type
+            if (time === "evening") return "dusk";
+            if (time === "rest") return "deep_night";
+            return time as
+              | "dawn"
+              | "morning"
+              | "midday"
+              | "afternoon"
+              | "dusk"
+              | "night"
+              | "deep_night";
+          }
+        : undefined,
+      getEntityPosition: (id: string) => {
+        const agent = this.gameState.agents.find((a) => a.id === id);
+        if (agent?.position) {
+          return { x: agent.position.x, y: agent.position.y };
+        }
+        const entity = this.gameState.entities?.find((e) => e.id === id);
+        if (entity?.position) {
+          return { x: entity.position.x, y: entity.position.y };
+        }
+        return null;
+      },
     };
 
     const goals = planGoals(deps, aiState);

@@ -1,0 +1,77 @@
+import type { AIState, AIGoal } from "../../../types/simulation/ai";
+import type { Inventory } from "../../../types/simulation/economy";
+
+export interface TradeEvaluatorDependencies {
+  getAgentInventory: (id: string) => Inventory | undefined;
+  getEntityPosition: (id: string) => { x: number; y: number } | null;
+  getAllActiveAgentIds: () => string[];
+  gameState: {
+    zones?: Array<{
+      id: string;
+      type: string;
+      bounds: { x: number; y: number; width: number; height: number };
+    }>;
+  };
+}
+
+export function evaluateTradeGoals(
+  deps: TradeEvaluatorDependencies,
+  aiState: AIState,
+): AIGoal[] {
+  const goals: AIGoal[] = [];
+  const now = Date.now();
+
+  const myInventory = deps.getAgentInventory(aiState.entityId);
+  if (!myInventory) return goals;
+
+  // Check if agent has excess resources to trade
+  const excessThreshold = 20; // More than this is considered excess
+  const hasExcess =
+    (myInventory.wood || 0) > excessThreshold ||
+    (myInventory.stone || 0) > excessThreshold ||
+    (myInventory.food || 0) > excessThreshold;
+
+  if (!hasExcess) return goals;
+
+  // Find market zones
+  const marketZones = deps.gameState.zones?.filter(
+    (z) => z.type === "market" || z.type === "trade",
+  ) || [];
+
+  if (marketZones.length === 0) return goals;
+
+  const myPos = deps.getEntityPosition(aiState.entityId);
+  if (!myPos) return goals;
+
+  // Find nearest market
+  let nearestMarket: typeof marketZones[0] | null = null;
+  let minDist = Infinity;
+
+  for (const zone of marketZones) {
+    const cx = zone.bounds.x + zone.bounds.width / 2;
+    const cy = zone.bounds.y + zone.bounds.height / 2;
+    const dist = Math.hypot(cx - myPos.x, cy - myPos.y);
+    if (dist < minDist) {
+      minDist = dist;
+      nearestMarket = zone;
+    }
+  }
+
+  if (nearestMarket) {
+    goals.push({
+      id: `trade_${aiState.entityId}_${now}`,
+      type: "work",
+      priority: 0.4, // Lower priority than critical needs
+      targetZoneId: nearestMarket.id,
+      data: {
+        action: "trade",
+        resourceType: "excess",
+      },
+      createdAt: now,
+      expiresAt: now + 20000,
+    });
+  }
+
+  return goals;
+}
+

@@ -9,6 +9,7 @@ export interface OpportunitiesEvaluatorDependencies {
     entityId: string,
     resourceType: string,
   ) => { id: string; x: number; y: number } | null;
+  getCurrentTimeOfDay?: () => "dawn" | "morning" | "midday" | "afternoon" | "dusk" | "night" | "deep_night";
 }
 
 export interface ExplorationDependencies {
@@ -30,6 +31,12 @@ export function evaluateWorkOpportunities(
 ): AIGoal[] {
   const goals: AIGoal[] = [];
   const now = Date.now();
+  const timeOfDay = deps.getCurrentTimeOfDay?.() || "midday";
+
+  // Reduce work priority at night
+  if (timeOfDay === "night" || timeOfDay === "deep_night") {
+    return goals; // Don't work at night
+  }
 
   const role = deps.getAgentRole(aiState.entityId);
 

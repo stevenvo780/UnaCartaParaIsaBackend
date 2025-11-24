@@ -17,6 +17,7 @@ import { InventorySystem } from "./InventorySystem";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 import { SocialSystem } from "./SocialSystem";
 import { SpatialGrid } from "../../../utils/SpatialGrid";
+import type { AnimalSystem } from "./AnimalSystem";
 
 interface CombatConfig {
   decisionIntervalMs: number;
@@ -53,13 +54,17 @@ export class CombatSystem {
   private readonly maxLogEntries = 200;
   private combatLog: CombatLogEntry[];
 
+  private animalSystem?: AnimalSystem;
+
   constructor(
     private readonly state: GameState,
     private readonly inventorySystem: InventorySystem,
     private readonly lifeCycleSystem: LifeCycleSystem,
     private readonly socialSystem: SocialSystem,
     config?: Partial<CombatConfig>,
+    animalSystem?: AnimalSystem,
   ) {
+    this.animalSystem = animalSystem;
     this.config = { ...DEFAULT_COMBAT_CONFIG, ...config };
     const worldWidth = state.worldSize?.width ?? 2000;
     const worldHeight = state.worldSize?.height ?? 2000;
@@ -90,6 +95,28 @@ export class CombatSystem {
       if (!entity.position) continue;
       entitiesById.set(entity.id, entity);
       this.spatialGrid.insert(entity.id, entity.position);
+    }
+
+    // Add animals as potential targets
+    if (this.animalSystem) {
+      const animals = this.animalSystem.getAnimals();
+      for (const [animalId, animal] of animals) {
+        if (animal.isDead || !animal.position) continue;
+        // Create a temporary entity representation for animals
+        const animalEntity: SimulationEntity = {
+          id: animalId,
+          type: "animal",
+          position: animal.position,
+          isDead: false,
+          tags: ["animal"],
+          stats: {
+            health: animal.health,
+            stamina: 100,
+          },
+        };
+        entitiesById.set(animalId, animalEntity);
+        this.spatialGrid.insert(animalId, animal.position);
+      }
     }
 
     for (const attacker of entities) {

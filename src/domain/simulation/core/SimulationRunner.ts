@@ -1,5 +1,5 @@
 import { EventEmitter } from "node:events";
-import type { GameResources, GameState } from "../../types/game-types";
+import type { GameResources, GameState, Zone } from "../../types/game-types";
 import { cloneGameState, createInitialGameState } from "./defaultState";
 import { worldGenerationService } from "../../../infrastructure/services/world/worldGenerationService";
 import { BiomeType } from "../../world/generation/types";
@@ -211,12 +211,18 @@ export class SimulationRunner {
       this.inventorySystem,
       this.lifeCycleSystem,
       this.socialSystem,
+      undefined,
+      this.animalSystem,
     );
     this.reputationSystem = new ReputationSystem(this.state);
     this._researchSystem = new ResearchSystem(this.state);
     this._recipeDiscoverySystem = new RecipeDiscoverySystem(this.state);
     this.questSystem = new QuestSystem(this.state);
     this.taskSystem = new TaskSystem(this.state);
+    // Connect TaskSystem to BuildingSystem after both are created
+    if (this.buildingSystem) {
+      this.buildingSystem.setTaskSystem(this.taskSystem);
+    }
     this.tradeSystem = new TradeSystem(this.state, this.inventorySystem);
     this.conflictResolutionSystem = new ConflictResolutionSystem(this.state);
     this._normsSystem = new NormsSystem(this.state);
@@ -277,6 +283,12 @@ export class SimulationRunner {
       taskSystem: this.taskSystem,
       combatSystem: this.combatSystem,
       animalSystem: this.animalSystem,
+      questSystem: this.questSystem,
+      timeSystem: this.timeSystem,
+      buildingSystem: this.buildingSystem,
+      productionSystem: this.productionSystem,
+      tradeSystem: this.tradeSystem,
+      reputationSystem: this.reputationSystem,
     });
 
     simulationEvents.on(
@@ -316,6 +328,30 @@ export class SimulationRunner {
       GameEventNames.COMBAT_KILL,
       (data: { targetId: string }) => {
         this._genealogySystem.recordDeath(data.targetId);
+      },
+    );
+
+    simulationEvents.on(
+      GameEventNames.ANIMAL_HUNTED,
+      (data: {
+        animalId: string;
+        hunterId: string;
+        foodValue?: number;
+      }) => {
+        if (data.hunterId && data.foodValue) {
+          // Give food to the hunter
+          const inventory = this.inventorySystem.getAgentInventory(
+            data.hunterId,
+          );
+          if (inventory) {
+            const foodToAdd = Math.floor(data.foodValue || 5);
+            this.inventorySystem.addResource(
+              data.hunterId,
+              "food",
+              foodToAdd,
+            );
+          }
+        }
       },
     );
 
@@ -459,6 +495,126 @@ export class SimulationRunner {
       worldConfig.tileSize,
       biomeMap,
     );
+
+    // Generate functional zones based on biomes
+    this.generateFunctionalZones(worldConfig, biomeMap);
+  }
+
+  private generateFunctionalZones(
+    worldConfig: {
+      width: number;
+      height: number;
+      tileSize: number;
+    },
+    biomeMap: string[][],
+  ): void {
+    if (!this.state.zones) {
+      this.state.zones = [];
+    }
+
+    const ZONE_SPACING = 300; // Distance between zones
+    const ZONE_SIZE = 120; // Zone size
+    const zones: Zone[] = [];
+
+    // Generate zones in a grid pattern
+    for (let x = ZONE_SPACING; x < worldConfig.width; x += ZONE_SPACING) {
+      for (let y = ZONE_SPACING; y < worldConfig.height; y += ZONE_SPACING) {
+        const tileX = Math.floor(x / worldConfig.tileSize);
+        const tileY = Math.floor(y / worldConfig.tileSize);
+
+        if (
+          tileY >= 0 &&
+          tileY < biomeMap.length &&
+          tileX >= 0 &&
+          tileX < biomeMap[0].length
+        ) {
+          const biome = biomeMap[tileY][tileX];
+
+          // Skip water biomes
+          if (biome === "ocean" || biome === "lake") continue;
+
+          // Determine zone type based on biome and position
+          const zoneType = this.determineZoneType(biome, x, y, worldConfig);
+          if (!zoneType) continue;
+
+          const zoneId = `zone_${zoneType}_${x}_${y}`;
+          const zone: Zone = {
+            id: zoneId,
+            type: zoneType,
+            bounds: {
+              x: Math.max(0, x - ZONE_SIZE / 2),
+              y: Math.max(0, y - ZONE_SIZE / 2),
+              width: ZONE_SIZE,
+              height: ZONE_SIZE,
+            },
+            props: {
+              color: this.getZoneColor(zoneType),
+              status: "ready",
+            },
+          };
+
+          zones.push(zone);
+        }
+      }
+    }
+
+    // Add zones to state
+    this.state.zones.push(...zones);
+    logger.info(`Generated ${zones.length} functional zones`);
+  }
+
+  private determineZoneType(
+    biome: string,
+    x: number,
+    y: number,
+    worldConfig: { width: number; height: number },
+  ): string | null {
+    // Use deterministic randomness based on position
+    const seed = x * 1000 + y;
+    const rng = () => {
+      const x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
+
+    // Center areas are more likely to be social/work zones
+    const centerX = worldConfig.width / 2;
+    const centerY = worldConfig.height / 2;
+    const distFromCenter = Math.hypot(x - centerX, y - centerY);
+    const isNearCenter = distFromCenter < worldConfig.width * 0.3;
+
+    if (isNearCenter && rng() < 0.3) {
+      return "social";
+    }
+
+    // Forest biomes favor rest zones
+    if (biome === "forest" && rng() < 0.4) {
+      return "rest";
+    }
+
+    // Grassland biomes favor work zones
+    if (biome === "grassland" && rng() < 0.3) {
+      return "work";
+    }
+
+    // Default distribution
+    const rand = rng();
+    if (rand < 0.25) return "rest";
+    if (rand < 0.5) return "work";
+    if (rand < 0.7) return "food";
+    if (rand < 0.85) return "water";
+    return "social";
+  }
+
+  private getZoneColor(zoneType: string): string {
+    const colors: Record<string, string> = {
+      rest: "#8B7355",
+      work: "#6B8E23",
+      food: "#FF6347",
+      water: "#4682B4",
+      social: "#9370DB",
+      crafting: "#CD853F",
+    };
+    return colors[zoneType] || "#C4B998";
   }
 
   start(): void {

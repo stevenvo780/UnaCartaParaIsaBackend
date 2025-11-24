@@ -153,8 +153,8 @@ export class BuildingSystem {
     let taskId: string | undefined;
     if (this.taskSystem) {
       const task = this.taskSystem.createTask({
-        type: `build_${label}` as any, // Using 'any' to bypass strict type check if TaskType is not updated yet
-        requiredWork: cost.time / 1000, // 1 unit of work per second roughly
+        type: `build_${label}` as any,
+        requiredWork: cost.time / 1000,
         zoneId: mutableZone.id,
         bounds: mutableZone.bounds,
         requirements: {

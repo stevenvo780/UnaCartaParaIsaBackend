@@ -8,6 +8,7 @@ import { SocialSystem } from "./SocialSystem.js";
 import { RoleSystem } from "./RoleSystem.js";
 import { DivineFavorSystem } from "./DivineFavorSystem.js";
 import { GenealogySystem } from "./GenealogySystem.js";
+import { simulationEvents, GameEventNames } from "../core/events.js";
 
 const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
   workDurationMs: 5000,
@@ -34,6 +35,10 @@ export class EconomySystem {
   private genealogySystem?: GenealogySystem;
   private config: EconomyConfig;
   private yieldResiduals = new Map<string, number>();
+  private lastUpdate = 0;
+  private readonly UPDATE_INTERVAL_MS = 10000; // Update every 10 seconds
+  private lastSalaryPayment = 0;
+  private readonly SALARY_INTERVAL_MS = 60000; // Pay salaries every minute
 
   constructor(
     state: GameState,
@@ -57,7 +62,137 @@ export class EconomySystem {
     this.genealogySystem = deps.genealogySystem;
   }
 
-  public update(_delta: number): void {}
+  public update(delta: number): void {
+    const now = Date.now();
+    
+    // Periodic updates
+    if (now - this.lastUpdate >= this.UPDATE_INTERVAL_MS) {
+      this.cleanupOldResiduals();
+      this.updateEconomyStats();
+      this.lastUpdate = now;
+    }
+
+    // Periodic salary payments
+    if (now - this.lastSalaryPayment >= this.SALARY_INTERVAL_MS) {
+      this.processSalaryPayments();
+      this.lastSalaryPayment = now;
+    }
+  }
+
+  private cleanupOldResiduals(): void {
+    // Clean residuals older than 1 hour
+    const maxAge = 3600000;
+    const now = Date.now();
+    
+    // Since we don't track timestamps per residual, we'll just limit the map size
+    if (this.yieldResiduals.size > 100) {
+      // Keep only the most recent entries (simplified cleanup)
+      const entries = Array.from(this.yieldResiduals.entries());
+      this.yieldResiduals.clear();
+      // Keep last 50 entries
+      entries.slice(-50).forEach(([key, value]) => {
+        this.yieldResiduals.set(key, value);
+      });
+    }
+  }
+
+  private updateEconomyStats(): void {
+    if (!this.state.economy) {
+      this.state.economy = {
+        totalWorkActions: 0,
+        totalResourcesProduced: {
+          wood: 0,
+          stone: 0,
+          food: 0,
+          water: 0,
+        },
+        averageYield: {
+          wood: 0,
+          stone: 0,
+          food: 0,
+          water: 0,
+        },
+        totalSalariesPaid: 0,
+        activeWorkers: 0,
+      };
+    }
+
+    // Count active workers (agents with roles)
+    if (this.roleSystem && this.state.agents) {
+      const activeWorkers = this.state.agents.filter((agent) => {
+        const role = this.roleSystem?.getAgentRole(agent.id);
+        return role && role.roleType !== undefined;
+      }).length;
+      this.state.economy.activeWorkers = activeWorkers;
+    }
+
+    // Emit economy update event
+    simulationEvents.emit(GameEventNames.ECONOMY_RESERVATIONS_UPDATE, {
+      economy: this.state.economy,
+      timestamp: Date.now(),
+    });
+  }
+
+  private processSalaryPayments(): void {
+    if (!this.state.agents || !this.roleSystem) return;
+
+    let totalSalaries = 0;
+
+    for (const agent of this.state.agents) {
+      const role = this.roleSystem.getAgentRole(agent.id);
+      if (!role || !role.roleType) continue;
+
+      // Base salary based on role
+      let baseSalary = 10;
+      switch (role.roleType) {
+        case "farmer":
+        case "quarryman":
+        case "logger":
+          baseSalary = 15;
+          break;
+        case "builder":
+        case "craftsman":
+          baseSalary = 20;
+          break;
+        case "guard":
+        case "leader":
+          baseSalary = 25;
+          break;
+      }
+
+      // Apply divine favor bonus if available
+      if (this.divineFavorSystem && this.genealogySystem) {
+        const ancestor = this.genealogySystem.getAncestor(agent.id);
+        const lineageId = ancestor?.lineageId || "";
+        const salaryMult = this.divineFavorSystem.getMultiplier(
+          lineageId,
+          "productivity_boost",
+        );
+        if (salaryMult > 1.0) {
+          baseSalary = Math.round(baseSalary * salaryMult);
+        }
+      }
+
+      if (agent.stats) {
+        const currentMoney =
+          typeof agent.stats.money === "number" ? agent.stats.money : 0;
+        agent.stats.money = currentMoney + baseSalary;
+        totalSalaries += baseSalary;
+
+        simulationEvents.emit(GameEventNames.SALARY_PAID, {
+          agentId: agent.id,
+          amount: baseSalary,
+          role: role.roleType,
+          timestamp: Date.now(),
+        });
+      }
+    }
+
+    if (this.state.economy) {
+      this.state.economy.totalSalariesPaid =
+        (this.state.economy.totalSalariesPaid || 0) + totalSalaries;
+    }
+  }
 
   public handleWorkAction(agentId: string, zoneId: string): void {
     const zone = this.state.zones.find((z) => z.id === zoneId);
