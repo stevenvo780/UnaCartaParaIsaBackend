@@ -1,0 +1,144 @@
+import { EventEmitter } from "node:events";
+import type { GameResources, GameState } from "../types/game-types.js";
+import { cloneGameState, createInitialGameState } from "./defaultState.js";
+import { WorldResourceSystem } from "./systems/WorldResourceSystem.js";
+import { simulationEvents, GameEventNames } from "./events.js";
+import type {
+  SimulationCommand,
+  SimulationConfig,
+  SimulationSnapshot,
+} from "./types.js";
+
+interface SimulationEventMap {
+  tick: SimulationSnapshot;
+  commandRejected: SimulationCommand;
+}
+
+export class SimulationRunner {
+  private state: GameState;
+  private readonly emitter = new EventEmitter();
+  private readonly commands: SimulationCommand[] = [];
+  private readonly tickIntervalMs: number;
+  private readonly maxCommandQueue: number;
+  private tickHandle?: NodeJS.Timeout;
+  private tickCounter = 0;
+  private lastUpdate = Date.now();
+  private timeScale = 1;
+  private worldResourceSystem: WorldResourceSystem;
+
+  constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
+    this.state = initialState ?? createInitialGameState();
+    this.tickIntervalMs = config?.tickIntervalMs ?? 200;
+    this.maxCommandQueue = config?.maxCommandQueue ?? 200;
+    this.worldResourceSystem = new WorldResourceSystem(this.state);
+  }
+
+  start(): void {
+    if (this.tickHandle) return;
+    this.tickHandle = setInterval(() => this.step(), this.tickIntervalMs);
+  }
+
+  stop(): void {
+    if (!this.tickHandle) return;
+    clearInterval(this.tickHandle);
+    this.tickHandle = undefined;
+  }
+
+  on<K extends keyof SimulationEventMap>(
+    event: K,
+    listener: (payload: SimulationEventMap[K]) => void,
+  ): void {
+    this.emitter.on(event, listener as (payload: unknown) => void);
+  }
+
+  off<K extends keyof SimulationEventMap>(
+    event: K,
+    listener: (payload: SimulationEventMap[K]) => void,
+  ): void {
+    this.emitter.off(event, listener as (payload: unknown) => void);
+  }
+
+  enqueueCommand(command: SimulationCommand): boolean {
+    if (this.commands.length >= this.maxCommandQueue) {
+      this.emitter.emit("commandRejected", command);
+      return false;
+    }
+    this.commands.push(command);
+    return true;
+  }
+
+  getSnapshot(): SimulationSnapshot {
+    return {
+      state: cloneGameState(this.state),
+      tick: this.tickCounter,
+      updatedAt: this.lastUpdate,
+    };
+  }
+
+  private step(): void {
+    const now = Date.now();
+    const delta = now - this.lastUpdate;
+    this.lastUpdate = now;
+
+    this.processCommands();
+    this.advanceSimulation(delta * this.timeScale);
+    this.worldResourceSystem.update(delta * this.timeScale);
+
+    this.tickCounter += 1;
+    const snapshot = this.getSnapshot();
+    this.emitter.emit("tick", snapshot);
+  }
+
+  private processCommands(): void {
+    while (this.commands.length > 0) {
+      const command = this.commands.shift();
+      if (!command) break;
+      switch (command.type) {
+        case "SET_TIME_SCALE":
+          this.timeScale = Math.max(0.1, Math.min(10, command.multiplier));
+          break;
+        case "APPLY_RESOURCE_DELTA":
+          this.applyResourceDelta(command.delta);
+          break;
+        case "GATHER_RESOURCE":
+          simulationEvents.emit(GameEventNames.RESOURCE_GATHERED, {
+            resourceId: command.resourceId,
+            amount: command.amount,
+          });
+          break;
+        case "PING":
+        default:
+          break;
+      }
+    }
+  }
+
+  private applyResourceDelta(delta: Partial<GameResources["materials"]>): void {
+    if (!this.state.resources) {
+      return;
+    }
+    const materials = this.state.resources.materials;
+    for (const [key, value] of Object.entries(delta)) {
+      const materialKey = key as keyof GameResources["materials"];
+      const current = materials[materialKey] ?? 0;
+      materials[materialKey] = current + (value ?? 0);
+    }
+  }
+
+  private advanceSimulation(deltaMs: number): void {
+    this.state.togetherTime += deltaMs;
+    this.state.dayTime = ((this.state.dayTime ?? 0) + deltaMs) % 86400000;
+
+    // Simple cycle counter until real systems hook in
+    this.state.cycles += 1;
+
+    // Decay / regen stub for resources
+    if (this.state.resources) {
+      const regenRate = deltaMs / 1000;
+      this.state.resources.energy = Math.min(
+        100,
+        this.state.resources.energy + regenRate * 0.1,
+      );
+    }
+  }
+}

@@ -9,16 +9,20 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^7.7.0",
+    "@types/ws": "^8.18.1",
     "cors": "^2.8.5",
     "delaunator": "^5.0.1",
     "express": "^4.18.2",
     "seedrandom": "^3.0.5",
-    "ssh2-sftp-client": "^12.0.1"
+    "ssh2-sftp-client": "^12.0.1",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
+    "@types/delaunator": "^5.0.3",
     "@types/express": "^5.0.5",
     "@types/node": "^24.10.1",
+    "@types/seedrandom": "^3.0.8",
     "@types/ssh2-sftp-client": "^9.0.5",
     "nodemon": "^3.1.11",
     "rimraf": "^6.1.2",

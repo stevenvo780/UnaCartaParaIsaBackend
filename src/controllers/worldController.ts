@@ -10,7 +10,12 @@ export class WorldController {
         seed: seed || 'default',
         width: width || 100,
         height: height || 100,
-        tileSize: tileSize || 64
+        tileSize: tileSize || 64,
+        noise: {
+          temperature: { scale: 0.01, octaves: 4, persistence: 0.5, lacunarity: 2 },
+          moisture: { scale: 0.01, octaves: 4, persistence: 0.5, lacunarity: 2 },
+          elevation: { scale: 0.01, octaves: 4, persistence: 0.5, lacunarity: 2 }
+        }
       });
 
       res.json(chunk);
