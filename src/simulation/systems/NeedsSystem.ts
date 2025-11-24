@@ -64,4 +64,8 @@ export class NeedsSystem {
       emergencyLevel: "none",
     });
   }
+
+  public getEntityNeeds(entityId: string): EntityNeedsData | undefined {
+    return this.entityNeeds.get(entityId);
+  }
 }

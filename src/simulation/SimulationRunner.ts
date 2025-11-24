@@ -11,6 +11,7 @@ import { InventorySystem } from "./systems/InventorySystem.js";
 import { EconomySystem } from "./systems/EconomySystem.js";
 import { MarketSystem } from "./systems/MarketSystem.js";
 import { RoleSystem } from "./systems/RoleSystem.js";
+import { AISystem } from "./systems/AISystem.js";
 import { simulationEvents, GameEventNames } from "./events.js";
 import type {
   SimulationCommand,
@@ -43,6 +44,7 @@ export class SimulationRunner {
   private economySystem: EconomySystem;
   private marketSystem: MarketSystem;
   private roleSystem: RoleSystem;
+  private aiSystem: AISystem;
 
   constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
     this.state = initialState ?? createInitialGameState();
@@ -67,6 +69,11 @@ export class SimulationRunner {
       this.lifeCycleSystem
     );
     this.roleSystem = new RoleSystem(this.state);
+    this.aiSystem = new AISystem(this.state, undefined, {
+      needsSystem: this.needsSystem,
+      roleSystem: this.roleSystem,
+      worldResourceSystem: this.worldResourceSystem,
+    });
   }
 
   public initializeWorldResources(worldConfig: { width: number; height: number; tileSize: number; biomeMap: string[][] }): void {
@@ -133,6 +140,7 @@ export class SimulationRunner {
     this.economySystem.update(scaledDelta);
     this.marketSystem.update(scaledDelta);
     this.roleSystem.update(scaledDelta);
+    this.aiSystem.update(scaledDelta);
     // Genealogy usually updates on events, but if it has a tick:
     // this.genealogySystem.update(scaledDelta);
 

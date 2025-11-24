@@ -1,6 +1,6 @@
 import { GameEventNames, simulationEvents } from "../events.js";
 import { getResourceConfig } from "../config/WorldResourceConfigs.js";
-import type { WorldResourceInstance } from "../types/worldResources.js";
+import type { WorldResourceInstance, WorldResourceType } from "../types/worldResources.js";
 import type { GameState } from "../../types/game-types.js";
 
 export class WorldResourceSystem {
@@ -154,5 +154,12 @@ export class WorldResourceSystem {
         this.regenerationTimers.set(resource.id, Date.now());
       }
     }
+  }
+
+  public getResourcesByType(type: WorldResourceType): WorldResourceInstance[] {
+    if (!this.state.worldResources) return [];
+    return Object.values(this.state.worldResources).filter(
+      (r) => r.type === type
+    );
   }
 }
