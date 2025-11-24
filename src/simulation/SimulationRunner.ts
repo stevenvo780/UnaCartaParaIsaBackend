@@ -16,6 +16,11 @@ import { ResourceReservationSystem } from "./systems/ResourceReservationSystem.j
 import { GovernanceSystem } from "./systems/GovernanceSystem.js";
 import { DivineFavorSystem } from "./systems/DivineFavorSystem.js";
 import { HouseholdSystem } from './systems/HouseholdSystem.js';
+import { BuildingSystem } from "./systems/BuildingSystem.js";
+import { BuildingMaintenanceSystem } from "./systems/BuildingMaintenanceSystem.js";
+import { ProductionSystem } from "./systems/ProductionSystem.js";
+import { EnhancedCraftingSystem } from "./systems/EnhancedCraftingSystem.js";
+import { CraftingSystem } from "./systems/CraftingSystem.js";
 import { simulationEvents, GameEventNames } from "./events.js";
 import type {
   SimulationCommand,
@@ -53,6 +58,11 @@ export class SimulationRunner {
   private governanceSystem: GovernanceSystem;
   private divineFavorSystem: DivineFavorSystem;
   private householdSystem: HouseholdSystem;
+  private buildingSystem: BuildingSystem;
+  private buildingMaintenanceSystem: BuildingMaintenanceSystem;
+  private productionSystem: ProductionSystem;
+  private enhancedCraftingSystem: EnhancedCraftingSystem;
+  private craftingSystem: CraftingSystem;
 
   constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
     this.state = initialState ?? createInitialGameState();
@@ -96,6 +106,27 @@ export class SimulationRunner {
     });
 
     this.householdSystem = new HouseholdSystem(this.state);
+    this.buildingMaintenanceSystem = new BuildingMaintenanceSystem(
+      this.state,
+      this.inventorySystem,
+    );
+    this.buildingSystem = new BuildingSystem(
+      this.state,
+      this.resourceReservationSystem,
+    );
+    this.productionSystem = new ProductionSystem(
+      this.state,
+      this.inventorySystem,
+      this.lifeCycleSystem,
+    );
+    this.enhancedCraftingSystem = new EnhancedCraftingSystem(
+      this.state,
+      this.inventorySystem,
+    );
+    this.craftingSystem = new CraftingSystem(
+      this.state,
+      this.enhancedCraftingSystem,
+    );
   }
 
   public initializeWorldResources(worldConfig: { width: number; height: number; tileSize: number; biomeMap: string[][] }): void {
@@ -167,6 +198,10 @@ export class SimulationRunner {
     this.divineFavorSystem.update(scaledDelta);
     this.governanceSystem.update(scaledDelta);
     this.householdSystem.update(scaledDelta);
+    this.buildingSystem.update(scaledDelta);
+    this.buildingMaintenanceSystem.update(scaledDelta);
+    this.productionSystem.update(scaledDelta);
+    this.enhancedCraftingSystem.update();
     // Genealogy usually updates on events, but if it has a tick:
     // this.genealogySystem.update(scaledDelta);
 
