@@ -400,16 +400,12 @@ export class EmergenceSystem extends EventEmitter {
         : 50;
     const stability = 1.0 - Math.abs(avgNeeds - 50) / 50;
 
-    // Complexity: system complexity based on interactions
     const complexity = Math.min(1.0, (entityCount + this.patterns.size) / 30);
 
-    // Coherence: how well systems work together
     const coherence = (cohesion + stability) / 2;
 
-    // Adaptability: system's ability to adapt
     const adaptability = (novelty + stability) / 2;
 
-    // Sustainability: long-term viability
     const resources = this.gameState.resources?.materials || {};
     const totalResources = Object.values(resources).reduce(
       (a, b) => a + (b || 0),
@@ -417,10 +413,8 @@ export class EmergenceSystem extends EventEmitter {
     );
     const sustainability = Math.min(1.0, totalResources / 1000);
 
-    // Entropy: disorder in the system
     const entropy = 1.0 - stability;
 
-    // Autopoiesis: self-organization capability
     const autopoiesis = (cohesion + adaptability) / 2;
 
     this.currentMetrics = {
@@ -441,7 +435,6 @@ export class EmergenceSystem extends EventEmitter {
       this.metricsHistory.shift();
     }
 
-    // Emit metrics update
     simulationEvents.emit(GameEventNames.EMERGENCE_METRICS_UPDATED, {
       metrics: this.currentMetrics,
       patterns: Array.from(this.patterns.values()),

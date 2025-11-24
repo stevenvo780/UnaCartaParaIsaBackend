@@ -7,12 +7,10 @@ const MAX_SAVE_ID_LENGTH = 200;
 const SAVE_ID_PATTERN = /^save_\d+$/;
 
 function sanitizeSaveId(id: string): string | null {
-  // Remove path traversal attempts and limit length
   const sanitized = id
     .replace(/\.\./g, "")
     .replace(/\//g, "")
     .slice(0, MAX_SAVE_ID_LENGTH);
-  // Validate format
   if (!SAVE_ID_PATTERN.test(sanitized)) {
     return null;
   }

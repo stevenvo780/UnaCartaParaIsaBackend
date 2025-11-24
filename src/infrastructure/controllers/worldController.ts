@@ -22,7 +22,6 @@ export class WorldController {
       const body = req.body as ChunkRequest;
       const { x, y, seed, width, height, tileSize } = body;
 
-      // Validate required parameters
       if (typeof x !== "number" || typeof y !== "number") {
         res.status(400).json({
           error: "Invalid request: x and y must be numbers",
@@ -30,7 +29,6 @@ export class WorldController {
         return;
       }
 
-      // Validate and sanitize dimensions
       const validatedWidth = Math.max(
         MIN_CHUNK_SIZE,
         Math.min(MAX_CHUNK_SIZE, width ?? DEFAULT_CHUNK_SIZE),

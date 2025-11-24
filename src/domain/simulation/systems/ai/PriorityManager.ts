@@ -103,7 +103,6 @@ export class PriorityManager {
       });
     }
 
-    // Adjust for role
     try {
       const role = this.roleSystem?.getAgentRole(agentId);
       const isWarrior = role?.roleType === "guard";
@@ -126,9 +125,6 @@ export class PriorityManager {
     return adjusted;
   }
 
-  /**
-   * Set the role system dependency
-   */
   public setRoleSystem(roleSystem: RoleSystem): void {
     this.roleSystem = roleSystem;
   }

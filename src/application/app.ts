@@ -11,7 +11,6 @@ import { logger } from "../infrastructure/utils/logger.js";
 
 const app = express();
 
-// Security: CORS configuration
 app.use(
   cors({
     origin: process.env.ALLOWED_ORIGINS?.split(",") ?? "*",
@@ -19,10 +18,8 @@ app.use(
   }),
 );
 
-// Body parser with size limit
 app.use(express.json({ limit: "50mb" }));
 
-// Request logging middleware (optional, can be removed in production)
 if (process.env.NODE_ENV !== "production") {
   app.use((req: Request, _res: Response, next: NextFunction) => {
     logger.debug(`${req.method} ${req.path}`);
@@ -30,12 +27,10 @@ if (process.env.NODE_ENV !== "production") {
   });
 }
 
-// Routes
 app.use("/", saveRoutes);
 app.use("/", worldRoutes);
 app.use("/", simulationRoutes);
 
-// Error handling middleware
 app.use(
   (err: Error, _req: Request, res: Response, _next: NextFunction): void => {
     const errorMessage =
@@ -47,7 +42,6 @@ app.use(
   },
 );
 
-// 404 handler
 app.use((_req: Request, res: Response): void => {
   res.status(404).json({ error: "Route not found" });
 });

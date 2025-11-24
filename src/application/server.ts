@@ -16,7 +16,6 @@ const server = app.listen(CONFIG.PORT, () => {
   }
 });
 
-// WebSocket Setup
 const simulationWss = new WebSocketServer({ noServer: true });
 const chunkStreamServer = new ChunkStreamServer({ maxInflight: 128 });
 
@@ -59,7 +58,6 @@ simulationWss.on("connection", (ws: WebSocket) => {
   ws.on("message", (data: Buffer) => {
     try {
       const message = data.toString();
-      // Limit message size to prevent DoS
       if (message.length > 10000) {
         ws.send(
           JSON.stringify({

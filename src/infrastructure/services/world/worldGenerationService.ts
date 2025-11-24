@@ -47,7 +47,6 @@ export class WorldGenerationService {
         const globalX = x * chunkSize + j;
         const globalY = y * chunkSize + i;
 
-        // Generate base noise values
         const temperature = this.noiseGen.noise2D(
           globalX * 0.01,
           globalY * 0.01,
@@ -65,7 +64,6 @@ export class WorldGenerationService {
           globalY * 0.005,
         );
 
-        // Resolve biome
         const biome = this.biomeResolver.resolveBiome(
           (temperature + 1) / 2,
           (moisture + 1) / 2,
@@ -120,23 +118,18 @@ export class WorldGenerationService {
 
     if (!biomeConfig) return assets;
 
-    // Deterministic RNG for this tile
     const tileRng = seedrandom(`${x},${y}-${this.currentSeed}`);
 
-    // Trees
     if (
       biomeConfig.density.trees &&
       tileRng() < biomeConfig.density.trees * 0.1
     ) {
-      // 10% chance base * density. This is a simplification.
-      // In a real implementation, we would use noise for clustering.
       const clusterNoise = this.noiseGen.noise2D(x * 0.05, y * 0.05);
       if (clusterNoise > 1 - (biomeConfig.clustering || 0.5)) {
         assets.vegetation.push(`tree_${biomeConfig.id}`);
       }
     }
 
-    // Plants
     if (
       biomeConfig.density.plants &&
       tileRng() < biomeConfig.density.plants * 0.2
@@ -144,7 +137,6 @@ export class WorldGenerationService {
       assets.vegetation.push(`plant_${biomeConfig.id}`);
     }
 
-    // Props
     if (
       biomeConfig.density.props &&
       tileRng() < biomeConfig.density.props * 0.05
@@ -152,11 +144,8 @@ export class WorldGenerationService {
       assets.props.push(`prop_${biomeConfig.id}`);
     }
 
-    // Structures
-    // Use a different noise scale for structures to create sparse clusters
-    const structureNoise = this.noiseGen.noise2D(x * 0.005, y * 0.005); // Low frequency
+    const structureNoise = this.noiseGen.noise2D(x * 0.005, y * 0.005);
     if (structureNoise > 0.8 && tileRng() < 0.01) {
-      // High threshold + very low random chance
       assets.structures.push(`structure_${biomeConfig.id}`);
     }
 

@@ -10,9 +10,6 @@ const PRIORITY_TIERS = {
   IDLE: 2.0,
 } as const;
 
-/**
- * Calculates priority for a need based on its current value
- */
 export function calculateNeedPriority(
   currentValue: number,
   urgencyMultiplier: number,
@@ -21,9 +18,6 @@ export function calculateNeedPriority(
   return Math.min(1, urgency * (urgencyMultiplier / 100));
 }
 
-/**
- * Selects the best zone from a list based on distance, attractiveness, and memory
- */
 export function selectBestZone(
   aiState: AIState,
   zoneIds: string[],
@@ -73,7 +67,6 @@ export function selectBestZone(
 
   evaluatedZones.sort((a, b) => b.score - a.score);
 
-  // Add some randomness based on personality
   const randomChance =
     0.1 + personality.openness * 0.3 - personality.neuroticism * 0.2;
 
@@ -143,7 +136,6 @@ export function prioritizeGoals(
 
   const filtered = tieredGoals.filter((goal) => goal.priority >= minThreshold);
 
-  // Add Gumbel noise for exploration if tau > 0
   const sampleGumbel = (): number => {
     const u = Math.max(1e-12, Math.random());
     return -Math.log(-Math.log(u));
@@ -176,7 +168,6 @@ function getGoalDomain(goal: AIGoal): GoalDomain {
 
 export function getGoalTier(goal: AIGoal, _aiState: AIState): number {
   if (goal.type === "satisfy_need") {
-    // Use priority embedded in goal or evaluate based on need type
     if (goal.data?.need === "hunger" || goal.data?.need === "thirst") {
       if (goal.priority >= 0.8) return PRIORITY_TIERS.SURVIVAL_CRITICAL;
       if (goal.priority >= 0.5) return PRIORITY_TIERS.SURVIVAL_URGENT;
@@ -203,9 +194,6 @@ export function getGoalTier(goal: AIGoal, _aiState: AIState): number {
   return PRIORITY_TIERS.IDLE;
 }
 
-/**
- * Gets recommended zone IDs for satisfying a specific need
- */
 export function getRecommendedZoneIdsForNeed(
   needType: string,
   gameState: GameState,
@@ -235,9 +223,6 @@ export function getRecommendedZoneIdsForNeed(
   );
 }
 
-/**
- * Gets the current position of an entity
- */
 export function getEntityPosition(
   entityId: string,
   gameState: GameState,
@@ -247,7 +232,6 @@ export function getEntityPosition(
     return { x: agent.position.x, y: agent.position.y };
   }
 
-  // Fallback to entity if agent not found
   const entity = gameState.entities?.find(
     (e: { id: string }) => e.id === entityId,
   ) as { position?: { x: number; y: number } } | undefined;
