@@ -38,6 +38,10 @@ export class SocialSystem {
     );
   }
 
+  public getGroupForAgent(agentId: string): SocialGroup | undefined {
+    return this.groups.find((group) => group.members.includes(agentId));
+  }
+
   public update(deltaTimeMs: number): void {
     const dt = deltaTimeMs / 1000;
     this.lastUpdate += deltaTimeMs;

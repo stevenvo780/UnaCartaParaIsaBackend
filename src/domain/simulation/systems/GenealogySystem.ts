@@ -33,6 +33,10 @@ export class GenealogySystem {
     };
   }
 
+  public getAncestor(agentId: string): Ancestor | undefined {
+    return this.familyTree.ancestors.get(agentId);
+  }
+
   public registerBirth(
     agent: AgentProfile,
     fatherId?: string,

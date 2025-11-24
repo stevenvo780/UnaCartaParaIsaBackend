@@ -6,6 +6,9 @@ import type {
 import { InventorySystem } from "./InventorySystem.js";
 import { SocialSystem } from "./SocialSystem.js";
 import { LifeCycleSystem } from "./LifeCycleSystem.js";
+import { RoleSystem } from "./RoleSystem.js";
+import { DivineFavorSystem } from "./DivineFavorSystem.js";
+import { GenealogySystem } from "./GenealogySystem.js";
 
 const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
   workDurationMs: 5000,
@@ -26,19 +29,36 @@ const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
 export class EconomySystem {
   private state: GameState;
   private inventorySystem: InventorySystem;
+  private socialSystem: SocialSystem;
+  private lifeCycleSystem: LifeCycleSystem;
+  private roleSystem?: RoleSystem;
+  private divineFavorSystem?: DivineFavorSystem;
+  private genealogySystem?: GenealogySystem;
   private config: EconomyConfig;
   private yieldResiduals = new Map<string, number>();
 
   constructor(
     state: GameState,
     inventorySystem: InventorySystem,
-    _socialSystem: SocialSystem,
-    _lifeCycleSystem: LifeCycleSystem,
+    socialSystem: SocialSystem,
+    lifeCycleSystem: LifeCycleSystem,
     config?: Partial<EconomyConfig>,
   ) {
     this.state = state;
     this.inventorySystem = inventorySystem;
+    this.socialSystem = socialSystem;
+    this.lifeCycleSystem = lifeCycleSystem;
     this.config = { ...DEFAULT_ECONOMY_CONFIG, ...config };
+  }
+
+  public setDependencies(deps: {
+    roleSystem?: RoleSystem;
+    divineFavorSystem?: DivineFavorSystem;
+    genealogySystem?: GenealogySystem;
+  }): void {
+    this.roleSystem = deps.roleSystem;
+    this.divineFavorSystem = deps.divineFavorSystem;
+    this.genealogySystem = deps.genealogySystem;
   }
 
   public update(_delta: number): void {}
@@ -78,7 +98,30 @@ export class EconomySystem {
     if (!resourceType || baseYield === 0) return;
 
     const teamBonus = this.computeTeamBonus(agentId, zone);
-    const totalYield = baseYield * teamBonus;
+    let totalYield = baseYield * teamBonus;
+
+    // Role Bonus
+    if (this.roleSystem) {
+      const role = this.roleSystem.getAgentRole(agentId);
+      if (role?.roleType) {
+        // Simplified role bonus logic
+        if (role.roleType === "farmer" && resourceType === "food") totalYield *= 1.5;
+        if (role.roleType === "miner" && resourceType === "stone") totalYield *= 1.8;
+        if (role.roleType === "lumberjack" && resourceType === "wood") totalYield *= 1.6;
+        if (role.roleType === "gatherer" && (resourceType === "water" || resourceType === "food")) totalYield *= 1.3;
+        if (role.roleType === "builder" && (resourceType === "wood" || resourceType === "stone")) totalYield *= 1.3;
+      }
+    }
+
+    // Divine/Genealogy Bonus
+    if (this.divineFavorSystem && this.genealogySystem) {
+      const ancestor = this.genealogySystem.getAncestor(agentId);
+      const lineageId = ancestor?.lineageId || "";
+      const productivityMult = this.divineFavorSystem.getMultiplier(lineageId, "productivity_boost");
+      if (productivityMult > 1.0) {
+        totalYield *= productivityMult;
+      }
+    }
 
     const key = `${agentId}:${resourceType}`;
     const residual = this.yieldResiduals.get(key) || 0;
@@ -98,6 +141,7 @@ export class EconomySystem {
       const salary = Math.round(
         this.config.salaryRates[resourceType] * teamBonus,
       );
+
       if (agent.stats) {
         const currentMoney =
           typeof agent.stats.money === "number" ? agent.stats.money : 0;
@@ -106,12 +150,22 @@ export class EconomySystem {
     }
   }
 
-  private computeTeamBonus(_agentId: string, _zone: Zone): number {
-    return 1.0;
-  }
+  private computeTeamBonus(agentId: string, zone: Zone): number {
+    let teamBonus = 1.0;
+    const workerGroup = this.socialSystem.getGroupForAgent(agentId);
+    
+    if (workerGroup) {
+      let groupMembersWorking = 0;
+      // Simplified check: count members in same zone (assuming they are working if in zone)
+      // In a real implementation, we would check their activity
+      const agentsInZone = this.state.entities.filter(e => {
+        // Simple bounds check
+        return e.position.x >= zone.bounds.x &&
+               e.position.x <= zone.bounds.x + zone.bounds.width &&
+               e.position.y >= zone.bounds.y &&
+               e.position.y <= zone.bounds.y + zone.bounds.height;
+      });
 
-  private addToGlobalResources(resource: ResourceType, amount: number): void {
-    if (!this.state.resources) return;
-    this.state.resources.materials[resource] += amount;
-  }
-}
+      for (const memberId of workerGroup.members) {
+        if (memberId === agentId) continue;
+        if

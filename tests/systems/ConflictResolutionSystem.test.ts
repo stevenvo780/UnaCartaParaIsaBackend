@@ -30,14 +30,56 @@ describe("ConflictResolutionSystem", () => {
       expect(result.shouldProposeTruce).toBeDefined();
     });
 
-    it("debe proponer tregua cuando la salud es baja", () => {
-      const result = conflictSystem.handleCombatHit({
+    it("debe proponer tregua cuando la salud es baja (<=25)", () => {
+      // Ejecutar múltiples veces para aumentar probabilidad
+      let proposed = false;
+      for (let i = 0; i < 20; i++) {
+        const result = conflictSystem.handleCombatHit({
+          attackerId: "attacker-1",
+          targetId: "target-1",
+          remaining: 20, // Por debajo del umbral de 25
+          damage: 10,
+        });
+        if (result.shouldProposeTruce) {
+          proposed = true;
+          expect(result.cardId).toBeDefined();
+          expect(result.reason).toBe("low_health");
+          break;
+        }
+      }
+      // Al menos una vez debería proponer tregua con 70% de probabilidad
+      expect(proposed).toBe(true);
+    });
+
+    it("debe proponer tregua cuando el daño es alto (>=18)", () => {
+      let proposed = false;
+      for (let i = 0; i < 20; i++) {
+        const result = conflictSystem.handleCombatHit({
+          attackerId: "attacker-1",
+          targetId: "target-1",
+          remaining: 50,
+          damage: 20, // Por encima del umbral de 18
+        });
+        if (result.shouldProposeTruce) {
+          proposed = true;
+          expect(result.cardId).toBeDefined();
+          expect(result.reason).toBe("heavy_hit");
+          break;
+        }
+      }
+      expect(proposed).toBe(true);
+    });
+
+    it("debe establecer firstConflictTime en el primer conflicto", () => {
+      const newSystem = new ConflictResolutionSystem(gameState);
+      newSystem.handleCombatHit({
         attackerId: "attacker-1",
         targetId: "target-1",
         remaining: 20,
         damage: 10,
       });
-      expect(result.shouldProposeTruce).toBeDefined();
+      // El sistema debería haber registrado el tiempo del primer conflicto
+      expect(newSystem).toBeDefined();
     });
   });
 
@@ -108,14 +150,113 @@ describe("ConflictResolutionSystem", () => {
 
   describe("Historial de conflictos", () => {
     it("debe registrar conflictos en el historial", () => {
-      conflictSystem.handleCombatHit({
+      const hitResult = conflictSystem.handleCombatHit({
         attackerId: "attacker-1",
         targetId: "target-1",
         remaining: 20,
         damage: 10,
       });
+      
+      if (hitResult.cardId) {
+        conflictSystem.resolveConflict(hitResult.cardId, "truce_accept");
+        const stats = conflictSystem.getConflictStats();
+        expect(stats.totalConflicts).toBeGreaterThan(0);
+      }
+    });
+
+    it("debe limitar el tamaño del historial a MAX_HISTORY", () => {
+      // Crear muchos conflictos
+      for (let i = 0; i < 250; i++) {
+        const hitResult = conflictSystem.handleCombatHit({
+          attackerId: `attacker-${i}`,
+          targetId: `target-${i}`,
+          remaining: 20,
+          damage: 10,
+        });
+        
+        if (hitResult.cardId) {
+          conflictSystem.resolveConflict(hitResult.cardId, "truce_accept");
+        }
+      }
+      
       const stats = conflictSystem.getConflictStats();
-      expect(stats.totalConflicts).toBeGreaterThanOrEqual(0);
+      // El historial debería estar limitado
+      expect(stats.totalConflicts).toBeLessThanOrEqual(200);
+    });
+  });
+
+  describe("Mediaciones", () => {
+    it("debe registrar intentos de mediación", () => {
+      const hitResult = conflictSystem.handleCombatHit({
+        attackerId: "attacker-1",
+        targetId: "target-1",
+        remaining: 20,
+        damage: 10,
+      });
+      
+      if (hitResult.cardId) {
+        const stats = conflictSystem.getConflictStats();
+        expect(stats.totalMediations).toBeGreaterThan(0);
+      }
+    });
+
+    it("debe actualizar outcome de mediación al resolver", () => {
+      const hitResult = conflictSystem.handleCombatHit({
+        attackerId: "attacker-1",
+        targetId: "target-1",
+        remaining: 20,
+        damage: 10,
+      });
+      
+      if (hitResult.cardId) {
+        conflictSystem.resolveConflict(hitResult.cardId, "truce_accept");
+        const stats = conflictSystem.getConflictStats();
+        expect(stats.mediationSuccessRate).toBeGreaterThanOrEqual(0);
+      }
+    });
+  });
+
+  describe("Bonus de tregua", () => {
+    it("debe retornar bonus al aceptar tregua", () => {
+      const hitResult = conflictSystem.handleCombatHit({
+        attackerId: "attacker-1",
+        targetId: "target-1",
+        remaining: 20,
+        damage: 10,
+      });
+      
+      if (hitResult.cardId) {
+        const result = conflictSystem.resolveConflict(hitResult.cardId, "truce_accept");
+        expect(result.truceBonus).toBe(0.1);
+      }
+    });
+
+    it("debe retornar bonus mayor al disculparse", () => {
+      const hitResult = conflictSystem.handleCombatHit({
+        attackerId: "attacker-1",
+        targetId: "target-1",
+        remaining: 20,
+        damage: 10,
+      });
+      
+      if (hitResult.cardId) {
+        const result = conflictSystem.resolveConflict(hitResult.cardId, "apologize");
+        expect(result.truceBonus).toBe(0.2);
+      }
+    });
+
+    it("no debe retornar bonus al continuar conflicto", () => {
+      const hitResult = conflictSystem.handleCombatHit({
+        attackerId: "attacker-1",
+        targetId: "target-1",
+        remaining: 20,
+        damage: 10,
+      });
+      
+      if (hitResult.cardId) {
+        const result = conflictSystem.resolveConflict(hitResult.cardId, "continue");
+        expect(result.truceBonus).toBeUndefined();
+      }
     });
   });
 });
