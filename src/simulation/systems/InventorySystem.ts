@@ -1,6 +1,8 @@
 import { Inventory, Stockpile, ResourceType } from "../types/economy.js";
+import type { GameState } from "../../types/game-types.js";
 
 export class InventorySystem {
+  private gameState?: GameState;
   private agentInventories = new Map<string, Inventory>();
   private stockpiles = new Map<string, Stockpile>();
   private stockpilesByZone = new Map<string, Set<string>>();
@@ -10,7 +12,9 @@ export class InventorySystem {
   private readonly DEFAULT_AGENT_CAPACITY = 50;
   private readonly DEFAULT_STOCKPILE_CAPACITY = 1000;
 
-  constructor() { }
+  constructor(gameState?: GameState) {
+    this.gameState = gameState;
+  }
 
   public initializeAgentInventory(agentId: string, capacity?: number): Inventory {
     const inventory: Inventory = {
@@ -154,6 +158,41 @@ export class InventorySystem {
 
       if (foodLoss > 0) inv.food = Math.max(0, inv.food - foodLoss);
       if (waterLoss > 0) inv.water = Math.max(0, inv.water - waterLoss);
+    }
+
+    // Escribir estado en GameState para sincronización con frontend
+    if (this.gameState) {
+      if (!this.gameState.inventory) {
+        this.gameState.inventory = {
+          global: {
+            wood: 0,
+            stone: 0,
+            food: 0,
+            water: 0,
+            capacity: 0,
+            lastUpdateTime: now,
+          },
+          stockpiles: new Map(),
+        };
+      }
+
+      // Convertir stockpiles Map a Map serializable
+      const stockpilesMap = new Map<string, Inventory>();
+      this.stockpiles.forEach((stockpile) => {
+        stockpilesMap.set(stockpile.id, stockpile.inventory);
+      });
+      this.gameState.inventory.stockpiles = stockpilesMap;
+
+      // Calcular inventario global (suma de todos los agentes y stockpiles)
+      const stats = this.getSystemStats();
+      this.gameState.inventory.global = {
+        wood: stats.stockpiled.wood + stats.inAgents.wood,
+        stone: stats.stockpiled.stone + stats.inAgents.stone,
+        food: stats.stockpiled.food + stats.inAgents.food,
+        water: stats.stockpiled.water + stats.inAgents.water,
+        capacity: 0, // No hay capacidad global
+        lastUpdateTime: now,
+      };
     }
   }
 

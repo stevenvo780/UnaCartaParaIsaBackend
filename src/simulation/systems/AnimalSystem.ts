@@ -100,6 +100,33 @@ export class AnimalSystem {
       this.cleanCaches();
       this.lastCleanup = now;
     }
+
+    // Escribir estado en GameState para sincronización con frontend
+    if (!this.gameState.animals) {
+      this.gameState.animals = {
+        animals: [],
+        stats: {
+          total: 0,
+          byType: {},
+        },
+      };
+    }
+
+    // Convertir Map a Array para serialización
+    this.gameState.animals.animals = Array.from(this.animals.values()).filter(a => !a.isDead);
+
+    // Calcular estadísticas
+    const byType: Record<string, number> = {};
+    let total = 0;
+    this.gameState.animals.animals.forEach((animal) => {
+      byType[animal.type] = (byType[animal.type] || 0) + 1;
+      total++;
+    });
+
+    this.gameState.animals.stats = {
+      total,
+      byType,
+    };
   }
 
   private updateAnimalBehavior(animal: Animal, deltaSeconds: number): void {

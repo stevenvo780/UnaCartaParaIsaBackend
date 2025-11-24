@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { ReputationSystem } from "../../src/simulation/systems/ReputationSystem.js";
 import { createMockGameState } from "../setup.js";
 import type { GameState } from "../../src/types/game-types.js";
+import { simulationEvents, GameEventNames } from "../../src/simulation/events.js";
 
 describe("ReputationSystem", () => {
   let gameState: GameState;
@@ -76,6 +77,52 @@ describe("ReputationSystem", () => {
       // La confianza puede degradarse hacia el valor objetivo (0.5)
       expect(updatedTrust).toBeGreaterThanOrEqual(0);
       expect(updatedTrust).toBeLessThanOrEqual(1);
+    });
+  });
+
+  describe("Manejo de eventos", () => {
+    it("debe manejar cambios en relaciones sociales", () => {
+      expect(() => {
+        simulationEvents.emit(GameEventNames.SOCIAL_RELATION_CHANGED, {
+          agentA: "agent-12",
+          agentB: "agent-13",
+          delta: 0.1,
+        });
+      }).not.toThrow();
+    });
+
+    it("debe manejar eventos de combate", () => {
+      expect(() => {
+        simulationEvents.emit(GameEventNames.COMBAT_HIT, {
+          attackerId: "attacker-1",
+          targetId: "target-1",
+          damage: 10,
+        });
+      }).not.toThrow();
+    });
+  });
+
+  describe("Estadísticas", () => {
+    it("debe retornar estadísticas del sistema", () => {
+      reputationSystem.updateReputation("agent-16", 0.1);
+      const stats = reputationSystem.getSystemStats();
+      expect(stats).toBeDefined();
+      expect(stats.agents).toBeGreaterThanOrEqual(0);
+      expect(stats.avgReputation).toBeGreaterThanOrEqual(0);
+      expect(stats.trustEdges).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe("Historial de reputación", () => {
+    it("debe retornar historial de cambios de reputación", () => {
+      reputationSystem.updateReputation("agent-17", 0.1, "test_reason");
+      const history = reputationSystem.getReputationHistory("agent-17");
+      expect(Array.isArray(history)).toBe(true);
+    });
+
+    it("debe retornar array vacío para agente sin historial", () => {
+      const history = reputationSystem.getReputationHistory("nonexistent");
+      expect(history).toEqual([]);
     });
   });
 });

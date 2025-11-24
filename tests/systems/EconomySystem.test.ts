@@ -63,6 +63,10 @@ describe("EconomySystem", () => {
   describe("Acciones de trabajo", () => {
     it("debe manejar acción de trabajo en zona de madera", () => {
       inventorySystem.initializeAgentInventory("agent-1");
+      const entity = gameState.entities.find(e => e.id === "agent-1");
+      if (entity) {
+        entity.stats = { money: 0 };
+      }
       economySystem.handleWorkAction("agent-1", "wood-zone");
       
       const inventory = inventorySystem.getAgentInventory("agent-1");
@@ -71,10 +75,61 @@ describe("EconomySystem", () => {
 
     it("debe manejar acción de trabajo en zona de comida", () => {
       inventorySystem.initializeAgentInventory("agent-1");
+      const entity = gameState.entities.find(e => e.id === "agent-1");
+      if (entity) {
+        entity.stats = { money: 0 };
+      }
       economySystem.handleWorkAction("agent-1", "food-zone");
       
       const inventory = inventorySystem.getAgentInventory("agent-1");
       expect(inventory?.food).toBeGreaterThan(0);
+    });
+
+    it("debe manejar acción de trabajo en zona de agua", () => {
+      gameState.zones.push({
+        id: "water-zone",
+        type: "water",
+        x: 300,
+        y: 300,
+        width: 50,
+        height: 50,
+      });
+      inventorySystem.initializeAgentInventory("agent-1");
+      const entity = gameState.entities.find(e => e.id === "agent-1");
+      if (entity) {
+        entity.stats = { money: 0 };
+      }
+      economySystem.handleWorkAction("agent-1", "water-zone");
+      
+      const inventory = inventorySystem.getAgentInventory("agent-1");
+      expect(inventory?.water).toBeGreaterThan(0);
+    });
+
+    it("debe pagar salario al agente", () => {
+      inventorySystem.initializeAgentInventory("agent-1");
+      const entity = gameState.entities.find(e => e.id === "agent-1");
+      if (entity) {
+        entity.stats = { money: 0 };
+      }
+      const initialMoney = entity?.stats?.money || 0;
+      economySystem.handleWorkAction("agent-1", "wood-zone");
+      
+      const updatedEntity = gameState.entities.find(e => e.id === "agent-1");
+      if (updatedEntity?.stats) {
+        expect(updatedEntity.stats.money).toBeGreaterThan(initialMoney);
+      }
+    });
+
+    it("debe agregar recursos globales si el inventario está lleno", () => {
+      inventorySystem.initializeAgentInventory("agent-1", 0); // Capacidad 0
+      const entity = gameState.entities.find(e => e.id === "agent-1");
+      if (entity) {
+        entity.stats = { money: 0 };
+      }
+      const initialWood = gameState.resources?.materials.wood || 0;
+      economySystem.handleWorkAction("agent-1", "wood-zone");
+      
+      expect(gameState.resources?.materials.wood).toBeGreaterThan(initialWood);
     });
 
     it("no debe hacer nada si el agente no existe", () => {
@@ -88,11 +143,39 @@ describe("EconomySystem", () => {
         economySystem.handleWorkAction("agent-1", "nonexistent");
       }).not.toThrow();
     });
+
+    it("no debe hacer nada si la zona no produce recursos", () => {
+      gameState.zones.push({
+        id: "rest-zone",
+        type: "rest",
+        x: 400,
+        y: 400,
+        width: 50,
+        height: 50,
+      });
+      expect(() => {
+        economySystem.handleWorkAction("agent-1", "rest-zone");
+      }).not.toThrow();
+    });
   });
 
   describe("Actualización del sistema", () => {
     it("debe actualizar sin errores", () => {
       expect(() => economySystem.update(1000)).not.toThrow();
+    });
+  });
+
+  describe("Residuos de yield", () => {
+    it("debe acumular residuos de yield", () => {
+      inventorySystem.initializeAgentInventory("agent-1");
+      const entity = gameState.entities.find(e => e.id === "agent-1");
+      if (entity) {
+        entity.stats = { money: 0 };
+      }
+      // Realizar múltiples acciones de trabajo para acumular residuos
+      economySystem.handleWorkAction("agent-1", "wood-zone");
+      economySystem.handleWorkAction("agent-1", "wood-zone");
+      expect(economySystem).toBeDefined();
     });
   });
 

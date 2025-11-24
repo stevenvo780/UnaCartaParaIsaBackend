@@ -193,7 +193,7 @@ export class TradeSystem {
       };
     }
 
-    this.gameState.trade.offers = this.getAllOffers();
+    this.gameState.trade.offers = Array.from(this.activeOffers.values());
     this.gameState.trade.history = this.tradeHistory;
     this.gameState.trade.stats = this.getTradeStats();
   }

@@ -308,7 +308,10 @@ export class RecipeDiscoverySystem {
       };
     }
 
-    this.gameState.recipes.discovered = this.getGloballyDiscoveredRecipes();
+    const discovered = this.getGloballyDiscoveredRecipes();
+    this.gameState.recipes.discovered = discovered;
+    // El frontend también espera globalDiscovered
+    (this.gameState.recipes as unknown as { globalDiscovered?: typeof discovered }).globalDiscovered = discovered;
 
     // Convertir Map a objeto para serialización
     const agentRecipesObj: Record<string, Array<{

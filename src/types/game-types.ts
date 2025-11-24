@@ -311,6 +311,27 @@ export interface GameState {
   mapSeed?: string;
   currentConversation?: ConversationState;
   terrainTiles?: TerrainTile[];
+  world?: {
+    terrain: Array<
+      Array<{
+        x: number;
+        y: number;
+        biome: string;
+        assets: {
+          terrain: string;
+          vegetation?: string[];
+          structures?: string[];
+        };
+        isWalkable: boolean;
+      }>
+    >;
+    config: {
+      width: number;
+      height: number;
+      tileSize: number;
+      seed: number;
+    };
+  };
   roads?: RoadPolyline[];
   objectLayers?: ObjectLayer[];
   worldSize?: Size;

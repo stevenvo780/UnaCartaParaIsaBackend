@@ -124,7 +124,7 @@ export class SimulationRunner {
     this.needsSystem = new NeedsSystem(this.state, this.lifeCycleSystem);
     this._genealogySystem = new GenealogySystem(this.state);
     this.socialSystem = new SocialSystem(this.state);
-    this.inventorySystem = new InventorySystem();
+    this.inventorySystem = new InventorySystem(this.state);
     this.resourceReservationSystem = new ResourceReservationSystem(
       this.state,
       this.inventorySystem,
@@ -419,10 +419,12 @@ export class SimulationRunner {
     this.emergenceSystem.update(scaledDelta);
     this.interactionGameSystem.update(scaledDelta);
     this.knowledgeNetworkSystem.update(scaledDelta);
-    // NormsSystem is event-driven, no tick needed
+    this._researchSystem.update();
+    this._recipeDiscoverySystem.update();
+    // NormsSystem is event-driven, but needs to write state
+    this._normsSystem.update();
     // Genealogy usually updates on events, but if it has a tick:
     // this.genealogySystem.update(scaledDelta);
-    // ResearchSystem and RecipeDiscoverySystem are event-driven, no tick needed
 
     this.tickCounter += 1;
     const snapshot = this.getSnapshot();

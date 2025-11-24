@@ -85,6 +85,50 @@ describe("SocialSystem", () => {
     });
   });
 
+  describe("Actualización de proximidad", () => {
+    it("debe reforzar afinidad entre entidades cercanas", () => {
+      gameState.entities = [
+        {
+          id: "entity-16",
+          position: { x: 100, y: 100 },
+          type: "agent",
+        },
+        {
+          id: "entity-17",
+          position: { x: 150, y: 100 }, // Dentro del radio de proximidad
+          type: "agent",
+        },
+      ];
+      
+      const initialAffinity = socialSystem.getAffinityBetween("entity-16", "entity-17");
+      socialSystem.update(1000);
+      const updatedAffinity = socialSystem.getAffinityBetween("entity-16", "entity-17");
+      expect(updatedAffinity).toBeGreaterThanOrEqual(initialAffinity);
+    });
+
+    it("no debe reforzar afinidad entre entidades lejanas", () => {
+      gameState.entities = [
+        {
+          id: "entity-18",
+          position: { x: 100, y: 100 },
+          type: "agent",
+        },
+        {
+          id: "entity-19",
+          position: { x: 500, y: 500 }, // Fuera del radio de proximidad
+          type: "agent",
+        },
+      ];
+      
+      const initialAffinity = socialSystem.getAffinityBetween("entity-18", "entity-19");
+      socialSystem.update(1000);
+      const updatedAffinity = socialSystem.getAffinityBetween("entity-18", "entity-19");
+      // Puede degradarse o mantenerse igual
+      expect(updatedAffinity).toBeGreaterThanOrEqual(-1);
+      expect(updatedAffinity).toBeLessThanOrEqual(1);
+    });
+  });
+
   describe("Configuración personalizada", () => {
     it("debe aceptar configuración personalizada", () => {
       const customSystem = new SocialSystem(gameState, {

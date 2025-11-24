@@ -66,4 +66,34 @@ export class NeedsSystem {
   public getAllNeeds(): EntityNeedsData[] {
     return Array.from(this.entityNeeds.values());
   }
+
+  public satisfyNeed(entityId: string, needType: string, amount: number): boolean {
+    const data = this.entityNeeds.get(entityId);
+    if (!data) return false;
+
+    const needs = data.needs;
+    const needKey = needType as keyof typeof needs;
+    if (needKey in needs && typeof needs[needKey] === 'number') {
+      (needs[needKey] as number) = Math.min(100, (needs[needKey] as number) + amount);
+      return true;
+    }
+    return false;
+  }
+
+  public modifyNeed(entityId: string, needType: string, delta: number): boolean {
+    const data = this.entityNeeds.get(entityId);
+    if (!data) return false;
+
+    const needs = data.needs;
+    const needKey = needType as keyof typeof needs;
+    if (needKey in needs && typeof needs[needKey] === 'number') {
+      (needs[needKey] as number) = Math.max(0, Math.min(100, (needs[needKey] as number) + delta));
+      return true;
+    }
+    return false;
+  }
+
+  public updateConfig(newConfig: Partial<NeedsConfig>): void {
+    this.config = { ...this.config, ...newConfig };
+  }
 }

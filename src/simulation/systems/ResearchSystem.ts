@@ -354,8 +354,23 @@ export class ResearchSystem {
     const primaryLineageId = lineageIds[0];
     this.gameState.research.techTree = this.getTechTreeState(primaryLineageId);
 
-    // Actualizar stats de todos los lineages
-    this.gameState.research.lineages = this.getAllLineagesStats();
+    // Actualizar stats de todos los lineages - el frontend espera una estructura específica
+    const allLineagesStats = this.getAllLineagesStats();
+    this.gameState.research.lineages = allLineagesStats.map(({ lineageId, stats }) => ({
+      lineageId,
+      stats,
+      // Agregar datos adicionales que el frontend puede necesitar
+      nodes: Array.from(this.getResearchProgress(lineageId)?.values() || []).map(node => ({
+        categoryId: node.categoryId,
+        progress: node.progress,
+        recipesDiscovered: node.recipesDiscovered,
+        contributors: node.contributors,
+      })),
+      unlockedCategories: Array.from(
+        this.lineageResearch.get(lineageId)?.keys() || []
+      ),
+      specializations: this.getSpecializations(lineageId),
+    }));
   }
 
   public cleanup(): void {

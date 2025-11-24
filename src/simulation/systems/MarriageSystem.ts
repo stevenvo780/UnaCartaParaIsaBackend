@@ -170,7 +170,8 @@ export class MarriageSystem {
     const now = Date.now();
 
     if (now - this.lastProposalCleanup >= 60000) {
-      for (const [targetId, proposal] of Array.from(this.pendingProposals.entries())) {
+      const proposalsEntries = Array.from(this.pendingProposals.entries());
+      for (const [targetId, proposal] of proposalsEntries) {
         if (now - proposal.timestamp > this.PROPOSAL_EXPIRATION_MS) {
           this.pendingProposals.delete(targetId);
         }
@@ -211,7 +212,7 @@ export class MarriageSystem {
       };
     }
 
-    this.gameState.marriage.groups = this.getAllMarriageGroups();
+    this.gameState.marriage.groups = Array.from(this.marriageGroups.values());
     this.gameState.marriage.proposals = this.getPendingProposals();
     this.gameState.marriage.stats = this.getMarriageStats();
   }
@@ -221,6 +222,10 @@ export class MarriageSystem {
   }
 
   public getAllMarriageGroups(): MarriageGroup[] {
+    return Array.from(this.marriageGroups.values());
+  }
+
+  public getMarriageGroupsArray(): MarriageGroup[] {
     return Array.from(this.marriageGroups.values());
   }
 

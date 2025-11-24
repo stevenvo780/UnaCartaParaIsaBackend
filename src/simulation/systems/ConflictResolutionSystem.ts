@@ -137,7 +137,8 @@ export class ConflictResolutionSystem {
   public update(): void {
     // Clean up expired cards
     const now = Date.now();
-    for (const [cardId, meta] of Array.from(this.activeCards.entries())) {
+    const activeCardsEntries = Array.from(this.activeCards.entries());
+    for (const [cardId, meta] of activeCardsEntries) {
       const mediation = this.mediationAttempts.find((m) => m.cardId === cardId);
       if (
         mediation &&
@@ -172,12 +173,40 @@ export class ConflictResolutionSystem {
           mediationSuccessRate: 0,
           truceAcceptanceRate: 0,
         },
-      };
+      } as typeof this.gameState.conflicts & { activeConflicts?: typeof this.gameState.conflicts.active };
     }
 
-    this.gameState.conflicts.active = this.getActiveConflicts();
+    // El frontend espera activeConflicts, no active
+    const activeConflicts = this.getActiveConflicts();
+    this.gameState.conflicts.active = activeConflicts;
+    // También agregar como activeConflicts para compatibilidad con frontend
+    (this.gameState.conflicts as unknown as { activeConflicts?: typeof activeConflicts }).activeConflicts = activeConflicts;
     this.gameState.conflicts.history = this.getConflictHistory(50);
     this.gameState.conflicts.stats = this.getConflictStats();
+
+    // También escribir truces en norms para ClientNormsSystem
+    if (!this.gameState.norms) {
+      this.gameState.norms = {
+        violations: [],
+        sanctions: [],
+        stats: {
+          totalViolations: 0,
+          protectedZonesCount: 0,
+          totalSanctions: 0,
+          totalGuardDispatches: 0,
+          avgViolationsPerDay: 0,
+          mostViolatedZone: null,
+        },
+        truces: [],
+      };
+    }
+    // Convertir active conflicts a truces para norms
+    this.gameState.norms.truces = activeConflicts.map(conflict => ({
+      cardId: conflict.cardId,
+      attackerId: conflict.attackerId,
+      targetId: conflict.targetId,
+      expiresAt: conflict.expiresAt,
+    }));
   }
 
   public getActiveConflicts(): ActiveConflict[] {

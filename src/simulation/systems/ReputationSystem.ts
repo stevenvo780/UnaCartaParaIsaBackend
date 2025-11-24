@@ -175,6 +175,27 @@ export class ReputationSystem {
 
     this.gameState.reputation.data = this.serialize();
     this.gameState.reputation.stats = this.getSystemStats();
+
+    // El frontend espera reputations y trust en formato diferente
+    const allReputations = this.getAllReputations();
+    const trustArray = Array.from(this.trust.entries()).map(([sourceId, targetMap]) => ({
+      sourceId,
+      targets: Array.from(targetMap.entries()).map(([targetId, edge]) => ({
+        sourceId,
+        targetId,
+        trust: edge.value,
+      })),
+    }));
+
+    // Agregar formato compatible con frontend
+    (this.gameState.reputation as unknown as {
+      reputations?: typeof allReputations;
+      trust?: typeof trustArray;
+    }).reputations = allReputations;
+    (this.gameState.reputation as unknown as {
+      reputations?: typeof allReputations;
+      trust?: typeof trustArray;
+    }).trust = trustArray;
   }
 
   public handleSocialRelationChanged(data: {
