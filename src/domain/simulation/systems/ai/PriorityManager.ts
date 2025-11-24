@@ -68,9 +68,6 @@ export class PriorityManager {
     return { ...this.weights };
   }
 
-  /**
-   * Adjusts goal priority based on domain, agent role, and game state
-   */
   public adjust(
     agentId: string,
     domain: GoalDomain,
@@ -79,7 +76,6 @@ export class PriorityManager {
     const w = this.weights[domain] ?? 1;
     let adjusted = basePriority * w;
 
-    // Adjust for resource scarcity
     try {
       const res = this.gameState.resources?.materials;
       if (res) {

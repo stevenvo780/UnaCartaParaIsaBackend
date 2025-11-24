@@ -210,6 +210,9 @@ export class AISystem extends EventEmitter {
       findNearestResource: (id: string, resourceType: string) => {
         return this.findNearestResourceForEntity(id, resourceType);
       },
+      getAgentRole: (id: string) => this.roleSystem?.getAgentRole(id),
+      getPreferredResourceForRole: (role: string) =>
+        this.roleSystem?.getPreferredResourceForRole(role),
     };
 
     const goals = planGoals(deps, aiState);
@@ -699,24 +702,21 @@ export class AISystem extends EventEmitter {
       const targetId = goal.data.targetAgentId as string;
       const targetAgent = this.gameState.agents?.find((a) => a.id === targetId);
       if (!targetAgent) {
-        return true; // Target agent doesn't exist
+        return true;
       }
     }
 
-    // Check if agent still exists
     const agent = this.gameState.agents?.find((a) => a.id === agentId);
     if (!agent) {
-      return true; // Agent doesn't exist anymore
+      return true;
     }
 
-    // Check if need is already satisfied (for need-based goals)
     if (goal.type.startsWith("satisfy_")) {
       const needType = goal.data?.need as string;
       if (needType && this.needsSystem) {
         const needs = this.needsSystem.getNeeds(agentId);
         if (needs) {
           const needValue = needs[needType as keyof typeof needs] as number;
-          // Goal is invalid if need is already well satisfied
           if (needValue > 85) {
             return true;
           }
@@ -724,7 +724,7 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    return false; // Goal is still valid
+    return false;
   }
 
   private completeGoal(aiState: AIState, _agentId: string): void {
@@ -803,10 +803,36 @@ export class AISystem extends EventEmitter {
     entityId: string,
     resourceType: string,
   ): { id: string; x: number; y: number } | null {
-    // Try to use WorldResourceSystem if available for more advanced logic
     if (this.worldResourceSystem) {
-      // This assumes WorldResourceSystem has a method to find resources
-      // If not, we fall back to direct state access
+      const resources = this.worldResourceSystem.getResourcesByType(
+        resourceType as WorldResourceType,
+      );
+      if (resources.length === 0) return null;
+
+      const agent = this.gameState.agents?.find((a) => a.id === entityId);
+      if (!agent?.position) return null;
+
+      let nearest: { id: string; x: number; y: number } | null = null;
+      let minDistance = Infinity;
+
+      for (const resource of resources) {
+        if (resource.state !== "pristine") continue;
+
+        const dx = resource.position.x - agent.position.x;
+        const dy = resource.position.y - agent.position.y;
+        const dist = dx * dx + dy * dy;
+
+        if (dist < minDistance) {
+          minDistance = dist;
+          nearest = {
+            id: resource.id,
+            x: resource.position.x,
+            y: resource.position.y,
+          };
+        }
+      }
+
+      return nearest;
     }
 
     if (!this.gameState.worldResources) return null;
@@ -864,9 +890,6 @@ export class AISystem extends EventEmitter {
     if (!this.householdSystem) logger.warn("AISystem: HouseholdSystem missing");
   }
 
-  /**
-   * Helper function to validate if a string is a valid WorldResourceType
-   */
   private isValidWorldResourceType(value: string): value is WorldResourceType {
     const validTypes: WorldResourceType[] = [
       "tree",

@@ -15,16 +15,13 @@ export class NeedsSystem extends EventEmitter {
   private entityNeeds: Map<string, EntityNeedsData>;
   private lastUpdate: number = 0;
 
-  // Dependencies
   private lifeCycleSystem?: LifeCycleSystem;
   private divineFavorSystem?: DivineFavorSystem;
   private inventorySystem?: InventorySystem;
   private socialSystem?: SocialSystem;
 
-  // Feature 2: Respawn Queue
   private respawnQueue = new Map<string, number>();
 
-  // Feature 7: Zone Cache
   private zoneCache = new Map<string, { zones: Zone[]; timestamp: number }>();
   private readonly ZONE_CACHE_TTL = 5000;
 
@@ -53,7 +50,6 @@ export class NeedsSystem extends EventEmitter {
       criticalThreshold: 20,
       emergencyThreshold: 10,
       updateIntervalMs: 1000,
-      // New config fields
       allowRespawn: true,
       deathThresholds: {
         hunger: 0,
@@ -91,10 +87,8 @@ export class NeedsSystem extends EventEmitter {
   public update(_deltaTimeMs: number): void {
     const now = Date.now();
 
-    // Process respawn queue
     this.processRespawnQueue(now);
 
-    // Clean zone cache periodically
     if (Math.random() < 0.01) this.cleanZoneCache(now);
 
     if (now - this.lastUpdate < this.config.updateIntervalMs) {
@@ -104,38 +98,25 @@ export class NeedsSystem extends EventEmitter {
     const dtSeconds = (now - this.lastUpdate) / 1000;
     this.lastUpdate = now;
 
-    // Process all entities
     for (const [entityId, needs] of Array.from(this.entityNeeds.entries())) {
-      // 1. Apply Decay
       this.applyNeedDecay(needs, dtSeconds, entityId);
-
-      // 2. Apply Zone Benefits (Feature 1)
       this.handleZoneBenefits(entityId, needs, dtSeconds);
-
-      // 3. Apply Social Benefits (Feature 5)
       this.applySocialMoraleBoost(entityId, needs);
 
-      // 4. Apply Cross Effects (Feature 8)
       if (this.config.crossEffectsEnabled) {
         this.applyCrossEffects(needs);
       }
 
-      // 5. Check Emergency (Feature 3)
       this.checkEmergencyNeeds(entityId, needs);
 
-      // 6. Check Death (Feature 2)
       if (this.checkForDeath(entityId, needs)) {
-        continue; // Entity died, skip rest
+        continue;
       }
 
-      // 7. Emit Events (Feature 10)
       this.emitNeedEvents(entityId, needs);
     }
   }
 
-  /**
-   * Feature 1: Zone Benefits
-   */
   private handleZoneBenefits(
     entityId: string,
     needs: EntityNeedsData,
@@ -212,9 +193,6 @@ export class NeedsSystem extends EventEmitter {
     }
   }
 
-  /**
-   * Feature 2: Death & Respawn
-   */
   private checkForDeath(entityId: string, needs: EntityNeedsData): boolean {
     if (needs.hunger <= (this.config.deathThresholds?.hunger ?? 0)) {
       this.handleEntityDeath(entityId, needs, "starvation");
@@ -287,9 +265,6 @@ export class NeedsSystem extends EventEmitter {
     });
   }
 
-  /**
-   * Feature 3: Emergency Fallbacks
-   */
   private checkEmergencyNeeds(entityId: string, needs: EntityNeedsData): void {
     const CRITICAL = this.config.emergencyThreshold || 10;
 
@@ -331,9 +306,6 @@ export class NeedsSystem extends EventEmitter {
     needs.energy = Math.min(100, needs.energy + emergencyRest);
   }
 
-  /**
-   * Feature 4 & 6: Decay with Age & Divine Favor
-   */
   private applyNeedDecay(
     needs: EntityNeedsData,
     deltaSeconds: number,
@@ -379,7 +351,6 @@ export class NeedsSystem extends EventEmitter {
     decayRates: Record<string, number>,
   ): Record<string, number> {
     if (!this.divineFavorSystem) return decayRates;
-    // Try to get favor by entityId as lineageId (simplified approach)
     const favorObj = this.divineFavorSystem.getFavor(entityId);
     if (!favorObj) return decayRates;
     const favorValue = favorObj.favor;
@@ -392,10 +363,6 @@ export class NeedsSystem extends EventEmitter {
     return result;
   }
 
-  /**
-   * Feature 5: Social Integration
-   * Apply morale boosts based on social relationships
-   */
   private applySocialMoraleBoost(
     entityId: string,
     needs: EntityNeedsData,
@@ -407,18 +374,16 @@ export class NeedsSystem extends EventEmitter {
 
     const entityPosition = entity.position;
 
-    // Check for nearby entities with positive affinity (truce-like effect)
     const nearbyEntities = this.gameState.entities.filter((e) => {
       if (e.id === entityId || !e.position) return false;
       const dx = e.position.x - entityPosition.x;
       const dy = e.position.y - entityPosition.y;
       const distance = Math.hypot(dx, dy);
-      return distance <= 100; // Within proximity radius
+      return distance <= 100;
     });
 
     if (nearbyEntities.length === 0) return;
 
-    // Calculate average affinity with nearby entities
     let totalAffinity = 0;
     let affinityCount = 0;
 
@@ -436,20 +401,16 @@ export class NeedsSystem extends EventEmitter {
     if (affinityCount > 0) {
       const avgAffinity = totalAffinity / affinityCount;
 
-      // Apply morale boost based on positive social relationships
       if (avgAffinity > 0.5) {
-        // Strong positive relationships boost social and fun needs
         const boost = Math.min(0.5, avgAffinity * 0.3);
         needs.social = Math.min(100, needs.social + boost);
         needs.fun = Math.min(100, needs.fun + boost * 0.8);
       } else if (avgAffinity > 0.2) {
-        // Moderate positive relationships provide smaller boost
         const boost = avgAffinity * 0.15;
         needs.social = Math.min(100, needs.social + boost);
         needs.fun = Math.min(100, needs.fun + boost * 0.6);
       }
 
-      // Having multiple friendly neighbors provides additional comfort
       if (affinityCount >= 3 && avgAffinity > 0.3) {
         needs.social = Math.min(100, needs.social + 2);
         needs.fun = Math.min(100, needs.fun + 1);
@@ -457,9 +418,6 @@ export class NeedsSystem extends EventEmitter {
     }
   }
 
-  /**
-   * Feature 7: Zone Caching
-   */
   private findZonesNearPosition(
     position: { x: number; y: number },
     radius: number,
@@ -495,9 +453,6 @@ export class NeedsSystem extends EventEmitter {
     }
   }
 
-  /**
-   * Feature 8: Enhanced Cross-Effects
-   */
   private applyCrossEffects(needs: EntityNeedsData): void {
     if (needs.energy < 30) {
       const penalty = (30 - needs.energy) * 0.02;
@@ -522,9 +477,6 @@ export class NeedsSystem extends EventEmitter {
     }
   }
 
-  /**
-   * Feature 10: Enhanced Events
-   */
   private emitNeedEvents(entityId: string, needs: EntityNeedsData): void {
     const CRITICAL = this.config.criticalThreshold;
 

@@ -293,14 +293,13 @@ export class InventorySystem {
       });
       this.gameState.inventory.agents = agentsObj;
 
-      // Calcular inventario global (suma de todos los agentes y stockpiles)
       const stats = this.getSystemStats();
       this.gameState.inventory.global = {
         wood: stats.stockpiled.wood + stats.inAgents.wood,
         stone: stats.stockpiled.stone + stats.inAgents.stone,
         food: stats.stockpiled.food + stats.inAgents.food,
         water: stats.stockpiled.water + stats.inAgents.water,
-        capacity: 0, // No hay capacidad global
+        capacity: 0,
         lastUpdateTime: now,
       };
     }

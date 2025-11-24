@@ -1,6 +1,5 @@
 import type { AIState, AIGoal } from "../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../types/simulation/needs";
-// AgentPersonality type is available but not currently used in this evaluator
 
 export interface NeedsEvaluatorDependencies {
   getEntityNeeds: (entityId: string) => EntityNeedsData | undefined;
@@ -35,12 +34,10 @@ export function evaluateCriticalNeeds(
   const needs = entityNeeds;
   const now = Date.now();
 
-  // Thresholds based on personality
   const hungerThreshold = 45;
   const thirstThreshold = 40;
   const energyThreshold = 35;
 
-  // Critical: Thirst (highest priority)
   if (needs.thirst < thirstThreshold) {
     let waterTarget = null;
     if (deps.findNearestResource) {
@@ -64,19 +61,15 @@ export function evaluateCriticalNeeds(
     }
   }
 
-  // Critical: Hunger
   if (needs.hunger < hungerThreshold) {
     let foodTarget = null;
     if (deps.findNearestResource) {
-      // Try wheat first
       foodTarget = deps.findNearestResource(aiState.entityId, "wheat");
 
-      // Then berries
       if (!foodTarget) {
         foodTarget = deps.findNearestResource(aiState.entityId, "berry_bush");
       }
 
-      // Then mushrooms
       if (!foodTarget) {
         foodTarget = deps.findNearestResource(
           aiState.entityId,
@@ -102,7 +95,6 @@ export function evaluateCriticalNeeds(
     }
   }
 
-  // Energy (rest/sleep)
   if (needs.energy < energyThreshold) {
     goals.push({
       id: `energy_${aiState.entityId}_${now}`,
@@ -117,7 +109,6 @@ export function evaluateCriticalNeeds(
     });
   }
 
-  // Mental health (social)
   if (needs.mentalHealth < 50) {
     goals.push({
       id: `social_${aiState.entityId}_${now}`,

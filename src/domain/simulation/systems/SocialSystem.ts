@@ -81,8 +81,6 @@ export class SocialSystem {
   }
 
   public imposeTruce(aId: string, bId: string, _durationMs: number): void {
-    // Las treguas se manejan en ConflictResolutionSystem, pero podemos mejorar la afinidad
-    // durationMs parameter kept for API compatibility but not currently used
     void _durationMs;
     this.addEdge(aId, bId, 0.2);
   }

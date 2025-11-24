@@ -27,8 +27,6 @@ export class WorldResourceSystem {
   }
 
   public update(_delta: number): void {
-    // delta parameter kept for API compatibility
-    void _delta;
     void _delta;
     const now = Date.now();
     if (now - this.lastRegenerationCheck < this.REGENERATION_CHECK_INTERVAL) {

@@ -9,9 +9,8 @@ export class TradeSystem {
   private merchantReputation = new Map<string, number>();
   private inventorySystem?: InventorySystem;
 
-  // Background trade constants for automated trading between agents
-  private readonly BACKGROUND_TRADE_INTERVAL = 30000; // 30 seconds
-  private readonly BACKGROUND_TRADE_PROBABILITY = 0.1; // 10% chance per interval
+  private readonly BACKGROUND_TRADE_INTERVAL = 30000;
+  private readonly BACKGROUND_TRADE_PROBABILITY = 0.1;
   private _lastBackgroundTrade = 0;
 
   constructor(gameState: GameState, inventorySystem?: InventorySystem) {
@@ -115,7 +114,6 @@ export class TradeSystem {
   public calculateOfferValue(
     items: Array<{ itemId: string; quantity: number }>,
   ): number {
-    // Simplified value calculation
     const itemValues: Record<string, number> = {
       wood: 1,
       stone: 2,
@@ -187,12 +185,10 @@ export class TradeSystem {
   public update(): void {
     const now = Date.now();
 
-    // Cleanup expired offers periodically
     if (now % 60000 < 100) {
       this.cleanupExpiredOffers();
     }
 
-    // Process background trades
     if (
       this.inventorySystem &&
       now - this._lastBackgroundTrade >= this.BACKGROUND_TRADE_INTERVAL
@@ -203,7 +199,6 @@ export class TradeSystem {
       this._lastBackgroundTrade = now;
     }
 
-    // Escribir estado en GameState para sincronización con frontend
     if (!this.gameState.trade) {
       this.gameState.trade = {
         offers: [],
@@ -221,17 +216,12 @@ export class TradeSystem {
     this.gameState.trade.stats = this.getTradeStats();
   }
 
-  /**
-   * Process automated background trades between agents
-   * Agents with excess resources can automatically trade with those in need
-   */
   private processBackgroundTrade(): void {
     if (!this.inventorySystem || !this.gameState.agents) return;
 
     const agents = this.gameState.agents.filter((a) => a.lifeStage === "adult");
     if (agents.length < 2) return;
 
-    // Find agents with excess resources
     const resourceTypes: Array<"wood" | "stone" | "food" | "water"> = [
       "wood",
       "stone",
@@ -240,7 +230,6 @@ export class TradeSystem {
     ];
 
     for (const resourceType of resourceTypes) {
-      // Find seller with excess (has more than 20 units)
       const seller = agents.find((agent) => {
         const inv = this.inventorySystem!.getAgentInventory(agent.id);
         return inv && (inv[resourceType] || 0) > 20;
@@ -248,7 +237,6 @@ export class TradeSystem {
 
       if (!seller) continue;
 
-      // Find buyer in need (has less than 5 units)
       const buyer = agents.find((agent) => {
         if (agent.id === seller.id) return false;
         const inv = this.inventorySystem!.getAgentInventory(agent.id);
@@ -257,7 +245,6 @@ export class TradeSystem {
 
       if (!buyer) continue;
 
-      // Execute trade: transfer 5-10 units
       const tradeAmount = Math.min(
         10,
         Math.max(5, Math.floor(Math.random() * 6) + 5),
@@ -275,7 +262,6 @@ export class TradeSystem {
         if (removed > 0) {
           this.inventorySystem.addResource(buyer.id, resourceType, removed);
 
-          // Record trade in history
           const value = this.calculateOfferValue([
             { itemId: resourceType, quantity: removed },
           ]);
@@ -287,11 +273,9 @@ export class TradeSystem {
             value,
           });
 
-          // Update reputation
           this.updateReputation(seller.id, 1);
           this.updateReputation(buyer.id, 0.5);
 
-          // Only one trade per update cycle
           return;
         }
       }

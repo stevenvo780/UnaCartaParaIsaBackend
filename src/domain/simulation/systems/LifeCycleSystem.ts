@@ -36,12 +36,10 @@ export class LifeCycleSystem extends EventEmitter {
   private lastUpdate: number = 0;
   private lastResourceConsumption: number = 0;
 
-  // State
   private reproductionCooldown = new Map<string, number>();
   private spawnCounter = 0;
   private pendingHousingAssignments = new Set<string>();
 
-  // Dependencies
   private needsSystem?: NeedsSystem;
   private aiSystem?: AISystem;
   private inventorySystem?: InventorySystem;
@@ -135,7 +133,6 @@ export class LifeCycleSystem extends EventEmitter {
   public update(deltaTimeMs: number): void {
     const dtSec = deltaTimeMs / 1000;
 
-    // Resource consumption every 60s (simulated time)
     this.lastResourceConsumption += deltaTimeMs;
     if (this.lastResourceConsumption >= 60000) {
       this.consumeResourcesPeriodically();
@@ -193,7 +190,6 @@ export class LifeCycleSystem extends EventEmitter {
   private processHousingAssignments(): void {
     if (!this.householdSystem) return;
 
-    // Process a few assignments per tick
     let processed = 0;
     for (const agentId of this.pendingHousingAssignments) {
       if (processed >= 3) break;
@@ -216,9 +212,7 @@ export class LifeCycleSystem extends EventEmitter {
 
     const agents = this.gameState.agents || [];
     for (const agent of agents) {
-      // Logic for consumption...
-      // Simplified for brevity, assumes InventorySystem handles details
-      const needs = { food: 1, water: 1 }; // Base needs
+      const needs = { food: 1, water: 1 };
       this.inventorySystem.consumeFromAgent(agent.id, needs);
     }
   }
@@ -227,10 +221,6 @@ export class LifeCycleSystem extends EventEmitter {
     const agents = this.gameState.agents || [];
     if (agents.length >= this.config.maxPopulation) return;
 
-    // Simple random breeding logic
-    // In a real implementation, this would be more complex (as seen in frontend)
-    // For now, we'll implement the core check
-
     const adults = agents.filter((a) => a.lifeStage === "adult");
     const males = adults.filter((a) => a.sex === "male");
     const females = adults.filter((a) => a.sex === "female");
@@ -238,7 +228,6 @@ export class LifeCycleSystem extends EventEmitter {
     if (males.length === 0 || females.length === 0) return;
 
     if (Math.random() < 0.05) {
-      // 5% chance per second
       const father = males[Math.floor(Math.random() * males.length)];
       const mother = females[Math.floor(Math.random() * females.length)];
 
@@ -256,7 +245,6 @@ export class LifeCycleSystem extends EventEmitter {
 
     if (now < cooldown) return;
 
-    // Success!
     const father = this.gameState.agents?.find((a) => a.id === fatherId);
     const mother = this.gameState.agents?.find((a) => a.id === motherId);
 
@@ -300,7 +288,6 @@ export class LifeCycleSystem extends EventEmitter {
     if (!this.gameState.agents) this.gameState.agents = [];
     this.gameState.agents.push(profile);
 
-    // Initialize Needs
     if (this.needsSystem) {
       this.needsSystem.initializeEntityNeeds(id);
     }
@@ -342,7 +329,7 @@ export class LifeCycleSystem extends EventEmitter {
     const index = this.gameState.agents.findIndex((a) => a.id === id);
     if (index !== -1) {
       this.gameState.agents.splice(index, 1);
-      simulationEvents.emit(GameEventNames.ANIMAL_DIED, { entityId: id }); // Using ANIMAL_DIED as generic death or add AGENT_DEATH if exists
+      simulationEvents.emit(GameEventNames.ANIMAL_DIED, { entityId: id });
     }
   }
 

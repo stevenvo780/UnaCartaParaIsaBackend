@@ -147,7 +147,6 @@ export class RoleSystem extends EventEmitter {
   }
 
   public update(_delta: number): void {
-    // delta parameter kept for API compatibility
     void _delta;
     void _delta;
     const now = Date.now();
@@ -288,7 +287,6 @@ export class RoleSystem extends EventEmitter {
       };
     }
 
-    // TypeScript guard: bestRole is now definitely RoleConfig
     const selectedRole: RoleConfig = bestRole;
     const efficiency = this.calculateEfficiency(agent, selectedRole);
     const role: AgentRole = {
@@ -359,8 +357,13 @@ export class RoleSystem extends EventEmitter {
     return this.roles.get(agentId);
   }
 
-  public getRoleConfig(type: RoleType): RoleConfig | undefined {
-    return ROLE_DEFINITIONS.find((r) => r.type === type);
+  public getPreferredResourceForRole(roleType: string): string | undefined {
+    const roleDef = ROLE_DEFINITIONS.find((r) => r.type === roleType);
+    return roleDef?.primaryResource;
+  }
+
+  public getRoleConfig(roleType: string): RoleConfig | undefined {
+    return ROLE_DEFINITIONS.find((r) => r.type === roleType);
   }
 
   public getAgentsInShift(shift: WorkShift): string[] {

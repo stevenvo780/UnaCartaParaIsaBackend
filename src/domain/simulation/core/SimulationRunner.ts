@@ -72,7 +72,6 @@ export class SimulationRunner {
   private livingLegendsSystem: LivingLegendsSystem;
   private lifeCycleSystem: LifeCycleSystem;
   private needsSystem: NeedsSystem;
-  // GenealogySystem is event-driven and initialized for event handling
   private readonly _genealogySystem: GenealogySystem;
   private socialSystem: SocialSystem;
   private inventorySystem: InventorySystem;
@@ -118,9 +117,8 @@ export class SimulationRunner {
     this.worldResourceSystem = new WorldResourceSystem(this.state);
     this.livingLegendsSystem = new LivingLegendsSystem(this.state);
 
-    // 1. Initialize core systems (without circular dependencies)
     this.lifeCycleSystem = new LifeCycleSystem(this.state);
-    this.needsSystem = new NeedsSystem(this.state); // Pass state only initially
+    this.needsSystem = new NeedsSystem(this.state);
     this._genealogySystem = new GenealogySystem(this.state);
     this.socialSystem = new SocialSystem(this.state);
     this.inventorySystem = new InventorySystem(this.state);
@@ -133,7 +131,6 @@ export class SimulationRunner {
     this.marriageSystem = new MarriageSystem(this.state);
     this.roleSystem = new RoleSystem(this.state);
 
-    // 2. Initialize dependent systems
     this.governanceSystem = new GovernanceSystem(
       this.state,
       this.inventorySystem,
@@ -153,10 +150,8 @@ export class SimulationRunner {
       this.lifeCycleSystem,
     );
 
-    // 3. Initialize AI System
     this.aiSystem = new AISystem(this.state);
 
-    // 4. Initialize other systems
     this.buildingMaintenanceSystem = new BuildingMaintenanceSystem(
       this.state,
       this.inventorySystem,
@@ -218,7 +213,6 @@ export class SimulationRunner {
     this.interactionGameSystem = new InteractionGameSystem(this.state);
     this.knowledgeNetworkSystem = new KnowledgeNetworkSystem(this.state);
 
-    // 5. Wire up circular dependencies using setDependencies
     this.lifeCycleSystem.setDependencies({
       needsSystem: this.needsSystem,
       aiSystem: this.aiSystem,
@@ -242,10 +236,9 @@ export class SimulationRunner {
       roleSystem: this.roleSystem,
       inventorySystem: this.inventorySystem,
       socialSystem: this.socialSystem,
-      craftingSystem: this.enhancedCraftingSystem, // Use enhanced crafting
+      craftingSystem: this.enhancedCraftingSystem,
     });
 
-    // Connect genealogy system to lifecycle events
     simulationEvents.on(
       GameEventNames.AGENT_ACTION_COMPLETE,
       (data: { agentId: string; action: string }) => {
@@ -269,7 +262,6 @@ export class SimulationRunner {
       },
     );
 
-    // Setup event capture for snapshot - add listeners for all known events
     const eventCaptureListener = (
       eventName: string,
       payload: unknown,
@@ -282,7 +274,6 @@ export class SimulationRunner {
     };
     this.eventCaptureListener = eventCaptureListener;
 
-    // Add listeners for all game events to capture them
     Object.values(GameEventNames).forEach((eventName) => {
       simulationEvents.on(eventName, (payload: unknown) => {
         if (this.eventCaptureListener) {
@@ -291,7 +282,6 @@ export class SimulationRunner {
       });
     });
 
-    // Spawn initial agents if none exist
     if (this.state.agents.length === 0) {
       this.lifeCycleSystem.spawnAgent({
         name: "Isa",
@@ -339,7 +329,6 @@ export class SimulationRunner {
       isWalkable: boolean;
     }> = [];
 
-    // Initialize biome map structure
     const biomeMap: string[][] = Array(worldConfig.height)
       .fill(null)
       .map((): string[] => {
@@ -375,10 +364,8 @@ export class SimulationRunner {
           },
         });
 
-        // Process chunk tiles
         for (const row of chunkTiles) {
           for (const tile of row) {
-            // Ensure we don't go out of bounds if world size isn't a multiple of chunk size
             if (tile.x < worldConfig.width && tile.y < worldConfig.height) {
               const tileType: "grass" | "stone" | "water" | "path" =
                 tile.biome === BiomeType.OCEAN ? "water" : "grass";
@@ -404,7 +391,6 @@ export class SimulationRunner {
     };
     logger.info(`Generated ${allTiles.length} terrain tiles.`);
 
-    // Spawn resources using the generated biome map
     this.worldResourceSystem.spawnResourcesInWorld({
       ...worldConfig,
       biomeMap,
@@ -451,7 +437,6 @@ export class SimulationRunner {
     const snapshotState = cloneGameState(this.state);
     snapshotState.genealogy = this._genealogySystem.getSerializedFamilyTree();
 
-    // Include legends data in snapshot
     const allLegends = this.livingLegendsSystem.getAllLegends();
     const activeLegends = this.livingLegendsSystem.getActiveLegends();
     snapshotState.legends = {
@@ -519,7 +504,6 @@ export class SimulationRunner {
     const snapshot = this.getSnapshot();
     this.emitter.emit("tick", snapshot);
 
-    // Clear captured events after snapshot
     this.capturedEvents = [];
   }
 
@@ -693,13 +677,11 @@ export class SimulationRunner {
           payload.agentB &&
           typeof payload.magnitude === "number"
         ) {
-          // Mejorar afinidad entre agentes
           this.socialSystem.modifyAffinity(
             payload.agentA as string,
             payload.agentB as string,
             (payload.magnitude as number) || 0.1,
           );
-          // También puede iniciar una interacción de juego
           this.interactionGameSystem.startInteraction(
             payload.agentA as string,
             payload.agentB as string,
@@ -713,13 +695,11 @@ export class SimulationRunner {
           payload.agentB &&
           typeof payload.magnitude === "number"
         ) {
-          // Empeorar afinidad entre agentes
           this.socialSystem.modifyAffinity(
             payload.agentA as string,
             payload.agentB as string,
             -(payload.magnitude as number) || -0.1,
           );
-          // También puede iniciar una interacción de juego hostil
           this.interactionGameSystem.startInteraction(
             payload.agentA as string,
             payload.agentB as string,
@@ -905,10 +885,8 @@ export class SimulationRunner {
     this.state.togetherTime += deltaMs;
     this.state.dayTime = ((this.state.dayTime ?? 0) + deltaMs) % 86400000;
 
-    // Simple cycle counter until real systems hook in
     this.state.cycles += 1;
 
-    // Decay / regen stub for resources
     if (this.state.resources) {
       const regenRate = deltaMs / 1000;
       this.state.resources.energy = Math.min(
