@@ -165,7 +165,7 @@ export class LifeCycleSystem extends EventEmitter {
     }
 
     this.tryBreeding(now);
-    this.processHousingAssignments(now);
+    this.processHousingAssignments();
   }
 
   private getLifeStage(age: number): LifeStage {

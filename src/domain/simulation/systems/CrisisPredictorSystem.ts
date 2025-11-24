@@ -108,7 +108,7 @@ export class CrisisPredictorSystem {
       1,
       (hungerStress + thirstStress + energyStress) / (totalAgents * 3),
     );
-    const emergencyRate = Math.min(1, emergencyCount / totalAgents);
+    const emergencyRate = Math.min(1, criticalCount / totalAgents);
 
     const rawIndicators: Record<string, number> = {
       sustainability: 1 - sustainabilityValue,

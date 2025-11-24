@@ -371,8 +371,11 @@ export class NeedsSystem extends EventEmitter {
     decayRates: Record<string, number>,
   ): Record<string, number> {
     if (!this.divineFavorSystem) return decayRates;
-    const favor = this.divineFavorSystem.getFavor(entityId);
-    const modifier = 1 - favor * 0.3;
+    // Try to get favor by entityId as lineageId (simplified approach)
+    const favorObj = this.divineFavorSystem.getFavor(entityId);
+    if (!favorObj) return decayRates;
+    const favorValue = favorObj.favor;
+    const modifier = 1 - favorValue * 0.3;
 
     const result: Record<string, number> = {};
     for (const [key, val] of Object.entries(decayRates)) {

@@ -14,7 +14,11 @@ export type GoalType =
   | "assist"
   | "construction"
   | "gather"
-  | "idle";
+  | "idle"
+  | "rest"
+  | "inspect"
+  | "flee"
+  | "attack";
 
 export type ActionType =
   | "move"
@@ -30,6 +34,7 @@ export type ActionType =
   | "build";
 
 export interface AIGoal {
+  id: string;
   type: GoalType;
   priority: number;
   targetId?: string;
@@ -91,8 +96,8 @@ export interface AgentMemory {
 
   // Zone and activity memory
   homeZoneId?: string;
-  successfulActivities?: Map<string, number>; // zoneId -> successCount
-  failedAttempts?: Map<string, number>; // zoneId -> failCount
+  successfulActivities: Map<string, number>; // zoneId -> successCount
+  failedAttempts: Map<string, number>; // zoneId -> failCount
 
   // Temporal tracking
   lastExplorationTime?: number;

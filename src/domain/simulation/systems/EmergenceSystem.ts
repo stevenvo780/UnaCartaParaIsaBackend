@@ -5,6 +5,7 @@ import type { NeedsSystem } from "./NeedsSystem.js";
 import type { SocialSystem } from "./SocialSystem.js";
 import type { LifeCycleSystem } from "./LifeCycleSystem.js";
 import type { EconomySystem } from "./EconomySystem.js";
+import type { EntityNeedsData } from "../../types/simulation/needs.js";
 
 export interface EmergencePattern {
   id: string;
@@ -402,13 +403,13 @@ export class EmergenceSystem extends EventEmitter {
       this.patterns.size > 0 ? Math.min(1.0, this.patterns.size / 5) : 0.3;
 
     // Stability: how stable the system state is
-    const needs = this.needsSystem?.getAllNeeds() || [];
+    const needsMap = this.needsSystem?.getAllNeeds();
+    const needsList = needsMap ? Array.from(needsMap.values()) : [];
     const avgNeeds =
-      needs.length > 0
-        ? needs.reduce((sum, n) => {
-            const nv = n.needs;
-            return sum + (nv.hunger + nv.thirst + nv.energy + nv.hygiene) / 4;
-          }, 0) / needs.length
+      needsList.length > 0
+        ? needsList.reduce((sum: number, n: EntityNeedsData) => {
+            return sum + (n.hunger + n.thirst + n.energy + n.hygiene) / 4;
+          }, 0) / needsList.length
         : 50;
     const stability = 1.0 - Math.abs(avgNeeds - 50) / 50;
 

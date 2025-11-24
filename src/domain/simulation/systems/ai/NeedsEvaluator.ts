@@ -49,6 +49,7 @@ export function evaluateCriticalNeeds(
 
     if (waterTarget) {
       goals.push({
+        id: `thirst_${aiState.entityId}_${now}`,
         type: "satisfy_need",
         priority: calculateNeedPriority(needs.thirst, 130),
         targetId: waterTarget.id,
@@ -86,6 +87,7 @@ export function evaluateCriticalNeeds(
 
     if (foodTarget) {
       goals.push({
+        id: `hunger_${aiState.entityId}_${now}`,
         type: "satisfy_need",
         priority: calculateNeedPriority(needs.hunger, 110),
         targetId: foodTarget.id,
@@ -103,6 +105,7 @@ export function evaluateCriticalNeeds(
   // Energy (rest/sleep)
   if (needs.energy < energyThreshold) {
     goals.push({
+      id: `energy_${aiState.entityId}_${now}`,
       type: "satisfy_need",
       priority: calculateNeedPriority(needs.energy, 80),
       data: {
@@ -117,6 +120,7 @@ export function evaluateCriticalNeeds(
   // Mental health (social)
   if (needs.mentalHealth < 50) {
     goals.push({
+      id: `social_${aiState.entityId}_${now}`,
       type: "social",
       priority: calculateNeedPriority(needs.mentalHealth, 70),
       data: {

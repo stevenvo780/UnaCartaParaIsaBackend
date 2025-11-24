@@ -29,7 +29,11 @@ export function mapGoalToActivity(goal: AIGoal): ActivityType {
       fun: "playing",
       mentalHealth: "meditating",
     };
-    return needToActivity[goal.data?.need || ""] || "idle";
+    const need = goal.data?.need;
+    if (typeof need === "string") {
+      return needToActivity[need] || "idle";
+    }
+    return "idle";
   }
 
   const goalToActivity: Partial<Record<AIGoal["type"], ActivityType>> = {

@@ -1,6 +1,5 @@
-import type { GameState } from "../../types/game-types";
-import type { RoleSystem } from "./RoleSystem";
-import type { AgentProfile } from "../../types/simulation/agents";
+import type { GameState } from "../../../types/game-types";
+import type { RoleSystem } from "../RoleSystem";
 
 export type GoalDomain =
   | "survival"
@@ -109,10 +108,8 @@ export class PriorityManager {
 
     // Adjust for role
     try {
-      const role = this.roleSystem?.getRole?.(agentId);
-      const agent = this.gameState.agents?.find((a) => a.id === agentId);
-      const isWarrior =
-        role?.type === "guard" || agent?.socialStatus === "warrior";
+      const role = this.roleSystem?.getAgentRole(agentId);
+      const isWarrior = role?.roleType === "guard";
 
       if (isWarrior) {
         if (domain === "combat") adjusted *= 1.25;
@@ -121,7 +118,7 @@ export class PriorityManager {
         if (domain === "flee") adjusted *= 1.2;
         if (domain === "combat") adjusted *= 0.8;
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn("[PriorityManager] Failed to adjust for role", {
         error,
         agentId,

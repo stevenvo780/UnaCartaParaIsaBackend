@@ -27,6 +27,7 @@ export function evaluateWorkOpportunities(
 
   if (!preferredResource || !deps.findNearestResource) {
     goals.push({
+      id: `work_${aiState.entityId}_${now}`,
       type: "work",
       priority: 0.6 * aiState.personality.diligence,
       data: {
@@ -45,6 +46,7 @@ export function evaluateWorkOpportunities(
 
   if (resourceTarget) {
     goals.push({
+      id: `work_${aiState.entityId}_${now}`,
       type: "work",
       priority: 0.7 * aiState.personality.diligence * role.efficiency,
       targetId: resourceTarget.id,
@@ -67,6 +69,7 @@ export function evaluateExplorationGoals(aiState: AIState): AIGoal[] {
 
   if (aiState.personality.curiosity > 0.5) {
     goals.push({
+      id: `explore_${aiState.entityId}_${now}`,
       type: "explore",
       priority: 0.3 * aiState.personality.curiosity,
       data: {

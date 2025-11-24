@@ -239,7 +239,7 @@ function evaluateOpportunities(
             id: `explore_${targetZoneId}_${now}`,
             type: "explore",
             priority: 0.4 + personality.openness * 0.3,
-            targetZone: targetZoneId,
+            targetZoneId: targetZoneId,
             targetPosition: {
               x: zone.bounds.x + zone.bounds.width / 2,
               y: zone.bounds.y + zone.bounds.height / 2,
@@ -271,7 +271,7 @@ function evaluateOpportunities(
         id: `work_${targetZone.id}_${now}`,
         type: "work",
         priority: 0.5 + personality.conscientiousness * 0.2,
-        targetZone: targetZone.id,
+        targetZoneId: targetZone.id,
         targetPosition: {
           x: targetZone.bounds.x + targetZone.bounds.width / 2,
           y: targetZone.bounds.y + targetZone.bounds.height / 2,
@@ -315,7 +315,7 @@ function createDefaultExplorationGoals(
             id: `default_explore_${targetZoneId}_${now}`,
             type: "explore",
             priority: 0.25,
-            targetZone: targetZoneId,
+            targetZoneId: targetZoneId,
             targetPosition: {
               x: zone.bounds.x + zone.bounds.width / 2,
               y: zone.bounds.y + zone.bounds.height / 2,

@@ -13,15 +13,8 @@ import type {
   AgentTraits,
   LifeStage,
 } from "../../types/simulation/agents";
-import {
-  evaluateCriticalNeeds,
-  type NeedsEvaluatorDependencies,
-} from "./ai/NeedsEvaluator";
-import {
-  evaluateWorkOpportunities,
-  evaluateExplorationGoals,
-  type OpportunitiesEvaluatorDependencies,
-} from "./ai/OpportunitiesEvaluator";
+import { planGoals, type AgentGoalPlannerDeps } from "./ai/AgentGoalPlanner";
+import { PriorityManager } from "./ai/PriorityManager";
 import { GameEventNames } from "../core/events";
 import { simulationEvents } from "../core/events";
 import type { NeedsSystem } from "./NeedsSystem";
@@ -44,6 +37,7 @@ export class AISystem extends EventEmitter {
   private config: AISystemConfig;
   private aiStates: Map<string, AIState>;
   private lastUpdate: number = 0;
+  private priorityManager: PriorityManager;
 
   // Dependencies
   private needsSystem?: NeedsSystem;
@@ -96,6 +90,11 @@ export class AISystem extends EventEmitter {
     };
 
     this.aiStates = new Map();
+    this.priorityManager = new PriorityManager(
+      gameState,
+      undefined,
+      systems?.roleSystem,
+    );
 
     if (systems) {
       this.needsSystem = systems.needsSystem;
@@ -106,6 +105,11 @@ export class AISystem extends EventEmitter {
       this.craftingSystem = systems.craftingSystem;
       this.householdSystem = systems.householdSystem;
     }
+
+    simulationEvents.on(
+      GameEventNames.AGENT_ACTION_COMPLETE,
+      this.handleActionComplete.bind(this),
+    );
   }
 
   public setDependencies(systems: {
@@ -127,7 +131,7 @@ export class AISystem extends EventEmitter {
     if (systems.householdSystem) this.householdSystem = systems.householdSystem;
   }
 
-  public update(deltaTimeMs: number): void {
+  public update(_deltaTimeMs: number): void {
     const now = Date.now();
     if (now - this.lastUpdate < this.config.updateIntervalMs) {
       return;
@@ -211,72 +215,23 @@ export class AISystem extends EventEmitter {
     }
   }
 
-  private makeDecision(agentId: string, aiState: AIState): AIGoal | null {
-    // 1. Check critical needs first (Survival Priority)
-    const priority = this.agentPriorities.get(agentId) || "normal";
+  private makeDecision(_agentId: string, aiState: AIState): AIGoal | null {
+    const deps: AgentGoalPlannerDeps = {
+      gameState: this.gameState,
+      priorityManager: this.priorityManager,
+      getEntityNeeds: (id: string) => this.needsSystem?.getNeeds(id),
+      findNearestResource: (id: string, resourceType: string) => {
+        return this.findNearestResourceForEntity(id, resourceType);
+      },
+    };
 
-    if (this.needsSystem) {
-      const needs = this.needsSystem.getNeeds(agentId);
-      if (needs) {
-        const deps: NeedsEvaluatorDependencies = {
-          getEntityNeeds: (id: string) => this.needsSystem?.getNeeds(id),
-          findNearestResource: (id: string, resourceType: string) => {
-            // TODO: Implement findNearestResource
-            return null;
-          },
-        };
-        const criticalGoals = evaluateCriticalNeeds(deps, aiState);
-        if (criticalGoals.length > 0) {
-          // Return the highest priority goal
-          criticalGoals.sort((a, b) => (b.priority || 0) - (a.priority || 0));
-          return criticalGoals[0];
-        }
-      }
+    const goals = planGoals(deps, aiState);
+
+    if (goals.length > 0) {
+      return goals[0];
     }
 
-    // If in survival mode, only focus on needs
-    if (priority === "survival") return null;
-
-    // 2. Evaluate opportunities
-    const opportunities: AIGoal[] = [];
-
-    // Work opportunities
-    if (this.roleSystem) {
-      const deps: OpportunitiesEvaluatorDependencies = {
-        getAgentRole: (id: string) => this.roleSystem?.getAgentRole(id),
-        getPreferredResourceForRole: (roleType: string) => {
-          // TODO: Implement getPreferredResourceForRole
-          return null;
-        },
-        findNearestResource: (id: string, resourceType: string) => {
-          // TODO: Implement findNearestResource
-          return null;
-        },
-      };
-      opportunities.push(...evaluateWorkOpportunities(deps, aiState));
-    }
-
-    // Exploration opportunities
-    opportunities.push(...evaluateExplorationGoals(aiState));
-
-    if (opportunities.length > 0) {
-      // Sort by utility and pick best
-      opportunities.sort((a: AIGoal, b: AIGoal) => {
-        const aPriority = a.priority || 0;
-        const bPriority = b.priority || 0;
-        return bPriority - aPriority;
-      });
-      return opportunities[0];
-    }
-
-    // 3. Default/Idle behavior
-    return {
-      id: `idle_${Date.now()}`,
-      type: "idle" as GoalType,
-      priority: 0,
-      description: "Idling",
-      createdAt: Date.now(),
-    } as AIGoal;
+    return null;
   }
 
   /**
@@ -793,6 +748,60 @@ export class AISystem extends EventEmitter {
       aiState.offDuty = offDuty;
       if (offDuty) {
         aiState.currentGoal = null;
+      }
+    }
+  }
+
+  private findNearestResourceForEntity(
+    entityId: string,
+    resourceType: string,
+  ): { id: string; x: number; y: number } | null {
+    if (!this.gameState.worldResources) return null;
+
+    const agent = this.gameState.agents?.find((a) => a.id === entityId);
+    if (!agent?.position) return null;
+
+    let nearest: { id: string; x: number; y: number } | null = null;
+    let minDistance = Infinity;
+
+    for (const resource of Object.values(this.gameState.worldResources)) {
+      if (resource.type === resourceType && resource.state === "pristine") {
+        const dx = resource.position.x - agent.position.x;
+        const dy = resource.position.y - agent.position.y;
+        const dist = dx * dx + dy * dy;
+
+        if (dist < minDistance) {
+          minDistance = dist;
+          nearest = {
+            id: resource.id,
+            x: resource.position.x,
+            y: resource.position.y,
+          };
+        }
+      }
+    }
+
+    return nearest;
+  }
+
+  private handleActionComplete(payload: {
+    agentId: string;
+    success: boolean;
+  }): void {
+    const aiState = this.aiStates.get(payload.agentId);
+    if (aiState) {
+      aiState.currentAction = null;
+      if (!payload.success) {
+        // If action failed, maybe fail the goal or retry?
+        // For now just log or track failure
+        if (aiState.currentGoal) {
+          const zoneId = aiState.currentGoal.targetZoneId;
+          if (zoneId) {
+            const failCount =
+              aiState.memory.failedAttempts?.get(zoneId) || 0;
+            aiState.memory.failedAttempts?.set(zoneId, failCount + 1);
+          }
+        }
       }
     }
   }
