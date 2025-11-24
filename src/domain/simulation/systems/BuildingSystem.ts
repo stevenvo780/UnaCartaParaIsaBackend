@@ -111,7 +111,22 @@ export class BuildingSystem {
     return false;
   }
 
-  private tryScheduleConstruction(label: BuildingLabel, now: number): boolean {
+  public enqueueConstruction(label: BuildingLabel): boolean {
+    return this.tryScheduleConstruction(label, this.now());
+  }
+
+  public constructBuilding(
+    label: BuildingLabel,
+    position?: { x: number; y: number },
+  ): boolean {
+    return this.tryScheduleConstruction(label, this.now(), position);
+  }
+
+  private tryScheduleConstruction(
+    label: BuildingLabel,
+    now: number,
+    position?: { x: number; y: number },
+  ): boolean {
     const cost = BUILDING_COSTS[label];
     const reservationId = `build_${label}_${now}_${Math.random().toString(36).slice(2)}`;
 
@@ -123,7 +138,7 @@ export class BuildingSystem {
       return false;
     }
 
-    const zone = this.createConstructionZone(label);
+    const zone = this.createConstructionZone(label, position);
     const mutableZone = zone as MutableZone;
     (this.state.zones as MutableZone[]).push(mutableZone);
 
@@ -147,8 +162,16 @@ export class BuildingSystem {
     return true;
   }
 
-  private createConstructionZone(label: BuildingLabel): MutableZone {
+  private createConstructionZone(
+    label: BuildingLabel,
+    overridePosition?: { x: number; y: number },
+  ): MutableZone {
     const worldSize = this.state.worldSize ?? { width: 2000, height: 2000 };
+    const boundsPosition = overridePosition ?? {
+      x: Math.floor(Math.random() * worldSize.width),
+      y: Math.floor(Math.random() * worldSize.height),
+    };
+
     const zoneId = `zone_${label}_${Math.random().toString(36).slice(2)}`;
     const metadata: MutableZone["metadata"] = {
       building: label,
@@ -160,8 +183,14 @@ export class BuildingSystem {
       id: zoneId,
       type: "work",
       bounds: {
-        x: Math.floor(Math.random() * worldSize.width),
-        y: Math.floor(Math.random() * worldSize.height),
+        x: Math.max(
+          0,
+          Math.min(boundsPosition.x, Math.max(0, worldSize.width - 120)),
+        ),
+        y: Math.max(
+          0,
+          Math.min(boundsPosition.y, Math.max(0, worldSize.height - 80)),
+        ),
         width: 120,
         height: 80,
       },

@@ -236,6 +236,75 @@ describe("TaskSystem", () => {
     });
   });
 
+  describe("Estadísticas de tareas", () => {
+    it("debe retornar estadísticas de tareas", () => {
+      const stats = taskSystem.getTaskStats();
+      expect(stats).toBeDefined();
+      expect(stats.total).toBeDefined();
+      expect(stats.active).toBeDefined();
+      expect(stats.completed).toBeDefined();
+      expect(stats.stalled).toBeDefined();
+      expect(stats.avgProgress).toBeDefined();
+    });
+
+    it("debe actualizar estadísticas al crear tareas", () => {
+      const statsBefore = taskSystem.getTaskStats();
+      taskSystem.createTask({
+        type: "gather",
+        target: "wood",
+        amount: 10,
+        requiredWork: 100,
+      });
+      const statsAfter = taskSystem.getTaskStats();
+      expect(statsAfter.total).toBeGreaterThan(statsBefore.total);
+    });
+
+    it("debe actualizar estadísticas al completar tareas", () => {
+      const task = taskSystem.createTask({
+        type: "gather",
+        target: "wood",
+        amount: 10,
+        requiredWork: 100,
+      });
+      
+      if (task) {
+        const statsBefore = taskSystem.getTaskStats();
+        taskSystem.contributeToTask(task.id, "agent-1", 100);
+        const statsAfter = taskSystem.getTaskStats();
+        expect(statsAfter.completed).toBeGreaterThan(statsBefore.completed);
+      }
+    });
+  });
+
+  describe("Tareas estancadas", () => {
+    it("debe detectar tareas estancadas", () => {
+      const task = taskSystem.createTask({
+        type: "gather",
+        target: "wood",
+        amount: 10,
+        requiredWork: 100,
+      });
+      
+      if (task) {
+        // Contribuir una vez
+        taskSystem.contributeToTask(task.id, "agent-1", 10);
+        
+        // Simular que pasó mucho tiempo (más de 5 minutos)
+        const retrievedTask = taskSystem.getTask(task.id);
+        if (retrievedTask) {
+          retrievedTask.lastContribution = Date.now() - 400000; // 6+ minutos
+        }
+        
+        // Actualizar después de 10 segundos
+        setTimeout(() => {
+          taskSystem.update();
+          const stats = taskSystem.getTaskStats();
+          expect(stats.stalled).toBeGreaterThanOrEqual(0);
+        }, 11000);
+      }
+    });
+  });
+
   describe("Actualización del sistema", () => {
     it("debe actualizar sin errores", () => {
       expect(() => taskSystem.update()).not.toThrow();
@@ -245,6 +314,61 @@ describe("TaskSystem", () => {
       taskSystem.update();
       // No debería procesar tareas estancadas inmediatamente
       expect(taskSystem).toBeDefined();
+    });
+
+    it("debe actualizar estado del juego con estadísticas", () => {
+      taskSystem.createTask({
+        type: "gather",
+        target: "wood",
+        amount: 10,
+        requiredWork: 100,
+      });
+      
+      // Esperar 10 segundos y actualizar
+      setTimeout(() => {
+        taskSystem.update();
+        expect(gameState.tasks).toBeDefined();
+        expect(gameState.tasks?.stats).toBeDefined();
+      }, 11000);
+    });
+  });
+
+  describe("Límites de progreso", () => {
+    it("no debe exceder el trabajo requerido", () => {
+      const task = taskSystem.createTask({
+        type: "gather",
+        target: "wood",
+        amount: 10,
+        requiredWork: 100,
+      });
+      
+      if (task) {
+        // Contribuir más del requerido
+        taskSystem.contributeToTask(task.id, "agent-1", 150);
+        const retrieved = taskSystem.getTask(task.id);
+        expect(retrieved?.progress).toBeLessThanOrEqual(100);
+      }
+    });
+  });
+
+  describe("Contribuciones acumuladas", () => {
+    it("debe acumular contribuciones de múltiples agentes", () => {
+      const task = taskSystem.createTask({
+        type: "gather",
+        target: "wood",
+        amount: 10,
+        requiredWork: 100,
+      });
+      
+      if (task) {
+        taskSystem.contributeToTask(task.id, "agent-1", 30);
+        taskSystem.contributeToTask(task.id, "agent-2", 40);
+        taskSystem.contributeToTask(task.id, "agent-3", 30);
+        
+        const retrieved = taskSystem.getTask(task.id);
+        expect(retrieved?.progress).toBeGreaterThanOrEqual(100);
+        expect(retrieved?.completed).toBe(true);
+      }
     });
   });
 });

@@ -148,8 +148,12 @@ export class SimulationRunner {
       this.state,
       this.inventorySystem,
       this.socialSystem,
-      this.lifeCycleSystem,
     );
+    this.economySystem.setDependencies({
+      roleSystem: this.roleSystem,
+      divineFavorSystem: this.divineFavorSystem,
+      genealogySystem: this._genealogySystem,
+    });
     this.marketSystem = new MarketSystem(
       this.state,
       this.inventorySystem,

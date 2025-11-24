@@ -5,7 +5,6 @@ import type {
 } from "../../types/simulation/economy";
 import { InventorySystem } from "./InventorySystem.js";
 import { SocialSystem } from "./SocialSystem.js";
-import { LifeCycleSystem } from "./LifeCycleSystem.js";
 import { RoleSystem } from "./RoleSystem.js";
 import { DivineFavorSystem } from "./DivineFavorSystem.js";
 import { GenealogySystem } from "./GenealogySystem.js";
@@ -30,7 +29,6 @@ export class EconomySystem {
   private state: GameState;
   private inventorySystem: InventorySystem;
   private socialSystem: SocialSystem;
-  private lifeCycleSystem: LifeCycleSystem;
   private roleSystem?: RoleSystem;
   private divineFavorSystem?: DivineFavorSystem;
   private genealogySystem?: GenealogySystem;
@@ -41,13 +39,11 @@ export class EconomySystem {
     state: GameState,
     inventorySystem: InventorySystem,
     socialSystem: SocialSystem,
-    lifeCycleSystem: LifeCycleSystem,
     config?: Partial<EconomyConfig>,
   ) {
     this.state = state;
     this.inventorySystem = inventorySystem;
     this.socialSystem = socialSystem;
-    this.lifeCycleSystem = lifeCycleSystem;
     this.config = { ...DEFAULT_ECONOMY_CONFIG, ...config };
   }
 
@@ -106,8 +102,8 @@ export class EconomySystem {
       if (role?.roleType) {
         // Simplified role bonus logic
         if (role.roleType === "farmer" && resourceType === "food") totalYield *= 1.5;
-        if (role.roleType === "miner" && resourceType === "stone") totalYield *= 1.8;
-        if (role.roleType === "lumberjack" && resourceType === "wood") totalYield *= 1.6;
+        if (role.roleType === "quarryman" && resourceType === "stone") totalYield *= 1.8;
+        if (role.roleType === "logger" && resourceType === "wood") totalYield *= 1.6;
         if (role.roleType === "gatherer" && (resourceType === "water" || resourceType === "food")) totalYield *= 1.3;
         if (role.roleType === "builder" && (resourceType === "wood" || resourceType === "stone")) totalYield *= 1.3;
       }
@@ -155,11 +151,11 @@ export class EconomySystem {
     const workerGroup = this.socialSystem.getGroupForAgent(agentId);
     
     if (workerGroup) {
-      let groupMembersWorking = 0;
       // Simplified check: count members in same zone (assuming they are working if in zone)
       // In a real implementation, we would check their activity
       const agentsInZone = this.state.entities.filter(e => {
         // Simple bounds check
+        if (!e.position) return false;
         return e.position.x >= zone.bounds.x &&
                e.position.x <= zone.bounds.x + zone.bounds.width &&
                e.position.y >= zone.bounds.y &&
@@ -168,4 +164,18 @@ export class EconomySystem {
 
       for (const memberId of workerGroup.members) {
         if (memberId === agentId) continue;
-        if
+        if (agentsInZone.some(e => e.id === memberId)) {
+          teamBonus += 0.05; // 5% bonus per team member
+        }
+      }
+    }
+
+    return Math.min(teamBonus, 1.5); // Cap at 50% bonus
+  }
+
+  private addToGlobalResources(resourceType: string, amount: number): void {
+    if (resourceType in this.state.resources.materials) {
+      this.state.resources.materials[resourceType as keyof typeof this.state.resources.materials] += amount;
+    }
+  }
+}

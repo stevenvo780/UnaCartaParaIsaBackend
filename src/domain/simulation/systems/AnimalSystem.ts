@@ -119,31 +119,7 @@ export class AnimalSystem {
       this.lastCleanup = now;
     }
 
-    if (!this.gameState.animals) {
-      this.gameState.animals = {
-        animals: [],
-        stats: {
-          total: 0,
-          byType: {},
-        },
-      };
-    }
-
-    this.gameState.animals.animals = Array.from(this.animals.values()).filter(
-      (a) => !a.isDead,
-    );
-
-    const byType: Record<string, number> = {};
-    let total = 0;
-    this.gameState.animals.animals.forEach((animal) => {
-      byType[animal.type] = (byType[animal.type] || 0) + 1;
-      total++;
-    });
-
-    this.gameState.animals.stats = {
-      total,
-      byType,
-    };
+    this.updateGameStateSnapshot();
   }
 
   private updateAnimalBehavior(animal: Animal, deltaSeconds: number): void {
@@ -449,6 +425,50 @@ export class AnimalSystem {
       this.spatialGrid.set(cellKey, cell);
     }
     cell.add(animal.id);
+  }
+
+  private updateGameStateSnapshot(): void {
+    if (!this.gameState.animals) {
+      this.gameState.animals = {
+        animals: [],
+        stats: {
+          total: 0,
+          byType: {},
+        },
+      };
+    }
+
+    const liveAnimals = Array.from(this.animals.values()).filter(
+      (a) => !a.isDead,
+    );
+
+    const byType: Record<string, number> = {};
+    liveAnimals.forEach((animal) => {
+      byType[animal.type] = (byType[animal.type] || 0) + 1;
+    });
+
+    this.gameState.animals.animals = liveAnimals;
+    this.gameState.animals.stats = {
+      total: liveAnimals.length,
+      byType,
+    };
+  }
+
+  public spawnAnimal(
+    type: string,
+    position: { x: number; y: number },
+    biome?: string,
+  ): Animal | null {
+    const resolvedBiome = biome || "grassland";
+    const animal = AnimalSpawning.createAnimal(type, position, resolvedBiome);
+
+    if (!animal) {
+      return null;
+    }
+
+    this.addAnimal(animal);
+    this.updateGameStateSnapshot();
+    return animal;
   }
 
   /**

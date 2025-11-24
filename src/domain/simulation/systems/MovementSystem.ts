@@ -356,6 +356,25 @@ export class MovementSystem extends EventEmitter {
     return true;
   }
 
+  public stopMovement(entityId: string): boolean {
+    const state = this.movementStates.get(entityId);
+    if (!state) return false;
+
+    state.isMoving = false;
+    state.targetZone = undefined;
+    state.targetPosition = undefined;
+    state.currentPath = [];
+    state.movementStartTime = undefined;
+    state.estimatedArrivalTime = undefined;
+    state.currentActivity = "idle";
+
+    return true;
+  }
+
+  public hasMovementState(entityId: string): boolean {
+    return this.movementStates.has(entityId);
+  }
+
   private async calculatePath(
     from: { x: number; y: number },
     to: { x: number; y: number },

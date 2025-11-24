@@ -94,7 +94,13 @@ export interface DialogueCommandPayload {
 export interface BuildingCommandPayload {
   zoneId?: string;
   agentId?: string;
-  [key: string]: string | undefined;
+  buildingType?: string;
+  position?: { x: number; y: number };
+  [key: string]:
+    | string
+    | { x: number; y: number }
+    | number
+    | undefined;
 }
 
 export interface ReputationCommandPayload {
@@ -121,6 +127,21 @@ export interface PingPayload {
   [key: string]: string | number | undefined;
 }
 
+export interface AgentCommandPayload {
+  x?: number;
+  y?: number;
+  speed?: number;
+  activity?: string;
+  [key: string]: string | number | boolean | undefined;
+}
+
+export interface AnimalCommandPayload {
+  type?: string;
+  position?: { x: number; y: number };
+  biome?: string;
+  [key: string]: string | number | { x: number; y: number } | undefined;
+}
+
 export type SimulationCommand =
   | { type: "SET_TIME_SCALE"; multiplier: number }
   | {
@@ -131,6 +152,17 @@ export type SimulationCommand =
   | { type: "SPAWN_AGENT"; payload?: SpawnAgentCommandPayload }
   | { type: "KILL_AGENT"; agentId: string }
   | { type: "PING"; payload?: PingPayload }
+  | {
+      type: "AGENT_COMMAND";
+      agentId: string;
+      command: string;
+      payload?: AgentCommandPayload;
+    }
+  | {
+      type: "ANIMAL_COMMAND";
+      command: string;
+      payload?: AnimalCommandPayload;
+    }
   | {
       type: "NEEDS_COMMAND";
       command: "SATISFY_NEED" | "MODIFY_NEED" | "UPDATE_CONFIG";
@@ -169,7 +201,11 @@ export type SimulationCommand =
     }
   | {
       type: "BUILDING_COMMAND";
-      command: "START_UPGRADE" | "CANCEL_UPGRADE";
+      command:
+        | "START_UPGRADE"
+        | "CANCEL_UPGRADE"
+        | "ENQUEUE_CONSTRUCTION"
+        | "CONSTRUCT_BUILDING";
       payload?: BuildingCommandPayload;
     }
   | {
@@ -181,7 +217,8 @@ export type SimulationCommand =
       type: "TASK_COMMAND";
       command: "CREATE_TASK" | "CONTRIBUTE_TO_TASK" | "REMOVE_TASK";
       payload?: TaskCommandPayload;
-    };
+    }
+  | { type: "FORCE_EMERGENCE_EVALUATION"; timestamp?: number };
 
 export interface SimulationConfig {
   tickIntervalMs: number;
