@@ -211,10 +211,29 @@ export class ChunkWorkerPool extends EventEmitter {
   }
 
   private resolveExecArgs(): string[] {
-    if (this.workerScript.pathname.endsWith(".ts")) {
-      return ["--loader", "tsx"];
+    if (!this.workerScript.pathname.endsWith(".ts")) {
+      return [];
     }
-    return [];
+    if (this.supportsImportFlag()) {
+      return ["--import", "tsx"];
+    }
+    return ["--loader", "tsx"];
+  }
+
+  private supportsImportFlag(): boolean {
+    const [major, minor] = process.versions.node
+      .split(".")
+      .map((part) => Number.parseInt(part, 10));
+    if (!Number.isFinite(major) || Number.isNaN(major)) {
+      return false;
+    }
+    if (major > 20) {
+      return true;
+    }
+    if (major < 20) {
+      return false;
+    }
+    return Number.isFinite(minor) && !Number.isNaN(minor) && minor >= 6;
   }
 
   private spawnWorker(index: number): WorkerEnvelope {
