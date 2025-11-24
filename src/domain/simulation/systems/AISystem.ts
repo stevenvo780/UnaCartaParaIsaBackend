@@ -576,7 +576,7 @@ export class AISystem extends EventEmitter {
       ) {
         const sorted = Array.from(aiState.memory.successfulActivities.entries())
           .sort((a, b) => b[1] - a[1])
-          .slice(0, 50);
+          .slice(0, 50) as Array<[string, number]>;
         aiState.memory.successfulActivities = new Map(sorted);
       }
 

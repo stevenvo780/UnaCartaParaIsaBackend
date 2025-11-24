@@ -46,6 +46,7 @@ import { InteractionGameSystem } from "../systems/InteractionGameSystem";
 import { KnowledgeNetworkSystem } from "../systems/KnowledgeNetworkSystem";
 import { MovementSystem } from "../systems/MovementSystem";
 import { TrailSystem } from "../systems/TrailSystem";
+import { AppearanceGenerationSystem } from "../systems/AppearanceGenerationSystem";
 import type {
   SimulationCommand,
   SimulationConfig,
@@ -111,6 +112,7 @@ export class SimulationRunner {
   private knowledgeNetworkSystem: KnowledgeNetworkSystem;
   private movementSystem: MovementSystem;
   private trailSystem: TrailSystem;
+  private appearanceGenerationSystem: AppearanceGenerationSystem;
   private capturedEvents: SimulationEvent[] = [];
   private eventCaptureListener?: (eventName: string, payload: unknown) => void;
 
@@ -222,6 +224,7 @@ export class SimulationRunner {
     this.knowledgeNetworkSystem = new KnowledgeNetworkSystem(this.state);
     this.movementSystem = new MovementSystem(this.state);
     this.trailSystem = new TrailSystem(this.state);
+    this.appearanceGenerationSystem = new AppearanceGenerationSystem();
 
     this.lifeCycleSystem.setDependencies({
       needsSystem: this.needsSystem,
@@ -262,6 +265,23 @@ export class SimulationRunner {
               agent.parents?.mother,
             );
           }
+        }
+      },
+    );
+
+    simulationEvents.on(
+      GameEventNames.AGENT_BIRTH,
+      (data: { entityId: string; parentIds: [string, string] | null }) => {
+        const agent = this.state.agents.find((a) => a.id === data.entityId);
+        if (agent) {
+          const fatherId = data.parentIds ? data.parentIds[0] : undefined;
+          const motherId = data.parentIds ? data.parentIds[1] : undefined;
+          this.appearanceGenerationSystem.generateAppearance(
+            agent.id,
+            agent,
+            fatherId,
+            motherId,
+          );
         }
       },
     );
@@ -584,7 +604,7 @@ export class SimulationRunner {
   private handleNeedsCommand(
     command: Extract<SimulationCommand, { type: "NEEDS_COMMAND" }>,
   ): void {
-    const payload = command.payload as Record<string, unknown>;
+    const payload = command.payload;
     switch (command.command) {
       case "SATISFY_NEED":
         if (
@@ -621,7 +641,7 @@ export class SimulationRunner {
   private handleRecipeCommand(
     command: Extract<SimulationCommand, { type: "RECIPE_COMMAND" }>,
   ): void {
-    const payload = command.payload as Record<string, unknown>;
+    const payload = command.payload;
     switch (command.command) {
       case "TEACH_RECIPE":
         if (payload.agentId && payload.recipeId) {
@@ -646,7 +666,7 @@ export class SimulationRunner {
   private handleSocialCommand(
     command: Extract<SimulationCommand, { type: "SOCIAL_COMMAND" }>,
   ): void {
-    const payload = command.payload as Record<string, unknown>;
+    const payload = command.payload;
     switch (command.command) {
       case "IMPOSE_TRUCE":
         if (
@@ -726,7 +746,7 @@ export class SimulationRunner {
   private handleResearchCommand(
     command: Extract<SimulationCommand, { type: "RESEARCH_COMMAND" }>,
   ): void {
-    const payload = command.payload as Record<string, unknown>;
+    const payload = command.payload;
     switch (command.command) {
       case "INITIALIZE_LINEAGE":
         if (payload.lineageId) {
@@ -748,7 +768,7 @@ export class SimulationRunner {
   private handleWorldResourceCommand(
     command: Extract<SimulationCommand, { type: "WORLD_RESOURCE_COMMAND" }>,
   ): void {
-    const payload = command.payload as Record<string, unknown>;
+    const payload = command.payload;
     switch (command.command) {
       case "SPAWN_RESOURCE":
         if (payload.type && payload.position) {
@@ -773,7 +793,7 @@ export class SimulationRunner {
   private handleDialogueCommand(
     command: Extract<SimulationCommand, { type: "DIALOGUE_COMMAND" }>,
   ): void {
-    const payload = command.payload as Record<string, unknown>;
+    const payload = command.payload;
     switch (command.command) {
       case "RESPOND_TO_CARD":
         if (payload.cardId && payload.choiceId) {
@@ -789,7 +809,7 @@ export class SimulationRunner {
   private handleBuildingCommand(
     command: Extract<SimulationCommand, { type: "BUILDING_COMMAND" }>,
   ): void {
-    const payload = command.payload as Record<string, unknown>;
+    const payload = command.payload;
     switch (command.command) {
       case "START_UPGRADE":
         if (payload.zoneId && payload.agentId) {
@@ -812,7 +832,7 @@ export class SimulationRunner {
   private handleReputationCommand(
     command: Extract<SimulationCommand, { type: "REPUTATION_COMMAND" }>,
   ): void {
-    const payload = command.payload as Record<string, unknown>;
+    const payload = command.payload;
     switch (command.command) {
       case "UPDATE_TRUST":
         if (
@@ -833,7 +853,7 @@ export class SimulationRunner {
   private handleTaskCommand(
     command: Extract<SimulationCommand, { type: "TASK_COMMAND" }>,
   ): void {
-    const payload = command.payload as Record<string, unknown>;
+    const payload = command.payload;
     switch (command.command) {
       case "CREATE_TASK":
         if (payload.type && typeof payload.requiredWork === "number") {

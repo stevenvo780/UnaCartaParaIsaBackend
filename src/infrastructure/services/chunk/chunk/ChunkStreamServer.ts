@@ -2,7 +2,10 @@ import { randomUUID } from "node:crypto";
 import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
 import { WebSocketServer, WebSocket } from "ws";
-import type { WorldGenConfig } from "../../../../domain/world/generation/types";
+import type {
+  WorldGenConfig,
+  TerrainTile,
+} from "../../../../domain/world/generation/types";
 import { ChunkWorkerPool } from "./ChunkWorkerPool";
 import type { ChunkPoolStats } from "./ChunkWorkerPool";
 
@@ -32,7 +35,7 @@ interface ChunkResultPayload {
   type: "CHUNK_RESULT";
   requestId: string;
   coords: { x: number; y: number };
-  chunk: unknown;
+  chunk: TerrainTile[][];
   timings: {
     generationMs: number;
   };

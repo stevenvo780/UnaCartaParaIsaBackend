@@ -9,7 +9,11 @@ export interface GameStats {
   population?: number;
   resources?: Record<string, number>;
   cycles?: number;
-  [key: string]: unknown;
+  time?: number;
+  dayTime?: number;
+  togetherTime?: number;
+  resonance?: number;
+  [key: string]: string | number | Record<string, number> | undefined;
 }
 
 export interface SaveMetadata {
@@ -25,7 +29,8 @@ export interface SaveData {
   timestamp: number;
   gameTime: number;
   stats: GameStats;
-  [key: string]: unknown;
+  state?: unknown; // GameState - avoiding circular dependency
+  [key: string]: string | number | GameStats | unknown | undefined;
 }
 
 export class StorageService {
