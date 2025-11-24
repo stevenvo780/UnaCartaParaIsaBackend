@@ -1,5 +1,3 @@
-// Item Generation Types
-
 export type ItemRarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
 
 export interface GenerationRule {

@@ -68,12 +68,12 @@ simulationWss.on("connection", (ws: WebSocket) => {
         return;
       }
 
-      const parsed = JSON.parse(message) as unknown;
+      const parsed = JSON.parse(message) as Record<string, unknown>;
       if (
         !parsed ||
         typeof parsed !== "object" ||
         !("type" in parsed) ||
-        typeof (parsed as { type: unknown }).type !== "string"
+        typeof parsed.type !== "string"
       ) {
         ws.send(
           JSON.stringify({

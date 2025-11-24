@@ -22,7 +22,6 @@ export function evaluateAttention(
 
   const ATTENTION_RADIUS = 600;
 
-  // Adapt to Backend GameState: use worldResources instead of mapElements
   const resources = Object.values(ctx.gameState.worldResources || {});
 
   const nearby = resources

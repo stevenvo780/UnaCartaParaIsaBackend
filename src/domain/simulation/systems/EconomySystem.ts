@@ -99,7 +99,6 @@ export class EconomySystem {
         this.config.salaryRates[resourceType] * teamBonus,
       );
       if (agent.stats) {
-        // Assuming agent has stats in entity
         const currentMoney =
           typeof agent.stats.money === "number" ? agent.stats.money : 0;
         agent.stats.money = currentMoney + salary;

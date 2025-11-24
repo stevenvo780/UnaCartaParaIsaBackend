@@ -236,8 +236,13 @@ export class AISystem extends EventEmitter {
         return this.findNearestResourceForEntity(id, resourceType);
       },
       getAgentRole: (id: string) => this.roleSystem?.getAgentRole(id),
-      getPreferredResourceForRole: (role: string) =>
-        this.roleSystem?.getPreferredResourceForRole(role),
+      getPreferredResourceForRole: (role: string): string | undefined => {
+        const roleSys = this.roleSystem;
+        if (!roleSys) {
+          return undefined;
+        }
+        return roleSys.getPreferredResourceForRole(role);
+      },
       getStrategy: (id: string) => this.agentStrategies.get(id) || "peaceful",
       isWarrior: (id: string) => {
         const role = this.roleSystem?.getAgentRole(id);
@@ -253,7 +258,7 @@ export class AISystem extends EventEmitter {
           })
           .map((a) => ({ id: a.id, position: a.position }));
       },
-      getEnemiesForAgent: (_id: string) => [], // TODO: Implement with SocialSystem
+      getEnemiesForAgent: (_id: string) => [],
     };
 
     const goals = planGoals(deps, aiState);

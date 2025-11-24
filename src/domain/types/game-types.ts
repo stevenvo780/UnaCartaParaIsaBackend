@@ -18,7 +18,6 @@ import type { Inventory } from "./simulation/economy";
 import type { TradeOffer, TradeRecord } from "./simulation/trade";
 import type { MarriageGroup } from "./simulation/marriage";
 import type { Quest } from "./simulation/quests";
-// MarriageProposal and CraftingRecipe are used in type definitions, not directly imported
 import type {
   ActiveConflict,
   ConflictRecord,

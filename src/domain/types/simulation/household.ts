@@ -1,5 +1,3 @@
-// Household System Types
-
 export interface HouseholdMember {
   agentId: string;
   role: "head" | "spouse" | "child" | "other";

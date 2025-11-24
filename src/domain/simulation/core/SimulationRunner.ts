@@ -173,7 +173,11 @@ export class SimulationRunner {
       this.state,
       this.inventorySystem,
     );
-    this.animalSystem = new AnimalSystem(this.state, this.worldResourceSystem);
+    this.animalSystem = new AnimalSystem(
+      this.state,
+      undefined,
+      this.worldResourceSystem,
+    );
     this.itemGenerationSystem = new ItemGenerationSystem(this.state);
     this.combatSystem = new CombatSystem(
       this.state,

@@ -415,7 +415,6 @@ export class MovementSystem extends EventEmitter {
             this.pathCache.set(pathKey, { result, timestamp: now });
             resolve(result);
           } else {
-            // Fallback: direct line
             const distance = Math.hypot(to.x - from.x, to.y - from.y);
             resolve({
               success: true, // Fallback is always "success" but might clip

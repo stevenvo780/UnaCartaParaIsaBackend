@@ -2,6 +2,8 @@ import type { GameState } from "../../../types/game-types";
 import type { AIGoal, AIState } from "../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../types/simulation/needs";
 import type { AgentRole } from "../../../types/simulation/roles";
+import type { Task } from "../../../types/simulation/tasks";
+import type { Inventory } from "../../../types/simulation/economy";
 import type { PriorityManager } from "./PriorityManager";
 import { evaluateCriticalNeeds } from "./NeedsEvaluator";
 import {
@@ -35,8 +37,8 @@ export interface AgentGoalPlannerDeps {
   getAgentRole?: (agentId: string) => AgentRole | undefined;
   getPreferredResourceForRole?: (roleType: string) => string | undefined;
 
-  getTasks?: () => any[];
-  getAgentInventory?: (id: string) => any;
+  getTasks?: () => Task[];
+  getAgentInventory?: (id: string) => Inventory | undefined;
   getCurrentZone?: (id: string) => string | undefined;
   getEquipped?: (id: string) => string;
   getSuggestedCraftZone?: () => string | undefined;

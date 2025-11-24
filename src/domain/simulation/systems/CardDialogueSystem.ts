@@ -406,7 +406,6 @@ export class CardDialogueSystem {
         if (typeof questId === "string") {
           const existingQuest = this.questSystem.getQuest(questId);
           if (!existingQuest) {
-            // Make quest available if it doesn't exist
             this.questSystem.makeQuestAvailable(questId);
           } else if (
             existingQuest.status === "available" &&
