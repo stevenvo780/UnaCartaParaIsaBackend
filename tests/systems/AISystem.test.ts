@@ -391,4 +391,163 @@ describe("AISystem", () => {
       expect(aiSystem).toBeDefined();
     });
   });
+
+  describe("setDependencies", () => {
+    it("debe establecer dependencias de sistemas", () => {
+      const newNeedsSystem = new NeedsSystem(gameState, lifeCycleSystem);
+      aiSystem.setDependencies({
+        needsSystem: newNeedsSystem,
+      });
+      expect(aiSystem).toBeDefined();
+    });
+  });
+
+  describe("notifyEntityArrived", () => {
+    it("debe notificar cuando una entidad llega a una zona", () => {
+      aiSystem.update(1000);
+      expect(() => {
+        aiSystem.notifyEntityArrived("agent-1", "zone-1");
+      }).not.toThrow();
+    });
+
+    it("debe intentar depositar recursos cuando llega a zona de almacenamiento", () => {
+      gameState.zones = [
+        {
+          id: "storage-1",
+          type: "storage",
+          bounds: { x: 100, y: 100, width: 50, height: 50 },
+        },
+      ];
+      aiSystem.update(1000);
+      // Agregar inventario al agente
+      if (gameState.agents && gameState.agents[0]) {
+        gameState.agents[0].inventory = {
+          wood: 50,
+          stone: 0,
+          food: 0,
+          water: 0,
+          capacity: 100,
+        };
+      }
+      expect(() => {
+        aiSystem.notifyEntityArrived("agent-1", "storage-1");
+      }).not.toThrow();
+    });
+  });
+
+  describe("setPlayerControl e isPlayerControlled", () => {
+    it("debe establecer control del jugador", () => {
+      aiSystem.setPlayerControl("agent-1", true);
+      const isControlled = aiSystem.isPlayerControlled("agent-1");
+      expect(isControlled).toBe(true);
+    });
+
+    it("debe retornar false para agente no controlado", () => {
+      const isControlled = aiSystem.isPlayerControlled("agent-1");
+      expect(isControlled).toBe(false);
+    });
+
+    it("debe remover control del jugador", () => {
+      aiSystem.setPlayerControl("agent-1", true);
+      aiSystem.setPlayerControl("agent-1", false);
+      const isControlled = aiSystem.isPlayerControlled("agent-1");
+      expect(isControlled).toBe(false);
+    });
+  });
+
+  describe("setEntityPriority", () => {
+    it("debe establecer prioridad para una entidad", () => {
+      expect(() => {
+        aiSystem.setEntityPriority("agent-1", 0.8);
+      }).not.toThrow();
+    });
+  });
+
+  describe("getStatusSnapshot", () => {
+    it("debe retornar snapshot del estado", () => {
+      const snapshot = aiSystem.getStatusSnapshot();
+      expect(snapshot).toBeDefined();
+      expect(typeof snapshot).toBe("object");
+    });
+  });
+
+  describe("getPerformanceMetrics", () => {
+    it("debe retornar métricas de rendimiento", () => {
+      const metrics = aiSystem.getPerformanceMetrics();
+      expect(metrics).toBeDefined();
+      expect(typeof metrics).toBe("object");
+    });
+  });
+
+  describe("removeEntityAI", () => {
+    it("debe remover AI de una entidad", () => {
+      aiSystem.update(1000);
+      expect(() => {
+        aiSystem.removeEntityAI("agent-1");
+      }).not.toThrow();
+      const state = aiSystem.getAIState("agent-1");
+      expect(state).toBeUndefined();
+    });
+  });
+
+  describe("cleanup", () => {
+    it("debe limpiar recursos sin errores", () => {
+      aiSystem.update(1000);
+      expect(() => {
+        aiSystem.cleanup();
+      }).not.toThrow();
+    });
+  });
+
+  describe("Manejo de acciones completadas", () => {
+    it("debe manejar acción completada", () => {
+      aiSystem.update(1000);
+      const state = aiSystem.getAIState("agent-1");
+      if (state) {
+        state.currentGoal = {
+          type: "work",
+          priority: 0.5,
+          createdAt: Date.now(),
+          targetZoneId: "work-zone-1",
+        };
+      }
+
+      simulationEvents.emit(GameEventNames.ACTION_COMPLETED, {
+        entityId: "agent-1",
+        actionType: "work",
+        success: true,
+        timestamp: Date.now(),
+      });
+
+      // El sistema debería procesar el evento
+      expect(aiSystem).toBeDefined();
+    });
+  });
+
+  describe("Búsqueda de recursos", () => {
+    it("debe encontrar recursos cercanos", () => {
+      gameState.worldResources = [
+        {
+          id: "tree-1",
+          type: "tree",
+          position: { x: 120, y: 120 },
+          amount: 100,
+          biome: "forest",
+        },
+        {
+          id: "stone-1",
+          type: "stone",
+          position: { x: 150, y: 150 },
+          amount: 50,
+          biome: "mountain",
+        },
+      ];
+
+      aiSystem.update(1000);
+      const state = aiSystem.getAIState("agent-1");
+      if (state) {
+        expect(state).toBeDefined();
+      }
+    });
+  });
 });

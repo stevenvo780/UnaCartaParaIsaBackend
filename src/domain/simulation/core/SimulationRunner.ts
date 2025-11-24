@@ -717,9 +717,7 @@ export class SimulationRunner {
       case "TEACH_RECIPE":
         if ((payload.agentId || payload.teacherId) && payload.recipeId) {
           this._recipeDiscoverySystem.teachRecipe(
-            (payload.agentId as string) ??
-              (payload.teacherId as string) ??
-              "",
+            (payload.agentId as string) ?? (payload.teacherId as string) ?? "",
             payload.recipeId as string,
           );
         }

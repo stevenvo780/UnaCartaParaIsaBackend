@@ -166,11 +166,7 @@ export class AppearanceGenerationSystem {
     father?: AgentAppearance,
     mother?: AgentAppearance,
   ): string {
-    if (
-      father &&
-      mother &&
-      Math.random() < this.config.inheritanceStrength
-    ) {
+    if (father && mother && Math.random() < this.config.inheritanceStrength) {
       return this.blendSkinTones(father.skinTone, mother.skinTone);
     }
     return this.selectRandom(SKIN_TONES);
@@ -198,11 +194,7 @@ export class AppearanceGenerationSystem {
     father?: AgentAppearance,
     mother?: AgentAppearance,
   ): string {
-    if (
-      father &&
-      mother &&
-      Math.random() < this.config.inheritanceStrength
-    ) {
+    if (father && mother && Math.random() < this.config.inheritanceStrength) {
       return Math.random() < 0.5 ? father.hairColor : mother.hairColor;
     }
     return this.selectRandom(style.hairColors);

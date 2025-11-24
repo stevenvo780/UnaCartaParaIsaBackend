@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import * as EasyStar from "easystarjs";
+import EasyStar from "easystarjs";
 import { GameState, MapElement } from "../../types/game-types";
 import { logger } from "../../../infrastructure/utils/logger";
 import { GameEventNames, simulationEvents } from "../core/events";

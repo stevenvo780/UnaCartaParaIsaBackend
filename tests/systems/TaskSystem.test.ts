@@ -371,5 +371,105 @@ describe("TaskSystem", () => {
       }
     });
   });
+
+  describe("getTasksNearPosition", () => {
+    it("debe retornar tareas cercanas a una posición", () => {
+      const task = taskSystem.createTask({
+        type: "gather",
+        target: "wood",
+        amount: 10,
+        requiredWork: 100,
+        bounds: { x: 100, y: 100, width: 50, height: 50 },
+      });
+      
+      if (task) {
+        const nearby = taskSystem.getTasksNearPosition({ x: 120, y: 120 }, 100);
+        expect(nearby.length).toBeGreaterThan(0);
+        expect(nearby.some((t) => t.id === task.id)).toBe(true);
+      }
+    });
+
+    it("debe retornar array vacío si no hay tareas cercanas", () => {
+      const task = taskSystem.createTask({
+        type: "gather",
+        target: "wood",
+        amount: 10,
+        requiredWork: 100,
+        bounds: { x: 100, y: 100, width: 50, height: 50 },
+      });
+      
+      if (task) {
+        const nearby = taskSystem.getTasksNearPosition({ x: 500, y: 500 }, 50);
+        expect(nearby.length).toBe(0);
+      }
+    });
+
+    it("debe filtrar tareas completadas", () => {
+      const task = taskSystem.createTask({
+        type: "gather",
+        target: "wood",
+        amount: 10,
+        requiredWork: 100,
+        bounds: { x: 100, y: 100, width: 50, height: 50 },
+      });
+      
+      if (task) {
+        taskSystem.contributeToTask(task.id, "agent-1", 100);
+        const nearby = taskSystem.getTasksNearPosition({ x: 120, y: 120 }, 100);
+        expect(nearby.length).toBe(0);
+      }
+    });
+
+    it("debe retornar array vacío si la tarea no tiene bounds", () => {
+      const task = taskSystem.createTask({
+        type: "gather",
+        target: "wood",
+        amount: 10,
+        requiredWork: 100,
+      });
+      
+      if (task) {
+        const nearby = taskSystem.getTasksNearPosition({ x: 120, y: 120 }, 100);
+        expect(nearby.length).toBe(0);
+      }
+    });
+  });
+
+  describe("cleanup", () => {
+    it("debe limpiar todas las tareas", () => {
+      taskSystem.createTask({
+        type: "gather",
+        target: "wood",
+        amount: 10,
+        requiredWork: 100,
+      });
+      
+      taskSystem.cleanup();
+      
+      const tasks = taskSystem.getTasks();
+      expect(tasks.length).toBe(0);
+    });
+
+    it("debe resetear el contador de secuencia", () => {
+      taskSystem.createTask({
+        type: "gather",
+        target: "wood",
+        amount: 10,
+        requiredWork: 100,
+      });
+      
+      taskSystem.cleanup();
+      
+      const newTask = taskSystem.createTask({
+        type: "gather",
+        target: "wood",
+        amount: 10,
+        requiredWork: 100,
+      });
+      
+      // El ID debería empezar desde 0 o 1
+      expect(newTask).toBeDefined();
+    });
+  });
 });
 

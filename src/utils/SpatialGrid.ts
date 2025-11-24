@@ -5,11 +5,7 @@ export class SpatialGrid<T = string> {
   private readonly cols: number;
   private readonly rows: number;
 
-  constructor(
-    worldWidth: number,
-    worldHeight: number,
-    cellSize: number,
-  ) {
+  constructor(worldWidth: number, worldHeight: number, cellSize: number) {
     this.cellSize = cellSize;
     this.cols = Math.ceil(worldWidth / cellSize);
     this.rows = Math.ceil(worldHeight / cellSize);

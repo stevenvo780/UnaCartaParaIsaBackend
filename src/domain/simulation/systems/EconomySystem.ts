@@ -101,11 +101,22 @@ export class EconomySystem {
       const role = this.roleSystem.getAgentRole(agentId);
       if (role?.roleType) {
         // Simplified role bonus logic
-        if (role.roleType === "farmer" && resourceType === "food") totalYield *= 1.5;
-        if (role.roleType === "quarryman" && resourceType === "stone") totalYield *= 1.8;
-        if (role.roleType === "logger" && resourceType === "wood") totalYield *= 1.6;
-        if (role.roleType === "gatherer" && (resourceType === "water" || resourceType === "food")) totalYield *= 1.3;
-        if (role.roleType === "builder" && (resourceType === "wood" || resourceType === "stone")) totalYield *= 1.3;
+        if (role.roleType === "farmer" && resourceType === "food")
+          totalYield *= 1.5;
+        if (role.roleType === "quarryman" && resourceType === "stone")
+          totalYield *= 1.8;
+        if (role.roleType === "logger" && resourceType === "wood")
+          totalYield *= 1.6;
+        if (
+          role.roleType === "gatherer" &&
+          (resourceType === "water" || resourceType === "food")
+        )
+          totalYield *= 1.3;
+        if (
+          role.roleType === "builder" &&
+          (resourceType === "wood" || resourceType === "stone")
+        )
+          totalYield *= 1.3;
       }
     }
 
@@ -113,7 +124,10 @@ export class EconomySystem {
     if (this.divineFavorSystem && this.genealogySystem) {
       const ancestor = this.genealogySystem.getAncestor(agentId);
       const lineageId = ancestor?.lineageId || "";
-      const productivityMult = this.divineFavorSystem.getMultiplier(lineageId, "productivity_boost");
+      const productivityMult = this.divineFavorSystem.getMultiplier(
+        lineageId,
+        "productivity_boost",
+      );
       if (productivityMult > 1.0) {
         totalYield *= productivityMult;
       }
@@ -149,22 +163,24 @@ export class EconomySystem {
   private computeTeamBonus(agentId: string, zone: Zone): number {
     let teamBonus = 1.0;
     const workerGroup = this.socialSystem.getGroupForAgent(agentId);
-    
+
     if (workerGroup) {
       // Simplified check: count members in same zone (assuming they are working if in zone)
       // In a real implementation, we would check their activity
-      const agentsInZone = this.state.entities.filter(e => {
+      const agentsInZone = this.state.entities.filter((e) => {
         // Simple bounds check
         if (!e.position) return false;
-        return e.position.x >= zone.bounds.x &&
-               e.position.x <= zone.bounds.x + zone.bounds.width &&
-               e.position.y >= zone.bounds.y &&
-               e.position.y <= zone.bounds.y + zone.bounds.height;
+        return (
+          e.position.x >= zone.bounds.x &&
+          e.position.x <= zone.bounds.x + zone.bounds.width &&
+          e.position.y >= zone.bounds.y &&
+          e.position.y <= zone.bounds.y + zone.bounds.height
+        );
       });
 
       for (const memberId of workerGroup.members) {
         if (memberId === agentId) continue;
-        if (agentsInZone.some(e => e.id === memberId)) {
+        if (agentsInZone.some((e) => e.id === memberId)) {
           teamBonus += 0.05; // 5% bonus per team member
         }
       }
@@ -175,7 +191,9 @@ export class EconomySystem {
 
   private addToGlobalResources(resourceType: string, amount: number): void {
     if (resourceType in this.state.resources.materials) {
-      this.state.resources.materials[resourceType as keyof typeof this.state.resources.materials] += amount;
+      this.state.resources.materials[
+        resourceType as keyof typeof this.state.resources.materials
+      ] += amount;
     }
   }
 }

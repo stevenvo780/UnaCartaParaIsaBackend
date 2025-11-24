@@ -75,7 +75,7 @@ export class SocialSystem {
           const bondType =
             this.permanentBonds.get(aId)?.get(bId) ||
             this.permanentBonds.get(bId)?.get(aId);
-          
+
           let decayRate = this.config.decayPerSecond;
           if (bondType) {
             decayRate *= 0.05; // Slower decay for family/marriage
@@ -87,7 +87,7 @@ export class SocialSystem {
           } else {
             newAffinity = Math.min(0, affinity + decayRate * dt);
           }
-          
+
           neighbors.set(bId, newAffinity);
         }
       });
@@ -133,11 +133,11 @@ export class SocialSystem {
   public imposeTruce(aId: string, bId: string, durationMs: number): void {
     const key = this.pairKey(aId, bId);
     this.truces.set(key, Date.now() + durationMs);
-    
+
     // Reset negative affinity slightly towards neutral
     const current = this.getAffinityBetween(aId, bId);
     if (current < 0) {
-        this.addEdge(aId, bId, Math.abs(current) * 0.5);
+      this.addEdge(aId, bId, Math.abs(current) * 0.5);
     }
 
     simulationEvents.emit(GameEventNames.SOCIAL_TRUCE_IMPOSED, {
@@ -188,12 +188,12 @@ export class SocialSystem {
     });
     this.permanentBonds.delete(agentId);
     this.permanentBonds.forEach((bonds) => bonds.delete(agentId));
-    
+
     // Remove from truces
     for (const key of this.truces.keys()) {
-        if (key.includes(agentId)) {
-            this.truces.delete(key);
-        }
+      if (key.includes(agentId)) {
+        this.truces.delete(key);
+      }
     }
   }
 
@@ -216,11 +216,7 @@ export class SocialSystem {
 
     for (let i = 0; i < nearby.length; i++) {
       for (let j = i + 1; j < nearby.length; j++) {
-        this.imposeTruce(
-          nearby[i].entity,
-          nearby[j].entity,
-          durationMs,
-        );
+        this.imposeTruce(nearby[i].entity, nearby[j].entity, durationMs);
       }
     }
   }
@@ -239,7 +235,7 @@ export class SocialSystem {
     // Boost affinity
     const current = this.getAffinityBetween(aId, bId);
     if (current < 0.5) {
-        this.addEdge(aId, bId, 0.5 - current);
+      this.addEdge(aId, bId, 0.5 - current);
     }
   }
 
@@ -254,14 +250,17 @@ export class SocialSystem {
 
   public addHeatAt(pos: { x: number; y: number }, amount: number): void {
     // Simple zone-based heat map
-    const zone = this.gameState.zones?.find(z => 
-        pos.x >= z.bounds.x && pos.x <= z.bounds.x + z.bounds.width &&
-        pos.y >= z.bounds.y && pos.y <= z.bounds.y + z.bounds.height
+    const zone = this.gameState.zones?.find(
+      (z) =>
+        pos.x >= z.bounds.x &&
+        pos.x <= z.bounds.x + z.bounds.width &&
+        pos.y >= z.bounds.y &&
+        pos.y <= z.bounds.y + z.bounds.height,
     );
-    
+
     if (zone) {
-        const current = this.zoneHeat.get(zone.id) || 0;
-        this.zoneHeat.set(zone.id, Math.min(10000, current + amount));
+      const current = this.zoneHeat.get(zone.id) || 0;
+      this.zoneHeat.set(zone.id, Math.min(10000, current + amount));
     }
   }
 
@@ -272,11 +271,11 @@ export class SocialSystem {
   private recomputeGroups(): void {
     const visited = new Set<string>();
     const newGroups: SocialGroup[] = [];
-    const entities = this.gameState.entities?.map(e => e.id) || [];
+    const entities = this.gameState.entities?.map((e) => e.id) || [];
 
     for (const u of entities) {
       if (visited.has(u)) continue;
-      
+
       const groupMembers: string[] = [];
       const queue = [u];
       visited.add(u);
@@ -303,43 +302,43 @@ export class SocialSystem {
         let bestLeader = { id: groupMembers[0], score: -Infinity };
 
         for (const member of groupMembers) {
-            let leadershipScore = 0;
-            const memberEdges = this.edges.get(member);
-            
-            if (memberEdges) {
-                for (const other of groupMembers) {
-                    if (member === other) continue;
-                    const aff = memberEdges.get(other) || 0;
-                    if (aff > 0) {
-                        totalAffinity += aff;
-                        edgeCount++;
-                        leadershipScore += aff;
-                    }
-                }
+          let leadershipScore = 0;
+          const memberEdges = this.edges.get(member);
+
+          if (memberEdges) {
+            for (const other of groupMembers) {
+              if (member === other) continue;
+              const aff = memberEdges.get(other) || 0;
+              if (aff > 0) {
+                totalAffinity += aff;
+                edgeCount++;
+                leadershipScore += aff;
+              }
             }
-            
-            if (leadershipScore > bestLeader.score) {
-                bestLeader = { id: member, score: leadershipScore };
-            }
+          }
+
+          if (leadershipScore > bestLeader.score) {
+            bestLeader = { id: member, score: leadershipScore };
+          }
         }
 
         const cohesion = edgeCount > 0 ? totalAffinity / edgeCount : 0;
-        
+
         newGroups.push({
-            id: `group_${groupMembers[0]}`,
-            members: groupMembers,
-            leader: bestLeader.id,
-            cohesion,
-            morale: 100 // Default morale for now
+          id: `group_${groupMembers[0]}`,
+          members: groupMembers,
+          leader: bestLeader.id,
+          cohesion,
+          morale: 100, // Default morale for now
         });
       }
     }
 
     this.groups = newGroups;
-    
+
     simulationEvents.emit(GameEventNames.SOCIAL_GROUPS_UPDATE, {
-        groups: this.groups,
-        count: this.groups.length
+      groups: this.groups,
+      count: this.groups.length,
     });
   }
 

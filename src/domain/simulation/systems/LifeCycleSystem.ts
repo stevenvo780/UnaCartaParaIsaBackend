@@ -107,7 +107,8 @@ export class LifeCycleSystem extends EventEmitter {
     if (systems.inventorySystem) this.inventorySystem = systems.inventorySystem;
     if (systems.socialSystem) this._socialSystem = systems.socialSystem;
     if (systems.marriageSystem) this._marriageSystem = systems.marriageSystem;
-    if (systems.genealogySystem) this._genealogySystem = systems.genealogySystem;
+    if (systems.genealogySystem)
+      this._genealogySystem = systems.genealogySystem;
     if (systems.householdSystem) this.householdSystem = systems.householdSystem;
     if (systems.divineFavorSystem)
       this._divineFavorSystem = systems.divineFavorSystem;
@@ -274,7 +275,10 @@ export class LifeCycleSystem extends EventEmitter {
 
     let traits = this.randomTraits();
     if (partial.parents?.father && partial.parents?.mother) {
-        traits = this.inheritTraits(partial.parents.father, partial.parents.mother);
+      traits = this.inheritTraits(
+        partial.parents.father,
+        partial.parents.mother,
+      );
     }
 
     const profile: AgentProfile = {
@@ -318,23 +322,23 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   private inheritTraits(fatherId: string, motherId: string): AgentTraits {
-      const father = this.getAgent(fatherId);
-      const mother = this.getAgent(motherId);
-      
-      if (!father || !mother) return this.randomTraits();
-      
-      const mix = (a: number, b: number) => {
-          const base = (a + b) / 2;
-          const mutation = (Math.random() - 0.5) * 0.2;
-          return Math.max(0, Math.min(1, base + mutation));
-      };
-      
-      return {
-          cooperation: mix(father.traits.cooperation, mother.traits.cooperation),
-          aggression: mix(father.traits.aggression, mother.traits.aggression),
-          diligence: mix(father.traits.diligence, mother.traits.diligence),
-          curiosity: mix(father.traits.curiosity, mother.traits.curiosity),
-      };
+    const father = this.getAgent(fatherId);
+    const mother = this.getAgent(motherId);
+
+    if (!father || !mother) return this.randomTraits();
+
+    const mix = (a: number, b: number) => {
+      const base = (a + b) / 2;
+      const mutation = (Math.random() - 0.5) * 0.2;
+      return Math.max(0, Math.min(1, base + mutation));
+    };
+
+    return {
+      cooperation: mix(father.traits.cooperation, mother.traits.cooperation),
+      aggression: mix(father.traits.aggression, mother.traits.aggression),
+      diligence: mix(father.traits.diligence, mother.traits.diligence),
+      curiosity: mix(father.traits.curiosity, mother.traits.curiosity),
+    };
   }
 
   public getAgent(id: string): AgentProfile | undefined {

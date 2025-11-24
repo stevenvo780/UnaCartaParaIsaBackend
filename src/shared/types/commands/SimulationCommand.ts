@@ -8,9 +8,21 @@ export type ResourcesState = NonNullable<GameState["resources"]>;
 
 export type SimulationEventPayload =
   | { type: string; [key: string]: string | number | boolean | undefined }
-  | { type: string; agentId: string; [key: string]: string | number | boolean | undefined }
-  | { type: string; zoneId: string; [key: string]: string | number | boolean | undefined }
-  | { type: string; resourceId: string; [key: string]: string | number | boolean | undefined }
+  | {
+      type: string;
+      agentId: string;
+      [key: string]: string | number | boolean | undefined;
+    }
+  | {
+      type: string;
+      zoneId: string;
+      [key: string]: string | number | boolean | undefined;
+    }
+  | {
+      type: string;
+      resourceId: string;
+      [key: string]: string | number | boolean | undefined;
+    }
   | Record<string, string | number | boolean | undefined>;
 
 export interface SimulationEvent {
@@ -96,11 +108,7 @@ export interface BuildingCommandPayload {
   agentId?: string;
   buildingType?: string;
   position?: { x: number; y: number };
-  [key: string]:
-    | string
-    | { x: number; y: number }
-    | number
-    | undefined;
+  [key: string]: string | { x: number; y: number } | number | undefined;
 }
 
 export interface ReputationCommandPayload {
@@ -118,7 +126,11 @@ export interface TaskCommandPayload {
   type?: string;
   requiredWork?: number;
   bounds?: { x: number; y: number; width: number; height: number };
-  [key: string]: string | number | { x: number; y: number; width: number; height: number } | undefined;
+  [key: string]:
+    | string
+    | number
+    | { x: number; y: number; width: number; height: number }
+    | undefined;
 }
 
 export interface PingPayload {
