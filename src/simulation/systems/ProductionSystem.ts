@@ -89,7 +89,7 @@ export class ProductionSystem {
   }
 
   private isAgentBusy(agentId: string): boolean {
-    for (const workers of this.assignments.values()) {
+    for (const workers of Array.from(this.assignments.values())) {
       if (workers.has(agentId)) return true;
     }
     return false;

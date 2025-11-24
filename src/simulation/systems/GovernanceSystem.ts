@@ -136,7 +136,7 @@ export class GovernanceSystem {
   }
 
   private expireOldDemands(now: number): void {
-    for (const [id, demand] of this.demands.entries()) {
+    for (const [id, demand] of Array.from(this.demands.entries())) {
       if (demand.resolvedAt) {
         continue;
       }

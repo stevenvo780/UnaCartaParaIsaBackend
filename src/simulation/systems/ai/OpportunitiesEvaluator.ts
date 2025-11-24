@@ -67,7 +67,6 @@ export function evaluateExplorationGoals(
   const goals: AIGoal[] = [];
   const now = Date.now();
 
-  // Base exploration based on curiosity
   if (aiState.personality.curiosity > 0.5) {
     goals.push({
       type: 'explore',

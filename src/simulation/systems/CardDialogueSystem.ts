@@ -100,7 +100,7 @@ export class CardDialogueSystem {
   }
 
   private cleanupExpired(now: number): void {
-    for (const [cardId, entry] of this.activeCards.entries()) {
+    for (const [cardId, entry] of Array.from(this.activeCards.entries())) {
       if (now >= entry.expiresAt) {
         this.activeCards.delete(cardId);
       }

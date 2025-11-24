@@ -63,7 +63,7 @@ export class BuildingMaintenanceSystem {
     }
     this.lastUpdate = now;
 
-    for (const state of this.buildingStates.values()) {
+    for (const state of Array.from(this.buildingStates.values())) {
       this.applyTimeDeterioration(state, now);
     }
   }

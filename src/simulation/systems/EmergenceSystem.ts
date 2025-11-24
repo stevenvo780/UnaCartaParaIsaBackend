@@ -439,7 +439,7 @@ export class EmergenceSystem extends EventEmitter {
 
   private cleanupExpiredPatterns(): void {
     const now = Date.now();
-    for (const [id, pattern] of this.patterns.entries()) {
+    for (const [id, pattern] of Array.from(this.patterns.entries())) {
       if (now - pattern.duration > pattern.duration) {
         this.patterns.delete(id);
       }

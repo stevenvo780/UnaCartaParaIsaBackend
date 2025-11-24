@@ -482,13 +482,13 @@ export class AnimalSystem {
   private cleanCaches(): void {
     const now = Date.now();
 
-    for (const [key, cache] of this.resourceSearchCache.entries()) {
+    for (const [key, cache] of Array.from(this.resourceSearchCache.entries())) {
       if (now - cache.timestamp > this.CACHE_DURATION) {
         this.resourceSearchCache.delete(key);
       }
     }
 
-    for (const [key, cache] of this.threatSearchCache.entries()) {
+    for (const [key, cache] of Array.from(this.threatSearchCache.entries())) {
       if (now - cache.timestamp > this.CACHE_DURATION) {
         this.threatSearchCache.delete(key);
       }

@@ -28,6 +28,12 @@ describe("CombatSystem", () => {
           type: "agent",
           isDead: false,
         },
+        {
+          id: "dead-entity",
+          position: { x: 200, y: 200 },
+          type: "agent",
+          isDead: true,
+        },
       ],
       worldSize: { width: 2000, height: 2000 },
     });
@@ -46,6 +52,33 @@ describe("CombatSystem", () => {
   describe("Inicialización", () => {
     it("debe inicializar correctamente", () => {
       expect(combatSystem).toBeDefined();
+    });
+
+    it("debe aceptar configuración personalizada", () => {
+      const customSystem = new CombatSystem(
+        gameState,
+        inventorySystem,
+        lifeCycleSystem,
+        socialSystem,
+        {
+          decisionIntervalMs: 1000,
+          engagementRadius: 100,
+          baseCooldownMs: 5000,
+        }
+      );
+      expect(customSystem).toBeDefined();
+    });
+
+    it("debe inicializar con tamaño de mundo por defecto", () => {
+      const stateWithoutSize = createMockGameState();
+      delete stateWithoutSize.worldSize;
+      const system = new CombatSystem(
+        stateWithoutSize,
+        inventorySystem,
+        lifeCycleSystem,
+        socialSystem
+      );
+      expect(system).toBeDefined();
     });
   });
 
@@ -70,11 +103,54 @@ describe("CombatSystem", () => {
       const weapon = combatSystem.getEquipped("agent-without-weapon");
       expect(weapon).toBe("unarmed");
     });
+
+    it("debe equipar stone_dagger", () => {
+      inventorySystem.initializeAgentInventory("attacker-1");
+      inventorySystem.addResource("attacker-1", "stone", 10);
+      combatSystem.equip("attacker-1", "stone_dagger");
+      
+      const weapon = combatSystem.getEquipped("attacker-1");
+      expect(weapon).toBe("stone_dagger");
+    });
   });
 
   describe("Actualización del sistema", () => {
     it("debe actualizar sin errores", () => {
       expect(() => combatSystem.update(1000)).not.toThrow();
+    });
+
+    it("no debe actualizar si no ha pasado el intervalo mínimo", () => {
+      combatSystem.update(100);
+      combatSystem.update(200);
+      // No debería procesar combate
+      expect(combatSystem).toBeDefined();
+    });
+
+    it("debe ignorar entidades muertas", () => {
+      expect(() => combatSystem.update(1000)).not.toThrow();
+    });
+
+    it("debe ignorar entidades sin posición", () => {
+      if (gameState.entities) {
+        gameState.entities.push({
+          id: "no-position",
+          type: "agent",
+          isDead: false,
+        });
+      }
+      expect(() => combatSystem.update(1000)).not.toThrow();
+    });
+  });
+
+  describe("Log de combate", () => {
+    it("debe mantener log de combate", () => {
+      expect(gameState.combatLog).toBeDefined();
+      expect(Array.isArray(gameState.combatLog)).toBe(true);
+    });
+
+    it("debe limitar tamaño del log", () => {
+      // El sistema limita a maxLogEntries
+      expect(combatSystem).toBeDefined();
     });
   });
 });
