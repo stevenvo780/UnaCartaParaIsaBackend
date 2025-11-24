@@ -53,8 +53,8 @@ export class AnimalSystem {
 
   constructor(
     gameState: GameState,
-    worldResourceSystem?: WorldResourceSystem,
     config?: Partial<AnimalSystemConfig>,
+    worldResourceSystem?: WorldResourceSystem,
   ) {
     this.gameState = gameState;
     this.worldResourceSystem = worldResourceSystem;
@@ -621,6 +621,18 @@ export class AnimalSystem {
    */
   public getAnimal(id: string): Animal | undefined {
     return this.animals.get(id);
+  }
+
+  /**
+   * Remove animal manually
+   */
+  public removeAnimal(id: string): void {
+    const animal = this.animals.get(id);
+    if (animal) {
+      const cellKey = this.getGridCell(animal.position);
+      this.spatialGrid.get(cellKey)?.delete(id);
+      this.animals.delete(id);
+    }
   }
 
   /**

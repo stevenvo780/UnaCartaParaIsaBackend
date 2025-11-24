@@ -22,7 +22,6 @@ import {
   getUnexploredZones,
   prioritizeGoals,
   getEntityPosition,
-  getRecommendedZoneIdsForNeed,
 } from "./utils";
 
 export interface AgentGoalPlannerDeps {
@@ -60,7 +59,6 @@ export function planGoals(
   minPriority: number = 0.3,
 ): AIGoal[] {
   const goals: AIGoal[] = [];
-  const now = Date.now();
   const entityNeeds = deps.getEntityNeeds(aiState.entityId);
 
   // 1. Critical Needs

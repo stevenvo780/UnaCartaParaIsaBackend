@@ -49,19 +49,10 @@ export class TaskSystem {
 
     const stats = this.getTaskStats();
     this.gameState.tasks.stats = stats;
+  }
 
-    // Convertir Map a Array para serialización
-    this.gameState.tasks.tasks = Array.from(this.tasks.values()).map(
-      (task) => ({
-        id: task.id,
-        type: task.type,
-        progress: task.progress,
-        requiredWork: task.requiredWork,
-        completed: task.completed,
-        zoneId: task.zoneId,
-        bounds: task.bounds,
-      }),
-    );
+  public getTasks(): Task[] {
+    return Array.from(this.tasks.values());
   }
 
   public createTask(params: TaskCreationParams): Task | null {
@@ -158,10 +149,6 @@ export class TaskSystem {
       completed,
       blocked: false,
     };
-  }
-
-  public getTasks(): Task[] {
-    return Array.from(this.tasks.values());
   }
 
   public getTask(id: string): Task | undefined {
