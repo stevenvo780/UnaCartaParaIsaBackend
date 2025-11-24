@@ -71,7 +71,6 @@ export class LifeCycleSystem {
       agent.lifeStage = this.getLifeStage(agent.ageYears);
 
       if (previousStage !== agent.lifeStage) {
-        // Emit event or log
         console.log(`Agent ${agent.id} aged to ${agent.lifeStage}`);
       }
 
@@ -79,8 +78,6 @@ export class LifeCycleSystem {
         this.removeAgent(agent.id);
       }
     });
-
-    // Reproduction logic would go here
   }
 
   public getAgent(id: string): AgentProfile | undefined {

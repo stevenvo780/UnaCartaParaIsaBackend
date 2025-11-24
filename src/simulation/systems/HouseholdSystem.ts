@@ -31,7 +31,6 @@ export class HouseholdSystem {
 
     const stats = this.getSystemStats();
 
-    // Check high occupancy
     if (stats.occupancy > this.config.highOccupancyThreshold) {
       simulationEvents.emit(GameEventNames.HOUSEHOLD_HIGH_OCCUPANCY, {
         occupancy: stats.occupancy,
@@ -40,7 +39,6 @@ export class HouseholdSystem {
       });
     }
 
-    // Check homeless agents
     const homeless = this.checkAgentsWithoutHome();
     if (homeless.length > 0) {
       simulationEvents.emit(GameEventNames.HOUSEHOLD_AGENTS_HOMELESS, {
@@ -69,7 +67,6 @@ export class HouseholdSystem {
   public rebuildFromZones(): void {
     const zones = this.gameState.zones || [];
 
-    // Preserve existing data
     const previousMembers = new Map<string, HouseholdMember[]>();
     const previousInventories = new Map<string, Household['sharedInventory']>();
 
@@ -82,7 +79,6 @@ export class HouseholdSystem {
       }
     });
 
-    // Rebuild from zones
     this.households.clear();
     const houses = zones.filter((z: Zone) => z.type === 'rest');
 

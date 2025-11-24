@@ -45,12 +45,10 @@ export class MarketSystem {
 
   private computeScarcityMultiplier(resource: ResourceType): number {
     let stock = 0;
-    // Check global resources
     if (this.state.resources) {
       stock += this.state.resources.materials[resource] || 0;
     }
 
-    // Check stockpiles (simplified: just sum all stockpiles)
     const stats = this.inventorySystem.getSystemStats();
     stock += stats.stockpiled[resource];
 
@@ -69,18 +67,14 @@ export class MarketSystem {
     const buyerMoney = typeof buyer.stats.money === 'number' ? buyer.stats.money : 0;
     if (buyerMoney < totalCost) return false;
 
-    // Deduct money
     buyer.stats.money = buyerMoney - totalCost;
 
-    // Add resource
     const added = this.inventorySystem.addResource(buyerId, resource, amount);
     if (!added) {
-      // Refund if full
       buyer.stats.money = (typeof buyer.stats.money === 'number' ? buyer.stats.money : 0) + totalCost;
       return false;
     }
 
-    // Add to global currency (or burn it?) - for now just disappear
     if (this.state.resources) {
       this.state.resources.currency += totalCost;
     }

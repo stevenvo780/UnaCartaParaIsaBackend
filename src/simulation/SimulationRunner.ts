@@ -243,6 +243,33 @@ export class SimulationRunner {
         }
       });
     });
+
+    // Spawn initial agents if none exist
+    if (this.state.agents.length === 0) {
+      this.lifeCycleSystem.spawnAgent({
+        requestId: "isa",
+        name: "Isa",
+        sex: "female",
+        traits: {
+          cooperation: 0.8,
+          aggression: 0.2,
+          diligence: 0.7,
+          curiosity: 0.9,
+        },
+      });
+
+      this.lifeCycleSystem.spawnAgent({
+        requestId: "stev",
+        name: "Stev",
+        sex: "male",
+        traits: {
+          cooperation: 0.7,
+          aggression: 0.3,
+          diligence: 0.8,
+          curiosity: 0.8,
+        },
+      });
+    }
   }
 
   public initializeWorldResources(worldConfig: { width: number; height: number; tileSize: number; biomeMap: string[][] }): void {

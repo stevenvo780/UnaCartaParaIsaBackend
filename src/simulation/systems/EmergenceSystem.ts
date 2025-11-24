@@ -78,7 +78,6 @@ export class EmergenceSystem extends EventEmitter {
   private lastEvaluation = 0;
   private currentMetrics: EmergenceMetrics;
 
-  // System dependencies
   private needsSystem?: NeedsSystem;
   private socialSystem?: SocialSystem;
   private lifeCycleSystem?: LifeCycleSystem;

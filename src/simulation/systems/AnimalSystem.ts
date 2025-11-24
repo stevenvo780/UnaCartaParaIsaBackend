@@ -15,10 +15,6 @@ const DEFAULT_CONFIG: AnimalSystemConfig = {
   cleanupInterval: 30000,
 };
 
-/**
- * Main Animal System
- * Orchestrates all animal subsystems: spawning, behavior, needs, genetics
- */
 export class AnimalSystem {
   private gameState: GameState;
   private config: AnimalSystemConfig;
@@ -28,11 +24,9 @@ export class AnimalSystem {
   private lastUpdate = 0;
   private lastCleanup = 0;
 
-  // Spatial grid for efficient proximity queries
   private spatialGrid = new Map<string, Set<string>>();
   private readonly GRID_CELL_SIZE = 256;
 
-  // Caching for performance
   private resourceSearchCache = new Map<string, {
     resources: Array<{ id: string; position: { x: number; y: number }; type: string }>;
     timestamp: number;
@@ -57,12 +51,10 @@ export class AnimalSystem {
   }
 
   private setupEventListeners(): void {
-    // Listen for animal hunted events
     simulationEvents.on(GameEventNames.ANIMAL_HUNTED, (data: { animalId: string; hunterId: string }) => {
       this.handleAnimalHunted(data.animalId, data.hunterId);
     });
 
-    // Listen for chunk rendered events (for dynamic spawning)
     simulationEvents.on(GameEventNames.CHUNK_RENDERED, (data: {
       coords: { x: number; y: number };
       bounds: { x: number; y: number; width: number; height: number };
@@ -73,9 +65,6 @@ export class AnimalSystem {
     });
   }
 
-  /**
-   * Main update loop
-   */
   public update(_deltaMs: number): void {
     const now = Date.now();
 
@@ -87,16 +76,12 @@ export class AnimalSystem {
     const deltaMinutes = (now - this.lastUpdate) / 60000;
     this.lastUpdate = now;
 
-    // Update each animal
     this.animals.forEach((animal) => {
       if (animal.isDead) return;
 
       const oldPosition = { ...animal.position };
 
-      // Age the animal
       animal.age += this.config.updateInterval;
-
-      // Update needs (hunger, thirst, etc.)
       AnimalNeeds.updateNeeds(animal, deltaMinutes);
 
       // Update behavior based on state

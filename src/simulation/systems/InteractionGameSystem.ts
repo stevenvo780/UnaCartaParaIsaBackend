@@ -25,9 +25,7 @@ export class InteractionGameSystem {
     console.log('🎲 InteractionGameSystem (Backend) initialized');
   }
 
-  public update(_deltaTimeMs: number): void {
-    // Check for timed out interactions or auto-resolve logic here
-  }
+  public update(_deltaTimeMs: number): void {}
 
   public startInteraction(initiatorId: string, targetId: string, type: string): boolean {
     const interactionId = `${initiatorId}-${targetId}-${Date.now()}`;

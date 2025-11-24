@@ -38,10 +38,7 @@ export class EconomySystem {
     this.config = { ...DEFAULT_ECONOMY_CONFIG, ...config };
   }
 
-  public update(_delta: number): void {
-    // Economy update logic (e.g. periodic salary payments, market fluctuations if integrated)
-    // For now, mostly event-driven by actions
-  }
+  public update(_delta: number): void {}
 
   public handleWorkAction(agentId: string, zoneId: string): void {
     const zone = this.state.zones.find((z) => z.id === zoneId);
@@ -50,7 +47,6 @@ export class EconomySystem {
     const agent = this.state.entities.find((e) => e.id === agentId);
     if (!agent) return;
 
-    // Calculate yield
     let resourceType: ResourceType | null = null;
     let baseYield = 0;
 
@@ -78,11 +74,9 @@ export class EconomySystem {
 
     if (!resourceType || baseYield === 0) return;
 
-    // Team bonus
     const teamBonus = this.computeTeamBonus(agentId, zone);
     const totalYield = baseYield * teamBonus;
 
-    // Handle residuals
     const key = `${agentId}:${resourceType}`;
     const residual = this.yieldResiduals.get(key) || 0;
     const amount = Math.floor(totalYield + residual);
@@ -90,14 +84,10 @@ export class EconomySystem {
     this.yieldResiduals.set(key, newResidual);
 
     if (amount > 0) {
-      // Add to inventory
       const added = this.inventorySystem.addResource(agentId, resourceType, amount);
       if (!added) {
-        // Add to global resources if inventory full
         this.addToGlobalResources(resourceType, amount);
       }
-
-      // Pay salary
       const salary = Math.round(this.config.salaryRates[resourceType] * teamBonus);
       if (agent.stats) { // Assuming agent has stats in entity
         const currentMoney = typeof agent.stats.money === 'number' ? agent.stats.money : 0;

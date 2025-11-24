@@ -27,9 +27,7 @@ export class KnowledgeNetworkSystem {
     console.log('🧠 KnowledgeNetworkSystem (Backend) initialized');
   }
 
-  public update(_deltaTimeMs: number): void {
-    // Potential logic: decay knowledge, propagate rumors, etc.
-  }
+  public update(_deltaTimeMs: number): void {}
 
   public addKnowledge(id: string, type: KnowledgeNode['type'], data: unknown, discovererId?: string): void {
     if (this.nodes.has(id)) return;
@@ -48,7 +46,6 @@ export class KnowledgeNetworkSystem {
       this.learnKnowledge(discovererId, id);
     }
 
-    // Emit event for graph update
     simulationEvents.emit('KNOWLEDGE_ADDED', { node });
   }
 

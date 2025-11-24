@@ -12,10 +12,6 @@ const DEFAULT_CONFIG: ItemGenerationConfig = {
   maxItemsPerZone: 10,
 };
 
-/**
- * Backend ItemGenerationSystem
- * Handles procedural item generation in zones with respawn mechanics
- */
 export class ItemGenerationSystem {
   private gameState: GameState;
   private config: ItemGenerationConfig;
@@ -33,16 +29,12 @@ export class ItemGenerationSystem {
     console.log('🎁 ItemGenerationSystem (Backend) initialized');
   }
 
-  /**
-   * Main update loop - triggers generation based on interval
-   */
   public update(_deltaMs: number): void {
     if (!this.config.enableAutoGeneration) return;
 
     const now = Date.now();
     const intervalMs = this.config.generationIntervalSec * 1000;
 
-    // Process each zone for generation
     const zones = this.gameState.zones || [];
     for (const zone of zones) {
       const lastGen = this.lastGeneration.get(zone.id) || 0;
@@ -54,50 +46,38 @@ export class ItemGenerationSystem {
     }
   }
 
-  /**
-   * Process item generation for a specific zone
-   */
   private processZoneGeneration(zone: Zone): void {
-    // Find applicable rules for this zone type
     const applicableRules = this.generationRules.filter(
       (rule) => rule.zoneType === zone.type
     );
 
     if (applicableRules.length === 0) return;
 
-    // Check current item count in zone
     const currentItems = this.zoneItems.get(zone.id);
     const itemCount = currentItems ? currentItems.size : 0;
 
     if (itemCount >= this.config.maxItemsPerZone) return;
 
-    // Try to generate items based on rules
     for (const rule of applicableRules) {
       this.tryGenerateItem(zone, rule);
     }
   }
 
-  /**
-   * Attempt to generate an item based on a rule
-   */
   private tryGenerateItem(zone: Zone, rule: GenerationRule): void {
-    // Check spawn chance
     if (Math.random() > rule.spawnChance) return;
 
-    // Check if zone already has this type
     const zoneItemMap = this.zoneItems.get(zone.id);
     if (zoneItemMap?.has(rule.itemId)) {
-      // Check respawn time
       const existingItem = zoneItemMap.get(rule.itemId)!;
       const now = Date.now();
 
       if (existingItem.collectedAt) {
         const timeSinceCollected = now - existingItem.collectedAt;
         if (timeSinceCollected < rule.respawnTime) {
-          return; // Not ready to respawn
+          return;
         }
       } else {
-        return; // Item still exists
+        return;
       }
     }
 
