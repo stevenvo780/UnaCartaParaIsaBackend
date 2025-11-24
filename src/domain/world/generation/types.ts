@@ -9,6 +9,10 @@ export const enum BiomeType {
   OCEAN = "ocean",
   RIVER = "river",
   LAKE = "lake",
+  MYSTICAL = "mystical",
+  WETLAND = "wetland",
+  MOUNTAINOUS = "mountainous",
+  VILLAGE = "village",
 }
 
 export interface BiomeDefinition {

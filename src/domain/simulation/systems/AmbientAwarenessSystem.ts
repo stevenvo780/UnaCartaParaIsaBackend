@@ -107,7 +107,7 @@ export class AmbientAwarenessSystem {
       else if (recent < older - 2) trend = "worsening";
     }
 
-    const criticalPercent = (critical / samples.length) * 100;
+    const criticalPercent = (critical / samplesList.length) * 100;
     const mood = this.resolveMood(average, criticalPercent);
 
     return {
@@ -115,7 +115,7 @@ export class AmbientAwarenessSystem {
       variance,
       trend,
       criticalCount: critical,
-      totalAgents: samples.length,
+      totalAgents: samplesList.length,
       mood,
     };
   }

@@ -497,4 +497,42 @@ export class NeedsSystem extends EventEmitter {
     this.config = { ...this.config, ...partial };
     this.emit("configUpdated", this.config);
   }
+
+  public satisfyNeed(
+    entityId: string,
+    needType: string,
+    amount: number,
+  ): boolean {
+    const data = this.entityNeeds.get(entityId);
+    if (!data) return false;
+
+    const needKey = needType as keyof EntityNeedsData;
+    if (needKey in data && typeof data[needKey] === "number") {
+      (data[needKey] as number) = Math.min(
+        100,
+        (data[needKey] as number) + amount,
+      );
+      return true;
+    }
+    return false;
+  }
+
+  public modifyNeed(
+    entityId: string,
+    needType: string,
+    delta: number,
+  ): boolean {
+    const data = this.entityNeeds.get(entityId);
+    if (!data) return false;
+
+    const needKey = needType as keyof EntityNeedsData;
+    if (needKey in data && typeof data[needKey] === "number") {
+      (data[needKey] as number) = Math.max(
+        0,
+        Math.min(100, (data[needKey] as number) + delta),
+      );
+      return true;
+    }
+    return false;
+  }
 }

@@ -1,5 +1,10 @@
 export type GoalType =
   | "satisfy_need"
+  | "satisfy_hunger"
+  | "satisfy_thirst"
+  | "satisfy_energy"
+  | "satisfy_social"
+  | "satisfy_fun"
   | "work"
   | "explore"
   | "social"
@@ -8,6 +13,7 @@ export type GoalType =
   | "deposit"
   | "assist"
   | "construction"
+  | "gather"
   | "idle";
 
 export type ActionType =

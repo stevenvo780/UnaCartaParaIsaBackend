@@ -93,10 +93,9 @@ export class CardDialogueSystem {
 
   private generateCards(now: number): void {
     const needs = this.needsSystem.getAllNeeds();
-    for (const data of needs) {
-      const entityId = data.entityId;
+    for (const [entityId, data] of needs.entries()) {
       const matchingTemplates = this.cardTemplates.filter((template) =>
-        this.matchesTemplate(template, data.needs, now, entityId),
+        this.matchesTemplate(template, data, now, entityId),
       );
 
       if (matchingTemplates.length === 0) continue;
@@ -104,7 +103,7 @@ export class CardDialogueSystem {
       // Scoring logic restored
       const scoredTemplates = matchingTemplates.map((template) => ({
         template,
-        score: this.computeTemplateScore(template, data.needs),
+        score: this.computeTemplateScore(template, data),
       }));
 
       scoredTemplates.sort((a, b) => b.score - a.score);
@@ -117,7 +116,7 @@ export class CardDialogueSystem {
         topCandidates[Math.floor(Math.random() * topCandidates.length)]
           .template;
 
-      const card = this.createCard(selected, entityId, data.needs, now);
+      const card = this.createCard(selected, entityId, data, now);
       this.queue.push(card);
     }
   }
@@ -152,7 +151,7 @@ export class CardDialogueSystem {
 
   private matchesTemplate(
     template: CardTemplate,
-    needs: NeedsState,
+    needs: EntityNeedsData,
     now: number,
     entityId?: string,
   ): boolean {
@@ -212,7 +211,7 @@ export class CardDialogueSystem {
 
   private computeTemplateScore(
     template: CardTemplate,
-    needs: NeedsState,
+    needs: EntityNeedsData,
   ): number {
     let score = 0.5;
 
@@ -242,7 +241,7 @@ export class CardDialogueSystem {
   private createCard(
     template: CardTemplate,
     entityId: string,
-    needs: NeedsState,
+    needs: EntityNeedsData,
     now: number,
   ): DialogueCard {
     const contentVariation =
@@ -280,7 +279,7 @@ export class CardDialogueSystem {
 
   private resolvePriority(
     template: CardTemplate,
-    needs: NeedsState,
+    needs: EntityNeedsData,
   ): DialoguePriority {
     // Priority based on needs severity (migrated from Frontend helpers)
     if (needs.hunger < 15 || needs.thirst < 15) return "urgent";

@@ -543,7 +543,7 @@ export class SimulationRunner {
           });
           break;
         case "SPAWN_AGENT":
-          this.lifeCycleSystem.spawnAgent(command.payload);
+          this.lifeCycleSystem.spawnAgent(command.payload as Partial<import("../../types/simulation/agents").AgentProfile>);
           break;
         case "KILL_AGENT":
           this.lifeCycleSystem.removeAgent(command.agentId);

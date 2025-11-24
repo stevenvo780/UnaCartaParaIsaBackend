@@ -9,8 +9,15 @@ import {
   GoalType,
 } from "../../types/simulation/ai";
 import type { AgentProfile, AgentTraits, LifeStage } from "../../types/simulation/agents";
-import { NeedsEvaluator } from "./ai/NeedsEvaluator";
-import { OpportunitiesEvaluator } from "./ai/OpportunitiesEvaluator";
+import {
+  evaluateCriticalNeeds,
+  type NeedsEvaluatorDependencies,
+} from "./ai/NeedsEvaluator";
+import {
+  evaluateWorkOpportunities,
+  evaluateExplorationGoals,
+  type OpportunitiesEvaluatorDependencies,
+} from "./ai/OpportunitiesEvaluator";
 import { GameEventNames } from "../core/events";
 import { simulationEvents } from "../core/events";
 import type { NeedsSystem } from "./NeedsSystem";
@@ -32,8 +39,6 @@ export class AISystem extends EventEmitter {
   private gameState: GameState;
   private config: AISystemConfig;
   private aiStates: Map<string, AIState>;
-  private needsEvaluator: NeedsEvaluator;
-  private opportunitiesEvaluator: OpportunitiesEvaluator;
   private lastUpdate: number = 0;
 
   // Dependencies
@@ -84,8 +89,6 @@ export class AISystem extends EventEmitter {
     };
 
     this.aiStates = new Map();
-    this.needsEvaluator = new NeedsEvaluator();
-    this.opportunitiesEvaluator = new OpportunitiesEvaluator();
 
     if (systems) {
       this.needsSystem = systems.needsSystem;
@@ -207,12 +210,19 @@ export class AISystem extends EventEmitter {
     if (this.needsSystem) {
       const needs = this.needsSystem.getNeeds(agentId);
       if (needs) {
-        const criticalGoal = this.needsEvaluator.evaluateCriticalNeeds(
-          agentId,
-          needs,
-          aiState.personality,
-        );
-        if (criticalGoal) return criticalGoal;
+        const deps: NeedsEvaluatorDependencies = {
+          getEntityNeeds: (id: string) => this.needsSystem?.getNeeds(id),
+          findNearestResource: (id: string, resourceType: string) => {
+            // TODO: Implement findNearestResource
+            return null;
+          },
+        };
+        const criticalGoals = evaluateCriticalNeeds(deps, aiState);
+        if (criticalGoals.length > 0) {
+          // Return the highest priority goal
+          criticalGoals.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+          return criticalGoals[0];
+        }
       }
     }
 
@@ -220,32 +230,45 @@ export class AISystem extends EventEmitter {
     if (priority === "survival") return null;
 
     // 2. Evaluate opportunities
-    // Pass available systems to evaluator
-    const opportunities = this.opportunitiesEvaluator.evaluateOpportunities(
-      agentId,
-      this.gameState,
-      aiState.personality,
-      {
-        roleSystem: this.roleSystem,
-        worldResourceSystem: this.worldResourceSystem,
-        socialSystem: this.socialSystem,
-      }
-    );
+    const opportunities: AIGoal[] = [];
+    
+    // Work opportunities
+    if (this.roleSystem) {
+      const deps: OpportunitiesEvaluatorDependencies = {
+        getAgentRole: (id: string) => this.roleSystem?.getAgentRole(id),
+        getPreferredResourceForRole: (roleType: string) => {
+          // TODO: Implement getPreferredResourceForRole
+          return null;
+        },
+        findNearestResource: (id: string, resourceType: string) => {
+          // TODO: Implement findNearestResource
+          return null;
+        },
+      };
+      opportunities.push(...evaluateWorkOpportunities(deps, aiState));
+    }
+    
+    // Exploration opportunities
+    opportunities.push(...evaluateExplorationGoals(aiState));
 
     if (opportunities.length > 0) {
       // Sort by utility and pick best
-      opportunities.sort((a, b) => b.utility - a.utility);
+      opportunities.sort((a: AIGoal, b: AIGoal) => {
+        const aPriority = a.priority || 0;
+        const bPriority = b.priority || 0;
+        return bPriority - aPriority;
+      });
       return opportunities[0];
     }
 
     // 3. Default/Idle behavior
     return {
       id: `idle_${Date.now()}`,
-      type: "idle",
+      type: "idle" as GoalType,
       priority: 0,
       description: "Idling",
       createdAt: Date.now(),
-    };
+    } as AIGoal;
   }
 
   /**
@@ -268,6 +291,9 @@ export class AISystem extends EventEmitter {
     const neuroticism = 1 - (traits.bravery || 0.5);
 
     return {
+      cooperation: traits.cooperation,
+      diligence: traits.diligence,
+      curiosity: traits.curiosity,
       openness,
       conscientiousness,
       extraversion,
@@ -276,11 +302,19 @@ export class AISystem extends EventEmitter {
       // Derived behavioral tendencies
       riskTolerance: (traits.bravery || 0.5) * 0.7 + (traits.curiosity || 0.5) * 0.3,
       socialPreference: isChild
-        ? 0.8
-        : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4,
+        ? "extroverted"
+        : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 > 0.6
+          ? "extroverted"
+          : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 < 0.4
+            ? "introverted"
+            : "balanced",
       workEthic: isChild
-        ? 0.3
-        : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2,
+        ? "lazy"
+        : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 > 0.7
+          ? "workaholic"
+          : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 < 0.3
+            ? "lazy"
+            : "balanced",
       explorationType:
         (traits.curiosity || 0.5) > 0.7 ? "adventurous" : "cautious",
     };
@@ -288,14 +322,17 @@ export class AISystem extends EventEmitter {
 
   private generatePersonalityFallback(): AgentPersonality {
     return {
+      cooperation: 0.5,
+      diligence: 0.5,
+      curiosity: 0.5,
       openness: 0.5,
       conscientiousness: 0.5,
       extraversion: 0.5,
       agreeableness: 0.5,
       neuroticism: 0.5,
       riskTolerance: 0.5,
-      socialPreference: 0.5,
-      workEthic: 0.5,
+      socialPreference: "balanced",
+      workEthic: "balanced",
       explorationType: "balanced",
     };
   }
@@ -314,12 +351,13 @@ export class AISystem extends EventEmitter {
     }
 
     return {
-      agentId,
+      entityId: agentId,
       personality,
       memory: {
-        lastInteractionTime: {},
+        lastSeenThreats: [],
         visitedZones: new Set(),
-        knownResources: new Map(),
+        recentInteractions: [],
+        knownResourceLocations: new Map(),
         // Extended memory fields
         homeZoneId: undefined,
         successfulActivities: new Map(),
@@ -328,6 +366,8 @@ export class AISystem extends EventEmitter {
         lastMemoryCleanup: Date.now(),
       },
       currentGoal: null,
+      goalQueue: [],
+      lastDecisionTime: Date.now(),
       currentAction: null,
       offDuty: false,
     };
@@ -346,14 +386,16 @@ export class AISystem extends EventEmitter {
     aiState.memory.visitedZones.add(zoneId);
 
     // Handle assist goals
-    if (goal.type.startsWith("assist_") && goal.data?.targetAgentId) {
+    if (goal.type.startsWith("assist_") && goal.data && goal.data.targetAgentId) {
       const targetId = goal.data.targetAgentId as string;
       const resourceType = goal.data.resourceType as string;
       const amount = (goal.data.amount as number) || 10;
 
       if (this.inventorySystem && this.socialSystem) {
         const inv = this.inventorySystem.getAgentInventory(entityId);
-        if (inv && inv[resourceType as keyof typeof inv] >= amount) {
+        if (!inv) return;
+        const resourceValue = inv[resourceType as keyof typeof inv];
+        if (typeof resourceValue === "number" && resourceValue >= amount) {
           this.inventorySystem.removeFromAgent(entityId, resourceType as any, amount);
           this.inventorySystem.addResource(targetId, resourceType as any, amount);
           this.socialSystem.registerFriendlyInteraction(entityId, targetId);
@@ -389,7 +431,7 @@ export class AISystem extends EventEmitter {
     if (this.roleSystem && this.socialSystem) {
       const role = this.roleSystem.getAgentRole(entityId);
       if (
-        role?.type === "guard" &&
+        role?.roleType === "guard" &&
         (goal.targetZoneId || "").toLowerCase().includes("defense")
       ) {
         this.socialSystem.imposeLocalTruces(entityId, 140, 45000);
