@@ -3,3 +3,8 @@
 node_modules/
 dist
 coverage
+
+# Environment variables
+.env
+.env.local
+.env.*.local

@@ -26,10 +26,10 @@ export class SocialSystem {
 
   private decayEdges(dt: number): void {
     this.edges.forEach((neighbors) => {
-      neighbors.forEach((affinity, b) => {
+      neighbors.forEach((affinity, neighborId) => {
         if (affinity > 0) {
           const newAffinity = Math.max(0, affinity - this.config.decayPerSecond * dt);
-          neighbors.set(b, newAffinity);
+          neighbors.set(neighborId, newAffinity);
         }
       });
     });

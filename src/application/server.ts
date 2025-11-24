@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { WebSocketServer, WebSocket } from "ws";
 import app from "./app";
 import { CONFIG } from "../config/config";

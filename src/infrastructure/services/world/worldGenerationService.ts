@@ -18,11 +18,13 @@ export class WorldGenerationService {
 
   private initializeGenerators(config: WorldGenConfig): void {
     this.noiseGen = new NoiseUtils(config.seed);
-    // rng and voronoiGen would be initialized here for future use
-    // Currently only noiseGen is used for biome generation
-    // Config is used via config.seed above, but voronoiGen and rng are not yet implemented
-    void config.width; // Keep for potential future use
-    void config.height; // Keep for potential future use
+    // Validate config dimensions
+    if (config.width <= 0 || config.height <= 0) {
+      throw new Error("World generation config dimensions must be positive");
+    }
+    // voronoiGen and rng would be initialized here when implemented
+    // const voronoiGen = new VoronoiGenerator(config.seed);
+    // const rng = seedrandom(config.seed.toString());
   }
 
   async generateChunk(x: number, y: number, config: WorldGenConfig): Promise<TerrainTile[][]> {

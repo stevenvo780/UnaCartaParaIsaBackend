@@ -66,10 +66,17 @@ export class AmbientAwarenessSystem {
     for (const data of samples) {
       const wellbeing =
         100 -
-        ((data.needs.hunger + data.needs.thirst + (100 - data.needs.energy) + (100 - data.needs.hygiene)) /
-          4);
+        (data.needs.hunger +
+          data.needs.thirst +
+          (100 - data.needs.energy) +
+          (100 - data.needs.hygiene)) /
+        4;
       total += wellbeing;
-      if (data.needs.hunger > 80 || data.needs.thirst > 80 || data.needs.energy < 20) {
+      if (
+        data.needs.hunger > 80 ||
+        data.needs.thirst > 80 ||
+        data.needs.energy < 20
+      ) {
         critical++;
       }
     }
@@ -79,8 +86,11 @@ export class AmbientAwarenessSystem {
     for (const data of samples) {
       const wellbeing =
         100 -
-        ((data.needs.hunger + data.needs.thirst + (100 - data.needs.energy) + (100 - data.needs.hygiene)) /
-          4);
+        (data.needs.hunger +
+          data.needs.thirst +
+          (100 - data.needs.energy) +
+          (100 - data.needs.hygiene)) /
+        4;
       varianceSum += Math.pow(wellbeing - average, 2);
     }
     const variance = Math.sqrt(varianceSum / samples.length) / 100;
@@ -92,8 +102,10 @@ export class AmbientAwarenessSystem {
 
     let trend: CollectiveWellbeing["trend"] = "stable";
     if (this.wellbeingHistory.length >= 10) {
-      const recent = this.wellbeingHistory.slice(-5).reduce((a, b) => a + b, 0) / 5;
-      const older = this.wellbeingHistory.slice(-10, -5).reduce((a, b) => a + b, 0) / 5;
+      const recent =
+        this.wellbeingHistory.slice(-5).reduce((a, b) => a + b, 0) / 5;
+      const older =
+        this.wellbeingHistory.slice(-10, -5).reduce((a, b) => a + b, 0) / 5;
       if (recent > older + 2) trend = "improving";
       else if (recent < older - 2) trend = "worsening";
     }
@@ -123,7 +135,10 @@ export class AmbientAwarenessSystem {
     const musicMood = this.resolveMusicMood(wellbeing);
     const lightingTint = this.resolveTint(wellbeing.mood);
     const particleIntensity = this.resolveParticleIntensity(wellbeing.mood);
-    const worldPulseRate = this.resolvePulseRate(wellbeing.mood, wellbeing.trend);
+    const worldPulseRate = this.resolvePulseRate(
+      wellbeing.mood,
+      wellbeing.trend,
+    );
     const weatherBias = this.resolveWeatherBias(wellbeing.mood);
 
     return {
@@ -136,7 +151,8 @@ export class AmbientAwarenessSystem {
   }
 
   private resolveMusicMood(wellbeing: CollectiveWellbeing): string {
-    if (wellbeing.mood === "thriving" && wellbeing.trend === "improving") return "harmonious";
+    if (wellbeing.mood === "thriving" && wellbeing.trend === "improving")
+      return "harmonious";
     if (wellbeing.mood === "comfortable") return "neutral";
     if (wellbeing.mood === "stressed") return "tense";
     if (wellbeing.mood === "crisis") return "ominous";
@@ -178,7 +194,10 @@ export class AmbientAwarenessSystem {
     }
   }
 
-  private resolvePulseRate(mood: AmbientMood, trend: CollectiveWellbeing["trend"]): number {
+  private resolvePulseRate(
+    mood: AmbientMood,
+    trend: CollectiveWellbeing["trend"],
+  ): number {
     let base = 1;
     switch (mood) {
       case "thriving":

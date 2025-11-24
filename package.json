@@ -17,6 +17,7 @@
     "@types/ws": "^8.18.1",
     "cors": "^2.8.5",
     "delaunator": "^5.0.1",
+    "dotenv": "^17.2.3",
     "express": "^4.18.2",
     "seedrandom": "^3.0.5",
     "ssh2-sftp-client": "^12.0.1",

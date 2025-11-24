@@ -1,12 +1,15 @@
 export class SpatialGrid<T> {
   private grid: Map<string, Set<{ item: T; x: number; y: number }>> = new Map();
   private cellSize: number;
+  private readonly width: number;
+  private readonly height: number;
 
-  constructor(_width: number, _height: number, cellSize: number) {
-    // width and height parameters kept for API compatibility but not currently used
-    // They may be used in the future for bounds checking
-    void _width;
-    void _height;
+  constructor(width: number, height: number, cellSize: number) {
+    if (width <= 0 || height <= 0) {
+      throw new Error("SpatialGrid dimensions must be positive");
+    }
+    this.width = width;
+    this.height = height;
     this.cellSize = cellSize;
   }
 
@@ -17,6 +20,12 @@ export class SpatialGrid<T> {
   }
 
   public insert(item: T, x: number, y: number): void {
+    // Validate bounds if dimensions are set
+    if (this.width > 0 && this.height > 0) {
+      if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+        return; // Out of bounds, ignore
+      }
+    }
     const key = this.getKey(x, y);
     if (!this.grid.has(key)) {
       this.grid.set(key, new Set());

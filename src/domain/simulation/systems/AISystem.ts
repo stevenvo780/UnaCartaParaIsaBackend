@@ -1,6 +1,6 @@
-import { EventEmitter } from 'node:events';
-import type { GameState } from '../../types/game-types';
-import type { AgentProfile } from '../../types/simulation/agents';
+import { EventEmitter } from "node:events";
+import type { GameState } from "../../types/game-types";
+import type { AgentProfile } from "../../types/simulation/agents";
 import type {
   AIState,
   AIGoal,
@@ -8,17 +8,17 @@ import type {
   AISystemConfig,
   AgentPersonality,
   AgentMemory,
-} from '../../types/simulation/ai';
-import { simulationEvents, GameEventNames } from '../core/events';
-import { evaluateCriticalNeeds } from './ai/NeedsEvaluator';
+} from "../../types/simulation/ai";
+import { simulationEvents, GameEventNames } from "../core/events";
+import { evaluateCriticalNeeds } from "./ai/NeedsEvaluator";
 import {
   evaluateWorkOpportunities,
   evaluateExplorationGoals,
-} from './ai/OpportunitiesEvaluator';
-import type { NeedsSystem } from './NeedsSystem';
-import type { RoleSystem } from './RoleSystem';
-import type { WorldResourceSystem } from './WorldResourceSystem';
-import type { WorldResourceType } from '../../types/simulation/worldResources';
+} from "./ai/OpportunitiesEvaluator";
+import type { NeedsSystem } from "./NeedsSystem";
+import type { RoleSystem } from "./RoleSystem";
+import type { WorldResourceSystem } from "./WorldResourceSystem";
+import type { WorldResourceType } from "../../types/simulation/worldResources";
 
 const DEFAULT_AI_CONFIG: AISystemConfig = {
   decisionIntervalMs: 500,
@@ -45,7 +45,7 @@ export class AISystem extends EventEmitter {
       needsSystem?: NeedsSystem;
       roleSystem?: RoleSystem;
       worldResourceSystem?: WorldResourceSystem;
-    }
+    },
   ) {
     super();
     this.gameState = gameState;
@@ -58,7 +58,7 @@ export class AISystem extends EventEmitter {
       this.worldResourceSystem = systems.worldResourceSystem;
     }
 
-    console.log('🤖 AISystem (Backend) initialized');
+    console.log("🤖 AISystem (Backend) initialized");
   }
 
   public update(_deltaMs: number): void {
@@ -75,7 +75,7 @@ export class AISystem extends EventEmitter {
     const batchStart = this.currentBatchIndex;
     const batchEnd = Math.min(
       batchStart + this.config.batchSize,
-      agents.length
+      agents.length,
     );
 
     for (let i = batchStart; i < batchEnd; i++) {
@@ -91,7 +91,7 @@ export class AISystem extends EventEmitter {
 
   private getAdultAgents(): AgentProfile[] {
     return (this.gameState.agents || []).filter(
-      (e) => e.lifeStage === 'adult' && !e.immortal
+      (e) => e.lifeStage === "adult" && !e.immortal,
     );
   }
 
@@ -111,7 +111,7 @@ export class AISystem extends EventEmitter {
       const goalAge = now - aiState.currentGoal.createdAt;
       if (goalAge > this.config.goalTimeoutMs) {
         aiState.currentGoal = null;
-        this.emit('goalExpired', { agentId: agent.id });
+        this.emit("goalExpired", { agentId: agent.id });
       } else {
         return;
       }
@@ -178,7 +178,7 @@ export class AISystem extends EventEmitter {
               this.findNearestResourceForEntity(entityId, resourceType)
             : undefined,
         },
-        aiState
+        aiState,
       );
       allGoals.push(...needsGoals);
     }
@@ -195,7 +195,7 @@ export class AISystem extends EventEmitter {
               this.findNearestResourceForEntity(entityId, resourceType)
             : undefined,
         },
-        aiState
+        aiState,
       );
       allGoals.push(...workGoals);
     }
@@ -212,13 +212,13 @@ export class AISystem extends EventEmitter {
 
   private findNearestResourceForEntity(
     _entityId: string,
-    resourceType: string
+    resourceType: string,
   ): { id: string; x: number; y: number } | null {
     if (!this.worldResourceSystem) return null;
 
     // Get all resources of this type
     const resources = this.worldResourceSystem.getResourcesByType(
-      resourceType as WorldResourceType
+      resourceType as WorldResourceType,
     );
     if (resources.length === 0) return null;
 
@@ -233,10 +233,10 @@ export class AISystem extends EventEmitter {
 
   private getPreferredResourceForRole(roleType: string): string | null {
     const roleResourceMap: Record<string, string> = {
-      logger: 'tree',
-      quarryman: 'rock',
-      farmer: 'wheat',
-      gatherer: 'berry_bush',
+      logger: "tree",
+      quarryman: "rock",
+      farmer: "wheat",
+      gatherer: "berry_bush",
     };
     return roleResourceMap[roleType] || null;
   }
@@ -244,28 +244,53 @@ export class AISystem extends EventEmitter {
   private goalToAction(
     goal: AIGoal,
     agentId: string,
-    timestamp: number
+    timestamp: number,
   ): AgentAction | null {
     // TODO: Implement goal-to-action conversion
     // For now, create basic action
 
     switch (goal.type) {
-      case 'explore':
+      case "explore":
         return {
-          actionType: 'move',
+          actionType: "move",
           agentId,
           targetPosition: goal.targetPosition,
           timestamp,
           data: { goalType: goal.type },
         };
 
-      case 'satisfy_need':
-        // Will implement need-specific actions
+      case "satisfy_need":
+        if (goal.data?.action === "rest") {
+          return {
+            actionType: "sleep",
+            agentId,
+            timestamp,
+            data: { need: "energy" },
+          };
+        }
+
+        if (goal.targetId && goal.targetPosition) {
+          let actionType: "eat" | "drink" | "harvest" = "harvest";
+          if (goal.data?.need === "hunger") actionType = "eat";
+          if (goal.data?.need === "thirst") actionType = "drink";
+
+          return {
+            actionType,
+            agentId,
+            targetId: goal.targetId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+            data: {
+              resourceType: goal.data?.resourceType,
+              need: goal.data?.need,
+            },
+          };
+        }
         return null;
 
-      case 'work':
+      case "work":
         return {
-          actionType: 'work',
+          actionType: "work",
           agentId,
           targetZoneId: goal.targetZoneId,
           timestamp,

@@ -154,7 +154,7 @@ export class ConflictResolutionSystem {
     const now = Date.now();
     const activeCardsEntries = Array.from(this.activeCards.entries());
     for (const [cardId, meta] of activeCardsEntries) {
-      const mediation = this.mediationAttempts.find((m) => m.cardId === cardId);
+      const mediation = this.mediationAttempts.find((m: MediationAttempt) => m.cardId === cardId);
       if (
         mediation &&
         now - mediation.timestamp > CONFLICT_CONFIG.truce.cardDisplayDuration
@@ -207,7 +207,7 @@ export class ConflictResolutionSystem {
       };
     }
     // Convertir active conflicts a truces para norms
-    this.gameState.norms.truces = activeConflicts.map(conflict => ({
+    this.gameState.norms.truces = activeConflicts.map((conflict: ActiveConflict) => ({
       cardId: conflict.cardId,
       attackerId: conflict.attackerId,
       targetId: conflict.targetId,
@@ -217,7 +217,7 @@ export class ConflictResolutionSystem {
 
   public getActiveConflicts(): ActiveConflict[] {
     const now = Date.now();
-    return Array.from(this.activeCards.entries()).map(([cardId, meta]) => ({
+    return Array.from(this.activeCards.entries()).map(([cardId, meta]: [string, { aId: string; bId: string }]) => ({
       cardId,
       attackerId: meta.aId,
       targetId: meta.bId,

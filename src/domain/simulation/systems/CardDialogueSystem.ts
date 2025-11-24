@@ -14,8 +14,22 @@ interface CardTemplate {
   title: string;
   contentVariations: string[];
   triggers: {
-    needsBased?: Array<{ need: keyof NeedsState; threshold: number; operator: "below" | "above" }>;
-    timeBased?: Array<{ time: "dawn" | "day" | "dusk" | "night"; frequency: "daily" | "hourly" }>;
+    needsBased?: Array<{
+      need: keyof NeedsState;
+      threshold: number;
+      operator: "below" | "above";
+    }>;
+    timeBased?: Array<{
+      time: "dawn" | "day" | "dusk" | "night";
+      frequency: "daily" | "hourly";
+    }>;
+    relationshipBased?: Array<{
+      minLevel: number;
+      withRole?: string;
+    }>;
+    eventBased?: Array<{
+      event: string;
+    }>;
   };
   choices?: DialogueChoice[];
   emotionalTone: DialogueTone;
@@ -47,8 +61,8 @@ export class CardDialogueSystem {
 
   constructor(
     private readonly gameState: GameState,
-    private readonly needsSystem: NeedsSystem,
-  ) {}
+    private readonly needsSystem: NeedsSystem
+  ) { }
 
   public update(_deltaMs: number): void {
     const now = Date.now();
@@ -60,7 +74,9 @@ export class CardDialogueSystem {
     this.flushQueue(now);
     this.cleanupExpired(now);
 
-    this.snapshot.active = Array.from(this.activeCards.values()).map((entry) => entry.card);
+    this.snapshot.active = Array.from(this.activeCards.values()).map(
+      (entry) => entry.card
+    );
     this.snapshot.history = this.history.slice(-this.MAX_HISTORY);
     this.snapshot.queueSize = this.queue.length;
     this.snapshot.lastGeneratedAt = this.lastGeneration;
@@ -77,12 +93,28 @@ export class CardDialogueSystem {
     for (const data of needs) {
       const entityId = data.entityId;
       const matchingTemplates = this.cardTemplates.filter((template) =>
-        this.matchesTemplate(template, data.needs, now),
+        this.matchesTemplate(template, data.needs, now)
       );
 
       if (matchingTemplates.length === 0) continue;
-      const template = matchingTemplates[Math.floor(Math.random() * matchingTemplates.length)];
-      const card = this.createCard(template, entityId, now);
+
+      // Scoring logic restored
+      const scoredTemplates = matchingTemplates.map((template) => ({
+        template,
+        score: this.computeTemplateScore(template, data.needs),
+      }));
+
+      scoredTemplates.sort((a, b) => b.score - a.score);
+
+      // Pick top 1 or random from top 3
+      const topCandidates = scoredTemplates.slice(0, 3);
+      if (topCandidates.length === 0) continue;
+
+      const selected =
+        topCandidates[Math.floor(Math.random() * topCandidates.length)]
+          .template;
+
+      const card = this.createCard(selected, entityId, now);
       this.queue.push(card);
     }
   }
@@ -107,12 +139,18 @@ export class CardDialogueSystem {
     }
   }
 
-  private matchesTemplate(template: CardTemplate, needs: NeedsState, now: number): boolean {
+  private matchesTemplate(
+    template: CardTemplate,
+    needs: NeedsState,
+    now: number
+  ): boolean {
     if (template.triggers.needsBased) {
       const satisfied = template.triggers.needsBased.every((trigger) => {
         const value = needs[trigger.need];
         if (value === undefined) return false;
-        return trigger.operator === "below" ? value <= trigger.threshold : value >= trigger.threshold;
+        return trigger.operator === "below"
+          ? value <= trigger.threshold
+          : value >= trigger.threshold;
       });
       if (!satisfied) return false;
     }
@@ -120,11 +158,40 @@ export class CardDialogueSystem {
     if (template.triggers.timeBased) {
       const hour = new Date(now).getUTCHours();
       const timeOfDay = this.resolveTimeOfDay(hour);
-      const satisfied = template.triggers.timeBased.some((trigger) => trigger.time === timeOfDay);
+      const satisfied = template.triggers.timeBased.some(
+        (trigger) => trigger.time === timeOfDay
+      );
       if (!satisfied) return false;
     }
 
+    // Placeholder for relationship/event triggers (requires more system access)
+    if (template.triggers.relationshipBased) {
+      // TODO: Check relationships
+    }
+
     return true;
+  }
+
+  private computeTemplateScore(
+    template: CardTemplate,
+    needs: NeedsState
+  ): number {
+    let score = 0.5;
+
+    if (template.triggers.needsBased) {
+      for (const trigger of template.triggers.needsBased) {
+        const val = needs[trigger.need] as number;
+        if (trigger.operator === "below" && val < trigger.threshold) {
+          score += (trigger.threshold - val) / 100; // Higher score if far below threshold
+        } else if (trigger.operator === "above" && val > trigger.threshold) {
+          score += (val - trigger.threshold) / 100;
+        }
+      }
+    }
+
+    if (template.emotionalTone === "worried") score += 0.2;
+
+    return score;
   }
 
   private resolveTimeOfDay(hour: number): "dawn" | "day" | "dusk" | "night" {
@@ -134,8 +201,15 @@ export class CardDialogueSystem {
     return "night";
   }
 
-  private createCard(template: CardTemplate, entityId: string, now: number): DialogueCard {
-    const contentVariation = template.contentVariations[Math.floor(Math.random() * template.contentVariations.length)];
+  private createCard(
+    template: CardTemplate,
+    entityId: string,
+    now: number
+  ): DialogueCard {
+    const contentVariation =
+      template.contentVariations[
+      Math.floor(Math.random() * template.contentVariations.length)
+      ];
     const priority = this.resolvePriority(template);
 
     return {
@@ -155,7 +229,9 @@ export class CardDialogueSystem {
 
   private resolvePriority(template: CardTemplate): DialoguePriority {
     if (!template.triggers.needsBased) return "low";
-    const maxThreshold = Math.max(...template.triggers.needsBased.map((t) => t.threshold));
+    const maxThreshold = Math.max(
+      ...template.triggers.needsBased.map((t) => t.threshold)
+    );
     if (maxThreshold >= 80) return "urgent";
     if (maxThreshold >= 60) return "high";
     if (maxThreshold >= 40) return "medium";
@@ -243,14 +319,20 @@ export class CardDialogueSystem {
     const choice = card.choices?.find((c) => c.id === choiceId);
     if (!choice) return false;
 
-    // Procesar la respuesta
+    // Remove card
     this.activeCards.delete(cardId);
 
-    // Emitir evento para que otros sistemas reaccionen
-    if (choice.outcome === "positive") {
-      // Mejorar necesidades o relaciones
-    } else if (choice.outcome === "negative") {
-      // Empeorar relaciones
+    // Apply effects
+    if (choice.effects) {
+      const entityId = card.participants[0];
+      if (choice.effects.needs) {
+        for (const [need, value] of Object.entries(choice.effects.needs)) {
+          if (typeof value === "number") {
+            this.needsSystem.modifyNeed(entityId, need, value);
+          }
+        }
+      }
+      // TODO: Apply relationship effects, mission unlocks, etc.
     }
 
     return true;

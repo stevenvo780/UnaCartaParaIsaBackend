@@ -15,7 +15,7 @@ import type { AgentRole } from "./simulation/roles";
 import type { LegendRecord } from "./simulation/legends";
 import type { FamilyTree } from "./simulation/genealogy";
 import type { Inventory } from "./simulation/economy";
-import type { TradeOffer, TradeRecord } from "./simulation/trade";
+import type { TradeRecord } from "./simulation/trade";
 import type { MarriageGroup } from "./simulation/marriage";
 import type { Quest } from "./simulation/quests";
 import type { ActiveConflict, ConflictRecord, ConflictStats } from "./simulation/conflict";
@@ -276,7 +276,7 @@ export interface KnowledgeGraphState {
     target: string;
     weight: number;
     type: 'related' | 'prerequisite' | 'derived';
-  }>;
+cor  }>;
 }
 
 export interface TaskState {
