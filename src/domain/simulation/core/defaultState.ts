@@ -69,6 +69,105 @@ export function createInitialGameState(): GameState {
   };
 }
 
+/**
+ * Clona el estado completo usando structuredClone (2-3x más rápido que JSON.parse/stringify)
+ */
 export function cloneGameState(state: GameState): GameState {
-  return JSON.parse(JSON.stringify(state)) as GameState;
+  // structuredClone es nativo y mucho más rápido que JSON serialization
+  // Soporta Map, Set, Date, etc. que JSON no puede manejar
+  try {
+    return structuredClone(state);
+  } catch (err) {
+    // Fallback a JSON si structuredClone falla (puede pasar con objetos muy complejos)
+    // eslint-disable-next-line no-console
+    console.warn("structuredClone failed, falling back to JSON:", err);
+    return JSON.parse(JSON.stringify(state)) as GameState;
+  }
+}
+
+/**
+ * Clona solo las secciones del estado que han cambiado (marcadas como dirty)
+ * Esto es mucho más eficiente cuando solo cambian partes pequeñas del estado
+ */
+export function cloneGameStateDelta(
+  state: GameState,
+  dirtyFlags: {
+    agents?: boolean;
+    entities?: boolean;
+    animals?: boolean;
+    zones?: boolean;
+    worldResources?: boolean;
+    inventory?: boolean;
+    socialGraph?: boolean;
+    market?: boolean;
+    [key: string]: boolean | undefined;
+  },
+  previousSnapshot?: GameState,
+): GameState {
+  // Si no hay snapshot previo o todos los flags están dirty, clonar todo
+  if (!previousSnapshot || Object.values(dirtyFlags).every((dirty) => dirty)) {
+    return cloneGameState(state);
+  }
+
+  // Crear nuevo objeto y copiar referencias de secciones no dirty
+  const cloned: GameState = { ...state };
+
+  // Solo clonar profundamente las secciones marcadas como dirty
+  if (dirtyFlags.agents) {
+    cloned.agents = structuredClone(state.agents);
+  } else if (previousSnapshot.agents) {
+    cloned.agents = previousSnapshot.agents;
+  }
+
+  if (dirtyFlags.entities) {
+    cloned.entities = structuredClone(state.entities);
+  } else if (previousSnapshot.entities) {
+    cloned.entities = previousSnapshot.entities;
+  }
+
+  if (dirtyFlags.animals) {
+    cloned.animals = structuredClone(state.animals);
+  } else if (previousSnapshot.animals) {
+    cloned.animals = previousSnapshot.animals;
+  }
+
+  if (dirtyFlags.zones) {
+    cloned.zones = structuredClone(state.zones);
+  } else if (previousSnapshot.zones) {
+    cloned.zones = previousSnapshot.zones;
+  }
+
+  if (dirtyFlags.worldResources) {
+    cloned.worldResources = structuredClone(state.worldResources);
+  } else if (previousSnapshot.worldResources) {
+    cloned.worldResources = previousSnapshot.worldResources;
+  }
+
+  if (dirtyFlags.inventory) {
+    cloned.inventory = structuredClone(state.inventory);
+  } else if (previousSnapshot.inventory) {
+    cloned.inventory = previousSnapshot.inventory;
+  }
+
+  if (dirtyFlags.socialGraph) {
+    cloned.socialGraph = structuredClone(state.socialGraph);
+  } else if (previousSnapshot.socialGraph) {
+    cloned.socialGraph = previousSnapshot.socialGraph;
+  }
+
+  if (dirtyFlags.market) {
+    cloned.market = structuredClone(state.market);
+  } else if (previousSnapshot.market) {
+    cloned.market = previousSnapshot.market;
+  }
+
+  // Siempre clonar campos que cambian frecuentemente
+  cloned.time = state.time;
+  cloned.dayTime = state.dayTime;
+  cloned.togetherTime = state.togetherTime;
+  cloned.cycles = state.cycles;
+  cloned.weather = structuredClone(state.weather);
+  cloned.resources = structuredClone(state.resources);
+
+  return cloned;
 }

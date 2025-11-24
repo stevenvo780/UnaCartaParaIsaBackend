@@ -23,7 +23,8 @@ export class NeedsSystem extends EventEmitter {
   private respawnQueue = new Map<string, number>();
 
   private zoneCache = new Map<string, { zones: Zone[]; timestamp: number }>();
-  private readonly ZONE_CACHE_TTL = 5000;
+  // Aumentado de 5s a 15s para reducir búsquedas espaciales costosas
+  private readonly ZONE_CACHE_TTL = 15000;
 
   constructor(
     gameState: GameState,

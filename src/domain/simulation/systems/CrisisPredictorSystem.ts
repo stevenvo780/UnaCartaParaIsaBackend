@@ -7,6 +7,7 @@ import type {
   CrisisSeverity,
   CrisisTrend,
 } from "../../types/simulation/ambient";
+import { simulationEvents, GameEventNames } from "../core/events";
 
 const INDICATOR_CONFIG: Record<
   string,
@@ -34,6 +35,7 @@ export class CrisisPredictorSystem {
   private snapshot: CrisisSnapshot;
   private indicatorHistory = new Map<string, number[]>();
   private readonly MAX_HISTORY = 60;
+  private previousPredictions = new Map<string, CrisisPrediction>();
 
   constructor(
     private readonly gameState: GameState,
@@ -65,6 +67,51 @@ export class CrisisPredictorSystem {
     };
 
     this.gameState.crisisForecast = this.snapshot;
+
+    // Emit events for new or updated predictions
+    this.emitPredictionEvents(predictions);
+  }
+
+  private emitPredictionEvents(predictions: CrisisPrediction[]): void {
+    const currentPredictionIds = new Set(predictions.map((p) => p.id));
+
+    // Emit events for new predictions
+    for (const prediction of predictions) {
+      const previous = this.previousPredictions.get(prediction.id);
+      
+      if (!previous) {
+        // New prediction
+        if (prediction.probability >= 0.7) {
+          simulationEvents.emit(GameEventNames.CRISIS_IMMEDIATE_WARNING, {
+            prediction,
+            timestamp: Date.now(),
+          });
+        } else {
+          simulationEvents.emit(GameEventNames.CRISIS_PREDICTION, {
+            prediction,
+            timestamp: Date.now(),
+          });
+        }
+      } else if (prediction.probability > previous.probability + 0.1) {
+        // Prediction worsened significantly
+        if (prediction.probability >= 0.7) {
+          simulationEvents.emit(GameEventNames.CRISIS_IMMEDIATE_WARNING, {
+            prediction,
+            previousProbability: previous.probability,
+            timestamp: Date.now(),
+          });
+        }
+      }
+      
+      this.previousPredictions.set(prediction.id, prediction);
+    }
+
+    // Remove predictions that are no longer active
+    for (const [id] of this.previousPredictions.entries()) {
+      if (!currentPredictionIds.has(id)) {
+        this.previousPredictions.delete(id);
+      }
+    }
   }
 
   public getSnapshot(): CrisisSnapshot {

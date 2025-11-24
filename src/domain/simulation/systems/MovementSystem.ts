@@ -101,7 +101,8 @@ export class MovementSystem extends EventEmitter {
     { result: PathfindingResult; timestamp: number }
   >();
   private readonly GRID_CACHE_DURATION = 30000;
-  private readonly PATH_CACHE_DURATION = 10000;
+  // Aumentado de 10s a 30s para reducir recálculos de pathfinding costosos
+  private readonly PATH_CACHE_DURATION = 30000;
   private lastCacheCleanup: number = 0;
 
   constructor(gameState: GameState) {

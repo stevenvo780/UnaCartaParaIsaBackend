@@ -18,6 +18,7 @@ import { LifeCycleSystem } from "./LifeCycleSystem";
 import { SocialSystem } from "./SocialSystem";
 import { SpatialGrid } from "../../../utils/SpatialGrid";
 import type { AnimalSystem } from "./AnimalSystem";
+import type { NormsSystem } from "./NormsSystem";
 
 interface CombatConfig {
   decisionIntervalMs: number;
@@ -55,6 +56,7 @@ export class CombatSystem {
   private combatLog: CombatLogEntry[];
 
   private animalSystem?: AnimalSystem;
+  private normsSystem?: NormsSystem;
 
   constructor(
     private readonly state: GameState,
@@ -63,8 +65,10 @@ export class CombatSystem {
     private readonly socialSystem: SocialSystem,
     config?: Partial<CombatConfig>,
     animalSystem?: AnimalSystem,
+    normsSystem?: NormsSystem,
   ) {
     this.animalSystem = animalSystem;
+    this.normsSystem = normsSystem;
     this.config = { ...DEFAULT_COMBAT_CONFIG, ...config };
     const worldWidth = state.worldSize?.width ?? 2000;
     const worldHeight = state.worldSize?.height ?? 2000;
@@ -295,6 +299,30 @@ export class CombatSystem {
     weaponId: WeaponId,
     timestamp: number,
   ): void {
+    // Check for norm violations in protected zones before applying damage
+    if (this.normsSystem && attacker.position) {
+      const zone = this.findZoneAtPosition(attacker.position);
+      if (zone) {
+        const violation = this.normsSystem.handleCombatInZone(
+          attacker.id,
+          target.id,
+          zone.id,
+          zone.type,
+          attacker.position,
+        );
+        if (violation.violated && violation.sanction) {
+          // Apply sanctions if needed (reputation penalty already applied by NormsSystem)
+          if (violation.sanction.truceDuration && this.socialSystem) {
+            this.socialSystem.imposeTruce(
+              attacker.id,
+              target.id,
+              violation.sanction.truceDuration,
+            );
+          }
+        }
+      }
+    }
+
     const weapon = getWeapon(weaponId);
     const targetStats = this.ensureStats(target);
     const attackerStats = this.ensureStats(attacker);
@@ -424,6 +452,24 @@ export class CombatSystem {
         hunterId: attacker.id,
       });
     }
+  }
+
+  private findZoneAtPosition(
+    position: { x: number; y: number },
+  ): { id: string; type: string } | null {
+    const zones = this.state.zones || [];
+    for (const zone of zones) {
+      if (
+        zone.bounds &&
+        position.x >= zone.bounds.x &&
+        position.x <= zone.bounds.x + zone.bounds.width &&
+        position.y >= zone.bounds.y &&
+        position.y <= zone.bounds.y + zone.bounds.height
+      ) {
+        return { id: zone.id, type: zone.type };
+      }
+    }
+    return null;
   }
 
   private ensureStats(entity: SimulationEntity): EntityStats {

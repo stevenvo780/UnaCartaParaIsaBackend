@@ -14,6 +14,7 @@ import {
   SKIN_TONES,
 } from "../../../shared/types/simulation/appearance";
 import { GeneticSpriteSystem } from "./GeneticSpriteSystem";
+import { simulationEvents, GameEventNames } from "../core/events";
 
 interface AppearanceConfig {
   enableGenerationalStyles: boolean;
@@ -157,6 +158,12 @@ export class AppearanceGenerationSystem {
       generation,
       skinTone,
       style: theme.style.name,
+    });
+
+    simulationEvents.emit(GameEventNames.APPEARANCE_GENERATED, {
+      agentId,
+      appearance,
+      timestamp: Date.now(),
     });
 
     return appearance;
@@ -317,6 +324,14 @@ export class AppearanceGenerationSystem {
       groupId,
       symbol: groupApp.symbol,
     });
+
+    simulationEvents.emit(GameEventNames.APPEARANCE_UPDATED, {
+      agentId,
+      appearance,
+      reason: "social_group_assigned",
+      groupId,
+      timestamp: Date.now(),
+    });
   }
 
   public updateForAging(
@@ -335,6 +350,14 @@ export class AppearanceGenerationSystem {
     logger.debug("🎨 Apariencia actualizada por edad", {
       agentId,
       newStage,
+    });
+
+    simulationEvents.emit(GameEventNames.APPEARANCE_UPDATED, {
+      agentId,
+      appearance,
+      reason: "aging",
+      newStage,
+      timestamp: Date.now(),
     });
   }
 

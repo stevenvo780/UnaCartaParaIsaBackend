@@ -1,6 +1,7 @@
 import { EventEmitter } from "node:events";
 import type { GameResources, GameState, Zone } from "../../types/game-types";
 import { cloneGameState, createInitialGameState } from "./defaultState";
+import { StateCache } from "./StateCache";
 import { worldGenerationService } from "../../../infrastructure/services/world/worldGenerationService";
 import { BiomeType } from "../../world/generation/types";
 import { logger } from "../../../infrastructure/utils/logger";
@@ -48,6 +49,7 @@ import { MovementSystem } from "../systems/MovementSystem";
 import { TrailSystem } from "../systems/TrailSystem";
 import type { BuildingLabel } from "../../types/simulation/buildings";
 import { AppearanceGenerationSystem } from "../systems/AppearanceGenerationSystem";
+import { mapEventName } from "./eventNameMapper";
 import type {
   SimulationCommand,
   SimulationConfig,
@@ -66,10 +68,6 @@ import type {
 } from "../../../shared/types/commands/SimulationCommand";
 import type { NeedsConfig } from "../../types/simulation/needs";
 import type { TaskType, TaskMetadata } from "../../types/simulation/tasks";
-interface SimulationEventMap {
-  tick: SimulationSnapshot;
-  commandRejected: SimulationCommand;
-}
 
 export class SimulationRunner {
   private state: GameState;
@@ -136,11 +134,13 @@ export class SimulationRunner {
   private appearanceGenerationSystem: AppearanceGenerationSystem;
   private capturedEvents: SimulationEvent[] = [];
   private eventCaptureListener?: (eventName: string, payload: unknown) => void;
+  private stateCache: StateCache;
 
   constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
     this.state = initialState ?? createInitialGameState();
     this.tickIntervalMs = config?.tickIntervalMs ?? 200;
     this.maxCommandQueue = config?.maxCommandQueue ?? 200;
+    this.stateCache = new StateCache();
     this.worldResourceSystem = new WorldResourceSystem(this.state);
     this.livingLegendsSystem = new LivingLegendsSystem(this.state);
 
@@ -213,6 +213,7 @@ export class SimulationRunner {
       this.socialSystem,
       undefined,
       this.animalSystem,
+      this._normsSystem,
     );
     this.reputationSystem = new ReputationSystem(this.state);
     this._researchSystem = new ResearchSystem(this.state);
@@ -262,6 +263,11 @@ export class SimulationRunner {
       inventorySystem: this.inventorySystem,
       householdSystem: this.householdSystem,
       movementSystem: this.movementSystem,
+      genealogySystem: this._genealogySystem,
+      socialSystem: this.socialSystem,
+      marriageSystem: this.marriageSystem,
+      divineFavorSystem: this.divineFavorSystem,
+      aiSystem: this.aiSystem,
     });
 
     this.needsSystem.setDependencies({
@@ -332,6 +338,13 @@ export class SimulationRunner {
     );
 
     simulationEvents.on(
+      GameEventNames.AGENT_DEATH,
+      (data: { entityId: string; reason?: string }) => {
+        this._genealogySystem.recordDeath(data.entityId);
+      },
+    );
+
+    simulationEvents.on(
       GameEventNames.ANIMAL_HUNTED,
       (data: {
         animalId: string;
@@ -355,12 +368,87 @@ export class SimulationRunner {
       },
     );
 
+    // Connect QuestSystem to events
+    simulationEvents.on(
+      GameEventNames.RESOURCE_GATHERED,
+      (data: {
+        resourceId: string;
+        resourceType: string;
+        harvesterId?: string;
+        position?: { x: number; y: number };
+      }) => {
+        if (data.harvesterId) {
+          this.questSystem.handleEvent({
+            type: "resource_collected",
+            entityId: data.harvesterId,
+            timestamp: Date.now(),
+            data: {
+              resourceType: data.resourceType,
+              amount: 1,
+            },
+          });
+        }
+      },
+    );
+
+    simulationEvents.on(
+      GameEventNames.BUILDING_CONSTRUCTED,
+      (data: {
+        jobId: string;
+        zoneId: string;
+        label: string;
+        completedAt: number;
+      }) => {
+        // Find the agent who completed the building task
+        const job = this.buildingSystem.getConstructionJob(data.jobId);
+        if (job?.taskId) {
+          const task = this.taskSystem.getTask(job.taskId);
+          if (task && task.contributors) {
+            // Notify quest system for all contributors
+            task.contributors.forEach((_contribution, agentId) => {
+              this.questSystem.handleEvent({
+                type: "structure_built",
+                entityId: agentId,
+                timestamp: Date.now(),
+                data: {
+                  structureType: data.label,
+                },
+              });
+            });
+          }
+        }
+      },
+    );
+
+    simulationEvents.on(
+      GameEventNames.DIALOGUE_CARD_RESPONDED,
+      (data: { cardId: string; choiceId: string }) => {
+        // Get the card to find the entity that responded
+        const dialogueState = this.state.dialogueState;
+        if (dialogueState?.active) {
+          const card = dialogueState.active.find((c) => c.id === data.cardId);
+          if (card && card.participants && card.participants.length > 0) {
+            this.questSystem.handleEvent({
+              type: "dialogue_completed",
+              entityId: card.participants[0],
+              timestamp: Date.now(),
+              data: {
+                cardId: data.cardId,
+              },
+            });
+          }
+        }
+      },
+    );
+
     const eventCaptureListener = (
       eventName: string,
       payload: unknown,
     ): void => {
+      // Map backend event names to frontend format
+      const mappedEventName = mapEventName(eventName);
       this.capturedEvents.push({
-        type: eventName,
+        type: mappedEventName,
         payload: payload as SimulationEventPayload | undefined,
         timestamp: Date.now(),
       });
@@ -637,9 +725,14 @@ export class SimulationRunner {
     return true;
   }
 
-  getSnapshot(): SimulationSnapshot {
+  /**
+   * Obtiene un snapshot completo (incluye datos estáticos)
+   * Usar solo al conectar un cliente nuevo
+   */
+  getInitialSnapshot(): SimulationSnapshot {
     const events =
       this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
+    // Para el snapshot inicial, clonar todo incluyendo datos estáticos
     const snapshotState = cloneGameState(this.state);
     snapshotState.genealogy = this._genealogySystem.getSerializedFamilyTree();
 
@@ -658,6 +751,55 @@ export class SimulationRunner {
     };
   }
 
+  /**
+   * Obtiene un snapshot optimizado para ticks (sin datos estáticos)
+   * Usa StateCache para solo clonar lo que cambió
+   */
+  getTickSnapshot(): SimulationSnapshot {
+    const events =
+      this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
+
+    // Usar cache inteligente para solo clonar secciones que cambiaron
+    const snapshotState = this.stateCache.getSnapshot(
+      this.state,
+      this.tickCounter,
+    );
+
+    // Actualizar campos que siempre cambian
+    snapshotState.genealogy = this._genealogySystem.getSerializedFamilyTree();
+
+    const allLegends = this.livingLegendsSystem.getAllLegends();
+    const activeLegends = this.livingLegendsSystem.getActiveLegends();
+    snapshotState.legends = {
+      records: allLegends,
+      activeLegends,
+    };
+
+    // Excluir datos estáticos del snapshot de tick (no cambian)
+    // Estos se envían solo en el snapshot inicial
+    const tickState = { ...snapshotState };
+    delete tickState.terrainTiles;
+    delete tickState.roads;
+    delete tickState.objectLayers;
+    // worldSize puede cambiar pero es raro, mantenerlo por ahora
+
+    return {
+      state: tickState,
+      tick: this.tickCounter,
+      updatedAt: this.lastUpdate,
+      events,
+    };
+  }
+
+  /**
+   * @deprecated Usar getInitialSnapshot() o getTickSnapshot() según el caso
+   * Mantenido para compatibilidad
+   */
+  getSnapshot(): SimulationSnapshot {
+    // Por defecto, retornar snapshot de tick (más eficiente)
+    return this.getTickSnapshot();
+  }
+
   private step(): void {
     const now = Date.now();
     const delta = now - this.lastUpdate;
@@ -666,34 +808,68 @@ export class SimulationRunner {
     this.processCommands();
     const scaledDelta = delta * this.timeScale;
 
+    // Marcar secciones como dirty antes de actualizar sistemas
+    // Esto permite al StateCache saber qué partes del estado cambiaron
+    const dirtySections: string[] = [];
+
     this.advanceSimulation(scaledDelta);
     this.worldResourceSystem.update(scaledDelta);
+    dirtySections.push("worldResources");
+
     this.livingLegendsSystem.update(scaledDelta);
     this.lifeCycleSystem.update(scaledDelta);
+    dirtySections.push("agents", "entities"); // LifeCycle puede cambiar agents/entities
+
     this.needsSystem.update(scaledDelta);
     this.socialSystem.update(scaledDelta);
+    dirtySections.push("socialGraph");
+
     this.inventorySystem.update();
+    dirtySections.push("inventory");
+
     this.resourceReservationSystem.update();
     this.economySystem.update(scaledDelta);
     this.marketSystem.update(scaledDelta);
+    dirtySections.push("market");
+
     this.roleSystem.update(scaledDelta);
     this.aiSystem.update(scaledDelta);
+    dirtySections.push("agents"); // AI puede cambiar agent behavior
+
     this.divineFavorSystem.update(scaledDelta);
     this.governanceSystem.update(scaledDelta);
     this.householdSystem.update(scaledDelta);
     this.buildingSystem.update(scaledDelta);
     this.buildingMaintenanceSystem.update(scaledDelta);
+    dirtySections.push("zones"); // Buildings pueden cambiar zones
+
     this.productionSystem.update(scaledDelta);
     this.enhancedCraftingSystem.update();
     this.animalSystem.update(scaledDelta);
+    dirtySections.push("animals");
+
     this.itemGenerationSystem.update(scaledDelta);
     this.combatSystem.update(scaledDelta);
+    dirtySections.push("entities"); // Combat puede cambiar entities
+
     this.reputationSystem.update();
+    dirtySections.push("reputation");
+
     this.questSystem.update();
+    dirtySections.push("quests");
+
     this.taskSystem.update();
+    dirtySections.push("tasks");
+
     this.tradeSystem.update();
+    dirtySections.push("trade");
+
     this.marriageSystem.update();
+    dirtySections.push("marriage");
+
     this.conflictResolutionSystem.update();
+    dirtySections.push("conflicts");
+
     this.resourceAttractionSystem.update(scaledDelta);
     this.crisisPredictorSystem.update(scaledDelta);
     this.ambientAwarenessSystem.update(scaledDelta);
@@ -702,14 +878,26 @@ export class SimulationRunner {
     this.emergenceSystem.update(scaledDelta);
     this.interactionGameSystem.update(scaledDelta);
     this.knowledgeNetworkSystem.update(scaledDelta);
+    dirtySections.push("knowledgeGraph");
+
     this.movementSystem.update(scaledDelta);
+    dirtySections.push("entities"); // Movement cambia posiciones de entities
+
     this.trailSystem.update(scaledDelta);
     this._researchSystem.update();
+    dirtySections.push("research");
+
     this._recipeDiscoverySystem.update();
+    dirtySections.push("recipes");
+
     this._normsSystem.update();
+    dirtySections.push("norms");
+
+    // Marcar todas las secciones afectadas como dirty
+    this.stateCache.markDirtyMultiple(dirtySections);
 
     this.tickCounter += 1;
-    const snapshot = this.getSnapshot();
+    const snapshot = this.getTickSnapshot();
     this.emitter.emit("tick", snapshot);
 
     this.capturedEvents = [];

@@ -49,7 +49,8 @@ export class AnimalSystem {
       timestamp: number;
     }
   >();
-  private readonly CACHE_DURATION = 5000;
+  // Aumentado de 5s a 15s para reducir búsquedas espaciales costosas
+  private readonly CACHE_DURATION = 15000;
 
   constructor(
     gameState: GameState,

@@ -189,6 +189,9 @@ export class ConflictResolutionSystem {
     this.gameState.conflicts.history = this.getConflictHistory(50);
     this.gameState.conflicts.stats = this.getConflictStats();
 
+    // Note: ConflictResolutionSystem manages truces for active conflict mediation,
+    // while NormsSystem manages truces for norm violations. Both write to gameState.norms.truces
+    // but serve different purposes: conflict mediation vs. sanction enforcement.
     if (!this.gameState.norms) {
       this.gameState.norms = {
         violations: [],
@@ -204,6 +207,7 @@ export class ConflictResolutionSystem {
         truces: [],
       };
     }
+    // Sync active conflict truces to norms state for UI display
     this.gameState.norms.truces = activeConflicts.map(
       (conflict: ActiveConflict) => ({
         cardId: conflict.cardId,

@@ -68,6 +68,10 @@ export class BuildingSystem {
     this.taskSystem = taskSystem;
   }
 
+  public getConstructionJob(jobId: string): ConstructionJob | undefined {
+    return this.constructionJobs.get(jobId);
+  }
+
   public update(_deltaMs: number): void {
     const now = this.now();
     this.completeFinishedJobs(now);
