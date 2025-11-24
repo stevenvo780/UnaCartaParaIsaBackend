@@ -40,6 +40,8 @@ import { AmbientAwarenessSystem } from "./systems/AmbientAwarenessSystem.js";
 import { CardDialogueSystem } from "./systems/CardDialogueSystem.js";
 import { EmergenceSystem } from "./systems/EmergenceSystem.js";
 import { TimeSystem } from "./systems/TimeSystem.js";
+import { InteractionGameSystem } from "./systems/InteractionGameSystem.js";
+import { KnowledgeNetworkSystem } from "./systems/KnowledgeNetworkSystem.js";
 import type {
   SimulationCommand,
   SimulationConfig,
@@ -105,6 +107,8 @@ export class SimulationRunner {
   private cardDialogueSystem: CardDialogueSystem;
   private emergenceSystem: EmergenceSystem;
   private timeSystem: TimeSystem;
+  private interactionGameSystem: InteractionGameSystem;
+  private knowledgeNetworkSystem: KnowledgeNetworkSystem;
   private capturedEvents: SimulationEvent[] = [];
   private eventCaptureListener?: (eventName: string, payload: unknown) => void;
 
@@ -218,6 +222,8 @@ export class SimulationRunner {
         economySystem: this.economySystem,
       }
     );
+    this.interactionGameSystem = new InteractionGameSystem(this.state);
+    this.knowledgeNetworkSystem = new KnowledgeNetworkSystem(this.state);
 
     // Setup event capture for snapshot - add listeners for all known events
     const eventCaptureListener = (eventName: string, payload: unknown) => {
@@ -228,7 +234,7 @@ export class SimulationRunner {
       });
     };
     this.eventCaptureListener = eventCaptureListener;
-    
+
     // Add listeners for all game events to capture them
     Object.values(GameEventNames).forEach((eventName) => {
       simulationEvents.on(eventName, (payload: unknown) => {
@@ -329,6 +335,8 @@ export class SimulationRunner {
     this.cardDialogueSystem.update(scaledDelta);
     this.timeSystem.update(scaledDelta);
     this.emergenceSystem.update(scaledDelta);
+    this.interactionGameSystem.update(scaledDelta);
+    this.knowledgeNetworkSystem.update(scaledDelta);
     // NormsSystem is event-driven, no tick needed
     // Genealogy usually updates on events, but if it has a tick:
     // this.genealogySystem.update(scaledDelta);
@@ -337,7 +345,7 @@ export class SimulationRunner {
     this.tickCounter += 1;
     const snapshot = this.getSnapshot();
     this.emitter.emit("tick", snapshot);
-    
+
     // Clear captured events after snapshot
     this.capturedEvents = [];
   }

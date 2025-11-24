@@ -105,7 +105,7 @@ export class DivineFavorSystem {
     }
 
     const now = Date.now();
-    for (const [id, blessing] of this.blessings.entries()) {
+    for (const [id, blessing] of Array.from(this.blessings.entries())) {
       if (blessing.expiresAt && blessing.expiresAt <= now) {
         this.expireBlessing(id);
       }

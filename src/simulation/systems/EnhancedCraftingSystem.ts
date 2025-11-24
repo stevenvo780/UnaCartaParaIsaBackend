@@ -41,7 +41,7 @@ export class EnhancedCraftingSystem {
 
   public update(): void {
     const now = this.now();
-    for (const job of this.activeJobs.values()) {
+    for (const job of Array.from(this.activeJobs.values())) {
       if (job.finishesAt <= now) {
         this.finishJob(job);
       }

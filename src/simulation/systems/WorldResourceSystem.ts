@@ -30,7 +30,7 @@ export class WorldResourceSystem {
   private processRegeneration(now: number): void {
     if (!this.state.worldResources) return;
 
-    for (const [resourceId, startTime] of this.regenerationTimers.entries()) {
+    for (const [resourceId, startTime] of Array.from(this.regenerationTimers.entries())) {
       const resource = this.state.worldResources[resourceId];
       if (!resource) {
         this.regenerationTimers.delete(resourceId);

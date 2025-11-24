@@ -135,7 +135,7 @@ export class ConflictResolutionSystem {
   public update(): void {
     // Clean up expired cards
     const now = Date.now();
-    for (const [cardId, meta] of this.activeCards.entries()) {
+    for (const [cardId, meta] of Array.from(this.activeCards.entries())) {
       const mediation = this.mediationAttempts.find((m) => m.cardId === cardId);
       if (
         mediation &&

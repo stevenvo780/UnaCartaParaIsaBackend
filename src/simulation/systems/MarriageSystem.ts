@@ -171,7 +171,7 @@ export class MarriageSystem {
 
     // Cleanup expired proposals
     if (now - this.lastProposalCleanup >= 60000) {
-      for (const [targetId, proposal] of this.pendingProposals.entries()) {
+      for (const [targetId, proposal] of Array.from(this.pendingProposals.entries())) {
         if (now - proposal.timestamp > this.PROPOSAL_EXPIRATION_MS) {
           this.pendingProposals.delete(targetId);
         }
@@ -180,7 +180,7 @@ export class MarriageSystem {
     }
 
     // Decay cohesion and check for auto-divorce
-    for (const group of this.marriageGroups.values()) {
+    for (const group of Array.from(this.marriageGroups.values())) {
       group.cohesion = Math.max(0, group.cohesion - 0.0001);
 
       if (group.cohesion < 0.3 && group.members.length > 2) {
@@ -207,7 +207,7 @@ export class MarriageSystem {
   }
 
   public areMarried(agentId1: string, agentId2: string): boolean {
-    for (const group of this.marriageGroups.values()) {
+    for (const group of Array.from(this.marriageGroups.values())) {
       if (
         group.members.includes(agentId1) &&
         group.members.includes(agentId2)

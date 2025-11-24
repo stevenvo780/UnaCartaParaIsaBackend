@@ -167,7 +167,7 @@ export class TradeSystem {
   public cleanupExpiredOffers(): void {
     const now = Date.now();
 
-    for (const [offerId, offer] of this.activeOffers.entries()) {
+    for (const [offerId, offer] of Array.from(this.activeOffers.entries())) {
       if (offer.expiresAt < now && offer.status === "pending") {
         offer.status = "expired";
         this.activeOffers.delete(offerId);

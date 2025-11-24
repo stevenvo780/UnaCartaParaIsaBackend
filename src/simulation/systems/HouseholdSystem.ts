@@ -111,7 +111,7 @@ export class HouseholdSystem {
   }
 
   public findFreeHouse(): Household | null {
-    for (const hh of this.households.values()) {
+    for (const hh of Array.from(this.households.values())) {
       if (hh.members.length < hh.capacity) return hh;
     }
     return null;
@@ -122,7 +122,7 @@ export class HouseholdSystem {
     role: 'head' | 'spouse' | 'child' | 'other' = 'other'
   ): string | null {
     // Check if already assigned
-    for (const hh of this.households.values()) {
+    for (const hh of Array.from(this.households.values())) {
       if (hh.members.some((m) => m.agentId === agentId)) {
         return hh.zoneId;
       }

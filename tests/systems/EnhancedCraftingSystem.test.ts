@@ -1,0 +1,75 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { EnhancedCraftingSystem } from '../../src/simulation/systems/EnhancedCraftingSystem.js';
+import { InventorySystem } from '../../src/simulation/systems/InventorySystem.js';
+import { createMockGameState } from '../setup.js';
+import type { GameState } from '../../src/types/game-types.js';
+
+describe('EnhancedCraftingSystem', () => {
+  let gameState: GameState;
+  let inventorySystem: InventorySystem;
+  let craftingSystem: EnhancedCraftingSystem;
+
+  beforeEach(() => {
+    gameState = createMockGameState({
+      entities: [
+        {
+          id: 'agent-1',
+          position: { x: 100, y: 100 },
+          type: 'agent',
+        },
+      ],
+    });
+    inventorySystem = new InventorySystem();
+    craftingSystem = new EnhancedCraftingSystem(gameState, inventorySystem);
+  });
+
+  describe('Inicialización', () => {
+    it('debe inicializar correctamente', () => {
+      expect(craftingSystem).toBeDefined();
+    });
+
+    it('debe aceptar configuración personalizada', () => {
+      const customSystem = new EnhancedCraftingSystem(
+        gameState,
+        inventorySystem,
+        { requireWorkstation: true, minSuccessRate: 0.5 }
+      );
+      expect(customSystem).toBeDefined();
+    });
+  });
+
+  describe('canCraftWeapon', () => {
+    it('debe retornar false si no hay ingredientes', () => {
+      const canCraft = craftingSystem.canCraftWeapon('agent-1', 'stone_dagger');
+      expect(canCraft).toBe(false);
+    });
+
+    it('debe retornar false para receta inexistente', () => {
+      const canCraft = craftingSystem.canCraftWeapon('agent-1', 'nonexistent_weapon' as any);
+      expect(canCraft).toBe(false);
+    });
+  });
+
+  describe('craftBestWeapon', () => {
+    it('debe retornar null si no puede craftear', () => {
+      const weapon = craftingSystem.craftBestWeapon('agent-1');
+      expect(weapon).toBeNull();
+    });
+  });
+
+  describe('getEquippedWeapon', () => {
+    it('debe retornar undefined si no hay arma equipada', () => {
+      const weapon = craftingSystem.getEquippedWeapon('agent-1');
+      expect(weapon).toBeUndefined();
+    });
+  });
+
+  describe('update', () => {
+    it('debe actualizar sin errores', () => {
+      expect(() => {
+        craftingSystem.update();
+      }).not.toThrow();
+    });
+  });
+});
+

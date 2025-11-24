@@ -92,7 +92,7 @@ export class BuildingSystem {
   }
 
   private hasActiveJob(label: BuildingLabel): boolean {
-    for (const job of this.constructionJobs.values()) {
+    for (const job of Array.from(this.constructionJobs.values())) {
       if (job.label === label) return true;
     }
     return false;
@@ -163,7 +163,7 @@ export class BuildingSystem {
   }
 
   private completeFinishedJobs(now: number): void {
-    for (const job of this.constructionJobs.values()) {
+    for (const job of Array.from(this.constructionJobs.values())) {
       if (now < job.completesAt) continue;
       this.finalizeConstruction(job, now);
     }

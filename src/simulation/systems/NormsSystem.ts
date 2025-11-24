@@ -160,7 +160,7 @@ export class NormsSystem {
 
     let mostViolatedZone: string | null = null;
     let maxViolations = 0;
-    for (const [zoneId, count] of zoneViolations.entries()) {
+    for (const [zoneId, count] of Array.from(zoneViolations.entries())) {
       if (count > maxViolations) {
         maxViolations = count;
         mostViolatedZone = zoneId;

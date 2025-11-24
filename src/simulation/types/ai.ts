@@ -28,7 +28,7 @@ export interface AIGoal {
   targetId?: string;
   targetPosition?: { x: number; y: number };
   targetZoneId?: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   createdAt: number;
   expiresAt?: number;
 }
@@ -75,7 +75,7 @@ export interface AgentAction {
   targetPosition?: { x: number; y: number };
   targetZoneId?: string;
   duration?: number;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   timestamp: number;
 }
 

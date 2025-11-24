@@ -42,7 +42,7 @@ export class SpatialGrid<T> {
         const key = `${x},${y}`;
         const cell = this.grid.get(key);
         if (cell) {
-          for (const entry of cell) {
+          for (const entry of Array.from(cell)) {
             const dx = entry.x - center.x;
             const dy = entry.y - center.y;
             const dist2 = dx * dx + dy * dy;

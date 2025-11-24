@@ -23,22 +23,49 @@ export class SocialSystem {
     const now = Date.now();
     const dt = deltaTimeMs / 1000;
 
-    // In a real backend, we would use a spatial index here.
-    // For now, we stub the spatial query or iterate all pairs if N is small.
-    // Since we don't have positions easily accessible in a performant way without a spatial structure,
-    // we will skip the proximity update for this migration step and focus on decay.
-
+    // 1. Decay existing bonds
     this.decayEdges(dt);
+
+    // 2. Proximity updates (Simple O(N^2) for now, optimize with spatial hash later)
+    // We need access to entity positions. In a real system, we'd query the spatial index.
+    // For this migration, we'll iterate through the GameState entities directly.
+    this.updateProximity(dt);
   }
 
   private decayEdges(dt: number): void {
     this.edges.forEach((neighbors, a) => {
       neighbors.forEach((affinity, b) => {
         if (affinity > 0) {
-          neighbors.set(b, Math.max(0, affinity - this.config.decayPerSecond * dt));
+          // Decay towards 0
+          const newAffinity = Math.max(0, affinity - this.config.decayPerSecond * dt);
+          neighbors.set(b, newAffinity);
         }
       });
     });
+  }
+
+  private updateProximity(dt: number): void {
+    const entities = this.gameState.entities;
+    if (!entities || entities.length < 2) return;
+
+    const radiusSq = this.config.proximityRadius * this.config.proximityRadius;
+    const reinforcement = this.config.reinforcementPerSecond * dt;
+
+    for (let i = 0; i < entities.length; i++) {
+      for (let j = i + 1; j < entities.length; j++) {
+        const a = entities[i];
+        const b = entities[j];
+
+        const dx = a.position.x - b.position.x;
+        const dy = a.position.y - b.position.y;
+        const distSq = dx * dx + dy * dy;
+
+        if (distSq <= radiusSq) {
+          // They are close! Reinforce bond.
+          this.addEdge(a.id, b.id, reinforcement);
+        }
+      }
+    }
   }
 
   public addEdge(a: string, b: string, delta: number): void {
