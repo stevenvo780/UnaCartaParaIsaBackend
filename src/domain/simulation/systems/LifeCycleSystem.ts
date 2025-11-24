@@ -112,7 +112,8 @@ export class LifeCycleSystem extends EventEmitter {
     if (systems.inventorySystem) this.inventorySystem = systems.inventorySystem;
     if (systems.socialSystem) this._socialSystem = systems.socialSystem;
     if (systems.marriageSystem) this._marriageSystem = systems.marriageSystem;
-    if (systems.genealogySystem) this._genealogySystem = systems.genealogySystem;
+    if (systems.genealogySystem)
+      this._genealogySystem = systems.genealogySystem;
     if (systems.householdSystem) this.householdSystem = systems.householdSystem;
     if (systems.divineFavorSystem)
       this._divineFavorSystem = systems.divineFavorSystem;
