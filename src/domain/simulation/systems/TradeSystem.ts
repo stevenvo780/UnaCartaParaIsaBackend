@@ -19,7 +19,7 @@ export class TradeSystem {
     sellerId: string,
     offering: Array<{ itemId: string; quantity: number }>,
     requesting: Array<{ itemId: string; quantity: number }> | { value: number },
-    duration = 300000
+    duration = 300000,
   ): string {
     const offerId = `trade_${sellerId}_${Date.now()}`;
 
@@ -100,12 +100,12 @@ export class TradeSystem {
 
   public getSellerOffers(sellerId: string): TradeOffer[] {
     return Array.from(this.activeOffers.values()).filter(
-      (offer) => offer.sellerId === sellerId
+      (offer) => offer.sellerId === sellerId,
     );
   }
 
   public calculateOfferValue(
-    items: Array<{ itemId: string; quantity: number }>
+    items: Array<{ itemId: string; quantity: number }>,
   ): number {
     // Simplified value calculation
     const itemValues: Record<string, number> = {
@@ -160,7 +160,7 @@ export class TradeSystem {
   public getTradeHistory(agentId: string, limit = 10): TradeRecord[] {
     return this.tradeHistory
       .filter(
-        (trade) => trade.sellerId === agentId || trade.buyerId === agentId
+        (trade) => trade.sellerId === agentId || trade.buyerId === agentId,
       )
       .slice(-limit);
   }

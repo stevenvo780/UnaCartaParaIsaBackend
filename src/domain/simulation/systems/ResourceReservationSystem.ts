@@ -43,7 +43,10 @@ export class ResourceReservationSystem {
       return true;
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.warn("ResourceReservationSystem.consume failed", { taskId, error });
+      console.warn("ResourceReservationSystem.consume failed", {
+        taskId,
+        error,
+      });
       return false;
     }
   }
@@ -90,7 +93,9 @@ export class ResourceReservationSystem {
     const now = this.now();
     let cleaned = 0;
 
-    for (const [taskId, reservation] of Array.from(this.reservations.entries())) {
+    for (const [taskId, reservation] of Array.from(
+      this.reservations.entries(),
+    )) {
       if (now - reservation.timestamp > maxAgeMs) {
         this.reservations.delete(taskId);
         cleaned += 1;
@@ -125,7 +130,11 @@ export class ResourceReservationSystem {
     let needWood = cost.wood;
     let needStone = cost.stone;
 
-    const consumedStockpiles: Array<{ stockpileId: string; wood: number; stone: number }> = [];
+    const consumedStockpiles: Array<{
+      stockpileId: string;
+      wood: number;
+      stone: number;
+    }> = [];
 
     for (const stockpile of this.inventorySystem.getAllStockpiles()) {
       if (needWood <= 0 && needStone <= 0) break;
@@ -142,7 +151,11 @@ export class ResourceReservationSystem {
 
       if (!success) continue;
 
-      consumedStockpiles.push({ stockpileId: stockpile.id, wood: woodToTake, stone: stoneToTake });
+      consumedStockpiles.push({
+        stockpileId: stockpile.id,
+        wood: woodToTake,
+        stone: stoneToTake,
+      });
       needWood -= woodToTake;
       needStone -= stoneToTake;
     }
@@ -171,10 +184,18 @@ export class ResourceReservationSystem {
   ): void {
     for (const entry of consumed) {
       if (entry.wood > 0) {
-        this.inventorySystem.addToStockpile(entry.stockpileId, "wood", entry.wood);
+        this.inventorySystem.addToStockpile(
+          entry.stockpileId,
+          "wood",
+          entry.wood,
+        );
       }
       if (entry.stone > 0) {
-        this.inventorySystem.addToStockpile(entry.stockpileId, "stone", entry.stone);
+        this.inventorySystem.addToStockpile(
+          entry.stockpileId,
+          "stone",
+          entry.stone,
+        );
       }
     }
   }

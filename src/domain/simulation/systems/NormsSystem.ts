@@ -23,7 +23,7 @@ export class NormsSystem {
     targetId: string,
     zoneId: string,
     zoneType: string,
-    _position?: { x: number; y: number } // position parameter kept for API compatibility
+    _position?: { x: number; y: number }, // position parameter kept for API compatibility
   ): {
     violated: boolean;
     sanction?: SanctionRecord;
@@ -77,7 +77,7 @@ export class NormsSystem {
     guardId: string,
     targetLocation: { x: number; y: number },
     zoneId: string,
-    distance: number
+    distance: number,
   ): void {
     const dispatch: GuardDispatch = {
       timestamp: Date.now(),

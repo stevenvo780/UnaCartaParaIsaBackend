@@ -27,11 +27,7 @@ export class VoronoiGenerator {
   private height: number;
   private rng: seedrandom.PRNG;
 
-  constructor(
-    width: number,
-    height: number,
-    seed?: string,
-  ) {
+  constructor(width: number, height: number, seed?: string) {
     this.width = width;
     this.height = height;
     this.rng = seedrandom(seed || `voronoi-${Date.now()}`);
@@ -144,9 +140,7 @@ export class VoronoiGenerator {
 
   private computeVoronoi(sites: Point[]): VoronoiCell[] {
     // Delaunator works with flat arrays of coordinates
-    const delaunay = Delaunator.from(
-      sites.map((site) => [site.x, site.y])
-    );
+    const delaunay = Delaunator.from(sites.map((site) => [site.x, site.y]));
 
     const cells: VoronoiCell[] = [];
 

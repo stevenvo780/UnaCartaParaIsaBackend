@@ -69,7 +69,9 @@ export class ChunkWorkerPool extends EventEmitter {
         ? os.availableParallelism()
         : os.cpus().length;
     const envWorkers = Number.parseInt(process.env.CHUNK_WORKERS ?? "", 10);
-    const desired = size ?? (Number.isNaN(envWorkers) ? parallelism : envWorkers || parallelism);
+    const desired =
+      size ??
+      (Number.isNaN(envWorkers) ? parallelism : envWorkers || parallelism);
     this.maxWorkers = Math.max(1, desired);
     for (let i = 0; i < this.maxWorkers; i++) {
       this.workers[i] = this.spawnWorker(i);
@@ -137,7 +139,8 @@ export class ChunkWorkerPool extends EventEmitter {
         }
         signal.addEventListener("abort", handleAbort, { once: true });
         job.signal = signal;
-        job.cleanupSignal = () => signal.removeEventListener("abort", handleAbort);
+        job.cleanupSignal = () =>
+          signal.removeEventListener("abort", handleAbort);
       }
 
       this.queue.push(job);

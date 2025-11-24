@@ -37,7 +37,10 @@ export class SpatialGrid<T> {
     this.grid.clear();
   }
 
-  public queryRadius(center: { x: number; y: number }, radius: number): { item: T; distance: number }[] {
+  public queryRadius(
+    center: { x: number; y: number },
+    radius: number,
+  ): { item: T; distance: number }[] {
     const results: { item: T; distance: number }[] = [];
     const startX = Math.floor((center.x - radius) / this.cellSize);
     const endX = Math.floor((center.x + radius) / this.cellSize);

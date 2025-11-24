@@ -1,12 +1,12 @@
-import type { AIState, AIGoal } from '../../../types/simulation/ai';
-import type { AgentRole } from '../../../types/simulation/roles';
+import type { AIState, AIGoal } from "../../../types/simulation/ai";
+import type { AgentRole } from "../../../types/simulation/roles";
 
 export interface OpportunitiesEvaluatorDependencies {
   getAgentRole: (agentId: string) => AgentRole | undefined;
   getPreferredResourceForRole: (roleType: string) => string | null;
   findNearestResource?: (
     entityId: string,
-    resourceType: string
+    resourceType: string,
   ) => { id: string; x: number; y: number } | null;
 }
 
@@ -27,7 +27,7 @@ export function evaluateWorkOpportunities(
 
   if (!preferredResource || !deps.findNearestResource) {
     goals.push({
-      type: 'work',
+      type: "work",
       priority: 0.6 * aiState.personality.diligence,
       data: {
         roleType: role.roleType,
@@ -40,12 +40,12 @@ export function evaluateWorkOpportunities(
 
   const resourceTarget = deps.findNearestResource(
     aiState.entityId,
-    preferredResource
+    preferredResource,
   );
 
   if (resourceTarget) {
     goals.push({
-      type: 'work',
+      type: "work",
       priority: 0.7 * aiState.personality.diligence * role.efficiency,
       targetId: resourceTarget.id,
       targetPosition: { x: resourceTarget.x, y: resourceTarget.y },
@@ -61,18 +61,16 @@ export function evaluateWorkOpportunities(
   return goals;
 }
 
-export function evaluateExplorationGoals(
-  aiState: AIState,
-): AIGoal[] {
+export function evaluateExplorationGoals(aiState: AIState): AIGoal[] {
   const goals: AIGoal[] = [];
   const now = Date.now();
 
   if (aiState.personality.curiosity > 0.5) {
     goals.push({
-      type: 'explore',
+      type: "explore",
       priority: 0.3 * aiState.personality.curiosity,
       data: {
-        reason: 'curiosity',
+        reason: "curiosity",
       },
       createdAt: now,
       expiresAt: now + 60000,

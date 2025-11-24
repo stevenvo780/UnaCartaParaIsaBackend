@@ -175,7 +175,7 @@ export class AISystem extends EventEmitter {
           getEntityNeeds: (id) => this.needsSystem?.getEntityNeeds(id),
           findNearestResource: this.worldResourceSystem
             ? (entityId, resourceType) =>
-              this.findNearestResourceForEntity(entityId, resourceType)
+                this.findNearestResourceForEntity(entityId, resourceType)
             : undefined,
         },
         aiState,
@@ -192,7 +192,7 @@ export class AISystem extends EventEmitter {
             this.getPreferredResourceForRole(roleType),
           findNearestResource: this.worldResourceSystem
             ? (entityId, resourceType) =>
-              this.findNearestResourceForEntity(entityId, resourceType)
+                this.findNearestResourceForEntity(entityId, resourceType)
             : undefined,
         },
         aiState,

@@ -267,7 +267,9 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
   },
 };
 
-export function getResourceConfig(type: string): WorldResourceConfig | undefined {
+export function getResourceConfig(
+  type: string,
+): WorldResourceConfig | undefined {
   return WORLD_RESOURCE_CONFIGS[type];
 }
 

@@ -61,7 +61,7 @@ export class CardDialogueSystem {
 
   constructor(
     private readonly gameState: GameState,
-    private readonly needsSystem: NeedsSystem
+    private readonly needsSystem: NeedsSystem,
   ) { }
 
   public update(_deltaMs: number): void {
@@ -75,7 +75,7 @@ export class CardDialogueSystem {
     this.cleanupExpired(now);
 
     this.snapshot.active = Array.from(this.activeCards.values()).map(
-      (entry) => entry.card
+      (entry) => entry.card,
     );
     this.snapshot.history = this.history.slice(-this.MAX_HISTORY);
     this.snapshot.queueSize = this.queue.length;
@@ -93,7 +93,7 @@ export class CardDialogueSystem {
     for (const data of needs) {
       const entityId = data.entityId;
       const matchingTemplates = this.cardTemplates.filter((template) =>
-        this.matchesTemplate(template, data.needs, now)
+        this.matchesTemplate(template, data.needs, now),
       );
 
       if (matchingTemplates.length === 0) continue;
@@ -142,7 +142,7 @@ export class CardDialogueSystem {
   private matchesTemplate(
     template: CardTemplate,
     needs: NeedsState,
-    now: number
+    now: number,
   ): boolean {
     if (template.triggers.needsBased) {
       const satisfied = template.triggers.needsBased.every((trigger) => {
@@ -159,7 +159,7 @@ export class CardDialogueSystem {
       const hour = new Date(now).getUTCHours();
       const timeOfDay = this.resolveTimeOfDay(hour);
       const satisfied = template.triggers.timeBased.some(
-        (trigger) => trigger.time === timeOfDay
+        (trigger) => trigger.time === timeOfDay,
       );
       if (!satisfied) return false;
     }
@@ -174,7 +174,7 @@ export class CardDialogueSystem {
 
   private computeTemplateScore(
     template: CardTemplate,
-    needs: NeedsState
+    needs: NeedsState,
   ): number {
     let score = 0.5;
 
@@ -204,7 +204,7 @@ export class CardDialogueSystem {
   private createCard(
     template: CardTemplate,
     entityId: string,
-    now: number
+    now: number,
   ): DialogueCard {
     const contentVariation =
       template.contentVariations[
@@ -227,10 +227,16 @@ export class CardDialogueSystem {
     };
   }
 
-  private resolvePriority(template: CardTemplate): DialoguePriority {
+  private resolvePriority(template: CardTemplate, needs: NeedsState): DialoguePriority {
+    // Priority based on needs severity (migrated from Frontend helpers)
+    if (needs.hunger < 15 || needs.thirst < 15) return "urgent";
+    if (needs.hunger < 30 || needs.thirst < 25 || needs.energy < 20) return "high";
+    if (needs.mentalHealth < 40) return "medium";
+
+    // Fallback to template-based priority
     if (!template.triggers.needsBased) return "low";
     const maxThreshold = Math.max(
-      ...template.triggers.needsBased.map((t) => t.threshold)
+      ...template.triggers.needsBased.map((t) => t.threshold),
     );
     if (maxThreshold >= 80) return "urgent";
     if (maxThreshold >= 60) return "high";

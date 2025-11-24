@@ -1,7 +1,14 @@
-import type { Animal, AnimalType, AnimalGenes } from '../../../types/simulation/animals';
-import { getAnimalConfig, getAnimalsForBiome } from '../../../../infrastructure/services/world/config/AnimalConfigs';
-import { AnimalGenetics } from './AnimalGenetics';
-import { simulationEvents, GameEventNames } from '../../core/events';
+import type {
+  Animal,
+  AnimalType,
+  AnimalGenes,
+} from "../../../types/simulation/animals";
+import {
+  getAnimalConfig,
+  getAnimalsForBiome,
+} from "../../../../infrastructure/services/world/config/AnimalConfigs";
+import { AnimalGenetics } from "./AnimalGenetics";
+import { simulationEvents, GameEventNames } from "../../core/events";
 
 export class AnimalSpawning {
   private static nextAnimalId = 1;
@@ -12,13 +19,13 @@ export class AnimalSpawning {
     worldHeight: number,
     tileSize: number,
     biomeMap: string[][],
-    onSpawn: (animal: Animal) => void
+    onSpawn: (animal: Animal) => void,
   ): number {
     const startTime = performance.now();
     let spawned = 0;
 
     if (!biomeMap || biomeMap.length === 0) {
-      console.warn('⚠️ No biomeMap, skipping animal spawn');
+      console.warn("⚠️ No biomeMap, skipping animal spawn");
       return 0;
     }
 
@@ -44,7 +51,7 @@ export class AnimalSpawning {
                 config.groupSize.min +
                 Math.floor(
                   Math.random() *
-                  (config.groupSize.max - config.groupSize.min + 1)
+                    (config.groupSize.max - config.groupSize.min + 1),
                 );
 
               for (let i = 0; i < groupSize; i++) {
@@ -54,7 +61,7 @@ export class AnimalSpawning {
                 const animal = this.createAnimal(
                   config.type,
                   { x: x + offsetX, y: y + offsetY },
-                  biome
+                  biome,
                 );
 
                 if (animal) {
@@ -76,7 +83,7 @@ export class AnimalSpawning {
   public static spawnAnimalsInChunk(
     chunkCoords: { x: number; y: number },
     chunkBounds: { x: number; y: number; width: number; height: number },
-    onSpawn: (animal: Animal) => void
+    onSpawn: (animal: Animal) => void,
   ): number {
     const chunkKey = `${chunkCoords.x},${chunkCoords.y}`;
     if (this.spawnedChunks.has(chunkKey)) {
@@ -93,11 +100,11 @@ export class AnimalSpawning {
       for (let y = chunkY; y < chunkY + height; y += sampleStep) {
         // Simple biome detection (could be improved with actual biome map)
         const biomeNoise = Math.sin(x * 0.02) + Math.cos(y * 0.02);
-        let biome = 'grassland';
-        if (biomeNoise > 0.6) biome = 'mystical';
-        else if (biomeNoise > 0.3) biome = 'forest';
-        else if (biomeNoise < -0.3) biome = 'wetland';
-        else if (biomeNoise < -0.6) biome = 'mountainous';
+        let biome = "grassland";
+        if (biomeNoise > 0.6) biome = "mystical";
+        else if (biomeNoise > 0.3) biome = "forest";
+        else if (biomeNoise < -0.3) biome = "wetland";
+        else if (biomeNoise < -0.6) biome = "mountainous";
 
         const animalConfigs = getAnimalsForBiome(biome);
 
@@ -108,11 +115,11 @@ export class AnimalSpawning {
             const groupSize = Math.max(
               1,
               config.groupSize.min +
-              Math.floor(
-                Math.random() *
-                (config.groupSize.max - config.groupSize.min + 1)
-              ) -
-              1
+                Math.floor(
+                  Math.random() *
+                    (config.groupSize.max - config.groupSize.min + 1),
+                ) -
+                1,
             );
 
             for (let i = 0; i < groupSize; i++) {
@@ -122,7 +129,7 @@ export class AnimalSpawning {
               const animal = this.createAnimal(
                 config.type,
                 { x: x + offsetX, y: y + offsetY },
-                biome
+                biome,
               );
 
               if (animal) {
@@ -136,7 +143,9 @@ export class AnimalSpawning {
     }
 
     if (spawned > 0) {
-      console.log(`🐰 Spawned ${spawned} animals in chunk (${chunkX}, ${chunkY})`);
+      console.log(
+        `🐰 Spawned ${spawned} animals in chunk (${chunkX}, ${chunkY})`,
+      );
     }
     return spawned;
   }
@@ -150,7 +159,7 @@ export class AnimalSpawning {
     biome: string,
     genes?: AnimalGenes,
     generation = 0,
-    parentIds: [string | null, string | null] = [null, null]
+    parentIds: [string | null, string | null] = [null, null],
   ): Animal | null {
     const config = getAnimalConfig(type);
     if (!config) {
@@ -166,7 +175,7 @@ export class AnimalSpawning {
       id,
       type: type as AnimalType,
       position: { ...position },
-      state: 'idle',
+      state: "idle",
       needs: {
         hunger: 100,
         thirst: 100,
@@ -204,7 +213,7 @@ export class AnimalSpawning {
     position: { x: number; y: number },
     type: string,
     existingAnimals: Animal[],
-    minDistance: number
+    minDistance: number,
   ): boolean {
     return existingAnimals.some((existing) => {
       if (existing.type !== type) return false;

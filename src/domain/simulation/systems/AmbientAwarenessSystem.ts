@@ -70,7 +70,7 @@ export class AmbientAwarenessSystem {
           data.needs.thirst +
           (100 - data.needs.energy) +
           (100 - data.needs.hygiene)) /
-        4;
+          4;
       total += wellbeing;
       if (
         data.needs.hunger > 80 ||
@@ -90,7 +90,7 @@ export class AmbientAwarenessSystem {
           data.needs.thirst +
           (100 - data.needs.energy) +
           (100 - data.needs.hygiene)) /
-        4;
+          4;
       varianceSum += Math.pow(wellbeing - average, 2);
     }
     const variance = Math.sqrt(varianceSum / samples.length) / 100;

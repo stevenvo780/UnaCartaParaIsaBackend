@@ -74,7 +74,7 @@ export class ReputationSystem {
     const e = this.getEdge(a, b);
     e.value = Math.max(
       REPUTATION_CONFIG.bounds.min,
-      Math.min(REPUTATION_CONFIG.bounds.max, e.value + delta)
+      Math.min(REPUTATION_CONFIG.bounds.max, e.value + delta),
     );
     e.lastUpdated = Date.now();
   }
@@ -83,7 +83,11 @@ export class ReputationSystem {
     return this.getEdge(a, b).value;
   }
 
-  public updateReputation(agentId: string, delta: number, reason?: string): void {
+  public updateReputation(
+    agentId: string,
+    delta: number,
+    reason?: string,
+  ): void {
     const now = Date.now();
     const r = this.reputation.get(agentId) || {
       value: REPUTATION_CONFIG.initialValues.reputation,
@@ -92,7 +96,7 @@ export class ReputationSystem {
     const oldValue = r.value;
     r.value = Math.max(
       REPUTATION_CONFIG.bounds.min,
-      Math.min(REPUTATION_CONFIG.bounds.max, r.value + delta)
+      Math.min(REPUTATION_CONFIG.bounds.max, r.value + delta),
     );
     r.lastUpdated = now;
     this.reputation.set(agentId, r);
@@ -178,24 +182,30 @@ export class ReputationSystem {
 
     // El frontend espera reputations y trust en formato diferente
     const allReputations = this.getAllReputations();
-    const trustArray = Array.from(this.trust.entries()).map(([sourceId, targetMap]) => ({
-      sourceId,
-      targets: Array.from(targetMap.entries()).map(([targetId, edge]) => ({
+    const trustArray = Array.from(this.trust.entries()).map(
+      ([sourceId, targetMap]) => ({
         sourceId,
-        targetId,
-        trust: edge.value,
-      })),
-    }));
+        targets: Array.from(targetMap.entries()).map(([targetId, edge]) => ({
+          sourceId,
+          targetId,
+          trust: edge.value,
+        })),
+      }),
+    );
 
     // Agregar formato compatible con frontend
-    (this.gameState.reputation as unknown as {
-      reputations?: typeof allReputations;
-      trust?: typeof trustArray;
-    }).reputations = allReputations;
-    (this.gameState.reputation as unknown as {
-      reputations?: typeof allReputations;
-      trust?: typeof trustArray;
-    }).trust = trustArray;
+    (
+      this.gameState.reputation as unknown as {
+        reputations?: typeof allReputations;
+        trust?: typeof trustArray;
+      }
+    ).reputations = allReputations;
+    (
+      this.gameState.reputation as unknown as {
+        reputations?: typeof allReputations;
+        trust?: typeof trustArray;
+      }
+    ).trust = trustArray;
   }
 
   public handleSocialRelationChanged(data: {
@@ -208,17 +218,19 @@ export class ReputationSystem {
     this.updateTrust(
       data.aId,
       data.bId,
-      REPUTATION_CONFIG.impacts.socialRelation.trust * sign * Math.abs(data.delta)
+      REPUTATION_CONFIG.impacts.socialRelation.trust *
+        sign *
+        Math.abs(data.delta),
     );
     this.updateReputation(
       data.aId,
       REPUTATION_CONFIG.impacts.socialRelation.reputation * sign,
-      `social_${data.type}`
+      `social_${data.type}`,
     );
     this.updateReputation(
       data.bId,
       REPUTATION_CONFIG.impacts.socialRelation.reputation * sign,
-      `social_${data.type}`
+      `social_${data.type}`,
     );
   }
 
@@ -229,7 +241,7 @@ export class ReputationSystem {
   }): void {
     const impact = Math.min(
       REPUTATION_CONFIG.impacts.combat.maxImpact,
-      (data.damage || 10) / REPUTATION_CONFIG.impacts.combat.damageNormalizer
+      (data.damage || 10) / REPUTATION_CONFIG.impacts.combat.damageNormalizer,
     );
     this.updateTrust(data.targetId, data.attackerId, -impact);
     this.updateReputation(data.attackerId, -impact, "combat_hit");
@@ -264,14 +276,14 @@ export class ReputationSystem {
       this.updateReputation(
         a,
         -scale * REPUTATION_CONFIG.impacts.interactionGame.exploitPenalty,
-        "exploit_gain"
+        "exploit_gain",
       );
     } else if (pb > pa) {
       this.updateTrust(a, b, -scale);
       this.updateReputation(
         b,
         -scale * REPUTATION_CONFIG.impacts.interactionGame.exploitPenalty,
-        "exploit_gain"
+        "exploit_gain",
       );
     }
   }
@@ -351,14 +363,14 @@ export class ReputationSystem {
         agentId,
         value: entry.value,
         lastUpdated: entry.lastUpdated,
-      })
+      }),
     );
 
     const historyArray = Array.from(this.reputationHistory.entries()).map(
       ([agentId, changes]) => ({
         agentId,
         changes: [...changes],
-      })
+      }),
     );
 
     return {

@@ -1,5 +1,5 @@
-import type { Animal } from '../../../types/simulation/animals';
-import { getAnimalConfig } from '../../../../infrastructure/services/world/config/AnimalConfigs';
+import type { Animal } from "../../../types/simulation/animals";
+import { getAnimalConfig } from "../../../../infrastructure/services/world/config/AnimalConfigs";
 
 export class AnimalNeeds {
   public static updateNeeds(animal: Animal, deltaMinutes: number): void {
@@ -8,22 +8,22 @@ export class AnimalNeeds {
 
     animal.needs.hunger = Math.max(
       0,
-      animal.needs.hunger - config.hungerDecayRate * deltaMinutes * 0.7
+      animal.needs.hunger - config.hungerDecayRate * deltaMinutes * 0.7,
     );
 
     animal.needs.thirst = Math.max(
       0,
-      animal.needs.thirst - config.thirstDecayRate * deltaMinutes * 0.7
+      animal.needs.thirst - config.thirstDecayRate * deltaMinutes * 0.7,
     );
 
     if (Date.now() - animal.lastReproduction > config.reproductionCooldown) {
       animal.needs.reproductiveUrge = Math.min(
         100,
-        animal.needs.reproductiveUrge + 0.5 * deltaMinutes
+        animal.needs.reproductiveUrge + 0.5 * deltaMinutes,
       );
     }
 
-    if (animal.state !== 'fleeing') {
+    if (animal.state !== "fleeing") {
       animal.needs.fear = Math.max(0, animal.needs.fear - 10 * deltaMinutes);
     }
   }

@@ -1,8 +1,8 @@
-import type { Animal } from '../../../types/simulation/animals';
-import { getAnimalConfig } from '../../../../infrastructure/services/world/config/AnimalConfigs';
-import { AnimalNeeds } from './AnimalNeeds';
-import { AnimalGenetics } from './AnimalGenetics';
-import { simulationEvents, GameEventNames } from '../../core/events';
+import type { Animal } from "../../../types/simulation/animals";
+import { getAnimalConfig } from "../../../../infrastructure/services/world/config/AnimalConfigs";
+import { AnimalNeeds } from "./AnimalNeeds";
+import { AnimalGenetics } from "./AnimalGenetics";
+import { simulationEvents, GameEventNames } from "../../core/events";
 
 const BASE_ANIMAL_SPEED = 50;
 
@@ -13,7 +13,7 @@ export class AnimalBehavior {
     animal: Animal,
     threatPosition: { x: number; y: number },
     speedMultiplier: number,
-    deltaSeconds: number
+    deltaSeconds: number,
   ): void {
     const dx = animal.position.x - threatPosition.x;
     const dy = animal.position.y - threatPosition.y;
@@ -39,7 +39,7 @@ export class AnimalBehavior {
     animal: Animal,
     targetPosition: { x: number; y: number },
     speedMultiplier: number,
-    deltaSeconds: number
+    deltaSeconds: number,
   ): void {
     const dx = targetPosition.x - animal.position.x;
     const dy = targetPosition.y - animal.position.y;
@@ -69,7 +69,7 @@ export class AnimalBehavior {
   public static wander(
     animal: Animal,
     speedMultiplier: number,
-    deltaSeconds: number
+    deltaSeconds: number,
   ): void {
     let wanderAngle = this.wanderAngles.get(animal.id);
     if (wanderAngle === undefined) {
@@ -78,7 +78,7 @@ export class AnimalBehavior {
     }
 
     if (Math.random() < 0.05) {
-      animal.state = 'idle';
+      animal.state = "idle";
       return;
     }
 
@@ -106,18 +106,22 @@ export class AnimalBehavior {
    */
   public static seekFood(
     animal: Animal,
-    availableResources: Array<{ id: string; position: { x: number; y: number }; type: string }>,
+    availableResources: Array<{
+      id: string;
+      position: { x: number; y: number };
+      type: string;
+    }>,
     deltaSeconds: number,
-    onConsume: (resourceId: string) => void
+    onConsume: (resourceId: string) => void,
   ): void {
     const config = getAnimalConfig(animal.type);
     if (!config || !config.consumesVegetation) return;
 
     // Find nearest food resource if no current target
-    if (!animal.currentTarget || animal.currentTarget.type !== 'food') {
+    if (!animal.currentTarget || animal.currentTarget.type !== "food") {
       if (availableResources.length > 0) {
         const target = availableResources[0];
-        animal.currentTarget = { type: 'food', id: target.id };
+        animal.currentTarget = { type: "food", id: target.id };
         animal.targetPosition = { x: target.position.x, y: target.position.y };
       } else {
         this.wander(animal, 0.5, deltaSeconds);
@@ -133,7 +137,7 @@ export class AnimalBehavior {
 
       if (distance < 30) {
         // Close enough to eat
-        animal.state = 'eating';
+        animal.state = "eating";
         const consumed = config.vegetationConsumptionRate;
         AnimalNeeds.feed(animal, consumed * 15);
 
@@ -144,7 +148,7 @@ export class AnimalBehavior {
 
         simulationEvents.emit(GameEventNames.ANIMAL_CONSUMED_RESOURCE, {
           animalId: animal.id,
-          resourceType: 'vegetation',
+          resourceType: "vegetation",
           amount: consumed,
           position: animal.position,
           biome: animal.biome,
@@ -159,7 +163,7 @@ export class AnimalBehavior {
           animal,
           animal.targetPosition,
           config.speed * animal.genes.speed * 0.6,
-          deltaSeconds
+          deltaSeconds,
         );
       }
     }
@@ -172,19 +176,19 @@ export class AnimalBehavior {
     animal: Animal,
     availablePrey: Animal[],
     deltaSeconds: number,
-    onKill: (preyId: string) => void
+    onKill: (preyId: string) => void,
   ): void {
     const config = getAnimalConfig(animal.type);
     if (!config?.isPredator || !config.preyTypes) return;
 
     // Find prey if no current target
-    if (!animal.currentTarget || animal.currentTarget.type !== 'food') {
+    if (!animal.currentTarget || animal.currentTarget.type !== "food") {
       const prey = availablePrey.find((p) =>
-        config.preyTypes!.includes(p.type)
+        config.preyTypes!.includes(p.type),
       );
 
       if (prey) {
-        animal.currentTarget = { type: 'food', id: prey.id };
+        animal.currentTarget = { type: "food", id: prey.id };
         animal.targetPosition = { ...prey.position };
         prey.isBeingHunted = true;
       } else {
@@ -211,7 +215,7 @@ export class AnimalBehavior {
 
       if (distance < 25) {
         // Close enough to attack
-        animal.state = 'eating';
+        animal.state = "eating";
         const consumed = config.foodValue || 50;
         AnimalNeeds.feed(animal, consumed);
 
@@ -219,7 +223,7 @@ export class AnimalBehavior {
 
         simulationEvents.emit(GameEventNames.ANIMAL_CONSUMED_RESOURCE, {
           animalId: animal.id,
-          resourceType: 'meat',
+          resourceType: "meat",
           amount: consumed,
           position: animal.position,
           biome: animal.biome,
@@ -234,7 +238,7 @@ export class AnimalBehavior {
           animal,
           prey.position,
           config.speed * animal.genes.speed * 1.2,
-          deltaSeconds
+          deltaSeconds,
         );
       }
     }
@@ -245,18 +249,21 @@ export class AnimalBehavior {
    */
   public static seekWater(
     animal: Animal,
-    availableWaterResources: Array<{ id: string; position: { x: number; y: number } }>,
+    availableWaterResources: Array<{
+      id: string;
+      position: { x: number; y: number };
+    }>,
     deltaSeconds: number,
-    onConsume: (resourceId: string) => void
+    onConsume: (resourceId: string) => void,
   ): void {
     const config = getAnimalConfig(animal.type);
     if (!config?.consumesWater) return;
 
     // Find water if no current target
-    if (!animal.currentTarget || animal.currentTarget.type !== 'water') {
+    if (!animal.currentTarget || animal.currentTarget.type !== "water") {
       if (availableWaterResources.length > 0) {
         const target = availableWaterResources[0];
-        animal.currentTarget = { type: 'water', id: target.id };
+        animal.currentTarget = { type: "water", id: target.id };
         animal.targetPosition = { ...target.position };
       } else {
         this.wander(animal, 0.5, deltaSeconds);
@@ -272,7 +279,7 @@ export class AnimalBehavior {
 
       if (distance < 30) {
         // Close enough to drink
-        animal.state = 'drinking';
+        animal.state = "drinking";
         const consumed = config.waterConsumptionRate;
         AnimalNeeds.hydrate(animal, consumed * 20);
 
@@ -282,7 +289,7 @@ export class AnimalBehavior {
 
         simulationEvents.emit(GameEventNames.ANIMAL_CONSUMED_RESOURCE, {
           animalId: animal.id,
-          resourceType: 'water',
+          resourceType: "water",
           amount: consumed,
           position: animal.position,
           biome: animal.biome,
@@ -297,7 +304,7 @@ export class AnimalBehavior {
           animal,
           animal.targetPosition,
           config.speed * animal.genes.speed * 0.6,
-          deltaSeconds
+          deltaSeconds,
         );
       }
     }
@@ -310,7 +317,7 @@ export class AnimalBehavior {
     animal: Animal,
     nearbyMates: Animal[],
     deltaSeconds: number,
-    onOffspringCreated: (offspring: Animal) => void
+    onOffspringCreated: (offspring: Animal) => void,
   ): void {
     const config = getAnimalConfig(animal.type);
     if (!config) return;
@@ -319,7 +326,7 @@ export class AnimalBehavior {
       (other) =>
         other.type === animal.type &&
         other.id !== animal.id &&
-        other.needs.reproductiveUrge > 70
+        other.needs.reproductiveUrge > 70,
     );
 
     if (nearbyMate) {
@@ -331,21 +338,26 @@ export class AnimalBehavior {
         // Close enough to mate
         if (Math.random() < 0.2) {
           const offspringPosition = {
-            x: (animal.position.x + nearbyMate.position.x) / 2 + (Math.random() - 0.5) * 20,
-            y: (animal.position.y + nearbyMate.position.y) / 2 + (Math.random() - 0.5) * 20,
+            x:
+              (animal.position.x + nearbyMate.position.x) / 2 +
+              (Math.random() - 0.5) * 20,
+            y:
+              (animal.position.y + nearbyMate.position.y) / 2 +
+              (Math.random() - 0.5) * 20,
           };
 
           const offspringGenes = AnimalGenetics.breedGenes(
             animal.genes,
-            nearbyMate.genes
+            nearbyMate.genes,
           );
-          const generation = Math.max(animal.generation, nearbyMate.generation) + 1;
+          const generation =
+            Math.max(animal.generation, nearbyMate.generation) + 1;
 
           const offspring: Animal = {
             id: `animal_${animal.type}_${Date.now()}_${Math.random()}`,
             type: animal.type,
             position: offspringPosition,
-            state: 'idle',
+            state: "idle",
             needs: {
               hunger: 100,
               thirst: 100,
@@ -381,8 +393,10 @@ export class AnimalBehavior {
 
           onOffspringCreated(offspring);
 
-          console.log(`👶 Animal ${animal.type} reproduced: ${offspring.id} (gen ${generation})`);
-          animal.state = 'idle';
+          console.log(
+            `👶 Animal ${animal.type} reproduced: ${offspring.id} (gen ${generation})`,
+          );
+          animal.state = "idle";
         }
       } else {
         // Move toward mate
@@ -390,7 +404,7 @@ export class AnimalBehavior {
           animal,
           nearbyMate.position,
           config.speed * animal.genes.speed * 0.6,
-          deltaSeconds
+          deltaSeconds,
         );
       }
     } else {

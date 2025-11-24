@@ -1,6 +1,10 @@
 import { InventorySystem } from "./InventorySystem";
 import type { GameState } from "../../types/game-types";
-import type { WeaponId, CraftingRecipe, CraftingJob } from "../../types/simulation/crafting";
+import type {
+  WeaponId,
+  CraftingRecipe,
+  CraftingJob,
+} from "../../types/simulation/crafting";
 import { BASIC_RECIPES, getRecipeById } from "../../../simulation/data/recipes";
 import { simulationEvents, GameEventNames } from "../core/events";
 import type { ResourceType } from "../../types/simulation/economy";
@@ -25,7 +29,10 @@ const BASE_WEAPONS: WeaponId[] = ["stone_dagger", "wooden_club"];
 export class EnhancedCraftingSystem {
   private readonly config: EnhancedCraftingConfig;
   private readonly now: () => number;
-  private readonly knownRecipes = new Map<string, Map<string, AgentRecipeState>>();
+  private readonly knownRecipes = new Map<
+    string,
+    Map<string, AgentRecipeState>
+  >();
   private readonly activeJobs = new Map<string, CraftingJob>();
   private readonly equippedWeapons = new Map<string, WeaponId>();
 
@@ -105,8 +112,12 @@ export class EnhancedCraftingSystem {
     const recipe = getRecipeById(job.recipeId);
     if (!recipe) return;
 
-    const successRate = this.getRecipeState(job.agentId, recipe.id)?.successRate ?? recipe.successRate ?? 0.5;
-    const success = Math.random() < Math.max(this.config.minSuccessRate, successRate);
+    const successRate =
+      this.getRecipeState(job.agentId, recipe.id)?.successRate ??
+      recipe.successRate ??
+      0.5;
+    const success =
+      Math.random() < Math.max(this.config.minSuccessRate, successRate);
 
     if (success) {
       this.applyOutput(job.agentId, recipe);
@@ -123,7 +134,12 @@ export class EnhancedCraftingSystem {
 
   private applyOutput(agentId: string, recipe: CraftingRecipe): void {
     const output = recipe.output.itemId;
-    if (output === "wood" || output === "stone" || output === "food" || output === "water") {
+    if (
+      output === "wood" ||
+      output === "stone" ||
+      output === "food" ||
+      output === "water"
+    ) {
       this.inventorySystem.addResource(agentId, output, recipe.output.quantity);
       return;
     }
@@ -157,13 +173,22 @@ export class EnhancedCraftingSystem {
   }
 
   private mapToResourceKey(itemId: string): ResourceType | null {
-    if (itemId === "wood" || itemId === "stone" || itemId === "food" || itemId === "water") {
+    if (
+      itemId === "wood" ||
+      itemId === "stone" ||
+      itemId === "food" ||
+      itemId === "water"
+    ) {
       return itemId;
     }
     return null;
   }
 
-  private registerRecipeUsage(agentId: string, recipeId: string, success: boolean): void {
+  private registerRecipeUsage(
+    agentId: string,
+    recipeId: string,
+    success: boolean,
+  ): void {
     const recipes = this.getOrCreateRecipeMap(agentId);
     const state = recipes.get(recipeId) ?? {
       successRate: getRecipeById(recipeId)?.successRate ?? 0.6,
@@ -179,10 +204,15 @@ export class EnhancedCraftingSystem {
   }
 
   private hasCraftingStation(): boolean {
-    return (this.state.zones || []).some((zone) => (zone as ZoneWithMetadata).metadata?.craftingStation);
+    return (this.state.zones || []).some(
+      (zone) => (zone as ZoneWithMetadata).metadata?.craftingStation,
+    );
   }
 
-  private getRecipeState(agentId: string, recipeId: string): AgentRecipeState | undefined {
+  private getRecipeState(
+    agentId: string,
+    recipeId: string,
+  ): AgentRecipeState | undefined {
     return this.knownRecipes.get(agentId)?.get(recipeId);
   }
 

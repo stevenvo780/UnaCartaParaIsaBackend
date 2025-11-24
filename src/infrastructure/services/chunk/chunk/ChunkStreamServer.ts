@@ -82,7 +82,9 @@ export class ChunkStreamServer {
       ws,
       inflight: new Map(),
     };
-    ws.on("message", (event: string | Buffer | ArrayBuffer) => this.handleMessage(ctx, event));
+    ws.on("message", (event: string | Buffer | ArrayBuffer) =>
+      this.handleMessage(ctx, event),
+    );
     ws.on("close", () => this.handleDisconnect(ctx));
     ws.on("error", () => this.handleDisconnect(ctx));
 
@@ -93,10 +95,18 @@ export class ChunkStreamServer {
     ws.send(JSON.stringify(hello));
   }
 
-  private handleMessage(ctx: ClientContext, raw: string | Buffer | ArrayBuffer): void {
+  private handleMessage(
+    ctx: ClientContext,
+    raw: string | Buffer | ArrayBuffer,
+  ): void {
     let json: unknown;
     try {
-      const data = raw instanceof ArrayBuffer ? Buffer.from(raw) : (typeof raw === 'string' ? Buffer.from(raw) : raw);
+      const data =
+        raw instanceof ArrayBuffer
+          ? Buffer.from(raw)
+          : typeof raw === "string"
+            ? Buffer.from(raw)
+            : raw;
       json = JSON.parse(data.toString());
     } catch (error) {
       ctx.ws.send(

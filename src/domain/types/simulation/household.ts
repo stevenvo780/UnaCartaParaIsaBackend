@@ -2,7 +2,7 @@
 
 export interface HouseholdMember {
   agentId: string;
-  role: 'head' | 'spouse' | 'child' | 'other';
+  role: "head" | "spouse" | "child" | "other";
   joinedDate: number;
 }
 

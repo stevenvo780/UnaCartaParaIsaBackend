@@ -89,8 +89,16 @@ export class DivineFavorSystem {
   constructor(config?: Partial<DivineFavorConfig>) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.divinePowers = {
-      isa: { godId: "isa", power: this.config.maxPower, regenRate: this.config.basePowerRegenRate },
-      stev: { godId: "stev", power: this.config.maxPower, regenRate: this.config.basePowerRegenRate },
+      isa: {
+        godId: "isa",
+        power: this.config.maxPower,
+        regenRate: this.config.basePowerRegenRate,
+      },
+      stev: {
+        godId: "stev",
+        power: this.config.maxPower,
+        regenRate: this.config.basePowerRegenRate,
+      },
     };
   }
 
@@ -135,7 +143,9 @@ export class DivineFavorSystem {
       duration: duration ?? this.config.defaultBlessingDuration,
       appliedAt: now,
       expiresAt:
-        duration && duration > 0 ? now + duration : now + this.config.defaultBlessingDuration,
+        duration && duration > 0
+          ? now + duration
+          : now + this.config.defaultBlessingDuration,
       target: { lineageIds: [lineageId] },
     };
 

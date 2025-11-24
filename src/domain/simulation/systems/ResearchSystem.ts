@@ -70,7 +70,7 @@ export class ResearchSystem {
   public onRecipeDiscovered(
     lineageId: string,
     recipeId: string,
-    discoveredBy: string
+    discoveredBy: string,
   ): { completed: boolean; unlocked: string[] } {
     const category = this.getCategoryForRecipe(recipeId);
     if (!category) return { completed: false, unlocked: [] };
@@ -139,7 +139,7 @@ export class ResearchSystem {
 
   private getUnlockedBy(categoryId: string): ResearchCategory[] {
     return RESEARCH_CATEGORIES.filter((cat) =>
-      cat.prerequisites.includes(categoryId)
+      cat.prerequisites.includes(categoryId),
     );
   }
 
@@ -151,7 +151,7 @@ export class ResearchSystem {
     if (!category) return false;
 
     const available = category.prerequisites.every((prereq) =>
-      unlocked.has(prereq)
+      unlocked.has(prereq),
     );
 
     if (available && !unlocked.has(categoryId)) {
@@ -191,7 +191,7 @@ export class ResearchSystem {
   }
 
   public getResearchProgress(
-    lineageId: string
+    lineageId: string,
   ): Map<string, ResearchNode> | undefined {
     return this.lineageResearch.get(lineageId);
   }
@@ -201,7 +201,7 @@ export class ResearchSystem {
     if (!unlocked) return [];
 
     return RESEARCH_CATEGORIES.filter((cat) =>
-      cat.prerequisites.every((prereq) => unlocked.has(prereq))
+      cat.prerequisites.every((prereq) => unlocked.has(prereq)),
     );
   }
 
@@ -248,9 +248,10 @@ export class ResearchSystem {
       totalCategories,
       unlockedCategories: unlockedCount,
       completedCategories: completedCount,
-      totalProgress: researchMap && researchMap.size > 0
-        ? totalProgress / researchMap.size
-        : 0,
+      totalProgress:
+        researchMap && researchMap.size > 0
+          ? totalProgress / researchMap.size
+          : 0,
       specializations,
     };
   }
@@ -278,7 +279,7 @@ export class ResearchSystem {
     const available = RESEARCH_CATEGORIES.filter(
       (cat) =>
         !unlocked.has(cat.id) &&
-        cat.prerequisites.every((prereq) => unlocked.has(prereq))
+        cat.prerequisites.every((prereq) => unlocked.has(prereq)),
     );
 
     return available.slice(0, limit);
@@ -356,21 +357,25 @@ export class ResearchSystem {
 
     // Actualizar stats de todos los lineages - el frontend espera una estructura específica
     const allLineagesStats = this.getAllLineagesStats();
-    this.gameState.research.lineages = allLineagesStats.map(({ lineageId, stats }) => ({
-      lineageId,
-      stats,
-      // Agregar datos adicionales que el frontend puede necesitar
-      nodes: Array.from(this.getResearchProgress(lineageId)?.values() || []).map(node => ({
-        categoryId: node.categoryId,
-        progress: node.progress,
-        recipesDiscovered: node.recipesDiscovered,
-        contributors: node.contributors,
-      })),
-      unlockedCategories: Array.from(
-        this.lineageResearch.get(lineageId)?.keys() || []
-      ),
-      specializations: this.getSpecializations(lineageId),
-    }));
+    this.gameState.research.lineages = allLineagesStats.map(
+      ({ lineageId, stats }) => ({
+        lineageId,
+        stats,
+        // Agregar datos adicionales que el frontend puede necesitar
+        nodes: Array.from(
+          this.getResearchProgress(lineageId)?.values() || [],
+        ).map((node) => ({
+          categoryId: node.categoryId,
+          progress: node.progress,
+          recipesDiscovered: node.recipesDiscovered,
+          contributors: node.contributors,
+        })),
+        unlockedCategories: Array.from(
+          this.lineageResearch.get(lineageId)?.keys() || [],
+        ),
+        specializations: this.getSpecializations(lineageId),
+      }),
+    );
   }
 
   public cleanup(): void {

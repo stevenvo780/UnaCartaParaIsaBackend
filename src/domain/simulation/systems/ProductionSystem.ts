@@ -63,7 +63,10 @@ export class ProductionSystem {
     if (zone.type === "food" || zone.metadata?.productionResource === "food") {
       return "food";
     }
-    if (zone.type === "water" || zone.metadata?.productionResource === "water") {
+    if (
+      zone.type === "water" ||
+      zone.metadata?.productionResource === "water"
+    ) {
       return "water";
     }
     return (zone.metadata?.productionResource as ResourceType) || null;

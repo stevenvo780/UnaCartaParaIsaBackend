@@ -167,8 +167,10 @@ export class QuestSystem {
     this.gameState.quests.active = this.getActiveQuests();
     this.gameState.quests.available = this.getAvailableQuests();
     this.gameState.quests.completed = this.getCompletedQuests();
-    this.gameState.quests.totalCompleted = this.questProgress.totalQuestsCompleted;
-    this.gameState.quests.totalExperience = this.questProgress.totalExperienceGained;
+    this.gameState.quests.totalCompleted =
+      this.questProgress.totalQuestsCompleted;
+    this.gameState.quests.totalExperience =
+      this.questProgress.totalExperienceGained;
   }
 
   public startQuest(questId: string): { success: boolean; event?: QuestEvent } {
@@ -213,7 +215,7 @@ export class QuestSystem {
     }
 
     const incompleteObjectives = quest.objectives.filter(
-      (obj) => !obj.isCompleted && !obj.isOptional
+      (obj) => !obj.isCompleted && !obj.isOptional,
     );
 
     if (incompleteObjectives.length > 0) {
@@ -253,7 +255,7 @@ export class QuestSystem {
   public updateObjectiveProgress(
     questId: string,
     objectiveId: string,
-    amount = 1
+    amount = 1,
   ): { completed: boolean; event?: QuestEvent } {
     const quest = this.questProgress.activeQuests.get(questId);
     if (!quest) return { completed: false };
@@ -345,7 +347,7 @@ export class QuestSystem {
     if (!quest) return;
 
     const incompleteObjectives = quest.objectives.filter(
-      (obj) => !obj.isCompleted && !obj.isOptional
+      (obj) => !obj.isCompleted && !obj.isOptional,
     );
 
     if (incompleteObjectives.length === 0) {
@@ -450,7 +452,7 @@ export class QuestSystem {
               this.updateObjectiveProgress(
                 quest.id,
                 objective.id,
-                (eventData.data.amount as number) || 1
+                (eventData.data.amount as number) || 1,
               );
             }
           });

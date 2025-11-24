@@ -77,14 +77,21 @@ export class BuildingSystem {
     }
 
     const mines = zones.filter(
-      (z) => z.metadata?.building === "mine" && z.metadata?.underConstruction !== true,
+      (z) =>
+        z.metadata?.building === "mine" &&
+        z.metadata?.underConstruction !== true,
     ).length;
     if (mines < this.config.maxMines && !this.hasActiveJob("mine")) {
       return "mine";
     }
 
-    const workbenches = zones.filter((z) => z.metadata?.craftingStation === true).length;
-    if (workbenches < this.config.maxWorkbenches && !this.hasActiveJob("workbench")) {
+    const workbenches = zones.filter(
+      (z) => z.metadata?.craftingStation === true,
+    ).length;
+    if (
+      workbenches < this.config.maxWorkbenches &&
+      !this.hasActiveJob("workbench")
+    ) {
       return "workbench";
     }
 
@@ -169,7 +176,10 @@ export class BuildingSystem {
     }
   }
 
-  private finalizeConstruction(job: ConstructionJob, completedAt: number): void {
+  private finalizeConstruction(
+    job: ConstructionJob,
+    completedAt: number,
+  ): void {
     this.constructionJobs.delete(job.id);
 
     const consumed = this.reservationSystem.consume(job.reservationId);

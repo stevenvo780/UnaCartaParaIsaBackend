@@ -1,6 +1,10 @@
 import { GameEventNames, simulationEvents } from "../core/events";
 import { getResourceConfig } from "../../../infrastructure/services/world/config/WorldResourceConfigs";
-import type { WorldResourceInstance, WorldResourceType, WorldResourceConfig } from "../../types/simulation/worldResources";
+import type {
+  WorldResourceInstance,
+  WorldResourceType,
+  WorldResourceConfig,
+} from "../../types/simulation/worldResources";
 import type { GameState } from "../../types/game-types";
 
 export class WorldResourceSystem {
@@ -15,7 +19,10 @@ export class WorldResourceSystem {
       this.state.worldResources = {};
     }
 
-    simulationEvents.on(GameEventNames.RESOURCE_GATHERED, this.handleResourceGathered.bind(this));
+    simulationEvents.on(
+      GameEventNames.RESOURCE_GATHERED,
+      this.handleResourceGathered.bind(this),
+    );
   }
 
   public update(_delta: number): void {
@@ -33,7 +40,9 @@ export class WorldResourceSystem {
   private processRegeneration(now: number): void {
     if (!this.state.worldResources) return;
 
-    for (const [resourceId, startTime] of Array.from(this.regenerationTimers.entries())) {
+    for (const [resourceId, startTime] of Array.from(
+      this.regenerationTimers.entries(),
+    )) {
       const resource = this.state.worldResources[resourceId];
       if (!resource) {
         this.regenerationTimers.delete(resourceId);
@@ -55,13 +64,18 @@ export class WorldResourceSystem {
 
         simulationEvents.emit(GameEventNames.RESOURCE_STATE_CHANGE, {
           resourceId,
-          newState: "pristine"
+          newState: "pristine",
         });
       }
     }
   }
 
-  public spawnResourcesInWorld(worldConfig: { width: number; height: number; tileSize: number; biomeMap: string[][] }): void {
+  public spawnResourcesInWorld(worldConfig: {
+    width: number;
+    height: number;
+    tileSize: number;
+    biomeMap: string[][];
+  }): void {
     const { width, height, tileSize, biomeMap } = worldConfig;
     let spawned = 0;
     const sampleStep = 64;
@@ -71,7 +85,12 @@ export class WorldResourceSystem {
         const tileX = Math.floor(x / tileSize);
         const tileY = Math.floor(y / tileSize);
 
-        if (tileY >= 0 && tileY < biomeMap.length && tileX >= 0 && tileX < biomeMap[0].length) {
+        if (
+          tileY >= 0 &&
+          tileY < biomeMap.length &&
+          tileX >= 0 &&
+          tileX < biomeMap[0].length
+        ) {
           const biome = biomeMap[tileY][tileX];
           const resourceConfigs = this.getResourcesForBiome(biome);
 
@@ -87,11 +106,23 @@ export class WorldResourceSystem {
     console.log(`[WorldResourceSystem] Spawned ${spawned} resources in world`);
   }
 
-  public spawnResource(type: string, position: { x: number; y: number }, biome: string): WorldResourceInstance | null {
+  public spawnResource(
+    type: string,
+    position: { x: number; y: number },
+    biome: string,
+  ): WorldResourceInstance | null {
     const config = getResourceConfig(type);
     if (!config) return null;
 
-    const validTypes: WorldResourceType[] = ["tree", "rock", "trash_pile", "water_source", "berry_bush", "mushroom_patch", "wheat_crop"];
+    const validTypes: WorldResourceType[] = [
+      "tree",
+      "rock",
+      "trash_pile",
+      "water_source",
+      "berry_bush",
+      "mushroom_patch",
+      "wheat_crop",
+    ];
     if (!validTypes.includes(type as WorldResourceType)) {
       return null;
     }
@@ -106,7 +137,7 @@ export class WorldResourceSystem {
       harvestCount: 0,
       lastHarvestTime: 0,
       biome,
-      spawnedAt: Date.now()
+      spawnedAt: Date.now(),
     };
 
     this.state.worldResources![id] = resource;
@@ -127,12 +158,20 @@ export class WorldResourceSystem {
       getResourceConfig("water_source"),
       getResourceConfig("mushroom_patch"),
       getResourceConfig("wheat_crop"),
-      getResourceConfig("trash_pile")
+      getResourceConfig("trash_pile"),
     ];
-    return configs.filter((c): c is NonNullable<typeof c> => c !== null && c !== undefined && c.suitableBiomes?.includes(biome) === true);
+    return configs.filter(
+      (c): c is NonNullable<typeof c> =>
+        c !== null &&
+        c !== undefined &&
+        c.suitableBiomes?.includes(biome) === true,
+    );
   }
 
-  private handleResourceGathered(data: { resourceId: string; amount: number }): void {
+  private handleResourceGathered(data: {
+    resourceId: string;
+    amount: number;
+  }): void {
     if (!this.state.worldResources) return;
     const resource = this.state.worldResources[data.resourceId];
     if (!resource) return;
@@ -154,7 +193,7 @@ export class WorldResourceSystem {
       resource.state = newState;
       simulationEvents.emit(GameEventNames.RESOURCE_STATE_CHANGE, {
         resourceId: resource.id,
-        newState
+        newState,
       });
 
       if (newState === "depleted" && config.canRegenerate) {
@@ -166,30 +205,40 @@ export class WorldResourceSystem {
 
   public getResourcesByType(type: WorldResourceType): WorldResourceInstance[] {
     if (!this.state.worldResources) return [];
-    return Object.values(this.state.worldResources).filter((r) => r.type === type);
+    return Object.values(this.state.worldResources).filter(
+      (r) => r.type === type,
+    );
   }
 
   /**
    * Get resources near a position (for animal foraging)
    */
-  public getResourcesNear(position: { x: number; y: number }, radius: number): WorldResourceInstance[] {
+  public getResourcesNear(
+    position: { x: number; y: number },
+    radius: number,
+  ): WorldResourceInstance[] {
     if (!this.state.worldResources) return [];
 
     const radiusSq = radius * radius;
-    return Object.values(this.state.worldResources).filter((resource: WorldResourceInstance) => {
-      const dx = resource.position.x - position.x;
-      const dy = resource.position.y - position.y;
-      const distSq = dx * dx + dy * dy;
-      return distSq <= radiusSq && resource.state !== 'depleted';
-    });
+    return Object.values(this.state.worldResources).filter(
+      (resource: WorldResourceInstance) => {
+        const dx = resource.position.x - position.x;
+        const dy = resource.position.y - position.y;
+        const distSq = dx * dx + dy * dy;
+        return distSq <= radiusSq && resource.state !== "depleted";
+      },
+    );
   }
 
   /**
    * Harvest/consume a resource (for animals and agents)
    */
-  public harvestResource(resourceId: string, harvesterId: string): { success: boolean; amount: number } {
+  public harvestResource(
+    resourceId: string,
+    harvesterId: string,
+  ): { success: boolean; amount: number } {
     const resource = this.state.worldResources?.[resourceId];
-    if (!resource || resource.state === 'depleted') {
+    if (!resource || resource.state === "depleted") {
       return { success: false, amount: 0 };
     }
 
@@ -205,7 +254,7 @@ export class WorldResourceSystem {
     // Check if depleted
     const maxHarvests = config.harvestsUntilDepleted || 5;
     if (resource.harvestCount >= maxHarvests) {
-      resource.state = 'depleted';
+      resource.state = "depleted";
 
       // Start regeneration if applicable
       if (config.canRegenerate) {
@@ -215,14 +264,14 @@ export class WorldResourceSystem {
 
       simulationEvents.emit(GameEventNames.RESOURCE_STATE_CHANGE, {
         resourceId,
-        newState: 'depleted',
+        newState: "depleted",
         harvesterId,
       });
     } else if (resource.harvestCount >= maxHarvests * 0.7) {
-      resource.state = 'harvested_partial';
+      resource.state = "harvested_partial";
       simulationEvents.emit(GameEventNames.RESOURCE_STATE_CHANGE, {
         resourceId,
-        newState: 'harvested_partial',
+        newState: "harvested_partial",
         harvesterId,
       });
     }

@@ -8,7 +8,10 @@ import type {
   CrisisTrend,
 } from "../../types/simulation/ambient";
 
-const INDICATOR_CONFIG: Record<string, { threshold: number; description: string }> = {
+const INDICATOR_CONFIG: Record<
+  string,
+  { threshold: number; description: string }
+> = {
   sustainability: {
     threshold: 0.3,
     description: "Sostenibilidad del sistema basado en reservas y consumo",
@@ -52,9 +55,12 @@ export class CrisisPredictorSystem {
     this.snapshot = {
       indicators,
       predictions,
-      historySize: Math.min(
-        ...Array.from(this.indicatorHistory.values()).map((values) => values.length),
-      ) || 0,
+      historySize:
+        Math.min(
+          ...Array.from(this.indicatorHistory.values()).map(
+            (values) => values.length,
+          ),
+        ) || 0,
       lastUpdated: now,
     };
 
@@ -81,7 +87,10 @@ export class CrisisPredictorSystem {
       if (data.needs.hunger > 80) hungerStress++;
       if (data.needs.thirst > 80) thirstStress++;
       if (data.needs.energy < 25) energyStress++;
-      if (data.emergencyLevel === "critical" || data.emergencyLevel === "dying") {
+      if (
+        data.emergencyLevel === "critical" ||
+        data.emergencyLevel === "dying"
+      ) {
         emergencyCount++;
       }
     }
@@ -90,9 +99,18 @@ export class CrisisPredictorSystem {
     const totalFood = materials?.food ?? 0;
     const totalWater = materials?.water ?? 0;
 
-    const sustainabilityValue = Math.min(1, (totalFood + totalWater) / Math.max(1, totalAgents * 10));
-    const resourceBalance = Math.min(1, totalFood / Math.max(1, totalAgents * 5));
-    const populationStress = Math.min(1, (hungerStress + thirstStress + energyStress) / (totalAgents * 3));
+    const sustainabilityValue = Math.min(
+      1,
+      (totalFood + totalWater) / Math.max(1, totalAgents * 10),
+    );
+    const resourceBalance = Math.min(
+      1,
+      totalFood / Math.max(1, totalAgents * 5),
+    );
+    const populationStress = Math.min(
+      1,
+      (hungerStress + thirstStress + energyStress) / (totalAgents * 3),
+    );
     const emergencyRate = Math.min(1, emergencyCount / totalAgents);
 
     const rawIndicators: Record<string, number> = {
@@ -147,10 +165,15 @@ export class CrisisPredictorSystem {
     }
   }
 
-  private computePredictions(indicators: CrisisIndicator[], now: number): CrisisPrediction[] {
+  private computePredictions(
+    indicators: CrisisIndicator[],
+    now: number,
+  ): CrisisPrediction[] {
     const predictions: CrisisPrediction[] = [];
 
-    const highIndicators = indicators.filter((ind) => ind.value >= ind.threshold);
+    const highIndicators = indicators.filter(
+      (ind) => ind.value >= ind.threshold,
+    );
 
     if (highIndicators.length === 0) {
       return predictions;
@@ -173,22 +196,39 @@ export class CrisisPredictorSystem {
       });
     };
 
-    const stressIndicator = indicators.find((ind) => ind.name === "population_stress");
+    const stressIndicator = indicators.find(
+      (ind) => ind.name === "population_stress",
+    );
     if (stressIndicator && stressIndicator.severity !== "low") {
-      addPrediction("population_crisis", ["population_stress"], stressIndicator.value);
+      addPrediction(
+        "population_crisis",
+        ["population_stress"],
+        stressIndicator.value,
+      );
     }
 
-    const balanceIndicator = indicators.find((ind) => ind.name === "resource_balance");
+    const balanceIndicator = indicators.find(
+      (ind) => ind.name === "resource_balance",
+    );
     if (balanceIndicator && balanceIndicator.severity !== "low") {
-      addPrediction("resource_shortage", ["resource_balance"], balanceIndicator.value);
+      addPrediction(
+        "resource_shortage",
+        ["resource_balance"],
+        balanceIndicator.value,
+      );
     }
 
-    const sustainabilityIndicator = indicators.find((ind) => ind.name === "sustainability");
-    const emergencyIndicator = indicators.find((ind) => ind.name === "emergency_rate");
+    const sustainabilityIndicator = indicators.find(
+      (ind) => ind.name === "sustainability",
+    );
+    const emergencyIndicator = indicators.find(
+      (ind) => ind.name === "emergency_rate",
+    );
     if (
       sustainabilityIndicator &&
       emergencyIndicator &&
-      (sustainabilityIndicator.severity === "high" || emergencyIndicator.severity === "high")
+      (sustainabilityIndicator.severity === "high" ||
+        emergencyIndicator.severity === "high")
     ) {
       addPrediction(
         "system_collapse",
@@ -203,7 +243,10 @@ export class CrisisPredictorSystem {
   private suggestActions(type: CrisisPrediction["type"]): string[] {
     switch (type) {
       case "resource_shortage":
-        return ["Priorizar construcción de graneros", "Aumentar raciones de emergencia"];
+        return [
+          "Priorizar construcción de graneros",
+          "Aumentar raciones de emergencia",
+        ];
       case "mass_starvation":
         return ["Distribuir reservas", "Activar mercados de intercambio"];
       case "population_crisis":

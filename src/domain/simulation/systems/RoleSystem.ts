@@ -1,6 +1,6 @@
-import { EventEmitter } from 'node:events';
-import type { GameState } from '../../types/game-types';
-import type { AgentProfile } from '../../types/simulation/agents';
+import { EventEmitter } from "node:events";
+import type { GameState } from "../../types/game-types";
+import type { AgentProfile } from "../../types/simulation/agents";
 import type {
   RoleType,
   WorkShift,
@@ -9,14 +9,14 @@ import type {
   ShiftSchedule,
   RoleAssignment,
   RoleSystemConfig,
-} from '../../types/simulation/roles';
+} from "../../types/simulation/roles";
 
 const ROLE_DEFINITIONS: RoleConfig[] = [
   {
-    type: 'logger' as RoleType,
-    name: 'Leñador',
-    description: 'Recolecta madera del bosque',
-    primaryResource: 'wood',
+    type: "logger" as RoleType,
+    name: "Leñador",
+    description: "Recolecta madera del bosque",
+    primaryResource: "wood",
     requirements: {
       minAge: 16,
       traits: { diligence: 0.4 },
@@ -25,14 +25,14 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       base: 0.6,
       traitBonus: { diligence: 0.3, cooperation: 0.1 },
     },
-    preferredZoneType: 'work',
-    workShifts: ['morning', 'afternoon'],
+    preferredZoneType: "work",
+    workShifts: ["morning", "afternoon"],
   },
   {
-    type: 'quarryman' as RoleType,
-    name: 'Cantero',
-    description: 'Extrae piedra de la cantera',
-    primaryResource: 'stone',
+    type: "quarryman" as RoleType,
+    name: "Cantero",
+    description: "Extrae piedra de la cantera",
+    primaryResource: "stone",
     requirements: {
       minAge: 18,
       traits: { diligence: 0.5 },
@@ -41,13 +41,13 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       base: 0.5,
       traitBonus: { diligence: 0.4, cooperation: 0.1 },
     },
-    preferredZoneType: 'work',
-    workShifts: ['morning', 'afternoon'],
+    preferredZoneType: "work",
+    workShifts: ["morning", "afternoon"],
   },
   {
-    type: 'builder' as RoleType,
-    name: 'Constructor',
-    description: 'Construye y repara edificios',
+    type: "builder" as RoleType,
+    name: "Constructor",
+    description: "Construye y repara edificios",
     primaryResource: undefined,
     requirements: {
       minAge: 20,
@@ -57,14 +57,14 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       base: 0.7,
       traitBonus: { diligence: 0.2, cooperation: 0.3, curiosity: 0.1 },
     },
-    preferredZoneType: 'work',
-    workShifts: ['morning', 'afternoon', 'evening'],
+    preferredZoneType: "work",
+    workShifts: ["morning", "afternoon", "evening"],
   },
   {
-    type: 'farmer' as RoleType,
-    name: 'Granjero',
-    description: 'Cultiva alimentos',
-    primaryResource: 'food',
+    type: "farmer" as RoleType,
+    name: "Granjero",
+    description: "Cultiva alimentos",
+    primaryResource: "food",
     requirements: {
       minAge: 16,
       traits: { diligence: 0.3 },
@@ -73,14 +73,14 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       base: 0.6,
       traitBonus: { diligence: 0.3, curiosity: 0.2 },
     },
-    preferredZoneType: 'food',
-    workShifts: ['morning', 'afternoon'],
+    preferredZoneType: "food",
+    workShifts: ["morning", "afternoon"],
   },
   {
-    type: 'gatherer' as RoleType,
-    name: 'Recolector',
-    description: 'Recolecta agua y recursos básicos',
-    primaryResource: 'water',
+    type: "gatherer" as RoleType,
+    name: "Recolector",
+    description: "Recolecta agua y recursos básicos",
+    primaryResource: "water",
     requirements: {
       minAge: 14,
       traits: {},
@@ -89,13 +89,13 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       base: 0.7,
       traitBonus: { curiosity: 0.2, cooperation: 0.1 },
     },
-    preferredZoneType: 'water',
-    workShifts: ['morning', 'afternoon', 'evening'],
+    preferredZoneType: "water",
+    workShifts: ["morning", "afternoon", "evening"],
   },
   {
-    type: 'guard' as RoleType,
-    name: 'Guardián',
-    description: 'Protege el asentamiento',
+    type: "guard" as RoleType,
+    name: "Guardián",
+    description: "Protege el asentamiento",
     primaryResource: undefined,
     requirements: {
       minAge: 20,
@@ -105,8 +105,8 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       base: 0.6,
       traitBonus: { cooperation: 0.3, diligence: 0.2 },
     },
-    preferredZoneType: 'rest',
-    workShifts: ['evening', 'night'],
+    preferredZoneType: "rest",
+    workShifts: ["evening", "night"],
   },
 ];
 
@@ -121,15 +121,12 @@ export class RoleSystem extends EventEmitter {
     night: [],
     rest: [],
   };
-  private currentShift: WorkShift = 'morning';
+  private currentShift: WorkShift = "morning";
   private lastUpdate = 0;
   private lastStatsUpdate = 0;
   private lastReassignment = 0;
 
-  constructor(
-    gameState: GameState,
-    config?: Partial<RoleSystemConfig>
-  ) {
+  constructor(gameState: GameState, config?: Partial<RoleSystemConfig>) {
     super();
     this.gameState = gameState;
     this.config = {
@@ -145,7 +142,7 @@ export class RoleSystem extends EventEmitter {
     this.lastStatsUpdate = now;
     this.lastReassignment = now;
 
-    console.log('👷 RoleSystem (Backend) initialized');
+    console.log("👷 RoleSystem (Backend) initialized");
   }
 
   public update(_delta: number): void {
@@ -174,26 +171,34 @@ export class RoleSystem extends EventEmitter {
 
   private updateRoleStats(dt: number): void {
     this.roles.forEach((role) => {
-      if (role.currentShift === this.currentShift && role.currentShift !== 'rest') {
+      if (
+        role.currentShift === this.currentShift &&
+        role.currentShift !== "rest"
+      ) {
         role.experience = Math.min(
           1,
-          role.experience + this.config.experienceGainPerSecond * dt
+          role.experience + this.config.experienceGainPerSecond * dt,
         );
       }
 
       role.satisfaction = Math.max(
         0,
-        role.satisfaction - this.config.satisfactionDecayPerSecond * dt
+        role.satisfaction - this.config.satisfactionDecayPerSecond * dt,
       );
     });
   }
 
-  public updateCurrentShift(timePhase: 'morning' | 'afternoon' | 'evening' | 'night' | 'rest'): void {
-    if (this.currentShift !== timePhase && timePhase !== 'rest') {
+  public updateCurrentShift(
+    timePhase: "morning" | "afternoon" | "evening" | "night" | "rest",
+  ): void {
+    if (this.currentShift !== timePhase && timePhase !== "rest") {
       const previousShift = this.currentShift;
       this.currentShift = timePhase as WorkShift;
       this.rebuildSchedule();
-      this.emit('shiftChanged', { previous: previousShift, current: this.currentShift });
+      this.emit("shiftChanged", {
+        previous: previousShift,
+        current: this.currentShift,
+      });
     }
   }
 
@@ -220,7 +225,7 @@ export class RoleSystem extends EventEmitter {
       if (config.workShifts.includes(this.currentShift)) {
         role.currentShift = this.currentShift;
       } else {
-        role.currentShift = 'rest';
+        role.currentShift = "rest";
         if (!this.schedule.rest.includes(agentId)) {
           this.schedule.rest.push(agentId);
         }
@@ -248,7 +253,7 @@ export class RoleSystem extends EventEmitter {
       return {
         success: false,
         agentId: agent.id,
-        reason: 'Agente inmortal (dios) no recibe rol',
+        reason: "Agente inmortal (dios) no recibe rol",
       };
     }
 
@@ -259,7 +264,7 @@ export class RoleSystem extends EventEmitter {
       if (!this.meetsRequirements(agent, roleDef)) return;
 
       const currentWorkers = Array.from(this.roles.values()).filter(
-        (r) => r.roleType === roleDef.type
+        (r) => r.roleType === roleDef.type,
       ).length;
       const maxSlots = this.getMaxSlotsForRole(roleDef.type);
 
@@ -278,7 +283,7 @@ export class RoleSystem extends EventEmitter {
       return {
         success: false,
         agentId: agent.id,
-        reason: 'No cumple requisitos de ningún rol o todos llenos',
+        reason: "No cumple requisitos de ningún rol o todos llenos",
       };
     }
 
@@ -298,7 +303,9 @@ export class RoleSystem extends EventEmitter {
     this.roles.set(agent.id, role);
     this.rebuildSchedule();
 
-    console.log(`👷 Rol asignado: ${agent.name || agent.id} → ${selectedRole.name}`);
+    console.log(
+      `👷 Rol asignado: ${agent.name || agent.id} → ${selectedRole.name}`,
+    );
 
     return { success: true, agentId: agent.id, roleType: selectedRole.type };
   }
@@ -308,7 +315,10 @@ export class RoleSystem extends EventEmitter {
     if (req.minAge && agent.ageYears < req.minAge) return false;
     if (req.forbiddenFor?.includes(agent.id)) return false;
     if (req.traits) {
-      if (req.traits.cooperation && agent.traits.cooperation < req.traits.cooperation)
+      if (
+        req.traits.cooperation &&
+        agent.traits.cooperation < req.traits.cooperation
+      )
         return false;
       if (req.traits.diligence && agent.traits.diligence < req.traits.diligence)
         return false;
@@ -321,7 +331,8 @@ export class RoleSystem extends EventEmitter {
   private calculateRoleScore(agent: AgentProfile, role: RoleConfig): number {
     let score = role.efficiency.base;
     const bonus = role.efficiency.traitBonus;
-    if (bonus.cooperation) score += agent.traits.cooperation * bonus.cooperation;
+    if (bonus.cooperation)
+      score += agent.traits.cooperation * bonus.cooperation;
     if (bonus.diligence) score += agent.traits.diligence * bonus.diligence;
     if (bonus.curiosity) score += agent.traits.curiosity * bonus.curiosity;
     return score;
@@ -372,18 +383,19 @@ export class RoleSystem extends EventEmitter {
   public reassignRole(agentId: string, newRole: RoleType): RoleAssignment {
     const agents = this.getAdultAgents();
     const agent = agents.find((a) => a.id === agentId);
-    if (!agent) return { success: false, agentId, reason: 'Agente no encontrado' };
+    if (!agent)
+      return { success: false, agentId, reason: "Agente no encontrado" };
     if (agent.immortal)
       return {
         success: false,
         agentId,
-        reason: 'Agente inmortal no reasignable',
+        reason: "Agente inmortal no reasignable",
       };
 
     const roleDef = ROLE_DEFINITIONS.find((r) => r.type === newRole);
-    if (!roleDef) return { success: false, agentId, reason: 'Rol no válido' };
+    if (!roleDef) return { success: false, agentId, reason: "Rol no válido" };
     if (!this.meetsRequirements(agent, roleDef)) {
-      return { success: false, agentId, reason: 'No cumple requisitos' };
+      return { success: false, agentId, reason: "No cumple requisitos" };
     }
 
     const efficiency = this.calculateEfficiency(agent, roleDef);

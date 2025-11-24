@@ -28,7 +28,10 @@ export class SocialSystem {
     this.edges.forEach((neighbors) => {
       neighbors.forEach((affinity, neighborId) => {
         if (affinity > 0) {
-          const newAffinity = Math.max(0, affinity - this.config.decayPerSecond * dt);
+          const newAffinity = Math.max(
+            0,
+            affinity - this.config.decayPerSecond * dt,
+          );
           neighbors.set(neighborId, newAffinity);
         }
       });

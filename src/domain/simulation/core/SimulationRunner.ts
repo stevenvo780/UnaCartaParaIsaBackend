@@ -17,7 +17,7 @@ import { AISystem } from "../systems/AISystem";
 import { ResourceReservationSystem } from "../systems/ResourceReservationSystem";
 import { GovernanceSystem } from "../systems/GovernanceSystem";
 import { DivineFavorSystem } from "../systems/DivineFavorSystem";
-import { HouseholdSystem } from '../systems/HouseholdSystem';
+import { HouseholdSystem } from "../systems/HouseholdSystem";
 import { BuildingSystem } from "../systems/BuildingSystem";
 import { BuildingMaintenanceSystem } from "../systems/BuildingMaintenanceSystem";
 import { ProductionSystem } from "../systems/ProductionSystem";
@@ -119,24 +119,30 @@ export class SimulationRunner {
     this.lifeCycleSystem = new LifeCycleSystem(this.state);
     this.needsSystem = new NeedsSystem(this.state, this.lifeCycleSystem);
     this._genealogySystem = new GenealogySystem(this.state);
-    
+
     // Connect genealogy system to lifecycle events
-    simulationEvents.on(GameEventNames.AGENT_ACTION_COMPLETE, (data: { agentId: string; action: string }) => {
-      if (data.action === "birth") {
-        const agent = this.state.agents.find(a => a.id === data.agentId);
-        if (agent) {
-          this._genealogySystem.registerBirth(
-            agent,
-            agent.parents?.father,
-            agent.parents?.mother
-          );
+    simulationEvents.on(
+      GameEventNames.AGENT_ACTION_COMPLETE,
+      (data: { agentId: string; action: string }) => {
+        if (data.action === "birth") {
+          const agent = this.state.agents.find((a) => a.id === data.agentId);
+          if (agent) {
+            this._genealogySystem.registerBirth(
+              agent,
+              agent.parents?.father,
+              agent.parents?.mother,
+            );
+          }
         }
-      }
-    });
-    
-    simulationEvents.on(GameEventNames.COMBAT_KILL, (data: { targetId: string }) => {
-      this._genealogySystem.recordDeath(data.targetId);
-    });
+      },
+    );
+
+    simulationEvents.on(
+      GameEventNames.COMBAT_KILL,
+      (data: { targetId: string }) => {
+        this._genealogySystem.recordDeath(data.targetId);
+      },
+    );
     this.socialSystem = new SocialSystem(this.state);
     this.inventorySystem = new InventorySystem(this.state);
     this.resourceReservationSystem = new ResourceReservationSystem(
@@ -155,12 +161,12 @@ export class SimulationRunner {
       this.state,
       this.inventorySystem,
       this.socialSystem,
-      this.lifeCycleSystem
+      this.lifeCycleSystem,
     );
     this.marketSystem = new MarketSystem(
       this.state,
       this.inventorySystem,
-      this.lifeCycleSystem
+      this.lifeCycleSystem,
     );
     this.roleSystem = new RoleSystem(this.state);
     this.aiSystem = new AISystem(this.state, undefined, {
@@ -187,10 +193,7 @@ export class SimulationRunner {
       this.state,
       this.inventorySystem,
     );
-    this.animalSystem = new AnimalSystem(
-      this.state,
-      this.worldResourceSystem,
-    );
+    this.animalSystem = new AnimalSystem(this.state, this.worldResourceSystem);
     this.itemGenerationSystem = new ItemGenerationSystem(this.state);
     this.combatSystem = new CombatSystem(
       this.state,
@@ -224,16 +227,12 @@ export class SimulationRunner {
       this.needsSystem,
     );
     this.timeSystem = new TimeSystem(this.state);
-    this.emergenceSystem = new EmergenceSystem(
-      this.state,
-      undefined,
-      {
-        needsSystem: this.needsSystem,
-        socialSystem: this.socialSystem,
-        lifeCycleSystem: this.lifeCycleSystem,
-        economySystem: this.economySystem,
-      }
-    );
+    this.emergenceSystem = new EmergenceSystem(this.state, undefined, {
+      needsSystem: this.needsSystem,
+      socialSystem: this.socialSystem,
+      lifeCycleSystem: this.lifeCycleSystem,
+      economySystem: this.economySystem,
+    });
     this.interactionGameSystem = new InteractionGameSystem(this.state);
     this.knowledgeNetworkSystem = new KnowledgeNetworkSystem(this.state);
 
@@ -284,8 +283,15 @@ export class SimulationRunner {
     }
   }
 
-  public async initializeWorldResources(worldConfig: { width: number; height: number; tileSize: number; biomeMap: string[][] }): Promise<void> {
-    console.log(`Generating initial world ${worldConfig.width}x${worldConfig.height}...`);
+  public async initializeWorldResources(worldConfig: {
+    width: number;
+    height: number;
+    tileSize: number;
+    biomeMap: string[][];
+  }): Promise<void> {
+    console.log(
+      `Generating initial world ${worldConfig.width}x${worldConfig.height}...`,
+    );
 
     const CHUNK_SIZE = 16;
     const chunksX = Math.ceil(worldConfig.width / CHUNK_SIZE);
@@ -293,7 +299,9 @@ export class SimulationRunner {
     const allTiles = [];
 
     // Initialize biome map structure
-    const biomeMap: string[][] = Array(worldConfig.height).fill(null).map(() => Array(worldConfig.width).fill(""));
+    const biomeMap: string[][] = Array(worldConfig.height)
+      .fill(null)
+      .map(() => Array(worldConfig.width).fill(""));
 
     for (let cy = 0; cy < chunksY; cy++) {
       for (let cx = 0; cx < chunksX; cx++) {
@@ -303,10 +311,25 @@ export class SimulationRunner {
           tileSize: worldConfig.tileSize,
           seed: 12345,
           noise: {
-            temperature: { scale: 0.0005, octaves: 4, persistence: 0.5, lacunarity: 2.0 },
-            moisture: { scale: 0.0005, octaves: 3, persistence: 0.6, lacunarity: 2.0 },
-            elevation: { scale: 0.0005, octaves: 5, persistence: 0.4, lacunarity: 2.0 }
-          }
+            temperature: {
+              scale: 0.0005,
+              octaves: 4,
+              persistence: 0.5,
+              lacunarity: 2.0,
+            },
+            moisture: {
+              scale: 0.0005,
+              octaves: 3,
+              persistence: 0.6,
+              lacunarity: 2.0,
+            },
+            elevation: {
+              scale: 0.0005,
+              octaves: 5,
+              persistence: 0.4,
+              lacunarity: 2.0,
+            },
+          },
         });
 
         // Process chunk tiles
@@ -314,7 +337,7 @@ export class SimulationRunner {
           for (const tile of row) {
             // Ensure we don't go out of bounds if world size isn't a multiple of chunk size
             if (tile.x < worldConfig.width && tile.y < worldConfig.height) {
-              const tileType: "grass" | "stone" | "water" | "path" = 
+              const tileType: "grass" | "stone" | "water" | "path" =
                 tile.biome === BiomeType.OCEAN ? "water" : "grass";
               allTiles.push({
                 x: tile.x,
@@ -322,7 +345,7 @@ export class SimulationRunner {
                 assetId: tile.assets.terrain,
                 type: tileType,
                 biome: String(tile.biome),
-                isWalkable: tile.isWalkable ?? true
+                isWalkable: tile.isWalkable ?? true,
               });
               biomeMap[tile.y][tile.x] = tile.biome;
             }
@@ -332,13 +355,16 @@ export class SimulationRunner {
     }
 
     this.state.terrainTiles = allTiles;
-    this.state.worldSize = { width: worldConfig.width, height: worldConfig.height };
+    this.state.worldSize = {
+      width: worldConfig.width,
+      height: worldConfig.height,
+    };
     console.log(`Generated ${allTiles.length} terrain tiles.`);
 
     // Spawn resources using the generated biome map
     this.worldResourceSystem.spawnResourcesInWorld({
       ...worldConfig,
-      biomeMap
+      biomeMap,
     });
   }
 
@@ -377,7 +403,8 @@ export class SimulationRunner {
   }
 
   getSnapshot(): SimulationSnapshot {
-    const events = this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
+    const events =
+      this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
     const snapshotState = cloneGameState(this.state);
     snapshotState.genealogy = this._genealogySystem.getFamilyTree();
     return {
@@ -501,24 +528,34 @@ export class SimulationRunner {
     }
   }
 
-  private handleNeedsCommand(command: Extract<SimulationCommand, { type: "NEEDS_COMMAND" }>): void {
+  private handleNeedsCommand(
+    command: Extract<SimulationCommand, { type: "NEEDS_COMMAND" }>,
+  ): void {
     const payload = command.payload as Record<string, unknown>;
     switch (command.command) {
       case "SATISFY_NEED":
-        if (payload.entityId && payload.needType && typeof payload.amount === "number") {
+        if (
+          payload.entityId &&
+          payload.needType &&
+          typeof payload.amount === "number"
+        ) {
           this.needsSystem.satisfyNeed(
             payload.entityId as string,
             payload.needType as string,
-            payload.amount
+            payload.amount,
           );
         }
         break;
       case "MODIFY_NEED":
-        if (payload.entityId && payload.needType && typeof payload.delta === "number") {
+        if (
+          payload.entityId &&
+          payload.needType &&
+          typeof payload.delta === "number"
+        ) {
           this.needsSystem.modifyNeed(
             payload.entityId as string,
             payload.needType as string,
-            payload.delta
+            payload.delta,
           );
         }
         break;
@@ -528,14 +565,16 @@ export class SimulationRunner {
     }
   }
 
-  private handleRecipeCommand(command: Extract<SimulationCommand, { type: "RECIPE_COMMAND" }>): void {
+  private handleRecipeCommand(
+    command: Extract<SimulationCommand, { type: "RECIPE_COMMAND" }>,
+  ): void {
     const payload = command.payload as Record<string, unknown>;
     switch (command.command) {
       case "TEACH_RECIPE":
         if (payload.agentId && payload.recipeId) {
           this._recipeDiscoverySystem.teachRecipe(
             payload.agentId as string,
-            payload.recipeId as string
+            payload.recipeId as string,
           );
         }
         break;
@@ -544,22 +583,28 @@ export class SimulationRunner {
           this._recipeDiscoverySystem.shareRecipe(
             payload.teacherId as string,
             payload.studentId as string,
-            payload.recipeId as string
+            payload.recipeId as string,
           );
         }
         break;
     }
   }
 
-  private handleSocialCommand(command: Extract<SimulationCommand, { type: "SOCIAL_COMMAND" }>): void {
+  private handleSocialCommand(
+    command: Extract<SimulationCommand, { type: "SOCIAL_COMMAND" }>,
+  ): void {
     const payload = command.payload as Record<string, unknown>;
     switch (command.command) {
       case "IMPOSE_TRUCE":
-        if (payload.aId && payload.bId && typeof payload.durationMs === "number") {
+        if (
+          payload.aId &&
+          payload.bId &&
+          typeof payload.durationMs === "number"
+        ) {
           this.socialSystem.imposeTruce(
             payload.aId as string,
             payload.bId as string,
-            payload.durationMs
+            payload.durationMs,
           );
         }
         break;
@@ -568,7 +613,7 @@ export class SimulationRunner {
           this.socialSystem.setAffinity(
             payload.aId as string,
             payload.bId as string,
-            payload.value
+            payload.value,
           );
         }
         break;
@@ -577,7 +622,7 @@ export class SimulationRunner {
           this.socialSystem.modifyAffinity(
             payload.aId as string,
             payload.bId as string,
-            payload.delta
+            payload.delta,
           );
         }
         break;
@@ -587,41 +632,51 @@ export class SimulationRunner {
         }
         break;
       case "FRIENDLY_INTERACTION":
-        if (payload.agentA && payload.agentB && typeof payload.magnitude === "number") {
+        if (
+          payload.agentA &&
+          payload.agentB &&
+          typeof payload.magnitude === "number"
+        ) {
           // Mejorar afinidad entre agentes
           this.socialSystem.modifyAffinity(
             payload.agentA as string,
             payload.agentB as string,
-            (payload.magnitude as number) || 0.1
+            (payload.magnitude as number) || 0.1,
           );
           // También puede iniciar una interacción de juego
           this.interactionGameSystem.startInteraction(
             payload.agentA as string,
             payload.agentB as string,
-            "friendly"
+            "friendly",
           );
         }
         break;
       case "HOSTILE_ENCOUNTER":
-        if (payload.agentA && payload.agentB && typeof payload.magnitude === "number") {
+        if (
+          payload.agentA &&
+          payload.agentB &&
+          typeof payload.magnitude === "number"
+        ) {
           // Empeorar afinidad entre agentes
           this.socialSystem.modifyAffinity(
             payload.agentA as string,
             payload.agentB as string,
-            -(payload.magnitude as number) || -0.1
+            -(payload.magnitude as number) || -0.1,
           );
           // También puede iniciar una interacción de juego hostil
           this.interactionGameSystem.startInteraction(
             payload.agentA as string,
             payload.agentB as string,
-            "hostile"
+            "hostile",
           );
         }
         break;
     }
   }
 
-  private handleResearchCommand(command: Extract<SimulationCommand, { type: "RESEARCH_COMMAND" }>): void {
+  private handleResearchCommand(
+    command: Extract<SimulationCommand, { type: "RESEARCH_COMMAND" }>,
+  ): void {
     const payload = command.payload as Record<string, unknown>;
     switch (command.command) {
       case "INITIALIZE_LINEAGE":
@@ -634,14 +689,16 @@ export class SimulationRunner {
           this._researchSystem.onRecipeDiscovered(
             payload.lineageId as string,
             payload.recipeId as string,
-            payload.discoveredBy as string
+            payload.discoveredBy as string,
           );
         }
         break;
     }
   }
 
-  private handleWorldResourceCommand(command: Extract<SimulationCommand, { type: "WORLD_RESOURCE_COMMAND" }>): void {
+  private handleWorldResourceCommand(
+    command: Extract<SimulationCommand, { type: "WORLD_RESOURCE_COMMAND" }>,
+  ): void {
     const payload = command.payload as Record<string, unknown>;
     switch (command.command) {
       case "SPAWN_RESOURCE":
@@ -649,7 +706,7 @@ export class SimulationRunner {
           this.worldResourceSystem.spawnResource(
             payload.type as string,
             payload.position as { x: number; y: number },
-            (payload.biome as string) || "grass"
+            (payload.biome as string) || "grass",
           );
         }
         break;
@@ -657,62 +714,76 @@ export class SimulationRunner {
         if (payload.resourceId && payload.agentId) {
           this.worldResourceSystem.harvestResource(
             payload.resourceId as string,
-            payload.agentId as string
+            payload.agentId as string,
           );
         }
         break;
     }
   }
 
-  private handleDialogueCommand(command: Extract<SimulationCommand, { type: "DIALOGUE_COMMAND" }>): void {
+  private handleDialogueCommand(
+    command: Extract<SimulationCommand, { type: "DIALOGUE_COMMAND" }>,
+  ): void {
     const payload = command.payload as Record<string, unknown>;
     switch (command.command) {
       case "RESPOND_TO_CARD":
         if (payload.cardId && payload.choiceId) {
           this.cardDialogueSystem.respondToCard(
             payload.cardId as string,
-            payload.choiceId as string
+            payload.choiceId as string,
           );
         }
         break;
     }
   }
 
-  private handleBuildingCommand(command: Extract<SimulationCommand, { type: "BUILDING_COMMAND" }>): void {
+  private handleBuildingCommand(
+    command: Extract<SimulationCommand, { type: "BUILDING_COMMAND" }>,
+  ): void {
     const payload = command.payload as Record<string, unknown>;
     switch (command.command) {
       case "START_UPGRADE":
         if (payload.zoneId && payload.agentId) {
           this.buildingMaintenanceSystem.startUpgrade(
             payload.zoneId as string,
-            payload.agentId as string
+            payload.agentId as string,
           );
         }
         break;
       case "CANCEL_UPGRADE":
         if (payload.zoneId) {
-          this.buildingMaintenanceSystem.cancelUpgrade(payload.zoneId as string);
-        }
-        break;
-    }
-  }
-
-  private handleReputationCommand(command: Extract<SimulationCommand, { type: "REPUTATION_COMMAND" }>): void {
-    const payload = command.payload as Record<string, unknown>;
-    switch (command.command) {
-      case "UPDATE_TRUST":
-        if (payload.agentA && payload.agentB && typeof payload.delta === "number") {
-          this.reputationSystem.updateTrust(
-            payload.agentA as string,
-            payload.agentB as string,
-            payload.delta
+          this.buildingMaintenanceSystem.cancelUpgrade(
+            payload.zoneId as string,
           );
         }
         break;
     }
   }
 
-  private handleTaskCommand(command: Extract<SimulationCommand, { type: "TASK_COMMAND" }>): void {
+  private handleReputationCommand(
+    command: Extract<SimulationCommand, { type: "REPUTATION_COMMAND" }>,
+  ): void {
+    const payload = command.payload as Record<string, unknown>;
+    switch (command.command) {
+      case "UPDATE_TRUST":
+        if (
+          payload.agentA &&
+          payload.agentB &&
+          typeof payload.delta === "number"
+        ) {
+          this.reputationSystem.updateTrust(
+            payload.agentA as string,
+            payload.agentB as string,
+            payload.delta,
+          );
+        }
+        break;
+    }
+  }
+
+  private handleTaskCommand(
+    command: Extract<SimulationCommand, { type: "TASK_COMMAND" }>,
+  ): void {
     const payload = command.payload as Record<string, unknown>;
     switch (command.command) {
       case "CREATE_TASK":
@@ -720,24 +791,37 @@ export class SimulationRunner {
           this.taskSystem.createTask({
             type: payload.type as TaskType,
             requiredWork: payload.requiredWork,
-            bounds: payload.bounds as { x: number; y: number; width: number; height: number } | undefined,
+            bounds: payload.bounds as
+              | { x: number; y: number; width: number; height: number }
+              | undefined,
             zoneId: payload.zoneId as string | undefined,
-            requirements: payload.requirements as {
-              resources?: { wood?: number; stone?: number; food?: number; water?: number };
-              minWorkers?: number;
-            } | undefined,
+            requirements: payload.requirements as
+              | {
+                  resources?: {
+                    wood?: number;
+                    stone?: number;
+                    food?: number;
+                    water?: number;
+                  };
+                  minWorkers?: number;
+                }
+              | undefined,
             metadata: payload.metadata as Record<string, unknown> | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,
           });
         }
         break;
       case "CONTRIBUTE_TO_TASK":
-        if (payload.taskId && payload.agentId && typeof payload.contribution === "number") {
+        if (
+          payload.taskId &&
+          payload.agentId &&
+          typeof payload.contribution === "number"
+        ) {
           this.taskSystem.contributeToTask(
             payload.taskId as string,
             payload.agentId as string,
             payload.contribution,
-            (payload.socialSynergyMultiplier as number) || 1.0
+            (payload.socialSynergyMultiplier as number) || 1.0,
           );
         }
         break;

@@ -1,26 +1,26 @@
 export type GoalType =
-  | 'satisfy_need'
-  | 'work'
-  | 'explore'
-  | 'social'
-  | 'combat'
-  | 'craft'
-  | 'deposit'
-  | 'assist'
-  | 'construction';
+  | "satisfy_need"
+  | "work"
+  | "explore"
+  | "social"
+  | "combat"
+  | "craft"
+  | "deposit"
+  | "assist"
+  | "construction";
 
 export type ActionType =
-  | 'move'
-  | 'harvest'
-  | 'eat'
-  | 'drink'
-  | 'sleep'
-  | 'work'
-  | 'socialize'
-  | 'attack'
-  | 'craft'
-  | 'deposit'
-  | 'build';
+  | "move"
+  | "harvest"
+  | "eat"
+  | "drink"
+  | "sleep"
+  | "work"
+  | "socialize"
+  | "attack"
+  | "craft"
+  | "deposit"
+  | "build";
 
 export interface AIGoal {
   type: GoalType;

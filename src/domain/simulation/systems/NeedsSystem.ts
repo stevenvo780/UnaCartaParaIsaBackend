@@ -34,19 +34,19 @@ export class NeedsSystem {
     // 1. Base Decay
     needs.hunger = Math.max(
       0,
-      needs.hunger - this.config.hungerDecayRate * dtSec
+      needs.hunger - this.config.hungerDecayRate * dtSec,
     );
     needs.thirst = Math.max(
       0,
-      needs.thirst - this.config.thirstDecayRate * dtSec
+      needs.thirst - this.config.thirstDecayRate * dtSec,
     );
     needs.energy = Math.max(
       0,
-      needs.energy - this.config.energyDecayRate * dtSec
+      needs.energy - this.config.energyDecayRate * dtSec,
     );
     needs.mentalHealth = Math.max(
       0,
-      needs.mentalHealth - this.config.mentalHealthDecayRate * dtSec
+      needs.mentalHealth - this.config.mentalHealthDecayRate * dtSec,
     );
 
     // 2. Cross Effects (Restored from Frontend)
@@ -89,14 +89,17 @@ export class NeedsSystem {
     data.emergencyLevel = "none";
   }
 
-  private applyCrossEffects(needs: EntityNeedsData["needs"], dtSec: number): void {
+  private applyCrossEffects(
+    needs: EntityNeedsData["needs"],
+    dtSec: number,
+  ): void {
     const SAFETY_THRESHOLD = 5;
 
     if (needs.hunger < 10) {
       needs.energy = Math.max(SAFETY_THRESHOLD, needs.energy - 0.1 * dtSec);
       needs.mentalHealth = Math.max(
         SAFETY_THRESHOLD,
-        needs.mentalHealth - 0.05 * dtSec
+        needs.mentalHealth - 0.05 * dtSec,
       );
     }
 
@@ -104,7 +107,7 @@ export class NeedsSystem {
       needs.energy = Math.max(SAFETY_THRESHOLD, needs.energy - 0.15 * dtSec);
       needs.mentalHealth = Math.max(
         SAFETY_THRESHOLD,
-        needs.mentalHealth - 0.05 * dtSec
+        needs.mentalHealth - 0.05 * dtSec,
       );
     }
 
@@ -121,26 +124,29 @@ export class NeedsSystem {
     if (needs.hygiene < 10) {
       needs.mentalHealth = Math.max(
         SAFETY_THRESHOLD,
-        needs.mentalHealth - 0.02 * dtSec
+        needs.mentalHealth - 0.02 * dtSec,
       );
     }
 
     if (needs.fun < 5) {
       needs.mentalHealth = Math.max(
         SAFETY_THRESHOLD,
-        needs.mentalHealth - 0.03 * dtSec
+        needs.mentalHealth - 0.03 * dtSec,
       );
     }
 
     if (needs.social < 5) {
       needs.mentalHealth = Math.max(
         SAFETY_THRESHOLD,
-        needs.mentalHealth - 0.04 * dtSec
+        needs.mentalHealth - 0.04 * dtSec,
       );
     }
   }
 
-  private applySafetyValidation(needs: EntityNeedsData["needs"], dtSec: number): void {
+  private applySafetyValidation(
+    needs: EntityNeedsData["needs"],
+    dtSec: number,
+  ): void {
     const CRITICAL_MIN = 1;
 
     // Emergency recovery if time jump or severe lag
@@ -163,7 +169,6 @@ export class NeedsSystem {
       }
     });
   }
-
 
   public initializeEntityNeeds(entityId: string): void {
     this.entityNeeds.set(entityId, {
@@ -191,27 +196,41 @@ export class NeedsSystem {
     return Array.from(this.entityNeeds.values());
   }
 
-  public satisfyNeed(entityId: string, needType: string, amount: number): boolean {
+  public satisfyNeed(
+    entityId: string,
+    needType: string,
+    amount: number,
+  ): boolean {
     const data = this.entityNeeds.get(entityId);
     if (!data) return false;
 
     const needs = data.needs;
     const needKey = needType as keyof typeof needs;
-    if (needKey in needs && typeof needs[needKey] === 'number') {
-      (needs[needKey] as number) = Math.min(100, (needs[needKey] as number) + amount);
+    if (needKey in needs && typeof needs[needKey] === "number") {
+      (needs[needKey] as number) = Math.min(
+        100,
+        (needs[needKey] as number) + amount,
+      );
       return true;
     }
     return false;
   }
 
-  public modifyNeed(entityId: string, needType: string, delta: number): boolean {
+  public modifyNeed(
+    entityId: string,
+    needType: string,
+    delta: number,
+  ): boolean {
     const data = this.entityNeeds.get(entityId);
     if (!data) return false;
 
     const needs = data.needs;
     const needKey = needType as keyof typeof needs;
-    if (needKey in needs && typeof needs[needKey] === 'number') {
-      (needs[needKey] as number) = Math.max(0, Math.min(100, (needs[needKey] as number) + delta));
+    if (needKey in needs && typeof needs[needKey] === "number") {
+      (needs[needKey] as number) = Math.max(
+        0,
+        Math.min(100, (needs[needKey] as number) + delta),
+      );
       return true;
     }
     return false;

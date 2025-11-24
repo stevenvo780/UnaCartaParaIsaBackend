@@ -1,5 +1,12 @@
 import type { GameState } from "../../types/game-types";
-import type { GovernanceEvent, GovernancePolicy, GovernanceSnapshot, SettlementDemand, SettlementStats, DemandType } from "../../types/simulation/governance";
+import type {
+  GovernanceEvent,
+  GovernancePolicy,
+  GovernanceSnapshot,
+  SettlementDemand,
+  SettlementStats,
+  DemandType,
+} from "../../types/simulation/governance";
 import type { ResourceCost } from "../../types/simulation/economy";
 import { GameEventNames, simulationEvents } from "../core/events";
 import { LifeCycleSystem } from "./LifeCycleSystem";
@@ -40,10 +47,27 @@ const DEFAULT_POLICIES: GovernancePolicy[] = [
   },
 ];
 
-const DEMAND_SOLUTIONS: Partial<Record<DemandType, { project: string; cost: ResourceCost; resourceBoost?: { food?: number; water?: number } }>> = {
+const DEMAND_SOLUTIONS: Partial<
+  Record<
+    DemandType,
+    {
+      project: string;
+      cost: ResourceCost;
+      resourceBoost?: { food?: number; water?: number };
+    }
+  >
+> = {
   housing_full: { project: "build_house", cost: { wood: 40, stone: 20 } },
-  food_shortage: { project: "gather_food", cost: { wood: 0, stone: 0 }, resourceBoost: { food: 25 } },
-  water_shortage: { project: "gather_water", cost: { wood: 0, stone: 0 }, resourceBoost: { water: 30 } },
+  food_shortage: {
+    project: "gather_food",
+    cost: { wood: 0, stone: 0 },
+    resourceBoost: { food: 25 },
+  },
+  water_shortage: {
+    project: "gather_water",
+    cost: { wood: 0, stone: 0 },
+    resourceBoost: { water: 30 },
+  },
 };
 
 const DEFAULT_LINEAGE = "community";
@@ -57,7 +81,11 @@ export class GovernanceSystem {
   private demandSeq = 0;
   private housingProjectsStarted = 0;
 
-  private readonly handleHighOccupancy = (payload: { occupancy?: number; free?: number; totalCapacity?: number }) => {
+  private readonly handleHighOccupancy = (payload: {
+    occupancy?: number;
+    free?: number;
+    totalCapacity?: number;
+  }) => {
     const occupancy = payload.occupancy ?? 1;
     const priority = 7 + Math.min(3, Math.max(0, (occupancy - 0.8) * 10));
     this.createDemand("housing_full", priority, "Ocupación de viviendas alta", {
@@ -70,9 +98,14 @@ export class GovernanceSystem {
   private readonly handleHomeless = (payload: { count?: number }) => {
     const count = payload.count ?? 1;
     const priority = 8 + Math.min(4, Math.floor(count / 2));
-    this.createDemand("housing_full", priority, "Agentes sin hogar detectados", {
-      homelessCount: count,
-    });
+    this.createDemand(
+      "housing_full",
+      priority,
+      "Agentes sin hogar detectados",
+      {
+        homelessCount: count,
+      },
+    );
   };
 
   private readonly handleNoHouses = () => {
@@ -94,11 +127,22 @@ export class GovernanceSystem {
       ...config,
     };
 
-    DEFAULT_POLICIES.forEach((policy) => this.policies.set(policy.id, { ...policy }));
+    DEFAULT_POLICIES.forEach((policy) =>
+      this.policies.set(policy.id, { ...policy }),
+    );
 
-    simulationEvents.on(GameEventNames.HOUSEHOLD_HIGH_OCCUPANCY, this.handleHighOccupancy);
-    simulationEvents.on(GameEventNames.HOUSEHOLD_AGENTS_HOMELESS, this.handleHomeless);
-    simulationEvents.on(GameEventNames.HOUSEHOLD_NO_FREE_HOUSES, this.handleNoHouses);
+    simulationEvents.on(
+      GameEventNames.HOUSEHOLD_HIGH_OCCUPANCY,
+      this.handleHighOccupancy,
+    );
+    simulationEvents.on(
+      GameEventNames.HOUSEHOLD_AGENTS_HOMELESS,
+      this.handleHomeless,
+    );
+    simulationEvents.on(
+      GameEventNames.HOUSEHOLD_NO_FREE_HOUSES,
+      this.handleNoHouses,
+    );
   }
 
   public update(_deltaTimeMs: number): void {
@@ -170,7 +214,10 @@ export class GovernanceSystem {
 
     const housingPolicy = this.policies.get("housing_expansion");
     if (housingPolicy?.enabled) {
-      if (stats.housingOccupancy > (housingPolicy.threshold.housingOccupancy ?? 0.8)) {
+      if (
+        stats.housingOccupancy >
+        (housingPolicy.threshold.housingOccupancy ?? 0.8)
+      ) {
         this.createDemand("housing_full", 7, "Viviendas casi llenas", {
           occupancy: stats.housingOccupancy,
           population: stats.population,
@@ -225,7 +272,10 @@ export class GovernanceSystem {
 
     const reservationId = `${demand.id}:reservation`;
     if (solution.cost && (solution.cost.wood > 0 || solution.cost.stone > 0)) {
-      const reserved = this.reservationSystem.reserve(reservationId, solution.cost);
+      const reserved = this.reservationSystem.reserve(
+        reservationId,
+        solution.cost,
+      );
       if (!reserved) {
         this.recordEvent({
           timestamp: Date.now(),
@@ -281,7 +331,10 @@ export class GovernanceSystem {
     let multiplier = 1;
 
     if (type === "housing_full") {
-      multiplier = this.divineFavorSystem.getMultiplier(lineage, "productivity_boost");
+      multiplier = this.divineFavorSystem.getMultiplier(
+        lineage,
+        "productivity_boost",
+      );
     } else if (type === "food_shortage" || type === "water_shortage") {
       multiplier = this.divineFavorSystem.getMultiplier(lineage, "prosperity");
     }
@@ -292,31 +345,47 @@ export class GovernanceSystem {
   private getSettlementStats(): SettlementStats {
     const lifecycleAgents = this.lifeCycleSystem.getAgents();
     const entities = this.state.entities ?? [];
-    const populationSource = lifecycleAgents.length > 0 ? lifecycleAgents : entities;
+    const populationSource =
+      lifecycleAgents.length > 0 ? lifecycleAgents : entities;
     const population = populationSource.length;
     const zones = this.state.zones ?? [];
-    const housingZones = zones.filter((zone) => zone.type === "house" || (zone.props && 'subtype' in zone.props && zone.props.subtype === "housing"));
+    const housingZones = zones.filter(
+      (zone) =>
+        zone.type === "house" ||
+        (zone.props &&
+          "subtype" in zone.props &&
+          zone.props.subtype === "housing"),
+    );
     const houses = housingZones.length;
     const baseCapacity = housingZones.reduce((sum: number, zone) => {
-      const capacity = (zone.props && typeof zone.props.capacity === 'number' ? zone.props.capacity : undefined) ?? 2;
+      const capacity =
+        (zone.props && typeof zone.props.capacity === "number"
+          ? zone.props.capacity
+          : undefined) ?? 2;
       return sum + capacity;
     }, 0);
     const housingCapacity = baseCapacity + this.housingProjectsStarted * 2;
 
     const stats = this.inventorySystem.getSystemStats();
     const resources = this.state.resources;
-    const foodStockpile = (resources?.materials.food ?? 0) + stats.stockpiled.food;
-    const waterStockpile = (resources?.materials.water ?? 0) + stats.stockpiled.water;
+    const foodStockpile =
+      (resources?.materials.food ?? 0) + stats.stockpiled.food;
+    const waterStockpile =
+      (resources?.materials.water ?? 0) + stats.stockpiled.water;
 
     const avgHappiness = this.averageEntityStat("happiness");
     const avgHealth = this.averageEntityStat("health");
 
     const idleAgents = entities.filter((entity) => {
       const activity = entity.state;
-      if (typeof activity === 'string') {
+      if (typeof activity === "string") {
         return activity === "idle";
       }
-      if (typeof activity === 'object' && activity !== null && 'status' in activity) {
+      if (
+        typeof activity === "object" &&
+        activity !== null &&
+        "status" in activity
+      ) {
         const status = (activity as { status?: string }).status;
         return status === "idle";
       }
@@ -324,9 +393,12 @@ export class GovernanceSystem {
     }).length;
     const workersAvailable = Math.max(0, population - idleAgents);
 
-    const foodPerCapita = population > 0 ? foodStockpile / population : foodStockpile;
-    const waterPerCapita = population > 0 ? waterStockpile / population : waterStockpile;
-    const housingOccupancy = housingCapacity > 0 ? population / housingCapacity : 1;
+    const foodPerCapita =
+      population > 0 ? foodStockpile / population : foodStockpile;
+    const waterPerCapita =
+      population > 0 ? waterStockpile / population : waterStockpile;
+    const housingOccupancy =
+      housingCapacity > 0 ? population / housingCapacity : 1;
 
     return {
       population,

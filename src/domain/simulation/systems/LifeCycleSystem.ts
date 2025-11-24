@@ -1,5 +1,9 @@
 import { GameState } from "../../types/game-types";
-import { AgentProfile, LifeStage, AgentTraits } from "../../types/simulation/agents";
+import {
+  AgentProfile,
+  LifeStage,
+  AgentTraits,
+} from "../../types/simulation/agents";
 import { simulationEvents, GameEventNames } from "../core/events";
 
 interface SpawnAgentOptions {
@@ -89,7 +93,9 @@ export class LifeCycleSystem {
     this.syncAgentsToState();
 
     // Create corresponding SimulationEntity if it doesn't exist
-    const existingEntityIndex = this.gameState.entities.findIndex(e => e.id === agent.id);
+    const existingEntityIndex = this.gameState.entities.findIndex(
+      (e) => e.id === agent.id,
+    );
     if (existingEntityIndex === -1) {
       this.gameState.entities.push({
         id: agent.id,
@@ -101,9 +107,9 @@ export class LifeCycleSystem {
         stats: {
           health: 100,
           energy: 100,
-          happiness: 100
+          happiness: 100,
         },
-        tags: ["agent", agent.sex]
+        tags: ["agent", agent.sex],
       });
     }
 
@@ -124,7 +130,7 @@ export class LifeCycleSystem {
     this.syncAgentsToState();
 
     // Remove corresponding SimulationEntity
-    const entityIndex = this.gameState.entities.findIndex(e => e.id === id);
+    const entityIndex = this.gameState.entities.findIndex((e) => e.id === id);
     if (entityIndex !== -1) {
       this.gameState.entities.splice(entityIndex, 1);
     }
@@ -156,9 +162,9 @@ export class LifeCycleSystem {
       parents:
         options.parents && (options.parents.father || options.parents.mother)
           ? {
-            father: options.parents.father,
-            mother: options.parents.mother,
-          }
+              father: options.parents.father,
+              mother: options.parents.mother,
+            }
           : undefined,
     };
     this.addAgent(agent);

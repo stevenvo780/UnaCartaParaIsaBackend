@@ -1,10 +1,10 @@
-import type { GameState, Zone } from '../../types/game-types';
+import type { GameState, Zone } from "../../types/game-types";
 import type {
   GenerationRule,
   GeneratedItem,
   ItemGenerationConfig,
-} from '../../types/simulation/itemGeneration';
-import { simulationEvents, GameEventNames } from '../core/events';
+} from "../../types/simulation/itemGeneration";
+import { simulationEvents, GameEventNames } from "../core/events";
 
 const DEFAULT_CONFIG: ItemGenerationConfig = {
   enableAutoGeneration: true,
@@ -20,13 +20,10 @@ export class ItemGenerationSystem {
   private lastGeneration = new Map<string, number>();
   private nextItemId = 1;
 
-  constructor(
-    gameState: GameState,
-    config?: Partial<ItemGenerationConfig>
-  ) {
+  constructor(gameState: GameState, config?: Partial<ItemGenerationConfig>) {
     this.gameState = gameState;
     this.config = { ...DEFAULT_CONFIG, ...config };
-    console.log('🎁 ItemGenerationSystem (Backend) initialized');
+    console.log("🎁 ItemGenerationSystem (Backend) initialized");
   }
 
   public update(_deltaMs: number): void {
@@ -48,7 +45,7 @@ export class ItemGenerationSystem {
 
   private processZoneGeneration(zone: Zone): void {
     const applicableRules = this.generationRules.filter(
-      (rule) => rule.zoneType === zone.type
+      (rule) => rule.zoneType === zone.type,
     );
 
     if (applicableRules.length === 0) return;
@@ -118,7 +115,7 @@ export class ItemGenerationSystem {
    */
   public collectItemsFromZone(
     zoneId: string,
-    agentId: string
+    agentId: string,
   ): Array<{ itemId: string; quantity: number }> {
     const zoneItemMap = this.zoneItems.get(zoneId);
     if (!zoneItemMap || zoneItemMap.size === 0) {
@@ -158,7 +155,7 @@ export class ItemGenerationSystem {
   public forceSpawnItem(
     zoneId: string,
     itemId: string,
-    quantity: number
+    quantity: number,
   ): boolean {
     const zone = this.gameState.zones?.find((z: Zone) => z.id === zoneId);
     if (!zone) return false;
@@ -192,7 +189,9 @@ export class ItemGenerationSystem {
    */
   public addGenerationRule(rule: GenerationRule): void {
     this.generationRules.push(rule);
-    console.log(`Added generation rule: ${rule.itemId} in ${rule.zoneType} zones`);
+    console.log(
+      `Added generation rule: ${rule.itemId} in ${rule.zoneType} zones`,
+    );
   }
 
   /**

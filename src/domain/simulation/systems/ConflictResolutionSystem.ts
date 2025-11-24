@@ -61,7 +61,8 @@ export class ConflictResolutionSystem {
       this.firstConflictTime = Date.now();
     }
 
-    const lowHealth = data.remaining <= CONFLICT_CONFIG.truce.lowHealthThreshold;
+    const lowHealth =
+      data.remaining <= CONFLICT_CONFIG.truce.lowHealthThreshold;
     const heavyHit = data.damage >= CONFLICT_CONFIG.truce.heavyHitThreshold;
     const tryChance = lowHealth
       ? CONFLICT_CONFIG.truce.chances.lowHealth
@@ -100,7 +101,7 @@ export class ConflictResolutionSystem {
 
   public resolveConflict(
     cardId: string,
-    choice: "truce_accept" | "apologize" | "continue"
+    choice: "truce_accept" | "apologize" | "continue",
   ): {
     resolved: boolean;
     resolution: ConflictRecord["resolution"];
@@ -152,9 +153,12 @@ export class ConflictResolutionSystem {
   public update(): void {
     // Clean up expired cards
     const now = Date.now();
-    const activeCardsEntries: Array<[string, { aId: string; bId: string }]> = Array.from(this.activeCards.entries());
+    const activeCardsEntries: Array<[string, { aId: string; bId: string }]> =
+      Array.from(this.activeCards.entries());
     for (const [cardId, meta] of activeCardsEntries) {
-      const mediation = this.mediationAttempts.find((m: MediationAttempt) => m.cardId === cardId);
+      const mediation = this.mediationAttempts.find(
+        (m: MediationAttempt) => m.cardId === cardId,
+      );
       if (
         mediation &&
         now - mediation.timestamp > CONFLICT_CONFIG.truce.cardDisplayDuration
@@ -207,23 +211,27 @@ export class ConflictResolutionSystem {
       };
     }
     // Convertir active conflicts a truces para norms
-    this.gameState.norms.truces = activeConflicts.map((conflict: ActiveConflict) => ({
-      cardId: conflict.cardId,
-      attackerId: conflict.attackerId,
-      targetId: conflict.targetId,
-      expiresAt: conflict.expiresAt,
-    }));
+    this.gameState.norms.truces = activeConflicts.map(
+      (conflict: ActiveConflict) => ({
+        cardId: conflict.cardId,
+        attackerId: conflict.attackerId,
+        targetId: conflict.targetId,
+        expiresAt: conflict.expiresAt,
+      }),
+    );
   }
 
   public getActiveConflicts(): ActiveConflict[] {
     const now = Date.now();
-    return Array.from(this.activeCards.entries()).map(([cardId, meta]: [string, { aId: string; bId: string }]) => ({
-      cardId,
-      attackerId: meta.aId,
-      targetId: meta.bId,
-      startedAt: now,
-      expiresAt: now + CONFLICT_CONFIG.truce.cardDisplayDuration,
-    }));
+    return Array.from(this.activeCards.entries()).map(
+      ([cardId, meta]: [string, { aId: string; bId: string }]) => ({
+        cardId,
+        attackerId: meta.aId,
+        targetId: meta.bId,
+        startedAt: now,
+        expiresAt: now + CONFLICT_CONFIG.truce.cardDisplayDuration,
+      }),
+    );
   }
 
   public getConflictHistory(limit = 50): ConflictRecord[] {
@@ -241,10 +249,10 @@ export class ConflictResolutionSystem {
   public getConflictStats(): ConflictStats {
     const totalMediations = this.mediationAttempts.length;
     const successfulMediations = this.mediationAttempts.filter(
-      (m) => m.outcome === "accepted" || m.outcome === "apologized"
+      (m) => m.outcome === "accepted" || m.outcome === "apologized",
     ).length;
     const truceAcceptances = this.mediationAttempts.filter(
-      (m) => m.outcome === "accepted"
+      (m) => m.outcome === "accepted",
     ).length;
 
     return {

@@ -1,4 +1,8 @@
-import { Inventory, Stockpile, ResourceType } from "../../types/simulation/economy";
+import {
+  Inventory,
+  Stockpile,
+  ResourceType,
+} from "../../types/simulation/economy";
 import type { GameState } from "../../types/game-types";
 
 export class InventorySystem {
@@ -16,7 +20,10 @@ export class InventorySystem {
     this.gameState = gameState;
   }
 
-  public initializeAgentInventory(agentId: string, capacity?: number): Inventory {
+  public initializeAgentInventory(
+    agentId: string,
+    capacity?: number,
+  ): Inventory {
     const inventory: Inventory = {
       wood: 0,
       stone: 0,
@@ -29,7 +36,11 @@ export class InventorySystem {
     return inventory;
   }
 
-  public createStockpile(zoneId: string, type: Stockpile["type"], capacity?: number): Stockpile {
+  public createStockpile(
+    zoneId: string,
+    type: Stockpile["type"],
+    capacity?: number,
+  ): Stockpile {
     const id = `stockpile_${zoneId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const stockpile: Stockpile = {
       id,
@@ -67,14 +78,20 @@ export class InventorySystem {
   public getStockpilesInZone(zoneId: string): Stockpile[] {
     const ids = this.stockpilesByZone.get(zoneId);
     if (!ids) return [];
-    return Array.from(ids).map(id => this.stockpiles.get(id)!).filter(Boolean);
+    return Array.from(ids)
+      .map((id) => this.stockpiles.get(id)!)
+      .filter(Boolean);
   }
 
   public getAllStockpiles(): Stockpile[] {
     return Array.from(this.stockpiles.values());
   }
 
-  public addResource(agentId: string, resource: ResourceType, amount: number): boolean {
+  public addResource(
+    agentId: string,
+    resource: ResourceType,
+    amount: number,
+  ): boolean {
     const inv = this.agentInventories.get(agentId);
     if (!inv) return false;
 
@@ -88,11 +105,19 @@ export class InventorySystem {
     return true;
   }
 
-  public addToStockpile(stockpileId: string, resource: ResourceType, amount: number): boolean {
+  public addToStockpile(
+    stockpileId: string,
+    resource: ResourceType,
+    amount: number,
+  ): boolean {
     const sp = this.stockpiles.get(stockpileId);
     if (!sp) return false;
 
-    const currentLoad = sp.inventory.wood + sp.inventory.stone + sp.inventory.food + sp.inventory.water;
+    const currentLoad =
+      sp.inventory.wood +
+      sp.inventory.stone +
+      sp.inventory.food +
+      sp.inventory.water;
     const available = sp.capacity - currentLoad;
     const toAdd = Math.min(amount, available);
 
@@ -125,7 +150,11 @@ export class InventorySystem {
     return true;
   }
 
-  public removeFromAgent(agentId: string, resource: ResourceType, amount: number): number {
+  public removeFromAgent(
+    agentId: string,
+    resource: ResourceType,
+    amount: number,
+  ): number {
     const inv = this.agentInventories.get(agentId);
     if (!inv) return 0;
 
@@ -147,8 +176,10 @@ export class InventorySystem {
       const foodLoss = Math.floor(sp.inventory.food * FOOD_DECAY_RATE);
       const waterLoss = Math.floor(sp.inventory.water * WATER_DECAY_RATE);
 
-      if (foodLoss > 0) sp.inventory.food = Math.max(0, sp.inventory.food - foodLoss);
-      if (waterLoss > 0) sp.inventory.water = Math.max(0, sp.inventory.water - waterLoss);
+      if (foodLoss > 0)
+        sp.inventory.food = Math.max(0, sp.inventory.food - foodLoss);
+      if (waterLoss > 0)
+        sp.inventory.water = Math.max(0, sp.inventory.water - waterLoss);
     }
 
     // Deprecate agent inventories
@@ -197,7 +228,7 @@ export class InventorySystem {
   }
 
   public getSystemStats() {
-    let totalStockpiled = { wood: 0, stone: 0, food: 0, water: 0 };
+    const totalStockpiled = { wood: 0, stone: 0, food: 0, water: 0 };
     for (const sp of Array.from(this.stockpiles.values())) {
       totalStockpiled.wood += sp.inventory.wood;
       totalStockpiled.stone += sp.inventory.stone;
@@ -205,7 +236,7 @@ export class InventorySystem {
       totalStockpiled.water += sp.inventory.water;
     }
 
-    let totalInAgents = { wood: 0, stone: 0, food: 0, water: 0 };
+    const totalInAgents = { wood: 0, stone: 0, food: 0, water: 0 };
     for (const inv of Array.from(this.agentInventories.values())) {
       totalInAgents.wood += inv.wood;
       totalInAgents.stone += inv.stone;

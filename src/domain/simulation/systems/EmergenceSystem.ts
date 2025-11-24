@@ -1,16 +1,16 @@
-import { EventEmitter } from 'node:events';
-import type { GameState } from '../../types/game-types.js';
-import { simulationEvents, GameEventNames } from '../core/events';
-import type { NeedsSystem } from './NeedsSystem.js';
-import type { SocialSystem } from './SocialSystem.js';
-import type { LifeCycleSystem } from './LifeCycleSystem.js';
-import type { EconomySystem } from './EconomySystem.js';
+import { EventEmitter } from "node:events";
+import type { GameState } from "../../types/game-types.js";
+import { simulationEvents, GameEventNames } from "../core/events";
+import type { NeedsSystem } from "./NeedsSystem.js";
+import type { SocialSystem } from "./SocialSystem.js";
+import type { LifeCycleSystem } from "./LifeCycleSystem.js";
+import type { EconomySystem } from "./EconomySystem.js";
 
 export interface EmergencePattern {
   id: string;
   name: string;
   description: string;
-  type: 'behavioral' | 'social' | 'environmental' | 'systemic';
+  type: "behavioral" | "social" | "environmental" | "systemic";
   strength: number;
   duration: number;
   triggers: string[];
@@ -35,7 +35,7 @@ export interface EmergencePattern {
 
 export interface FeedbackLoop {
   id: string;
-  type: 'positive' | 'negative';
+  type: "positive" | "negative";
   strength: number;
   elements: string[];
   description: string;
@@ -91,7 +91,7 @@ export class EmergenceSystem extends EventEmitter {
       socialSystem?: SocialSystem;
       lifeCycleSystem?: LifeCycleSystem;
       economySystem?: EconomySystem;
-    }
+    },
   ) {
     super();
     this.gameState = gameState;
@@ -179,19 +179,23 @@ export class EmergenceSystem extends EventEmitter {
     if (entities.length < 3) return null;
 
     // Detect clustering pattern (agents gathering in groups)
-    const positions = entities.map(e => e.position).filter((p): p is { x: number; y: number } => p !== undefined);
+    const positions = entities
+      .map((e) => e.position)
+      .filter((p): p is { x: number; y: number } => p !== undefined);
     const clusters = this.detectClusters(positions, 200);
-    
+
     if (clusters.length >= 2 && clusters.length < entities.length / 2) {
       return {
         id: `social_clustering_${Date.now()}`,
-        name: 'Social Clustering',
-        description: 'Agents are forming social clusters',
-        type: 'social',
+        name: "Social Clustering",
+        description: "Agents are forming social clusters",
+        type: "social",
         strength: Math.min(0.8, clusters.length / entities.length),
         duration: 30000,
-        triggers: ['proximity', 'social_interaction'],
-        participants: entities.slice(0, Math.min(5, entities.length)).map(e => e.id),
+        triggers: ["proximity", "social_interaction"],
+        participants: entities
+          .slice(0, Math.min(5, entities.length))
+          .map((e) => e.id),
         effects: {
           needsModifiers: {
             loneliness: -0.1,
@@ -209,18 +213,21 @@ export class EmergenceSystem extends EventEmitter {
     if (!this.economySystem) return null;
 
     const resources = this.gameState.resources?.materials || {};
-    const totalResources = Object.values(resources).reduce((a, b) => a + (b || 0), 0);
+    const totalResources = Object.values(resources).reduce(
+      (a, b) => a + (b || 0),
+      0,
+    );
 
     // Detect resource accumulation pattern
     if (totalResources > 1000) {
       return {
         id: `economic_accumulation_${Date.now()}`,
-        name: 'Resource Accumulation',
-        description: 'Significant resource accumulation detected',
-        type: 'systemic',
+        name: "Resource Accumulation",
+        description: "Significant resource accumulation detected",
+        type: "systemic",
         strength: Math.min(0.9, totalResources / 5000),
         duration: 60000,
-        triggers: ['resource_gathering', 'production'],
+        triggers: ["resource_gathering", "production"],
         effects: {
           worldModifiers: {
             stability: 0.1,
@@ -237,8 +244,11 @@ export class EmergenceSystem extends EventEmitter {
     if (!this.lifeCycleSystem) return null;
 
     const entities = this.gameState.entities || [];
-    const birthRate = entities.filter(e => {
-      const birthTimestamp = typeof e.stats?.birthTimestamp === 'number' ? e.stats.birthTimestamp : 0;
+    const birthRate = entities.filter((e) => {
+      const birthTimestamp =
+        typeof e.stats?.birthTimestamp === "number"
+          ? e.stats.birthTimestamp
+          : 0;
       const age = (Date.now() - birthTimestamp) / (365 * 24 * 60 * 60 * 1000);
       return age < 1;
     }).length;
@@ -246,12 +256,12 @@ export class EmergenceSystem extends EventEmitter {
     if (birthRate > 0 && entities.length > 5) {
       return {
         id: `population_growth_${Date.now()}`,
-        name: 'Population Growth',
-        description: 'Population is growing',
-        type: 'systemic',
+        name: "Population Growth",
+        description: "Population is growing",
+        type: "systemic",
         strength: Math.min(0.7, birthRate / entities.length),
         duration: 120000,
-        triggers: ['birth', 'reproduction'],
+        triggers: ["birth", "reproduction"],
         effects: {
           worldModifiers: {
             complexity: 0.05,
@@ -271,7 +281,7 @@ export class EmergenceSystem extends EventEmitter {
     const allNeeds = this.needsSystem.getAllNeeds();
     if (allNeeds.length === 0) return null;
 
-    const criticalCount = allNeeds.filter(n => {
+    const criticalCount = allNeeds.filter((n) => {
       const needs = n.needs;
       return needs.hunger > 80 || needs.thirst > 80 || needs.energy < 20;
     }).length;
@@ -281,19 +291,19 @@ export class EmergenceSystem extends EventEmitter {
     if (criticalRatio > 0.3) {
       return {
         id: `needs_crisis_${Date.now()}`,
-        name: 'Needs Crisis',
-        description: 'High number of agents with critical needs',
-        type: 'behavioral',
+        name: "Needs Crisis",
+        description: "High number of agents with critical needs",
+        type: "behavioral",
         strength: Math.min(0.9, criticalRatio),
         duration: 45000,
-        triggers: ['needs_depletion', 'resource_scarcity'],
+        triggers: ["needs_depletion", "resource_scarcity"],
         effects: {
           needsModifiers: {
             stress: 0.15,
             mentalHealth: -0.1,
           },
           aiModifiers: {
-            priority: 'survival',
+            priority: "survival",
           },
         },
         conditions: {},
@@ -305,7 +315,7 @@ export class EmergenceSystem extends EventEmitter {
 
   private detectClusters(
     positions: Array<{ x: number; y: number }>,
-    threshold: number
+    threshold: number,
   ): Array<Array<{ x: number; y: number }>> {
     const clusters: Array<Array<{ x: number; y: number }>> = [];
     const visited = new Set<number>();
@@ -340,15 +350,22 @@ export class EmergenceSystem extends EventEmitter {
   private updateFeedbackLoops(): void {
     // Detect positive feedback loops (e.g., resource gathering -> more production -> more resources)
     const resources = this.gameState.resources?.materials || {};
-    const totalResources = Object.values(resources).reduce((a, b) => a + (b || 0), 0);
+    const totalResources = Object.values(resources).reduce(
+      (a, b) => a + (b || 0),
+      0,
+    );
 
-    if (totalResources > 500 && !this.feedbackLoops.has('resource_production_loop')) {
-      this.feedbackLoops.set('resource_production_loop', {
-        id: 'resource_production_loop',
-        type: 'positive',
+    if (
+      totalResources > 500 &&
+      !this.feedbackLoops.has("resource_production_loop")
+    ) {
+      this.feedbackLoops.set("resource_production_loop", {
+        id: "resource_production_loop",
+        type: "positive",
         strength: 0.6,
-        elements: ['resource_gathering', 'production', 'resource_accumulation'],
-        description: 'Resources enable production which generates more resources',
+        elements: ["resource_gathering", "production", "resource_accumulation"],
+        description:
+          "Resources enable production which generates more resources",
         active: true,
       });
     }
@@ -356,13 +373,17 @@ export class EmergenceSystem extends EventEmitter {
     // Detect negative feedback loops (e.g., population growth -> resource depletion -> population decline)
     const entities = this.gameState.entities || [];
     if (entities.length > 10 && totalResources < 200) {
-      if (!this.feedbackLoops.has('population_resource_loop')) {
-        this.feedbackLoops.set('population_resource_loop', {
-          id: 'population_resource_loop',
-          type: 'negative',
+      if (!this.feedbackLoops.has("population_resource_loop")) {
+        this.feedbackLoops.set("population_resource_loop", {
+          id: "population_resource_loop",
+          type: "negative",
           strength: 0.5,
-          elements: ['population_growth', 'resource_depletion', 'population_stress'],
-          description: 'Population growth depletes resources causing stress',
+          elements: [
+            "population_growth",
+            "resource_depletion",
+            "population_stress",
+          ],
+          description: "Population growth depletes resources causing stress",
           active: true,
         });
       }
@@ -374,21 +395,21 @@ export class EmergenceSystem extends EventEmitter {
     const entityCount = entities.length;
 
     // Cohesion: how connected the system is
-    const cohesion = this.socialSystem
-      ? Math.min(1.0, entityCount / 20)
-      : 0.5;
+    const cohesion = this.socialSystem ? Math.min(1.0, entityCount / 20) : 0.5;
 
     // Novelty: how much new activity is happening
-    const novelty = this.patterns.size > 0 ? Math.min(1.0, this.patterns.size / 5) : 0.3;
+    const novelty =
+      this.patterns.size > 0 ? Math.min(1.0, this.patterns.size / 5) : 0.3;
 
     // Stability: how stable the system state is
     const needs = this.needsSystem?.getAllNeeds() || [];
-    const avgNeeds = needs.length > 0
-      ? needs.reduce((sum, n) => {
-          const nv = n.needs;
-          return sum + (nv.hunger + nv.thirst + nv.energy + nv.hygiene) / 4;
-        }, 0) / needs.length
-      : 50;
+    const avgNeeds =
+      needs.length > 0
+        ? needs.reduce((sum, n) => {
+            const nv = n.needs;
+            return sum + (nv.hunger + nv.thirst + nv.energy + nv.hygiene) / 4;
+          }, 0) / needs.length
+        : 50;
     const stability = 1.0 - Math.abs(avgNeeds - 50) / 50;
 
     // Complexity: system complexity based on interactions
@@ -402,7 +423,10 @@ export class EmergenceSystem extends EventEmitter {
 
     // Sustainability: long-term viability
     const resources = this.gameState.resources?.materials || {};
-    const totalResources = Object.values(resources).reduce((a, b) => a + (b || 0), 0);
+    const totalResources = Object.values(resources).reduce(
+      (a, b) => a + (b || 0),
+      0,
+    );
     const sustainability = Math.min(1.0, totalResources / 1000);
 
     // Entropy: disorder in the system
@@ -493,4 +517,3 @@ export class EmergenceSystem extends EventEmitter {
     };
   }
 }
-

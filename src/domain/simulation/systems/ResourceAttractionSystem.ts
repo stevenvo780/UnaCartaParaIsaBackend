@@ -48,7 +48,10 @@ export class ResourceAttractionSystem {
     const now = Date.now();
     const needs = this.needsSystem.getAllNeeds();
     const desires: NeedDesireSnapshot[] = [];
-    const fieldMap = new Map<string, { total: number; needs: Map<string, number> }>();
+    const fieldMap = new Map<
+      string,
+      { total: number; needs: Map<string, number> }
+    >();
     const emergencies: ResourceEmergencyRequest[] = [];
 
     for (const data of needs) {
@@ -59,7 +62,15 @@ export class ResourceAttractionSystem {
         if (needType === "energy" || needType === "hygiene") {
           if (typeof thresholds.low === "number" && value < thresholds.low) {
             const intensity = thresholds.low - value;
-            this.addDesire(desires, fieldMap, data.entityId, needType, zoneId, intensity, now);
+            this.addDesire(
+              desires,
+              fieldMap,
+              data.entityId,
+              needType,
+              zoneId,
+              intensity,
+              now,
+            );
             if (value < 10) {
               emergencies.push({
                 agentId: data.entityId,
@@ -72,7 +83,15 @@ export class ResourceAttractionSystem {
           }
         } else if (value > thresholds.high) {
           const intensity = value - thresholds.high;
-          this.addDesire(desires, fieldMap, data.entityId, needType, zoneId, intensity, now);
+          this.addDesire(
+            desires,
+            fieldMap,
+            data.entityId,
+            needType,
+            zoneId,
+            intensity,
+            now,
+          );
           if (value > 95) {
             emergencies.push({
               agentId: data.entityId,
@@ -88,13 +107,18 @@ export class ResourceAttractionSystem {
 
     const fields: ResourceAttractionFieldSnapshot[] = [];
     fieldMap.forEach((data, zoneId) => {
-      const dominantNeeds: ResourceBiasSnapshot[] = Array.from(data.needs.entries())
+      const dominantNeeds: ResourceBiasSnapshot[] = Array.from(
+        data.needs.entries(),
+      )
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3)
         .map(([resourceType, intensity]) => ({ resourceType, intensity }));
 
       const totalDesire = data.total;
-      const spawnBias = Math.min(1, totalDesire / Math.max(1, desires.length * 10));
+      const spawnBias = Math.min(
+        1,
+        totalDesire / Math.max(1, desires.length * 10),
+      );
 
       fields.push({
         zoneId,
@@ -114,7 +138,9 @@ export class ResourceAttractionSystem {
       stats: {
         totalDesires: desires.length,
         activeZones: fields.length,
-        attractedSpawns: Math.floor(fields.reduce((sum, f) => sum + f.spawnBias, 0) * 10),
+        attractedSpawns: Math.floor(
+          fields.reduce((sum, f) => sum + f.spawnBias, 0) * 10,
+        ),
         emergencyRequests: emergencies.length,
       },
       emergencies: emergencies.slice(0, 20),
@@ -144,6 +170,9 @@ export class ResourceAttractionSystem {
     const record = fieldMap.get(zoneId)!;
     record.total += intensity;
     const resourceType = RESOURCE_MAPPING[needType];
-    record.needs.set(resourceType, (record.needs.get(resourceType) || 0) + intensity);
+    record.needs.set(
+      resourceType,
+      (record.needs.get(resourceType) || 0) + intensity,
+    );
   }
 }

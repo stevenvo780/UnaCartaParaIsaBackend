@@ -7,22 +7,29 @@ export interface InteractionConfig {
 }
 
 export class InteractionGameSystem {
-  private activeInteractions = new Map<string, {
-    participants: string[];
-    type: string;
-    startTime: number;
-  }>();
+  private activeInteractions = new Map<
+    string,
+    {
+      participants: string[];
+      type: string;
+      startTime: number;
+    }
+  >();
 
   constructor(_gameState: GameState, _config?: Partial<InteractionConfig>) {
     // Parameters kept for API compatibility but not currently used
     void _gameState;
     void _config;
-    console.log('🎲 InteractionGameSystem (Backend) initialized');
+    console.log("🎲 InteractionGameSystem (Backend) initialized");
   }
 
   public update(_deltaTimeMs: number): void {}
 
-  public startInteraction(initiatorId: string, targetId: string, type: string): boolean {
+  public startInteraction(
+    initiatorId: string,
+    targetId: string,
+    type: string,
+  ): boolean {
     const interactionId = `${initiatorId}-${targetId}-${Date.now()}`;
 
     this.activeInteractions.set(interactionId, {
@@ -36,11 +43,13 @@ export class InteractionGameSystem {
       initiatorId,
       targetId,
       type,
-      result: 'started',
+      result: "started",
       timestamp: Date.now(),
     });
 
-    console.log(`🎲 Interaction started: ${initiatorId} -> ${targetId} (${type})`);
+    console.log(
+      `🎲 Interaction started: ${initiatorId} -> ${targetId} (${type})`,
+    );
     return true;
   }
 
@@ -53,7 +62,7 @@ export class InteractionGameSystem {
       ...interaction,
       result,
       timestamp: Date.now(),
-      status: 'completed'
+      status: "completed",
     });
 
     this.activeInteractions.delete(interactionId);

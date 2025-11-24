@@ -52,7 +52,8 @@ export class BuildingMaintenanceSystem {
     this.bootstrapExistingZones();
     simulationEvents.on(
       GameEventNames.BUILDING_CONSTRUCTED,
-      (payload: { zoneId: string }) => this.initializeBuildingState(payload.zoneId),
+      (payload: { zoneId: string }) =>
+        this.initializeBuildingState(payload.zoneId),
     );
   }
 
@@ -93,7 +94,9 @@ export class BuildingMaintenanceSystem {
     const zone = this.findZone(zoneId);
     if (!zone) return false;
 
-    const inventory = this.inventorySystem.getAgentInventory(agentId) as AgentInventory | undefined;
+    const inventory = this.inventorySystem.getAgentInventory(agentId) as
+      | AgentInventory
+      | undefined;
     if (!inventory) return false;
 
     const cost = calculateRepairCost(state.durability, perfectRepair);
@@ -176,7 +179,11 @@ export class BuildingMaintenanceSystem {
     }
 
     const damage = (state.deteriorationRate / 3600_000) * this.updateIntervalMs;
-    this.reduceDurability(state, damage, state.isAbandoned ? "abandonment" : "time");
+    this.reduceDurability(
+      state,
+      damage,
+      state.isAbandoned ? "abandonment" : "time",
+    );
   }
 
   private reduceDurability(
@@ -221,7 +228,9 @@ export class BuildingMaintenanceSystem {
   }
 
   private findZone(zoneId: string): MutableZone | undefined {
-    return ((this.state.zones || []) as MutableZone[]).find((z) => z.id === zoneId);
+    return ((this.state.zones || []) as MutableZone[]).find(
+      (z) => z.id === zoneId,
+    );
   }
 
   private syncZone(zoneId: string, state: BuildingState): void {

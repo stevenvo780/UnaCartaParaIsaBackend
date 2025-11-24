@@ -1,6 +1,10 @@
-import type { GameState, Zone } from '../../types/game-types';
-import type { Household, HouseholdMember, HouseholdSystemConfig } from '../../types/simulation/household';
-import { simulationEvents, GameEventNames } from '../core/events';
+import type { GameState, Zone } from "../../types/game-types";
+import type {
+  Household,
+  HouseholdMember,
+  HouseholdSystemConfig,
+} from "../../types/simulation/household";
+import { simulationEvents, GameEventNames } from "../core/events";
 
 const DEFAULT_CONFIG: HouseholdSystemConfig = {
   updateIntervalMs: 5000,
@@ -14,14 +18,11 @@ export class HouseholdSystem {
   private households = new Map<string, Household>();
   private lastUpdate = 0;
 
-  constructor(
-    gameState: GameState,
-    config?: Partial<HouseholdSystemConfig>
-  ) {
+  constructor(gameState: GameState, config?: Partial<HouseholdSystemConfig>) {
     this.gameState = gameState;
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.rebuildFromZones();
-    console.log('🏠 HouseholdSystem (Backend) initialized');
+    console.log("🏠 HouseholdSystem (Backend) initialized");
   }
 
   public update(_deltaMs: number): void {
@@ -53,8 +54,8 @@ export class HouseholdSystem {
     const homeless: string[] = [];
 
     for (const agent of allAgents) {
-      const hasHome = Array.from(this.households.values()).some(
-        (h) => h.members.some((m) => m.agentId === agent.id)
+      const hasHome = Array.from(this.households.values()).some((h) =>
+        h.members.some((m) => m.agentId === agent.id),
       );
       if (!hasHome) {
         homeless.push(agent.id);
@@ -68,7 +69,7 @@ export class HouseholdSystem {
     const zones = this.gameState.zones || [];
 
     const previousMembers = new Map<string, HouseholdMember[]>();
-    const previousInventories = new Map<string, Household['sharedInventory']>();
+    const previousInventories = new Map<string, Household["sharedInventory"]>();
 
     this.households.forEach((hh, zoneId) => {
       if (hh.members.length > 0) {
@@ -80,12 +81,12 @@ export class HouseholdSystem {
     });
 
     this.households.clear();
-    const houses = zones.filter((z: Zone) => z.type === 'rest');
+    const houses = zones.filter((z: Zone) => z.type === "rest");
 
     houses.forEach((z: Zone) => {
       const capacity = Math.max(
         2,
-        Math.floor((z.bounds.width * z.bounds.height) / 2000)
+        Math.floor((z.bounds.width * z.bounds.height) / 2000),
       );
 
       const existingMembers = previousMembers.get(z.id) || [];
@@ -115,7 +116,7 @@ export class HouseholdSystem {
 
   public assignToHouse(
     agentId: string,
-    role: 'head' | 'spouse' | 'child' | 'other' = 'other'
+    role: "head" | "spouse" | "child" | "other" = "other",
   ): string | null {
     // Check if already assigned
     for (const hh of Array.from(this.households.values())) {
@@ -156,12 +157,12 @@ export class HouseholdSystem {
 
   public getHouseFor(agentId: string): Zone | null {
     const hhEntry = Array.from(this.households.values()).find((h) =>
-      h.members.some((m) => m.agentId === agentId)
+      h.members.some((m) => m.agentId === agentId),
     );
     if (!hhEntry) return null;
 
     const zones = this.gameState.zones || [];
-    return zones.find((z: Zone) => z.id === hhEntry.zoneId) as Zone || null;
+    return (zones.find((z: Zone) => z.id === hhEntry.zoneId) as Zone) || null;
   }
 
   public getSystemStats() {
@@ -190,8 +191,8 @@ export class HouseholdSystem {
 
   public depositToHousehold(
     householdId: string,
-    resource: 'wood' | 'stone' | 'food' | 'water',
-    amount: number
+    resource: "wood" | "stone" | "food" | "water",
+    amount: number,
   ): boolean {
     const household = this.households.get(householdId);
     if (!household) return false;
@@ -219,8 +220,8 @@ export class HouseholdSystem {
   public withdrawFromHousehold(
     agentId: string,
     householdId: string,
-    resource: 'wood' | 'stone' | 'food' | 'water',
-    amount: number
+    resource: "wood" | "stone" | "food" | "water",
+    amount: number,
   ): number {
     const household = this.households.get(householdId);
     if (!household) return 0;
@@ -254,7 +255,7 @@ export class HouseholdSystem {
 
   public getAgentHousehold(agentId: string): Household | null {
     const household = Array.from(this.households.values()).find((h) =>
-      h.members.some((m) => m.agentId === agentId)
+      h.members.some((m) => m.agentId === agentId),
     );
     return household || null;
   }

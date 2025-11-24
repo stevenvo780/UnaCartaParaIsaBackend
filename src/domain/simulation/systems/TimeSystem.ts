@@ -1,17 +1,24 @@
-import { EventEmitter } from 'node:events';
-import type { GameState } from '../../types/game-types.js';
+import { EventEmitter } from "node:events";
+import type { GameState } from "../../types/game-types.js";
 
 export interface TimeOfDay {
   hour: number;
   minute: number;
-  phase: 'dawn' | 'morning' | 'midday' | 'afternoon' | 'dusk' | 'night' | 'deep_night';
+  phase:
+    | "dawn"
+    | "morning"
+    | "midday"
+    | "afternoon"
+    | "dusk"
+    | "night"
+    | "deep_night";
   lightLevel: number;
   temperature: number;
   timestamp: number;
 }
 
 export interface WeatherCondition {
-  type: 'clear' | 'cloudy' | 'rainy' | 'stormy' | 'foggy' | 'snowy';
+  type: "clear" | "cloudy" | "rainy" | "stormy" | "foggy" | "snowy";
   intensity: number;
   visibility: number;
   comfort: number;
@@ -81,20 +88,20 @@ export class TimeSystem extends EventEmitter {
       minute: this.config.startMinute,
       phase: this.getPhaseFromTime(this.config.startHour),
       lightLevel: this.calculateLightLevel(this.config.startHour),
-      temperature: this.calculateTemperature(this.config.startHour, 'clear'),
+      temperature: this.calculateTemperature(this.config.startHour, "clear"),
       timestamp: Date.now(),
     };
   }
 
   private createInitialWeather(): WeatherCondition {
     return {
-      type: 'clear',
+      type: "clear",
       intensity: 0.2,
       visibility: 1.0,
       comfort: 0.8,
       duration: this.randomFloat(
         this.config.weatherDurationMin,
-        this.config.weatherDurationMax
+        this.config.weatherDurationMax,
       ),
     };
   }
@@ -104,7 +111,9 @@ export class TimeSystem extends EventEmitter {
     const realMillisPerGameMinute = realMinutesPerGameMinute * 60 * 1000;
 
     const timeSinceLastUpdate = Date.now() - this.currentTime.timestamp;
-    const gameMinutesToAdd = Math.floor(timeSinceLastUpdate / realMillisPerGameMinute);
+    const gameMinutesToAdd = Math.floor(
+      timeSinceLastUpdate / realMillisPerGameMinute,
+    );
 
     if (gameMinutesToAdd > 0) {
       this.currentTime.minute += gameMinutesToAdd;
@@ -116,10 +125,12 @@ export class TimeSystem extends EventEmitter {
       }
 
       this.currentTime.phase = this.getPhaseFromTime(this.currentTime.hour);
-      this.currentTime.lightLevel = this.calculateLightLevel(this.currentTime.hour);
+      this.currentTime.lightLevel = this.calculateLightLevel(
+        this.currentTime.hour,
+      );
       this.currentTime.temperature = this.calculateTemperature(
         this.currentTime.hour,
-        this.currentWeather.type
+        this.currentWeather.type,
       );
       this.currentTime.timestamp = Date.now();
 
@@ -134,14 +145,14 @@ export class TimeSystem extends EventEmitter {
     }
   }
 
-  private getPhaseFromTime(hour: number): TimeOfDay['phase'] {
-    if (hour >= 5 && hour < 7) return 'dawn';
-    if (hour >= 7 && hour < 11) return 'morning';
-    if (hour >= 11 && hour < 15) return 'midday';
-    if (hour >= 15 && hour < 18) return 'afternoon';
-    if (hour >= 18 && hour < 21) return 'dusk';
-    if (hour >= 21 && hour < 23) return 'night';
-    return 'deep_night';
+  private getPhaseFromTime(hour: number): TimeOfDay["phase"] {
+    if (hour >= 5 && hour < 7) return "dawn";
+    if (hour >= 7 && hour < 11) return "morning";
+    if (hour >= 11 && hour < 15) return "midday";
+    if (hour >= 15 && hour < 18) return "afternoon";
+    if (hour >= 18 && hour < 21) return "dusk";
+    if (hour >= 21 && hour < 23) return "night";
+    return "deep_night";
   }
 
   private calculateLightLevel(hour: number): number {
@@ -156,7 +167,7 @@ export class TimeSystem extends EventEmitter {
 
   private calculateTemperature(
     hour: number,
-    weatherType: WeatherCondition['type']
+    weatherType: WeatherCondition["type"],
   ): number {
     const baseTemp = 15 + Math.sin(((hour - 6) / 24) * 2 * Math.PI) * 10;
     const weatherModifiers: Record<string, number> = {
@@ -186,7 +197,7 @@ export class TimeSystem extends EventEmitter {
     for (const [weather, probability] of Object.entries(weatherProbabilities)) {
       cumulative += probability;
       if (rand <= cumulative) {
-        newWeatherType = weather as WeatherCondition['type'];
+        newWeatherType = weather as WeatherCondition["type"];
         break;
       }
     }
@@ -194,7 +205,7 @@ export class TimeSystem extends EventEmitter {
     if (this.isAbruptWeatherChange(this.currentWeather.type, newWeatherType)) {
       newWeatherType = this.getTransitionWeather(
         this.currentWeather.type,
-        newWeatherType
+        newWeatherType,
       );
     }
 
@@ -202,15 +213,18 @@ export class TimeSystem extends EventEmitter {
       type: newWeatherType,
       intensity: this.calculateWeatherIntensity(newWeatherType),
       visibility: this.calculateVisibility(newWeatherType),
-      comfort: this.calculateComfort(newWeatherType, this.currentTime.temperature),
+      comfort: this.calculateComfort(
+        newWeatherType,
+        this.currentTime.temperature,
+      ),
       duration: this.randomFloat(
         this.config.weatherDurationMin,
-        this.config.weatherDurationMax
+        this.config.weatherDurationMax,
       ),
     };
     this.currentTime.temperature = this.calculateTemperature(
       this.currentTime.hour,
-      this.currentWeather.type
+      this.currentWeather.type,
     );
 
     // Update game state
@@ -233,8 +247,8 @@ export class TimeSystem extends EventEmitter {
     };
 
     if (
-      this.currentTime.phase === 'night' ||
-      this.currentTime.phase === 'deep_night'
+      this.currentTime.phase === "night" ||
+      this.currentTime.phase === "deep_night"
     ) {
       base.rainy += 0.1;
       base.foggy += 0.1;
@@ -246,38 +260,38 @@ export class TimeSystem extends EventEmitter {
 
   private isAbruptWeatherChange(current: string, next: string): boolean {
     const abruptChanges = [
-      ['clear', 'stormy'],
-      ['clear', 'rainy'],
-      ['stormy', 'clear'],
+      ["clear", "stormy"],
+      ["clear", "rainy"],
+      ["stormy", "clear"],
     ];
 
     return abruptChanges.some(
       ([from, to]) =>
-        (current === from && next === to) || (current === to && next === from)
+        (current === from && next === to) || (current === to && next === from),
     );
   }
 
   private getTransitionWeather(
     current: string,
-    target: string
-  ): WeatherCondition['type'] {
+    target: string,
+  ): WeatherCondition["type"] {
     if (
-      (current === 'clear' && target === 'stormy') ||
-      (current === 'stormy' && target === 'clear')
+      (current === "clear" && target === "stormy") ||
+      (current === "stormy" && target === "clear")
     ) {
-      return 'cloudy';
+      return "cloudy";
     }
     if (
-      (current === 'clear' && target === 'rainy') ||
-      (current === 'rainy' && target === 'clear')
+      (current === "clear" && target === "rainy") ||
+      (current === "rainy" && target === "clear")
     ) {
-      return 'cloudy';
+      return "cloudy";
     }
-    return target as WeatherCondition['type'];
+    return target as WeatherCondition["type"];
   }
 
   private calculateWeatherIntensity(
-    weatherType: WeatherCondition['type']
+    weatherType: WeatherCondition["type"],
   ): number {
     const intensities: Record<string, number> = {
       clear: 0.1,
@@ -291,7 +305,7 @@ export class TimeSystem extends EventEmitter {
     return intensities[weatherType] || 0.5;
   }
 
-  private calculateVisibility(weatherType: WeatherCondition['type']): number {
+  private calculateVisibility(weatherType: WeatherCondition["type"]): number {
     const baseVisibility: Record<string, number> = {
       clear: 1.0,
       cloudy: 0.9,
@@ -305,8 +319,8 @@ export class TimeSystem extends EventEmitter {
   }
 
   private calculateComfort(
-    weatherType: WeatherCondition['type'],
-    temperature: number
+    weatherType: WeatherCondition["type"],
+    temperature: number,
   ): number {
     let comfort = 0;
     if (temperature >= 18 && temperature <= 24) {
@@ -328,7 +342,10 @@ export class TimeSystem extends EventEmitter {
       snowy: -0.5,
     };
 
-    return Math.max(-1, Math.min(1, comfort + (weatherComfort[weatherType] || 0)));
+    return Math.max(
+      -1,
+      Math.min(1, comfort + (weatherComfort[weatherType] || 0)),
+    );
   }
 
   private randomFloat(min: number, max: number): number {
@@ -344,50 +361,52 @@ export class TimeSystem extends EventEmitter {
   }
 
   public getTimeString(): string {
-    const h = this.currentTime.hour.toString().padStart(2, '0');
-    const m = this.currentTime.minute.toString().padStart(2, '0');
+    const h = this.currentTime.hour.toString().padStart(2, "0");
+    const m = this.currentTime.minute.toString().padStart(2, "0");
     return `${h}:${m}`;
   }
 
   public getCurrentTimeOfDay():
-    | 'morning'
-    | 'afternoon'
-    | 'evening'
-    | 'night'
-    | 'rest' {
+    | "morning"
+    | "afternoon"
+    | "evening"
+    | "night"
+    | "rest" {
     const hour = this.currentTime.hour;
 
-    if (hour >= 7 && hour < 11) return 'morning';
-    if (hour >= 11 && hour < 18) return 'afternoon';
-    if (hour >= 18 && hour < 21) return 'evening';
-    return 'night';
+    if (hour >= 7 && hour < 11) return "morning";
+    if (hour >= 11 && hour < 18) return "afternoon";
+    if (hour >= 18 && hour < 21) return "evening";
+    return "night";
   }
 
   public setTime(hour: number, minute: number = 0): void {
     this.currentTime.hour = Math.max(0, Math.min(23, hour));
     this.currentTime.minute = Math.max(0, Math.min(59, minute));
     this.currentTime.phase = this.getPhaseFromTime(this.currentTime.hour);
-    this.currentTime.lightLevel = this.calculateLightLevel(this.currentTime.hour);
+    this.currentTime.lightLevel = this.calculateLightLevel(
+      this.currentTime.hour,
+    );
     this.currentTime.temperature = this.calculateTemperature(
       this.currentTime.hour,
-      this.currentWeather.type
+      this.currentWeather.type,
     );
     this.currentTime.timestamp = Date.now();
   }
 
-  public setWeather(weatherType: WeatherCondition['type']): void {
+  public setWeather(weatherType: WeatherCondition["type"]): void {
     this.currentWeather.type = weatherType;
     this.currentWeather.intensity = this.calculateWeatherIntensity(weatherType);
     this.currentWeather.visibility = this.calculateVisibility(weatherType);
     this.currentWeather.comfort = this.calculateComfort(
       weatherType,
-      this.currentTime.temperature
+      this.currentTime.temperature,
     );
     this.currentWeather.duration = this.config.weatherDurationMin;
 
     this.currentTime.temperature = this.calculateTemperature(
       this.currentTime.hour,
-      weatherType
+      weatherType,
     );
   }
 
@@ -403,4 +422,3 @@ export class TimeSystem extends EventEmitter {
     };
   }
 }
-

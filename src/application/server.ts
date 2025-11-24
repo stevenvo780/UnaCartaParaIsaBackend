@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import "dotenv/config";
 import { WebSocketServer, WebSocket } from "ws";
 import app from "./app";
 import { CONFIG } from "../config/config";
@@ -76,7 +76,7 @@ simulationRunner.on("tick", (snapshot) => {
     payload: snapshot,
   });
 
-simulationWss.clients.forEach((client) => {
+  simulationWss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(message);
     }

@@ -19,11 +19,19 @@ import type { TradeRecord } from "./simulation/trade";
 import type { MarriageGroup } from "./simulation/marriage";
 import type { Quest } from "./simulation/quests";
 // MarriageProposal and CraftingRecipe are used in type definitions, not directly imported
-import type { ActiveConflict, ConflictRecord, ConflictStats } from "./simulation/conflict";
+import type {
+  ActiveConflict,
+  ConflictRecord,
+  ConflictStats,
+} from "./simulation/conflict";
 import type { Animal } from "./simulation/animals";
 import type { TechTreeState } from "./simulation/research";
 import type { SerializedReputationData } from "./simulation/reputation";
-import type { NormViolation, SanctionRecord, NormComplianceStats } from "./simulation/norms";
+import type {
+  NormViolation,
+  SanctionRecord,
+  NormComplianceStats,
+} from "./simulation/norms";
 
 export interface Position {
   x: number;
@@ -55,7 +63,7 @@ export interface Size {
   height: number;
 }
 
-export interface Rect extends Position, Size { }
+export interface Rect extends Position, Size {}
 
 export type InteractionType =
   | "NOURISH"
@@ -226,13 +234,16 @@ export interface ResearchState {
 
 export interface RecipeState {
   discovered: string[];
-  agentRecipes: Record<string, Array<{
-    recipeId: string;
-    discoveredAt: number;
-    timesUsed: number;
-    successRate: number;
-    proficiency: number;
-  }>>;
+  agentRecipes: Record<
+    string,
+    Array<{
+      recipeId: string;
+      discoveredAt: number;
+      timesUsed: number;
+      successRate: number;
+      proficiency: number;
+    }>
+  >;
 }
 
 export interface ReputationState {
@@ -267,7 +278,7 @@ export interface AnimalState {
 export interface KnowledgeGraphState {
   nodes: Array<{
     id: string;
-    type: 'fact' | 'recipe' | 'location' | 'person';
+    type: "fact" | "recipe" | "location" | "person";
     data: unknown;
     discoveredBy: string[];
     discoveryTime: number;
@@ -276,8 +287,9 @@ export interface KnowledgeGraphState {
     source: string;
     target: string;
     weight: number;
-    type: 'related' | 'prerequisite' | 'derived';
-cor  }>;
+    type: "related" | "prerequisite" | "derived";
+    cor;
+  }>;
 }
 
 export interface TaskState {

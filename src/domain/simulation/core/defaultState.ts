@@ -1,4 +1,8 @@
-import type { ConversationState, GameResources, GameState } from "../../types/game-types";
+import type {
+  ConversationState,
+  GameResources,
+  GameState,
+} from "../../types/game-types";
 
 const defaultResources: GameResources = {
   energy: 0,

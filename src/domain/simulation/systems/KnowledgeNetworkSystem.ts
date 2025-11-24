@@ -3,7 +3,7 @@ import { simulationEvents, GameEventNames } from "../core/events";
 
 export interface KnowledgeNode {
   id: string;
-  type: 'fact' | 'recipe' | 'location' | 'person';
+  type: "fact" | "recipe" | "location" | "person";
   data: unknown;
   discoveredBy: string[];
   discoveryTime: number;
@@ -13,7 +13,7 @@ export interface KnowledgeEdge {
   source: string;
   target: string;
   weight: number;
-  type: 'related' | 'prerequisite' | 'derived';
+  type: "related" | "prerequisite" | "derived";
 }
 
 export class KnowledgeNetworkSystem {
@@ -24,7 +24,7 @@ export class KnowledgeNetworkSystem {
 
   constructor(gameState: GameState) {
     this.gameState = gameState;
-    console.log('🧠 KnowledgeNetworkSystem (Backend) initialized');
+    console.log("🧠 KnowledgeNetworkSystem (Backend) initialized");
   }
 
   public update(_deltaTimeMs: number): void {
@@ -41,7 +41,12 @@ export class KnowledgeNetworkSystem {
     this.gameState.knowledgeGraph.links = snapshot.edges;
   }
 
-  public addKnowledge(id: string, type: KnowledgeNode['type'], data: unknown, discovererId?: string): void {
+  public addKnowledge(
+    id: string,
+    type: KnowledgeNode["type"],
+    data: unknown,
+    discovererId?: string,
+  ): void {
     if (this.nodes.has(id)) return;
 
     const node: KnowledgeNode = {
@@ -58,7 +63,7 @@ export class KnowledgeNetworkSystem {
       this.learnKnowledge(discovererId, id);
     }
 
-    simulationEvents.emit('KNOWLEDGE_ADDED', { node });
+    simulationEvents.emit("KNOWLEDGE_ADDED", { node });
   }
 
   public learnKnowledge(agentId: string, nodeId: string): boolean {
@@ -82,13 +87,17 @@ export class KnowledgeNetworkSystem {
     simulationEvents.emit(GameEventNames.KNOWLEDGE_LEARNED, {
       agentId,
       nodeId,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     return true;
   }
 
-  public shareKnowledge(fromAgentId: string, toAgentId: string, nodeId: string): boolean {
+  public shareKnowledge(
+    fromAgentId: string,
+    toAgentId: string,
+    nodeId: string,
+  ): boolean {
     const fromKnowledge = this.agentKnowledge.get(fromAgentId);
     if (!fromKnowledge?.has(nodeId)) return false;
 
@@ -99,9 +108,11 @@ export class KnowledgeNetworkSystem {
         fromAgentId,
         toAgentId,
         nodeId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
-      console.log(`🧠 Knowledge shared: ${fromAgentId} -> ${toAgentId} (${nodeId})`);
+      console.log(
+        `🧠 Knowledge shared: ${fromAgentId} -> ${toAgentId} (${nodeId})`,
+      );
     }
 
     return learned;
@@ -110,7 +121,7 @@ export class KnowledgeNetworkSystem {
   public getGraphSnapshot() {
     return {
       nodes: Array.from(this.nodes.values()),
-      edges: this.edges
+      edges: this.edges,
     };
   }
 }

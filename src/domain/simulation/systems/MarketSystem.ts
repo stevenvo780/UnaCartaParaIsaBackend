@@ -1,5 +1,8 @@
 import type { GameState } from "../../types/game-types";
-import type { MarketConfig, ResourceType } from "../../types/simulation/economy";
+import type {
+  MarketConfig,
+  ResourceType,
+} from "../../types/simulation/economy";
 // MarketOrder removed from imports as it's not used in this file
 import { InventorySystem } from "./InventorySystem";
 import { LifeCycleSystem } from "./LifeCycleSystem";
@@ -26,7 +29,7 @@ export class MarketSystem {
     state: GameState,
     inventorySystem: InventorySystem,
     _lifeCycleSystem: LifeCycleSystem,
-    config?: Partial<MarketConfig>
+    config?: Partial<MarketConfig>,
   ) {
     // lifeCycleSystem parameter kept for API compatibility but not currently used
     void _lifeCycleSystem;
@@ -49,7 +52,12 @@ export class MarketSystem {
 
     // Actualizar precios en el estado
     const prices: Record<string, number> = {};
-    const resourceTypes: Array<"wood" | "stone" | "food" | "water"> = ["wood", "stone", "food", "water"];
+    const resourceTypes: Array<"wood" | "stone" | "food" | "water"> = [
+      "wood",
+      "stone",
+      "food",
+      "water",
+    ];
     for (const resource of resourceTypes) {
       prices[resource] = this.getResourcePrice(resource);
     }
@@ -76,20 +84,27 @@ export class MarketSystem {
     return this.config.normalMultiplier;
   }
 
-  public buyResource(buyerId: string, resource: ResourceType, amount: number): boolean {
+  public buyResource(
+    buyerId: string,
+    resource: ResourceType,
+    amount: number,
+  ): boolean {
     const price = this.getResourcePrice(resource);
     const totalCost = price * amount;
 
     const buyer = this.state.entities.find((e) => e.id === buyerId);
     if (!buyer || !buyer.stats) return false;
-    const buyerMoney = typeof buyer.stats.money === 'number' ? buyer.stats.money : 0;
+    const buyerMoney =
+      typeof buyer.stats.money === "number" ? buyer.stats.money : 0;
     if (buyerMoney < totalCost) return false;
 
     buyer.stats.money = buyerMoney - totalCost;
 
     const added = this.inventorySystem.addResource(buyerId, resource, amount);
     if (!added) {
-      buyer.stats.money = (typeof buyer.stats.money === 'number' ? buyer.stats.money : 0) + totalCost;
+      buyer.stats.money =
+        (typeof buyer.stats.money === "number" ? buyer.stats.money : 0) +
+        totalCost;
       return false;
     }
 
@@ -100,8 +115,16 @@ export class MarketSystem {
     return true;
   }
 
-  public sellResource(sellerId: string, resource: ResourceType, amount: number): number {
-    const removed = this.inventorySystem.removeFromAgent(sellerId, resource, amount);
+  public sellResource(
+    sellerId: string,
+    resource: ResourceType,
+    amount: number,
+  ): number {
+    const removed = this.inventorySystem.removeFromAgent(
+      sellerId,
+      resource,
+      amount,
+    );
     if (removed <= 0) return 0;
 
     const price = this.getResourcePrice(resource);
@@ -109,12 +132,17 @@ export class MarketSystem {
 
     const seller = this.state.entities.find((e) => e.id === sellerId);
     if (seller && seller.stats) {
-      seller.stats.money = (typeof seller.stats.money === 'number' ? seller.stats.money : 0) + totalValue;
+      seller.stats.money =
+        (typeof seller.stats.money === "number" ? seller.stats.money : 0) +
+        totalValue;
     }
 
     // Deduct from global currency?
     if (this.state.resources) {
-      this.state.resources.currency = Math.max(0, this.state.resources.currency - totalValue);
+      this.state.resources.currency = Math.max(
+        0,
+        this.state.resources.currency - totalValue,
+      );
     }
 
     return totalValue;
@@ -135,7 +163,12 @@ export class MarketSystem {
       if (!sellerInv) continue;
 
       // Check if seller has excess of any resource
-      for (const resource of ["wood", "stone", "food", "water"] as ResourceType[]) {
+      for (const resource of [
+        "wood",
+        "stone",
+        "food",
+        "water",
+      ] as ResourceType[]) {
         const sellerStock = sellerInv[resource] || 0;
         if (sellerStock < 10) continue; // Not enough to trade
 
@@ -153,19 +186,27 @@ export class MarketSystem {
           const price = this.getResourcePrice(resource);
           const cost = price * tradeAmount;
 
-          const buyerMoney = buyer.stats && typeof buyer.stats.money === 'number' 
-            ? buyer.stats.money 
-            : 0;
+          const buyerMoney =
+            buyer.stats && typeof buyer.stats.money === "number"
+              ? buyer.stats.money
+              : 0;
 
           if (buyerMoney >= cost) {
-            const removed = this.inventorySystem.removeFromAgent(seller.id, resource, tradeAmount);
+            const removed = this.inventorySystem.removeFromAgent(
+              seller.id,
+              resource,
+              tradeAmount,
+            );
             if (removed > 0) {
               this.inventorySystem.addResource(buyer.id, resource, removed);
               if (buyer.stats) {
                 buyer.stats.money = buyerMoney - cost;
               }
               if (seller.stats) {
-                const sellerMoney = typeof seller.stats.money === 'number' ? seller.stats.money : 0;
+                const sellerMoney =
+                  typeof seller.stats.money === "number"
+                    ? seller.stats.money
+                    : 0;
                 seller.stats.money = sellerMoney + cost;
               }
               // Only one trade per update cycle

@@ -32,7 +32,7 @@ export class MarriageSystem {
   public proposeMarriage(
     proposerId: string,
     targetId: string,
-    proposerGroupId?: string
+    proposerGroupId?: string,
   ): boolean {
     const proposerGroup = proposerGroupId
       ? this.marriageGroups.get(proposerGroupId)
@@ -70,7 +70,7 @@ export class MarriageSystem {
       group.members.push(targetId);
       group.cohesion = Math.max(
         0.3,
-        1.0 - group.members.length * this.config.cohesionDecayPerMember
+        1.0 - group.members.length * this.config.cohesionDecayPerMember,
       );
 
       this.addHistoryEvent("joined", targetId, group.id, proposal.proposerId);
@@ -97,7 +97,7 @@ export class MarriageSystem {
   public initiateDivorce(
     agentId: string,
     groupId: string,
-    reason: "mutual" | "conflict" = "mutual"
+    reason: "mutual" | "conflict" = "mutual",
   ): boolean {
     const group = this.marriageGroups.get(groupId);
     if (!group) return false;
@@ -149,7 +149,7 @@ export class MarriageSystem {
     agentId: string,
     groupId?: string,
     partnerId?: string,
-    reason?: string
+    reason?: string,
   ): void {
     const event: MarriageEvent = {
       timestamp: Date.now(),
@@ -281,7 +281,7 @@ export class MarriageSystem {
         targetId,
         proposerId: proposal.proposerId,
         timestamp: proposal.timestamp,
-      })
+      }),
     );
   }
 
@@ -289,7 +289,7 @@ export class MarriageSystem {
     let events = this.marriageHistory;
     if (agentId) {
       events = events.filter(
-        (e) => e.agentId === agentId || e.partnerId === agentId
+        (e) => e.agentId === agentId || e.partnerId === agentId,
       );
     }
     return events.slice(-limit).sort((a, b) => b.timestamp - a.timestamp);
@@ -305,7 +305,7 @@ export class MarriageSystem {
         : 0;
     const largestGroup = groups.reduce(
       (max, g) => Math.max(max, g.members.length),
-      0
+      0,
     );
 
     return {

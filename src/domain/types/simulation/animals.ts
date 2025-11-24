@@ -1,18 +1,18 @@
-import type { Position } from '../../types/game-types.js';
+import type { Position } from "../../types/game-types.js";
 
-export type AnimalType = 'rabbit' | 'deer' | 'boar' | 'bird' | 'fish' | 'wolf';
+export type AnimalType = "rabbit" | "deer" | "boar" | "bird" | "fish" | "wolf";
 
 export type AnimalState =
-  | 'idle'
-  | 'wandering'
-  | 'seeking_food'
-  | 'seeking_water'
-  | 'eating'
-  | 'drinking'
-  | 'fleeing'
-  | 'hunting'
-  | 'mating'
-  | 'dead';
+  | "idle"
+  | "wandering"
+  | "seeking_food"
+  | "seeking_water"
+  | "eating"
+  | "drinking"
+  | "fleeing"
+  | "hunting"
+  | "mating"
+  | "dead";
 
 export interface AnimalGenes {
   color: number;
@@ -58,7 +58,7 @@ export interface AnimalConfig {
   waterConsumptionRate: number;
 
   isPredator?: boolean;
-  preyTypes?: (AnimalType | 'human')[];
+  preyTypes?: (AnimalType | "human")[];
   huntingRange?: number;
   attackDamage?: number;
 
@@ -85,7 +85,7 @@ export interface Animal {
   parentIds: [string | null, string | null];
 
   targetPosition: Position | null;
-  currentTarget: { type: 'food' | 'water' | 'mate'; id: string } | null;
+  currentTarget: { type: "food" | "water" | "mate"; id: string } | null;
   fleeTarget: string | null;
 
   biome: string;

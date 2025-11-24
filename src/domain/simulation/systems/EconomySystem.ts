@@ -1,8 +1,11 @@
-import type { GameState, Zone } from '../../types/game-types.js';
-import type { EconomyConfig, ResourceType } from '../../types/simulation/economy';
-import { InventorySystem } from './InventorySystem.js';
-import { SocialSystem } from './SocialSystem.js';
-import { LifeCycleSystem } from './LifeCycleSystem.js';
+import type { GameState, Zone } from "../../types/game-types.js";
+import type {
+  EconomyConfig,
+  ResourceType,
+} from "../../types/simulation/economy";
+import { InventorySystem } from "./InventorySystem.js";
+import { SocialSystem } from "./SocialSystem.js";
+import { LifeCycleSystem } from "./LifeCycleSystem.js";
 
 const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
   workDurationMs: 5000,
@@ -31,7 +34,7 @@ export class EconomySystem {
     inventorySystem: InventorySystem,
     _socialSystem: SocialSystem,
     _lifeCycleSystem: LifeCycleSystem,
-    config?: Partial<EconomyConfig>
+    config?: Partial<EconomyConfig>,
   ) {
     this.state = state;
     this.inventorySystem = inventorySystem;
@@ -80,17 +83,25 @@ export class EconomySystem {
     const key = `${agentId}:${resourceType}`;
     const residual = this.yieldResiduals.get(key) || 0;
     const amount = Math.floor(totalYield + residual);
-    const newResidual = (totalYield + residual) - amount;
+    const newResidual = totalYield + residual - amount;
     this.yieldResiduals.set(key, newResidual);
 
     if (amount > 0) {
-      const added = this.inventorySystem.addResource(agentId, resourceType, amount);
+      const added = this.inventorySystem.addResource(
+        agentId,
+        resourceType,
+        amount,
+      );
       if (!added) {
         this.addToGlobalResources(resourceType, amount);
       }
-      const salary = Math.round(this.config.salaryRates[resourceType] * teamBonus);
-      if (agent.stats) { // Assuming agent has stats in entity
-        const currentMoney = typeof agent.stats.money === 'number' ? agent.stats.money : 0;
+      const salary = Math.round(
+        this.config.salaryRates[resourceType] * teamBonus,
+      );
+      if (agent.stats) {
+        // Assuming agent has stats in entity
+        const currentMoney =
+          typeof agent.stats.money === "number" ? agent.stats.money : 0;
         agent.stats.money = currentMoney + salary;
       }
     }

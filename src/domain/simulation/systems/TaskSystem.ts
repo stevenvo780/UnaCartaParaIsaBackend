@@ -51,15 +51,17 @@ export class TaskSystem {
     this.gameState.tasks.stats = stats;
 
     // Convertir Map a Array para serialización
-    this.gameState.tasks.tasks = Array.from(this.tasks.values()).map(task => ({
-      id: task.id,
-      type: task.type,
-      progress: task.progress,
-      requiredWork: task.requiredWork,
-      completed: task.completed,
-      zoneId: task.zoneId,
-      bounds: task.bounds,
-    }));
+    this.gameState.tasks.tasks = Array.from(this.tasks.values()).map(
+      (task) => ({
+        id: task.id,
+        type: task.type,
+        progress: task.progress,
+        requiredWork: task.requiredWork,
+        completed: task.completed,
+        zoneId: task.zoneId,
+        bounds: task.bounds,
+      }),
+    );
   }
 
   public createTask(params: TaskCreationParams): Task | null {
@@ -103,7 +105,7 @@ export class TaskSystem {
     taskId: string,
     agentId: string,
     contribution: number,
-    socialSynergyMultiplier = 1.0
+    socialSynergyMultiplier = 1.0,
   ): {
     progressMade: boolean;
     completed: boolean;
@@ -142,7 +144,7 @@ export class TaskSystem {
 
     task.progress = Math.min(
       task.requiredWork,
-      task.progress + finalContribution
+      task.progress + finalContribution,
     );
     task.lastContribution = Date.now();
 
@@ -180,7 +182,7 @@ export class TaskSystem {
 
   public getTasksNearPosition(
     position: { x: number; y: number },
-    radius: number
+    radius: number,
   ): Task[] {
     return Array.from(this.tasks.values()).filter((task) => {
       if (!task.bounds || task.completed) return false;
@@ -211,13 +213,13 @@ export class TaskSystem {
       ([agentId, contribution]) => ({
         agentId,
         contribution,
-      })
+      }),
     );
   }
 
   public getAgentTasks(agentId: string): Task[] {
-    return Array.from(this.tasks.values()).filter(
-      (task) => task.contributors?.has(agentId)
+    return Array.from(this.tasks.values()).filter((task) =>
+      task.contributors?.has(agentId),
     );
   }
 

@@ -31,7 +31,13 @@ export interface QuestObjective {
 }
 
 export interface QuestReward {
-  type: "experience" | "money" | "item" | "stats_boost" | "title" | "unlock_feature";
+  type:
+    | "experience"
+    | "money"
+    | "item"
+    | "stats_boost"
+    | "title"
+    | "unlock_feature";
   amount?: number;
   itemId?: string;
   statsBoost?: Record<string, number>;

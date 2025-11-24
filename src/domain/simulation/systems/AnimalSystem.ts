@@ -1,12 +1,15 @@
-import type { GameState } from '../../types/game-types';
-import type { Animal, AnimalSystemConfig } from '../../types/simulation/animals';
-import type { WorldResourceInstance } from '../../types/simulation/worldResources';
-import { getAnimalConfig } from '../../../infrastructure/services/world/config/AnimalConfigs';
-import { AnimalNeeds } from './animals/AnimalNeeds';
-import { AnimalBehavior } from './animals/AnimalBehavior';
-import { AnimalSpawning } from './animals/AnimalSpawning';
-import { simulationEvents, GameEventNames } from '../core/events';
-import type { WorldResourceSystem } from './WorldResourceSystem';
+import type { GameState } from "../../types/game-types";
+import type {
+  Animal,
+  AnimalSystemConfig,
+} from "../../types/simulation/animals";
+import type { WorldResourceInstance } from "../../types/simulation/worldResources";
+import { getAnimalConfig } from "../../../infrastructure/services/world/config/AnimalConfigs";
+import { AnimalNeeds } from "./animals/AnimalNeeds";
+import { AnimalBehavior } from "./animals/AnimalBehavior";
+import { AnimalSpawning } from "./animals/AnimalSpawning";
+import { simulationEvents, GameEventNames } from "../core/events";
+import type { WorldResourceSystem } from "./WorldResourceSystem";
 
 const DEFAULT_CONFIG: AnimalSystemConfig = {
   maxAnimals: 500,
@@ -27,42 +30,62 @@ export class AnimalSystem {
   private spatialGrid = new Map<string, Set<string>>();
   private readonly GRID_CELL_SIZE = 256;
 
-  private resourceSearchCache = new Map<string, {
-    resources: Array<{ id: string; position: { x: number; y: number }; type: string }>;
-    timestamp: number;
-  }>();
-  private threatSearchCache = new Map<string, {
-    threat: { id: string; position: { x: number; y: number } } | null;
-    timestamp: number;
-  }>();
+  private resourceSearchCache = new Map<
+    string,
+    {
+      resources: Array<{
+        id: string;
+        position: { x: number; y: number };
+        type: string;
+      }>;
+      timestamp: number;
+    }
+  >();
+  private threatSearchCache = new Map<
+    string,
+    {
+      threat: { id: string; position: { x: number; y: number } } | null;
+      timestamp: number;
+    }
+  >();
   private readonly CACHE_DURATION = 5000;
 
   constructor(
     gameState: GameState,
     worldResourceSystem?: WorldResourceSystem,
-    config?: Partial<AnimalSystemConfig>
+    config?: Partial<AnimalSystemConfig>,
   ) {
     this.gameState = gameState;
     this.worldResourceSystem = worldResourceSystem;
     this.config = { ...DEFAULT_CONFIG, ...config };
 
     this.setupEventListeners();
-    console.log('🐾 AnimalSystem (Backend) initialized');
+    console.log("🐾 AnimalSystem (Backend) initialized");
   }
 
   private setupEventListeners(): void {
-    simulationEvents.on(GameEventNames.ANIMAL_HUNTED, (data: { animalId: string; hunterId: string }) => {
-      this.handleAnimalHunted(data.animalId, data.hunterId);
-    });
+    simulationEvents.on(
+      GameEventNames.ANIMAL_HUNTED,
+      (data: { animalId: string; hunterId: string }) => {
+        this.handleAnimalHunted(data.animalId, data.hunterId);
+      },
+    );
 
-    simulationEvents.on(GameEventNames.CHUNK_RENDERED, (data: {
-      coords: { x: number; y: number };
-      bounds: { x: number; y: number; width: number; height: number };
-    }) => {
-      AnimalSpawning.spawnAnimalsInChunk(data.coords, data.bounds, (animal) => {
-        this.addAnimal(animal);
-      });
-    });
+    simulationEvents.on(
+      GameEventNames.CHUNK_RENDERED,
+      (data: {
+        coords: { x: number; y: number };
+        bounds: { x: number; y: number; width: number; height: number };
+      }) => {
+        AnimalSpawning.spawnAnimalsInChunk(
+          data.coords,
+          data.bounds,
+          (animal) => {
+            this.addAnimal(animal);
+          },
+        );
+      },
+    );
   }
 
   public update(_deltaMs: number): void {
@@ -113,7 +136,9 @@ export class AnimalSystem {
     }
 
     // Convertir Map a Array para serialización
-    this.gameState.animals.animals = Array.from(this.animals.values()).filter(a => !a.isDead);
+    this.gameState.animals.animals = Array.from(this.animals.values()).filter(
+      (a) => !a.isDead,
+    );
 
     // Calcular estadísticas
     const byType: Record<string, number> = {};
@@ -133,87 +158,124 @@ export class AnimalSystem {
     const config = getAnimalConfig(animal.type);
     if (!config) return;
 
-    const nearbyPredator = this.findNearbyPredator(animal, config.detectionRange);
+    const nearbyPredator = this.findNearbyPredator(
+      animal,
+      config.detectionRange,
+    );
     if (nearbyPredator) {
-      animal.state = 'fleeing';
+      animal.state = "fleeing";
       animal.fleeTarget = nearbyPredator.id;
       animal.needs.fear = 100;
       animal.currentTarget = null;
       animal.targetPosition = null;
-      AnimalBehavior.moveAwayFrom(animal, nearbyPredator.position, 1.2, deltaSeconds);
+      AnimalBehavior.moveAwayFrom(
+        animal,
+        nearbyPredator.position,
+        1.2,
+        deltaSeconds,
+      );
       return;
     }
 
     if (config.fleeFromHumans) {
       const nearbyHuman = this.findNearbyHuman(animal, config.detectionRange);
       if (nearbyHuman) {
-        animal.state = 'fleeing';
+        animal.state = "fleeing";
         animal.fleeTarget = nearbyHuman.id;
         animal.needs.fear = 100;
         animal.currentTarget = null;
         animal.targetPosition = null;
-        AnimalBehavior.moveAwayFrom(animal, nearbyHuman.position, 1.0, deltaSeconds);
+        AnimalBehavior.moveAwayFrom(
+          animal,
+          nearbyHuman.position,
+          1.0,
+          deltaSeconds,
+        );
         return;
       }
     }
 
     if (animal.needs.hunger < 30) {
       if (config.isPredator) {
-        animal.state = 'hunting';
-        const prey = this.getAnimalsInRadius(animal.position, config.huntingRange || 200);
+        animal.state = "hunting";
+        const prey = this.getAnimalsInRadius(
+          animal.position,
+          config.huntingRange || 200,
+        );
         AnimalBehavior.huntPrey(animal, prey, deltaSeconds, (preyId) => {
-          this.killAnimal(preyId, 'hunted');
+          this.killAnimal(preyId, "hunted");
         });
         return;
       } else if (config.consumesVegetation) {
-        animal.state = 'seeking_food';
-        const foodResources = this.findNearbyFood(animal, config.detectionRange);
-        AnimalBehavior.seekFood(animal, foodResources, deltaSeconds, (resourceId) => {
-          this.consumeResource(resourceId, animal.id);
-        });
+        animal.state = "seeking_food";
+        const foodResources = this.findNearbyFood(
+          animal,
+          config.detectionRange,
+        );
+        AnimalBehavior.seekFood(
+          animal,
+          foodResources,
+          deltaSeconds,
+          (resourceId) => {
+            this.consumeResource(resourceId, animal.id);
+          },
+        );
         return;
       }
     }
 
     if (animal.needs.thirst < 30 && config.consumesWater) {
-      animal.state = 'seeking_water';
-      const waterResources = this.findNearbyWater(animal, config.detectionRange);
-      AnimalBehavior.seekWater(animal, waterResources, deltaSeconds, (resourceId) => {
-        this.consumeResource(resourceId, animal.id);
-      });
+      animal.state = "seeking_water";
+      const waterResources = this.findNearbyWater(
+        animal,
+        config.detectionRange,
+      );
+      AnimalBehavior.seekWater(
+        animal,
+        waterResources,
+        deltaSeconds,
+        (resourceId) => {
+          this.consumeResource(resourceId, animal.id);
+        },
+      );
       return;
     }
 
     if (animal.needs.reproductiveUrge > 80) {
-      animal.state = 'mating';
+      animal.state = "mating";
       const mates = this.getAnimalsInRadius(animal.position, 60);
-      AnimalBehavior.attemptReproduction(animal, mates, deltaSeconds, (offspring) => {
-        this.addAnimal(offspring);
-      });
+      AnimalBehavior.attemptReproduction(
+        animal,
+        mates,
+        deltaSeconds,
+        (offspring) => {
+          this.addAnimal(offspring);
+        },
+      );
       return;
     }
 
-    if (animal.state === 'eating' || animal.state === 'drinking') {
+    if (animal.state === "eating" || animal.state === "drinking") {
       if (animal.stateEndTime && Date.now() > animal.stateEndTime) {
-        animal.state = 'idle';
+        animal.state = "idle";
         animal.stateEndTime = undefined;
       }
       return;
     }
 
-    if (animal.state === 'idle') {
+    if (animal.state === "idle") {
       if (Math.random() < 0.2) {
-        animal.state = 'wandering';
+        animal.state = "wandering";
       }
     } else {
-      animal.state = 'wandering';
+      animal.state = "wandering";
       AnimalBehavior.wander(animal, 0.5, deltaSeconds);
     }
   }
 
   private findNearbyPredator(
     animal: Animal,
-    range: number
+    range: number,
   ): { id: string; position: { x: number; y: number } } | null {
     const cacheKey = `predator_${animal.id}`;
     const cached = this.threatSearchCache.get(cacheKey);
@@ -231,18 +293,24 @@ export class AnimalSystem {
 
       if (predatorConfig.preyTypes.includes(animal.type)) {
         const result = { id: predator.id, position: { ...predator.position } };
-        this.threatSearchCache.set(cacheKey, { threat: result, timestamp: Date.now() });
+        this.threatSearchCache.set(cacheKey, {
+          threat: result,
+          timestamp: Date.now(),
+        });
         return result;
       }
     }
 
-    this.threatSearchCache.set(cacheKey, { threat: null, timestamp: Date.now() });
+    this.threatSearchCache.set(cacheKey, {
+      threat: null,
+      timestamp: Date.now(),
+    });
     return null;
   }
 
   private findNearbyHuman(
     animal: Animal,
-    range: number
+    range: number,
   ): { id: string; position: { x: number; y: number } } | null {
     const cached = this.threatSearchCache.get(`human_${animal.id}`);
     if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
@@ -252,7 +320,11 @@ export class AnimalSystem {
     const entities = this.gameState.entities || [];
     for (const entity of entities) {
       if (entity.isDead) continue;
-      const entityPos = entity.position || (entity.x !== undefined && entity.y !== undefined ? { x: entity.x, y: entity.y } : null);
+      const entityPos =
+        entity.position ||
+        (entity.x !== undefined && entity.y !== undefined
+          ? { x: entity.x, y: entity.y }
+          : null);
       if (!entityPos) continue;
 
       const dx = animal.position.x - entityPos.x;
@@ -261,19 +333,28 @@ export class AnimalSystem {
 
       if (distSq <= range * range) {
         const result = { id: entity.id, position: entityPos };
-        this.threatSearchCache.set(`human_${animal.id}`, { threat: result, timestamp: Date.now() });
+        this.threatSearchCache.set(`human_${animal.id}`, {
+          threat: result,
+          timestamp: Date.now(),
+        });
         return result;
       }
     }
 
-    this.threatSearchCache.set(`human_${animal.id}`, { threat: null, timestamp: Date.now() });
+    this.threatSearchCache.set(`human_${animal.id}`, {
+      threat: null,
+      timestamp: Date.now(),
+    });
     return null;
   }
 
   /**
    * Find nearby food resources
    */
-  private findNearbyFood(animal: Animal, range: number): Array<{ id: string; position: { x: number; y: number }; type: string }> {
+  private findNearbyFood(
+    animal: Animal,
+    range: number,
+  ): Array<{ id: string; position: { x: number; y: number }; type: string }> {
     const cacheKey = `food_${animal.id}`;
     const cached = this.resourceSearchCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
@@ -283,23 +364,38 @@ export class AnimalSystem {
     if (!this.worldResourceSystem) return [];
 
     // Get harvestable resources near animal
-    const resources = this.worldResourceSystem.getResourcesNear?.(animal.position, range)
-      ?.filter(r => r.type === 'berry_bush' || r.type === 'tree' || r.type === 'mushroom_patch')
-      ?.map(r => ({ id: r.id, position: r.position, type: r.type })) || [];
+    const resources =
+      this.worldResourceSystem
+        .getResourcesNear?.(animal.position, range)
+        ?.filter(
+          (r) =>
+            r.type === "berry_bush" ||
+            r.type === "tree" ||
+            r.type === "mushroom_patch",
+        )
+        ?.map((r) => ({ id: r.id, position: r.position, type: r.type })) || [];
 
-    this.resourceSearchCache.set(cacheKey, { resources, timestamp: Date.now() });
+    this.resourceSearchCache.set(cacheKey, {
+      resources,
+      timestamp: Date.now(),
+    });
     return resources;
   }
 
   /**
    * Find nearby water resources
    */
-  private findNearbyWater(animal: Animal, range: number): Array<{ id: string; position: { x: number; y: number } }> {
+  private findNearbyWater(
+    animal: Animal,
+    range: number,
+  ): Array<{ id: string; position: { x: number; y: number } }> {
     if (!this.worldResourceSystem) return [];
 
-    const resources = this.worldResourceSystem.getResourcesNear?.(animal.position, range)
-      ?.filter((r): r is WorldResourceInstance => r.type === 'water_source')
-      ?.map((r) => ({ id: r.id, position: r.position })) || [];
+    const resources =
+      this.worldResourceSystem
+        .getResourcesNear?.(animal.position, range)
+        ?.filter((r): r is WorldResourceInstance => r.type === "water_source")
+        ?.map((r) => ({ id: r.id, position: r.position })) || [];
 
     return resources;
   }
@@ -307,7 +403,10 @@ export class AnimalSystem {
   /**
    * Get animals within radius using spatial grid
    */
-  private getAnimalsInRadius(position: { x: number; y: number }, radius: number): Animal[] {
+  private getAnimalsInRadius(
+    position: { x: number; y: number },
+    radius: number,
+  ): Animal[] {
     const result: Animal[] = [];
     const radiusSq = radius * radius;
 
@@ -365,7 +464,10 @@ export class AnimalSystem {
   /**
    * Update animal position in spatial grid
    */
-  private updateSpatialGrid(animal: Animal, oldPosition: { x: number; y: number }): void {
+  private updateSpatialGrid(
+    animal: Animal,
+    oldPosition: { x: number; y: number },
+  ): void {
     const oldCell = this.getGridCell(oldPosition);
     const newCell = this.getGridCell(animal.position);
 
@@ -390,19 +492,19 @@ export class AnimalSystem {
 
     // Death by starvation
     if (AnimalNeeds.isStarving(animal)) {
-      this.killAnimal(animal.id, 'starvation');
+      this.killAnimal(animal.id, "starvation");
       return;
     }
 
     // Death by dehydration
     if (AnimalNeeds.isDehydrated(animal)) {
-      this.killAnimal(animal.id, 'dehydration');
+      this.killAnimal(animal.id, "dehydration");
       return;
     }
 
     // Death by old age
     if (animal.age > config.lifespan) {
-      this.killAnimal(animal.id, 'old_age');
+      this.killAnimal(animal.id, "old_age");
     }
   }
 
@@ -411,13 +513,13 @@ export class AnimalSystem {
    */
   private killAnimal(
     animalId: string,
-    cause: 'starvation' | 'dehydration' | 'old_age' | 'hunted'
+    cause: "starvation" | "dehydration" | "old_age" | "hunted",
   ): void {
     const animal = this.animals.get(animalId);
     if (!animal || animal.isDead) return;
 
     animal.isDead = true;
-    animal.state = 'dead';
+    animal.state = "dead";
 
     simulationEvents.emit(GameEventNames.ANIMAL_DIED, {
       animalId,
@@ -448,7 +550,7 @@ export class AnimalSystem {
       genes: animal.genes,
     });
 
-    this.killAnimal(animalId, 'hunted');
+    this.killAnimal(animalId, "hunted");
   }
 
   /**
@@ -527,14 +629,14 @@ export class AnimalSystem {
     width: number,
     height: number,
     tileSize: number,
-    biomeMap: string[][]
+    biomeMap: string[][],
   ): void {
     AnimalSpawning.spawnAnimalsInWorld(
       width,
       height,
       tileSize,
       biomeMap,
-      (animal) => this.addAnimal(animal)
+      (animal) => this.addAnimal(animal),
     );
   }
 }

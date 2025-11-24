@@ -90,7 +90,10 @@ export class RecipeDiscoverySystem {
     });
   }
 
-  public teachRecipe(agentId: string, recipeId: string): RecipeDiscoveryEvent | null {
+  public teachRecipe(
+    agentId: string,
+    recipeId: string,
+  ): RecipeDiscoveryEvent | null {
     const recipe = RECIPES_CATALOG.find((r) => r.id === recipeId);
     if (!recipe) return null;
 
@@ -123,7 +126,7 @@ export class RecipeDiscoverySystem {
   public attemptExperimentation(
     agentId: string,
     ingredients: string[],
-    _currentBiome?: string
+    _currentBiome?: string,
   ): {
     success: boolean;
     recipeId?: string;
@@ -191,7 +194,7 @@ export class RecipeDiscoverySystem {
 
   public getAvailableRecipes(
     agentId: string,
-    availableItems: Map<string, number>
+    availableItems: Map<string, number>,
   ): CraftingRecipe[] {
     const knownRecipes = this.getAgentRecipes(agentId);
     const availableRecipes: CraftingRecipe[] = [];
@@ -216,7 +219,7 @@ export class RecipeDiscoverySystem {
   public improveRecipeProficiency(
     agentId: string,
     recipeId: string,
-    success: boolean
+    success: boolean,
   ): void {
     const agentRecipeMap = this.agentRecipes.get(agentId);
     const knownRecipe = agentRecipeMap?.get(recipeId);
@@ -228,7 +231,7 @@ export class RecipeDiscoverySystem {
     if (success) {
       knownRecipe.proficiency = Math.min(
         100,
-        knownRecipe.proficiency + 2 + this.random() * 3
+        knownRecipe.proficiency + 2 + this.random() * 3,
       );
       knownRecipe.successRate = Math.min(1.0, knownRecipe.successRate + 0.01);
     } else {
@@ -239,7 +242,7 @@ export class RecipeDiscoverySystem {
   public shareRecipe(
     teacherId: string,
     studentId: string,
-    recipeId: string
+    recipeId: string,
   ): RecipeDiscoveryEvent | null {
     if (!this.agentKnowsRecipe(teacherId, recipeId)) {
       return null;
@@ -260,12 +263,12 @@ export class RecipeDiscoverySystem {
     childId: string,
     fatherId?: string,
     motherId?: string,
-    inheritanceRate = 0.5
+    inheritanceRate = 0.5,
   ): RecipeDiscoveryEvent[] {
     const events: RecipeDiscoveryEvent[] = [];
 
     const parents = [fatherId, motherId].filter(
-      (id): id is string => id !== undefined
+      (id): id is string => id !== undefined,
     );
 
     if (parents.length === 0) return events;
@@ -311,16 +314,23 @@ export class RecipeDiscoverySystem {
     const discovered = this.getGloballyDiscoveredRecipes();
     this.gameState.recipes.discovered = discovered;
     // El frontend también espera globalDiscovered
-    (this.gameState.recipes as unknown as { globalDiscovered?: typeof discovered }).globalDiscovered = discovered;
+    (
+      this.gameState.recipes as unknown as {
+        globalDiscovered?: typeof discovered;
+      }
+    ).globalDiscovered = discovered;
 
     // Convertir Map a objeto para serialización
-    const agentRecipesObj: Record<string, Array<{
-      recipeId: string;
-      discoveredAt: number;
-      timesUsed: number;
-      successRate: number;
-      proficiency: number;
-    }>> = {};
+    const agentRecipesObj: Record<
+      string,
+      Array<{
+        recipeId: string;
+        discoveredAt: number;
+        timesUsed: number;
+        successRate: number;
+        proficiency: number;
+      }>
+    > = {};
 
     this.agentRecipes.forEach((recipeMap, agentId) => {
       agentRecipesObj[agentId] = Array.from(recipeMap.values());

@@ -1,4 +1,10 @@
-import type { Zone, MapElement, TerrainTile, RoadPolyline, ObjectLayer } from "../../types/game-types";
+import type {
+  Zone,
+  MapElement,
+  TerrainTile,
+  RoadPolyline,
+  ObjectLayer,
+} from "../../types/game-types";
 
 export type MaterialType = "wood" | "stone" | "food" | "water";
 
