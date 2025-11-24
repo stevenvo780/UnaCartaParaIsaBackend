@@ -17,18 +17,15 @@ export function evaluateWorkOpportunities(
   const goals: AIGoal[] = [];
   const now = Date.now();
 
-  // Check if agent has a role
   const role = deps.getAgentRole(aiState.entityId);
 
   if (!role) {
-    return goals; // No role, no work
+    return goals;
   }
 
-  // Get preferred resource for this role
   const preferredResource = deps.getPreferredResourceForRole(role.roleType);
 
   if (!preferredResource || !deps.findNearestResource) {
-    // Generic work goal if no specific resource
     goals.push({
       type: 'work',
       priority: 0.6 * aiState.personality.diligence,
@@ -41,7 +38,6 @@ export function evaluateWorkOpportunities(
     return goals;
   }
 
-  // Find nearest resource for work
   const resourceTarget = deps.findNearestResource(
     aiState.entityId,
     preferredResource

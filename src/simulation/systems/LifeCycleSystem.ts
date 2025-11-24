@@ -87,6 +87,26 @@ export class LifeCycleSystem {
   public addAgent(agent: AgentProfile): void {
     this.agents.set(agent.id, agent);
     this.syncAgentsToState();
+
+    // Create corresponding SimulationEntity if it doesn't exist
+    const existingEntityIndex = this.gameState.entities.findIndex(e => e.id === agent.id);
+    if (existingEntityIndex === -1) {
+      this.gameState.entities.push({
+        id: agent.id,
+        name: agent.name,
+        x: 2048 + (Math.random() * 100 - 50),
+        y: 2048 + (Math.random() * 100 - 50),
+        type: "agent",
+        state: "idle",
+        stats: {
+          health: 100,
+          energy: 100,
+          happiness: 100
+        },
+        tags: ["agent", agent.sex]
+      });
+    }
+
     simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
       agentId: agent.id,
       action: "birth",
@@ -102,6 +122,13 @@ export class LifeCycleSystem {
     if (!removed) return;
     console.log(`Agent ${id} removed from lifecycle system`);
     this.syncAgentsToState();
+
+    // Remove corresponding SimulationEntity
+    const entityIndex = this.gameState.entities.findIndex(e => e.id === id);
+    if (entityIndex !== -1) {
+      this.gameState.entities.splice(entityIndex, 1);
+    }
+
     simulationEvents.emit(GameEventNames.COMBAT_KILL, {
       targetId: id,
       agentId: id,
@@ -129,9 +156,9 @@ export class LifeCycleSystem {
       parents:
         options.parents && (options.parents.father || options.parents.mother)
           ? {
-              father: options.parents.father,
-              mother: options.parents.mother,
-            }
+            father: options.parents.father,
+            mother: options.parents.mother,
+          }
           : undefined,
     };
     this.addAgent(agent);

@@ -1,31 +1,20 @@
 import type { AnimalGenes } from '../../types/animals.js';
 
-/**
- * Animal Genetics Module
- * Handles gene generation, inheritance, and mutations
- */
-
 const MUTATION_RATE = 0.1;
 
 export class AnimalGenetics {
-  /**
-   * Generate random genes for a new animal
-   */
   public static generateRandomGenes(seed?: number): AnimalGenes {
     const random = seed !== undefined ? () => Math.random() : Math.random;
 
     return {
       color: Math.floor(random() * 0xffffff),
-      size: 0.7 + random() * 0.6, // 0.7 to 1.3
-      speed: 0.8 + random() * 0.4, // 0.8 to 1.2
-      health: 0.8 + random() * 0.4, // 0.8 to 1.2
-      fertility: 0.8 + random() * 0.4, // 0.8 to 1.2
+      size: 0.7 + random() * 0.6,
+      speed: 0.8 + random() * 0.4,
+      health: 0.8 + random() * 0.4,
+      fertility: 0.8 + random() * 0.4,
     };
   }
 
-  /**
-   * Breed genes from two parents with mutation chance
-   */
   public static breedGenes(
     parent1: AnimalGenes,
     parent2: AnimalGenes
@@ -39,9 +28,6 @@ export class AnimalGenetics {
     };
   }
 
-  /**
-   * Inherit color with possible mutation
-   */
   private static inheritColor(color1: number, color2: number): number {
     if (Math.random() < MUTATION_RATE) {
       return Math.floor(Math.random() * 0xffffff);
@@ -49,9 +35,6 @@ export class AnimalGenetics {
     return Math.random() < 0.5 ? color1 : color2;
   }
 
-  /**
-   * Inherit numerical trait with averaging and mutation
-   */
   private static inheritTrait(
     trait1: number,
     trait2: number,
@@ -67,15 +50,12 @@ export class AnimalGenetics {
     return Math.max(min, Math.min(max, average + mutation));
   }
 
-  /**
-   * Calculate fitness score (0-1) based on genes
-   */
   public static calculateFitness(genes: AnimalGenes): number {
     return (
       genes.size * 0.2 +
       genes.speed * 0.3 +
       genes.health * 0.3 +
       genes.fertility * 0.2
-    ) / 1.4; // Normalize to 0-1
+    ) / 1.4;
   }
 }

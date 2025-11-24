@@ -4,19 +4,11 @@ import { AnimalNeeds } from './AnimalNeeds.js';
 import { AnimalGenetics } from './AnimalGenetics.js';
 import { simulationEvents, GameEventNames } from '../../events.js';
 
-/**
- * Animal Behavior Module
- * Handles movement, seeking resources, hunting, mating, and wandering
- */
-
 const BASE_ANIMAL_SPEED = 50;
 
 export class AnimalBehavior {
   private static wanderAngles = new Map<string, number>();
 
-  /**
-   * Move animal away from a threat
-   */
   public static moveAwayFrom(
     animal: Animal,
     threatPosition: { x: number; y: number },
@@ -43,9 +35,6 @@ export class AnimalBehavior {
     }
   }
 
-  /**
-   * Move animal toward a target
-   */
   public static moveToward(
     animal: Animal,
     targetPosition: { x: number; y: number },
@@ -63,7 +52,6 @@ export class AnimalBehavior {
       let effectiveSpeed =
         BASE_ANIMAL_SPEED * animal.genes.speed * speedMultiplier;
 
-      // Slow down when approaching target
       const slowingRadius = 120;
       if (distance < slowingRadius) {
         effectiveSpeed *= distance / slowingRadius;
@@ -78,9 +66,6 @@ export class AnimalBehavior {
     }
   }
 
-  /**
-   * Wander randomly
-   */
   public static wander(
     animal: Animal,
     speedMultiplier: number,
@@ -92,7 +77,6 @@ export class AnimalBehavior {
       this.wanderAngles.set(animal.id, wanderAngle);
     }
 
-    // Random chance to become idle
     if (Math.random() < 0.05) {
       animal.state = 'idle';
       return;

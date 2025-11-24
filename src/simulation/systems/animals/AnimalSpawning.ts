@@ -3,18 +3,10 @@ import { getAnimalConfig, getAnimalsForBiome } from '../../config/AnimalConfigs.
 import { AnimalGenetics } from './AnimalGenetics.js';
 import { simulationEvents, GameEventNames } from '../../events.js';
 
-/**
- * Animal Spawning Module
- * Handles procedural spawning of animals in world and chunks
- */
-
 export class AnimalSpawning {
   private static nextAnimalId = 1;
   private static spawnedChunks = new Set<string>();
 
-  /**
-   * Spawn animals across entire world based on biome map
-   */
   public static spawnAnimalsInWorld(
     worldWidth: number,
     worldHeight: number,
@@ -30,7 +22,7 @@ export class AnimalSpawning {
       return 0;
     }
 
-    const sampleStep = 96; // Sample every 96 pixels
+    const sampleStep = 96;
 
     for (let x = 0; x < worldWidth; x += sampleStep) {
       for (let y = 0; y < worldHeight; y += sampleStep) {
@@ -81,9 +73,6 @@ export class AnimalSpawning {
     return spawned;
   }
 
-  /**
-   * Spawn animals in a specific chunk (for dynamic loading)
-   */
   public static spawnAnimalsInChunk(
     chunkCoords: { x: number; y: number },
     chunkBounds: { x: number; y: number; width: number; height: number },
