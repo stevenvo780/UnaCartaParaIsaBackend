@@ -34,7 +34,6 @@ export class AISystem extends EventEmitter {
   private lastUpdate = 0;
   private currentBatchIndex = 0;
 
-  // System dependencies
   private needsSystem?: NeedsSystem;
   private roleSystem?: RoleSystem;
   private worldResourceSystem?: WorldResourceSystem;
@@ -53,7 +52,6 @@ export class AISystem extends EventEmitter {
     this.config = { ...DEFAULT_AI_CONFIG, ...config };
     this.lastUpdate = Date.now();
 
-    // Set system dependencies
     if (systems) {
       this.needsSystem = systems.needsSystem;
       this.roleSystem = systems.roleSystem;
@@ -73,10 +71,7 @@ export class AISystem extends EventEmitter {
 
     this.lastUpdate = now;
 
-    // Get all adult agents from game state
     const agents = this.getAdultAgents();
-
-    // Process agents in batches to distribute load
     const batchStart = this.currentBatchIndex;
     const batchEnd = Math.min(
       batchStart + this.config.batchSize,
@@ -88,7 +83,6 @@ export class AISystem extends EventEmitter {
       this.processAgentDecision(agent, now);
     }
 
-    // Move to next batch
     this.currentBatchIndex = batchEnd;
     if (this.currentBatchIndex >= agents.length) {
       this.currentBatchIndex = 0;
@@ -102,7 +96,6 @@ export class AISystem extends EventEmitter {
   }
 
   private processAgentDecision(agent: AgentProfile, now: number): void {
-    // Get or create AI state for this agent
     let aiState = this.aiStates.get(agent.id);
 
     if (!aiState) {
@@ -110,47 +103,38 @@ export class AISystem extends EventEmitter {
       this.aiStates.set(agent.id, aiState);
     }
 
-    // Skip if agent is off duty
     if (aiState.offDuty) {
       return;
     }
 
-    // Check if current goal is still valid
     if (aiState.currentGoal) {
       const goalAge = now - aiState.currentGoal.createdAt;
       if (goalAge > this.config.goalTimeoutMs) {
-        // Goal expired, clear it
         aiState.currentGoal = null;
         this.emit('goalExpired', { agentId: agent.id });
       } else {
-        // Goal still valid, don't make new decision yet
         return;
       }
     }
 
-    // Generate new goals
     const goals = this.planGoals(aiState, agent);
 
     if (goals.length === 0) {
       return;
     }
 
-    // Select highest priority goal
     const selectedGoal = goals[0];
     aiState.currentGoal = selectedGoal;
     aiState.lastDecisionTime = now;
 
-    // Emit goal changed event
     simulationEvents.emit(GameEventNames.AGENT_GOAL_CHANGED, {
       agentId: agent.id,
       goal: selectedGoal,
     });
 
-    // Convert goal to action command
     const action = this.goalToAction(selectedGoal, agent.id, now);
 
     if (action) {
-      // Emit action command for frontend
       simulationEvents.emit(GameEventNames.AGENT_ACTION_COMMANDED, {
         action,
       });
@@ -185,7 +169,6 @@ export class AISystem extends EventEmitter {
   private planGoals(aiState: AIState, _agent: AgentProfile): AIGoal[] {
     const allGoals: AIGoal[] = [];
 
-    // 1. Evaluate critical needs (highest priority)
     if (this.needsSystem) {
       const needsGoals = evaluateCriticalNeeds(
         {

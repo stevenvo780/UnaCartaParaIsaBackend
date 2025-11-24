@@ -56,9 +56,19 @@ describe("NormsSystem", () => {
 
   describe("Estadísticas", () => {
     it("debe retornar estadísticas de cumplimiento", () => {
-      const stats = normsSystem.getComplianceStats();
+      const stats = normsSystem.getNormCompliance();
       expect(stats).toBeDefined();
-      expect(stats.totalViolations).toBeDefined();
+      expect(typeof stats).toBe("object");
+    });
+
+    it("debe retornar violaciones de normas", () => {
+      const violations = normsSystem.getNormViolations();
+      expect(Array.isArray(violations)).toBe(true);
+    });
+
+    it("debe retornar zonas protegidas", () => {
+      const zones = normsSystem.getProtectedZones();
+      expect(Array.isArray(zones)).toBe(true);
     });
   });
 });
