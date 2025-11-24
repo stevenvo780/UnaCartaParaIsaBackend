@@ -24,7 +24,6 @@ export class GenealogySystem {
   private history: GenealogyEvent[] = [];
 
   constructor(_gameState: GameState, config?: Partial<GenealogyConfig>) {
-    // gameState kept for potential future use
     void _gameState;
     this.config = {
       mutationRate: 0.15,
@@ -39,7 +38,6 @@ export class GenealogySystem {
     fatherId?: string,
     motherId?: string,
   ): void {
-    // Simplified logic for migration
     let lineageId = "unknown";
 
     if (fatherId) {
@@ -126,7 +124,6 @@ export class GenealogySystem {
 
     const lineagesObj: SerializedFamilyTree["lineages"] = {};
     this.familyTree.lineages.forEach((v: Lineage, k: string) => {
-      // researchProgress is also a Map
       const serializedResearch: Record<string, number> = {};
       if (v.researchProgress) {
         v.researchProgress.forEach((val: number, key: string) => {
@@ -143,7 +140,6 @@ export class GenealogySystem {
 
     const relationshipsObj: Record<string, string[]> = {};
     this.familyTree.relationships.forEach((v: string[], k: string) => {
-      // relationships is Map<string, string[]>
       relationshipsObj[k] = v;
     });
 

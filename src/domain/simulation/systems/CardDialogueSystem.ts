@@ -100,7 +100,6 @@ export class CardDialogueSystem {
 
       if (matchingTemplates.length === 0) continue;
 
-      // Scoring logic restored
       const scoredTemplates = matchingTemplates.map((template) => ({
         template,
         score: this.computeTemplateScore(template, data),
@@ -108,7 +107,6 @@ export class CardDialogueSystem {
 
       scoredTemplates.sort((a, b) => b.score - a.score);
 
-      // Pick top 1 or random from top 3
       const topCandidates = scoredTemplates.slice(0, 3);
       if (topCandidates.length === 0) continue;
 
@@ -175,15 +173,12 @@ export class CardDialogueSystem {
       if (!satisfied) return false;
     }
 
-    // Check relationship-based triggers
     if (template.triggers.relationshipBased && entityId && this.socialSystem) {
       const satisfied = template.triggers.relationshipBased.some((trigger) => {
-        // Check relationships with all other agents
         const agents = this.gameState.agents || [];
         for (const agent of agents) {
           if (agent.id === entityId) continue;
 
-          // Check role filter if specified
           if (trigger.withRole) {
             const roleSystem = this.gameState.roles?.assignments?.get(agent.id);
             if (!roleSystem || roleSystem.roleType !== trigger.withRole) {
@@ -191,10 +186,8 @@ export class CardDialogueSystem {
             }
           }
 
-          // Check relationship level
           const affinity =
             this.socialSystem?.getAffinityBetween(entityId, agent.id) ?? 0;
-          // Convert affinity (-1 to 1) to relationship level (0 to 100)
           const relationshipLevel = ((affinity + 1) / 2) * 100;
 
           if (relationshipLevel >= trigger.minLevel) {
@@ -285,7 +278,6 @@ export class CardDialogueSystem {
       return "high";
     if (needs.mentalHealth < 40) return "medium";
 
-    // Fallback to template-based priority
     if (!template.triggers.needsBased) return "low";
     const maxThreshold = Math.max(
       ...template.triggers.needsBased.map((t) => t.threshold),
@@ -420,9 +412,6 @@ export class CardDialogueSystem {
             existingQuest.status === "available" &&
             card.participants.length > 0
           ) {
-            // Optionally auto-start the quest if it's available
-            // For now, we just make it available
-            // this.questSystem.startQuest(questId);
           }
         }
       }

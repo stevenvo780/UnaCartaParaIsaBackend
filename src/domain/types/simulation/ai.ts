@@ -59,25 +59,22 @@ export interface AIState {
 }
 
 export interface AgentPersonality {
-  // Original traits (from LifeCycleSystem)
   cooperation: number;
   diligence: number;
   curiosity: number;
   aggression?: number;
   sociability?: number;
 
-  // Derived personality attributes
   explorationType: "cautious" | "balanced" | "adventurous";
   socialPreference: "introverted" | "balanced" | "extroverted";
   workEthic: "lazy" | "balanced" | "workaholic";
-  riskTolerance: number; // 0-1
+  riskTolerance: number;
 
-  // Big Five personality traits
-  neuroticism: number; // 0-1
-  extraversion: number; // 0-1
-  openness: number; // 0-1
-  conscientiousness: number; // 0-1
-  agreeableness: number; // 0-1
+  neuroticism: number;
+  extraversion: number;
+  openness: number;
+  conscientiousness: number;
+  agreeableness: number;
 }
 
 export interface AgentMemory {
@@ -94,12 +91,10 @@ export interface AgentMemory {
   }>;
   knownResourceLocations: Map<string, { x: number; y: number }>;
 
-  // Zone and activity memory
   homeZoneId?: string;
-  successfulActivities: Map<string, number>; // zoneId -> successCount
-  failedAttempts: Map<string, number>; // zoneId -> failCount
+  successfulActivities: Map<string, number>;
+  failedAttempts: Map<string, number>;
 
-  // Temporal tracking
   lastExplorationTime?: number;
   lastMemoryCleanup?: number;
 }

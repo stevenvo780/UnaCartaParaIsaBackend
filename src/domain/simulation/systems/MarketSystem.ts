@@ -3,7 +3,6 @@ import type {
   MarketConfig,
   ResourceType,
 } from "../../types/simulation/economy";
-// MarketOrder removed from imports as it's not used in this file
 import { InventorySystem } from "./InventorySystem";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 
@@ -31,7 +30,6 @@ export class MarketSystem {
     _lifeCycleSystem: LifeCycleSystem,
     config?: Partial<MarketConfig>,
   ) {
-    // lifeCycleSystem parameter kept for API compatibility but not currently used
     void _lifeCycleSystem;
     this.state = state;
     this.inventorySystem = inventorySystem;
@@ -135,7 +133,6 @@ export class MarketSystem {
         totalValue;
     }
 
-    // Deduct from global currency?
     if (this.state.resources) {
       this.state.resources.currency = Math.max(
         0,
@@ -172,9 +169,8 @@ export class MarketSystem {
           if (!buyer || !buyer.id) continue;
 
           const buyerInv = this.inventorySystem.getAgentInventory(buyer.id);
-          if (!buyerInv || (buyerInv[resource] || 0) > 5) continue; // Buyer already has enough
+          if (!buyerInv || (buyerInv[resource] || 0) > 5) continue;
 
-          // Attempt trade
           const tradeAmount = Math.min(5, sellerStock);
           const price = this.getResourcePrice(resource);
           const cost = price * tradeAmount;
@@ -202,7 +198,6 @@ export class MarketSystem {
                     : 0;
                 seller.stats.money = sellerMoney + cost;
               }
-              // Only one trade per update cycle
               return;
             }
           }

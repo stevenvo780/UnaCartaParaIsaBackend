@@ -4,7 +4,6 @@ import {
   QuestProgress,
   QuestEvent,
 } from "../../types/simulation/quests";
-// QuestObjective removed from imports as it's not used in this file
 
 const QUEST_CATALOG: Quest[] = [
   {
@@ -129,7 +128,6 @@ export class QuestSystem {
     const now = Date.now();
 
     this.questProgress.activeQuests.forEach((quest) => {
-      // Check timeouts
       if (quest.timeLimit && quest.startedAt) {
         const elapsedTime = now - quest.startedAt;
         const timeLimit = quest.timeLimit * 1000;
@@ -140,7 +138,6 @@ export class QuestSystem {
         }
       }
 
-      // Check time-based objectives
       quest.objectives.forEach((objective) => {
         if (objective.isCompleted) return;
 
@@ -291,7 +288,6 @@ export class QuestSystem {
   }
 
   private failQuest(questId: string, _reason: string): QuestEvent | null {
-    // reason parameter kept for API compatibility
     void _reason;
     const quest = this.questProgress.activeQuests.get(questId);
     if (!quest) return null;

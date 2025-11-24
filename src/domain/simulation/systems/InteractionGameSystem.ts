@@ -18,7 +18,6 @@ export class InteractionGameSystem {
   >();
 
   constructor(_gameState: GameState, _config?: Partial<InteractionConfig>) {
-    // Parameters kept for API compatibility but not currently used
     void _gameState;
     void _config;
     logger.info("🎲 InteractionGameSystem (Backend) initialized");

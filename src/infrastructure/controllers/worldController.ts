@@ -42,7 +42,6 @@ export class WorldController {
         Math.min(256, tileSize ?? DEFAULT_TILE_SIZE),
       );
 
-      // Sanitize seed
       const validatedSeed =
         typeof seed === "string" && seed.length > 0
           ? seed.slice(0, 100) // Limit seed length

@@ -63,8 +63,6 @@ export class TimeSystem extends EventEmitter {
   }
 
   public update(_deltaMs: number): void {
-    // deltaMs parameter kept for API compatibility
-    void _deltaMs;
     void _deltaMs;
     const now = Date.now();
 

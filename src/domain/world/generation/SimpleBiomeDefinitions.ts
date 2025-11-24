@@ -6,12 +6,10 @@ export interface SimpleBiomeConfig {
   color: string;
   isWalkable: boolean;
 
-  // Condiciones ambientales
-  temperature: [number, number]; // [min, max]
+  temperature: [number, number];
   moisture: [number, number];
   elevation: [number, number];
 
-  // Densidades (0.0 - 1.0)
   density: {
     trees?: number;
     plants?: number;
@@ -19,10 +17,8 @@ export interface SimpleBiomeConfig {
     rocks?: number;
   };
 
-  // Clustering (qué tan agrupados están los objetos)
   clustering?: number;
 
-  // Transiciones
   transitionWidth?: number;
 }
 

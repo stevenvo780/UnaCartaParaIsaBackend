@@ -151,7 +151,6 @@ export class ConflictResolutionSystem {
   }
 
   public update(): void {
-    // Clean up expired cards
     const now = Date.now();
     const activeCardsEntries: Array<[string, { aId: string; bId: string }]> =
       Array.from(this.activeCards.entries());

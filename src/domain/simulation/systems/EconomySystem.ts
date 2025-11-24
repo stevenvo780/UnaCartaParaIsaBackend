@@ -108,9 +108,6 @@ export class EconomySystem {
   }
 
   private computeTeamBonus(_agentId: string, _zone: Zone): number {
-    // Simplified team bonus logic
-    // In a real implementation, we'd use spatialGrid to find neighbors
-    // For now, let's assume 1.0 if no neighbors
     return 1.0;
   }
 

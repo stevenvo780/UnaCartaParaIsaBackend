@@ -83,7 +83,6 @@ export class ItemGenerationSystem {
       rule.minQuantity +
       Math.floor(Math.random() * (rule.maxQuantity - rule.minQuantity + 1));
 
-    // Create generated item
     const item: GeneratedItem = {
       id: `item_gen_${this.nextItemId++}`,
       itemId: rule.itemId,

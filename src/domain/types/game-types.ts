@@ -348,7 +348,6 @@ export interface GameState {
   knowledgeGraph?: KnowledgeGraphState;
   tasks?: TaskState;
 
-  // Legacy/Frontend fields (kept for compatibility if needed)
   resonance?: number;
   lastSave?: number;
   connectionAnimation?: {

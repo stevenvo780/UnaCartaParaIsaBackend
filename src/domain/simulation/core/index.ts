@@ -4,8 +4,6 @@ import { logger } from "../../../infrastructure/utils/logger";
 
 export const simulationRunner = new SimulationRunner();
 
-// Initialize world with default config
-// In a real app this might come from a config file or database
 simulationRunner
   .initializeWorldResources({
     width: 128, // 128x128 tiles
