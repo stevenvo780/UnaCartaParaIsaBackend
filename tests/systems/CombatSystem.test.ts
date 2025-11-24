@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { CombatSystem } from "../../src/simulation/systems/CombatSystem.js";
-import { InventorySystem } from "../../src/simulation/systems/InventorySystem.js";
-import { LifeCycleSystem } from "../../src/simulation/systems/LifeCycleSystem.js";
-import { SocialSystem } from "../../src/simulation/systems/SocialSystem.js";
-import { createMockGameState } from "../setup.js";
-import type { GameState } from "../../src/types/game-types.js";
+import { CombatSystem } from "../../src/simulation/systems/CombatSystem.ts";
+import { InventorySystem } from "../../src/simulation/systems/InventorySystem.ts";
+import { LifeCycleSystem } from "../../src/simulation/systems/LifeCycleSystem.ts";
+import { SocialSystem } from "../../src/simulation/systems/SocialSystem.ts";
+import { createMockGameState } from "../setup.ts";
+import type { GameState } from "../../src/types/game-types.ts";
 
 describe("CombatSystem", () => {
   let gameState: GameState;

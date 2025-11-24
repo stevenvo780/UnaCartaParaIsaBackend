@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { CrisisPredictorSystem } from "../../src/simulation/systems/CrisisPredictorSystem.js";
-import { NeedsSystem } from "../../src/simulation/systems/NeedsSystem.js";
-import { LifeCycleSystem } from "../../src/simulation/systems/LifeCycleSystem.js";
-import { createMockGameState } from "../setup.js";
-import type { GameState } from "../../src/types/game-types.js";
+import { CrisisPredictorSystem } from "../../src/simulation/systems/CrisisPredictorSystem.ts";
+import { NeedsSystem } from "../../src/simulation/systems/NeedsSystem.ts";
+import { LifeCycleSystem } from "../../src/simulation/systems/LifeCycleSystem.ts";
+import { createMockGameState } from "../setup.ts";
+import type { GameState } from "../../src/types/game-types.ts";
 
 describe("CrisisPredictorSystem", () => {
   let gameState: GameState;

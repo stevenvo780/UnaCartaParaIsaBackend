@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { SimulationRunner } from '../../src/simulation/SimulationRunner.js';
-import { createMockGameState } from '../setup.js';
-import type { GameState } from '../../src/types/game-types.js';
-import type { SimulationCommand } from '../../src/simulation/types.js';
+import { SimulationRunner } from '../../src/simulation/SimulationRunner.ts";
+import { createMockGameState } from '../setup.ts";
+import type { GameState } from '../../src/types/game-types.ts";
+import type { SimulationCommand } from '../../src/simulation/types.ts";
 
 describe('SimulationRunner', () => {
   let runner: SimulationRunner;

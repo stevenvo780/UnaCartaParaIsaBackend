@@ -1,16 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Request, Response } from 'express';
-import { simulationRunner } from '../../src/simulation/index.js';
-import { storageService } from '../../src/services/storageService.js';
+import { simulationRunner } from '../../src/simulation/index.ts";
+import { storageService } from '../../src/services/storageService.ts";
 
-vi.mock('../../src/simulation/index.js', () => ({
+vi.mock('../../src/simulation/index.ts", () => ({
   simulationRunner: {
     getSnapshot: vi.fn(),
     enqueueCommand: vi.fn(),
   },
 }));
 
-vi.mock('../../src/services/storageService.js', () => ({
+vi.mock('../../src/services/storageService.ts", () => ({
   storageService: {
     saveGame: vi.fn(),
   },

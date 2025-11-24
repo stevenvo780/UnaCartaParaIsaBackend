@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { EnhancedCraftingSystem } from '../../src/simulation/systems/EnhancedCraftingSystem.js';
-import { InventorySystem } from '../../src/simulation/systems/InventorySystem.js';
-import { createMockGameState } from '../setup.js';
-import type { GameState } from '../../src/types/game-types.js';
+import { EnhancedCraftingSystem } from '../../src/simulation/systems/EnhancedCraftingSystem.ts";
+import { InventorySystem } from '../../src/simulation/systems/InventorySystem.ts";
+import { createMockGameState } from '../setup.ts";
+import type { GameState } from '../../src/types/game-types.ts";
 
 describe('EnhancedCraftingSystem', () => {
   let gameState: GameState;

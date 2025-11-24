@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { NoiseUtils } from '../../src/utils/NoiseUtils.js';
+import { NoiseUtils } from '../../src/utils/NoiseUtils.ts";
 
 describe('NoiseUtils', () => {
   describe('Inicialización', () => {

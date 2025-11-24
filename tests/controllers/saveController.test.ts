@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Request, Response } from 'express';
-import { saveController } from '../../src/controllers/saveController.js';
-import { storageService } from '../../src/services/storageService.js';
+import { saveController } from '../../src/controllers/saveController.ts";
+import { storageService } from '../../src/services/storageService.ts";
 
-vi.mock('../../src/services/storageService.js', () => ({
+vi.mock('../../src/services/storageService.ts", () => ({
   storageService: {
     isHealthy: vi.fn(),
     listSaves: vi.fn(),

@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Request, Response } from 'express';
-import { worldController } from '../../src/controllers/worldController.js';
-import { worldGenerationService } from '../../src/services/worldGenerationService.js';
+import { worldController } from '../../src/controllers/worldController.ts";
+import { worldGenerationService } from '../../src/services/worldGenerationService.ts";
 
-vi.mock('../../src/services/worldGenerationService.js', () => ({
+vi.mock('../../src/services/worldGenerationService.ts", () => ({
   worldGenerationService: {
     generateChunk: vi.fn(),
   },

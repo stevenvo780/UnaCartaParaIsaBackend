@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { ReputationSystem } from "../../src/simulation/systems/ReputationSystem.js";
-import { createMockGameState } from "../setup.js";
-import type { GameState } from "../../src/types/game-types.js";
-import { simulationEvents, GameEventNames } from "../../src/simulation/events.js";
+import { ReputationSystem } from "../../src/simulation/systems/ReputationSystem.ts";
+import { createMockGameState } from "../setup.ts";
+import type { GameState } from "../../src/types/game-types.ts";
+import { simulationEvents, GameEventNames } from "../../src/simulation/events.ts";
 
 describe("ReputationSystem", () => {
   let gameState: GameState;

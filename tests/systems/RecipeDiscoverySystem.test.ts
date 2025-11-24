@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { RecipeDiscoverySystem } from "../../src/simulation/systems/RecipeDiscoverySystem.js";
-import { createMockGameState } from "../setup.js";
-import type { GameState } from "../../src/types/game-types.js";
+import { RecipeDiscoverySystem } from "../../src/simulation/systems/RecipeDiscoverySystem.ts";
+import { createMockGameState } from "../setup.ts";
+import type { GameState } from "../../src/types/game-types.ts";
 
 describe("RecipeDiscoverySystem", () => {
   let gameState: GameState;

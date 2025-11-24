@@ -180,7 +180,8 @@ export class ConflictResolutionSystem {
     const activeConflicts = this.getActiveConflicts();
     this.gameState.conflicts.active = activeConflicts;
     // También agregar como activeConflicts para compatibilidad con frontend
-    (this.gameState.conflicts as unknown as { activeConflicts?: typeof activeConflicts }).activeConflicts = activeConflicts;
+    const conflictsWithActiveConflicts = this.gameState.conflicts as unknown as { activeConflicts?: typeof activeConflicts };
+    conflictsWithActiveConflicts.activeConflicts = activeConflicts;
     this.gameState.conflicts.history = this.getConflictHistory(50);
     this.gameState.conflicts.stats = this.getConflictStats();
 

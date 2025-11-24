@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { ItemGenerationSystem } from "../../src/simulation/systems/ItemGenerationSystem.js";
-import { createMockGameState } from "../setup.js";
-import type { GameState } from "../../src/types/game-types.js";
-import { simulationEvents, GameEventNames } from "../../src/simulation/events.js";
+import { ItemGenerationSystem } from "../../src/simulation/systems/ItemGenerationSystem.ts";
+import { createMockGameState } from "../setup.ts";
+import type { GameState } from "../../src/types/game-types.ts";
+import { simulationEvents, GameEventNames } from "../../src/simulation/events.ts";
 
 describe("ItemGenerationSystem", () => {
   let gameState: GameState;

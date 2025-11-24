@@ -1,5 +1,6 @@
 import type { GameState } from "../../types/game-types";
 import type { MarketConfig, ResourceType } from "../../types/simulation/economy";
+// MarketOrder removed from imports as it's not used in this file
 import { InventorySystem } from "./InventorySystem";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 

@@ -3,6 +3,8 @@ export class SpatialGrid<T> {
   private cellSize: number;
 
   constructor(_width: number, _height: number, cellSize: number) {
+    // width and height parameters kept for API compatibility but not currently used
+    // They may be used in the future for bounds checking
     this.cellSize = cellSize;
   }
 

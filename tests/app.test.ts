@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import app from '../src/app.js';
+import app from '../src/app.ts";
 
 describe('App', () => {
   it('debe exportar la aplicación Express', () => {

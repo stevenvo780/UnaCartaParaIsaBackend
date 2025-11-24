@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { NormsSystem } from "../../src/simulation/systems/NormsSystem.js";
-import { createMockGameState } from "../setup.js";
-import type { GameState } from "../../src/types/game-types.js";
+import { NormsSystem } from "../../src/simulation/systems/NormsSystem.ts";
+import { createMockGameState } from "../setup.ts";
+import type { GameState } from "../../src/types/game-types.ts";
 
 describe("NormsSystem", () => {
   let gameState: GameState;

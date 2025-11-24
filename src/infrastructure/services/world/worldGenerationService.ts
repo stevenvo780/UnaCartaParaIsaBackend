@@ -18,13 +18,9 @@ export class WorldGenerationService {
 
   private initializeGenerators(config: WorldGenConfig): void {
     this.noiseGen = new NoiseUtils(config.seed);
-    // rng and voronoiGen initialized but not currently used
-    void seedrandom(String(config.seed));
-    void new VoronoiGenerator(
-      config.width * config.tileSize,
-      config.height * config.tileSize,
-      String(config.seed)
-    );
+    // rng and voronoiGen would be initialized here for future use
+    // Currently only noiseGen is used for biome generation
+    void config; // Keep config parameter for potential future use
   }
 
   async generateChunk(x: number, y: number, config: WorldGenConfig): Promise<TerrainTile[][]> {

@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "tsx watch src/server.ts",
+    "start": "node dist/application/server.js",
+    "dev": "tsx watch src/application/server.ts",
     "test": "vitest",
     "test:run": "vitest run",
     "test:watch": "vitest --watch",

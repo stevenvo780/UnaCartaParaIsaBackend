@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { RoleSystem } from "../../src/simulation/systems/RoleSystem.js";
-import { createMockGameState } from "../setup.js";
-import type { GameState } from "../../src/types/game-types.js";
-import type { RoleType, WorkShift } from "../../src/simulation/types/roles.js";
+import { RoleSystem } from "../../src/simulation/systems/RoleSystem.ts";
+import { createMockGameState } from "../setup.ts";
+import type { GameState } from "../../src/types/game-types.ts";
+import type { RoleType, WorkShift } from "../../src/simulation/types/roles.ts";
 
 describe("RoleSystem", () => {
   let gameState: GameState;

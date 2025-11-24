@@ -4,6 +4,7 @@ import {
   QuestProgress,
   QuestEvent,
 } from "../../types/simulation/quests";
+// QuestObjective removed from imports as it's not used in this file
 
 const QUEST_CATALOG: Quest[] = [
   {
@@ -289,6 +290,7 @@ export class QuestSystem {
   }
 
   private failQuest(questId: string, _reason: string): QuestEvent | null {
+    // reason parameter kept for API compatibility but not currently used
     const quest = this.questProgress.activeQuests.get(questId);
     if (!quest) return null;
 

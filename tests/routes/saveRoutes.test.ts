@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Request, Response } from 'express';
-import saveRoutes from '../../src/routes/saveRoutes.js';
-import { saveController } from '../../src/controllers/saveController.js';
+import saveRoutes from '../../src/routes/saveRoutes.ts";
+import { saveController } from '../../src/controllers/saveController.ts";
 
-vi.mock('../../src/controllers/saveController.js', () => ({
+vi.mock('../../src/controllers/saveController.ts", () => ({
   saveController: {
     healthCheck: vi.fn(),
     listSaves: vi.fn(),
