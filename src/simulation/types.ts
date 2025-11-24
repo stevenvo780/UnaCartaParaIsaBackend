@@ -1,4 +1,5 @@
 import type { GameResources, GameState } from "../types/game-types.js";
+import type { AgentTraits } from "./types/agents.js";
 
 export type ResourcesState = NonNullable<GameState["resources"]>;
 
@@ -8,6 +9,19 @@ export interface SimulationSnapshot {
   updatedAt: number;
 }
 
+export interface SpawnAgentCommandPayload {
+  requestId?: string;
+  name?: string;
+  sex?: "male" | "female" | "unknown";
+  generation?: number;
+  immortal?: boolean;
+  parents?: {
+    father?: string;
+    mother?: string;
+  };
+  traits?: Partial<AgentTraits>;
+}
+
 export type SimulationCommand =
   | { type: "SET_TIME_SCALE"; multiplier: number }
   | {
@@ -15,6 +29,8 @@ export type SimulationCommand =
       delta: Partial<GameResources["materials"]>;
     }
   | { type: "GATHER_RESOURCE"; resourceId: string; amount: number }
+  | { type: "SPAWN_AGENT"; payload?: SpawnAgentCommandPayload }
+  | { type: "KILL_AGENT"; agentId: string }
   | { type: "PING"; payload?: Record<string, unknown> };
 
 export interface SimulationConfig {

@@ -310,6 +310,12 @@ export class SimulationRunner {
             amount: command.amount,
           });
           break;
+        case "SPAWN_AGENT":
+          this.lifeCycleSystem.spawnAgent(command.payload);
+          break;
+        case "KILL_AGENT":
+          this.lifeCycleSystem.killAgent(command.agentId);
+          break;
         case "PING":
         default:
           break;

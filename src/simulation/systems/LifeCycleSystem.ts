@@ -1,5 +1,19 @@
 import { GameState } from "../../types/game-types.js";
 import { AgentProfile, LifeStage, AgentTraits } from "../types/agents.js";
+import { simulationEvents, GameEventNames } from "../events.js";
+
+interface SpawnAgentOptions {
+  requestId?: string;
+  name?: string;
+  sex?: AgentProfile["sex"] | "unknown";
+  generation?: number;
+  immortal?: boolean;
+  parents?: {
+    father?: string;
+    mother?: string;
+  };
+  traits?: Partial<AgentTraits>;
+}
 
 interface LifeCycleConfig {
   secondsPerYear: number;
@@ -39,8 +53,11 @@ export class LifeCycleSystem {
       ...config,
     };
 
-    // Initialize agents map from gameState if it has data (stubbed for now)
-    // In a real scenario, we'd sync this.
+    (gameState.agents ?? []).forEach((agent) => {
+      if (!agent?.id) return;
+      this.agents.set(agent.id, agent as AgentProfile);
+    });
+    this.syncAgentsToState();
   }
 
   public update(deltaTimeMs: number): void {
@@ -75,8 +92,11 @@ export class LifeCycleSystem {
 
   public addAgent(agent: AgentProfile): void {
     this.agents.set(agent.id, agent);
-    // Also update GameState entities if they are linked
-    // this.gameState.entities.push(agent); // Need to align types first
+    this.syncAgentsToState();
+    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      agentId: agent.id,
+      action: "birth",
+    });
   }
 
   public getAgents(): AgentProfile[] {
@@ -84,14 +104,70 @@ export class LifeCycleSystem {
   }
 
   public removeAgent(id: string): void {
-    this.agents.delete(id);
-    console.log(`Agent ${id} died of old age`);
-    // Remove from GameState
+    const removed = this.agents.delete(id);
+    if (!removed) return;
+    console.log(`Agent ${id} removed from lifecycle system`);
+    this.syncAgentsToState();
+    simulationEvents.emit(GameEventNames.COMBAT_KILL, {
+      targetId: id,
+      agentId: id,
+      cause: "lifecycle",
+    });
+  }
+
+  public spawnAgent(options: SpawnAgentOptions = {}): AgentProfile {
+    const id =
+      options.requestId ??
+      `agent_${Date.now().toString(36)}_${Math.random()
+        .toString(36)
+        .slice(2, 6)}`;
+    const traits = this.normalizeTraits(options.traits);
+    const agent: AgentProfile = {
+      id,
+      name: options.name ?? `Agent ${id.slice(-4)}`,
+      sex: options.sex === "female" ? "female" : "male",
+      ageYears: 18,
+      lifeStage: "adult",
+      birthTimestamp: Date.now(),
+      generation: options.generation ?? 0,
+      immortal: options.immortal ?? false,
+      traits,
+      parents:
+        options.parents && (options.parents.father || options.parents.mother)
+          ? {
+              father: options.parents.father,
+              mother: options.parents.mother,
+            }
+          : undefined,
+    };
+    this.addAgent(agent);
+    return agent;
+  }
+
+  public killAgent(agentId: string): boolean {
+    if (!this.agents.has(agentId)) {
+      return false;
+    }
+    this.removeAgent(agentId);
+    return true;
   }
 
   private getLifeStage(age: number): LifeStage {
     if (age < this.config.adultAge) return "child";
     if (age < this.config.elderAge) return "adult";
     return "elder";
+  }
+
+  private syncAgentsToState(): void {
+    this.gameState.agents = Array.from(this.agents.values());
+  }
+
+  private normalizeTraits(partial?: Partial<AgentTraits>): AgentTraits {
+    return {
+      cooperation: partial?.cooperation ?? 0.5,
+      aggression: partial?.aggression ?? 0.5,
+      diligence: partial?.diligence ?? 0.5,
+      curiosity: partial?.curiosity ?? 0.5,
+    };
   }
 }

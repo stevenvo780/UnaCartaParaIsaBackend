@@ -20,7 +20,7 @@ export interface AgentProfile {
   traits: AgentTraits;
   socialStatus?: "noble" | "commoner";
   parents?: {
-    father: string;
-    mother: string;
+    father?: string;
+    mother?: string;
   };
 }
