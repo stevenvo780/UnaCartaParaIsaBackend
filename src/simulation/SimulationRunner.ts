@@ -34,6 +34,10 @@ import { ConflictResolutionSystem } from "./systems/ConflictResolutionSystem.js"
 import { NormsSystem } from "./systems/NormsSystem.js";
 import { simulationEvents, GameEventNames } from "./events.js";
 import { CombatSystem } from "./systems/CombatSystem.js";
+import { ResourceAttractionSystem } from "./systems/ResourceAttractionSystem.js";
+import { CrisisPredictorSystem } from "./systems/CrisisPredictorSystem.js";
+import { AmbientAwarenessSystem } from "./systems/AmbientAwarenessSystem.js";
+import { CardDialogueSystem } from "./systems/CardDialogueSystem.js";
 import type {
   SimulationCommand,
   SimulationConfig,
@@ -87,6 +91,10 @@ export class SimulationRunner {
   private marriageSystem: MarriageSystem;
   private conflictResolutionSystem: ConflictResolutionSystem;
   private normsSystem: NormsSystem;
+  private resourceAttractionSystem: ResourceAttractionSystem;
+  private crisisPredictorSystem: CrisisPredictorSystem;
+  private ambientAwarenessSystem: AmbientAwarenessSystem;
+  private cardDialogueSystem: CardDialogueSystem;
 
   constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
     this.state = initialState ?? createInitialGameState();
@@ -171,6 +179,22 @@ export class SimulationRunner {
     this.marriageSystem = new MarriageSystem(this.state);
     this.conflictResolutionSystem = new ConflictResolutionSystem(this.state);
     this.normsSystem = new NormsSystem(this.state);
+    this.resourceAttractionSystem = new ResourceAttractionSystem(
+      this.state,
+      this.needsSystem,
+    );
+    this.crisisPredictorSystem = new CrisisPredictorSystem(
+      this.state,
+      this.needsSystem,
+    );
+    this.ambientAwarenessSystem = new AmbientAwarenessSystem(
+      this.state,
+      this.needsSystem,
+    );
+    this.cardDialogueSystem = new CardDialogueSystem(
+      this.state,
+      this.needsSystem,
+    );
   }
 
   public initializeWorldResources(worldConfig: { width: number; height: number; tileSize: number; biomeMap: string[][] }): void {
@@ -255,6 +279,10 @@ export class SimulationRunner {
     this.tradeSystem.update();
     this.marriageSystem.update();
     this.conflictResolutionSystem.update();
+    this.resourceAttractionSystem.update(scaledDelta);
+    this.crisisPredictorSystem.update(scaledDelta);
+    this.ambientAwarenessSystem.update(scaledDelta);
+    this.cardDialogueSystem.update(scaledDelta);
     // NormsSystem is event-driven, no tick needed
     // Genealogy usually updates on events, but if it has a tick:
     // this.genealogySystem.update(scaledDelta);

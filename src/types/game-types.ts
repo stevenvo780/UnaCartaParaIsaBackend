@@ -1,6 +1,12 @@
 import type { WorldResourceInstance } from "../simulation/types/worldResources.js";
 import type { GovernanceSnapshot } from "../simulation/types/governance.js";
 import type { CombatLogEntry } from "../simulation/types/combat.js";
+import type {
+  AmbientSnapshot,
+  CrisisSnapshot,
+  DialogueStateSnapshot,
+  ResourceAttractionSnapshot,
+} from "../simulation/types/ambient.js";
 
 export interface Position {
   x: number;
@@ -112,6 +118,10 @@ export interface GameState {
   genealogy?: any;
   governance?: GovernanceSnapshot;
   combatLog?: CombatLogEntry[];
+  resourceAttraction?: ResourceAttractionSnapshot;
+  crisisForecast?: CrisisSnapshot;
+  ambientMood?: AmbientSnapshot;
+  dialogueState?: DialogueStateSnapshot;
 
   // Legacy/Frontend fields (kept for compatibility if needed)
   resonance?: number;

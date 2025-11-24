@@ -1,6 +1,7 @@
+import { randomUUID } from "node:crypto";
 import type { GameState } from "../../types/game-types.js";
 import { simulationEvents, GameEventNames } from "../events.js";
-import type { WeaponId } from "../types/combat.js";
+import type { CombatLogEntry, WeaponId } from "../types/combat.js";
 import { getWeapon } from "../data/WeaponCatalog.js";
 import type { ResourceType } from "../types/economy.js";
 import { InventorySystem } from "./InventorySystem.js";
@@ -51,6 +52,8 @@ export class CombatSystem {
   private lastUpdate = 0;
   private readonly lastAttackAt = new Map<string, number>();
   private readonly equippedWeapons = new Map<string, WeaponId>();
+  private readonly maxLogEntries = 200;
+  private combatLog: CombatLogEntry[];
 
   constructor(
     private readonly state: GameState,
@@ -63,6 +66,8 @@ export class CombatSystem {
     const worldWidth = state.worldSize?.width ?? 2000;
     const worldHeight = state.worldSize?.height ?? 2000;
     this.spatialGrid = new SpatialGrid(worldWidth, worldHeight, this.config.engagementRadius);
+    this.combatLog = this.state.combatLog ?? [];
+    this.state.combatLog = this.combatLog;
   }
 
   public update(_deltaMs: number): void {
@@ -113,6 +118,11 @@ export class CombatSystem {
       agentId,
       weapon: weaponId,
     });
+    this.appendLog({
+      type: "weapon_equipped",
+      agentId,
+      weapon: weaponId,
+    });
   }
 
   public getEquipped(agentId: string): WeaponId {
@@ -141,6 +151,11 @@ export class CombatSystem {
 
     this.equip(agentId, weaponId);
     simulationEvents.emit(GameEventNames.COMBAT_WEAPON_CRAFTED, {
+      agentId,
+      weapon: weaponId,
+    });
+    this.appendLog({
+      type: "weapon_crafted",
       agentId,
       weapon: weaponId,
     });
@@ -211,6 +226,18 @@ export class CombatSystem {
       targetHealth: newHealth,
       timestamp,
     });
+    this.appendLog({
+      type: "engaged",
+      attackerId: attacker.id,
+      targetId: target.id,
+      weapon: weaponId,
+      attackerX: attacker.position?.x,
+      attackerY: attacker.position?.y,
+      targetX: target.position?.x,
+      targetY: target.position?.y,
+      attackerHealth: this.ensureStats(attacker).health ?? 100,
+      targetHealth: newHealth,
+    });
 
     this.applyStatChanges(targetStats, damage);
     targetStats.health = newHealth;
@@ -222,6 +249,17 @@ export class CombatSystem {
       crit,
       weapon: weaponId,
       remaining: newHealth,
+      remainingHealth: newHealth,
+      x: target.position?.x,
+      y: target.position?.y,
+    });
+    this.appendLog({
+      type: "hit",
+      attackerId: attacker.id,
+      targetId: target.id,
+      weapon: weaponId,
+      damage,
+      crit,
       remainingHealth: newHealth,
       x: target.position?.x,
       y: target.position?.y,
@@ -256,6 +294,12 @@ export class CombatSystem {
       targetId: target.id,
       weapon: weaponId,
     });
+    this.appendLog({
+      type: "kill",
+      attackerId: attacker.id,
+      targetId: target.id,
+      weapon: weaponId,
+    });
 
     if (target.tags?.includes("animal") || target.type === "animal") {
       simulationEvents.emit(GameEventNames.ANIMAL_HUNTED, {
@@ -271,5 +315,18 @@ export class CombatSystem {
     }
     if (entity.stats.health === undefined) entity.stats.health = 100;
     return entity.stats;
+  }
+
+  private appendLog(entry: Omit<CombatLogEntry, "id" | "timestamp">): void {
+    const logEntry: CombatLogEntry = {
+      id: randomUUID(),
+      timestamp: Date.now(),
+      ...entry,
+    };
+    this.combatLog.push(logEntry);
+    if (this.combatLog.length > this.maxLogEntries) {
+      this.combatLog.splice(0, this.combatLog.length - this.maxLogEntries);
+    }
+    this.state.combatLog = this.combatLog;
   }
 }

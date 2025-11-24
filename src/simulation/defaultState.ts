@@ -51,6 +51,7 @@ export function createInitialGameState(): GameState {
     playerLevel: 1,
     exploredBiomes: [],
     unlockedAssets: [],
+    combatLog: [],
     weather: {
       current: "sunny",
       temperature: 24,

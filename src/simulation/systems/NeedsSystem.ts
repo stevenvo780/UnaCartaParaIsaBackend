@@ -68,4 +68,8 @@ export class NeedsSystem {
   public getEntityNeeds(entityId: string): EntityNeedsData | undefined {
     return this.entityNeeds.get(entityId);
   }
+
+  public getAllNeeds(): EntityNeedsData[] {
+    return Array.from(this.entityNeeds.values());
+  }
 }
