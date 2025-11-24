@@ -257,6 +257,21 @@ export interface ReputationState {
     avgReputation: number;
     trustEdges: number;
   };
+  reputations?: Array<{
+    agentId: string;
+    agentName: string;
+    reputation: number;
+    rank: number;
+    lastUpdated: number;
+  }>;
+  trust?: Array<{
+    sourceId: string;
+    targets: Array<{
+      sourceId: string;
+      targetId: string;
+      trust: number;
+    }>;
+  }>;
 }
 
 export interface NormsState {

@@ -241,7 +241,6 @@ export class AISystem extends EventEmitter {
         if (!roleSys) {
           return undefined;
         }
-        // Type assertion needed due to TypeScript inference issue
         const method = roleSys.getPreferredResourceForRole as (
           roleType: string,
         ) => string | undefined;

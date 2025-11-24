@@ -185,11 +185,7 @@ export class ConflictResolutionSystem {
 
     const activeConflicts = this.getActiveConflicts();
     this.gameState.conflicts.active = activeConflicts;
-    const conflictsState = this.gameState
-      .conflicts as unknown as ConflictState & {
-      activeConflicts?: ActiveConflict[];
-    };
-    conflictsState.activeConflicts = activeConflicts;
+    this.gameState.conflicts.activeConflicts = activeConflicts;
     this.gameState.conflicts.history = this.getConflictHistory(50);
     this.gameState.conflicts.stats = this.getConflictStats();
 

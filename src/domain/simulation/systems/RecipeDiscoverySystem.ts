@@ -311,11 +311,7 @@ export class RecipeDiscoverySystem {
 
     const discovered = this.getGloballyDiscoveredRecipes();
     this.gameState.recipes.discovered = discovered;
-    (
-      this.gameState.recipes as unknown as {
-        globalDiscovered?: typeof discovered;
-      }
-    ).globalDiscovered = discovered;
+    this.gameState.recipes.globalDiscovered = discovered;
 
     const agentRecipesObj: Record<
       string,

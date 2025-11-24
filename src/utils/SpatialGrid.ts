@@ -1,70 +1,141 @@
-export class SpatialGrid<T> {
-  private grid: Map<string, Set<{ item: T; x: number; y: number }>> = new Map();
-  private cellSize: number;
-  private readonly width: number;
-  private readonly height: number;
+export class SpatialGrid<T = string> {
+  private cells: Map<string, Set<T>>;
+  private entityPositions: Map<T, { x: number; y: number }>;
+  private readonly cellSize: number;
+  private readonly cols: number;
+  private readonly rows: number;
 
-  constructor(width: number, height: number, cellSize: number) {
-    if (width <= 0 || height <= 0) {
-      throw new Error("SpatialGrid dimensions must be positive");
-    }
-    this.width = width;
-    this.height = height;
+  constructor(
+    worldWidth: number,
+    worldHeight: number,
+    cellSize: number,
+  ) {
     this.cellSize = cellSize;
+    this.cols = Math.ceil(worldWidth / cellSize);
+    this.rows = Math.ceil(worldHeight / cellSize);
+    this.cells = new Map();
+    this.entityPositions = new Map();
   }
 
-  private getKey(x: number, y: number): string {
-    const gx = Math.floor(x / this.cellSize);
-    const gy = Math.floor(y / this.cellSize);
-    return `${gx},${gy}`;
+  private worldToCell(x: number, y: number): { col: number; row: number } {
+    return {
+      col: Math.floor(x / this.cellSize),
+      row: Math.floor(y / this.cellSize),
+    };
   }
 
-  public insert(item: T, x: number, y: number): void {
-    if (this.width > 0 && this.height > 0) {
-      if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
-        return; // Out of bounds, ignore
+  private cellKey(col: number, row: number): string {
+    return `${col},${row}`;
+  }
+
+  public insert(entity: T, position: { x: number; y: number }): void {
+    this.remove(entity);
+
+    const { col, row } = this.worldToCell(position.x, position.y);
+    const key = this.cellKey(col, row);
+
+    if (!this.cells.has(key)) {
+      this.cells.set(key, new Set());
+    }
+
+    this.cells.get(key)!.add(entity);
+    this.entityPositions.set(entity, { ...position });
+  }
+
+  public remove(entity: T): void {
+    const pos = this.entityPositions.get(entity);
+    if (!pos) return;
+
+    const { col, row } = this.worldToCell(pos.x, pos.y);
+    const key = this.cellKey(col, row);
+    const cell = this.cells.get(key);
+
+    if (cell) {
+      cell.delete(entity);
+      if (cell.size === 0) {
+        this.cells.delete(key);
       }
     }
-    const key = this.getKey(x, y);
-    if (!this.grid.has(key)) {
-      this.grid.set(key, new Set());
-    }
-    this.grid.get(key)!.add({ item, x, y });
+
+    this.entityPositions.delete(entity);
   }
 
   public clear(): void {
-    this.grid.clear();
+    this.cells.clear();
+    this.entityPositions.clear();
   }
 
   public queryRadius(
     center: { x: number; y: number },
     radius: number,
-  ): { item: T; distance: number }[] {
-    const results: { item: T; distance: number }[] = [];
-    const startX = Math.floor((center.x - radius) / this.cellSize);
-    const endX = Math.floor((center.x + radius) / this.cellSize);
-    const startY = Math.floor((center.y - radius) / this.cellSize);
-    const endY = Math.floor((center.y + radius) / this.cellSize);
+  ): Array<{ entity: T; distance: number }> {
+    const results: Array<{ entity: T; distance: number }> = [];
+    const { col: centerCol, row: centerRow } = this.worldToCell(
+      center.x,
+      center.y,
+    );
+    const cellRadius = Math.ceil(radius / this.cellSize);
 
-    const r2 = radius * radius;
+    for (
+      let col = centerCol - cellRadius;
+      col <= centerCol + cellRadius;
+      col++
+    ) {
+      for (
+        let row = centerRow - cellRadius;
+        row <= centerRow + cellRadius;
+        row++
+      ) {
+        if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) {
+          continue;
+        }
 
-    for (let x = startX; x <= endX; x++) {
-      for (let y = startY; y <= endY; y++) {
-        const key = `${x},${y}`;
-        const cell = this.grid.get(key);
-        if (cell) {
-          for (const entry of Array.from(cell)) {
-            const dx = entry.x - center.x;
-            const dy = entry.y - center.y;
-            const dist2 = dx * dx + dy * dy;
-            if (dist2 <= r2) {
-              results.push({ item: entry.item, distance: Math.sqrt(dist2) });
-            }
+        const key = this.cellKey(col, row);
+        const cell = this.cells.get(key);
+        if (!cell) continue;
+
+        for (const entity of cell) {
+          const pos = this.entityPositions.get(entity);
+          if (!pos) continue;
+
+          const dx = pos.x - center.x;
+          const dy = pos.y - center.y;
+          const distance = Math.hypot(dx, dy);
+
+          if (distance <= radius) {
+            results.push({ entity, distance });
           }
         }
       }
     }
 
     return results;
+  }
+
+  public getCell(x: number, y: number): Set<T> | undefined {
+    const { col, row } = this.worldToCell(x, y);
+    return this.cells.get(this.cellKey(col, row));
+  }
+
+  public getStats(): {
+    totalEntities: number;
+    totalCells: number;
+    occupiedCells: number;
+    avgEntitiesPerCell: number;
+    maxEntitiesInCell: number;
+  } {
+    let maxEntities = 0;
+    for (const cell of this.cells.values()) {
+      maxEntities = Math.max(maxEntities, cell.size);
+    }
+
+    return {
+      totalEntities: this.entityPositions.size,
+      totalCells: this.cols * this.rows,
+      occupiedCells: this.cells.size,
+      avgEntitiesPerCell:
+        this.cells.size > 0 ? this.entityPositions.size / this.cells.size : 0,
+      maxEntitiesInCell: maxEntities,
+    };
   }
 }

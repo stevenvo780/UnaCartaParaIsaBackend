@@ -24,3 +24,11 @@ export interface AgentProfile {
     mother?: string;
   };
 }
+
+export interface SocialGroup {
+  id: string;
+  members: string[];
+  leader?: string;
+  cohesion: number;
+  morale?: number;
+}

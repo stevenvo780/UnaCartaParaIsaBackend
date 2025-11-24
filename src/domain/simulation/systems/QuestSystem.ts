@@ -468,11 +468,11 @@ export class QuestSystem {
               !objective.isCompleted &&
               objective.target === eventData.data.resourceType
             ) {
-              this.updateObjectiveProgress(
-                quest.id,
-                objective.id,
-                (eventData.data.amount as number) || 1,
-              );
+              const amount =
+                typeof eventData.data.amount === "number"
+                  ? eventData.data.amount
+                  : 1;
+              this.updateObjectiveProgress(quest.id, objective.id, amount);
             }
           });
         });

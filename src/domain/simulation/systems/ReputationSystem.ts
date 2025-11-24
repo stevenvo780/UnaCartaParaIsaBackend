@@ -191,18 +191,8 @@ export class ReputationSystem {
       }),
     );
 
-    (
-      this.gameState.reputation as unknown as {
-        reputations?: typeof allReputations;
-        trust?: typeof trustArray;
-      }
-    ).reputations = allReputations;
-    (
-      this.gameState.reputation as unknown as {
-        reputations?: typeof allReputations;
-        trust?: typeof trustArray;
-      }
-    ).trust = trustArray;
+    this.gameState.reputation.reputations = allReputations;
+    this.gameState.reputation.trust = trustArray;
   }
 
   public handleSocialRelationChanged(data: {
