@@ -474,7 +474,7 @@ export class MovementSystem extends EventEmitter {
     if (!this.cachedGrid) {
       this.cachedGrid = Array(this.gridHeight)
         .fill(null)
-        .map(() => Array(this.gridWidth).fill(0));
+        .map(() => Array<number>(this.gridWidth).fill(0));
     } else if (this.gridDirty) {
       for (let y = 0; y < this.gridHeight; y++) {
         this.cachedGrid[y].fill(0);
@@ -497,7 +497,7 @@ export class MovementSystem extends EventEmitter {
     this.gridCacheTime = now;
     this.gridDirty = false;
 
-    return this.cachedGrid;
+    return this.cachedGrid!;
   }
 
   private initializeObstacles(): void {

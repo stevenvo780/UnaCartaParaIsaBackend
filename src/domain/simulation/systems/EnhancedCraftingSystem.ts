@@ -163,7 +163,9 @@ export class EnhancedCraftingSystem {
 
     for (const ingredient of recipe.ingredients) {
       const key = this.mapToResourceKey(ingredient.itemId);
-      if (!key) continue;
+      // Si el ingrediente no está mapeado, no podemos verificar si lo tenemos
+      // Por lo tanto, no podemos craftar
+      if (!key) return false;
       if ((inventory[key] ?? 0) < ingredient.quantity) {
         return false;
       }
@@ -181,6 +183,7 @@ export class EnhancedCraftingSystem {
   }
 
   private mapToResourceKey(itemId: string): ResourceType | null {
+    // Mapeo directo
     if (
       itemId === "wood" ||
       itemId === "stone" ||
@@ -189,6 +192,13 @@ export class EnhancedCraftingSystem {
     ) {
       return itemId;
     }
+    // Mapeo de recursos procesados a recursos base
+    if (itemId === "wood_log") {
+      return "wood";
+    }
+    // fiber no está en el inventario básico, así que retornamos null
+    // Esto significa que no podemos craftar recetas que requieren fiber
+    // hasta que se extienda el sistema de inventario
     return null;
   }
 

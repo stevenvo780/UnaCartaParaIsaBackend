@@ -6,7 +6,7 @@ import type {
 // import { gameRandom } from "../utils/deterministicRandom"; // Removed frontend dependency
 
 // Mock gameRandom for now or use Math.random
-const gameRandom = {
+const gameRandom: { random: () => number } = {
   random: () => Math.random(),
 };
 

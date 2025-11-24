@@ -459,10 +459,6 @@ export class CardDialogueSystem {
           const existingQuest = this.questSystem.getQuest(questId);
           if (!existingQuest) {
             this.questSystem.makeQuestAvailable(questId);
-          } else if (
-            existingQuest.status === "available" &&
-            card.participants.length > 0
-          ) {
           }
         }
       }

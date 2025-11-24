@@ -344,7 +344,7 @@ export class LifeCycleSystem extends EventEmitter {
 
     if (!father || !mother) return this.randomTraits();
 
-    const mix = (a: number, b: number) => {
+    const mix = (a: number, b: number): number => {
       const base = (a + b) / 2;
       const mutation = (Math.random() - 0.5) * 0.2;
       return Math.max(0, Math.min(1, base + mutation));
@@ -372,7 +372,9 @@ export class LifeCycleSystem extends EventEmitter {
     const index = this.gameState.agents.findIndex((a) => a.id === id);
     if (index !== -1) {
       this.gameState.agents.splice(index, 1);
-      this._movementSystem?.removeEntityMovement(id);
+      if (this._movementSystem && typeof this._movementSystem.removeEntityMovement === 'function') {
+        this._movementSystem.removeEntityMovement(id);
+      }
       simulationEvents.emit(GameEventNames.ANIMAL_DIED, { entityId: id });
     }
   }

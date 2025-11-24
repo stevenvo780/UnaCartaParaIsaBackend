@@ -960,10 +960,7 @@ export class AISystem extends EventEmitter {
     switch (action.actionType) {
       case "move":
         if (action.targetZoneId) {
-          this._movementSystem.moveToZone(
-            action.agentId,
-            action.targetZoneId,
-          );
+          this._movementSystem.moveToZone(action.agentId, action.targetZoneId);
         } else if (action.targetPosition) {
           this._movementSystem.moveToPoint(
             action.agentId,
@@ -974,10 +971,7 @@ export class AISystem extends EventEmitter {
         break;
       case "work":
         if (action.targetZoneId) {
-          this._movementSystem.moveToZone(
-            action.agentId,
-            action.targetZoneId,
-          );
+          this._movementSystem.moveToZone(action.agentId, action.targetZoneId);
         }
         break;
       default:
