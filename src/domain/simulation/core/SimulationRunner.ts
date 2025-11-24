@@ -187,7 +187,7 @@ export class SimulationRunner {
     this._recipeDiscoverySystem = new RecipeDiscoverySystem(this.state);
     this.questSystem = new QuestSystem(this.state);
     this.taskSystem = new TaskSystem(this.state);
-    this.tradeSystem = new TradeSystem(this.state);
+    this.tradeSystem = new TradeSystem(this.state, this.inventorySystem);
     this.conflictResolutionSystem = new ConflictResolutionSystem(this.state);
     this._normsSystem = new NormsSystem(this.state);
     this.resourceAttractionSystem = new ResourceAttractionSystem(

@@ -334,10 +334,12 @@ describe("AISystem", () => {
       gameState.zones?.push({
         id: "work-zone-1",
         type: "work",
-        x: 150,
-        y: 150,
-        width: 50,
-        height: 50,
+        bounds: {
+          x: 150,
+          y: 150,
+          width: 50,
+          height: 50,
+        }
       });
 
       const eventSpy = vi.fn();

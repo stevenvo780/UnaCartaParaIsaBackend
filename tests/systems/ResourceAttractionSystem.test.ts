@@ -41,8 +41,8 @@ describe("ResourceAttractionSystem", () => {
       needsSystem.initializeEntityNeeds("agent-1");
       const needs = needsSystem.getEntityNeeds("agent-1");
       if (needs) {
-        needs.needs.hunger = 80; // Alta necesidad
-        needs.needs.thirst = 70;
+        needs.hunger = 80; // Alta necesidad
+        needs.thirst = 70;
       }
       resourceAttractionSystem.update(1000);
       const snapshot = resourceAttractionSystem.getSnapshot();
@@ -53,7 +53,7 @@ describe("ResourceAttractionSystem", () => {
       needsSystem.initializeEntityNeeds("agent-1");
       const needs = needsSystem.getEntityNeeds("agent-1");
       if (needs) {
-        needs.needs.hunger = 98; // Muy alta necesidad
+        needs.hunger = 98; // Muy alta necesidad
       }
       resourceAttractionSystem.update(1000);
       const snapshot = resourceAttractionSystem.getSnapshot();

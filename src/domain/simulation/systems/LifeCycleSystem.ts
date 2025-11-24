@@ -150,6 +150,7 @@ export class LifeCycleSystem extends EventEmitter {
 
     const yearInc = dtSec / this.config.secondsPerYear;
     const agents = this.gameState.agents || [];
+    console.log(`[LifeCycleSystem] Updating ${agents.length} agents. dtSec=${dtSec}, yearInc=${yearInc}`);
 
     for (const agent of agents) {
       if (agent.immortal) {
@@ -160,6 +161,7 @@ export class LifeCycleSystem extends EventEmitter {
       }
 
       agent.ageYears += yearInc;
+      console.log(`[LifeCycleSystem] Agent ${agent.id} aged to ${agent.ageYears}`);
       const previousStage = agent.lifeStage;
       agent.lifeStage = this.getLifeStage(agent.ageYears);
 
@@ -173,6 +175,7 @@ export class LifeCycleSystem extends EventEmitter {
       }
 
       if (agent.ageYears > this.config.maxAge) {
+        console.log(`[LifeCycleSystem] Agent ${agent.id} died of old age (${agent.ageYears} > ${this.config.maxAge})`);
         this.removeAgent(agent.id);
       }
 

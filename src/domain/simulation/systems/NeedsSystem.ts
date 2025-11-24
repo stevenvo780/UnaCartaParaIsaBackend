@@ -394,20 +394,67 @@ export class NeedsSystem extends EventEmitter {
 
   /**
    * Feature 5: Social Integration
+   * Apply morale boosts based on social relationships
    */
   private applySocialMoraleBoost(
-    _entityId: string,
-    _needs: EntityNeedsData,
+    entityId: string,
+    needs: EntityNeedsData,
   ): void {
-    if (!this.socialSystem) return;
+    if (!this.socialSystem || !this.gameState.entities) return;
 
-    // Placeholder for truce check
-    // const isInTruce = this.socialSystem.isInTruce(entityId);
-    // if (isInTruce) { ... }
+    const entity = this.gameState.entities.find((e) => e.id === entityId);
+    if (!entity?.position) return;
 
-    // Placeholder for affinity check
-    // const avgAffinity = this.socialSystem.getAverageAffinity(entityId);
-    // if (avgAffinity > 0.5) { ... }
+    const entityPosition = entity.position;
+
+    // Check for nearby entities with positive affinity (truce-like effect)
+    const nearbyEntities = this.gameState.entities.filter((e) => {
+      if (e.id === entityId || !e.position) return false;
+      const dx = e.position.x - entityPosition.x;
+      const dy = e.position.y - entityPosition.y;
+      const distance = Math.hypot(dx, dy);
+      return distance <= 100; // Within proximity radius
+    });
+
+    if (nearbyEntities.length === 0) return;
+
+    // Calculate average affinity with nearby entities
+    let totalAffinity = 0;
+    let affinityCount = 0;
+
+    for (const nearby of nearbyEntities) {
+      const affinity = this.socialSystem.getAffinityBetween(
+        entityId,
+        nearby.id,
+      );
+      if (affinity > 0) {
+        totalAffinity += affinity;
+        affinityCount++;
+      }
+    }
+
+    if (affinityCount > 0) {
+      const avgAffinity = totalAffinity / affinityCount;
+
+      // Apply morale boost based on positive social relationships
+      if (avgAffinity > 0.5) {
+        // Strong positive relationships boost social and fun needs
+        const boost = Math.min(0.5, avgAffinity * 0.3);
+        needs.social = Math.min(100, needs.social + boost);
+        needs.fun = Math.min(100, needs.fun + boost * 0.8);
+      } else if (avgAffinity > 0.2) {
+        // Moderate positive relationships provide smaller boost
+        const boost = avgAffinity * 0.15;
+        needs.social = Math.min(100, needs.social + boost);
+        needs.fun = Math.min(100, needs.fun + boost * 0.6);
+      }
+
+      // Having multiple friendly neighbors provides additional comfort
+      if (affinityCount >= 3 && avgAffinity > 0.3) {
+        needs.social = Math.min(100, needs.social + 2);
+        needs.fun = Math.min(100, needs.fun + 1);
+      }
+    }
   }
 
   /**

@@ -9,6 +9,7 @@ import {
   AgentPersonality,
 } from "../../types/simulation/ai";
 import type { AgentTraits, LifeStage } from "../../types/simulation/agents";
+import type { WorldResourceType } from "../../types/simulation/worldResources";
 import { planGoals, type AgentGoalPlannerDeps } from "./ai/AgentGoalPlanner";
 import { PriorityManager } from "./ai/PriorityManager";
 import { GameEventNames } from "../core/events";
@@ -632,14 +633,150 @@ export class AISystem extends EventEmitter {
   }
 
   // Helper methods
-  private isGoalCompleted(goal: AIGoal, _agentId: string): boolean {
-    // Simple check: if goal has been active too long, force complete/fail
-    // In a real system, this would check world state
-    return Date.now() - goal.createdAt > 60000; // 1 minute timeout
+  private isGoalCompleted(goal: AIGoal, agentId: string): boolean {
+    const now = Date.now();
+
+    // Check if goal has expired
+    if (goal.expiresAt && now > goal.expiresAt) {
+      return true; // Goal expired, consider it completed (or failed, handled by caller)
+    }
+
+    // Check timeout (fallback safety)
+    if (now - goal.createdAt > 60000) {
+      return true; // 1 minute timeout
+    }
+
+    // Check if need-based goals are satisfied
+    if (goal.type.startsWith("satisfy_")) {
+      const needType = goal.data?.need as string;
+      if (needType && this.needsSystem) {
+        const needs = this.needsSystem.getNeeds(agentId);
+        if (needs) {
+          const needValue = needs[needType as keyof typeof needs] as number;
+          // Goal is completed if the need is above threshold
+          if (needValue > 70) {
+            return true;
+          }
+        }
+      }
+    }
+
+    // Check if target zone still exists (for zone-based goals)
+    if (goal.targetZoneId) {
+      const zone = this.gameState.zones?.find(
+        (z) => z.id === goal.targetZoneId,
+      );
+      if (!zone) {
+        return false; // Zone doesn't exist, goal is invalid (not completed)
+      }
+    }
+
+    // Check if target resource still exists (for resource-based goals)
+    if (goal.targetId && goal.data?.resourceType) {
+      const resourceTypeStr = goal.data.resourceType as string;
+      if (this.worldResourceSystem) {
+        if (this.isValidWorldResourceType(resourceTypeStr)) {
+          const resources = this.worldResourceSystem.getResourcesByType(
+            resourceTypeStr,
+          );
+          const targetResource = resources.find((r) => r.id === goal.targetId);
+          if (!targetResource || targetResource.state !== "pristine") {
+            return false; // Resource doesn't exist or is depleted
+          }
+        } else {
+          // Resource type not valid, goal not completed
+          return false;
+        }
+      } else if (this.gameState.worldResources) {
+        const resource = this.gameState.worldResources[goal.targetId];
+        if (!resource || resource.state !== "pristine") {
+          return false; // Resource doesn't exist or is depleted
+        }
+      }
+    }
+
+    // For assist goals, check if target agent still exists
+    if (goal.type.startsWith("assist_") && goal.data?.targetAgentId) {
+      const targetId = goal.data.targetAgentId as string;
+      const targetAgent = this.gameState.agents?.find((a) => a.id === targetId);
+      if (!targetAgent) {
+        return false; // Target agent doesn't exist
+      }
+    }
+
+    return false; // Goal is still active
   }
 
-  private isGoalInvalid(_goal: AIGoal, _agentId: string): boolean {
-    return false; // Placeholder
+  private isGoalInvalid(goal: AIGoal, agentId: string): boolean {
+    // Check if goal has expired
+    if (goal.expiresAt && Date.now() > goal.expiresAt) {
+      return true;
+    }
+
+    // Check if target zone exists (for zone-based goals)
+    if (goal.targetZoneId) {
+      const zone = this.gameState.zones?.find(
+        (z) => z.id === goal.targetZoneId,
+      );
+      if (!zone) {
+        return true; // Zone doesn't exist, goal is invalid
+      }
+    }
+
+    // Check if target resource exists and is available (for resource-based goals)
+    if (goal.targetId && goal.data?.resourceType) {
+      const resourceTypeStr = goal.data.resourceType as string;
+      if (this.worldResourceSystem) {
+        if (this.isValidWorldResourceType(resourceTypeStr)) {
+          const resources =
+            this.worldResourceSystem.getResourcesByType(resourceTypeStr);
+          const targetResource = resources.find((r) => r.id === goal.targetId);
+          if (!targetResource || targetResource.state !== "pristine") {
+            return true; // Resource doesn't exist or is depleted
+          }
+        } else {
+          // Resource type not valid, goal is invalid
+          return true;
+        }
+      } else if (this.gameState.worldResources) {
+        const resource = this.gameState.worldResources[goal.targetId];
+        if (!resource || resource.state !== "pristine") {
+          return true; // Resource doesn't exist or is depleted
+        }
+      }
+    }
+
+    // Check if target agent exists (for assist goals)
+    if (goal.type.startsWith("assist_") && goal.data?.targetAgentId) {
+      const targetId = goal.data.targetAgentId as string;
+      const targetAgent = this.gameState.agents?.find((a) => a.id === targetId);
+      if (!targetAgent) {
+        return true; // Target agent doesn't exist
+      }
+    }
+
+    // Check if agent still exists
+    const agent = this.gameState.agents?.find((a) => a.id === agentId);
+    if (!agent) {
+      return true; // Agent doesn't exist anymore
+    }
+
+    // Check if need is already satisfied (for need-based goals)
+    if (goal.type.startsWith("satisfy_")) {
+      const needType = goal.data?.need as string;
+      if (needType && this.needsSystem) {
+        const needs = this.needsSystem.getNeeds(agentId);
+        if (needs) {
+          const needValue = needs[needType as keyof typeof needs] as number;
+          // Goal is invalid if need is already well satisfied
+          if (needValue > 85) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false; // Goal is still valid
   }
 
   private completeGoal(aiState: AIState, _agentId: string): void {
@@ -777,5 +914,21 @@ export class AISystem extends EventEmitter {
     if (!this.craftingSystem)
       logger.warn("AISystem: EnhancedCraftingSystem missing");
     if (!this.householdSystem) logger.warn("AISystem: HouseholdSystem missing");
+  }
+
+  /**
+   * Helper function to validate if a string is a valid WorldResourceType
+   */
+  private isValidWorldResourceType(value: string): value is WorldResourceType {
+    const validTypes: WorldResourceType[] = [
+      "tree",
+      "rock",
+      "trash_pile",
+      "water_source",
+      "berry_bush",
+      "mushroom_patch",
+      "wheat_crop",
+    ];
+    return validTypes.includes(value as WorldResourceType);
   }
 }

@@ -1,24 +1,26 @@
 import { GameState } from "../../types/game-types";
 import { TradeOffer, TradeRecord } from "../../types/simulation/trade";
+import type { InventorySystem } from "./InventorySystem";
 
 export class TradeSystem {
   private gameState: GameState;
   private activeOffers = new Map<string, TradeOffer>();
   private tradeHistory: TradeRecord[] = [];
   private merchantReputation = new Map<string, number>();
-  // TODO: Background trade constants kept for potential future implementation
-  // These will be used for automated background trading between agents
-  // @ts-expect-error - Intentionally unused, reserved for future implementation
-  private readonly _BACKGROUND_TRADE_INTERVAL = 30000;
-  // TODO: Probability of background trade occurring
-  // @ts-expect-error - Intentionally unused, reserved for future implementation
-  private readonly _BACKGROUND_TRADE_PROBABILITY = 0.1;
-  // TODO: Timestamp of last background trade for rate limiting
-  // @ts-expect-error - Intentionally unused, reserved for future implementation
+  private inventorySystem?: InventorySystem;
+  
+  // Background trade constants for automated trading between agents
+  private readonly BACKGROUND_TRADE_INTERVAL = 30000; // 30 seconds
+  private readonly BACKGROUND_TRADE_PROBABILITY = 0.1; // 10% chance per interval
   private _lastBackgroundTrade = 0;
 
-  constructor(gameState: GameState) {
+  constructor(gameState: GameState, inventorySystem?: InventorySystem) {
     this.gameState = gameState;
+    this.inventorySystem = inventorySystem;
+  }
+
+  public setInventorySystem(inventorySystem: InventorySystem): void {
+    this.inventorySystem = inventorySystem;
   }
 
   public createOffer(
@@ -183,8 +185,22 @@ export class TradeSystem {
   }
 
   public update(): void {
-    if (Date.now() % 60000 < 100) {
+    const now = Date.now();
+    
+    // Cleanup expired offers periodically
+    if (now % 60000 < 100) {
       this.cleanupExpiredOffers();
+    }
+
+    // Process background trades
+    if (
+      this.inventorySystem &&
+      now - this._lastBackgroundTrade >= this.BACKGROUND_TRADE_INTERVAL
+    ) {
+      if (Math.random() < this.BACKGROUND_TRADE_PROBABILITY) {
+        this.processBackgroundTrade();
+      }
+      this._lastBackgroundTrade = now;
     }
 
     // Escribir estado en GameState para sincronización con frontend
@@ -203,6 +219,83 @@ export class TradeSystem {
     this.gameState.trade.offers = Array.from(this.activeOffers.values());
     this.gameState.trade.history = this.tradeHistory;
     this.gameState.trade.stats = this.getTradeStats();
+  }
+
+  /**
+   * Process automated background trades between agents
+   * Agents with excess resources can automatically trade with those in need
+   */
+  private processBackgroundTrade(): void {
+    if (!this.inventorySystem || !this.gameState.agents) return;
+
+    const agents = this.gameState.agents.filter((a) => a.lifeStage === "adult");
+    if (agents.length < 2) return;
+
+    // Find agents with excess resources
+    const resourceTypes: Array<"wood" | "stone" | "food" | "water"> = [
+      "wood",
+      "stone",
+      "food",
+      "water",
+    ];
+
+    for (const resourceType of resourceTypes) {
+      // Find seller with excess (has more than 20 units)
+      const seller = agents.find((agent) => {
+        const inv = this.inventorySystem!.getAgentInventory(agent.id);
+        return inv && (inv[resourceType] || 0) > 20;
+      });
+
+      if (!seller) continue;
+
+      // Find buyer in need (has less than 5 units)
+      const buyer = agents.find((agent) => {
+        if (agent.id === seller.id) return false;
+        const inv = this.inventorySystem!.getAgentInventory(agent.id);
+        return inv && (inv[resourceType] || 0) < 5;
+      });
+
+      if (!buyer) continue;
+
+      // Execute trade: transfer 5-10 units
+      const tradeAmount = Math.min(
+        10,
+        Math.max(5, Math.floor(Math.random() * 6) + 5),
+      );
+      const sellerInv = this.inventorySystem.getAgentInventory(seller.id);
+      const available = sellerInv?.[resourceType] || 0;
+
+      if (available >= tradeAmount) {
+        const removed = this.inventorySystem.removeFromAgent(
+          seller.id,
+          resourceType,
+          tradeAmount,
+        );
+
+        if (removed > 0) {
+          this.inventorySystem.addResource(buyer.id, resourceType, removed);
+
+          // Record trade in history
+          const value = this.calculateOfferValue([
+            { itemId: resourceType, quantity: removed },
+          ]);
+          this.tradeHistory.push({
+            sellerId: seller.id,
+            buyerId: buyer.id,
+            timestamp: Date.now(),
+            items: [resourceType],
+            value,
+          });
+
+          // Update reputation
+          this.updateReputation(seller.id, 1);
+          this.updateReputation(buyer.id, 0.5);
+
+          // Only one trade per update cycle
+          return;
+        }
+      }
+    }
   }
 
   public getAllOffers(): TradeOffer[] {
