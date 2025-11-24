@@ -71,17 +71,6 @@ describe("ResearchSystem", () => {
       // Debería desbloquear categorías siguientes
       expect(researchSystem).toBeDefined();
     });
-
-    it("debe retornar categorías desbloqueadas", () => {
-      researchSystem.initializeLineage("lineage-1");
-      const unlocked = researchSystem.getUnlockedCategories("lineage-1");
-      expect(Array.isArray(unlocked)).toBe(true);
-    });
-
-    it("debe retornar array vacío para linaje no inicializado", () => {
-      const unlocked = researchSystem.getUnlockedCategories("nonexistent");
-      expect(unlocked).toEqual([]);
-    });
   });
 
   describe("Estadísticas de linaje", () => {

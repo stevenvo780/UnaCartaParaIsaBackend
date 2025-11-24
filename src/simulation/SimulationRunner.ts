@@ -304,11 +304,13 @@ export class SimulationRunner {
           for (const tile of row) {
             // Ensure we don't go out of bounds if world size isn't a multiple of chunk size
             if (tile.x < worldConfig.width && tile.y < worldConfig.height) {
+              const tileType: "grass" | "stone" | "water" | "path" = 
+                tile.biome === BiomeType.OCEAN ? "water" : "grass";
               allTiles.push({
                 x: tile.x,
                 y: tile.y,
                 assetId: tile.assets.terrain,
-                type: tile.biome === BiomeType.OCEAN ? "water" : "grass",
+                type: tileType,
                 biome: String(tile.biome),
                 isWalkable: tile.isWalkable ?? true
               });

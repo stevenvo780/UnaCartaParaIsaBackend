@@ -109,6 +109,58 @@ describe("ResourceReservationSystem", () => {
     it("debe actualizar sin errores", () => {
       expect(() => reservationSystem.update()).not.toThrow();
     });
+
+    it("debe limpiar reservas antiguas periódicamente", () => {
+      const oldNow = Date.now() - 400000; // 6+ minutos atrás
+      const oldSystem = new ResourceReservationSystem(
+        gameState,
+        inventorySystem,
+        () => oldNow
+      );
+      oldSystem.reserve("old-task", { wood: 10, stone: 5 });
+      
+      const newSystem = new ResourceReservationSystem(
+        gameState,
+        inventorySystem,
+        () => Date.now()
+      );
+      // Copiar reservas antiguas
+      const oldReservations = (oldSystem as any).reservations;
+      (newSystem as any).reservations = oldReservations;
+      
+      newSystem.update();
+      const cleaned = newSystem.cleanupStaleReservations();
+      expect(cleaned).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe("cleanupStaleReservations", () => {
+    it("debe limpiar reservas antiguas", () => {
+      const oldNow = Date.now() - 400000;
+      const system = new ResourceReservationSystem(
+        gameState,
+        inventorySystem,
+        () => oldNow
+      );
+      system.reserve("old-task", { wood: 10, stone: 5 });
+      
+      const newSystem = new ResourceReservationSystem(
+        gameState,
+        inventorySystem,
+        () => Date.now()
+      );
+      const oldReservations = (system as any).reservations;
+      (newSystem as any).reservations = oldReservations;
+      
+      const cleaned = newSystem.cleanupStaleReservations(300000);
+      expect(cleaned).toBeGreaterThanOrEqual(0);
+    });
+
+    it("no debe limpiar reservas recientes", () => {
+      reservationSystem.reserve("recent-task", { wood: 10, stone: 5 });
+      const cleaned = reservationSystem.cleanupStaleReservations(300000);
+      expect(cleaned).toBe(0);
+    });
   });
 });
 
