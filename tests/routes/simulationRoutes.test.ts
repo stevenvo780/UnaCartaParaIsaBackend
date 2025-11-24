@@ -3,14 +3,14 @@ import { Request, Response } from 'express';
 import { simulationRunner } from "../../src/domain/simulation/core/index.ts";
 import { storageService } from "../../src/infrastructure/services/storageService.ts";
 
-vi.mock('../../src/simulation/index.ts", () => ({
+vi.mock('../../src/domain/simulation/core/index.ts', () => ({
   simulationRunner: {
     getSnapshot: vi.fn(),
     enqueueCommand: vi.fn(),
   },
 }));
 
-vi.mock('../../src/services/storageService.ts", () => ({
+vi.mock('../../src/infrastructure/services/storageService.ts', () => ({
   storageService: {
     saveGame: vi.fn(),
   },

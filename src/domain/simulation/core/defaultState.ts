@@ -46,7 +46,7 @@ export function createInitialGameState(): GameState {
     terrainTiles: [],
     roads: [],
     objectLayers: [],
-    worldSize: { width: 0, height: 0 },
+    worldSize: { width: 2000, height: 2000 },
     generatorVersion: "backend-sim",
     playerLevel: 1,
     exploredBiomes: [],

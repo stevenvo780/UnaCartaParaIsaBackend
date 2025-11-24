@@ -22,7 +22,6 @@ import { BuildingSystem } from "../systems/BuildingSystem";
 import { BuildingMaintenanceSystem } from "../systems/BuildingMaintenanceSystem";
 import { ProductionSystem } from "../systems/ProductionSystem";
 import { EnhancedCraftingSystem } from "../systems/EnhancedCraftingSystem";
-import { CraftingSystem } from "../systems/CraftingSystem";
 import { AnimalSystem } from "../systems/AnimalSystem";
 import { ItemGenerationSystem } from "../systems/ItemGenerationSystem";
 import { ReputationSystem } from "../systems/ReputationSystem";
@@ -72,7 +71,8 @@ export class SimulationRunner {
   private livingLegendsSystem: LivingLegendsSystem;
   private lifeCycleSystem: LifeCycleSystem;
   private needsSystem: NeedsSystem;
-  private _genealogySystem: GenealogySystem;
+  // GenealogySystem is event-driven and initialized for event handling
+  private readonly _genealogySystem: GenealogySystem;
   private socialSystem: SocialSystem;
   private inventorySystem: InventorySystem;
   private economySystem: EconomySystem;
@@ -87,7 +87,6 @@ export class SimulationRunner {
   private buildingMaintenanceSystem: BuildingMaintenanceSystem;
   private productionSystem: ProductionSystem;
   private enhancedCraftingSystem: EnhancedCraftingSystem;
-  private _craftingSystem: CraftingSystem;
   private animalSystem: AnimalSystem;
   private itemGenerationSystem: ItemGenerationSystem;
   private combatSystem: CombatSystem;
@@ -120,6 +119,24 @@ export class SimulationRunner {
     this.lifeCycleSystem = new LifeCycleSystem(this.state);
     this.needsSystem = new NeedsSystem(this.state, this.lifeCycleSystem);
     this._genealogySystem = new GenealogySystem(this.state);
+    
+    // Connect genealogy system to lifecycle events
+    simulationEvents.on(GameEventNames.AGENT_ACTION_COMPLETE, (data: { agentId: string; action: string }) => {
+      if (data.action === "birth") {
+        const agent = this.state.agents.find(a => a.id === data.agentId);
+        if (agent) {
+          this._genealogySystem.registerBirth(
+            agent,
+            agent.parents?.father,
+            agent.parents?.mother
+          );
+        }
+      }
+    });
+    
+    simulationEvents.on(GameEventNames.COMBAT_KILL, (data: { targetId: string }) => {
+      this._genealogySystem.recordDeath(data.targetId);
+    });
     this.socialSystem = new SocialSystem(this.state);
     this.inventorySystem = new InventorySystem(this.state);
     this.resourceReservationSystem = new ResourceReservationSystem(
@@ -169,10 +186,6 @@ export class SimulationRunner {
     this.enhancedCraftingSystem = new EnhancedCraftingSystem(
       this.state,
       this.inventorySystem,
-    );
-    this._craftingSystem = new CraftingSystem(
-      this.state,
-      this.enhancedCraftingSystem,
     );
     this.animalSystem = new AnimalSystem(
       this.state,
@@ -319,6 +332,7 @@ export class SimulationRunner {
     }
 
     this.state.terrainTiles = allTiles;
+    this.state.worldSize = { width: worldConfig.width, height: worldConfig.height };
     console.log(`Generated ${allTiles.length} terrain tiles.`);
 
     // Spawn resources using the generated biome map
@@ -364,8 +378,10 @@ export class SimulationRunner {
 
   getSnapshot(): SimulationSnapshot {
     const events = this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
+    const snapshotState = cloneGameState(this.state);
+    snapshotState.genealogy = this._genealogySystem.getFamilyTree();
     return {
-      state: cloneGameState(this.state),
+      state: snapshotState,
       tick: this.tickCounter,
       updatedAt: this.lastUpdate,
       events,
@@ -418,10 +434,7 @@ export class SimulationRunner {
     this.knowledgeNetworkSystem.update(scaledDelta);
     this._researchSystem.update();
     this._recipeDiscoverySystem.update();
-    // NormsSystem is event-driven, but needs to write state
     this._normsSystem.update();
-    // Genealogy usually updates on events, but if it has a tick:
-    // this.genealogySystem.update(scaledDelta);
 
     this.tickCounter += 1;
     const snapshot = this.getSnapshot();

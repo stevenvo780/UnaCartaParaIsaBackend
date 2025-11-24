@@ -22,7 +22,6 @@ export class LivingLegendsSystem {
   constructor(state: GameState) {
     // State kept for potential future use
     this._state = state;
-    void this._state; // Suppress unused warning
     this.setupEventListeners();
   }
 

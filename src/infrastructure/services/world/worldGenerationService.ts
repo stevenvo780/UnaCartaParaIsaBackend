@@ -1,5 +1,4 @@
 import { NoiseUtils } from '../../../utils/NoiseUtils.js';
-import { VoronoiGenerator } from '../../../domain/world/generation/VoronoiGenerator.js';
 import { BiomeResolver } from '../../../domain/world/generation/BiomeResolver.js';
 import { WorldGenConfig, TerrainTile, BiomeType } from '../../../domain/world/generation/types.js';
 import { SIMPLE_BIOMES, SimpleBiomeConfig } from '../../../domain/world/generation/SimpleBiomeDefinitions.js';
@@ -18,13 +17,9 @@ export class WorldGenerationService {
 
   private initializeGenerators(config: WorldGenConfig): void {
     this.noiseGen = new NoiseUtils(config.seed);
-    // Validate config dimensions
     if (config.width <= 0 || config.height <= 0) {
       throw new Error("World generation config dimensions must be positive");
     }
-    // voronoiGen and rng would be initialized here when implemented
-    // const voronoiGen = new VoronoiGenerator(config.seed);
-    // const rng = seedrandom(config.seed.toString());
   }
 
   async generateChunk(x: number, y: number, config: WorldGenConfig): Promise<TerrainTile[][]> {

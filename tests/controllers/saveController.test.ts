@@ -1,9 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Request, Response } from 'express';
-import { saveController } from "../../src/infrastructure/controllers/saveController.ts";
-import { storageService } from "../../src/infrastructure/services/storageService.ts";
 
-vi.mock('../../src/services/storageService.ts", () => ({
+vi.mock('../../src/infrastructure/services/storage/storageService.ts', () => ({
   storageService: {
     isHealthy: vi.fn(),
     listSaves: vi.fn(),
@@ -12,6 +10,9 @@ vi.mock('../../src/services/storageService.ts", () => ({
     deleteSave: vi.fn(),
   },
 }));
+
+import { saveController } from "../../src/infrastructure/controllers/saveController.ts";
+import { storageService } from "../../src/infrastructure/services/storage/storageService.ts";
 
 describe('SaveController', () => {
   let mockReq: Partial<Request>;

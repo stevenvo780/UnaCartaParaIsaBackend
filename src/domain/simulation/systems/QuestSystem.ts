@@ -290,7 +290,8 @@ export class QuestSystem {
   }
 
   private failQuest(questId: string, _reason: string): QuestEvent | null {
-    // reason parameter kept for API compatibility but not currently used
+    // reason parameter kept for API compatibility
+    void _reason;
     const quest = this.questProgress.activeQuests.get(questId);
     if (!quest) return null;
 

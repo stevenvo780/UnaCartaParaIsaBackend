@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import fs from 'fs/promises';
 import path from 'path';
-import { StorageService } from "../../src/infrastructure/services/storageService.ts";
+import { StorageService } from "../../src/infrastructure/services/storage/storageService.ts";
 
 vi.mock('fs/promises');
 vi.mock('@google-cloud/storage', () => ({
@@ -10,7 +10,7 @@ vi.mock('@google-cloud/storage', () => ({
 vi.mock('ssh2-sftp-client', () => ({
   default: vi.fn(),
 }));
-vi.mock('../../src/config/config.ts", () => ({
+vi.mock('../../src/config/config.ts', () => ({
   CONFIG: {
     USE_LOCAL_STORAGE: true,
     LOCAL_SAVES_PATH: '/tmp/test-saves',

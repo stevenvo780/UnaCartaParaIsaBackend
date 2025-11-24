@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { CONFIG } from '../../src/config/config.ts";
+import { CONFIG } from '../../src/config/config.ts';
 
 describe('Config', () => {
   beforeEach(() => {

@@ -111,4 +111,29 @@ export class GenealogySystem {
       this.history.shift();
     }
   }
+
+  public getFamilyTree(): FamilyTree {
+    return this.familyTree;
+  }
+
+  public recordDeath(agentId: string): void {
+    const ancestor = this.familyTree.ancestors.get(agentId);
+    if (!ancestor) return;
+
+    const lineage = this.familyTree.lineages.get(ancestor.lineageId);
+    if (lineage) {
+      const livingIndex = lineage.livingMembers.indexOf(agentId);
+      if (livingIndex !== -1) {
+        lineage.livingMembers.splice(livingIndex, 1);
+      }
+      lineage.totalDied++;
+    }
+
+    this.recordEvent({
+      type: "death",
+      timestamp: Date.now(),
+      agentId,
+      lineageId: ancestor.lineageId,
+    });
+  }
 }

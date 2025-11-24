@@ -1,5 +1,6 @@
 import type { AIState, AIGoal } from '../../../types/simulation/ai';
 import type { EntityNeedsData } from '../../../types/simulation/needs';
+// AgentPersonality type is available but not currently used in this evaluator
 
 export interface NeedsEvaluatorDependencies {
   getEntityNeeds: (entityId: string) => EntityNeedsData | undefined;
