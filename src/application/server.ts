@@ -55,6 +55,23 @@ simulationWss.on("connection", (ws: WebSocket) => {
     }),
   );
 
+  const tickHandler = (snapshot: unknown): void => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(
+        JSON.stringify({
+          type: "TICK",
+          payload: snapshot,
+        }),
+      );
+    }
+  };
+
+  simulationRunner.on("tick", tickHandler);
+
+  ws.on("close", () => {
+    simulationRunner.off("tick", tickHandler);
+  });
+
   ws.on("message", (data: Buffer) => {
     try {
       const message = data.toString();

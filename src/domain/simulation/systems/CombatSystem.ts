@@ -119,6 +119,47 @@ export class CombatSystem {
     }
   }
 
+  public getNearbyEnemies(
+    agentId: string,
+    hostilityThreshold = -0.4,
+  ): string[] {
+    const entities = this.state.entities;
+    if (!entities || entities.length === 0) return [];
+
+    const agent = entities.find(
+      (entity): entity is SimulationEntity =>
+        entity.id === agentId &&
+        Boolean(entity.position) &&
+        (entity.type === "agent" || entity.type === "humanoid"),
+    );
+    if (!agent || !agent.position) return [];
+
+    const radius = this.config.engagementRadius * 2;
+    const result: string[] = [];
+
+    for (const entity of entities) {
+      if (
+        entity.id === agentId ||
+        entity.isDead ||
+        !entity.position ||
+        entity.type !== "agent"
+      ) {
+        continue;
+      }
+
+      const affinity = this.socialSystem.getAffinityBetween(agentId, entity.id);
+      if (affinity > hostilityThreshold) continue;
+
+      const dx = entity.position.x - agent.position.x;
+      const dy = entity.position.y - agent.position.y;
+      if (Math.hypot(dx, dy) <= radius) {
+        result.push(entity.id);
+      }
+    }
+
+    return result;
+  }
+
   public equip(agentId: string, weaponId: WeaponId): void {
     this.equippedWeapons.set(agentId, weaponId);
     simulationEvents.emit(GameEventNames.COMBAT_WEAPON_EQUIPPED, {

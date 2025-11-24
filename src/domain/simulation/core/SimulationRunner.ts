@@ -66,7 +66,6 @@ import type {
 } from "../../../shared/types/commands/SimulationCommand";
 import type { NeedsConfig } from "../../types/simulation/needs";
 import type { TaskType, TaskMetadata } from "../../types/simulation/tasks";
-
 interface SimulationEventMap {
   tick: SimulationSnapshot;
   commandRejected: SimulationCommand;
@@ -80,6 +79,7 @@ export class SimulationRunner {
   private readonly maxCommandQueue: number;
   private tickHandle?: NodeJS.Timeout;
   private tickCounter = 0;
+
   private lastUpdate = Date.now();
   private timeScale = 1;
   private worldResourceSystem: WorldResourceSystem;
@@ -264,6 +264,8 @@ export class SimulationRunner {
       craftingSystem: this.enhancedCraftingSystem,
       movementSystem: this.movementSystem,
       householdSystem: this.householdSystem,
+      taskSystem: this.taskSystem,
+      combatSystem: this.combatSystem,
       animalSystem: this.animalSystem,
     });
 

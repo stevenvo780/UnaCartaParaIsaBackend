@@ -1,4 +1,4 @@
-// import { logger } from "../../../infrastructure/utils/logger"; // Reserved for future use
+import { logger } from "../../../infrastructure/utils/logger";
 import { EventEmitter } from "events";
 import { GameState } from "../../types/game-types";
 import {
@@ -50,6 +50,7 @@ export class LifeCycleSystem extends EventEmitter {
   private _genealogySystem?: GenealogySystem;
   private _divineFavorSystem?: DivineFavorSystem;
   private _movementSystem?: MovementSystem;
+  private dependenciesChecked = false;
 
   constructor(
     gameState: GameState,
@@ -120,25 +121,32 @@ export class LifeCycleSystem extends EventEmitter {
     if (systems.movementSystem) this._movementSystem = systems.movementSystem;
   }
 
-  // Reserved for future dependency validation
-  // private checkDependencies(): void {
-  //   if (!this.needsSystem) logger.warn("LifeCycleSystem: NeedsSystem missing");
-  //   if (!this.aiSystem) logger.warn("LifeCycleSystem: AISystem missing");
-  //   if (!this.inventorySystem)
-  //     logger.warn("LifeCycleSystem: InventorySystem missing");
-  //   if (!this.householdSystem)
-  //     logger.warn("LifeCycleSystem: HouseholdSystem missing");
-  //   if (!this.socialSystem)
-  //     logger.warn("LifeCycleSystem: SocialSystem missing");
-  //   if (!this.marriageSystem)
-  //     logger.warn("LifeCycleSystem: MarriageSystem missing");
-  //   if (!this.genealogySystem)
-  //     logger.warn("LifeCycleSystem: GenealogySystem missing");
-  //   if (!this.divineFavorSystem)
-  //     logger.warn("LifeCycleSystem: DivineFavorSystem missing");
-  // }
+  private checkDependencies(): void {
+    if (this.dependenciesChecked) {
+      return;
+    }
+    const missing: string[] = [];
+    if (!this.needsSystem) missing.push("NeedsSystem");
+    if (!this._aiSystem) missing.push("AISystem");
+    if (!this.inventorySystem) missing.push("InventorySystem");
+    if (!this.householdSystem) missing.push("HouseholdSystem");
+    if (!this._socialSystem) missing.push("SocialSystem");
+    if (!this._marriageSystem) missing.push("MarriageSystem");
+    if (!this._genealogySystem) missing.push("GenealogySystem");
+    if (!this._divineFavorSystem) missing.push("DivineFavorSystem");
+    if (!this._movementSystem) missing.push("MovementSystem");
+    if (missing.length > 0) {
+      logger.warn(
+        `LifeCycleSystem: missing dependencies -> ${missing.join(", ")}`,
+      );
+    }
+    this.dependenciesChecked = true;
+  }
 
   public update(deltaTimeMs: number): void {
+    if (!this.dependenciesChecked) {
+      this.checkDependencies();
+    }
     const dtSec = deltaTimeMs / 1000;
 
     this.lastResourceConsumption += deltaTimeMs;

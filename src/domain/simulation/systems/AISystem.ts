@@ -11,6 +11,7 @@ import {
 import type { AgentTraits, LifeStage } from "../../types/simulation/agents";
 import type { WorldResourceType } from "../../types/simulation/worldResources";
 import { getAnimalConfig } from "../../../infrastructure/services/world/config/AnimalConfigs";
+import type { Task } from "../../types/simulation/tasks";
 import { planGoals, type AgentGoalPlannerDeps } from "./ai/AgentGoalPlanner";
 import { PriorityManager } from "./ai/PriorityManager";
 import { GameEventNames } from "../core/events";
@@ -48,9 +49,8 @@ export class AISystem extends EventEmitter {
   private socialSystem?: SocialSystem;
   private craftingSystem?: EnhancedCraftingSystem;
   private householdSystem?: HouseholdSystem;
-  // Reserved for future use in decision making
-  private _taskSystem?: TaskSystem;
-  private _combatSystem?: CombatSystem;
+  private taskSystem?: TaskSystem;
+  private combatSystem?: CombatSystem;
   private animalSystem?: AnimalSystem;
   private _movementSystem?: MovementSystem;
 
@@ -111,8 +111,8 @@ export class AISystem extends EventEmitter {
       this.socialSystem = systems.socialSystem;
       this.craftingSystem = systems.craftingSystem;
       this.householdSystem = systems.householdSystem;
-      this._taskSystem = systems.taskSystem;
-      this._combatSystem = systems.combatSystem;
+      this.taskSystem = systems.taskSystem;
+      this.combatSystem = systems.combatSystem;
       this.animalSystem = systems.animalSystem;
       this._movementSystem = systems.movementSystem;
     }
@@ -144,8 +144,8 @@ export class AISystem extends EventEmitter {
     if (systems.socialSystem) this.socialSystem = systems.socialSystem;
     if (systems.craftingSystem) this.craftingSystem = systems.craftingSystem;
     if (systems.householdSystem) this.householdSystem = systems.householdSystem;
-    if (systems.taskSystem) this._taskSystem = systems.taskSystem;
-    if (systems.combatSystem) this._combatSystem = systems.combatSystem;
+    if (systems.taskSystem) this.taskSystem = systems.taskSystem;
+    if (systems.combatSystem) this.combatSystem = systems.combatSystem;
     if (systems.animalSystem) this.animalSystem = systems.animalSystem;
     if (systems.movementSystem) this._movementSystem = systems.movementSystem;
   }
@@ -263,7 +263,13 @@ export class AISystem extends EventEmitter {
           })
           .map((a) => ({ id: a.id, position: a.position }));
       },
-      getEnemiesForAgent: (_id: string) => [],
+      getEnemiesForAgent: (id: string, threshold?: number): string[] => {
+        if (!this.combatSystem) return [];
+        return this.combatSystem.getNearbyEnemies(id, threshold);
+      },
+      getTasks: this.taskSystem
+        ? (): Task[] => this.taskSystem!.getActiveTasks()
+        : undefined,
     };
 
     const goals = planGoals(deps, aiState);
