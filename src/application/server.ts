@@ -93,8 +93,7 @@ simulationWss.on("connection", (ws: WebSocket) => {
         );
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Unknown error";
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
       console.error("Failed to parse command:", errorMessage);
       ws.send(
         JSON.stringify({

@@ -41,7 +41,6 @@ interface ActiveCardEntry {
   expiresAt: number;
 }
 
-
 export class CardDialogueSystem {
   private readonly cardTemplates: CardTemplate[] = this.createTemplates();
   private activeCards = new Map<string, ActiveCardEntry>();

@@ -101,7 +101,7 @@ export class ConflictResolutionSystem {
 
   public resolveConflict(
     cardId: string,
-    choice: "truce_accept" | "apologize" | "continue"
+    choice: "truce_accept" | "apologize" | "continue",
   ): {
     resolved: boolean;
     resolution: ConflictRecord["resolution"];
@@ -135,9 +135,7 @@ export class ConflictResolutionSystem {
       this.conflictHistory.shift();
     }
 
-    const mediation = this.mediationAttempts.find(
-      (m) => m.cardId === cardId,
-    );
+    const mediation = this.mediationAttempts.find((m) => m.cardId === cardId);
     if (mediation) {
       mediation.outcome =
         choice === "truce_accept"
@@ -191,7 +189,7 @@ export class ConflictResolutionSystem {
     const activeConflicts = this.getActiveConflicts();
     this.gameState.conflicts.active = activeConflicts;
     // También agregar como activeConflicts para compatibilidad con frontend
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     (this.gameState.conflicts as Record<string, unknown>).activeConflicts =
       activeConflicts;
     this.gameState.conflicts.history = this.getConflictHistory(50);

@@ -237,7 +237,10 @@ export class SimulationRunner {
     this.knowledgeNetworkSystem = new KnowledgeNetworkSystem(this.state);
 
     // Setup event capture for snapshot - add listeners for all known events
-    const eventCaptureListener = (eventName: string, payload: unknown) => {
+    const eventCaptureListener = (
+      eventName: string,
+      payload: unknown,
+    ): void => {
       this.capturedEvents.push({
         type: eventName,
         payload,

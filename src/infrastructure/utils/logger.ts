@@ -5,7 +5,11 @@ class Logger {
     return process.env.NODE_ENV !== "production";
   }
 
-  private formatMessage(level: LogLevel, message: string, ...args: unknown[]): string {
+  private formatMessage(
+    level: LogLevel,
+    message: string,
+    ...args: unknown[]
+  ): string {
     const timestamp = new Date().toISOString();
     const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
     return args.length > 0
@@ -35,4 +39,3 @@ class Logger {
 }
 
 export const logger = new Logger();
-
