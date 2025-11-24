@@ -6,6 +6,8 @@ import {
   BuildingLabel,
 } from "../../types/simulation/buildings";
 
+import { TaskSystem } from "./TaskSystem";
+
 interface BuildingSystemConfig {
   decisionIntervalMs: number;
   maxHouses: number;
@@ -19,6 +21,7 @@ interface ConstructionJob {
   label: BuildingLabel;
   completesAt: number;
   reservationId: string;
+  taskId?: string;
 }
 
 const DEFAULT_CONFIG: BuildingSystemConfig = {
@@ -49,6 +52,7 @@ export class BuildingSystem {
   private readonly now: () => number;
   private readonly constructionJobs = new Map<string, ConstructionJob>();
   private lastDecisionAt = 0;
+  private taskSystem?: TaskSystem;
 
   constructor(
     private readonly state: GameState,
@@ -58,6 +62,10 @@ export class BuildingSystem {
   ) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.now = nowProvider;
+  }
+
+  public setTaskSystem(taskSystem: TaskSystem): void {
+    this.taskSystem = taskSystem;
   }
 
   public update(_deltaMs: number): void {
@@ -142,12 +150,31 @@ export class BuildingSystem {
     const mutableZone = zone as MutableZone;
     (this.state.zones as MutableZone[]).push(mutableZone);
 
+    let taskId: string | undefined;
+    if (this.taskSystem) {
+      const task = this.taskSystem.createTask({
+        type: `build_${label}` as any, // Using 'any' to bypass strict type check if TaskType is not updated yet
+        requiredWork: cost.time / 1000, // 1 unit of work per second roughly
+        zoneId: mutableZone.id,
+        bounds: mutableZone.bounds,
+        requirements: {
+          minWorkers: 1,
+        },
+        metadata: {
+          targetZoneId: mutableZone.id,
+          buildingType: label,
+        },
+      });
+      taskId = task?.id;
+    }
+
     const job: ConstructionJob = {
       id: reservationId,
       zoneId: mutableZone.id,
       label,
       reservationId,
       completesAt: now + cost.time,
+      taskId,
     };
 
     this.constructionJobs.set(job.id, job);
@@ -216,6 +243,15 @@ export class BuildingSystem {
     completedAt: number,
   ): void {
     this.constructionJobs.delete(job.id);
+
+    if (job.taskId && this.taskSystem) {
+      const task = this.taskSystem.getTask(job.taskId);
+      if (task && !task.completed) {
+        // Force complete the task if building is done
+        task.completed = true;
+        task.progress = task.requiredWork;
+      }
+    }
 
     const consumed = this.reservationSystem.consume(job.reservationId);
     if (!consumed) {

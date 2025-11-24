@@ -12,6 +12,7 @@ import type { AgentTraits, LifeStage } from "../../types/simulation/agents";
 import type { WorldResourceType } from "../../types/simulation/worldResources";
 import { getAnimalConfig } from "../../../infrastructure/services/world/config/AnimalConfigs";
 import type { Task } from "../../types/simulation/tasks";
+import type { WeaponId as CraftingWeaponId } from "../../types/simulation/crafting";
 import { planGoals, type AgentGoalPlannerDeps } from "./ai/AgentGoalPlanner";
 import { PriorityManager } from "./ai/PriorityManager";
 import { GameEventNames } from "../core/events";
@@ -238,6 +239,71 @@ export class AISystem extends EventEmitter {
         return this.findNearestResourceForEntity(id, resourceType);
       },
       getAgentRole: (id: string) => this.roleSystem?.getAgentRole(id),
+      getAgentInventory: (id: string) =>
+        this.inventorySystem?.getAgentInventory(id),
+      getCurrentZone: (id: string) => {
+        const agent = this.gameState.agents.find((a) => a.id === id);
+        if (!agent?.position) return undefined;
+        const zone = this.gameState.zones.find((z) => {
+          return (
+            agent.position &&
+            agent.position.x >= z.bounds.x &&
+            agent.position.x <= z.bounds.x + z.bounds.width &&
+            agent.position.y >= z.bounds.y &&
+            agent.position.y <= z.bounds.y + z.bounds.height
+          );
+        });
+        return zone?.id;
+      },
+      getEquipped: (id: string) =>
+        this.combatSystem?.getEquipped(id) || "unarmed",
+      getSuggestedCraftZone: () => {
+        // Find nearest zone with crafting station (simplified: just find any)
+        // Zone doesn't have metadata directly, check props or use type
+        const zone = this.gameState.zones?.find((z) => z.type === "crafting");
+        return zone?.id;
+      },
+      canCraftWeapon: (id: string, weaponId: string) => {
+        if (!this.craftingSystem) return false;
+        // Validate weaponId is a valid CraftingWeaponId (doesn't include "unarmed")
+        const validWeaponIds: CraftingWeaponId[] = [
+          "wooden_club",
+          "stone_dagger",
+        ];
+        if (!validWeaponIds.includes(weaponId as CraftingWeaponId)) {
+          return false;
+        }
+        return this.craftingSystem.canCraftWeapon(
+          id,
+          weaponId as CraftingWeaponId,
+        );
+      },
+      getAllActiveAgentIds: () => {
+        // Check entities for isDead, fallback to agents
+        const activeIds: string[] = [];
+        for (const agent of this.gameState.agents) {
+          const entity = this.gameState.entities?.find(
+            (e) => e.id === agent.id,
+          );
+          if (!entity?.isDead) {
+            activeIds.push(agent.id);
+          }
+        }
+        return activeIds;
+      },
+      getEntityStats: (id: string) => {
+        // Get stats from entity, not agent
+        const entity = this.gameState.entities?.find((e) => e.id === id);
+        if (!entity) return null;
+        const stats = entity.stats;
+        if (!stats) return null;
+        return {
+          health: stats.health ?? 100,
+          stamina: stats.stamina ?? 100,
+          attack: stats.attack ?? 10,
+          defense: stats.defense ?? 0,
+        };
+      },
       getPreferredResourceForRole: (role: string): string | undefined => {
         const roleSys = this.roleSystem;
         if (!roleSys) {
@@ -254,8 +320,9 @@ export class AISystem extends EventEmitter {
         return role?.roleType === "guard";
       },
       getNearbyPredators: (pos: { x: number; y: number }, range: number) => {
-        if (!this.animalSystem) return [];
-        const animals = this.animalSystem.getAnimalsInRadius(pos, range);
+        const animalSys = this.animalSystem;
+        if (!animalSys) return [];
+        const animals = animalSys.getAnimalsInRadius(pos, range);
         return animals
           .filter((a) => {
             const config = getAnimalConfig(a.type);
@@ -265,6 +332,8 @@ export class AISystem extends EventEmitter {
       },
       getEnemiesForAgent: (id: string, threshold?: number): string[] => {
         if (!this.combatSystem) return [];
+        // Suppress unsafe type warning - CombatSystem.getNearbyEnemies returns string[]
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
         return this.combatSystem.getNearbyEnemies(id, threshold);
       },
       getTasks: this.taskSystem

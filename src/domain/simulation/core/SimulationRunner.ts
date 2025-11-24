@@ -80,6 +80,16 @@ export class SimulationRunner {
   private tickHandle?: NodeJS.Timeout;
   private tickCounter = 0;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public on(event: string, listener: (...args: any[]) => void): void {
+    this.emitter.on(event, listener);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public off(event: string, listener: (...args: any[]) => void): void {
+    this.emitter.off(event, listener);
+  }
+
   private lastUpdate = Date.now();
   private timeScale = 1;
   private worldResourceSystem: WorldResourceSystem;
@@ -460,20 +470,6 @@ export class SimulationRunner {
     if (!this.tickHandle) return;
     clearInterval(this.tickHandle);
     this.tickHandle = undefined;
-  }
-
-  on<K extends keyof SimulationEventMap>(
-    event: K,
-    listener: (payload: SimulationEventMap[K]) => void,
-  ): void {
-    this.emitter.on(event, listener as (payload: unknown) => void);
-  }
-
-  off<K extends keyof SimulationEventMap>(
-    event: K,
-    listener: (payload: SimulationEventMap[K]) => void,
-  ): void {
-    this.emitter.off(event, listener as (payload: unknown) => void);
   }
 
   enqueueCommand(command: SimulationCommand): boolean {
