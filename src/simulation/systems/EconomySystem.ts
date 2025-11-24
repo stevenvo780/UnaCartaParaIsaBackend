@@ -1,5 +1,6 @@
-import type { GameState } from '../../types/game-types.js';
-import type { EconomyConfig, ResourceType, Transaction } from '../types/economy.js';
+import type { GameState, Zone } from '../../types/game-types.js';
+import type { EconomyConfig, ResourceType } from '../types/economy.js';
+import type { SimulationEntity } from '../schema.js';
 import { InventorySystem } from './InventorySystem.js';
 import { SocialSystem } from './SocialSystem.js';
 import { LifeCycleSystem } from './LifeCycleSystem.js';
@@ -24,29 +25,19 @@ const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
 export class EconomySystem {
   private state: GameState;
   private inventorySystem: InventorySystem;
-  private socialSystem: SocialSystem;
-  private lifeCycleSystem: LifeCycleSystem;
   private config: EconomyConfig;
-  private spatialGrid: SpatialGrid<string>;
   private yieldResiduals = new Map<string, number>();
 
   constructor(
     state: GameState,
     inventorySystem: InventorySystem,
-    socialSystem: SocialSystem,
-    lifeCycleSystem: LifeCycleSystem,
+    _socialSystem: SocialSystem,
+    _lifeCycleSystem: LifeCycleSystem,
     config?: Partial<EconomyConfig>
   ) {
     this.state = state;
     this.inventorySystem = inventorySystem;
-    this.socialSystem = socialSystem;
-    this.lifeCycleSystem = lifeCycleSystem;
     this.config = { ...DEFAULT_ECONOMY_CONFIG, ...config };
-    this.spatialGrid = new SpatialGrid(
-      state.worldSize?.width ?? 2000,
-      state.worldSize?.height ?? 2000,
-      150
-    );
   }
 
   public update(_delta: number): void {
@@ -55,10 +46,10 @@ export class EconomySystem {
   }
 
   public handleWorkAction(agentId: string, zoneId: string): void {
-    const zone = this.state.zones.find((z: any) => z.id === zoneId);
+    const zone = this.state.zones.find((z) => z.id === zoneId);
     if (!zone) return;
 
-    const agent = this.state.entities.find((e: any) => e.id === agentId);
+    const agent = this.state.entities.find((e) => e.id === agentId);
     if (!agent) return;
 
     // Calculate yield
@@ -66,8 +57,8 @@ export class EconomySystem {
     let baseYield = 0;
 
     switch (zone.type) {
-      case "work":
-        const res = zone.properties?.resource;
+      case "work": {
+        const res = zone.props?.resource;
         if (res === "wood") {
           resourceType = "wood";
           baseYield = this.config.baseYield.wood;
@@ -76,6 +67,7 @@ export class EconomySystem {
           baseYield = this.config.baseYield.stone;
         }
         break;
+      }
       case "food":
         resourceType = "food";
         baseYield = this.config.baseYield.food;
@@ -110,12 +102,13 @@ export class EconomySystem {
       // Pay salary
       const salary = Math.round(this.config.salaryRates[resourceType] * teamBonus);
       if (agent.stats) { // Assuming agent has stats in entity
-        agent.stats.money = (agent.stats.money || 0) + salary;
+        const currentMoney = typeof agent.stats.money === 'number' ? agent.stats.money : 0;
+        agent.stats.money = currentMoney + salary;
       }
     }
   }
 
-  private computeTeamBonus(agentId: string, zone: any): number {
+  private computeTeamBonus(_agentId: string, _zone: Zone): number {
     // Simplified team bonus logic
     // In a real implementation, we'd use spatialGrid to find neighbors
     // For now, let's assume 1.0 if no neighbors

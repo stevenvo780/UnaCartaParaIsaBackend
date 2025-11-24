@@ -44,6 +44,7 @@ import type {
   SimulationCommand,
   SimulationConfig,
   SimulationSnapshot,
+  SimulationEvent,
 } from "./types.js";
 
 interface SimulationEventMap {
@@ -104,6 +105,8 @@ export class SimulationRunner {
   private cardDialogueSystem: CardDialogueSystem;
   private emergenceSystem: EmergenceSystem;
   private timeSystem: TimeSystem;
+  private capturedEvents: SimulationEvent[] = [];
+  private eventCaptureListener?: (eventName: string, payload: unknown) => void;
 
   constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
     this.state = initialState ?? createInitialGameState();
@@ -215,6 +218,22 @@ export class SimulationRunner {
         economySystem: this.economySystem,
       }
     );
+
+    // Setup event capture for snapshot - capture all events
+    this.eventCaptureListener = (eventName: string, payload: unknown) => {
+      this.capturedEvents.push({
+        type: eventName,
+        payload,
+        timestamp: Date.now(),
+      });
+    };
+    
+    // Capture all events by wrapping the emit method
+    const originalEmit = simulationEvents.emit.bind(simulationEvents);
+    simulationEvents.emit = (eventName: string, ...args: unknown[]) => {
+      this.eventCaptureListener(eventName, args[0]);
+      return originalEmit(eventName, ...args);
+    };
   }
 
   public initializeWorldResources(worldConfig: { width: number; height: number; tileSize: number; biomeMap: string[][] }): void {
@@ -256,10 +275,12 @@ export class SimulationRunner {
   }
 
   getSnapshot(): SimulationSnapshot {
+    const events = this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
     return {
       state: cloneGameState(this.state),
       tick: this.tickCounter,
       updatedAt: this.lastUpdate,
+      events,
     };
   }
 
@@ -313,6 +334,9 @@ export class SimulationRunner {
     this.tickCounter += 1;
     const snapshot = this.getSnapshot();
     this.emitter.emit("tick", snapshot);
+    
+    // Clear captured events after snapshot
+    this.capturedEvents = [];
   }
 
   private processCommands(): void {

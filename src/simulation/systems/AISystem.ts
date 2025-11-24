@@ -96,10 +96,9 @@ export class AISystem extends EventEmitter {
   }
 
   private getAdultAgents(): AgentProfile[] {
-    const entities = this.gameState.agents || [];
-    return entities.filter(
-      (e: any) => e.lifeStage === 'adult' && !e.immortal
-    ) as AgentProfile[];
+    return (this.gameState.agents || []).filter(
+      (e) => e.lifeStage === 'adult' && !e.immortal
+    );
   }
 
   private processAgentDecision(agent: AgentProfile, now: number): void {

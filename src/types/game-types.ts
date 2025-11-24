@@ -28,11 +28,17 @@ export interface GameMap {
   biomeMap: string[][];
 }
 
+export interface ZoneProps {
+  resource?: "wood" | "stone" | "food" | "water";
+  capacity?: number;
+  [key: string]: unknown;
+}
+
 export interface Zone {
   id: string;
   type: string;
   bounds: { x: number; y: number; width: number; height: number };
-  props?: Record<string, unknown>;
+  props?: ZoneProps;
 }
 
 export interface Size {

@@ -1,5 +1,6 @@
 import type { GameState } from '../../types/game-types.js';
 import type { Animal, AnimalSystemConfig } from '../types/animals.js';
+import type { WorldResourceInstance } from '../types/worldResources.js';
 import { getAnimalConfig } from '../config/AnimalConfigs.js';
 import { AnimalNeeds } from './animals/AnimalNeeds.js';
 import { AnimalBehavior } from './animals/AnimalBehavior.js';
@@ -301,8 +302,8 @@ export class AnimalSystem {
     if (!this.worldResourceSystem) return [];
 
     const resources = this.worldResourceSystem.getResourcesNear?.(animal.position, range)
-      ?.filter((r: any) => r.type === 'water_source')
-      ?.map((r: any) => ({ id: r.id, position: r.position })) || [];
+      ?.filter((r): r is WorldResourceInstance => r.type === 'water_source')
+      ?.map((r) => ({ id: r.id, position: r.position })) || [];
 
     return resources;
   }

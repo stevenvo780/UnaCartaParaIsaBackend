@@ -7,6 +7,7 @@ import {
   ReputationChange,
   SerializedReputationData,
 } from "../types/reputation.js";
+import { simulationEvents, GameEventNames } from "../events.js";
 
 const REPUTATION_CONFIG = {
   decay: {
@@ -205,6 +206,15 @@ export class ReputationSystem {
     const pa = evt.payoffs[a] || 0;
     const pb = evt.payoffs[b] || 0;
     const scale = REPUTATION_CONFIG.impacts.interactionGame.scale;
+
+    // Emitir evento para que el frontend pueda visualizarlo
+    simulationEvents.emit(GameEventNames.INTERACTION_GAME_PLAYED, {
+      game: evt.game,
+      agentA: a,
+      agentB: b,
+      payoffs: evt.payoffs,
+      timestamp: Date.now(),
+    });
 
     if (pa > 0 && pb > 0) {
       this.updateTrust(a, b, scale);

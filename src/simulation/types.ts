@@ -3,10 +3,17 @@ import type { AgentTraits } from "./types/agents.js";
 
 export type ResourcesState = NonNullable<GameState["resources"]>;
 
+export interface SimulationEvent {
+  type: string;
+  payload?: unknown;
+  timestamp?: number;
+}
+
 export interface SimulationSnapshot {
   state: GameState;
   tick: number;
   updatedAt: number;
+  events?: SimulationEvent[];
 }
 
 export interface SpawnAgentCommandPayload {

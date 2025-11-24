@@ -1,6 +1,6 @@
 import { GameEventNames, simulationEvents } from "../events.js";
 import { getResourceConfig } from "../config/WorldResourceConfigs.js";
-import type { WorldResourceInstance, WorldResourceType } from "../types/worldResources.js";
+import type { WorldResourceInstance, WorldResourceType, WorldResourceConfig } from "../types/worldResources.js";
 import type { GameState } from "../../types/game-types.js";
 
 export class WorldResourceSystem {
@@ -92,7 +92,7 @@ export class WorldResourceSystem {
 
     const resource: WorldResourceInstance = {
       id,
-      type: type as any,
+      type,
       position,
       state: "pristine",
       harvestCount: 0,
@@ -109,7 +109,7 @@ export class WorldResourceSystem {
     return resource;
   }
 
-  private getResourcesForBiome(biome: string): any[] {
+  private getResourcesForBiome(biome: string): WorldResourceConfig[] {
     // Helper to filter configs by biome
     // In a real implementation this would be imported or cached
     const configs = [
@@ -121,7 +121,7 @@ export class WorldResourceSystem {
       getResourceConfig("wheat_crop"),
       getResourceConfig("trash_pile")
     ];
-    return configs.filter(c => c && c.suitableBiomes?.includes(biome));
+    return configs.filter((c): c is NonNullable<typeof c> => c !== null && c !== undefined && c.suitableBiomes?.includes(biome) === true);
   }
 
   private handleResourceGathered(data: { resourceId: string; amount: number }): void {
@@ -158,7 +158,7 @@ export class WorldResourceSystem {
 
   public getResourcesByType(type: WorldResourceType): WorldResourceInstance[] {
     if (!this.state.worldResources) return [];
-    return Object.values(this.state.worldResources).filter((r: any) => r.type === type);
+    return Object.values(this.state.worldResources).filter((r) => r.type === type);
   }
 
   /**

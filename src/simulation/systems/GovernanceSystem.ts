@@ -295,10 +295,11 @@ export class GovernanceSystem {
     const populationSource = lifecycleAgents.length > 0 ? lifecycleAgents : entities;
     const population = populationSource.length;
     const zones = this.state.zones ?? [];
-    const housingZones = zones.filter((zone: any) => zone.type === "house" || zone.subtype === "housing");
+    const housingZones = zones.filter((zone) => zone.type === "house" || (zone.props && 'subtype' in zone.props && zone.props.subtype === "housing"));
     const houses = housingZones.length;
-    const baseCapacity = housingZones.reduce((sum: number, zone: any) => {
-      return sum + (zone.capacity ?? zone.properties?.capacity ?? 2);
+    const baseCapacity = housingZones.reduce((sum: number, zone) => {
+      const capacity = (zone.props && typeof zone.props.capacity === 'number' ? zone.props.capacity : undefined) ?? 2;
+      return sum + capacity;
     }, 0);
     const housingCapacity = baseCapacity + this.housingProjectsStarted * 2;
 
@@ -310,7 +311,10 @@ export class GovernanceSystem {
     const avgHappiness = this.averageEntityStat("happiness");
     const avgHealth = this.averageEntityStat("health");
 
-    const idleAgents = entities.filter((entity: any) => entity.activity?.status === "idle").length;
+    const idleAgents = entities.filter((entity) => {
+      const activity = entity.state;
+      return activity === "idle" || (typeof activity === 'object' && activity !== null && 'status' in activity && activity.status === "idle");
+    }).length;
     const workersAvailable = Math.max(0, population - idleAgents);
 
     const foodPerCapita = population > 0 ? foodStockpile / population : foodStockpile;

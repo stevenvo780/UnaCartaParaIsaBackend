@@ -253,7 +253,7 @@ export class RoleSystem extends EventEmitter {
       };
     }
 
-    let bestRole: any = null;
+    let bestRole: RoleConfig | null = null;
     let bestScore = -1;
 
     ROLE_DEFINITIONS.forEach((roleDef) => {

@@ -239,7 +239,8 @@ export class EmergenceSystem extends EventEmitter {
 
     const entities = this.gameState.entities || [];
     const birthRate = entities.filter(e => {
-      const age = (Date.now() - (e.stats?.birthTimestamp || 0)) / (365 * 24 * 60 * 60 * 1000);
+      const birthTimestamp = typeof e.stats?.birthTimestamp === 'number' ? e.stats.birthTimestamp : 0;
+      const age = (Date.now() - birthTimestamp) / (365 * 24 * 60 * 60 * 1000);
       return age < 1;
     }).length;
 

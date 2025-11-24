@@ -7,7 +7,9 @@ import seedrandom from 'seedrandom';
 
 export class WorldGenerationService {
   private noiseGen: NoiseUtils;
+  private voronoiGen: VoronoiGenerator | null = null;
   private biomeResolver: BiomeResolver;
+  private rng!: seedrandom.PRNG;
   private biomeMap: Map<BiomeType, SimpleBiomeConfig>;
 
   constructor() {
@@ -17,7 +19,7 @@ export class WorldGenerationService {
     this.biomeMap = new Map(SIMPLE_BIOMES.map(b => [b.id, b]));
   }
 
-  private initializeGenerators(config: WorldGenConfig) {
+  private initializeGenerators(config: WorldGenConfig): void {
     this.noiseGen = new NoiseUtils(config.seed);
     this.rng = seedrandom(String(config.seed));
     this.voronoiGen = new VoronoiGenerator(
