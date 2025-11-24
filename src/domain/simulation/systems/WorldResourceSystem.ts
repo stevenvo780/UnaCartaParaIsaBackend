@@ -6,7 +6,7 @@ import type {
   WorldResourceType,
   WorldResourceConfig,
 } from "../../types/simulation/worldResources";
-import type { GameState } from "../../types/game-types";
+import type { GameState, Zone } from "../../types/game-types";
 
 export class WorldResourceSystem {
   private state: GameState;
@@ -285,5 +285,9 @@ export class WorldResourceSystem {
     });
 
     return { success: true, amount: 1 };
+  }
+
+  public getZones(): Zone[] {
+    return this.state.zones || [];
   }
 }
