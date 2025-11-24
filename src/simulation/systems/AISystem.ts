@@ -18,6 +18,7 @@ import {
 import type { NeedsSystem } from './NeedsSystem.js';
 import type { RoleSystem } from './RoleSystem.js';
 import type { WorldResourceSystem } from './WorldResourceSystem.js';
+import type { WorldResourceType } from '../types/worldResources.js';
 
 const DEFAULT_AI_CONFIG: AISystemConfig = {
   decisionIntervalMs: 500,
@@ -234,7 +235,9 @@ export class AISystem extends EventEmitter {
     if (!this.worldResourceSystem) return null;
 
     // Get all resources of this type
-    const resources = this.worldResourceSystem.getResourcesByType(resourceType);
+    const resources = this.worldResourceSystem.getResourcesByType(
+      resourceType as WorldResourceType
+    );
     if (resources.length === 0) return null;
 
     // For now, return first available (TODO: implement spatial distance)

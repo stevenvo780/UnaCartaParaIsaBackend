@@ -66,6 +66,10 @@ export class InventorySystem {
     return Array.from(ids).map(id => this.stockpiles.get(id)!).filter(Boolean);
   }
 
+  public getAllStockpiles(): Stockpile[] {
+    return Array.from(this.stockpiles.values());
+  }
+
   public addResource(agentId: string, resource: ResourceType, amount: number): boolean {
     const inv = this.agentInventories.get(agentId);
     if (!inv) return false;
@@ -91,6 +95,29 @@ export class InventorySystem {
     if (toAdd <= 0) return false;
 
     sp.inventory[resource] += toAdd;
+    return true;
+  }
+
+  public consumeFromStockpile(
+    stockpileId: string,
+    resources: Partial<Record<ResourceType, number>>,
+  ): boolean {
+    const sp = this.stockpiles.get(stockpileId);
+    if (!sp) return false;
+
+    const entries = Object.entries(resources || {}) as [ResourceType, number][];
+    for (const [resource, amount] of entries) {
+      if (!amount) continue;
+      if ((sp.inventory[resource] ?? 0) < amount) {
+        return false;
+      }
+    }
+
+    for (const [resource, amount] of entries) {
+      if (!amount) continue;
+      sp.inventory[resource] -= amount;
+    }
+
     return true;
   }
 

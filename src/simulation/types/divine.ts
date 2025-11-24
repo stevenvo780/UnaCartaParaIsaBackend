@@ -1,0 +1,54 @@
+export type BlessingType =
+  | "fertility_boost"
+  | "productivity_boost"
+  | "longevity"
+  | "social_harmony"
+  | "resilience"
+  | "wisdom"
+  | "prosperity";
+
+export type GodId = "isa" | "stev";
+
+export interface BlessingTarget {
+  lineageIds?: string[];
+  agentIds?: string[];
+  global?: boolean;
+}
+
+export interface Blessing {
+  id: string;
+  type: BlessingType;
+  name: string;
+  description: string;
+  duration: number;
+  magnitude: number;
+  appliedAt: number;
+  expiresAt?: number;
+  target: BlessingTarget;
+}
+
+export interface DivinePower {
+  godId: GodId;
+  power: number;
+  regenRate: number;
+}
+
+export interface BlessingEffect {
+  type: BlessingType;
+  multiplier: number;
+}
+
+export interface DivineFavorEvent {
+  timestamp: number;
+  type: "blessing_granted" | "favor_increased" | "favor_decreased" | "miracle";
+  godId: GodId;
+  lineageId?: string;
+  details?: Record<string, unknown>;
+}
+
+export interface DivineFavor {
+  lineageId: string;
+  favor: number;
+  blessings: string[];
+  history: DivineFavorEvent[];
+}

@@ -78,3 +78,8 @@ export interface StorageContainer {
   capacity: number;
   items: InventoryItem[];
 }
+
+export interface ResourceCost {
+  wood: number;
+  stone: number;
+}

@@ -12,6 +12,9 @@ import { EconomySystem } from "./systems/EconomySystem.js";
 import { MarketSystem } from "./systems/MarketSystem.js";
 import { RoleSystem } from "./systems/RoleSystem.js";
 import { AISystem } from "./systems/AISystem.js";
+import { ResourceReservationSystem } from "./systems/ResourceReservationSystem.js";
+import { GovernanceSystem } from "./systems/GovernanceSystem.js";
+import { DivineFavorSystem } from "./systems/DivineFavorSystem.js";
 import { simulationEvents, GameEventNames } from "./events.js";
 import type {
   SimulationCommand,
@@ -45,6 +48,9 @@ export class SimulationRunner {
   private marketSystem: MarketSystem;
   private roleSystem: RoleSystem;
   private aiSystem: AISystem;
+  private resourceReservationSystem: ResourceReservationSystem;
+  private governanceSystem: GovernanceSystem;
+  private divineFavorSystem: DivineFavorSystem;
 
   constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
     this.state = initialState ?? createInitialGameState();
@@ -57,6 +63,18 @@ export class SimulationRunner {
     this.genealogySystem = new GenealogySystem(this.state);
     this.socialSystem = new SocialSystem(this.state);
     this.inventorySystem = new InventorySystem();
+    this.resourceReservationSystem = new ResourceReservationSystem(
+      this.state,
+      this.inventorySystem,
+    );
+    this.divineFavorSystem = new DivineFavorSystem();
+    this.governanceSystem = new GovernanceSystem(
+      this.state,
+      this.inventorySystem,
+      this.lifeCycleSystem,
+      this.divineFavorSystem,
+      this.resourceReservationSystem,
+    );
     this.economySystem = new EconomySystem(
       this.state,
       this.inventorySystem,
@@ -137,10 +155,13 @@ export class SimulationRunner {
     this.needsSystem.update(scaledDelta);
     this.socialSystem.update(scaledDelta);
     this.inventorySystem.update();
+    this.resourceReservationSystem.update();
     this.economySystem.update(scaledDelta);
     this.marketSystem.update(scaledDelta);
     this.roleSystem.update(scaledDelta);
     this.aiSystem.update(scaledDelta);
+    this.divineFavorSystem.update(scaledDelta);
+    this.governanceSystem.update(scaledDelta);
     // Genealogy usually updates on events, but if it has a tick:
     // this.genealogySystem.update(scaledDelta);
 

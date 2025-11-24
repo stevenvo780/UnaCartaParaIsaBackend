@@ -1,4 +1,5 @@
 import type { WorldResourceInstance } from "../simulation/types/worldResources.js";
+import type { GovernanceSnapshot } from "../simulation/types/governance.js";
 
 export interface Position {
   x: number;
@@ -94,6 +95,7 @@ export interface GameState {
   roles?: any;
   legends?: any;
   genealogy?: any;
+  governance?: GovernanceSnapshot;
 
   // Legacy/Frontend fields (kept for compatibility if needed)
   resonance?: number;

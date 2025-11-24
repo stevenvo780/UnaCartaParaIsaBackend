@@ -79,6 +79,10 @@ export class LifeCycleSystem {
     // this.gameState.entities.push(agent); // Need to align types first
   }
 
+  public getAgents(): AgentProfile[] {
+    return Array.from(this.agents.values());
+  }
+
   private removeAgent(id: string): void {
     this.agents.delete(id);
     console.log(`Agent ${id} died of old age`);
