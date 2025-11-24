@@ -3,13 +3,27 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node --watch index.js"
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.7.0",
     "cors": "^2.8.5",
+    "delaunator": "^5.0.1",
     "express": "^4.18.2",
+    "seedrandom": "^3.0.5",
     "ssh2-sftp-client": "^12.0.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/node": "^24.10.1",
+    "@types/ssh2-sftp-client": "^9.0.5",
+    "nodemon": "^3.1.11",
+    "rimraf": "^6.1.2",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
   }
 }
