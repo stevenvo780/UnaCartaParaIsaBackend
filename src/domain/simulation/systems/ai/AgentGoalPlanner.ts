@@ -35,7 +35,6 @@ export interface AgentGoalPlannerDeps {
   getAgentRole?: (agentId: string) => AgentRole | undefined;
   getPreferredResourceForRole?: (roleType: string) => string | undefined;
 
-  // New dependencies for full AI cycle
   getTasks?: () => any[];
   getAgentInventory?: (id: string) => any;
   getCurrentZone?: (id: string) => string | undefined;
@@ -61,7 +60,6 @@ export function planGoals(
   const goals: AIGoal[] = [];
   const entityNeeds = deps.getEntityNeeds(aiState.entityId);
 
-  // 1. Critical Needs
   if (entityNeeds) {
     const needsDeps = {
       getEntityNeeds: deps.getEntityNeeds,
@@ -71,7 +69,6 @@ export function planGoals(
     goals.push(...criticalGoals);
   }
 
-  // 2. Combat / Threats
   if (
     deps.getStrategy &&
     deps.isWarrior &&
@@ -90,7 +87,6 @@ export function planGoals(
     goals.push(...combatGoals);
   }
 
-  // 3. Assist (Social)
   if (deps.getAllActiveAgentIds && deps.getEntityStats) {
     const assistDeps = {
       getAllActiveAgentIds: deps.getAllActiveAgentIds,
@@ -110,7 +106,6 @@ export function planGoals(
     goals.push(...assistGoals);
   }
 
-  // 4. Construction
   if (deps.getTasks) {
     const constDeps = {
       gameState: deps.gameState,
@@ -121,7 +116,6 @@ export function planGoals(
     goals.push(...constructionGoals);
   }
 
-  // 5. Deposit
   if (deps.getAgentInventory && deps.getCurrentZone) {
     const depositDeps = {
       gameState: deps.gameState,
@@ -136,7 +130,6 @@ export function planGoals(
     goals.push(...depositGoals);
   }
 
-  // 6. Crafting
   if (deps.getEquipped && deps.getSuggestedCraftZone && deps.canCraftWeapon) {
     const craftingDeps = {
       getEquipped: deps.getEquipped,
@@ -147,7 +140,6 @@ export function planGoals(
     goals.push(...craftingGoals);
   }
 
-  // 7. Attention / Inspection
   const attentionDeps = {
     gameState: deps.gameState,
     getEntityPosition: (id: string) => getEntityPosition(id, deps.gameState),
@@ -159,7 +151,6 @@ export function planGoals(
   const attentionGoals = evaluateAttention(attentionDeps, aiState);
   goals.push(...attentionGoals);
 
-  // 8. Work Opportunities (if not critical)
   const criticalCount = goals.filter((g) => g.priority > 0.7).length;
   if (criticalCount === 0) {
     if (deps.getAgentRole && deps.getPreferredResourceForRole) {
@@ -199,7 +190,6 @@ export function planGoals(
     goals.push(...defaultGoals);
   }
 
-  // Prioritize and filter
   const prioritized = prioritizeGoals(
     goals,
     aiState,

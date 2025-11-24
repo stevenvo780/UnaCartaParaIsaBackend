@@ -44,6 +44,8 @@ import { EmergenceSystem } from "../systems/EmergenceSystem";
 import { TimeSystem } from "../systems/TimeSystem";
 import { InteractionGameSystem } from "../systems/InteractionGameSystem";
 import { KnowledgeNetworkSystem } from "../systems/KnowledgeNetworkSystem";
+import { MovementSystem } from "../systems/MovementSystem";
+import { TrailSystem } from "../systems/TrailSystem";
 import type {
   SimulationCommand,
   SimulationConfig,
@@ -107,6 +109,8 @@ export class SimulationRunner {
   private timeSystem: TimeSystem;
   private interactionGameSystem: InteractionGameSystem;
   private knowledgeNetworkSystem: KnowledgeNetworkSystem;
+  private movementSystem: MovementSystem;
+  private trailSystem: TrailSystem;
   private capturedEvents: SimulationEvent[] = [];
   private eventCaptureListener?: (eventName: string, payload: unknown) => void;
 
@@ -212,6 +216,8 @@ export class SimulationRunner {
     });
     this.interactionGameSystem = new InteractionGameSystem(this.state);
     this.knowledgeNetworkSystem = new KnowledgeNetworkSystem(this.state);
+    this.movementSystem = new MovementSystem(this.state);
+    this.trailSystem = new TrailSystem(this.state);
 
     this.lifeCycleSystem.setDependencies({
       needsSystem: this.needsSystem,
@@ -496,6 +502,8 @@ export class SimulationRunner {
     this.emergenceSystem.update(scaledDelta);
     this.interactionGameSystem.update(scaledDelta);
     this.knowledgeNetworkSystem.update(scaledDelta);
+    this.movementSystem.update(scaledDelta);
+    this.trailSystem.update(scaledDelta);
     this._researchSystem.update();
     this._recipeDiscoverySystem.update();
     this._normsSystem.update();

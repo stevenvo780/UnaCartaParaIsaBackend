@@ -83,7 +83,6 @@ export class AnimalBehavior {
       return;
     }
 
-    // Slight random direction change
     const wanderStrength = 0.1;
     wanderAngle += (Math.random() - 0.5) * wanderStrength;
     this.wanderAngles.set(animal.id, wanderAngle);
@@ -118,7 +117,6 @@ export class AnimalBehavior {
     const config = getAnimalConfig(animal.type);
     if (!config || !config.consumesVegetation) return;
 
-    // Find nearest food resource if no current target
     if (!animal.currentTarget || animal.currentTarget.type !== "food") {
       if (availableResources.length > 0) {
         const target = availableResources[0];
@@ -130,19 +128,16 @@ export class AnimalBehavior {
       }
     }
 
-    // Move toward or consume food
     if (animal.targetPosition) {
       const dx = animal.targetPosition.x - animal.position.x;
       const dy = animal.targetPosition.y - animal.position.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < 30) {
-        // Close enough to eat
         animal.state = "eating";
         const consumed = config.vegetationConsumptionRate;
         AnimalNeeds.feed(animal, consumed * 15);
 
-        // Notify consumption
         if (animal.currentTarget?.id) {
           onConsume(animal.currentTarget.id);
         }
@@ -159,7 +154,6 @@ export class AnimalBehavior {
         animal.targetPosition = null;
         animal.stateEndTime = Date.now() + 3000;
       } else {
-        // Move toward food
         this.moveToward(
           animal,
           animal.targetPosition,
@@ -182,7 +176,6 @@ export class AnimalBehavior {
     const config = getAnimalConfig(animal.type);
     if (!config?.isPredator || !config.preyTypes) return;
 
-    // Find prey if no current target
     if (!animal.currentTarget || animal.currentTarget.type !== "food") {
       const prey = availablePrey.find((p) =>
         config.preyTypes!.includes(p.type),
@@ -198,7 +191,6 @@ export class AnimalBehavior {
       }
     }
 
-    // Chase and kill prey
     if (animal.currentTarget && animal.targetPosition) {
       const prey = availablePrey.find((p) => p.id === animal.currentTarget!.id);
       if (!prey || prey.isDead) {
@@ -207,7 +199,6 @@ export class AnimalBehavior {
         return;
       }
 
-      // Update target position to current prey location
       animal.targetPosition = { ...prey.position };
 
       const dx = prey.position.x - animal.position.x;
@@ -215,7 +206,6 @@ export class AnimalBehavior {
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < 25) {
-        // Close enough to attack
         animal.state = "eating";
         const consumed = config.foodValue || 50;
         AnimalNeeds.feed(animal, consumed);
@@ -234,7 +224,6 @@ export class AnimalBehavior {
         animal.targetPosition = null;
         animal.stateEndTime = Date.now() + 5000;
       } else {
-        // Chase prey
         this.moveToward(
           animal,
           prey.position,
@@ -260,7 +249,6 @@ export class AnimalBehavior {
     const config = getAnimalConfig(animal.type);
     if (!config?.consumesWater) return;
 
-    // Find water if no current target
     if (!animal.currentTarget || animal.currentTarget.type !== "water") {
       if (availableWaterResources.length > 0) {
         const target = availableWaterResources[0];
@@ -272,14 +260,12 @@ export class AnimalBehavior {
       }
     }
 
-    // Move toward or drink water
     if (animal.targetPosition) {
       const dx = animal.targetPosition.x - animal.position.x;
       const dy = animal.targetPosition.y - animal.position.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < 30) {
-        // Close enough to drink
         animal.state = "drinking";
         const consumed = config.waterConsumptionRate;
         AnimalNeeds.hydrate(animal, consumed * 20);
@@ -300,7 +286,6 @@ export class AnimalBehavior {
         animal.targetPosition = null;
         animal.stateEndTime = Date.now() + 3000;
       } else {
-        // Move toward water
         this.moveToward(
           animal,
           animal.targetPosition,
@@ -336,7 +321,6 @@ export class AnimalBehavior {
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < 30) {
-        // Close enough to mate
         if (Math.random() < 0.2) {
           const offspringPosition = {
             x:
@@ -400,7 +384,6 @@ export class AnimalBehavior {
           animal.state = "idle";
         }
       } else {
-        // Move toward mate
         this.moveToward(
           animal,
           nearbyMate.position,
@@ -409,7 +392,6 @@ export class AnimalBehavior {
         );
       }
     } else {
-      // Wander looking for mate
       this.wander(animal, 0.4, deltaSeconds);
     }
   }

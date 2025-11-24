@@ -1,0 +1,585 @@
+import { EventEmitter } from "events";
+import * as EasyStar from "easystarjs";
+import { GameState, Zone } from "../../types/game-types";
+import { logger } from "../../../infrastructure/utils/logger";
+import { GameEventNames, simulationEvents } from "../core/events";
+import {
+  estimateTravelTime,
+  assessRouteDifficultyByDistance,
+  findAccessibleDestination,
+  calculateZoneDistance,
+  worldToGrid,
+  Difficulty,
+} from "./movement/helpers";
+
+const MOVEMENT_CONSTANTS = {
+  BASE_MOVEMENT_SPEED: 60,
+  FATIGUE_PENALTY_MULTIPLIER: 0.5,
+  PATHFINDING: {
+    TIMEOUT_MS: 50,
+    GRID_SIZE: 32,
+    MAX_ITERATIONS: 500,
+  },
+  IDLE_WANDER: {
+    COOLDOWN_MS: 800,
+    PROBABILITY: 0.85,
+    RADIUS_MIN: 80,
+    RADIUS_MAX: 280,
+    EXPLORATION_PROBABILITY: 0.35,
+    EXPLORATION_RADIUS_MIN: 400,
+    EXPLORATION_RADIUS_MAX: 900,
+  },
+  WORLD: {
+    WIDTH: 3200,
+    HEIGHT: 3200,
+  },
+};
+
+export interface EntityMovementState {
+  entityId: string;
+  currentPosition: { x: number; y: number };
+  startPosition?: { x: number; y: number };
+  targetPosition?: { x: number; y: number };
+  targetZone?: string;
+  isMoving: boolean;
+  movementStartTime?: number;
+  estimatedArrivalTime?: number;
+  currentPath: Array<{ x: number; y: number }>;
+  currentActivity:
+    | "idle"
+    | "moving"
+    | "eating"
+    | "drinking"
+    | "cleaning"
+    | "playing"
+    | "meditating"
+    | "working"
+    | "resting"
+    | "socializing"
+    | "inspecting"
+    | "fleeing"
+    | "attacking";
+  activityStartTime?: number;
+  activityDuration?: number;
+  fatigue: number;
+  lastIdleWander?: number;
+  isPathfinding?: boolean;
+}
+
+export interface PathfindingResult {
+  success: boolean;
+  path: Array<{ x: number; y: number }>;
+  estimatedTime: number;
+  distance: number;
+}
+
+export interface ZoneDistance {
+  fromZone: string;
+  toZone: string;
+  distance: number;
+  travelTime: number;
+  difficulty: Difficulty;
+}
+
+export class MovementSystem extends EventEmitter {
+  private gameState: GameState;
+  private movementStates = new Map<string, EntityMovementState>();
+  private pathfinder: EasyStar.js;
+
+  private zoneDistanceCache = new Map<string, ZoneDistance>();
+  private readonly gridSize = MOVEMENT_CONSTANTS.PATHFINDING.GRID_SIZE;
+  private gridWidth: number;
+  private gridHeight: number;
+  private gridInitialized = false;
+  private occupiedTiles = new Set<string>();
+  private cachedGrid: number[][] | null = null;
+  private gridCacheTime: number = 0;
+  private gridDirty = true;
+
+  private pathCache = new Map<
+    string,
+    { result: PathfindingResult; timestamp: number }
+  >();
+  private readonly GRID_CACHE_DURATION = 30000;
+  private readonly PATH_CACHE_DURATION = 10000;
+  private lastCacheCleanup: number = 0;
+
+  constructor(gameState: GameState) {
+    super();
+    this.gameState = gameState;
+
+    this.pathfinder = new EasyStar.js();
+    this.pathfinder.setAcceptableTiles([0]);
+    this.pathfinder.enableDiagonals();
+    this.pathfinder.setIterationsPerCalculation(
+      MOVEMENT_CONSTANTS.PATHFINDING.MAX_ITERATIONS,
+    );
+
+    const worldWidthPx =
+      this.gameState.worldSize?.width ?? MOVEMENT_CONSTANTS.WORLD.WIDTH;
+    const worldHeightPx =
+      this.gameState.worldSize?.height ?? MOVEMENT_CONSTANTS.WORLD.HEIGHT;
+    this.gridWidth = Math.max(1, Math.ceil(worldWidthPx / this.gridSize));
+    this.gridHeight = Math.max(1, Math.ceil(worldHeightPx / this.gridSize));
+
+    this.precomputeZoneDistances();
+    this.initializeObstacles();
+
+    logger.info("🚶 MovementSystem initialized", {
+      gridSize: `${this.gridWidth}x${this.gridHeight}`,
+      zones: this.gameState.zones.length,
+    });
+  }
+
+  public update(deltaMs: number): void {
+    const now = Date.now();
+
+    this.movementStates.forEach((state) => {
+      this.updateEntityMovement(state, now, deltaMs);
+      this.updateEntityActivity(state, now);
+      this.updateEntityFatigue(state);
+      this.maybeStartIdleWander(state, now);
+    });
+
+    if (now - this.lastCacheCleanup > 30000) {
+      this.cleanupOldCache(now);
+      this.lastCacheCleanup = now;
+    }
+
+    this.pathfinder.calculate();
+  }
+
+  private updateEntityMovement(
+    state: EntityMovementState,
+    now: number,
+    deltaMs: number,
+  ): void {
+    if (!state.isMoving || !state.targetPosition) return;
+
+    const dx = state.targetPosition.x - state.currentPosition.x;
+    const dy = state.targetPosition.y - state.currentPosition.y;
+    const distanceRemaining = Math.hypot(dx, dy);
+
+    if (distanceRemaining < 2) {
+      this.completeMovement(state);
+      return;
+    }
+
+    const lifeStage = "adult"; // TODO: Get from agent profile
+    const ageSpeedMultiplier = 1.0; // Simplified for now
+    const fatigueMultiplier =
+      1 /
+      (1 +
+        (state.fatigue / 100) * MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER);
+
+    const effectiveSpeed =
+      MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED *
+      ageSpeedMultiplier *
+      fatigueMultiplier;
+
+    const moveDistance = (effectiveSpeed * deltaMs) / 1000;
+
+    if (moveDistance >= distanceRemaining) {
+      state.currentPosition.x = state.targetPosition.x;
+      state.currentPosition.y = state.targetPosition.y;
+    } else {
+      const ratio = moveDistance / distanceRemaining;
+      state.currentPosition.x += dx * ratio;
+      state.currentPosition.y += dy * ratio;
+    }
+
+    const agent = this.gameState.agents.find((a) => a.id === state.entityId);
+    if (agent) {
+      agent.position = { ...state.currentPosition };
+    }
+  }
+
+  private updateEntityActivity(state: EntityMovementState, now: number): void {
+    if (state.currentActivity === "moving" || state.currentActivity === "idle")
+      return;
+
+    if (state.activityStartTime && state.activityDuration) {
+      const elapsed = now - state.activityStartTime;
+      if (elapsed >= state.activityDuration) {
+        this.completeActivity(state);
+      }
+    }
+  }
+
+  private updateEntityFatigue(state: EntityMovementState): void {
+    if (state.isMoving) {
+      state.fatigue = Math.min(100, state.fatigue + 0.1);
+    } else if (state.currentActivity === "resting") {
+      state.fatigue = Math.max(0, state.fatigue - 0.5);
+    } else {
+      state.fatigue = Math.max(0, state.fatigue - 0.1);
+    }
+  }
+
+  private completeMovement(state: EntityMovementState): void {
+    state.isMoving = false;
+    state.currentActivity = "idle";
+
+    if (state.targetPosition) {
+      state.currentPosition = { ...state.targetPosition };
+
+      const agent = this.gameState.agents.find((a) => a.id === state.entityId);
+      if (agent) {
+        agent.position = { ...state.currentPosition };
+      }
+    }
+
+    const arrivedZone = state.targetZone;
+    state.targetZone = undefined;
+    state.targetPosition = undefined;
+    state.currentPath = [];
+
+    if (arrivedZone) {
+      simulationEvents.emit(GameEventNames.MOVEMENT_ARRIVED_AT_ZONE, {
+        entityId: state.entityId,
+        zoneId: arrivedZone,
+      });
+    }
+  }
+
+  private completeActivity(state: EntityMovementState): void {
+    const previousActivity = state.currentActivity;
+    state.currentActivity = "idle";
+    state.activityStartTime = undefined;
+    state.activityDuration = undefined;
+
+    simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_COMPLETED, {
+      entityId: state.entityId,
+      activity: previousActivity,
+      position: state.currentPosition,
+    });
+  }
+
+  public initializeEntityMovement(
+    entityId: string,
+    initialPosition: { x: number; y: number },
+  ): void {
+    if (!isFinite(initialPosition.x) || !isFinite(initialPosition.y)) {
+      initialPosition = { x: 100, y: 100 };
+    }
+
+    const movementState: EntityMovementState = {
+      entityId,
+      currentPosition: { ...initialPosition },
+      isMoving: false,
+      currentPath: [],
+      currentActivity: "idle",
+      fatigue: 0,
+      lastIdleWander: 0,
+    };
+
+    this.movementStates.set(entityId, movementState);
+
+    const agent = this.gameState.agents.find((a) => a.id === entityId);
+    if (agent) {
+      agent.position = { ...initialPosition };
+    }
+  }
+
+  public moveToZone(entityId: string, targetZoneId: string): boolean {
+    const state = this.movementStates.get(entityId);
+    const targetZone = this.gameState.zones.find((z) => z.id === targetZoneId);
+
+    if (!state || !targetZone) return false;
+    if (state.isPathfinding) return false;
+
+    state.isPathfinding = true;
+
+    const targetX = targetZone.bounds.x + targetZone.bounds.width / 2;
+    const targetY = targetZone.bounds.y + targetZone.bounds.height / 2;
+
+    this.calculatePath(state.currentPosition, { x: targetX, y: targetY })
+      .then((pathResult) => {
+        state.isPathfinding = false;
+        if (!pathResult.success) return;
+
+        const now = Date.now();
+        const travelTime = estimateTravelTime(
+          pathResult.distance,
+          state.fatigue,
+          MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
+          MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+        );
+
+        state.isMoving = true;
+        state.targetZone = targetZoneId;
+        state.startPosition = { ...state.currentPosition };
+        state.targetPosition = pathResult.path[pathResult.path.length - 1];
+        state.currentPath = pathResult.path;
+        state.movementStartTime = now;
+        state.estimatedArrivalTime = now + travelTime;
+        state.currentActivity = "moving";
+      })
+      .catch((err) => {
+        state.isPathfinding = false;
+        logger.error(`Pathfinding error for ${entityId}`, err);
+      });
+
+    return true;
+  }
+
+  public moveToPoint(entityId: string, x: number, y: number): boolean {
+    const state = this.movementStates.get(entityId);
+    if (!state) return false;
+
+    const tx = Math.max(0, Math.min(x, this.gridWidth * this.gridSize - 1));
+    const ty = Math.max(0, Math.min(y, this.gridHeight * this.gridSize - 1));
+
+    const distance = Math.hypot(
+      tx - state.currentPosition.x,
+      ty - state.currentPosition.y,
+    );
+
+    const travelTime = estimateTravelTime(
+      distance,
+      state.fatigue,
+      MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
+      MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+    );
+
+    const now = Date.now();
+
+    state.isMoving = true;
+    state.targetZone = undefined;
+    state.startPosition = { ...state.currentPosition };
+    state.targetPosition = { x: tx, y: ty };
+    state.currentPath = [{ ...state.currentPosition }, { x: tx, y: ty }];
+    state.movementStartTime = now;
+    state.estimatedArrivalTime = now + travelTime;
+    state.currentActivity = "moving";
+
+    return true;
+  }
+
+  private async calculatePath(
+    from: { x: number; y: number },
+    to: { x: number; y: number },
+  ): Promise<PathfindingResult> {
+    const startGrid = worldToGrid(from.x, from.y, this.gridSize);
+    const endGrid = worldToGrid(to.x, to.y, this.gridSize);
+
+    startGrid.x = Math.max(0, Math.min(startGrid.x, this.gridWidth - 1));
+    startGrid.y = Math.max(0, Math.min(startGrid.y, this.gridHeight - 1));
+    endGrid.x = Math.max(0, Math.min(endGrid.x, this.gridWidth - 1));
+    endGrid.y = Math.max(0, Math.min(endGrid.y, this.gridHeight - 1));
+
+    const pathKey = `${startGrid.x},${startGrid.y}->${endGrid.x},${endGrid.y}`;
+    const now = Date.now();
+    const cached = this.pathCache.get(pathKey);
+
+    if (cached && now - cached.timestamp < this.PATH_CACHE_DURATION) {
+      return cached.result;
+    }
+
+    return new Promise((resolve) => {
+      const grid = this.getOptimizedGrid();
+      this.pathfinder.setGrid(grid);
+
+      this.pathfinder.findPath(
+        startGrid.x,
+        startGrid.y,
+        endGrid.x,
+        endGrid.y,
+        (path) => {
+          if (path) {
+            const worldPath = path.map((p) => ({
+              x: p.x * this.gridSize + this.gridSize / 2,
+              y: p.y * this.gridSize + this.gridSize / 2,
+            }));
+
+            let distance = 0;
+            for (let i = 0; i < worldPath.length - 1; i++) {
+              distance += Math.hypot(
+                worldPath[i + 1].x - worldPath[i].x,
+                worldPath[i + 1].y - worldPath[i].y,
+              );
+            }
+
+            const result: PathfindingResult = {
+              success: true,
+              path: worldPath,
+              estimatedTime: estimateTravelTime(
+                distance,
+                0,
+                MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
+                MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+              ),
+              distance,
+            };
+
+            this.pathCache.set(pathKey, { result, timestamp: now });
+            resolve(result);
+          } else {
+            // Fallback: direct line
+            const distance = Math.hypot(to.x - from.x, to.y - from.y);
+            resolve({
+              success: true, // Fallback is always "success" but might clip
+              path: [from, to],
+              estimatedTime: estimateTravelTime(
+                distance,
+                0,
+                MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
+                MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+              ),
+              distance,
+            });
+          }
+        },
+      );
+    });
+  }
+
+  private getOptimizedGrid(): number[][] {
+    const now = Date.now();
+
+    if (
+      this.cachedGrid &&
+      !this.gridDirty &&
+      now - this.gridCacheTime < this.GRID_CACHE_DURATION
+    ) {
+      return this.cachedGrid;
+    }
+
+    if (!this.cachedGrid) {
+      this.cachedGrid = Array(this.gridHeight)
+        .fill(null)
+        .map(() => Array(this.gridWidth).fill(0));
+    } else if (this.gridDirty) {
+      for (let y = 0; y < this.gridHeight; y++) {
+        this.cachedGrid[y].fill(0);
+      }
+    }
+
+    this.occupiedTiles.forEach((key) => {
+      const [x, y] = key.split(",").map(Number);
+      if (
+        x >= 0 &&
+        x < this.gridWidth &&
+        y >= 0 &&
+        y < this.gridHeight &&
+        this.cachedGrid
+      ) {
+        this.cachedGrid[y][x] = 1;
+      }
+    });
+
+    this.gridCacheTime = now;
+    this.gridDirty = false;
+
+    return this.cachedGrid;
+  }
+
+  private initializeObstacles(): void {
+    this.occupiedTiles.clear();
+
+    if (this.gameState.mapElements) {
+      this.gameState.mapElements.forEach((element) => {
+        if (this.isObstacle(element)) {
+          const gridPos = worldToGrid(
+            element.position.x,
+            element.position.y,
+            this.gridSize,
+          );
+          const width = element.width || this.gridSize;
+          const height = element.height || this.gridSize;
+          const tilesWide = Math.ceil(width / this.gridSize);
+          const tilesHigh = Math.ceil(height / this.gridSize);
+
+          for (let dx = 0; dx < tilesWide; dx++) {
+            for (let dy = 0; dy < tilesHigh; dy++) {
+              this.occupiedTiles.add(`${gridPos.x + dx},${gridPos.y + dy}`);
+            }
+          }
+        }
+      });
+    }
+
+    this.gridDirty = true;
+  }
+
+  private isObstacle(element: any): boolean {
+    const type = element.type || "";
+    return (
+      type === "obstacle" ||
+      type === "building" ||
+      type === "rock" ||
+      type === "tree"
+    );
+  }
+
+  private precomputeZoneDistances(): void {
+    const zones = this.gameState.zones;
+    for (let i = 0; i < zones.length; i++) {
+      for (let j = i + 1; j < zones.length; j++) {
+        const zoneA = zones[i];
+        const zoneB = zones[j];
+        const distance = calculateZoneDistance(zoneA, zoneB);
+        const travelTime = estimateTravelTime(
+          distance,
+          0,
+          MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
+          MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+        );
+        const difficulty = assessRouteDifficultyByDistance(distance);
+
+        const zoneDistance: ZoneDistance = {
+          fromZone: zoneA.id,
+          toZone: zoneB.id,
+          distance,
+          travelTime,
+          difficulty,
+        };
+        this.zoneDistanceCache.set(`${zoneA.id}->${zoneB.id}`, zoneDistance);
+        this.zoneDistanceCache.set(`${zoneB.id}->${zoneA.id}`, {
+          ...zoneDistance,
+          fromZone: zoneB.id,
+          toZone: zoneA.id,
+        });
+      }
+    }
+  }
+
+  private maybeStartIdleWander(state: EntityMovementState, now: number): void {
+    if (state.isMoving || state.currentActivity !== "idle") return;
+
+    if (
+      (state.lastIdleWander || 0) + MOVEMENT_CONSTANTS.IDLE_WANDER.COOLDOWN_MS >
+      now
+    )
+      return;
+
+    if (Math.random() > MOVEMENT_CONSTANTS.IDLE_WANDER.PROBABILITY) return;
+
+    const radius =
+      MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MIN +
+      Math.random() *
+        (MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MAX -
+          MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MIN);
+
+    const angle = Math.random() * Math.PI * 2;
+    const targetX = state.currentPosition.x + Math.cos(angle) * radius;
+    const targetY = state.currentPosition.y + Math.sin(angle) * radius;
+
+    this.moveToPoint(state.entityId, targetX, targetY);
+    state.lastIdleWander = now;
+  }
+
+  private cleanupOldCache(now: number): void {
+    for (const [key, cached] of this.pathCache.entries()) {
+      if (now - cached.timestamp > this.PATH_CACHE_DURATION) {
+        this.pathCache.delete(key);
+      }
+    }
+  }
+
+  public getEntityMovementState(
+    entityId: string,
+  ): EntityMovementState | undefined {
+    return this.movementStates.get(entityId);
+  }
+}
