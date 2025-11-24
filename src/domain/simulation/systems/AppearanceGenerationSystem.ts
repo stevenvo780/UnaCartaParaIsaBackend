@@ -1,18 +1,18 @@
 import { logger } from "@/infrastructure/utils/logger";
-import type { AgentProfile } from "../../shared/types/simulation/agents";
+import type { AgentProfile } from "../../../shared/types/simulation/agents";
 import type {
   AgentAppearance,
   ColorPalette,
   GenerationVisualTheme,
   SocialGroupAppearance,
   VisualStyle,
-} from "../../shared/types/simulation/appearance";
+} from "../../../shared/types/simulation/appearance";
 import {
   GENERATION_STYLES,
   SOCIAL_GROUP_COLORS,
   SOCIAL_GROUP_SYMBOLS,
   SKIN_TONES,
-} from "../../shared/types/simulation/appearance";
+} from "../../../shared/types/simulation/appearance";
 import { GeneticSpriteSystem } from "./GeneticSpriteSystem";
 
 interface AppearanceConfig {

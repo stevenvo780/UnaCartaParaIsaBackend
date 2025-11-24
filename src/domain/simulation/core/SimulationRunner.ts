@@ -46,6 +46,7 @@ import { InteractionGameSystem } from "../systems/InteractionGameSystem";
 import { KnowledgeNetworkSystem } from "../systems/KnowledgeNetworkSystem";
 import { MovementSystem } from "../systems/MovementSystem";
 import { TrailSystem } from "../systems/TrailSystem";
+import type { BuildingLabel } from "../../types/simulation/buildings";
 import { AppearanceGenerationSystem } from "../systems/AppearanceGenerationSystem";
 import type {
   SimulationCommand,
@@ -571,6 +572,12 @@ export class SimulationRunner {
         case "KILL_AGENT":
           this.lifeCycleSystem.removeAgent(command.agentId);
           break;
+        case "AGENT_COMMAND":
+          this.handleAgentCommand(command);
+          break;
+        case "ANIMAL_COMMAND":
+          this.handleAnimalCommand(command);
+          break;
         case "NEEDS_COMMAND":
           this.handleNeedsCommand(command);
           break;
@@ -598,11 +605,71 @@ export class SimulationRunner {
         case "TASK_COMMAND":
           this.handleTaskCommand(command);
           break;
+        case "FORCE_EMERGENCE_EVALUATION":
+          this.emergenceSystem.forcePatternEvaluation();
+          break;
         case "PING":
         default:
           break;
       }
     }
+  }
+
+  private handleAgentCommand(
+    command: Extract<SimulationCommand, { type: "AGENT_COMMAND" }>,
+  ): void {
+    if (!command.agentId) return;
+    if (!this.ensureMovementState(command.agentId)) return;
+
+    const payload = command.payload;
+
+    switch (command.command) {
+      case "MOVE_TO":
+        if (
+          payload &&
+          typeof payload.x === "number" &&
+          typeof payload.y === "number"
+        ) {
+          this.movementSystem.moveToPoint(
+            command.agentId,
+            payload.x,
+            payload.y,
+          );
+          simulationEvents.emit(GameEventNames.AGENT_ACTION_COMMANDED, {
+            agentId: command.agentId,
+            action: "move",
+            payload,
+          });
+        }
+        break;
+      case "STOP_MOVEMENT":
+        this.movementSystem.stopMovement(command.agentId);
+        break;
+      default:
+        break;
+    }
+  }
+
+  private handleAnimalCommand(
+    command: Extract<SimulationCommand, { type: "ANIMAL_COMMAND" }>,
+  ): void {
+    if (command.command !== "SPAWN_ANIMAL") return;
+    const payload = command.payload;
+    if (
+      !payload ||
+      typeof payload.type !== "string" ||
+      !payload.position ||
+      typeof payload.position.x !== "number" ||
+      typeof payload.position.y !== "number"
+    ) {
+      return;
+    }
+
+    this.animalSystem.spawnAnimal(
+      payload.type,
+      payload.position,
+      payload.biome as string | undefined,
+    );
   }
 
   private handleNeedsCommand(
@@ -648,20 +715,35 @@ export class SimulationRunner {
     const payload = command.payload;
     switch (command.command) {
       case "TEACH_RECIPE":
-        if (payload.agentId && payload.recipeId) {
+        if ((payload.agentId || payload.teacherId) && payload.recipeId) {
           this._recipeDiscoverySystem.teachRecipe(
-            payload.agentId as string,
+            (payload.agentId as string) ??
+              (payload.teacherId as string) ??
+              "",
             payload.recipeId as string,
           );
         }
         break;
       case "SHARE_RECIPE":
-        if (payload.teacherId && payload.studentId && payload.recipeId) {
-          this._recipeDiscoverySystem.shareRecipe(
-            payload.teacherId as string,
-            payload.studentId as string,
-            payload.recipeId as string,
-          );
+        {
+          const teacherId =
+            (payload.teacherId as string | undefined) ??
+            ((payload as Record<string, unknown>).fromAgentId as
+              | string
+              | undefined);
+          const studentId =
+            (payload.studentId as string | undefined) ??
+            ((payload as Record<string, unknown>).toAgentId as
+              | string
+              | undefined);
+
+          if (teacherId && studentId && payload.recipeId) {
+            this._recipeDiscoverySystem.shareRecipe(
+              teacherId,
+              studentId,
+              payload.recipeId as string,
+            );
+          }
         }
         break;
     }
@@ -758,11 +840,17 @@ export class SimulationRunner {
         }
         break;
       case "RECIPE_DISCOVERED":
-        if (payload.lineageId && payload.recipeId && payload.discoveredBy) {
+        if (payload.recipeId) {
+          const lineageId = this.resolveLineageId(
+            payload.lineageId as string | undefined,
+          );
+          const discoveredBy =
+            (payload.discoveredBy as string | undefined) || "unknown";
+
           this._researchSystem.onRecipeDiscovered(
-            payload.lineageId as string,
+            lineageId,
             payload.recipeId as string,
-            payload.discoveredBy as string,
+            discoveredBy,
           );
         }
         break;
@@ -827,6 +915,21 @@ export class SimulationRunner {
         if (payload.zoneId) {
           this.buildingMaintenanceSystem.cancelUpgrade(
             payload.zoneId as string,
+          );
+        }
+        break;
+      case "ENQUEUE_CONSTRUCTION":
+        if (payload.buildingType) {
+          this.buildingSystem.enqueueConstruction(
+            payload.buildingType as BuildingLabel,
+          );
+        }
+        break;
+      case "CONSTRUCT_BUILDING":
+        if (payload.buildingType) {
+          this.buildingSystem.constructBuilding(
+            payload.buildingType as BuildingLabel,
+            payload.position as { x: number; y: number } | undefined,
           );
         }
         break;
@@ -931,5 +1034,36 @@ export class SimulationRunner {
         this.state.resources.energy + regenRate * 0.1,
       );
     }
+  }
+
+  private ensureMovementState(agentId: string): boolean {
+    if (this.movementSystem.hasMovementState(agentId)) {
+      return true;
+    }
+
+    const agent = this.state.agents.find((a) => a.id === agentId);
+    if (!agent || !agent.position) {
+      return false;
+    }
+
+    this.movementSystem.initializeEntityMovement(agentId, agent.position);
+    return true;
+  }
+
+  private resolveLineageId(requested?: string): string {
+    if (requested) {
+      return requested;
+    }
+
+    const existing =
+      this.state.research?.lineages && this.state.research.lineages.length > 0
+        ? this.state.research.lineages[0].lineageId
+        : undefined;
+
+    const lineageId = existing ?? "lineage_default";
+    if (!existing) {
+      this._researchSystem.initializeLineage(lineageId);
+    }
+    return lineageId;
   }
 }
