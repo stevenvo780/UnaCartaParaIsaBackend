@@ -246,7 +246,6 @@ export class HouseholdSystem {
     const household = this.households.get(householdId);
     if (!household) return 0;
 
-    // Check membership
     if (!household.members.some((m) => m.agentId === agentId)) {
       return 0;
     }

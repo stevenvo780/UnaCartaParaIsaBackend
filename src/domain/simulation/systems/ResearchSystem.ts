@@ -6,7 +6,6 @@ import {
   TechTreeState,
 } from "../../types/simulation/research";
 
-// Simplified catalog - in production would be loaded from data files
 const RESEARCH_CATEGORIES: ResearchCategory[] = [
   {
     id: "basic_survival",

@@ -79,7 +79,6 @@ export class ItemGenerationSystem {
       }
     }
 
-    // Generate quantity
     const quantity =
       rule.minQuantity +
       Math.floor(Math.random() * (rule.maxQuantity - rule.minQuantity + 1));
@@ -93,13 +92,11 @@ export class ItemGenerationSystem {
       generatedAt: Date.now(),
     };
 
-    // Store item
     if (!this.zoneItems.has(zone.id)) {
       this.zoneItems.set(zone.id, new Map());
     }
     this.zoneItems.get(zone.id)!.set(rule.itemId, item);
 
-    // Emit event
     simulationEvents.emit(GameEventNames.ITEM_GENERATED, {
       itemId: item.id,
       type: item.itemId,

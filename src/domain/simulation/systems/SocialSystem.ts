@@ -107,7 +107,6 @@ export class SocialSystem {
    * Register a friendly interaction between two agents (used when agents help each other)
    */
   public registerFriendlyInteraction(aId: string, bId: string): void {
-    // Friendly interactions boost affinity
     this.addEdge(aId, bId, 0.15);
   }
 

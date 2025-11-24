@@ -147,12 +147,9 @@ export class MarketSystem {
   }
 
   private autoTradeAmongAgents(): void {
-    // Simplified auto-trade logic: agents with excess resources can sell to those in need
     const entities = this.state.entities || [];
     if (entities.length < 2) return;
 
-    // Simple implementation: find agents with excess and those in need
-    // This is a basic version - can be enhanced with more sophisticated matching
     for (let i = 0; i < entities.length; i++) {
       const seller = entities[i];
       if (!seller || !seller.id) continue;
@@ -160,7 +157,6 @@ export class MarketSystem {
       const sellerInv = this.inventorySystem.getAgentInventory(seller.id);
       if (!sellerInv) continue;
 
-      // Check if seller has excess of any resource
       for (const resource of [
         "wood",
         "stone",

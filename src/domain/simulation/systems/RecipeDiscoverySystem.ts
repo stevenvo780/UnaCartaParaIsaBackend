@@ -5,7 +5,6 @@ import {
   RecipeDiscoveryEvent,
 } from "../../types/simulation/recipes";
 
-// Simplified catalog - in production would be loaded from data files
 const RECIPES_CATALOG: CraftingRecipe[] = [
   {
     id: "wood_to_plank",

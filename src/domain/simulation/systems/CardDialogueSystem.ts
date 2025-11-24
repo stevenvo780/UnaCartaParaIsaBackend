@@ -267,7 +267,6 @@ export class CardDialogueSystem {
   }
 
   private calculateDuration(priority: DialoguePriority): number {
-    // Migrated from Frontend helpers
     const durations = {
       urgent: 30000,
       high: 45000,
@@ -281,7 +280,6 @@ export class CardDialogueSystem {
     template: CardTemplate,
     needs: EntityNeedsData,
   ): DialoguePriority {
-    // Priority based on needs severity (migrated from Frontend helpers)
     if (needs.hunger < 15 || needs.thirst < 15) return "urgent";
     if (needs.hunger < 30 || needs.thirst < 25 || needs.energy < 20)
       return "high";
