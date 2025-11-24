@@ -128,7 +128,6 @@ export class ItemGenerationSystem {
 
     zoneItemMap.forEach((item, _key) => {
       if (!item.collectedBy) {
-        // Mark as collected
         item.collectedBy = agentId;
         item.collectedAt = now;
 

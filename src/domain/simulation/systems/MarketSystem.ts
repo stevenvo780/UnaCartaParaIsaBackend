@@ -168,9 +168,8 @@ export class MarketSystem {
         "water",
       ] as ResourceType[]) {
         const sellerStock = sellerInv[resource] || 0;
-        if (sellerStock < 10) continue; // Not enough to trade
+        if (sellerStock < 10) continue;
 
-        // Find a buyer who needs this resource
         for (let j = 0; j < entities.length; j++) {
           if (i === j) continue;
           const buyer = entities[j];

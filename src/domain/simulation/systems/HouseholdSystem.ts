@@ -119,14 +119,12 @@ export class HouseholdSystem {
     agentId: string,
     role: "head" | "spouse" | "child" | "other" = "other",
   ): string | null {
-    // Check if already assigned
     for (const hh of Array.from(this.households.values())) {
       if (hh.members.some((m) => m.agentId === agentId)) {
         return hh.zoneId;
       }
     }
 
-    // Find free house
     const free = this.findFreeHouse();
     if (!free) {
       simulationEvents.emit(GameEventNames.HOUSEHOLD_NO_FREE_HOUSES, {
@@ -135,7 +133,6 @@ export class HouseholdSystem {
       return null;
     }
 
-    // Assign agent
     free.members.push({
       agentId,
       role,

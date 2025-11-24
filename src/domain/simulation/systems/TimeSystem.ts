@@ -227,7 +227,6 @@ export class TimeSystem extends EventEmitter {
       this.currentWeather.type,
     );
 
-    // Update game state
     if (this.gameState.weather) {
       this.gameState.weather.current = this.currentWeather.type;
       this.gameState.weather.temperature = this.currentTime.temperature;

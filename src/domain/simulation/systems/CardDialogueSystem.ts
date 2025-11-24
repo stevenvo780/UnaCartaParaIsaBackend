@@ -414,7 +414,6 @@ export class CardDialogueSystem {
       if (choice.effects?.unlocksMission && this.questSystem) {
         const questId = choice.effects.unlocksMission;
         if (typeof questId === "string") {
-          // Check if quest already exists
           const existingQuest = this.questSystem.getQuest(questId);
           if (!existingQuest) {
             // Make quest available if it doesn't exist

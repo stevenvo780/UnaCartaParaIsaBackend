@@ -426,17 +426,14 @@ export class QuestSystem {
       return false;
     }
 
-    // Find quest in catalog
     const questTemplate = QUEST_CATALOG.find((q) => q.id === questId);
     if (!questTemplate) {
       return false;
     }
 
-    // Create a copy of the quest
     const questCopy = JSON.parse(JSON.stringify(questTemplate)) as Quest;
     questCopy.status = "available";
 
-    // Check if requirements are met
     if (this.checkQuestRequirements(questCopy)) {
       this.questProgress.availableQuests.set(questId, questCopy);
       return true;

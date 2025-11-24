@@ -118,7 +118,6 @@ export class LivingLegendsSystem {
       const newTitles: string[] = [];
       let newTier: LegendRecord["legendTier"] = "unknown";
 
-      // Determine tier and titles based on reputation
       if (legend.reputation >= 0.9) {
         newTier = "mythical";
         newTitles.push("Mythical Being");
@@ -139,7 +138,6 @@ export class LivingLegendsSystem {
         newTitles.push("Villain");
       }
 
-      // Update based on deeds
       if (legend.deeds.length >= 10) {
         newTitles.push("Accomplished");
       }
@@ -151,7 +149,6 @@ export class LivingLegendsSystem {
       legend.currentTitle = newTitles[0] || "";
       legend.legendTier = newTier;
 
-      // Update aura based on tier
       if (newTier === "mythical" || newTier === "legendary") {
         legend.auraColor = 0xffdd00;
         legend.auraIntensity = 0.8;

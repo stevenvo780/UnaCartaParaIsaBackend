@@ -409,7 +409,6 @@ export class ReputationSystem {
     this.trust.delete(agentId);
     this.reputationHistory.delete(agentId);
 
-    // Remove trust edges pointing to this agent
     this.trust.forEach((targetMap) => {
       targetMap.delete(agentId);
     });

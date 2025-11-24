@@ -92,7 +92,6 @@ export class NormsSystem {
       this.guardDispatches.shift();
     }
 
-    // Mark last violation as having guard dispatched
     const lastViolation = this.violations[this.violations.length - 1];
     if (lastViolation && lastViolation.zoneId === zoneId) {
       lastViolation.guardDispatched = true;
