@@ -33,7 +33,13 @@ export function selectBestZone(
     id: string;
     attractiveness?: number;
     bounds: { x: number; y: number; width: number; height: number };
-    metadata?: Record<string, unknown>;
+    metadata?: {
+      priority?: number;
+      agentId?: string;
+      zoneId?: string;
+      resourceType?: string;
+      [key: string]: string | number | undefined;
+    };
   }>;
 
   if (validZones.length === 0) return null;

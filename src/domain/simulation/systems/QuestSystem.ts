@@ -436,12 +436,26 @@ export class QuestSystem {
 
     return false;
   }
+}
+
+export interface QuestEventData {
+  cardId?: string;
+  dialogueId?: string;
+  itemId?: string;
+  itemType?: string;
+  resourceType?: string;
+  structureType?: string;
+  amount?: number;
+  locationId?: string;
+  zoneId?: string;
+  [key: string]: string | number | undefined;
+}
 
   public handleEvent(eventData: {
     type: string;
     entityId: string;
     timestamp: number;
-    data: Record<string, unknown>;
+    data: QuestEventData;
   }): void {
     switch (eventData.type) {
       case "dialogue_completed":
