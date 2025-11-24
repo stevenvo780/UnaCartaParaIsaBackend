@@ -164,6 +164,7 @@ export interface GameState {
   togetherTime: number;
   cycles: number;
   weather: WeatherState;
+  timeOfDay?: string;
   worldResources?: Record<string, WorldResourceInstance>;
   socialGraph?: SocialGraphState;
   market?: MarketState;

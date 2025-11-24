@@ -38,6 +38,8 @@ import { ResourceAttractionSystem } from "./systems/ResourceAttractionSystem.js"
 import { CrisisPredictorSystem } from "./systems/CrisisPredictorSystem.js";
 import { AmbientAwarenessSystem } from "./systems/AmbientAwarenessSystem.js";
 import { CardDialogueSystem } from "./systems/CardDialogueSystem.js";
+import { EmergenceSystem } from "./systems/EmergenceSystem.js";
+import { TimeSystem } from "./systems/TimeSystem.js";
 import type {
   SimulationCommand,
   SimulationConfig,
@@ -95,6 +97,8 @@ export class SimulationRunner {
   private crisisPredictorSystem: CrisisPredictorSystem;
   private ambientAwarenessSystem: AmbientAwarenessSystem;
   private cardDialogueSystem: CardDialogueSystem;
+  private emergenceSystem: EmergenceSystem;
+  private timeSystem: TimeSystem;
 
   constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
     this.state = initialState ?? createInitialGameState();
@@ -195,6 +199,17 @@ export class SimulationRunner {
       this.state,
       this.needsSystem,
     );
+    this.timeSystem = new TimeSystem(this.state);
+    this.emergenceSystem = new EmergenceSystem(
+      this.state,
+      undefined,
+      {
+        needsSystem: this.needsSystem,
+        socialSystem: this.socialSystem,
+        lifeCycleSystem: this.lifeCycleSystem,
+        economySystem: this.economySystem,
+      }
+    );
   }
 
   public initializeWorldResources(worldConfig: { width: number; height: number; tileSize: number; biomeMap: string[][] }): void {
@@ -283,6 +298,8 @@ export class SimulationRunner {
     this.crisisPredictorSystem.update(scaledDelta);
     this.ambientAwarenessSystem.update(scaledDelta);
     this.cardDialogueSystem.update(scaledDelta);
+    this.timeSystem.update(scaledDelta);
+    this.emergenceSystem.update(scaledDelta);
     // NormsSystem is event-driven, no tick needed
     // Genealogy usually updates on events, but if it has a tick:
     // this.genealogySystem.update(scaledDelta);
