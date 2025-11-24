@@ -241,8 +241,23 @@ describe("EconomySystem", () => {
       
       economySystem.setDependencies({ roleSystem });
       
-      // Asignar rol de logger
-      roleSystem.assignRole("agent-1", "logger");
+      // Crear agente en gameState.agents para que RoleSystem pueda asignarle rol
+      if (!gameState.agents) gameState.agents = [];
+      gameState.agents.push({
+        id: "agent-1",
+        name: "Agent 1",
+        ageYears: 20,
+        lifeStage: "adult",
+        sex: "male",
+        birthTimestamp: Date.now(),
+        immortal: false,
+        traits: { diligence: 0.6, cooperation: 0.5 },
+        socialStatus: "commoner",
+        generation: 0,
+      });
+      
+      // Asignar rol de logger usando reassignRole
+      roleSystem.reassignRole("agent-1", "logger");
       
       inventorySystem.initializeAgentInventory("agent-1");
       const entity = gameState.entities.find(e => e.id === "agent-1");

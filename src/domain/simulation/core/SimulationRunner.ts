@@ -243,13 +243,8 @@ export class SimulationRunner {
 
     this.lifeCycleSystem.setDependencies({
       needsSystem: this.needsSystem,
-      aiSystem: this.aiSystem,
       inventorySystem: this.inventorySystem,
-      socialSystem: this.socialSystem,
-      marriageSystem: this.marriageSystem,
-      genealogySystem: this._genealogySystem,
       householdSystem: this.householdSystem,
-      divineFavorSystem: this.divineFavorSystem,
       movementSystem: this.movementSystem,
     });
 
@@ -269,8 +264,6 @@ export class SimulationRunner {
       craftingSystem: this.enhancedCraftingSystem,
       movementSystem: this.movementSystem,
       householdSystem: this.householdSystem,
-      taskSystem: this.taskSystem,
-      combatSystem: this.combatSystem,
       animalSystem: this.animalSystem,
     });
 

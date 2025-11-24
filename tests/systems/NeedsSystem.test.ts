@@ -346,5 +346,243 @@ describe("NeedsSystem", () => {
       expect(result).toBe(false);
     });
   });
+
+  describe("Beneficios de zona adicionales", () => {
+    it("debe aplicar beneficios de zona de kitchen", () => {
+      if (!gameState.agents) gameState.agents = [];
+      gameState.agents.push({
+        id: "entity-29",
+        name: "Entity 29",
+        ageYears: 20,
+        lifeStage: "adult",
+        sex: "male",
+        birthTimestamp: Date.now(),
+        immortal: false,
+        traits: {},
+        socialStatus: "commoner",
+        generation: 0,
+        position: { x: 100, y: 100 },
+      });
+      
+      gameState.zones.push({
+        id: "kitchen-zone",
+        type: "kitchen",
+        bounds: { x: 90, y: 90, width: 30, height: 30 },
+      });
+      
+      needsSystem.initializeEntityNeeds("entity-29");
+      needsSystem.modifyNeed("entity-29", "hunger", -50);
+      const initialHunger = needsSystem.getEntityNeeds("entity-29")?.hunger || 0;
+      
+      needsSystem.update(2000);
+      
+      const updatedHunger = needsSystem.getEntityNeeds("entity-29")?.hunger || 0;
+      expect(updatedHunger).toBeGreaterThan(initialHunger);
+    });
+
+    it("debe aplicar beneficios de zona de well", () => {
+      if (!gameState.agents) gameState.agents = [];
+      gameState.agents.push({
+        id: "entity-30",
+        name: "Entity 30",
+        ageYears: 20,
+        lifeStage: "adult",
+        sex: "male",
+        birthTimestamp: Date.now(),
+        immortal: false,
+        traits: {},
+        socialStatus: "commoner",
+        generation: 0,
+        position: { x: 200, y: 200 },
+      });
+      
+      gameState.zones.push({
+        id: "well-zone",
+        type: "well",
+        bounds: { x: 190, y: 190, width: 30, height: 30 },
+      });
+      
+      needsSystem.initializeEntityNeeds("entity-30");
+      needsSystem.modifyNeed("entity-30", "thirst", -50);
+      const initialThirst = needsSystem.getEntityNeeds("entity-30")?.thirst || 0;
+      
+      needsSystem.update(2000);
+      
+      const updatedThirst = needsSystem.getEntityNeeds("entity-30")?.thirst || 0;
+      expect(updatedThirst).toBeGreaterThan(initialThirst);
+    });
+
+    it("debe aplicar beneficios de zona de bed", () => {
+      if (!gameState.agents) gameState.agents = [];
+      gameState.agents.push({
+        id: "entity-31",
+        name: "Entity 31",
+        ageYears: 20,
+        lifeStage: "adult",
+        sex: "male",
+        birthTimestamp: Date.now(),
+        immortal: false,
+        traits: {},
+        socialStatus: "commoner",
+        generation: 0,
+        position: { x: 300, y: 300 },
+      });
+      
+      gameState.zones.push({
+        id: "bed-zone",
+        type: "bed",
+        bounds: { x: 290, y: 290, width: 30, height: 30 },
+      });
+      
+      needsSystem.initializeEntityNeeds("entity-31");
+      needsSystem.modifyNeed("entity-31", "energy", -50);
+      const initialEnergy = needsSystem.getEntityNeeds("entity-31")?.energy || 0;
+      
+      needsSystem.update(2000);
+      
+      const updatedEnergy = needsSystem.getEntityNeeds("entity-31")?.energy || 0;
+      expect(updatedEnergy).toBeGreaterThan(initialEnergy);
+    });
+
+    it("debe aplicar beneficios de zona de bath", () => {
+      if (!gameState.agents) gameState.agents = [];
+      gameState.agents.push({
+        id: "entity-32",
+        name: "Entity 32",
+        ageYears: 20,
+        lifeStage: "adult",
+        sex: "male",
+        birthTimestamp: Date.now(),
+        immortal: false,
+        traits: {},
+        socialStatus: "commoner",
+        generation: 0,
+        position: { x: 400, y: 400 },
+      });
+      
+      gameState.zones.push({
+        id: "bath-zone",
+        type: "bath",
+        bounds: { x: 390, y: 390, width: 30, height: 30 },
+      });
+      
+      needsSystem.initializeEntityNeeds("entity-32");
+      needsSystem.modifyNeed("entity-32", "hygiene", -50);
+      const initialHygiene = needsSystem.getEntityNeeds("entity-32")?.hygiene || 0;
+      
+      needsSystem.update(2000);
+      
+      const updatedHygiene = needsSystem.getEntityNeeds("entity-32")?.hygiene || 0;
+      expect(updatedHygiene).toBeGreaterThan(initialHygiene);
+    });
+
+    it("debe aplicar beneficios de zona de entertainment", () => {
+      if (!gameState.agents) gameState.agents = [];
+      gameState.agents.push({
+        id: "entity-33",
+        name: "Entity 33",
+        ageYears: 20,
+        lifeStage: "adult",
+        sex: "male",
+        birthTimestamp: Date.now(),
+        immortal: false,
+        traits: {},
+        socialStatus: "commoner",
+        generation: 0,
+        position: { x: 500, y: 500 },
+      });
+      
+      gameState.zones.push({
+        id: "entertainment-zone",
+        type: "entertainment",
+        bounds: { x: 490, y: 490, width: 30, height: 30 },
+      });
+      
+      needsSystem.initializeEntityNeeds("entity-33");
+      needsSystem.modifyNeed("entity-33", "fun", -50);
+      needsSystem.modifyNeed("entity-33", "mentalHealth", -30);
+      const initialFun = needsSystem.getEntityNeeds("entity-33")?.fun || 0;
+      const initialMentalHealth = needsSystem.getEntityNeeds("entity-33")?.mentalHealth || 0;
+      
+      needsSystem.update(2000);
+      
+      const updatedFun = needsSystem.getEntityNeeds("entity-33")?.fun || 0;
+      const updatedMentalHealth = needsSystem.getEntityNeeds("entity-33")?.mentalHealth || 0;
+      expect(updatedFun).toBeGreaterThan(initialFun);
+      expect(updatedMentalHealth).toBeGreaterThan(initialMentalHealth);
+    });
+
+    it("debe aplicar beneficios de zona de temple", () => {
+      if (!gameState.agents) gameState.agents = [];
+      gameState.agents.push({
+        id: "entity-34",
+        name: "Entity 34",
+        ageYears: 20,
+        lifeStage: "adult",
+        sex: "male",
+        birthTimestamp: Date.now(),
+        immortal: false,
+        traits: {},
+        socialStatus: "commoner",
+        generation: 0,
+        position: { x: 600, y: 600 },
+      });
+      
+      gameState.zones.push({
+        id: "temple-zone",
+        type: "temple",
+        bounds: { x: 590, y: 590, width: 30, height: 30 },
+      });
+      
+      needsSystem.initializeEntityNeeds("entity-34");
+      needsSystem.modifyNeed("entity-34", "mentalHealth", -50);
+      needsSystem.modifyNeed("entity-34", "social", -30);
+      const initialMentalHealth = needsSystem.getEntityNeeds("entity-34")?.mentalHealth || 0;
+      const initialSocial = needsSystem.getEntityNeeds("entity-34")?.social || 0;
+      
+      needsSystem.update(2000);
+      
+      const updatedMentalHealth = needsSystem.getEntityNeeds("entity-34")?.mentalHealth || 0;
+      const updatedSocial = needsSystem.getEntityNeeds("entity-34")?.social || 0;
+      expect(updatedMentalHealth).toBeGreaterThan(initialMentalHealth);
+      expect(updatedSocial).toBeGreaterThan(initialSocial);
+    });
+
+    it("debe aplicar beneficios de zona de festival", () => {
+      if (!gameState.agents) gameState.agents = [];
+      gameState.agents.push({
+        id: "entity-35",
+        name: "Entity 35",
+        ageYears: 20,
+        lifeStage: "adult",
+        sex: "male",
+        birthTimestamp: Date.now(),
+        immortal: false,
+        traits: {},
+        socialStatus: "commoner",
+        generation: 0,
+        position: { x: 700, y: 700 },
+      });
+      
+      gameState.zones.push({
+        id: "festival-zone",
+        type: "festival",
+        bounds: { x: 690, y: 690, width: 30, height: 30 },
+      });
+      
+      needsSystem.initializeEntityNeeds("entity-35");
+      needsSystem.modifyNeed("entity-35", "fun", -50);
+      needsSystem.modifyNeed("entity-35", "mentalHealth", -30);
+      const initialFun = needsSystem.getEntityNeeds("entity-35")?.fun || 0;
+      const initialMentalHealth = needsSystem.getEntityNeeds("entity-35")?.mentalHealth || 0;
+      
+      needsSystem.update(2000);
+      
+      const updatedFun = needsSystem.getEntityNeeds("entity-35")?.fun || 0;
+      const updatedMentalHealth = needsSystem.getEntityNeeds("entity-35")?.mentalHealth || 0;
+      expect(updatedFun).toBeGreaterThan(initialFun);
+      expect(updatedMentalHealth).toBeGreaterThan(initialMentalHealth);
+    });
+  });
 });
 

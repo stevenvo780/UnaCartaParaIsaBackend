@@ -164,7 +164,7 @@ export class EconomySystem {
     let teamBonus = 1.0;
     const workerGroup = this.socialSystem.getGroupForAgent(agentId);
 
-    if (workerGroup) {
+    if (workerGroup && zone.bounds) {
       // Simplified check: count members in same zone (assuming they are working if in zone)
       // In a real implementation, we would check their activity
       const agentsInZone = this.state.entities.filter((e) => {

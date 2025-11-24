@@ -62,7 +62,7 @@ export function planGoals(
   const goals: AIGoal[] = [];
   const entityNeeds = deps.getEntityNeeds(aiState.entityId);
   const positionFor = (id: string): { x: number; y: number } =>
-    getEntityPosition(id, deps.gameState);
+    getEntityPosition(id, deps.gameState) ?? { x: 0, y: 0 };
   const defaultStats = (): Record<string, number> | null => null;
   const selectZone = (
     state: AIState,
