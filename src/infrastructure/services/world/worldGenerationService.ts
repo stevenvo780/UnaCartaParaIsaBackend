@@ -103,7 +103,12 @@ export class WorldGenerationService {
     biomeConfig: SimpleBiomeConfig | undefined,
     x: number,
     y: number,
-  ) {
+  ): {
+    vegetation: string[];
+    props: string[];
+    structures: string[];
+    decals: string[];
+  } {
     const assets = {
       vegetation: [] as string[],
       props: [] as string[],
@@ -114,7 +119,9 @@ export class WorldGenerationService {
     if (!biomeConfig) return assets;
 
     // Deterministic RNG for this tile
-    const tileRng = seedrandom(`${x},${y}-${this.noiseGen["seed"]}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const seed = (this.noiseGen as any).seed ?? "default";
+    const tileRng = seedrandom(`${x},${y}-${seed}`);
 
     // Trees
     if (
@@ -156,7 +163,10 @@ export class WorldGenerationService {
     return assets;
   }
 
-  async generateWorld(config: WorldGenConfig) {
+  async generateWorld(config: WorldGenConfig): Promise<{
+    config: WorldGenConfig;
+    status: string;
+  }> {
     return {
       config,
       status: "generating",

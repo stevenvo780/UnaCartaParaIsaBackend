@@ -41,7 +41,6 @@ interface ActiveCardEntry {
   expiresAt: number;
 }
 
-const DEFAULT_DURATION = 10000;
 
 export class CardDialogueSystem {
   private readonly cardTemplates: CardTemplate[] = this.createTemplates();
@@ -114,7 +113,7 @@ export class CardDialogueSystem {
         topCandidates[Math.floor(Math.random() * topCandidates.length)]
           .template;
 
-      const card = this.createCard(selected, entityId, now);
+      const card = this.createCard(selected, entityId, data.needs, now);
       this.queue.push(card);
     }
   }

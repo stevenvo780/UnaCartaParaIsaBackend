@@ -1,16 +1,61 @@
 import { Request, Response } from "express";
 import { worldGenerationService } from "../services/world/worldGenerationService.js";
 
+interface ChunkRequest {
+  x?: number;
+  y?: number;
+  seed?: string | number;
+  width?: number;
+  height?: number;
+  tileSize?: number;
+}
+
+const DEFAULT_CHUNK_SIZE = 100;
+const DEFAULT_TILE_SIZE = 64;
+const MAX_CHUNK_SIZE = 1000;
+const MIN_CHUNK_SIZE = 16;
+
 export class WorldController {
-  async generateChunk(req: Request, res: Response) {
+  async generateChunk(req: Request, res: Response): Promise<void> {
     try {
-      const { x, y, seed, width, height, tileSize } = req.body;
+      const body = req.body as ChunkRequest;
+      const { x, y, seed, width, height, tileSize } = body;
+
+      // Validate required parameters
+      if (typeof x !== "number" || typeof y !== "number") {
+        res.status(400).json({
+          error: "Invalid request: x and y must be numbers",
+        });
+        return;
+      }
+
+      // Validate and sanitize dimensions
+      const validatedWidth = Math.max(
+        MIN_CHUNK_SIZE,
+        Math.min(MAX_CHUNK_SIZE, width ?? DEFAULT_CHUNK_SIZE),
+      );
+      const validatedHeight = Math.max(
+        MIN_CHUNK_SIZE,
+        Math.min(MAX_CHUNK_SIZE, height ?? DEFAULT_CHUNK_SIZE),
+      );
+      const validatedTileSize = Math.max(
+        16,
+        Math.min(256, tileSize ?? DEFAULT_TILE_SIZE),
+      );
+
+      // Sanitize seed
+      const validatedSeed =
+        typeof seed === "string" && seed.length > 0
+          ? seed.slice(0, 100) // Limit seed length
+          : typeof seed === "number"
+            ? seed
+            : "default";
 
       const chunk = await worldGenerationService.generateChunk(x, y, {
-        seed: seed || "default",
-        width: width || 100,
-        height: height || 100,
-        tileSize: tileSize || 64,
+        seed: validatedSeed,
+        width: validatedWidth,
+        height: validatedHeight,
+        tileSize: validatedTileSize,
         noise: {
           temperature: {
             scale: 0.01,
@@ -35,7 +80,9 @@ export class WorldController {
 
       res.json(chunk);
     } catch (error) {
-      console.error("Error generating chunk:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error("Error generating chunk:", errorMessage);
       res.status(500).json({ error: "Failed to generate chunk" });
     }
   }

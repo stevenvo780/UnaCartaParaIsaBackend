@@ -1,19 +1,15 @@
 import { GameEventNames, simulationEvents } from "../core/events";
 import type { GameState } from "../../types/game-types";
-import type {
-  LegendRecord,
-  ReputationEvent,
-  LegendDeed,
-} from "../../types/simulation/legends";
+import type { LegendRecord, ReputationEvent, LegendDeed } from "../../types/simulation/legends";
 
 export class LivingLegendsSystem {
-  // @ts-expect-error - Kept for potential future use
+  // @ts-ignore - Kept for potential future use
   private _state: GameState;
   private legends = new Map<string, LegendRecord>();
   private reputationEvents: ReputationEvent[] = [];
   private readonly MAX_EVENT_HISTORY = 50;
   private lastTitleUpdate = 0;
-
+  
   private config = {
     minReputationForLegend: 0.7,
     minReputationForVillain: -0.5,
@@ -30,14 +26,8 @@ export class LivingLegendsSystem {
   }
 
   private setupEventListeners(): void {
-    simulationEvents.on(
-      GameEventNames.REPUTATION_UPDATED,
-      this.handleReputationChange.bind(this),
-    );
-    simulationEvents.on(
-      GameEventNames.AGENT_ACTION_COMPLETE,
-      this.recordDeed.bind(this),
-    );
+    simulationEvents.on(GameEventNames.REPUTATION_UPDATED, this.handleReputationChange.bind(this));
+    simulationEvents.on(GameEventNames.AGENT_ACTION_COMPLETE, this.recordDeed.bind(this));
   }
 
   public update(delta: number): void {
@@ -64,7 +54,7 @@ export class LivingLegendsSystem {
       reason: data.reason || "unknown",
       timestamp: Date.now(),
     };
-
+    
     this.reputationEvents.push(event);
     if (this.reputationEvents.length > this.MAX_EVENT_HISTORY) {
       this.reputationEvents.shift();
@@ -77,8 +67,7 @@ export class LivingLegendsSystem {
     }
 
     legend.reputation = data.newReputation;
-    legend.reputationTrend =
-      data.delta > 0 ? "rising" : data.delta < 0 ? "falling" : "stable";
+    legend.reputationTrend = data.delta > 0 ? "rising" : data.delta < 0 ? "falling" : "stable";
     legend.lastUpdate = Date.now();
 
     simulationEvents.emit(GameEventNames.LEGEND_UPDATE, { legend });
@@ -91,7 +80,7 @@ export class LivingLegendsSystem {
     impact?: number;
   }): void {
     if (!data.success) return;
-
+    
     let legend = this.legends.get(data.agentId);
     if (!legend) {
       legend = this.createLegendRecord(data.agentId);
@@ -104,7 +93,7 @@ export class LivingLegendsSystem {
       description: `Performed ${data.actionType}`,
       impact: data.impact ?? 1,
       timestamp: Date.now(),
-      witnesses: [],
+      witnesses: []
     };
 
     legend.deeds.push(deed);
@@ -132,7 +121,7 @@ export class LivingLegendsSystem {
       stories: [],
       legendTier: "unknown",
       firstSeen: Date.now(),
-      lastUpdate: Date.now(),
+      lastUpdate: Date.now()
     };
   }
 }

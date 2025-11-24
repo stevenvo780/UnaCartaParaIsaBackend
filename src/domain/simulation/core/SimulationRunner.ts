@@ -296,12 +296,19 @@ export class SimulationRunner {
     const CHUNK_SIZE = 16;
     const chunksX = Math.ceil(worldConfig.width / CHUNK_SIZE);
     const chunksY = Math.ceil(worldConfig.height / CHUNK_SIZE);
-    const allTiles = [];
+    const allTiles: Array<{
+      x: number;
+      y: number;
+      assetId: string;
+      type: "grass" | "stone" | "water" | "path";
+      biome: string;
+      isWalkable: boolean;
+    }> = [];
 
     // Initialize biome map structure
     const biomeMap: string[][] = Array(worldConfig.height)
       .fill(null)
-      .map(() => Array(worldConfig.width).fill(""));
+      .map((): string[] => Array(worldConfig.width).fill(""));
 
     for (let cy = 0; cy < chunksY; cy++) {
       for (let cx = 0; cx < chunksX; cx++) {
