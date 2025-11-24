@@ -180,7 +180,7 @@ export class EmergenceSystem extends EventEmitter {
     if (entities.length < 3) return null;
 
     // Detect clustering pattern (agents gathering in groups)
-    const positions = entities.map(e => e.position);
+    const positions = entities.map(e => e.position).filter((p): p is { x: number; y: number } => p !== undefined);
     const clusters = this.detectClusters(positions, 200);
     
     if (clusters.length >= 2 && clusters.length < entities.length / 2) {

@@ -64,17 +64,19 @@ export class MarketSystem {
     const price = this.getResourcePrice(resource);
     const totalCost = price * amount;
 
-    const buyer = this.state.entities.find((e: any) => e.id === buyerId);
-    if (!buyer || !buyer.stats || (buyer.stats.money || 0) < totalCost) return false;
+    const buyer = this.state.entities.find((e) => e.id === buyerId);
+    if (!buyer || !buyer.stats) return false;
+    const buyerMoney = typeof buyer.stats.money === 'number' ? buyer.stats.money : 0;
+    if (buyerMoney < totalCost) return false;
 
     // Deduct money
-    buyer.stats.money -= totalCost;
+    buyer.stats.money = buyerMoney - totalCost;
 
     // Add resource
     const added = this.inventorySystem.addResource(buyerId, resource, amount);
     if (!added) {
       // Refund if full
-      buyer.stats.money += totalCost;
+      buyer.stats.money = (typeof buyer.stats.money === 'number' ? buyer.stats.money : 0) + totalCost;
       return false;
     }
 
@@ -93,9 +95,9 @@ export class MarketSystem {
     const price = this.getResourcePrice(resource);
     const totalValue = price * removed;
 
-    const seller = this.state.entities.find((e: any) => e.id === sellerId);
+    const seller = this.state.entities.find((e) => e.id === sellerId);
     if (seller && seller.stats) {
-      seller.stats.money = (seller.stats.money || 0) + totalValue;
+      seller.stats.money = (typeof seller.stats.money === 'number' ? seller.stats.money : 0) + totalValue;
     }
 
     // Deduct from global currency?

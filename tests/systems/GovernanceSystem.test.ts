@@ -61,8 +61,8 @@ describe("GovernanceSystem", () => {
 
     inventorySystem = new InventorySystem();
     lifeCycleSystem = new LifeCycleSystem(gameState);
-    divineFavorSystem = new DivineFavorSystem(gameState);
-    reservationSystem = new ResourceReservationSystem(gameState);
+    divineFavorSystem = new DivineFavorSystem();
+    reservationSystem = new ResourceReservationSystem(gameState, inventorySystem);
     governanceSystem = new GovernanceSystem(
       gameState,
       inventorySystem,
@@ -148,12 +148,13 @@ describe("GovernanceSystem", () => {
 
   describe("Configuración personalizada", () => {
     it("debe aceptar configuración personalizada", () => {
+      const customReservationSystem = new ResourceReservationSystem(gameState, inventorySystem);
       const customSystem = new GovernanceSystem(
         gameState,
         inventorySystem,
         lifeCycleSystem,
         divineFavorSystem,
-        reservationSystem,
+        customReservationSystem,
         {
           checkIntervalMs: 500,
           demandExpirationMs: 3000,

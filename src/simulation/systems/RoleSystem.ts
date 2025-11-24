@@ -241,10 +241,7 @@ export class RoleSystem extends EventEmitter {
 
   private getAdultAgents(): AgentProfile[] {
     // Access agents from gameState
-    const entities = this.gameState.entities || [];
-    return entities.filter(
-      (e: any) => e.lifeStage === 'adult' && !e.immortal
-    ) as AgentProfile[];
+    return this.gameState.agents || [];
   }
 
   public assignBestRole(agent: AgentProfile): RoleAssignment {

@@ -43,6 +43,18 @@ export interface SimulationEntity {
   x: number;
   y: number;
   state?: string;
+  position?: { x: number; y: number };
+  isDead?: boolean;
+  stats?: {
+    health?: number;
+    morale?: number;
+    stress?: number;
+    [key: string]: unknown;
+  };
+  tags?: string[];
+  type?: string;
+  traits?: { aggression?: number; [key: string]: unknown };
+  immortal?: boolean;
 }
 
 export interface Size2D {

@@ -1,6 +1,4 @@
-import { EventEmitter } from 'node:events';
 import type { GameState } from '../../types/game-types.js';
-import { simulationEvents, GameEventNames } from '../events.js';
 
 export interface TimeOfDay {
   hour: number;

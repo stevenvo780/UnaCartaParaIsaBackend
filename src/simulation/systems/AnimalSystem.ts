@@ -254,15 +254,16 @@ export class AnimalSystem {
 
     const entities = this.gameState.entities || [];
     for (const entity of entities) {
-      if (!entity.x || !entity.y || entity.isDead) continue;
+      if (entity.isDead) continue;
+      const entityPos = entity.position || (entity.x !== undefined && entity.y !== undefined ? { x: entity.x, y: entity.y } : null);
+      if (!entityPos) continue;
 
-      const entityPosition = { x: entity.x, y: entity.y };
-      const dx = animal.position.x - entityPosition.x;
-      const dy = animal.position.y - entityPosition.y;
+      const dx = animal.position.x - entityPos.x;
+      const dy = animal.position.y - entityPos.y;
       const distSq = dx * dx + dy * dy;
 
       if (distSq <= range * range) {
-        const result = { id: entity.id, position: entityPosition };
+        const result = { id: entity.id, position: entityPos };
         this.threatSearchCache.set(`human_${animal.id}`, { threat: result, timestamp: Date.now() });
         return result;
       }
