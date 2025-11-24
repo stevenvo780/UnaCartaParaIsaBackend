@@ -404,7 +404,7 @@ export class AnimalSystem {
   /**
    * Get animals within radius using spatial grid
    */
-  private getAnimalsInRadius(
+  public getAnimalsInRadius(
     position: { x: number; y: number },
     radius: number,
   ): Animal[] {

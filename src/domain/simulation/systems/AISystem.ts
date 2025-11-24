@@ -10,6 +10,7 @@ import {
 } from "../../types/simulation/ai";
 import type { AgentTraits, LifeStage } from "../../types/simulation/agents";
 import type { WorldResourceType } from "../../types/simulation/worldResources";
+import { getAnimalConfig } from "../../../infrastructure/services/world/config/AnimalConfigs";
 import { planGoals, type AgentGoalPlannerDeps } from "./ai/AgentGoalPlanner";
 import { PriorityManager } from "./ai/PriorityManager";
 import { GameEventNames } from "../core/events";
@@ -231,6 +232,22 @@ export class AISystem extends EventEmitter {
       getAgentRole: (id: string) => this.roleSystem?.getAgentRole(id),
       getPreferredResourceForRole: (role: string) =>
         this.roleSystem?.getPreferredResourceForRole(role),
+      getStrategy: (id: string) => this.agentStrategies.get(id) || "peaceful",
+      isWarrior: (id: string) => {
+        const role = this.roleSystem?.getAgentRole(id);
+        return role?.roleType === "guard";
+      },
+      getNearbyPredators: (pos: { x: number; y: number }, range: number) => {
+        if (!this.animalSystem) return [];
+        const animals = this.animalSystem.getAnimalsInRadius(pos, range);
+        return animals
+          .filter((a) => {
+            const config = getAnimalConfig(a.type);
+            return config?.isPredator;
+          })
+          .map((a) => ({ id: a.id, position: a.position }));
+      },
+      getEnemiesForAgent: (_id: string) => [], // TODO: Implement with SocialSystem
     };
 
     const goals = planGoals(deps, aiState);
