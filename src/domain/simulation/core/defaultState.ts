@@ -5,14 +5,14 @@ import type {
 } from "../../types/game-types";
 
 const defaultResources: GameResources = {
-  energy: 0,
+  energy: 100,
   materials: {
-    wood: 0,
-    stone: 0,
-    food: 0,
-    water: 0,
+    wood: 50,
+    stone: 30,
+    food: 40,
+    water: 40,
   },
-  currency: 0,
+  currency: 100,
   experience: 0,
   unlockedFeatures: [],
 };

@@ -294,7 +294,140 @@ export class SimulationRunner {
       }
 
       logger.info(`👨‍👩‍👧‍👦 Family initialized: Isa & Stev with 4 children`);
+
+      // Crear infraestructura básica inicial
+      this.createInitialInfrastructure();
     }
+  }
+
+  /**
+   * Crea infraestructuras básicas iniciales para que la familia pueda comenzar
+   * - Casa familiar
+   * - Mesa de trabajo (workbench)
+   * - Zona de almacenamiento
+   */
+  private createInitialInfrastructure(): void {
+    const baseX = 100;
+    const baseY = 100;
+
+    // Casa familiar principal (ya construida)
+    const houseZone: Zone = {
+      id: `zone_house_initial_${Date.now()}`,
+      type: "shelter",
+      bounds: {
+        x: baseX,
+        y: baseY,
+        width: 80,
+        height: 60,
+      },
+      props: {
+        capacity: 8,
+        comfort: 0.7,
+      },
+      metadata: {
+        building: "house" as BuildingLabel,
+        underConstruction: false,
+        buildingId: `building_house_initial_${Date.now()}`,
+        builtAt: Date.now(),
+      },
+    };
+
+    // Mesa de trabajo (workbench) para crafting
+    const workbenchZone: Zone = {
+      id: `zone_workbench_initial_${Date.now()}`,
+      type: "work",
+      bounds: {
+        x: baseX + 100,
+        y: baseY,
+        width: 40,
+        height: 40,
+      },
+      props: {
+        craftingSpeed: 1.2,
+        toolQuality: 0.8,
+      },
+      metadata: {
+        building: "workbench" as BuildingLabel,
+        underConstruction: false,
+        craftingStation: true,
+        buildingId: `building_workbench_initial_${Date.now()}`,
+        builtAt: Date.now(),
+      },
+    };
+
+    // Zona de almacenamiento
+    const storageZone: Zone = {
+      id: `zone_storage_initial_${Date.now()}`,
+      type: "storage",
+      bounds: {
+        x: baseX + 100,
+        y: baseY + 50,
+        width: 40,
+        height: 30,
+      },
+      props: {
+        capacity: 200,
+      },
+      metadata: {
+        buildingId: `building_storage_initial_${Date.now()}`,
+        builtAt: Date.now(),
+      },
+    };
+
+    // Zona de descanso (dentro de la casa)
+    const restZone: Zone = {
+      id: `zone_rest_initial_${Date.now()}`,
+      type: "rest",
+      bounds: {
+        x: baseX + 10,
+        y: baseY + 10,
+        width: 30,
+        height: 40,
+      },
+      props: {
+        restQuality: 0.8,
+        beds: 6,
+      },
+      metadata: {
+        parentZoneId: houseZone.id,
+      },
+    };
+
+    // Zona de cocina (dentro de la casa)
+    const kitchenZone: Zone = {
+      id: `zone_kitchen_initial_${Date.now()}`,
+      type: "kitchen",
+      bounds: {
+        x: baseX + 45,
+        y: baseY + 10,
+        width: 25,
+        height: 25,
+      },
+      props: {
+        cookingSpeed: 1.0,
+        foodCapacity: 50,
+      },
+      metadata: {
+        parentZoneId: houseZone.id,
+      },
+    };
+
+    // Agregar zonas al estado
+    this.state.zones.push(
+      houseZone,
+      workbenchZone,
+      storageZone,
+      restZone,
+      kitchenZone,
+    );
+
+    logger.info(`🏠 Initial infrastructure created:`);
+    logger.info(`   - Family house (shelter) at (${baseX}, ${baseY})`);
+    logger.info(`   - Workbench at (${baseX + 100}, ${baseY})`);
+    logger.info(`   - Storage zone`);
+    logger.info(`   - Rest zone (inside house)`);
+    logger.info(`   - Kitchen zone (inside house)`);
+    logger.info(`📦 Starting resources: wood=50, stone=30, food=40, water=40`);
   }
 
   private setupEventListeners(): void {

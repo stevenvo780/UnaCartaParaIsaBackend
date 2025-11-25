@@ -5,6 +5,7 @@ import { CONFIG } from "../config/config";
 import { container } from "../config/container";
 import { TYPES } from "../config/Types";
 import { SimulationRunner } from "../domain/simulation/core/SimulationRunner";
+import { detectGPUAvailability } from "../infrastructure/utils/gpuDetector";
 
 const simulationRunner = container.get<SimulationRunner>(
   TYPES.SimulationRunner,
@@ -31,6 +32,9 @@ import type {
 } from "../shared/types/commands/SimulationCommand";
 import { ChunkStreamServer } from "../infrastructure/services/chunk/chunk/ChunkStreamServer";
 import { logger } from "../infrastructure/utils/logger.js";
+
+// Detectar disponibilidad de GPU al inicio
+detectGPUAvailability();
 
 const server = app.listen(CONFIG.PORT, () => {
   logger.info(`Save server running on http://localhost:${CONFIG.PORT}`);
