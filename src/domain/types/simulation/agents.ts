@@ -22,7 +22,7 @@ export interface AgentProfile {
   generation: number;
   immortal?: boolean;
   traits: AgentTraits;
-  socialStatus?: "noble" | "commoner";
+  socialStatus?: "noble" | "commoner" | "warrior";
   parents?: {
     father?: string;
     mother?: string;

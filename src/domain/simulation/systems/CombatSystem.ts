@@ -91,6 +91,18 @@ export class CombatSystem {
     );
     this.combatLog = this.state.combatLog ?? [];
     this.state.combatLog = this.combatLog;
+
+    simulationEvents.on(
+      GameEventNames.AGENT_BIRTH,
+      this.handleAgentBirth.bind(this),
+    );
+  }
+
+  private handleAgentBirth(data: { entityId: string }): void {
+    const agent = this.lifeCycleSystem.getAgent(data.entityId);
+    if (agent && agent.socialStatus === "warrior") {
+      this.equip(data.entityId, "wooden_club");
+    }
   }
 
   public update(_deltaMs: number): void {

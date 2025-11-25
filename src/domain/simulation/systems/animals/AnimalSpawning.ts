@@ -157,10 +157,10 @@ export class AnimalSpawning {
 
           if (Math.random() < chunkSpawnProb) {
             // Spawn smaller groups in chunks (1-2 instead of full group)
-            const groupSize = Math.min(2, Math.max(
-              1,
-              Math.floor(Math.random() * 2) + 1,
-            ));
+            const groupSize = Math.min(
+              2,
+              Math.max(1, Math.floor(Math.random() * 2) + 1),
+            );
 
             for (let i = 0; i < groupSize; i++) {
               const offsetX = (Math.random() - 0.5) * 80;

@@ -332,11 +332,16 @@ export class AnimalSystem {
       return;
     }
 
+    // Default behavior: always wander if nothing else to do
+    // High probability to keep moving for visual feedback
     if (animal.state === "idle") {
-      if (Math.random() < 0.2) {
+      // 80% chance to start wandering from idle (was 20%)
+      if (Math.random() < 0.8) {
         animal.state = "wandering";
+        AnimalBehavior.wander(animal, 0.5, deltaSeconds);
       }
     } else {
+      // Keep wandering
       animal.state = "wandering";
       AnimalBehavior.wander(animal, 0.5, deltaSeconds);
     }
