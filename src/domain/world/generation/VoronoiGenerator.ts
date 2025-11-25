@@ -35,14 +35,32 @@ export class VoronoiGenerator {
     seed?: string,
     minDistance = 100,
   ): VoronoiRegion[] {
+    if (numRegions <= 0 || width <= 0 || height <= 0) {
+      return [];
+    }
+
+    const maxPossibleRegions = Math.floor(
+      (width * height) / (minDistance * minDistance),
+    );
+    const actualTargetCount = Math.min(numRegions, maxPossibleRegions);
+
+    if (actualTargetCount <= 0) {
+      return [];
+    }
+
     const rng = seedrandom(seed || `voronoi-${Date.now()}`);
     const sites = this.poissonDiskSampling(
       width,
       height,
       rng,
-      numRegions,
+      actualTargetCount,
       minDistance,
     );
+
+    if (sites.length === 0) {
+      return [];
+    }
+
     const voronoi = this.computeVoronoi(sites);
     const regions = this.convertToRegions(voronoi);
 
@@ -62,7 +80,16 @@ export class VoronoiGenerator {
     const cols = Math.max(1, Math.ceil(width / cellSize));
     const rows = Math.max(1, Math.ceil(height / cellSize));
 
-    if (rows > 100000 || cols > 100000) {
+    if (rows > 100000 || cols > 100000 || rows * cols > 100000000) {
+      return [];
+    }
+
+    if (
+      rows <= 0 ||
+      cols <= 0 ||
+      !Number.isFinite(rows) ||
+      !Number.isFinite(cols)
+    ) {
       return [];
     }
 

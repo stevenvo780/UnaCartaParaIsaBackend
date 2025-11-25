@@ -54,7 +54,7 @@ export class EnhancedCraftingSystem {
     private readonly inventorySystem: InventorySystem,
   ) {
     this.config = DEFAULT_CONFIG;
-    this.now = () => Date.now();
+    this.now = (): number => Date.now();
   }
 
   public update(): void {

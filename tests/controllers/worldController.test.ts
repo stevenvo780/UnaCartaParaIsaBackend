@@ -1,14 +1,23 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Request, Response } from 'express';
 
+const mockGenerateChunk = vi.fn();
+
 vi.mock('../../src/infrastructure/services/world/worldGenerationService.ts', () => ({
-  worldGenerationService: {
-    generateChunk: vi.fn(),
+  WorldGenerationService: vi.fn().mockImplementation(() => ({
+    generateChunk: mockGenerateChunk,
+  })),
+}));
+
+vi.mock('../../src/config/container.ts', () => ({
+  container: {
+    get: vi.fn(() => ({
+      generateChunk: mockGenerateChunk,
+    })),
   },
 }));
 
 import { worldController } from "../../src/infrastructure/controllers/worldController.ts";
-import { worldGenerationService } from "../../src/infrastructure/services/world/worldGenerationService.ts";
 
 describe('WorldController', () => {
   let mockReq: Partial<Request>;
@@ -38,11 +47,11 @@ describe('WorldController', () => {
         height: 100,
         tileSize: 64,
       };
-      vi.mocked(worldGenerationService.generateChunk).mockResolvedValue(mockChunk);
+      mockGenerateChunk.mockResolvedValue(mockChunk);
 
       await worldController.generateChunk(mockReq as Request, mockRes as Response);
 
-      expect(worldGenerationService.generateChunk).toHaveBeenCalledWith(0, 0, {
+      expect(mockGenerateChunk).toHaveBeenCalledWith(0, 0, {
         seed: 'test-seed',
         width: 100,
         height: 100,
@@ -62,11 +71,11 @@ describe('WorldController', () => {
         x: 1,
         y: 2,
       };
-      vi.mocked(worldGenerationService.generateChunk).mockResolvedValue(mockChunk);
+      mockGenerateChunk.mockResolvedValue(mockChunk);
 
       await worldController.generateChunk(mockReq as Request, mockRes as Response);
 
-      expect(worldGenerationService.generateChunk).toHaveBeenCalledWith(1, 2, {
+      expect(mockGenerateChunk).toHaveBeenCalledWith(1, 2, {
         seed: 'default',
         width: 100,
         height: 100,
@@ -82,7 +91,7 @@ describe('WorldController', () => {
 
     it('debe manejar errores', async () => {
       mockReq.body = { x: 0, y: 0 };
-      vi.mocked(worldGenerationService.generateChunk).mockRejectedValue(new Error('Generation error'));
+      mockGenerateChunk.mockRejectedValue(new Error('Generation error'));
 
       await worldController.generateChunk(mockReq as Request, mockRes as Response);
 

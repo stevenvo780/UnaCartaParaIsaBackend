@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { container } from "../../src/config/container.ts";
+import { TYPES } from "../../src/config/Types.ts";
 import { SimulationRunner } from "../../src/domain/simulation/core/SimulationRunner.ts";
 import { createMockGameState } from '../setup.ts';
 import type { GameState } from '../../src/domain/types/game-types.ts';
@@ -10,7 +12,13 @@ describe('SimulationRunner', () => {
 
   beforeEach(() => {
     initialState = createMockGameState();
-    runner = new SimulationRunner({ tickIntervalMs: 10, maxCommandQueue: 10 }, initialState);
+    container.unbind(TYPES.GameState);
+    container.unbind(TYPES.SimulationConfig);
+    container.bind<GameState>(TYPES.GameState).toConstantValue(initialState);
+    container.bind(TYPES.SimulationConfig).toConstantValue({ tickIntervalMs: 10, maxCommandQueue: 10 });
+    container.unbind(TYPES.SimulationRunner);
+    container.bind<SimulationRunner>(TYPES.SimulationRunner).to(SimulationRunner).inSingletonScope();
+    runner = container.get<SimulationRunner>(TYPES.SimulationRunner);
   });
 
   afterEach(() => {
@@ -27,16 +35,24 @@ describe('SimulationRunner', () => {
         cycles: 100,
         resonance: 50,
       });
-      const customRunner = new SimulationRunner(undefined, customState);
+      container.unbind(TYPES.GameState);
+      container.bind<GameState>(TYPES.GameState).toConstantValue(customState);
+      container.unbind(TYPES.SimulationRunner);
+      container.bind<SimulationRunner>(TYPES.SimulationRunner).to(SimulationRunner).inSingletonScope();
+      const customRunner = container.get<SimulationRunner>(TYPES.SimulationRunner);
       expect(customRunner).toBeDefined();
       customRunner.stop();
     });
 
     it('debe aceptar configuración personalizada', () => {
-      const customRunner = new SimulationRunner({
+      container.unbind(TYPES.SimulationConfig);
+      container.bind(TYPES.SimulationConfig).toConstantValue({
         tickIntervalMs: 100,
         maxCommandQueue: 50,
       });
+      container.unbind(TYPES.SimulationRunner);
+      container.bind<SimulationRunner>(TYPES.SimulationRunner).to(SimulationRunner).inSingletonScope();
+      const customRunner = container.get<SimulationRunner>(TYPES.SimulationRunner);
       expect(customRunner).toBeDefined();
       customRunner.stop();
     });
@@ -121,7 +137,7 @@ describe('SimulationRunner', () => {
   });
 
   describe('initializeWorldResources', () => {
-    it('debe inicializar recursos del mundo', () => {
+    it('debe inicializar recursos del mundo', async () => {
       const worldConfig = {
         width: 100,
         height: 100,
@@ -129,9 +145,9 @@ describe('SimulationRunner', () => {
         biomeMap: Array(100).fill(null).map(() => Array(100).fill('grassland')),
       };
       
-      expect(() => {
-        runner.initializeWorldResources(worldConfig);
-      }).not.toThrow();
+      await expect(
+        runner.initializeWorldResources(worldConfig)
+      ).resolves.not.toThrow();
     });
   });
 

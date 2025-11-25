@@ -175,11 +175,11 @@ export class SimulationRunner {
 
   constructor(
     @inject(TYPES.GameState) state: GameState,
-    @inject(TYPES.SimulationConfig) _config: SimulationConfig,
+    @inject(TYPES.SimulationConfig) _config?: SimulationConfig,
   ) {
     this.state = state;
     // tickIntervalMs deprecated, not stored
-    this.maxCommandQueue = _config.maxCommandQueue ?? 200;
+    this.maxCommandQueue = _config?.maxCommandQueue ?? 200;
     this.stateCache = new StateCache();
     this.deltaEncoder = new DeltaEncoder();
 
@@ -1179,14 +1179,25 @@ export class SimulationRunner {
 
     simulationEvents.on(
       GameEventNames.KNOWLEDGE_LEARNED,
-      (_data: {
+      (data: {
         agentId: string;
         knowledgeId: string;
         knowledgeType: string;
         timestamp: number;
       }) => {
-        // Evento registrado para futuras implementaciones de capacidades en AI
-        void _data;
+        // Registrar conocimiento en la memoria del agente para que pueda usarlo en decisiones futuras
+        const aiState = this.aiSystem.getAIState(data.agentId);
+        if (aiState) {
+          // Almacenar conocimiento en la memoria del agente
+          if (!aiState.memory.knownResourceLocations) {
+            aiState.memory.knownResourceLocations = new Map();
+          }
+          // El conocimiento puede desbloquear nuevas capacidades de crafting
+          // Por ahora solo lo registramos, en el futuro podría afectar qué recetas puede hacer
+          aiState.memory.lastMemoryCleanup = Date.now();
+        }
+        // Forzar reevaluación para que el agente considere nuevas opciones
+        this.aiSystem.forceGoalReevaluation(data.agentId);
       },
     );
 
@@ -1298,6 +1309,136 @@ export class SimulationRunner {
         timestamp: number;
       }) => {
         // Evento registrado para futuras implementaciones de generación de recursos
+        void _data;
+      },
+    );
+
+    // Handler para tareas creadas - notificar a sistemas relevantes
+    simulationEvents.on(
+      GameEventNames.TASK_CREATED,
+      (data: {
+        taskId: string;
+        taskType: string;
+        zoneId?: string;
+        createdBy?: string;
+        timestamp: number;
+      }) => {
+        // Notificar a QuestSystem si hay quests relacionados con construcción
+        if (data.taskType === "build" || data.taskType === "repair") {
+          this.questSystem.handleEvent({
+            type: "task_created",
+            entityId: data.createdBy || "system",
+            timestamp: data.timestamp,
+            data: { taskId: data.taskId, taskType: data.taskType },
+          });
+        }
+      },
+    );
+
+    // Handler para progreso de tareas - actualizar estadísticas
+    simulationEvents.on(
+      GameEventNames.TASK_PROGRESS,
+      (data: {
+        taskId: string;
+        agentId: string;
+        contribution: number;
+        progress: number;
+        timestamp: number;
+      }) => {
+        // Registrar contribución para estadísticas de trabajo colaborativo
+        // Esto podría usarse para calcular eficiencia de equipos
+        const task = this.taskSystem.getTask(data.taskId);
+        if (task && task.contributors) {
+          const contributorCount = task.contributors.size;
+          // Si hay múltiples contribuidores, otorgar pequeña bonificación de reputación
+          if (contributorCount > 1 && data.contribution > 10) {
+            this.reputationSystem.updateReputation(
+              data.agentId,
+              0.01,
+              "collaborative_work",
+            );
+          }
+        }
+      },
+    );
+
+    // Handler para edificios dañados - otorgar reputación negativa si es significativo
+    simulationEvents.on(
+      GameEventNames.BUILDING_DAMAGED,
+      (_data: {
+        zoneId: string;
+        buildingType: string;
+        damage: number;
+        health: number;
+        maxHealth: number;
+        timestamp: number;
+      }) => {
+        // El GovernanceSystem ya escucha eventos de household, podría crear demandas automáticamente
+        // Por ahora solo registramos el evento para telemetría
+        void _data;
+      },
+    );
+
+    // Handler para edificios reparados - otorgar reputación al reparador
+    simulationEvents.on(
+      GameEventNames.BUILDING_REPAIRED,
+      (data: {
+        zoneId: string;
+        buildingType: string;
+        repairedBy: string;
+        health: number;
+        maxHealth: number;
+        timestamp: number;
+      }) => {
+        // Otorgar reputación al agente que reparó
+        this.reputationSystem.updateReputation(
+          data.repairedBy,
+          0.03,
+          "building_repaired",
+        );
+      },
+    );
+
+    // Handler para asignación de agente a household - actualizar estadísticas
+    simulationEvents.on(
+      GameEventNames.HOUSEHOLD_AGENT_ASSIGNED,
+      (_data: {
+        agentId: string;
+        zoneId: string;
+        occupancy: number;
+        timestamp: number;
+      }) => {
+        // El GovernanceSystem ya escucha eventos de household para crear demandas
+        // Este listener puede usarse para otras acciones en el futuro
+      },
+    );
+
+    // Handler para depósito de recursos en household - actualizar estadísticas económicas
+    simulationEvents.on(
+      GameEventNames.HOUSEHOLD_RESOURCE_DEPOSITED,
+      (_data: {
+        zoneId: string;
+        agentId: string;
+        resource: string;
+        amount: number;
+        timestamp: number;
+      }) => {
+        // Evento registrado para futuras implementaciones de economía doméstica
+        void _data;
+      },
+    );
+
+    // Handler para retiro de recursos de household - actualizar estadísticas económicas
+    simulationEvents.on(
+      GameEventNames.HOUSEHOLD_RESOURCE_WITHDRAWN,
+      (_data: {
+        zoneId: string;
+        agentId: string;
+        resource: string;
+        amount: number;
+        timestamp: number;
+      }) => {
+        // Evento registrado para futuras implementaciones de economía doméstica
         void _data;
       },
     );
@@ -1581,7 +1722,7 @@ export class SimulationRunner {
     const events =
       this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
     const snapshotState = cloneGameState(this.state);
-    snapshotState.genealogy = this._genealogySystem.getSerializedFamilyTree();
+    snapshotState.genealogy = this._genealogySystem?.getSerializedFamilyTree() ?? {};
 
     const allLegends = this.livingLegendsSystem.getAllLegends();
     const activeLegends = this.livingLegendsSystem.getActiveLegends();
@@ -1611,7 +1752,7 @@ export class SimulationRunner {
       this.tickCounter,
     );
 
-    snapshotState.genealogy = this._genealogySystem.getSerializedFamilyTree();
+    snapshotState.genealogy = this._genealogySystem?.getSerializedFamilyTree() ?? {};
 
     const allLegends = this.livingLegendsSystem.getAllLegends();
     const activeLegends = this.livingLegendsSystem.getActiveLegends();

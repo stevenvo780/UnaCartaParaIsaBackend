@@ -180,6 +180,83 @@ export class GovernanceSystem {
         );
       },
     );
+
+    // Handler para producción generada - actualizar estadísticas de asentamiento
+    simulationEvents.on(
+      GameEventNames.PRODUCTION_OUTPUT_GENERATED,
+      (data: {
+        zoneId: string;
+        resource: string;
+        amount: number;
+        workers: string[];
+        timestamp?: number;
+      }) => {
+        // Registrar producción para estadísticas y decisiones de gobierno
+        this.recordEvent({
+          timestamp: Date.now(),
+          type: "production_generated",
+          details: {
+            zoneId: data.zoneId,
+            resource: data.resource,
+            amount: data.amount,
+            workerCount: data.workers.length,
+          },
+        });
+        // Si la producción es alta, podría resolver demandas de recursos
+        if (data.resource === "food" && data.amount > 20) {
+          // Revisar si hay demandas de comida que puedan resolverse
+          for (const [_demandId, demand] of Array.from(this.demands.entries())) {
+            if (
+              demand.type === "food_shortage" &&
+              !demand.resolvedAt &&
+              demand.priority < 8
+            ) {
+              // Reducir prioridad de demanda de comida si hay producción activa
+              demand.priority = Math.max(5, demand.priority - 1);
+            }
+          }
+        }
+      },
+    );
+
+    // Handler para trabajador removido de producción - ajustar políticas si es necesario
+    simulationEvents.on(
+      GameEventNames.PRODUCTION_WORKER_REMOVED,
+      (data: {
+        zoneId: string;
+        agentId: string;
+        reason: string;
+        timestamp?: number;
+      }) => {
+        // Registrar pérdida de trabajador para estadísticas
+        this.recordEvent({
+          timestamp: Date.now(),
+          type: "production_worker_lost",
+          details: {
+            zoneId: data.zoneId,
+            agentId: data.agentId,
+            reason: data.reason,
+          },
+        });
+        // Si se pierden muchos trabajadores, podría crear demanda de trabajadores
+        const recentLosses = this.history.filter(
+          (e) =>
+            e.type === "production_worker_lost" &&
+            Date.now() - e.timestamp < 60000, // Último minuto
+        );
+        if (recentLosses.length >= 3) {
+          // Crear demanda de trabajadores si hay muchas pérdidas recientes
+          this.createDemand(
+            "housing_full", // Usar tipo existente, podría ser "worker_shortage" en el futuro
+            7,
+            "Pérdida significativa de trabajadores de producción",
+            {
+              recentLosses: recentLosses.length,
+            },
+          );
+        }
+      },
+    );
   }
 
   public update(_deltaTimeMs: number): void {
