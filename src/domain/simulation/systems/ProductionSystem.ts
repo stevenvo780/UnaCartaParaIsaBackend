@@ -35,6 +35,18 @@ type MutableZone = Zone & {
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 
+/**
+ * Sistema responsable de gestionar la producción de recursos en las zonas designadas.
+ *
+ * Flujo principal:
+ * 1. `update()`: Se ejecuta periódicamente según `updateIntervalMs`.
+ * 2. Itera sobre todas las zonas de producción (comida, agua, o recursos específicos).
+ * 3. `ensureAssignments()`: Asigna trabajadores disponibles a las zonas si hay vacantes.
+ * 4. `processProduction()`: Genera recursos si ha pasado el tiempo de producción (`productionIntervalMs`).
+ * 5. Los recursos generados se depositan en el inventario de la zona (`depositToZoneStockpile`).
+ * 6. Emite eventos de producción (`PRODUCTION_OUTPUT_GENERATED`).
+ * 7. Puede modificar el terreno (ej. agricultura) visualmente.
+ */
 @injectable()
 export class ProductionSystem {
   private readonly config: ProductionConfig;
@@ -66,6 +78,10 @@ export class ProductionSystem {
     );
   }
 
+  /**
+   * Maneja la muerte de un agente, removiéndolo de cualquier asignación de trabajo.
+   * @param data Datos del evento de muerte.
+   */
   private handleAgentDeath(data: { entityId: string }): void {
     const { entityId } = data;
     for (const [zoneId, workers] of this.assignments.entries()) {
@@ -80,6 +96,11 @@ export class ProductionSystem {
     }
   }
 
+  /**
+   * Ciclo principal de actualización del sistema.
+   * Verifica si es momento de procesar la producción y actualiza cada zona.
+   * @param _deltaMs Tiempo transcurrido desde la última actualización (no usado actualmente, se usa intervalo fijo).
+   */
   public update(_deltaMs: number): void {
     const now = Date.now();
     if (now - this.lastUpdate < this.config.updateIntervalMs) {
@@ -94,12 +115,21 @@ export class ProductionSystem {
     }
   }
 
+  /**
+   * Determina si una zona es capaz de producir recursos.
+   * @param zone Zona a evaluar.
+   */
   private isProductionZone(zone: MutableZone): boolean {
     if (zone.type === "food" || zone.type === "water") return true;
     const resource = this.getProductionResource(zone);
     return Boolean(resource);
   }
 
+  /**
+   * Obtiene el tipo de recurso que produce una zona.
+   * @param zone Zona a consultar.
+   * @returns El tipo de recurso o null si no produce nada.
+   */
   private getProductionResource(zone: MutableZone): ResourceType | null {
     if (zone.type === "food" || zone.metadata?.productionResource === "food") {
       return "food";
@@ -113,6 +143,11 @@ export class ProductionSystem {
     return (zone.metadata?.productionResource as ResourceType) || null;
   }
 
+  /**
+   * Asegura que la zona tenga trabajadores asignados hasta su capacidad máxima.
+   * Busca agentes ociosos a través del `LifeCycleSystem`.
+   * @param zone Zona a gestionar.
+   */
   private ensureAssignments(zone: MutableZone): void {
     const assigned = this.assignments.get(zone.id) ?? new Set<string>();
     if (!this.assignments.has(zone.id)) {
@@ -132,6 +167,10 @@ export class ProductionSystem {
     }
   }
 
+  /**
+   * Verifica si un agente ya está trabajando en alguna zona.
+   * @param agentId ID del agente.
+   */
   private isAgentBusy(agentId: string): boolean {
     for (const workers of this.assignments.values()) {
       if (workers.has(agentId)) return true;
@@ -139,6 +178,13 @@ export class ProductionSystem {
     return false;
   }
 
+  /**
+   * Ejecuta la lógica de producción para una zona específica.
+   * Calcula la cantidad producida basada en trabajadores y rendimiento base.
+   * Puede modificar el terreno visualmente (ej. convertir pasto en tierra de cultivo).
+   * @param zone Zona de producción.
+   * @param now Timestamp actual.
+   */
   private processProduction(zone: MutableZone, now: number): void {
     const last = this.lastProduction.get(zone.id) ?? 0;
     if (now - last < this.config.productionIntervalMs) {
@@ -205,6 +251,13 @@ export class ProductionSystem {
     }
   }
 
+  /**
+   * Deposita los recursos producidos en el almacenamiento de la zona.
+   * Si no existe un almacenamiento, crea uno nuevo.
+   * @param zoneId ID de la zona.
+   * @param resource Tipo de recurso.
+   * @param amount Cantidad a depositar.
+   */
   private depositToZoneStockpile(
     zoneId: string,
     resource: ResourceType,

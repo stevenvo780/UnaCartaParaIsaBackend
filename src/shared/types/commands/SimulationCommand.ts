@@ -230,6 +230,11 @@ export type SimulationCommand =
       command: "CREATE_TASK" | "CONTRIBUTE_TO_TASK" | "REMOVE_TASK";
       payload?: TaskCommandPayload;
     }
+  | {
+      type: "TIME_COMMAND";
+      command: "SET_WEATHER";
+      payload?: { weatherType: string };
+    }
   | { type: "FORCE_EMERGENCE_EVALUATION"; timestamp?: number };
 
 export interface SimulationConfig {

@@ -1863,6 +1863,9 @@ export class SimulationRunner {
         case "TASK_COMMAND":
           this.handleTaskCommand(command);
           break;
+        case "TIME_COMMAND":
+          this.handleTimeCommand(command);
+          break;
         case "FORCE_EMERGENCE_EVALUATION":
           this.emergenceSystem.forcePatternEvaluation();
           break;
@@ -2262,6 +2265,25 @@ export class SimulationRunner {
           this.taskSystem.removeTask(payload.taskId as string);
         }
         break;
+    }
+  }
+
+  private handleTimeCommand(
+    command: Extract<SimulationCommand, { type: "TIME_COMMAND" }>,
+  ): void {
+    if (command.command === "SET_WEATHER" && command.payload?.weatherType) {
+      const weatherType = command.payload.weatherType as string;
+      if (
+        this.timeSystem &&
+        typeof this.timeSystem === "object" &&
+        "setWeather" in this.timeSystem &&
+        typeof this.timeSystem.setWeather === "function"
+      ) {
+        this.timeSystem.setWeather(weatherType);
+        logger.info(`Weather set to ${weatherType} via TIME_COMMAND`);
+      } else {
+        logger.warn("TimeSystem.setWeather not available");
+      }
     }
   }
 

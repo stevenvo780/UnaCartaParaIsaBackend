@@ -13,7 +13,8 @@
     "test:coverage:open": "vitest run --coverage && open coverage/index.html",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "docs": "typedoc"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.7.0",
@@ -48,6 +49,7 @@
     "rimraf": "^6.1.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6",
+    "typedoc": "^0.28.14",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.47.0",
     "vitest": "^3.2.4",

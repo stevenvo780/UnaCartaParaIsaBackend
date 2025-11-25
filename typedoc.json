@@ -1,0 +1,17 @@
+{
+  "entryPoints": [
+    "./src"
+  ],
+  "entryPointStrategy": "expand",
+  "out": "docs",
+  "plugin": [],
+  "theme": "default",
+  "name": "UnaCartaParaIsa Backend Documentation",
+  "includeVersion": true,
+  "readme": "README.md",
+  "hideGenerator": true,
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+}
