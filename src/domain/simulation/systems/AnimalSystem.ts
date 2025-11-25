@@ -56,15 +56,24 @@ export class AnimalSystem {
       timestamp: number;
     }
   >();
-  private readonly CACHE_DURATION = 15000;
+  // Cache duration increased to 30s for better performance with 1000+ animals
+  private readonly CACHE_DURATION = 30000;
 
   private batchProcessor: AnimalBatchProcessor;
   /**
    * Threshold for activating batch processing.
-   * 30 animals: AnimalSystem processes more complex behaviors (genetics, needs, reproduction),
+   * 50 animals: AnimalSystem processes more complex behaviors (genetics, needs, reproduction),
    * so it requires more animals to justify the batch processing overhead.
    */
-  private readonly BATCH_THRESHOLD = 30;
+  private readonly BATCH_THRESHOLD = 50;
+
+  // === OPTIMIZATION: Reduce state logging frequency ===
+  private lastStateLog = 0;
+  private readonly STATE_LOG_INTERVAL = 2000; // Log every 2s instead of 5% random
+
+  // === OPTIMIZATION: Staggered updates for idle/wandering animals ===
+  private updateFrame = 0;
+  private readonly IDLE_UPDATE_DIVISOR = 3; // Update idle/wandering animals every 3rd frame
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
@@ -114,19 +123,28 @@ export class AnimalSystem {
     const deltaSeconds = deltaMs / 1000;
     const deltaMinutes = deltaMs / 60000;
 
+    // === OPTIMIZATION: Only count states when logging ===
+    const shouldLogState = now - this.lastStateLog > this.STATE_LOG_INTERVAL;
     let liveCount = 0;
-    const stateCount: Record<string, number> = {};
-    for (const animal of this.animals.values()) {
-      if (!animal.isDead) {
-        liveCount++;
-        stateCount[animal.state] = (stateCount[animal.state] || 0) + 1;
+    let stateCount: Record<string, number> | null = null;
+    
+    if (shouldLogState) {
+      stateCount = {};
+      for (const animal of this.animals.values()) {
+        if (!animal.isDead) {
+          liveCount++;
+          stateCount[animal.state] = (stateCount[animal.state] || 0) + 1;
+        }
       }
-    }
-
-    if (Math.random() < 0.05) {
       logger.info(
         `🐾 [AnimalSystem] States: ${JSON.stringify(stateCount)}, deltaMs=${deltaMs.toFixed(0)}`,
       );
+      this.lastStateLog = now;
+    } else {
+      // Quick count without state tracking
+      for (const animal of this.animals.values()) {
+        if (!animal.isDead) liveCount++;
+      }
     }
 
     if (liveCount >= this.BATCH_THRESHOLD) {
@@ -160,6 +178,7 @@ export class AnimalSystem {
     deltaMinutes: number,
     _now: number,
   ): void {
+    this.updateFrame++;
     this.batchProcessor.rebuildBuffers(this.animals);
 
     const animalIdArray = this.batchProcessor.getAnimalIdArray();
@@ -191,10 +210,19 @@ export class AnimalSystem {
 
     this.batchProcessor.syncToAnimals(this.animals);
 
+    // === OPTIMIZATION: Stagger behavior updates for idle/wandering animals ===
+    // Critical states (fleeing, hunting, etc.) update every frame
+    // Idle/wandering update every IDLE_UPDATE_DIVISOR frames
     for (let i = 0; i < animalCount; i++) {
       const animalId = animalIdArray[i];
       const animal = this.animals.get(animalId);
       if (!animal || animal.isDead) continue;
+
+      // Skip idle/wandering animals on non-update frames
+      const isIdleState = animal.state === "idle" || animal.state === "wandering";
+      if (isIdleState && (i % this.IDLE_UPDATE_DIVISOR) !== (this.updateFrame % this.IDLE_UPDATE_DIVISOR)) {
+        continue;
+      }
 
       const oldPosition = { ...animal.position };
       this.updateAnimalBehavior(animal, deltaSeconds);

@@ -228,9 +228,10 @@ export class MultiRateScheduler {
     this.stats.fast.totalMs += elapsed;
     this.stats.fast.avgMs = this.stats.fast.totalMs / this.stats.fast.count;
 
-    if (elapsed > 80) {
+    // Only warn for really slow ticks (>120ms) - 80ms is too aggressive with 1000+ entities
+    if (elapsed > 120) {
       logger.warn(
-        `⚠️ FAST tick took ${elapsed.toFixed(2)}ms (>80ms threshold)`,
+        `⚠️ FAST tick took ${elapsed.toFixed(2)}ms (>120ms threshold)`,
       );
     }
   }
