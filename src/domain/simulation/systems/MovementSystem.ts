@@ -50,19 +50,19 @@ export interface EntityMovementState {
   estimatedArrivalTime?: number;
   currentPath: Array<{ x: number; y: number }>;
   currentActivity:
-    | "idle"
-    | "moving"
-    | "eating"
-    | "drinking"
-    | "cleaning"
-    | "playing"
-    | "meditating"
-    | "working"
-    | "resting"
-    | "socializing"
-    | "inspecting"
-    | "fleeing"
-    | "attacking";
+  | "idle"
+  | "moving"
+  | "eating"
+  | "drinking"
+  | "cleaning"
+  | "playing"
+  | "meditating"
+  | "working"
+  | "resting"
+  | "socializing"
+  | "inspecting"
+  | "fleeing"
+  | "attacking";
   activityStartTime?: number;
   activityDuration?: number;
   fatigue: number;
@@ -606,6 +606,20 @@ export class MovementSystem extends EventEmitter {
     this.movementStates.delete(entityId);
   }
 
+  public isMovingToZone(entityId: string, zoneId: string): boolean {
+    const state = this.movementStates.get(entityId);
+    return !!(state && state.isMoving && state.targetZone === zoneId);
+  }
+
+  public isMovingToPosition(entityId: string, x: number, y: number): boolean {
+    const state = this.movementStates.get(entityId);
+    if (!state || !state.isMoving || !state.targetPosition) return false;
+    return (
+      Math.abs(state.targetPosition.x - x) < 1 &&
+      Math.abs(state.targetPosition.y - y) < 1
+    );
+  }
+
   private async calculatePath(
     from: { x: number; y: number },
     to: { x: number; y: number },
@@ -807,8 +821,8 @@ export class MovementSystem extends EventEmitter {
     const radius =
       MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MIN +
       Math.random() *
-        (MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MAX -
-          MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MIN);
+      (MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MAX -
+        MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MIN);
 
     const angle = Math.random() * Math.PI * 2;
     const targetX = state.currentPosition.x + Math.cos(angle) * radius;

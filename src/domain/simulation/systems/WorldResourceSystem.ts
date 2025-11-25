@@ -256,6 +256,14 @@ export class WorldResourceSystem {
       if (config.canRegenerate) {
         resource.regenerationStartTime = Date.now();
         this.regenerationTimers.set(resourceId, Date.now());
+      } else {
+        // Remove permanently if it cannot regenerate
+        delete this.state.worldResources![resourceId];
+        simulationEvents.emit(GameEventNames.RESOURCE_DEPLETED, {
+          resourceId,
+          resourceType: resource.type,
+          position: resource.position,
+        });
       }
 
       simulationEvents.emit(GameEventNames.RESOURCE_STATE_CHANGE, {
@@ -280,6 +288,39 @@ export class WorldResourceSystem {
     });
 
     return { success: true, amount: 1 };
+  }
+
+  public removeResourcesInArea(bounds: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }): void {
+    if (!this.state.worldResources) return;
+
+    const toRemove: string[] = [];
+    for (const resource of Object.values(this.state.worldResources)) {
+      if (
+        resource.position.x >= bounds.x &&
+        resource.position.x <= bounds.x + bounds.width &&
+        resource.position.y >= bounds.y &&
+        resource.position.y <= bounds.y + bounds.height
+      ) {
+        toRemove.push(resource.id);
+      }
+    }
+
+    for (const id of toRemove) {
+      const resource = this.state.worldResources[id];
+      delete this.state.worldResources[id];
+      this.regenerationTimers.delete(id);
+
+      simulationEvents.emit(GameEventNames.RESOURCE_DEPLETED, {
+        resourceId: id,
+        resourceType: resource.type,
+        position: resource.position,
+      });
+    }
   }
 
   public getZones(): Zone[] {

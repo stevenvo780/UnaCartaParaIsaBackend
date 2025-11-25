@@ -7,6 +7,12 @@ import { TYPES } from "../config/Types";
 import { SimulationRunner } from "../domain/simulation/core/SimulationRunner";
 import { detectGPUAvailability } from "../infrastructure/utils/gpuDetector";
 import { encodeMsgPack, decodeMessage } from "../shared/MessagePackCodec";
+import type {
+  SimulationCommand,
+  SimulationRequest,
+} from "../shared/types/commands/SimulationCommand";
+import { ChunkStreamServer } from "../infrastructure/services/chunk/chunk/ChunkStreamServer";
+import { logger } from "../infrastructure/utils/logger.js";
 
 const simulationRunner = container.get<SimulationRunner>(
   TYPES.SimulationRunner,
@@ -29,12 +35,6 @@ simulationRunner
   .catch((err) => {
     logger.error("Failed to initialize simulation:", err);
   });
-import type {
-  SimulationCommand,
-  SimulationRequest,
-} from "../shared/types/commands/SimulationCommand";
-import { ChunkStreamServer } from "../infrastructure/services/chunk/chunk/ChunkStreamServer";
-import { logger } from "../infrastructure/utils/logger.js";
 
 detectGPUAvailability();
 

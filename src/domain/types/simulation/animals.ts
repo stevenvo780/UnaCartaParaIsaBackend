@@ -62,6 +62,8 @@ export interface AnimalConfig {
   huntingRange?: number;
   attackDamage?: number;
 
+  isAquatic?: boolean;
+
   spawnProbability: number;
   suitableBiomes: string[];
   groupSize: { min: number; max: number };

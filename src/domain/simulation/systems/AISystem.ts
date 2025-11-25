@@ -373,25 +373,25 @@ export class AISystem extends EventEmitter {
         : undefined,
       getCurrentTimeOfDay: this.timeSystem
         ? ():
+          | "dawn"
+          | "morning"
+          | "midday"
+          | "afternoon"
+          | "dusk"
+          | "night"
+          | "deep_night" => {
+          const time = this.timeSystem!.getCurrentTimeOfDay();
+          if (time === "evening") return "dusk";
+          if (time === "rest") return "deep_night";
+          return time as
             | "dawn"
             | "morning"
             | "midday"
             | "afternoon"
             | "dusk"
             | "night"
-            | "deep_night" => {
-            const time = this.timeSystem!.getCurrentTimeOfDay();
-            if (time === "evening") return "dusk";
-            if (time === "rest") return "deep_night";
-            return time as
-              | "dawn"
-              | "morning"
-              | "midday"
-              | "afternoon"
-              | "dusk"
-              | "night"
-              | "deep_night";
-          }
+            | "deep_night";
+        }
         : undefined,
       getEntityPosition: (id: string) => {
         const agent =
@@ -448,10 +448,10 @@ export class AISystem extends EventEmitter {
       socialPreference: isChild
         ? "extroverted"
         : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 >
-            0.6
+          0.6
           ? "extroverted"
           : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 <
-              0.4
+            0.4
             ? "introverted"
             : "balanced",
       workEthic: isChild
@@ -459,7 +459,7 @@ export class AISystem extends EventEmitter {
         : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 > 0.7
           ? "workaholic"
           : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 <
-              0.3
+            0.3
             ? "lazy"
             : "balanced",
       explorationType:
@@ -954,6 +954,37 @@ export class AISystem extends EventEmitter {
         };
 
       case "gather":
+        if (goal.targetId && goal.targetPosition) {
+          const agentPos = this.getAgentPosition(agentId);
+          if (agentPos) {
+            const dist = Math.hypot(
+              agentPos.x - goal.targetPosition.x,
+              agentPos.y - goal.targetPosition.y,
+            );
+            if (dist < 60) {
+              return {
+                actionType: "harvest",
+                agentId,
+                targetId: goal.targetId,
+                targetPosition: goal.targetPosition,
+                timestamp,
+              };
+            }
+            return {
+              actionType: "move",
+              agentId,
+              targetPosition: goal.targetPosition,
+              timestamp,
+            };
+          }
+        }
+        return {
+          actionType: "work",
+          agentId,
+          targetZoneId: goal.targetZoneId,
+          timestamp,
+        };
+
       case "work":
         return {
           actionType: "work",
@@ -973,6 +1004,16 @@ export class AISystem extends EventEmitter {
       default:
         return null;
     }
+  }
+
+  private getAgentPosition(agentId: string): { x: number; y: number } | null {
+    const agent =
+      this.entityIndex?.getAgent(agentId) ??
+      this.gameState.agents.find((a) => a.id === agentId);
+    if (agent?.position) {
+      return { x: agent.position.x, y: agent.position.y };
+    }
+    return null;
   }
 
   public getAIState(agentId: string): AIState | undefined {
@@ -1118,8 +1159,27 @@ export class AISystem extends EventEmitter {
     switch (action.actionType) {
       case "move":
         if (action.targetZoneId) {
+          // Check if already moving to this zone
+          if (
+            this._movementSystem.isMovingToZone(
+              action.agentId,
+              action.targetZoneId,
+            )
+          ) {
+            return;
+          }
           this._movementSystem.moveToZone(action.agentId, action.targetZoneId);
         } else if (action.targetPosition) {
+          // Check if already moving to this position
+          if (
+            this._movementSystem.isMovingToPosition(
+              action.agentId,
+              action.targetPosition.x,
+              action.targetPosition.y,
+            )
+          ) {
+            return;
+          }
           this._movementSystem.moveToPoint(
             action.agentId,
             action.targetPosition.x,
@@ -1129,7 +1189,30 @@ export class AISystem extends EventEmitter {
         break;
       case "work":
         if (action.targetZoneId) {
+          if (
+            this._movementSystem.isMovingToZone(
+              action.agentId,
+              action.targetZoneId,
+            )
+          ) {
+            return;
+          }
           this._movementSystem.moveToZone(action.agentId, action.targetZoneId);
+        }
+        break;
+      case "harvest":
+        if (action.targetId && this.worldResourceSystem) {
+          const result = this.worldResourceSystem.harvestResource(
+            action.targetId,
+            action.agentId,
+          );
+
+          simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+            agentId: action.agentId,
+            actionType: "harvest",
+            success: result.success,
+            data: { amount: result.amount },
+          });
         }
         break;
       default:

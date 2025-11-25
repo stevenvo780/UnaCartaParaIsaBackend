@@ -698,7 +698,6 @@ describe("NeedsSystem", () => {
       
       const initialSocial = needsSystem.getEntityNeeds("spatial-entity-1")?.social || 0;
       
-      // El test valida que el sistema no crashea sin SharedSpatialIndex (usa fallback)
       vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
       
@@ -709,7 +708,6 @@ describe("NeedsSystem", () => {
     });
 
     it("debe manejar correctamente el fallback cuando SharedSpatialIndex no está disponible", () => {
-      // Este test verifica que el sistema funciona sin SharedSpatialIndex (legacy mode)
       if (!gameState.entities) gameState.entities = [];
       
       gameState.entities.push({

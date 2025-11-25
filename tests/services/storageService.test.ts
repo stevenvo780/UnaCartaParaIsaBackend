@@ -76,6 +76,39 @@ describe('StorageService', () => {
       
       expect(saves).toEqual([]);
     });
+
+    it('debe saltar saves inválidos y continuar', async () => {
+      const mockFiles = ['save_1000.json', 'save_2000.json'];
+      const validData = { timestamp: 2000, gameTime: 200, stats: {} };
+
+      vi.mocked(fs.mkdir).mockResolvedValue(undefined);
+      vi.mocked(fs.readdir).mockResolvedValue(mockFiles as never);
+      vi.mocked(fs.readFile)
+        .mockResolvedValueOnce('INVALID_JSON')
+        .mockResolvedValueOnce(JSON.stringify(validData));
+      vi.mocked(fs.stat)
+        .mockResolvedValue({ size: 50, mtime: new Date('2024-01-01') } as never)
+        .mockResolvedValue({ size: 60, mtime: new Date('2024-01-02') } as never);
+
+      const saves = await storageService.listSaves();
+
+      expect(saves).toHaveLength(1);
+      expect(saves[0].id).toBe('save_2000');
+    });
+
+    it('debe manejar error al crear directorio y continuar', async () => {
+      const mockFiles = ['save_1000.json'];
+      const mockSaveData = { timestamp: 1000, gameTime: 100, stats: {} };
+
+      vi.mocked(fs.mkdir).mockRejectedValue(new Error('EEXIST'));
+      vi.mocked(fs.readdir).mockResolvedValue(mockFiles as never);
+      vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockSaveData));
+      vi.mocked(fs.stat).mockResolvedValue({ size: 10, mtime: new Date() } as never);
+
+      const saves = await storageService.listSaves();
+
+      expect(saves).toHaveLength(1);
+    });
   });
 
   describe('getSave', () => {
@@ -102,6 +135,15 @@ describe('StorageService', () => {
       
       expect(save).toBeNull();
     });
+
+    it('debe retornar null si el JSON es inválido', async () => {
+      vi.mocked(fs.mkdir).mockResolvedValue(undefined);
+      vi.mocked(fs.readFile).mockResolvedValue('invalid-json');
+
+      const save = await storageService.getSave('save_invalid');
+
+      expect(save).toBeNull();
+    });
   });
 
   describe('saveGame', () => {
@@ -117,6 +159,15 @@ describe('StorageService', () => {
       expect(result.saveId).toBe('save_1000');
       expect(result.size).toBe(500);
       expect(fs.writeFile).toHaveBeenCalled();
+    });
+
+    it('debe propagar errores de escritura', async () => {
+      const mockSaveData = { timestamp: 1000, gameTime: 100, stats: {} };
+
+      vi.mocked(fs.mkdir).mockResolvedValue(undefined);
+      vi.mocked(fs.writeFile).mockRejectedValue(new Error('disk full'));
+
+      await expect(storageService.saveGame(mockSaveData)).rejects.toThrow('disk full');
     });
   });
 

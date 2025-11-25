@@ -165,8 +165,10 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     vegetationConsumptionRate: 1.5,
     waterConsumptionRate: 0,
 
+    isAquatic: true,
+
     spawnProbability: 0.3,
-    suitableBiomes: ["wetland"],
+    suitableBiomes: ["wetland", "ocean", "lake", "river"],
     groupSize: { min: 4, max: 10 },
     minDistanceBetweenGroups: 300,
   },

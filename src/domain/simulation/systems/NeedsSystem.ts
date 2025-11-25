@@ -534,7 +534,6 @@ export class NeedsSystem extends EventEmitter {
           return e ? { id: e.id } : { id: r.entity };
         });
     } else {
-      // Fallback para compatibilidad (legacy)
       const radiusSq = radius * radius;
       nearbyEntities = this.gameState.entities.filter((e) => {
         if (e.id === entityId || !e.position) return false;

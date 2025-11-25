@@ -65,7 +65,9 @@ export interface GovernanceEvent {
     | "demand_resolved"
     | "policy_changed"
     | "project_started"
-    | "project_failed";
+    | "project_failed"
+    | "production_generated"
+    | "production_worker_lost";
   details: GovernanceEventDetails;
 }
 

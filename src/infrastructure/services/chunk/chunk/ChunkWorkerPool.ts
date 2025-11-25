@@ -206,8 +206,6 @@ export class ChunkWorkerPool extends EventEmitter {
         return jsUrl;
       }
     } catch (error) {
-      // Error resolving JS path, fallback to TS
-      // This is expected when running in development with TS files
       void error;
     }
     return tsUrl;

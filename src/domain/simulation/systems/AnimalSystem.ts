@@ -4,6 +4,7 @@ import type {
   Animal,
   AnimalSystemConfig,
 } from "../../types/simulation/animals";
+import type { TerrainTile } from "../../world/generation/types";
 import type { WorldResourceInstance } from "../../types/simulation/worldResources";
 import { getAnimalConfig } from "../../../infrastructure/services/world/config/AnimalConfigs";
 import { AnimalNeeds } from "./animals/AnimalNeeds";
@@ -735,9 +736,15 @@ export class AnimalSystem {
   public spawnAnimalsForChunk(
     chunkCoords: { x: number; y: number },
     chunkBounds: { x: number; y: number; width: number; height: number },
+    tiles?: TerrainTile[][],
   ): void {
-    AnimalSpawning.spawnAnimalsInChunk(chunkCoords, chunkBounds, (animal) => {
-      this.addAnimal(animal);
-    });
+    AnimalSpawning.spawnAnimalsInChunk(
+      chunkCoords,
+      chunkBounds,
+      (animal) => {
+        this.addAnimal(animal);
+      },
+      tiles,
+    );
   }
 }

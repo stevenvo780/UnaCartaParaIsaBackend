@@ -84,10 +84,8 @@ export class WorldController {
         },
       });
 
-      // Spawn animals for this chunk
       try {
         const animalSystem = container.get<AnimalSystem>(TYPES.AnimalSystem);
-        // WorldGenerationService uses hardcoded 16 for chunk size
         const CHUNK_SIZE = 16;
         const pixelWidth = CHUNK_SIZE * validatedTileSize;
         const pixelHeight = CHUNK_SIZE * validatedTileSize;
@@ -102,6 +100,7 @@ export class WorldController {
             width: pixelWidth,
             height: pixelHeight,
           },
+          chunk,
         );
       } catch (error) {
         logger.warn(

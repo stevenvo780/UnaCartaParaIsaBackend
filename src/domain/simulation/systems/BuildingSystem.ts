@@ -1,6 +1,7 @@
 import type { GameState, Zone } from "../../types/game-types";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { ResourceReservationSystem } from "./ResourceReservationSystem";
+import { WorldResourceSystem } from "./WorldResourceSystem";
 import {
   BUILDING_COSTS,
   BuildingLabel,
@@ -65,6 +66,9 @@ export class BuildingSystem {
     @inject(TYPES.ResourceReservationSystem)
     private readonly reservationSystem: ResourceReservationSystem,
     @inject(TYPES.TaskSystem) @optional() taskSystem?: TaskSystem,
+    @inject(TYPES.WorldResourceSystem)
+    @optional()
+    private readonly worldResourceSystem?: WorldResourceSystem,
   ) {
     this.config = DEFAULT_CONFIG;
     this.now = (): number => Date.now();
@@ -237,15 +241,21 @@ export class BuildingSystem {
       craftingStation: label === "workbench",
     };
 
+    const bounds = {
+      x: Math.max(0, Math.min(validatedPosition.x, worldSize.width - 120)),
+      y: Math.max(0, Math.min(validatedPosition.y, worldSize.height - 80)),
+      width: 120,
+      height: 80,
+    };
+
+    if (this.worldResourceSystem) {
+      this.worldResourceSystem.removeResourcesInArea(bounds);
+    }
+
     return {
       id: zoneId,
       type: "work",
-      bounds: {
-        x: Math.max(0, Math.min(validatedPosition.x, worldSize.width - 120)),
-        y: Math.max(0, Math.min(validatedPosition.y, worldSize.height - 80)),
-        width: 120,
-        height: 80,
-      },
+      bounds,
       props: {
         color: "#C4B998",
         status: "construction",

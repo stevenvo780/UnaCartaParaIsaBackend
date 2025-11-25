@@ -348,7 +348,6 @@ describe("TradeSystem", () => {
 
   describe("setInventorySystem", () => {
     it("debe establecer sistema de inventario", () => {
-      // Mock de InventorySystem
       const mockInventorySystem = {
         getInventory: () => ({}),
         addItem: () => true,

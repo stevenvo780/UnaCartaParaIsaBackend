@@ -24,7 +24,6 @@ vi.mock("@tensorflow/tfjs-node-gpu", () => {
         try {
           return fn();
         } finally {
-          // Cleanup simulado
         }
       }),
       disposeVariables: vi.fn(),
