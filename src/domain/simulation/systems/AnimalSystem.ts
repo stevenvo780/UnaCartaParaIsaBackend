@@ -728,4 +728,16 @@ export class AnimalSystem {
       (animal) => this.addAnimal(animal),
     );
   }
+
+  /**
+   * Spawn animals for a specific chunk
+   */
+  public spawnAnimalsForChunk(
+    chunkCoords: { x: number; y: number },
+    chunkBounds: { x: number; y: number; width: number; height: number },
+  ): void {
+    AnimalSpawning.spawnAnimalsInChunk(chunkCoords, chunkBounds, (animal) => {
+      this.addAnimal(animal);
+    });
+  }
 }

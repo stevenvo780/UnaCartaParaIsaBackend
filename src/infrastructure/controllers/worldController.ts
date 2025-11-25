@@ -19,6 +19,7 @@ const MIN_CHUNK_SIZE = 16;
 import { container } from "../../config/container";
 import { TYPES } from "../../config/Types";
 import { WorldGenerationService } from "../services/world/worldGenerationService";
+import { AnimalSystem } from "../../domain/simulation/systems/AnimalSystem";
 
 export class WorldController {
   async generateChunk(req: Request, res: Response): Promise<void> {
@@ -82,6 +83,31 @@ export class WorldController {
           },
         },
       });
+
+      // Spawn animals for this chunk
+      try {
+        const animalSystem = container.get<AnimalSystem>(TYPES.AnimalSystem);
+        // WorldGenerationService uses hardcoded 16 for chunk size
+        const CHUNK_SIZE = 16;
+        const pixelWidth = CHUNK_SIZE * validatedTileSize;
+        const pixelHeight = CHUNK_SIZE * validatedTileSize;
+        const worldX = x * pixelWidth;
+        const worldY = y * pixelHeight;
+
+        animalSystem.spawnAnimalsForChunk(
+          { x, y },
+          {
+            x: worldX,
+            y: worldY,
+            width: pixelWidth,
+            height: pixelHeight,
+          },
+        );
+      } catch (error) {
+        logger.warn(
+          `Failed to spawn animals for chunk ${x},${y}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
 
       res.json(chunk);
     } catch (error) {
