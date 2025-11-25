@@ -49,7 +49,6 @@ import { TimeSystem } from "../systems/TimeSystem";
 import { InteractionGameSystem } from "../systems/InteractionGameSystem";
 import { KnowledgeNetworkSystem } from "../systems/KnowledgeNetworkSystem";
 import { MovementSystem } from "../systems/MovementSystem";
-import { TrailSystem } from "../systems/TrailSystem";
 import type { BuildingLabel } from "../../types/simulation/buildings";
 import { AppearanceGenerationSystem } from "../systems/AppearanceGenerationSystem";
 import { GPUComputeService } from "./GPUComputeService";
@@ -102,23 +101,11 @@ export class SimulationRunner {
   private tickCounter = 0;
   private scheduler: MultiRateScheduler;
 
-  /**
-   * Registers an event listener.
-   *
-   * @param event - Event name
-   * @param listener - Event listener function
-   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public on(event: string, listener: (...args: any[]) => void): void {
     this.emitter.on(event, listener);
   }
 
-  /**
-   * Removes an event listener.
-   *
-   * @param event - Event name
-   * @param listener - Event listener function to remove
-   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public off(event: string, listener: (...args: any[]) => void): void {
     this.emitter.off(event, listener);
@@ -184,7 +171,6 @@ export class SimulationRunner {
   @inject(TYPES.KnowledgeNetworkSystem)
   private knowledgeNetworkSystem!: KnowledgeNetworkSystem;
   @inject(TYPES.MovementSystem) private movementSystem!: MovementSystem;
-  @inject(TYPES.TrailSystem) private trailSystem!: TrailSystem;
   @inject(TYPES.AppearanceGenerationSystem)
   private appearanceGenerationSystem!: AppearanceGenerationSystem;
   @inject(TYPES.GPUComputeService)
@@ -198,12 +184,6 @@ export class SimulationRunner {
   @inject(TYPES.SharedSpatialIndex)
   private sharedSpatialIndex!: SharedSpatialIndex;
 
-  /**
-   * Creates a new simulation runner.
-   *
-   * @param state - Initial game state
-   * @param _config - Optional simulation configuration
-   */
   constructor(
     @inject(TYPES.GameState) state: GameState,
     @inject(TYPES.SimulationConfig) _config?: SimulationConfig,
@@ -280,7 +260,9 @@ export class SimulationRunner {
       genealogySystem: this._genealogySystem,
     });
 
-    logger.info("\ud83d\udd17 SimulationRunner: Dependencias entre sistemas configuradas");
+    logger.info(
+      "\ud83d\udd17 SimulationRunner: Dependencias entre sistemas configuradas",
+    );
 
     this.setupEventListeners();
 
@@ -443,13 +425,6 @@ export class SimulationRunner {
       name: "CombatSystem",
       rate: "FAST",
       update: (delta: number) => this.combatSystem.update(delta),
-      enabled: true,
-    });
-
-    this.scheduler.registerSystem({
-      name: "TrailSystem",
-      rate: "FAST",
-      update: (delta: number) => this.trailSystem.update(delta),
       enabled: true,
     });
 
@@ -1790,7 +1765,6 @@ export class SimulationRunner {
         Promise.resolve(this.worldResourceSystem.update(scaledDelta)),
         Promise.resolve(this.animalSystem.update(scaledDelta)),
         Promise.resolve(this.timeSystem.update(scaledDelta)),
-        Promise.resolve(this.trailSystem.update(scaledDelta)),
         Promise.resolve(this.itemGenerationSystem.update(scaledDelta)),
         Promise.resolve(this.reputationSystem.update()),
         Promise.resolve(this._researchSystem.update()),
@@ -2336,14 +2310,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                resources?: {
-                  wood?: number;
-                  stone?: number;
-                  food?: number;
-                  water?: number;
-                };
-                minWorkers?: number;
-              }
+                  resources?: {
+                    wood?: number;
+                    stone?: number;
+                    food?: number;
+                    water?: number;
+                  };
+                  minWorkers?: number;
+                }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,
@@ -2385,12 +2359,12 @@ export class SimulationRunner {
       ) {
         this.timeSystem.setWeather(
           weatherType as
-          | "clear"
-          | "cloudy"
-          | "rainy"
-          | "stormy"
-          | "foggy"
-          | "snowy",
+            | "clear"
+            | "cloudy"
+            | "rainy"
+            | "stormy"
+            | "foggy"
+            | "snowy",
         );
         logger.info(`Weather set to ${weatherType} via TIME_COMMAND`);
       } else {
@@ -2445,13 +2419,12 @@ export class SimulationRunner {
     }
 
     if (!agent.position) {
-      // Assign default position near world center if missing
       agent.position = {
         x: (this.state.worldSize?.width ?? 128) * 16,
         y: (this.state.worldSize?.height ?? 128) * 16,
       };
       logger.warn(
-        `ensureMovementState: Agent ${agentId} had no position, assigned default`
+        `ensureMovementState: Agent ${agentId} had no position, assigned default`,
       );
     }
 

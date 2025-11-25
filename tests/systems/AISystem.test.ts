@@ -228,13 +228,24 @@ describe("AISystem", () => {
     });
 
     it("debe expirar objetivos antiguos", () => {
-      aiSystem = new AISystem(gameState, {
-        goalTimeoutMs: 100,
-      }, {
+      // Crear un nuevo sistema con las dependencias necesarias
+      const mockDeps = createMockAISystemDependencies();
+      aiSystem = new AISystem(
+        gameState,
         needsSystem,
         roleSystem,
         worldResourceSystem,
-      });
+        mockDeps.inventorySystem,
+        mockDeps.socialSystem,
+        mockDeps.craftingSystem,
+        mockDeps.householdSystem,
+        mockDeps.taskSystem,
+        mockDeps.combatSystem,
+        mockDeps.animalSystem,
+        mockDeps.movementSystem,
+        mockDeps.questSystem,
+        mockDeps.timeSystem,
+      );
 
       aiSystem.update(1000);
       const state = aiSystem.getAIState("agent-1");

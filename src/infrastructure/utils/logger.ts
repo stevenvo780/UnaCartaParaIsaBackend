@@ -121,7 +121,7 @@ class Logger {
       await fs.promises.writeFile(
         filepath,
         JSON.stringify(logsToWrite, null, 2),
-        "utf-8"
+        "utf-8",
       );
 
       this.lastEvacuation = Date.now();
@@ -130,7 +130,7 @@ class Logger {
       // Re-add logs to buffer if write failed
       this.memoryBuffer = [...logsToWrite, ...this.memoryBuffer].slice(
         0,
-        this.config.maxMemoryLogs
+        this.config.maxMemoryLogs,
       );
       console.error("Failed to evacuate logs:", error);
     } finally {

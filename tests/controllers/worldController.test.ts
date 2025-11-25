@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Request, Response } from 'express';
 
 const mockGenerateChunk = vi.fn();
+const mockSpawnAnimalsForChunk = vi.fn();
 
 vi.mock('../../src/infrastructure/services/world/worldGenerationService.ts', () => ({
   WorldGenerationService: vi.fn().mockImplementation(() => ({
@@ -9,13 +10,36 @@ vi.mock('../../src/infrastructure/services/world/worldGenerationService.ts', () 
   })),
 }));
 
-vi.mock('../../src/config/container.ts', () => ({
-  container: {
-    get: vi.fn(() => ({
-      generateChunk: mockGenerateChunk,
-    })),
-  },
-}));
+vi.mock('../../src/config/container.ts', () => {
+  // Importar TYPES dentro del mock factory usando require
+  const { TYPES } = require('../../src/config/Types');
+  
+  return {
+    container: {
+      get: vi.fn((type: symbol) => {
+        // Usar Symbol.keyFor para comparar símbolos de forma más confiable
+        const typeKey = Symbol.keyFor(type);
+        const worldGenKey = Symbol.keyFor(TYPES.WorldGenerationService);
+        const animalSystemKey = Symbol.keyFor(TYPES.AnimalSystem);
+        
+        if (typeKey === worldGenKey) {
+          return {
+            generateChunk: mockGenerateChunk,
+          };
+        }
+        if (typeKey === animalSystemKey) {
+          return {
+            spawnAnimalsForChunk: mockSpawnAnimalsForChunk,
+          };
+        }
+        // Por defecto, devolver el servicio de generación
+        return {
+          generateChunk: mockGenerateChunk,
+        };
+      }),
+    },
+  };
+});
 
 import { worldController } from "../../src/infrastructure/controllers/worldController.ts";
 

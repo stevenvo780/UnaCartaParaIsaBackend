@@ -51,7 +51,6 @@ export const TYPES = {
   InteractionGameSystem: Symbol.for("InteractionGameSystem"),
   KnowledgeNetworkSystem: Symbol.for("KnowledgeNetworkSystem"),
   MovementSystem: Symbol.for("MovementSystem"),
-  TrailSystem: Symbol.for("TrailSystem"),
   AppearanceGenerationSystem: Symbol.for("AppearanceGenerationSystem"),
   SimulationConfig: Symbol.for("SimulationConfig"),
   VoronoiGenerator: Symbol.for("VoronoiGenerator"),

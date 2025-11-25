@@ -159,6 +159,7 @@ export function createMockAISystemDependencies() {
     animalSystem: {
       getAnimals: vi.fn(() => new Map()),
       getAnimal: vi.fn(() => null),
+      spawnAnimalsForChunk: vi.fn(),
     } as unknown as AnimalSystem,
     movementSystem: {
       moveTo: vi.fn(),

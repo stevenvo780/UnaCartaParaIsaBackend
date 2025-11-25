@@ -32,7 +32,9 @@ const simulationRunner = container.get<SimulationRunner>(
   TYPES.SimulationRunner,
 );
 
-logger.info("\ud83d\ude80 Backend: Iniciando proceso de inicializaci\u00f3n de simulaci\u00f3n...");
+logger.info(
+  "\ud83d\ude80 Backend: Iniciando proceso de inicializaci\u00f3n de simulaci\u00f3n...",
+);
 
 simulationRunner
   .initialize()

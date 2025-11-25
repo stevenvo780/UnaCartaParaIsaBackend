@@ -91,10 +91,10 @@ class PerformanceMonitor {
     totalResources: number;
     totalBuildings: number;
   } = {
-      activeAgents: 0,
-      totalResources: 0,
-      totalBuildings: 0,
-    };
+    activeAgents: 0,
+    totalResources: 0,
+    totalBuildings: 0,
+  };
 
   public setGameLogicStats(stats: {
     activeAgents: number;
@@ -152,8 +152,7 @@ class PerformanceMonitor {
       scheduler: this.schedulerStats,
       gameLogic: this.gameLogicStats,
       memory: process.memoryUsage(),
-      eventLoopLagMs:
-        performance.eventLoopUtilization?.()?.utilization ?? 0,
+      eventLoopLagMs: performance.eventLoopUtilization?.()?.utilization ?? 0,
     };
   }
 
@@ -240,7 +239,9 @@ class PerformanceMonitor {
     }
 
     // Game Logic Metrics
-    lines.push("# HELP backend_active_agents_total Total number of active agents");
+    lines.push(
+      "# HELP backend_active_agents_total Total number of active agents",
+    );
     lines.push("# TYPE backend_active_agents_total gauge");
     lines.push(
       `backend_active_agents_total ${snapshot.gameLogic.activeAgents}`,
@@ -250,17 +251,13 @@ class PerformanceMonitor {
       "# HELP backend_total_resources Total number of world resources",
     );
     lines.push("# TYPE backend_total_resources gauge");
-    lines.push(
-      `backend_total_resources ${snapshot.gameLogic.totalResources}`,
-    );
+    lines.push(`backend_total_resources ${snapshot.gameLogic.totalResources}`);
 
     lines.push(
       "# HELP backend_total_buildings Total number of buildings/zones",
     );
     lines.push("# TYPE backend_total_buildings gauge");
-    lines.push(
-      `backend_total_buildings ${snapshot.gameLogic.totalBuildings}`,
-    );
+    lines.push(`backend_total_buildings ${snapshot.gameLogic.totalBuildings}`);
 
     lines.push(
       "# HELP backend_event_loop_utilization Proportion of time event loop was busy",
@@ -275,4 +272,3 @@ class PerformanceMonitor {
 }
 
 export const performanceMonitor = new PerformanceMonitor();
-

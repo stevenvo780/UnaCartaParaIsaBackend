@@ -39,12 +39,6 @@ export class WorldGenerationService {
     this.biomeMap = new Map(SIMPLE_BIOMES.map((b) => [b.id, b]));
   }
 
-  /**
-   * Initializes noise generators with the provided seed.
-   *
-   * @param {WorldGenConfig} config - World generation configuration
-   * @throws {Error} If width or height are non-positive
-   */
   private initializeGenerators(config: WorldGenConfig): void {
     this.currentSeed = config.seed ?? "default";
     this.noiseGen = new NoiseUtils(this.currentSeed);
@@ -55,14 +49,8 @@ export class WorldGenerationService {
 
   /**
    * Generates a 16x16 terrain chunk at the specified coordinates.
-   *
    * Uses Perlin noise to generate temperature, moisture, elevation, and continentality values.
-   * Resolves biomes based on these values and generates appropriate assets (vegetation, props, structures).
-   *
-   * @param {number} x - Chunk X coordinate
-   * @param {number} y - Chunk Y coordinate
-   * @param {WorldGenConfig} config - World generation configuration (seed, dimensions, noise params)
-   * @returns {Promise<TerrainTile[][]>} 2D array of terrain tiles (16x16)
+   * Resolves biomes based on these values and generates appropriate assets.
    */
   async generateChunk(
     x: number,
@@ -134,18 +122,8 @@ export class WorldGenerationService {
 
   /**
    * Generates assets (vegetation, props, structures) for a terrain tile.
-   *
    * Uses seeded random number generation based on tile coordinates to ensure
    * deterministic asset placement. Applies biome density and clustering rules.
-   *
-   * @param {SimpleBiomeConfig | undefined} biomeConfig - Biome configuration with density rules
-   * @param {number} x - Global tile X coordinate
-   * @param {number} y - Global tile Y coordinate
-   * @returns {Object} Asset arrays for the tile
-   * @returns {string[]} returns.vegetation - Vegetation asset IDs
-   * @returns {string[]} returns.props - Prop asset IDs
-   * @returns {string[]} returns.structures - Structure asset IDs
-   * @returns {string[]} returns.decals - Decal asset IDs
    */
   private generateAssetsForTile(
     biomeConfig: SimpleBiomeConfig | undefined,
@@ -200,12 +178,6 @@ export class WorldGenerationService {
     return assets;
   }
 
-  /**
-   * Placeholder for full world generation.
-   *
-   * @param {WorldGenConfig} config - World generation configuration
-   * @returns {Promise<Object>} Generation status
-   */
   async generateWorld(config: WorldGenConfig): Promise<{
     config: WorldGenConfig;
     status: string;
@@ -218,12 +190,7 @@ export class WorldGenerationService {
 
   /**
    * Generates world using Voronoi diagram-based biome regions.
-   *
-   * Uses VoronoiGenerator to create biome regions and assign biomes.
    * Currently returns empty array - implementation in progress.
-   *
-   * @param {WorldGenConfig} config - World generation configuration
-   * @returns {Promise<TerrainTile[][]>} Empty array (implementation pending)
    */
   async generateVoronoiWorld(config: WorldGenConfig): Promise<TerrainTile[][]> {
     this.initializeGenerators(config);
