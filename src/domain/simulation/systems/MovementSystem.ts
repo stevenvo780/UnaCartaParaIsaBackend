@@ -517,10 +517,11 @@ export class MovementSystem extends EventEmitter {
             this.pathCache.set(pathKey, { result, timestamp: now });
             resolve(result);
           } else {
+            // Pathfinding falló, marcar como no exitoso
             const distance = Math.hypot(to.x - from.x, to.y - from.y);
             resolve({
-              success: true, // Fallback is always "success" but might clip
-              path: [from, to],
+              success: false, // Fallback marcado como fallido para evitar atravesar obstáculos
+              path: [from, to], // Path directo como último recurso
               estimatedTime: estimateTravelTime(
                 distance,
                 0,

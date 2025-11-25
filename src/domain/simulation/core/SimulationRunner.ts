@@ -206,6 +206,8 @@ export class SimulationRunner {
       divineFavorSystem: this.divineFavorSystem,
       inventorySystem: this.inventorySystem,
       socialSystem: this.socialSystem,
+      aiSystem: this.aiSystem,
+      movementSystem: this.movementSystem,
     });
 
     this.aiSystem.setDependencies({

@@ -20,7 +20,8 @@ export class TaskSystem {
   public update(): void {
     const now = Date.now();
     const dtSec = (now - this.lastUpdate) / 1000;
-    if (dtSec < 10) return;
+    // Reducir intervalo de 10s a 2s para detección más rápida de tareas stalled
+    if (dtSec < 2) return;
     this.lastUpdate = now;
 
     const STALLED_THRESHOLD = 300000; // 5 minutes

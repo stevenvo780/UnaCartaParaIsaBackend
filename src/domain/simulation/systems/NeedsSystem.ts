@@ -7,6 +7,8 @@ import type { LifeCycleSystem } from "./LifeCycleSystem";
 import type { DivineFavorSystem } from "./DivineFavorSystem";
 import type { InventorySystem } from "./InventorySystem";
 import type { SocialSystem } from "./SocialSystem";
+import type { AISystem } from "./AISystem";
+import type { MovementSystem } from "./MovementSystem";
 import type { Zone } from "../../types/game-types";
 import { NeedsBatchProcessor } from "./NeedsBatchProcessor";
 import { injectable, inject, unmanaged } from "inversify";
@@ -23,6 +25,8 @@ export class NeedsSystem extends EventEmitter {
   private divineFavorSystem?: DivineFavorSystem;
   private inventorySystem?: InventorySystem;
   private socialSystem?: SocialSystem;
+  private aiSystem?: AISystem;
+  private movementSystem?: MovementSystem;
 
   private respawnQueue = new Map<string, number>();
 
@@ -84,12 +88,16 @@ export class NeedsSystem extends EventEmitter {
     divineFavorSystem?: DivineFavorSystem;
     inventorySystem?: InventorySystem;
     socialSystem?: SocialSystem;
+    aiSystem?: AISystem;
+    movementSystem?: MovementSystem;
   }): void {
     if (systems.lifeCycleSystem) this.lifeCycleSystem = systems.lifeCycleSystem;
     if (systems.divineFavorSystem)
       this.divineFavorSystem = systems.divineFavorSystem;
     if (systems.inventorySystem) this.inventorySystem = systems.inventorySystem;
     if (systems.socialSystem) this.socialSystem = systems.socialSystem;
+    if (systems.aiSystem) this.aiSystem = systems.aiSystem;
+    if (systems.movementSystem) this.movementSystem = systems.movementSystem;
   }
 
   public update(_deltaTimeMs: number): void {
@@ -197,10 +205,20 @@ export class NeedsSystem extends EventEmitter {
     needs: EntityNeedsData,
     deltaSeconds: number,
   ): void {
-    const entity = this.gameState.agents?.find((e) => e.id === entityId);
-    if (!entity || !entity.position) return;
+    // Buscar primero en agents, luego en entities
+    let position: { x: number; y: number } | undefined;
+    const agent = this.gameState.agents?.find((e) => e.id === entityId);
+    if (agent?.position) {
+      position = agent.position;
+    } else {
+      const entity = this.gameState.entities?.find((e) => e.id === entityId);
+      if (entity?.position) {
+        position = entity.position;
+      }
+    }
+    if (!position) return;
 
-    const nearbyZones = this.findZonesNearPosition(entity.position, 50);
+    const nearbyZones = this.findZonesNearPosition(position, 50);
 
     for (const zone of nearbyZones) {
       const multiplier = this.config.zoneBonusMultiplier || 1.0;
@@ -331,6 +349,30 @@ export class NeedsSystem extends EventEmitter {
     needs.social = 70;
     needs.fun = 70;
     needs.mentalHealth = 80;
+
+    // Marcar entidad como no muerta si existe
+    if (this.gameState.entities) {
+      const entity = this.gameState.entities.find((e) => e.id === entityId);
+      if (entity) {
+        entity.isDead = false;
+      }
+    }
+
+    // Notificar a AISystem que el agente está activo de nuevo
+    if (this.aiSystem) {
+      this.aiSystem.setAgentOffDuty(entityId, false);
+    }
+
+    // Asegurar que MovementSystem tenga el estado de movimiento inicializado
+    const agent = this.gameState.agents?.find((a) => a.id === entityId);
+    if (this.movementSystem && agent?.position) {
+      if (!this.movementSystem.hasMovementState(entityId)) {
+        this.movementSystem.initializeEntityMovement(
+          entityId,
+          agent.position,
+        );
+      }
+    }
 
     logger.info(`✨ Entity ${entityId} respawned`);
 

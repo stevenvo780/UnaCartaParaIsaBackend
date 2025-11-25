@@ -1,5 +1,5 @@
 import type { AgentProfile } from "../../types/simulation/agents";
-import type { SimulationEntity } from "./schema";
+import type { SimulationEntity, EntityTraits } from "./schema";
 import type { GameState } from "../../types/game-types";
 
 /**
@@ -82,5 +82,62 @@ export class EntityIndex {
 
   public hasEntity(entityId: string): boolean {
     return this.entityIndex.has(entityId);
+  }
+
+  /**
+   * Busca una entidad por ID, primero en entities, luego en agents
+   * Útil para sistemas que necesitan encontrar entidades sin saber
+   * en qué array están almacenadas
+   */
+  public findEntityOrAgent(entityId: string): {
+    agent?: AgentProfile;
+    entity?: SimulationEntity;
+  } {
+    const agent = this.agentIndex.get(entityId);
+    const entity = this.entityIndex.get(entityId);
+    return { agent, entity };
+  }
+
+  /**
+   * Obtiene una entidad SimulationEntity, creándola desde un AgentProfile si es necesario
+   */
+  public getOrCreateEntityFromAgent(
+    agentId: string,
+    state: GameState,
+  ): SimulationEntity | undefined {
+    // Primero intentar obtener la entidad existente
+    let entity = this.entityIndex.get(agentId);
+    if (entity) return entity;
+
+    // Si no existe, crear desde el agente
+    const agent = this.agentIndex.get(agentId);
+    if (!agent || !agent.position) return undefined;
+
+    entity = {
+      id: agent.id,
+      name: agent.name,
+      x: agent.position.x,
+      y: agent.position.y,
+      position: { ...agent.position },
+      isDead: false,
+      type: "agent",
+      traits: agent.traits as EntityTraits,
+      immortal: agent.immortal,
+      stats: {
+        health: 100,
+        stamina: 100,
+      },
+    };
+
+    // Agregar a gameState.entities si no existe
+    if (!state.entities) {
+      state.entities = [];
+    }
+    if (!state.entities.find((e) => e.id === agentId)) {
+      state.entities.push(entity);
+    }
+
+    this.entityIndex.set(agentId, entity);
+    return entity;
   }
 }

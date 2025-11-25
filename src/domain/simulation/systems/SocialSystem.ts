@@ -3,6 +3,7 @@ import { SocialConfig } from "../../types/simulation/social";
 import { SpatialGrid } from "../../../utils/SpatialGrid";
 import { SocialGroup } from "../../../shared/types/simulation/agents";
 import { simulationEvents, GameEventNames } from "../core/events";
+import type { SimulationEntity, EntityTraits } from "../core/schema";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -48,6 +49,9 @@ export class SocialSystem {
   public update(deltaTimeMs: number): void {
     const dt = deltaTimeMs / 1000;
     this.lastUpdate += deltaTimeMs;
+
+    // Sincronizar agents con entities
+    this.syncAgentsToEntities();
 
     this.spatialGrid.clear();
     const entities = this.gameState.entities || [];
@@ -350,5 +354,53 @@ export class SocialSystem {
       }
     }
     return connections;
+  }
+
+  /**
+   * Sincroniza agents con entities para asegurar que todos los agentes
+   * tengan su entidad correspondiente en gameState.entities
+   */
+  private syncAgentsToEntities(): void {
+    if (!this.gameState.agents) return;
+
+    if (!this.gameState.entities) {
+      this.gameState.entities = [];
+    }
+
+    for (const agent of this.gameState.agents) {
+      // Verificar si ya existe la entidad
+      const existingEntity = this.gameState.entities.find(
+        (e) => e.id === agent.id,
+      );
+      if (existingEntity) {
+        // Actualizar posición si el agente tiene posición
+        if (agent.position) {
+          existingEntity.x = agent.position.x;
+          existingEntity.y = agent.position.y;
+          existingEntity.position = { ...agent.position };
+        }
+        continue;
+      }
+
+      // Crear entidad desde agente si no existe
+      if (agent.position) {
+        const entity: SimulationEntity = {
+          id: agent.id,
+          name: agent.name,
+          x: agent.position.x,
+          y: agent.position.y,
+          position: { ...agent.position },
+          isDead: false,
+          type: "agent",
+          traits: agent.traits as EntityTraits,
+          immortal: agent.immortal,
+          stats: {
+            health: 100,
+            stamina: 100,
+          },
+        };
+        this.gameState.entities.push(entity);
+      }
+    }
   }
 }

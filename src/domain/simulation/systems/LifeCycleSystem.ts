@@ -7,6 +7,7 @@ import {
   LifeStage,
 } from "../../types/simulation/agents";
 import { simulationEvents, GameEventNames } from "../core/events";
+import type { SimulationEntity, EntityTraits } from "../core/schema";
 import type { NeedsSystem } from "./NeedsSystem";
 import type { AISystem } from "./AISystem";
 import type { InventorySystem } from "./InventorySystem";
@@ -296,8 +297,38 @@ export class LifeCycleSystem extends EventEmitter {
     if (!this.gameState.agents) this.gameState.agents = [];
     this.gameState.agents.push(profile);
 
+    // Crear entidad correspondiente en gameState.entities
+    if (profile.position) {
+      if (!this.gameState.entities) {
+        this.gameState.entities = [];
+      }
+      // Verificar si ya existe la entidad
+      const existingEntity = this.gameState.entities.find((e) => e.id === id);
+      if (!existingEntity) {
+        const entity: SimulationEntity = {
+          id,
+          name: profile.name,
+          x: profile.position.x,
+          y: profile.position.y,
+          position: { ...profile.position },
+          isDead: false,
+          type: "agent",
+          traits: profile.traits as EntityTraits,
+          immortal: profile.immortal,
+          stats: {
+            health: 100,
+            stamina: 100,
+          },
+        };
+        this.gameState.entities.push(entity);
+      }
+    }
+
     if (this.needsSystem) {
       this.needsSystem.initializeEntityNeeds(id);
+    }
+    if (this.inventorySystem) {
+      this.inventorySystem.initializeAgentInventory(id);
     }
     if (profile.position) {
       this._movementSystem?.initializeEntityMovement(id, profile.position);
@@ -364,7 +395,19 @@ export class LifeCycleSystem extends EventEmitter {
     const index = this.gameState.agents.findIndex((a) => a.id === id);
     if (index !== -1) {
       this.gameState.agents.splice(index, 1);
-      simulationEvents.emit(GameEventNames.ANIMAL_DIED, { entityId: id });
+      // También remover de entities si existe
+      if (this.gameState.entities) {
+        const entityIndex = this.gameState.entities.findIndex(
+          (e) => e.id === id,
+        );
+        if (entityIndex !== -1) {
+          this.gameState.entities[entityIndex].isDead = true;
+        }
+      }
+      simulationEvents.emit(GameEventNames.AGENT_DEATH, {
+        entityId: id,
+        reason: "removed",
+      });
     }
   }
 

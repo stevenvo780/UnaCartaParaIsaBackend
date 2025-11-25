@@ -204,10 +204,17 @@ export class BuildingSystem {
     overridePosition?: { x: number; y: number },
   ): MutableZone {
     const worldSize = this.state.worldSize ?? { width: 2000, height: 2000 };
-    const boundsPosition = overridePosition ?? {
+    let boundsPosition = overridePosition ?? {
       x: Math.floor(Math.random() * worldSize.width),
       y: Math.floor(Math.random() * worldSize.height),
     };
+
+    // Validar y ajustar posición si es necesario
+    boundsPosition = this.validateAndAdjustPosition(
+      boundsPosition,
+      worldSize,
+      label,
+    );
 
     const zoneId = `zone_${label}_${Math.random().toString(36).slice(2)}`;
     const metadata: MutableZone["metadata"] = {
@@ -294,5 +301,80 @@ export class BuildingSystem {
       label: job.label,
       completedAt,
     });
+  }
+
+  /**
+   * Valida y ajusta la posición de construcción para evitar:
+   * - Colisiones con otras zonas
+   * - Posiciones en agua
+   * - Posiciones fuera de límites
+   */
+  private validateAndAdjustPosition(
+    position: { x: number; y: number },
+    worldSize: { width: number; height: number },
+    _buildingType: BuildingLabel,
+  ): { x: number; y: number } {
+    const BUILDING_WIDTH = 120;
+    const BUILDING_HEIGHT = 80;
+    const MAX_ATTEMPTS = 50;
+
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      const testX = attempt === 0
+        ? position.x
+        : Math.floor(Math.random() * (worldSize.width - BUILDING_WIDTH));
+      const testY = attempt === 0
+        ? position.y
+        : Math.floor(Math.random() * (worldSize.height - BUILDING_HEIGHT));
+
+      // Verificar límites del mundo
+      if (
+        testX < 0 ||
+        testY < 0 ||
+        testX + BUILDING_WIDTH > worldSize.width ||
+        testY + BUILDING_HEIGHT > worldSize.height
+      ) {
+        continue;
+      }
+
+      // Verificar colisión con otras zonas
+      const hasCollision = this.state.zones?.some((zone) => {
+        if (!zone.bounds) return false;
+        return !(
+          testX + BUILDING_WIDTH < zone.bounds.x ||
+          testX > zone.bounds.x + zone.bounds.width ||
+          testY + BUILDING_HEIGHT < zone.bounds.y ||
+          testY > zone.bounds.y + zone.bounds.height
+        );
+      });
+
+      if (hasCollision) {
+        continue;
+      }
+
+      // Verificar que no esté en agua (básico - verificar terreno si está disponible)
+      if (this.state.terrainTiles) {
+        const centerX = testX + BUILDING_WIDTH / 2;
+        const centerY = testY + BUILDING_HEIGHT / 2;
+        const nearbyWater = this.state.terrainTiles.some((tile) => {
+          const dx = tile.x - centerX;
+          const dy = tile.y - centerY;
+          const dist = Math.hypot(dx, dy);
+          return dist < 60 && tile.type === "water";
+        });
+
+        if (nearbyWater) {
+          continue;
+        }
+      }
+
+      return { x: testX, y: testY };
+    }
+
+    // Si no se encontró una posición válida después de MAX_ATTEMPTS,
+    // usar la posición original pero ajustada a los límites
+    return {
+      x: Math.max(0, Math.min(position.x, worldSize.width - BUILDING_WIDTH)),
+      y: Math.max(0, Math.min(position.y, worldSize.height - BUILDING_HEIGHT)),
+    };
   }
 }

@@ -12,7 +12,7 @@ import type {
 } from "../../types/simulation/combat";
 import { getWeapon } from "../../../simulation/data/WeaponCatalog";
 import type { ResourceType } from "../../types/simulation/economy";
-import type { SimulationEntity } from "../core/schema";
+import type { SimulationEntity, EntityTraits } from "../core/schema";
 import { InventorySystem } from "./InventorySystem";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 import { SocialSystem } from "./SocialSystem";
@@ -48,6 +48,8 @@ const WEAPON_COSTS: Record<WeaponId, Partial<Record<ResourceType, number>>> = {
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import { EntityIndex } from "../core/EntityIndex";
+import { SharedSpatialIndex } from "../core/SharedSpatialIndex";
 
 @injectable()
 export class CombatSystem {
@@ -61,6 +63,8 @@ export class CombatSystem {
 
   private animalSystem?: AnimalSystem;
   private normsSystem?: NormsSystem;
+  private entityIndex?: EntityIndex;
+  private sharedSpatialIndex?: SharedSpatialIndex;
 
   constructor(
     @inject(TYPES.GameState) private readonly state: GameState,
@@ -71,12 +75,17 @@ export class CombatSystem {
     @inject(TYPES.SocialSystem) private readonly socialSystem: SocialSystem,
     @inject(TYPES.AnimalSystem) @optional() animalSystem?: AnimalSystem,
     @inject(TYPES.NormsSystem) @optional() normsSystem?: NormsSystem,
+    @inject("EntityIndex") @optional() entityIndex?: EntityIndex,
+    @inject("SharedSpatialIndex") @optional() sharedSpatialIndex?: SharedSpatialIndex,
   ) {
     this.animalSystem = animalSystem;
     this.normsSystem = normsSystem;
+    this.entityIndex = entityIndex;
+    this.sharedSpatialIndex = sharedSpatialIndex;
     this.config = DEFAULT_COMBAT_CONFIG;
     const worldWidth = state.worldSize?.width ?? 2000;
     const worldHeight = state.worldSize?.height ?? 2000;
+    // Mantener SpatialGrid como fallback si SharedSpatialIndex no está disponible
     this.spatialGrid = new SpatialGrid(
       worldWidth,
       worldHeight,
@@ -93,17 +102,28 @@ export class CombatSystem {
     }
     this.lastUpdate = now;
 
+    // Sincronizar agents con entities si es necesario
+    this.syncAgentsToEntities();
+
     const entities = this.state.entities;
     if (!entities || entities.length === 0) return;
 
-    this.spatialGrid.clear();
     const entitiesById = new Map<string, SimulationEntity>();
-
     const validEntities = entities.filter((e) => !e.isDead && e.position);
 
-    for (const entity of validEntities) {
-      entitiesById.set(entity.id, entity);
-      this.spatialGrid.insert(entity.id, entity.position!);
+    // Usar SharedSpatialIndex si está disponible, sino usar SpatialGrid local
+    if (this.sharedSpatialIndex) {
+      // SharedSpatialIndex ya está reconstruido en SimulationRunner
+      for (const entity of validEntities) {
+        entitiesById.set(entity.id, entity);
+      }
+    } else {
+      // Fallback a SpatialGrid local
+      this.spatialGrid.clear();
+      for (const entity of validEntities) {
+        entitiesById.set(entity.id, entity);
+        this.spatialGrid.insert(entity.id, entity.position!);
+      }
     }
 
     if (this.animalSystem) {
@@ -142,16 +162,30 @@ export class CombatSystem {
         const weaponId = this.getEquipped(attacker.id);
         const weapon = getWeapon(weaponId);
 
-        const nearby = this.spatialGrid
-          .queryRadius(
+        const radius = Math.max(this.config.engagementRadius, weapon.range);
+        let nearby: SimulationEntity[];
+
+        if (this.sharedSpatialIndex) {
+          const results = this.sharedSpatialIndex.queryRadius(
             attacker.position,
-            Math.max(this.config.engagementRadius, weapon.range),
-          )
-          .filter((candidate) => candidate.entity !== attacker.id)
-          .map((candidate) => entitiesById.get(candidate.entity))
-          .filter((candidate): candidate is SimulationEntity =>
-            Boolean(candidate && !candidate.isDead),
+            radius,
+            "all",
           );
+          nearby = results
+            .filter((candidate) => candidate.entity !== attacker.id)
+            .map((candidate) => entitiesById.get(candidate.entity))
+            .filter((candidate): candidate is SimulationEntity =>
+              Boolean(candidate && !candidate.isDead),
+            );
+        } else {
+          nearby = this.spatialGrid
+            .queryRadius(attacker.position, radius)
+            .filter((candidate) => candidate.entity !== attacker.id)
+            .map((candidate) => entitiesById.get(candidate.entity))
+            .filter((candidate): candidate is SimulationEntity =>
+              Boolean(candidate && !candidate.isDead),
+            );
+        }
 
         for (const target of nearby) {
           if (!this.shouldAttack(attacker, target)) continue;
@@ -186,13 +220,24 @@ export class CombatSystem {
     for (const query of queries) {
       const { attacker, center, radius } = query;
 
-      const nearby = this.spatialGrid
-        .queryRadius(center, radius)
-        .filter((candidate) => candidate.entity !== attacker.id)
-        .map((candidate) => entitiesById.get(candidate.entity))
-        .filter((candidate): candidate is SimulationEntity =>
-          Boolean(candidate && !candidate.isDead),
-        );
+      let nearby: SimulationEntity[];
+      if (this.sharedSpatialIndex) {
+        const results = this.sharedSpatialIndex.queryRadius(center, radius, "all");
+        nearby = results
+          .filter((candidate) => candidate.entity !== attacker.id)
+          .map((candidate) => entitiesById.get(candidate.entity))
+          .filter((candidate): candidate is SimulationEntity =>
+            Boolean(candidate && !candidate.isDead),
+          );
+      } else {
+        nearby = this.spatialGrid
+          .queryRadius(center, radius)
+          .filter((candidate) => candidate.entity !== attacker.id)
+          .map((candidate) => entitiesById.get(candidate.entity))
+          .filter((candidate): candidate is SimulationEntity =>
+            Boolean(candidate && !candidate.isDead),
+          );
+      }
 
       for (const target of nearby) {
         if (!this.shouldAttack(attacker, target)) continue;
@@ -558,5 +603,54 @@ export class CombatSystem {
       id: randomUUID(),
       timestamp: Date.now(),
     } as T;
+  }
+
+  /**
+   * Sincroniza agents con entities para asegurar que todos los agentes
+   * tengan su entidad correspondiente en gameState.entities
+   */
+  private syncAgentsToEntities(): void {
+    if (!this.state.agents || !this.entityIndex) return;
+
+    if (!this.state.entities) {
+      this.state.entities = [];
+    }
+
+    for (const agent of this.state.agents) {
+      // Verificar si ya existe la entidad
+      const existingEntity = this.state.entities.find((e) => e.id === agent.id);
+      if (existingEntity) {
+        // Actualizar posición si el agente tiene posición
+        if (agent.position) {
+          existingEntity.x = agent.position.x;
+          existingEntity.y = agent.position.y;
+          existingEntity.position = { ...agent.position };
+        }
+        continue;
+      }
+
+      // Crear entidad desde agente si no existe
+      if (agent.position) {
+        const entity: SimulationEntity = {
+          id: agent.id,
+          name: agent.name,
+          x: agent.position.x,
+          y: agent.position.y,
+          position: { ...agent.position },
+          isDead: false,
+          type: "agent",
+          traits: agent.traits as EntityTraits,
+          immortal: agent.immortal,
+          stats: {
+            health: 100,
+            stamina: 100,
+          },
+        };
+        this.state.entities.push(entity);
+        if (this.entityIndex) {
+          this.entityIndex.setEntity(entity);
+        }
+      }
+    }
   }
 }
