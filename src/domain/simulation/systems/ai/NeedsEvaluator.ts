@@ -75,6 +75,19 @@ export function evaluateCriticalNeeds(
         createdAt: now,
         expiresAt: now + 15000,
       });
+    } else {
+      // Desperate search for water
+      goals.push({
+        id: `desperate_water_${aiState.entityId}_${now}`,
+        type: "explore",
+        priority: calculateNeedPriority(needs.thirst, 140), // Higher priority than normal search
+        data: {
+          explorationType: "desperate_search",
+          need: "thirst",
+        },
+        createdAt: now,
+        expiresAt: now + 10000,
+      });
     }
   }
 
@@ -108,6 +121,19 @@ export function evaluateCriticalNeeds(
         },
         createdAt: now,
         expiresAt: now + 15000,
+      });
+    } else {
+      // Desperate search for food
+      goals.push({
+        id: `desperate_food_${aiState.entityId}_${now}`,
+        type: "explore",
+        priority: calculateNeedPriority(needs.hunger, 120),
+        data: {
+          explorationType: "desperate_search",
+          need: "hunger",
+        },
+        createdAt: now,
+        expiresAt: now + 10000,
       });
     }
   }

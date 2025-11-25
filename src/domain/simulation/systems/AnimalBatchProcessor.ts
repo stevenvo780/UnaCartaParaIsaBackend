@@ -74,6 +74,9 @@ export class AnimalBatchProcessor {
   ): void {
     if (!this.needsBuffer || this.animalIdArray.length === 0) return;
 
+    // Double buffering: create work copy
+    const workBuffer = new Float32Array(this.needsBuffer);
+
     if (this.gpuService?.isGPUAvailable()) {
       try {
         const deltaSeconds = deltaMinutes * 60;
@@ -88,8 +91,8 @@ export class AnimalBatchProcessor {
         const ageMultipliers = new Float32Array(animalCount).fill(1.0);
         const divineModifiers = new Float32Array(animalCount).fill(1.0);
 
-        const newNeeds = this.gpuService.applyNeedsDecayBatch(
-          this.needsBuffer,
+        const result = this.gpuService.applyNeedsDecayBatch(
+          workBuffer,
           decayRates,
           ageMultipliers,
           divineModifiers,
@@ -97,54 +100,44 @@ export class AnimalBatchProcessor {
           deltaSeconds,
         );
 
-        for (let i = 0; i < animalCount; i++) {
-          const needsOffset = i * this.NEED_COUNT;
-          const hungerDecay = hungerDecayRates[i] * deltaMinutes;
-          newNeeds[needsOffset + 0] = Math.max(
-            0,
-            newNeeds[needsOffset + 0] - hungerDecay,
-          );
-
-          const thirstDecay = thirstDecayRates[i] * deltaMinutes;
-          newNeeds[needsOffset + 1] = Math.max(
-            0,
-            newNeeds[needsOffset + 1] - thirstDecay,
-          );
-        }
-
-        this.needsBuffer = newNeeds;
+        // Atomic swap on GPU success
+        this.needsBuffer = result;
         this.bufferDirty = true;
         return;
       } catch (error) {
         logger.warn(
-          `⚠️ Error en GPU updateNeedsBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+          `⚠️ Error en GPU updateNeedsBatch (Animal), usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
         );
+        // workBuffer is intact for CPU fallback
       }
     }
+
+    // CPU fallback: work on copy
+    const hungerRate = hungerDecayRates[0] || 1.0 / 60;
+    const thirstRate = thirstDecayRates[0] || 1.5 / 60;
+    const fearDecayRate = 0.5 / 60;
 
     const animalCount = this.animalIdArray.length;
 
     for (let i = 0; i < animalCount; i++) {
-      const needsOffset = i * this.NEED_COUNT;
+      const offset = i * this.NEED_COUNT;
 
-      const hungerDecay = hungerDecayRates[i] * deltaMinutes;
-      this.needsBuffer[needsOffset + 0] = Math.max(
+      workBuffer[offset + 0] = Math.max(
         0,
-        this.needsBuffer[needsOffset + 0] - hungerDecay,
+        workBuffer[offset + 0] - hungerRate * deltaMinutes,
       );
-
-      const thirstDecay = thirstDecayRates[i] * deltaMinutes;
-      this.needsBuffer[needsOffset + 1] = Math.max(
+      workBuffer[offset + 1] = Math.max(
         0,
-        this.needsBuffer[needsOffset + 1] - thirstDecay,
+        workBuffer[offset + 1] - thirstRate * deltaMinutes,
       );
-
-      this.needsBuffer[needsOffset + 2] = Math.max(
+      workBuffer[offset + 2] = Math.max(
         0,
-        this.needsBuffer[needsOffset + 2] - 0.5 * deltaMinutes,
+        workBuffer[offset + 2] - fearDecayRate * deltaMinutes,
       );
     }
 
+    // Atomic swap after CPU processing
+    this.needsBuffer = workBuffer;
     this.bufferDirty = true;
   }
 

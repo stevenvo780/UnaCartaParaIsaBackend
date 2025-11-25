@@ -3,7 +3,7 @@ import { GameState } from "../../types/game-types";
 import { EntityNeedsData, NeedsConfig } from "../../types/simulation/needs";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { logger } from "@/infrastructure/utils/logger";
-import type { LifeCycleSystem } from "./LifeCycleSystem";
+import type { ILifeCyclePort } from "../ports";
 import type { DivineFavorSystem } from "./DivineFavorSystem";
 import type { InventorySystem } from "./InventorySystem";
 import type { SocialSystem } from "./SocialSystem";
@@ -42,7 +42,7 @@ export class NeedsSystem extends EventEmitter {
   private entityNeeds: Map<string, EntityNeedsData>;
   private lastUpdate: number = Date.now();
 
-  private lifeCycleSystem?: LifeCycleSystem;
+  private lifeCyclePort?: ILifeCyclePort;
   private divineFavorSystem?: DivineFavorSystem;
   private inventorySystem?: InventorySystem;
   private socialSystem?: SocialSystem;
@@ -68,7 +68,7 @@ export class NeedsSystem extends EventEmitter {
     @unmanaged() config?: Partial<NeedsConfig>,
     @unmanaged()
     systems?: {
-      lifeCycleSystem?: LifeCycleSystem;
+      lifeCyclePort?: ILifeCyclePort;
       divineFavorSystem?: DivineFavorSystem;
       inventorySystem?: InventorySystem;
       socialSystem?: SocialSystem;
@@ -110,7 +110,7 @@ export class NeedsSystem extends EventEmitter {
     this.batchProcessor = new NeedsBatchProcessor();
 
     if (systems) {
-      this.lifeCycleSystem = systems.lifeCycleSystem;
+      this.lifeCyclePort = systems.lifeCyclePort;
       this.divineFavorSystem = systems.divineFavorSystem;
       this.inventorySystem = systems.inventorySystem;
       this.socialSystem = systems.socialSystem;
@@ -123,12 +123,12 @@ export class NeedsSystem extends EventEmitter {
    * @param systems - Object containing system dependencies
    */
   public setDependencies(systems: {
-    lifeCycleSystem?: LifeCycleSystem;
+    lifeCyclePort?: ILifeCyclePort;
     divineFavorSystem?: DivineFavorSystem;
     inventorySystem?: InventorySystem;
     socialSystem?: SocialSystem;
   }): void {
-    if (systems.lifeCycleSystem) this.lifeCycleSystem = systems.lifeCycleSystem;
+    if (systems.lifeCyclePort) this.lifeCyclePort = systems.lifeCyclePort;
     if (systems.divineFavorSystem)
       this.divineFavorSystem = systems.divineFavorSystem;
     if (systems.inventorySystem) this.inventorySystem = systems.inventorySystem;
@@ -517,8 +517,8 @@ export class NeedsSystem extends EventEmitter {
   }
 
   private getAgeDecayMultiplier(entityId: string): number {
-    if (!this.lifeCycleSystem) return 1.0;
-    const agent = this.lifeCycleSystem.getAgent(entityId);
+    if (!this.lifeCyclePort) return 1.0;
+    const agent = this.lifeCyclePort.getAgent(entityId);
     if (!agent) return 1.0;
 
     switch (agent.lifeStage) {

@@ -8,7 +8,7 @@ import {
 } from "../../types/simulation/agents";
 import { simulationEvents, GameEventNames } from "../core/events";
 import type { SimulationEntity, EntityTraits } from "../core/schema";
-import type { NeedsSystem } from "./NeedsSystem";
+import type { INeedsPort } from "../ports";
 import type { AISystem } from "./AISystem";
 import type { InventorySystem } from "./InventorySystem";
 import type { SocialSystem } from "./SocialSystem";
@@ -62,7 +62,7 @@ export class LifeCycleSystem extends EventEmitter {
   private spawnCounter = 0;
   private pendingHousingAssignments = new Set<string>();
 
-  private needsSystem?: NeedsSystem;
+  private needsPort?: INeedsPort;
   private _aiSystem?: AISystem;
   private inventorySystem?: InventorySystem;
   private householdSystem?: HouseholdSystem;
@@ -88,7 +88,7 @@ export class LifeCycleSystem extends EventEmitter {
       adultAge: 16,
       elderAge: 55,
       maxAge: 85,
-      reproductionCooldownSec: 90,
+      reproductionCooldownSec: 30,
       maxPopulation: 50,
       fertilityMinAge: 18,
       fertilityMaxAge: 45,
@@ -99,7 +99,7 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   public setDependencies(systems: {
-    needsSystem?: NeedsSystem;
+    needsPort?: INeedsPort;
     aiSystem?: AISystem;
     inventorySystem?: InventorySystem;
     socialSystem?: SocialSystem;
@@ -111,7 +111,7 @@ export class LifeCycleSystem extends EventEmitter {
     roleSystem?: RoleSystem;
     taskSystem?: TaskSystem;
   }): void {
-    if (systems.needsSystem) this.needsSystem = systems.needsSystem;
+    if (systems.needsPort) this.needsPort = systems.needsPort;
     if (systems.aiSystem) this._aiSystem = systems.aiSystem;
     if (systems.inventorySystem) this.inventorySystem = systems.inventorySystem;
     if (systems.socialSystem) this._socialSystem = systems.socialSystem;
@@ -134,7 +134,7 @@ export class LifeCycleSystem extends EventEmitter {
       return;
     }
     const missing: string[] = [];
-    if (!this.needsSystem) missing.push("NeedsSystem");
+    if (!this.needsPort) missing.push("NeedsPort");
     if (!this._aiSystem) missing.push("AISystem");
     if (!this.inventorySystem) missing.push("InventorySystem");
     if (!this.householdSystem) missing.push("HouseholdSystem");
@@ -255,7 +255,7 @@ export class LifeCycleSystem extends EventEmitter {
 
     if (males.length === 0 || females.length === 0) return;
 
-    if (Math.random() < 0.3) {
+    if (Math.random() < 0.6) {
       const father = males[Math.floor(Math.random() * males.length)];
       const mother = females[Math.floor(Math.random() * females.length)];
 
@@ -371,8 +371,8 @@ export class LifeCycleSystem extends EventEmitter {
       }
     }
 
-    if (this.needsSystem) {
-      this.needsSystem.initializeEntityNeeds(id);
+    if (this.needsPort) {
+      this.needsPort.initializeEntityNeeds(id);
     }
     if (this.inventorySystem) {
       this.inventorySystem.initializeAgentInventory(id);
@@ -519,8 +519,8 @@ export class LifeCycleSystem extends EventEmitter {
       this._aiSystem.removeEntityAI(agentId);
     }
 
-    if (this.needsSystem) {
-      this.needsSystem.removeEntityNeeds(agentId);
+    if (this.needsPort) {
+      this.needsPort.removeEntityNeeds(agentId);
     }
 
     if (this._socialSystem) {

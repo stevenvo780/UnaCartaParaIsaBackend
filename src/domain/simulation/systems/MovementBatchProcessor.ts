@@ -226,29 +226,27 @@ export class MovementBatchProcessor {
         logger.warn(
           `⚠️ Error en GPU updateFatigueBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
         );
+        // workFatigue is intact for CPU fallback
       }
     }
 
+    // CPU fallback: work on copy
     const entityCount = this.entityIdArray.length;
     const fatigueDecayRate = 0.1 * (deltaMs / 1000);
     const fatigueRestRate = 0.5 * (deltaMs / 1000);
 
     for (let i = 0; i < entityCount; i++) {
       if (isMoving[i]) {
-        this.fatigueBuffer[i] = Math.min(100, this.fatigueBuffer[i] + 0.1);
+        workFatigue[i] = Math.min(100, workFatigue[i] + 0.1);
       } else if (isResting[i]) {
-        this.fatigueBuffer[i] = Math.max(
-          0,
-          this.fatigueBuffer[i] - fatigueRestRate,
-        );
+        workFatigue[i] = Math.max(0, workFatigue[i] - fatigueRestRate);
       } else {
-        this.fatigueBuffer[i] = Math.max(
-          0,
-          this.fatigueBuffer[i] - fatigueDecayRate,
-        );
+        workFatigue[i] = Math.max(0, workFatigue[i] - fatigueDecayRate);
       }
     }
 
+    // Atomic swap after CPU processing
+    this.fatigueBuffer = workFatigue;
     this.bufferDirty = true;
   }
 

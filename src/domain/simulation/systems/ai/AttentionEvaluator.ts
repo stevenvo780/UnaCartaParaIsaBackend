@@ -66,7 +66,21 @@ export function evaluateDefaultExploration(
   const allZones = ctx.gameState.zones?.map((z) => z.id) || [];
   const candidates = restZones.length > 0 ? restZones : allZones;
 
-  if (candidates.length === 0) return [];
+  if (candidates.length === 0) {
+    // No zones found, wander randomly
+    return [
+      {
+        id: `wander_${now}`,
+        type: "explore",
+        priority: 0.3,
+        data: {
+          explorationType: "wander",
+        },
+        createdAt: now,
+        expiresAt: now + 8000,
+      },
+    ];
+  }
 
   const best = ctx.selectBestZone(
     aiState,
@@ -74,7 +88,21 @@ export function evaluateDefaultExploration(
     restZones.length > 0 ? "rest" : "explore",
   );
 
-  if (!best) return [];
+  if (!best) {
+    // Fallback if selectBestZone fails
+    return [
+      {
+        id: `wander_fallback_${now}`,
+        type: "explore",
+        priority: 0.3,
+        data: {
+          explorationType: "wander",
+        },
+        createdAt: now,
+        expiresAt: now + 8000,
+      },
+    ];
+  }
 
   return [
     {

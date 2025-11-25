@@ -29,6 +29,7 @@ import {
   getEntityPosition,
 } from "./utils";
 import type { Quest } from "../../../types/simulation/quests";
+import { evaluateExpansionGoals } from "./ExpansionEvaluator";
 
 /**
  * Dependencies interface for goal planning.
@@ -254,6 +255,20 @@ export function planGoals(
       aiState,
     );
     goals.push(...opportunityGoals);
+  }
+
+  // ... (imports)
+
+  // Inside planGoals function, before default exploration:
+
+  if (deps.getAgentInventory && deps.getEntityPosition) {
+    const expansionDeps = {
+      gameState: deps.gameState,
+      getAgentInventory: deps.getAgentInventory,
+      getEntityPosition: positionFor,
+    };
+    const expansionGoals = evaluateExpansionGoals(expansionDeps, aiState);
+    goals.push(...expansionGoals);
   }
 
   if (goals.length === 0) {

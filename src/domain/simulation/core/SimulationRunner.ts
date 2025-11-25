@@ -219,7 +219,7 @@ export class SimulationRunner {
     }
 
     this.lifeCycleSystem.setDependencies({
-      needsSystem: this.needsSystem,
+      needsPort: this.needsSystem,
       inventorySystem: this.inventorySystem,
       householdSystem: this.householdSystem,
       movementSystem: this.movementSystem,
@@ -232,7 +232,7 @@ export class SimulationRunner {
     });
 
     this.needsSystem.setDependencies({
-      lifeCycleSystem: this.lifeCycleSystem,
+      lifeCyclePort: this.lifeCycleSystem,
       divineFavorSystem: this.divineFavorSystem,
       inventorySystem: this.inventorySystem,
       socialSystem: this.socialSystem,
