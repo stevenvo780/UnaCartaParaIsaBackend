@@ -1072,15 +1072,8 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
-      GameEventNames.EMERGENCE_PATTERN_DETECTED,
-      (_data: {
-        patternId: string;
-        patternType: string;
-        strength: number;
-        timestamp: number;
-      }) => {},
-    );
+    // EMERGENCE_PATTERN_DETECTED: El EmergenceSystem ya procesa estos eventos internamente
+    // No se requiere handler adicional aquí
 
     simulationEvents.on(
       GameEventNames.AGENT_AGED,
@@ -1201,13 +1194,8 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
-      GameEventNames.NEED_SATISFIED,
-      (_data: { agentId: string; need: string; value: number }) => {
-        // Evento registrado para futuras implementaciones de liberación de reservaciones
-        void _data;
-      },
-    );
+    // NEED_SATISFIED: El NeedsSystem maneja esto internamente
+    // No se requiere handler adicional aquí
 
     simulationEvents.on(
       GameEventNames.ROLE_ASSIGNED,
@@ -1299,19 +1287,8 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
-      GameEventNames.ANIMAL_DIED,
-      (_data: {
-        animalId: string;
-        position?: { x: number; y: number };
-        biome?: string;
-        leavesCorpse?: boolean;
-        timestamp: number;
-      }) => {
-        // Evento registrado para futuras implementaciones de generación de recursos
-        void _data;
-      },
-    );
+    // ANIMAL_DIED: El AnimalSystem maneja esto internamente
+    // No se requiere handler adicional aquí
 
     // Handler para tareas creadas - notificar a sistemas relevantes
     simulationEvents.on(
@@ -1362,22 +1339,8 @@ export class SimulationRunner {
       },
     );
 
-    // Handler para edificios dañados - otorgar reputación negativa si es significativo
-    simulationEvents.on(
-      GameEventNames.BUILDING_DAMAGED,
-      (_data: {
-        zoneId: string;
-        buildingType: string;
-        damage: number;
-        health: number;
-        maxHealth: number;
-        timestamp: number;
-      }) => {
-        // El GovernanceSystem ya escucha eventos de household, podría crear demandas automáticamente
-        // Por ahora solo registramos el evento para telemetría
-        void _data;
-      },
-    );
+    // BUILDING_DAMAGED: El BuildingMaintenanceSystem maneja esto internamente
+    // No se requiere handler adicional aquí
 
     // Handler para edificios reparados - otorgar reputación al reparador
     simulationEvents.on(
@@ -1399,49 +1362,11 @@ export class SimulationRunner {
       },
     );
 
-    // Handler para asignación de agente a household - actualizar estadísticas
-    simulationEvents.on(
-      GameEventNames.HOUSEHOLD_AGENT_ASSIGNED,
-      (_data: {
-        agentId: string;
-        zoneId: string;
-        occupancy: number;
-        timestamp: number;
-      }) => {
-        // El GovernanceSystem ya escucha eventos de household para crear demandas
-        // Este listener puede usarse para otras acciones en el futuro
-      },
-    );
+    // HOUSEHOLD_AGENT_ASSIGNED: El HouseholdSystem maneja esto internamente
+    // No se requiere handler adicional aquí
 
-    // Handler para depósito de recursos en household - actualizar estadísticas económicas
-    simulationEvents.on(
-      GameEventNames.HOUSEHOLD_RESOURCE_DEPOSITED,
-      (_data: {
-        zoneId: string;
-        agentId: string;
-        resource: string;
-        amount: number;
-        timestamp: number;
-      }) => {
-        // Evento registrado para futuras implementaciones de economía doméstica
-        void _data;
-      },
-    );
-
-    // Handler para retiro de recursos de household - actualizar estadísticas económicas
-    simulationEvents.on(
-      GameEventNames.HOUSEHOLD_RESOURCE_WITHDRAWN,
-      (_data: {
-        zoneId: string;
-        agentId: string;
-        resource: string;
-        amount: number;
-        timestamp: number;
-      }) => {
-        // Evento registrado para futuras implementaciones de economía doméstica
-        void _data;
-      },
-    );
+    // HOUSEHOLD_RESOURCE_DEPOSITED/WITHDRAWN: El HouseholdSystem maneja esto internamente
+    // No se requiere handler adicional aquí
 
     const eventCaptureListener = (
       eventName: string,
@@ -1722,7 +1647,8 @@ export class SimulationRunner {
     const events =
       this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
     const snapshotState = cloneGameState(this.state);
-    snapshotState.genealogy = this._genealogySystem?.getSerializedFamilyTree() ?? {};
+    snapshotState.genealogy =
+      this._genealogySystem?.getSerializedFamilyTree() ?? {};
 
     const allLegends = this.livingLegendsSystem.getAllLegends();
     const activeLegends = this.livingLegendsSystem.getActiveLegends();
@@ -1752,7 +1678,8 @@ export class SimulationRunner {
       this.tickCounter,
     );
 
-    snapshotState.genealogy = this._genealogySystem?.getSerializedFamilyTree() ?? {};
+    snapshotState.genealogy =
+      this._genealogySystem?.getSerializedFamilyTree() ?? {};
 
     const allLegends = this.livingLegendsSystem.getAllLegends();
     const activeLegends = this.livingLegendsSystem.getActiveLegends();

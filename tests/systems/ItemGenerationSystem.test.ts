@@ -97,6 +97,9 @@ describe("ItemGenerationSystem", () => {
       
       itemGenerationSystem.forceSpawnItem("zone-1", "test_item", 5);
       
+      // Flush eventos para que se emitan inmediatamente
+      simulationEvents.flushEvents();
+      
       expect(eventSpy).toHaveBeenCalled();
       simulationEvents.off(GameEventNames.ITEM_GENERATED, eventSpy);
     });
@@ -122,6 +125,9 @@ describe("ItemGenerationSystem", () => {
       
       itemGenerationSystem.forceSpawnItem("zone-1", "test_item", 5);
       itemGenerationSystem.collectItemsFromZone("zone-1", "agent-1");
+      
+      // Flush eventos para que se emitan inmediatamente
+      simulationEvents.flushEvents();
       
       expect(eventSpy).toHaveBeenCalled();
       simulationEvents.off(GameEventNames.ITEM_COLLECTED, eventSpy);

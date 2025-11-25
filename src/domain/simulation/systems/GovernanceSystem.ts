@@ -205,7 +205,9 @@ export class GovernanceSystem {
         // Si la producción es alta, podría resolver demandas de recursos
         if (data.resource === "food" && data.amount > 20) {
           // Revisar si hay demandas de comida que puedan resolverse
-          for (const [_demandId, demand] of Array.from(this.demands.entries())) {
+          for (const [_demandId, demand] of Array.from(
+            this.demands.entries(),
+          )) {
             if (
               demand.type === "food_shortage" &&
               !demand.resolvedAt &&
