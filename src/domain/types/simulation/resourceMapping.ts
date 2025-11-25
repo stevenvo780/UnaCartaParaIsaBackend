@@ -38,12 +38,12 @@ export const WORLD_TO_INVENTORY: Record<
  * INVENTORY_TO_WORLD.food // ["berry_bush", "mushroom_patch", "wheat_crop"]
  */
 export const INVENTORY_TO_WORLD: Record<ResourceType, WorldResourceType[]> = {
-  wood: ["tree"],
-  stone: ["rock"],
-  water: ["water_source"],
-  food: ["berry_bush", "mushroom_patch", "wheat_crop"],
-  rare_materials: [], // se obtiene como drop raro, no de recursos específicos
-} as const;
+  wood: ["tree"] as WorldResourceType[],
+  stone: ["rock"] as WorldResourceType[],
+  water: ["water_source"] as WorldResourceType[],
+  food: ["berry_bush", "mushroom_patch", "wheat_crop"] as WorldResourceType[],
+  rare_materials: [] as WorldResourceType[], // se obtiene como drop raro, no de recursos específicos
+};
 
 /**
  * Type guard: valida si un string es un WorldResourceType válido

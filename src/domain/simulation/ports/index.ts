@@ -149,7 +149,7 @@ export interface IMovementPort {
   /**
    * Starts movement to coordinates
    */
-  moveToPosition(entityId: string, x: number, y: number): void;
+  moveToPoint(entityId: string, x: number, y: number): void;
 
   /**
    * Stops entity movement
@@ -174,12 +174,12 @@ export interface ISocialPort {
   /**
    * Gets relationship value between two agents
    */
-  getRelationship(agentId1: string, agentId2: string): number;
+  getAffinityBetween(agentId1: string, agentId2: string): number;
 
   /**
    * Modifies relationship between agents
    */
-  modifyRelationship(agentId1: string, agentId2: string, delta: number): void;
+  modifyAffinity(agentId1: string, agentId2: string, delta: number): void;
 
   /**
    * Gets list of friends for an agent
@@ -236,12 +236,12 @@ export interface IHouseholdPort {
   /**
    * Assigns agent to a household
    */
-  assignToHousehold(agentId: string, householdId?: string): boolean;
+  assignToHouse(agentId: string, role?: string): string | null;
 
   /**
    * Gets household for an agent
    */
-  getAgentHousehold(agentId: string): string | undefined;
+  getHouseFor(agentId: string): { id: string } | null;
 
   /**
    * Deposits resources to household

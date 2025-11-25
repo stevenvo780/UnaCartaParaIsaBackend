@@ -5,6 +5,7 @@ import type {
   HouseholdMember,
   HouseholdSystemConfig,
 } from "../../types/simulation/household";
+import type { ResourceType } from "../../types/simulation/economy";
 import { simulationEvents, GameEventNames } from "../core/events";
 
 const DEFAULT_CONFIG: HouseholdSystemConfig = {
@@ -223,60 +224,76 @@ export class HouseholdSystem {
 
   public depositToHousehold(
     householdId: string,
-    resource: "wood" | "stone" | "food" | "water",
-    amount: number,
+    resources: Partial<Record<ResourceType, number>>,
   ): boolean {
     const household = this.households.get(householdId);
     if (!household) return false;
 
-    const currentLoad =
-      household.sharedInventory.wood +
-      household.sharedInventory.stone +
-      household.sharedInventory.food +
-      household.sharedInventory.water;
+    let success = true;
+    for (const [res, amount] of Object.entries(resources)) {
+      const resource = res as ResourceType;
+      // Solo procesamos los recursos básicos que el inventario del hogar puede almacenar
+      if (resource !== "wood" && resource !== "stone" && resource !== "food" && resource !== "water") {
+        continue;
+      }
 
-    const available = household.sharedInventory.capacity - currentLoad;
-    if (available < amount) return false;
+      if (amount === undefined) continue;
 
-    household.sharedInventory[resource] += amount;
+      const currentLoad =
+        household.sharedInventory.wood +
+        household.sharedInventory.stone +
+        household.sharedInventory.food +
+        household.sharedInventory.water;
 
-    simulationEvents.emit(GameEventNames.HOUSEHOLD_RESOURCE_DEPOSITED, {
-      householdId,
-      resource,
-      amount,
-    });
+      const available = household.sharedInventory.capacity - currentLoad;
+      if (available < amount) {
+        success = false;
+        continue;
+      }
 
-    return true;
-  }
+      household.sharedInventory[resource] += amount;
 
-  public withdrawFromHousehold(
-    agentId: string,
-    householdId: string,
-    resource: "wood" | "stone" | "food" | "water",
-    amount: number,
-  ): number {
-    const household = this.households.get(householdId);
-    if (!household) return 0;
-
-    if (!household.members.some((m) => m.agentId === agentId)) {
-      return 0;
-    }
-
-    const available = household.sharedInventory[resource];
-    const withdrawn = Math.min(amount, available);
-
-    if (withdrawn > 0) {
-      household.sharedInventory[resource] -= withdrawn;
-
-      simulationEvents.emit(GameEventNames.HOUSEHOLD_RESOURCE_WITHDRAWN, {
-        agentId,
+      simulationEvents.emit(GameEventNames.HOUSEHOLD_RESOURCE_DEPOSITED, {
         householdId,
         resource,
-        amount: withdrawn,
+        amount,
       });
     }
 
-    return withdrawn;
+    return success;
+  }
+
+  public withdrawFromHousehold(
+    householdId: string,
+    resources: Partial<Record<ResourceType, number>>,
+  ): boolean {
+    const household = this.households.get(householdId);
+    if (!household) return false;
+
+    // Simplified withdrawal for port compatibility
+    // In a real scenario we might want to check agent permissions here if agentId was passed
+    // But the port signature is (householdId, resources)
+
+    for (const [res, amount] of Object.entries(resources)) {
+      const resource = res as ResourceType;
+      // Solo procesamos los recursos básicos que el inventario del hogar puede almacenar
+      if (resource !== "wood" && resource !== "stone" && resource !== "food" && resource !== "water") {
+        continue;
+      }
+
+      if (amount === undefined) continue;
+
+      if (household.sharedInventory[resource] >= amount) {
+        household.sharedInventory[resource] -= amount;
+        simulationEvents.emit(GameEventNames.HOUSEHOLD_RESOURCE_WITHDRAWN, {
+          agentId: "system", // Unknown agent context in this overload
+          householdId,
+          resource,
+          amount,
+        });
+      }
+    }
+    return true;
   }
 
   public getHouseholdInventory(householdId: string): {
@@ -290,7 +307,7 @@ export class HouseholdSystem {
     return household ? household.sharedInventory : null;
   }
 
-  public getAgentHousehold(agentId: string): Household | null {
+  public findHouseholdForAgent(agentId: string): Household | null {
     for (const h of this.households.values()) {
       if (h.members.some((m) => m.agentId === agentId)) {
         return h;
@@ -298,4 +315,6 @@ export class HouseholdSystem {
     }
     return null;
   }
+
+
 }

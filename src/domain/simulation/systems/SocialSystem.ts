@@ -509,4 +509,31 @@ export class SocialSystem {
     }
     return connections;
   }
+
+
+
+  public getFriends(agentId: string): string[] {
+    const neighbors = this.edges.get(agentId);
+    if (!neighbors) return [];
+    const friends: string[] = [];
+    for (const [otherId, affinity] of neighbors.entries()) {
+      if (affinity > 0.5) {
+        friends.push(otherId);
+      }
+    }
+    return friends;
+  }
+
+  public addSocialMemory(
+    _agentId: string,
+    _memory: {
+      type: string;
+      targetId?: string;
+      timestamp: number;
+      [key: string]: unknown;
+    },
+  ): void {
+    // TODO: Implement social memory logic
+    // For now, we just log it or ignore it as it wasn't present before
+  }
 }

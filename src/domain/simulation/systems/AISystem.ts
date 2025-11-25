@@ -4,9 +4,11 @@ import { EventEmitter } from "events";
 import { GameState } from "../../types/game-types";
 import {
   AIGoal,
+  AIGoalData,
   AIState,
   AgentAction,
   AgentPersonality,
+  GoalType,
 } from "../../types/simulation/ai";
 import type { AgentTraits, LifeStage } from "../../types/simulation/agents";
 import type { WorldResourceType } from "../../types/simulation/worldResources";
@@ -469,25 +471,25 @@ export class AISystem extends EventEmitter {
         : undefined,
       getCurrentTimeOfDay: this.timeSystem
         ? ():
+          | "dawn"
+          | "morning"
+          | "midday"
+          | "afternoon"
+          | "dusk"
+          | "night"
+          | "deep_night" => {
+          const time = this.timeSystem!.getCurrentTimeOfDay();
+          if (time === "evening") return "dusk";
+          if (time === "rest") return "deep_night";
+          return time as
             | "dawn"
             | "morning"
             | "midday"
             | "afternoon"
             | "dusk"
             | "night"
-            | "deep_night" => {
-            const time = this.timeSystem!.getCurrentTimeOfDay();
-            if (time === "evening") return "dusk";
-            if (time === "rest") return "deep_night";
-            return time as
-              | "dawn"
-              | "morning"
-              | "midday"
-              | "afternoon"
-              | "dusk"
-              | "night"
-              | "deep_night";
-          }
+            | "deep_night";
+        }
         : undefined,
       getEntityPosition: (id: string) => {
         const agent =
@@ -544,10 +546,10 @@ export class AISystem extends EventEmitter {
       socialPreference: isChild
         ? "extroverted"
         : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 >
-            0.6
+          0.6
           ? "extroverted"
           : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 <
-              0.4
+            0.4
             ? "introverted"
             : "balanced",
       workEthic: isChild
@@ -555,7 +557,7 @@ export class AISystem extends EventEmitter {
         : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 > 0.7
           ? "workaholic"
           : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 <
-              0.3
+            0.3
             ? "lazy"
             : "balanced",
       explorationType:
@@ -1515,5 +1517,63 @@ export class AISystem extends EventEmitter {
     }
 
     this._movementSystem?.moveToZone(action.agentId, action.targetZoneId);
+  }
+  // IAIPort implementation
+  public setGoal(
+    agentId: string,
+    goal: {
+      type: string;
+      priority: number;
+      targetId?: string;
+      targetZoneId?: string;
+      data?: Record<string, unknown>;
+    },
+  ): void {
+    const aiState = this.aiStates.get(agentId);
+    if (aiState) {
+      // Convert goal.type to GoalType and validate
+      const goalType = goal.type as GoalType;
+      // Convert goal.data to AIGoalData format
+      const goalData: AIGoalData | undefined = goal.data
+        ? {
+            ...Object.fromEntries(
+              Object.entries(goal.data).map(([k, v]) => [
+                k,
+                typeof v === "string" || typeof v === "number" ? v : undefined,
+              ]),
+            ),
+          }
+        : undefined;
+
+      const newGoal: AIGoal = {
+        id: `external_${Date.now()}`,
+        type: goalType,
+        priority: goal.priority,
+        targetId: goal.targetId,
+        targetZoneId: goal.targetZoneId,
+        data: goalData,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 60000, // Default 1 min expiry for external goals
+      };
+      aiState.currentGoal = newGoal;
+      simulationEvents.emit(GameEventNames.AGENT_GOAL_CHANGED, {
+        agentId,
+        newGoal,
+        timestamp: Date.now(),
+      });
+    }
+  }
+
+  public clearGoals(agentId: string): void {
+    const aiState = this.aiStates.get(agentId);
+    if (aiState) {
+      aiState.currentGoal = null;
+      aiState.goalQueue = [];
+    }
+  }
+
+  public getCurrentGoal(agentId: string): unknown {
+    const aiState = this.aiStates.get(agentId);
+    return aiState?.currentGoal;
   }
 }

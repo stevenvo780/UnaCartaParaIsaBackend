@@ -1,5 +1,6 @@
 import type { AIState, AIGoal } from "../../../types/simulation/ai";
 import type { GameState } from "../../../types/game-types";
+import { RandomUtils } from "../../../../shared/utils/RandomUtils";
 
 export interface AttentionContext {
   gameState: GameState;
@@ -31,7 +32,6 @@ export function evaluateAttention(
     .filter(({ d }) => d > 50 && d < ATTENTION_RADIUS)
     .sort((a, b) => a.d - b.d);
 
-  import { RandomUtils } from "../../../../shared/utils/RandomUtils";
 
   // ...
 

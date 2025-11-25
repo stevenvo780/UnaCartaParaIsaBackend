@@ -199,14 +199,15 @@ export class LifeCycleSystem extends EventEmitter {
     this.processHousingAssignments();
   }
 
-  private getLifeStage(age: number): LifeStage {
+  public getLifeStage(age: number): LifeStage {
     if (age < this.config.adultAge) return "child";
     if (age < this.config.elderAge) return "adult";
     return "elder";
   }
 
   private queueHousingAssignment(agentId: string): void {
-    if (this.householdPort?.getAgentHousehold(agentId)) return;
+    const house = this.householdPort?.getHouseFor(agentId);
+    if (house) return;
     this.pendingHousingAssignments.add(agentId);
   }
 
@@ -221,7 +222,7 @@ export class LifeCycleSystem extends EventEmitter {
         this.entityIndex?.getAgent(agentId) ??
         this.gameState.agents?.find((a) => a.id === agentId);
       if (agent && agent.lifeStage === "adult") {
-        const assigned = this.householdPort.assignToHousehold(agentId);
+        const assigned = this.householdPort?.assignToHouse(agentId);
         if (assigned) {
           this.pendingHousingAssignments.delete(agentId);
         }
@@ -311,7 +312,23 @@ export class LifeCycleSystem extends EventEmitter {
     });
   }
 
-  public spawnAgent(partial: Partial<AgentProfile> = {}): AgentProfile {
+  public spawnAgent(
+    spec:
+      | Partial<AgentProfile>
+      | {
+        id?: string;
+        name?: string;
+        sex: "male" | "female";
+        ageYears: number;
+        lifeStage: LifeStage;
+        generation: number;
+        immortal?: boolean;
+        traits?: Partial<AgentTraits>;
+      }
+      = {},
+  ): AgentProfile {
+    // Convert spec to Partial<AgentProfile> for internal processing
+    const partial = spec as Partial<AgentProfile>;
     const id = partial.id ?? `agent_${++this.spawnCounter}`;
     logger.info(`🧑 Spawning agent ${id} (${partial.name || "unnamed"})`);
 
@@ -383,7 +400,7 @@ export class LifeCycleSystem extends EventEmitter {
       this.inventoryPort.initializeAgentInventory(id);
     }
     if (profile.position) {
-      this._movementPort?.moveToPosition(
+      this._movementPort?.moveToPoint(
         id,
         profile.position.x,
         profile.position.y,
@@ -524,12 +541,12 @@ export class LifeCycleSystem extends EventEmitter {
       }
     }
 
-    if (this._aiPort) {
-      this._aiPort.clearGoals(agentId);
+    if (this._aiSystem) {
+      this._aiSystem.clearGoals(agentId);
     }
 
-    if (this.needsPort) {
-      this.needsPort.removeEntityNeeds(agentId);
+    if (this.needsSystem) {
+      this.needsSystem.removeEntityNeeds(agentId);
     }
 
     if (this._socialPort) {
@@ -537,8 +554,8 @@ export class LifeCycleSystem extends EventEmitter {
       // this._socialPort.removeRelationships(agentId);
     }
 
-    if (this._movementPort) {
-      this._movementPort.stopMovement(agentId);
+    if (this._movementSystem) {
+      this._movementSystem.stopMovement(agentId);
     }
 
     if (this._taskSystem) {

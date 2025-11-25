@@ -220,14 +220,14 @@ export class SimulationRunner {
 
     this.lifeCycleSystem.setDependencies({
       needsPort: this.needsSystem,
-      inventorySystem: this.inventorySystem,
-      householdSystem: this.householdSystem,
-      movementSystem: this.movementSystem,
+      inventoryPort: this.inventorySystem,
+      householdPort: this.householdSystem,
+      movementPort: this.movementSystem,
       genealogySystem: this._genealogySystem,
-      socialSystem: this.socialSystem,
+      socialPort: this.socialSystem,
       marriageSystem: this.marriageSystem,
       divineFavorSystem: this.divineFavorSystem,
-      aiSystem: this.aiSystem,
+      aiPort: this.aiSystem,
       roleSystem: this.roleSystem,
     });
 
@@ -2350,14 +2350,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                  resources?: {
-                    wood?: number;
-                    stone?: number;
-                    food?: number;
-                    water?: number;
-                  };
-                  minWorkers?: number;
-                }
+                resources?: {
+                  wood?: number;
+                  stone?: number;
+                  food?: number;
+                  water?: number;
+                };
+                minWorkers?: number;
+              }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,
@@ -2399,12 +2399,12 @@ export class SimulationRunner {
       ) {
         this.timeSystem.setWeather(
           weatherType as
-            | "clear"
-            | "cloudy"
-            | "rainy"
-            | "stormy"
-            | "foggy"
-            | "snowy",
+          | "clear"
+          | "cloudy"
+          | "rainy"
+          | "stormy"
+          | "foggy"
+          | "snowy",
         );
         logger.info(`Weather set to ${weatherType} via TIME_COMMAND`);
       } else {
@@ -2507,12 +2507,12 @@ export class SimulationRunner {
       social,
       ai: aiState
         ? {
-            currentGoal: aiState.currentGoal,
-            goalQueue: aiState.goalQueue,
-            currentAction: aiState.currentAction,
-            offDuty: aiState.offDuty,
-            lastDecisionTime: aiState.lastDecisionTime,
-          }
+          currentGoal: aiState.currentGoal,
+          goalQueue: aiState.goalQueue,
+          currentAction: aiState.currentAction,
+          offDuty: aiState.offDuty,
+          lastDecisionTime: aiState.lastDecisionTime,
+        }
         : null,
     };
   }

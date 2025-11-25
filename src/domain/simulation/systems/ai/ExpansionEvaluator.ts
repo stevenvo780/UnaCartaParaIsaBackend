@@ -1,6 +1,7 @@
 import type { AIState, AIGoal } from "../../../types/simulation/ai";
 import type { GameState } from "../../../types/game-types";
 import type { Inventory } from "../../../types/simulation/economy";
+import { RandomUtils } from "../../../../shared/utils/RandomUtils";
 
 export interface ExpansionContext {
   gameState: GameState;
@@ -47,7 +48,6 @@ export function evaluateExpansionGoals(
   const mapHeight = ctx.gameState.worldSize?.height || 2000;
   const pos = ctx.getEntityPosition(aiState.entityId);
 
-  import { RandomUtils } from "../../../../shared/utils/RandomUtils";
 
   // ...
 
