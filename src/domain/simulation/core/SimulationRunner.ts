@@ -413,30 +413,6 @@ export class SimulationRunner {
         }
       });
     });
-
-    if (this.state.agents.length === 0) {
-      this.lifeCycleSystem.spawnAgent({
-        name: "Isa",
-        sex: "female",
-        traits: {
-          cooperation: 0.8,
-          aggression: 0.2,
-          diligence: 0.7,
-          curiosity: 0.9,
-        },
-      });
-
-      this.lifeCycleSystem.spawnAgent({
-        name: "Stev",
-        sex: "male",
-        traits: {
-          cooperation: 0.7,
-          aggression: 0.3,
-          diligence: 0.8,
-          curiosity: 0.8,
-        },
-      });
-    }
   }
 
   public async initializeWorldResources(worldConfig: {

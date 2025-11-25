@@ -88,7 +88,7 @@ export class KnowledgeNetworkSystem {
       this.learnKnowledge(discovererId, id);
     }
 
-    simulationEvents.emit("KNOWLEDGE_ADDED", { node });
+    simulationEvents.emit(GameEventNames.KNOWLEDGE_ADDED, { node });
   }
 
   public learnKnowledge(agentId: string, nodeId: string): boolean {

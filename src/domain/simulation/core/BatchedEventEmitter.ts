@@ -8,9 +8,20 @@ export class BatchedEventEmitter extends EventEmitter {
   private eventQueue: Array<{ name: string; payload: unknown }> = [];
   private batchingEnabled = true;
 
+  /**
+   * Sobrescribe emit() para usar queueEvent() automáticamente cuando batching está habilitado
+   */
+  public emit(event: string | symbol, ...args: unknown[]): boolean {
+    if (this.batchingEnabled) {
+      this.queueEvent(String(event), args[0]);
+      return true;
+    }
+    return super.emit(event, ...args);
+  }
+
   public queueEvent(name: string, payload: unknown): void {
     if (!this.batchingEnabled) {
-      this.emit(name, payload);
+      super.emit(name, payload);
       return;
     }
 
@@ -21,12 +32,18 @@ export class BatchedEventEmitter extends EventEmitter {
     if (this.eventQueue.length === 0) return;
 
     const batch = this.eventQueue.splice(0);
+    const wasBatchingEnabled = this.batchingEnabled;
 
-    setImmediate(() => {
+    // Temporalmente deshabilitar batching para emitir eventos directamente
+    this.batchingEnabled = false;
+
+    try {
       for (const event of batch) {
-        this.emit(event.name, event.payload);
+        super.emit(event.name, event.payload);
       }
-    });
+    } finally {
+      this.batchingEnabled = wasBatchingEnabled;
+    }
   }
 
   public setBatchingEnabled(enabled: boolean): void {
