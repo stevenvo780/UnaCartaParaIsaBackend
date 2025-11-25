@@ -115,7 +115,6 @@ export class MovementSystem extends EventEmitter {
    */
   private readonly BATCH_THRESHOLD = 15;
 
-  // Pathfinding queue para limitar concurrencia
   private pathfindingQueue: Array<{
     entityId: string;
     from: { x: number; y: number };
@@ -123,8 +122,6 @@ export class MovementSystem extends EventEmitter {
     callback: (result: PathfindingResult) => void;
   }> = [];
   private activePaths = 0;
-  // 🔧 FIX: Aumentar paths concurrentes de 3 a 5
-  // Con 3, la cola se acumulaba cuando muchos agentes se movían
   private readonly MAX_CONCURRENT_PATHS = 5;
   private entityIndex?: EntityIndex;
 
@@ -165,19 +162,21 @@ export class MovementSystem extends EventEmitter {
 
     this.processPathfindingQueue();
 
-    const movingCount = Array.from(this.movementStates.values()).filter(
-      (s) => s.isMoving,
-    ).length;
+    // Contar sin crear array temporal
+    let movingCount = 0;
+    for (const state of this.movementStates.values()) {
+      if (state.isMoving) movingCount++;
+    }
 
     if (movingCount >= this.BATCH_THRESHOLD) {
       this.updateBatch(deltaMs, now);
     } else {
-      this.movementStates.forEach((state) => {
+      for (const state of this.movementStates.values()) {
         this.updateEntityMovement(state, now, deltaMs);
         this.updateEntityActivity(state, now);
         this.updateEntityFatigue(state);
         this.maybeStartIdleWander(state, now);
-      });
+      }
     }
 
     if (now - this.lastCacheCleanup > 30000) {
@@ -188,9 +187,6 @@ export class MovementSystem extends EventEmitter {
     this.pathfinder.calculate();
   }
 
-  /**
-   * Procesa la cola de pathfinding, limitando la concurrencia
-   */
   private processPathfindingQueue(): void {
     if (this.activePaths >= this.MAX_CONCURRENT_PATHS) {
       return;
@@ -242,9 +238,6 @@ export class MovementSystem extends EventEmitter {
     }
   }
 
-  /**
-   * Encola un request de pathfinding en lugar de calcularlo inmediatamente
-   */
   private enqueuePathfinding(
     entityId: string,
     from: { x: number; y: number },
@@ -307,7 +300,6 @@ export class MovementSystem extends EventEmitter {
         this.entityIndex?.getAgent(entityId) ??
         this.gameState.agents.find((a) => a.id === entityId);
       if (agent) {
-        // Optimizado: mutar directamente en lugar de crear objeto nuevo
         if (!agent.position) {
           agent.position = {
             x: state.currentPosition.x,

@@ -88,7 +88,7 @@ export class ResourceReservationSystem {
     let stone = (res?.materials.stone ?? 0) + stats.stockpiled.stone;
 
     if (!includeReserved) {
-      for (const reservation of Array.from(this.reservations.values())) {
+      for (const reservation of this.reservations.values()) {
         wood -= reservation.cost.wood;
         stone -= reservation.cost.stone;
       }
@@ -103,7 +103,7 @@ export class ResourceReservationSystem {
   public getTotalReserved(): ResourceCost {
     let wood = 0;
     let stone = 0;
-    for (const reservation of Array.from(this.reservations.values())) {
+    for (const reservation of this.reservations.values()) {
       wood += reservation.cost.wood;
       stone += reservation.cost.stone;
     }
@@ -113,14 +113,17 @@ export class ResourceReservationSystem {
   public cleanupStaleReservations(maxAgeMs = 5 * 60 * 1000): number {
     const now = this.now();
     let cleaned = 0;
+    const toDelete: string[] = [];
 
-    for (const [taskId, reservation] of Array.from(
-      this.reservations.entries(),
-    )) {
+    for (const [taskId, reservation] of this.reservations) {
       if (now - reservation.timestamp > maxAgeMs) {
-        this.reservations.delete(taskId);
-        cleaned += 1;
+        toDelete.push(taskId);
       }
+    }
+
+    for (const taskId of toDelete) {
+      this.reservations.delete(taskId);
+      cleaned++;
     }
 
     if (cleaned > 0) {

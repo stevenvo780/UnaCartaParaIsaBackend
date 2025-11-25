@@ -59,9 +59,13 @@ export class HouseholdSystem {
     const homeless: string[] = [];
 
     for (const agent of allAgents) {
-      const hasHome = Array.from(this.households.values()).some((h) =>
-        h.members.some((m) => m.agentId === agent.id),
-      );
+      let hasHome = false;
+      for (const h of this.households.values()) {
+        if (h.members.some((m) => m.agentId === agent.id)) {
+          hasHome = true;
+          break;
+        }
+      }
       if (!hasHome) {
         homeless.push(agent.id);
       }
@@ -76,14 +80,14 @@ export class HouseholdSystem {
     const previousMembers = new Map<string, HouseholdMember[]>();
     const previousInventories = new Map<string, Household["sharedInventory"]>();
 
-    this.households.forEach((hh, zoneId) => {
+    for (const [zoneId, hh] of this.households) {
       if (hh.members.length > 0) {
         previousMembers.set(zoneId, [...hh.members]);
       }
       if (hh.sharedInventory) {
         previousInventories.set(zoneId, { ...hh.sharedInventory });
       }
-    });
+    }
 
     this.households.clear();
     const houses = zones.filter((z: Zone) => z.type === "rest");
@@ -113,7 +117,7 @@ export class HouseholdSystem {
   }
 
   public findFreeHouse(): Household | null {
-    for (const hh of Array.from(this.households.values())) {
+    for (const hh of this.households.values()) {
       if (hh.members.length < hh.capacity) return hh;
     }
     return null;
@@ -123,7 +127,7 @@ export class HouseholdSystem {
     agentId: string,
     role: "head" | "spouse" | "child" | "other" = "other",
   ): string | null {
-    for (const hh of Array.from(this.households.values())) {
+    for (const hh of this.households.values()) {
       if (hh.members.some((m) => m.agentId === agentId)) {
         return hh.zoneId;
       }
@@ -158,13 +162,17 @@ export class HouseholdSystem {
   }
 
   public getHouseFor(agentId: string): Zone | null {
-    const hhEntry = Array.from(this.households.values()).find((h) =>
-      h.members.some((m) => m.agentId === agentId),
-    );
+    let hhEntry: Household | undefined;
+    for (const h of this.households.values()) {
+      if (h.members.some((m) => m.agentId === agentId)) {
+        hhEntry = h;
+        break;
+      }
+    }
     if (!hhEntry) return null;
 
     const zones = this.gameState.zones || [];
-    return (zones.find((z: Zone) => z.id === hhEntry.zoneId) as Zone) || null;
+    return (zones.find((z: Zone) => z.id === hhEntry!.zoneId) as Zone) || null;
   }
 
   public getSystemStats(): {
@@ -283,9 +291,11 @@ export class HouseholdSystem {
   }
 
   public getAgentHousehold(agentId: string): Household | null {
-    const household = Array.from(this.households.values()).find((h) =>
-      h.members.some((m) => m.agentId === agentId),
-    );
-    return household || null;
+    for (const h of this.households.values()) {
+      if (h.members.some((m) => m.agentId === agentId)) {
+        return h;
+      }
+    }
+    return null;
   }
 }

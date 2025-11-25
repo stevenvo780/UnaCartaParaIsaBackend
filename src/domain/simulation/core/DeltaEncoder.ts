@@ -55,8 +55,6 @@ export class DeltaEncoder {
 
     this.ticksSinceFullSnapshot++;
 
-    // Comparar con el último snapshot para detectar cambios
-    // En este punto, lastFullSnapshot no puede ser null porque ya se verificó en shouldSendFull
     if (!this.lastFullSnapshot) {
       this.lastFullSnapshot = currentSnapshot.state;
       return {
@@ -96,7 +94,6 @@ export class DeltaEncoder {
   ): Partial<GameState> {
     const changes: Partial<GameState> = {};
 
-    // Crear índices O(1) para el estado anterior
     const prevAgentMap = previous.agents
       ? new Map(previous.agents.map((a) => [a.id, a]))
       : new Map<string, AgentProfile>();
@@ -104,7 +101,6 @@ export class DeltaEncoder {
       ? new Map(previous.entities.map((e) => [e.id, e]))
       : new Map<string, SimulationEntity>();
 
-    // Comparar agentes (solo incluir los que cambiaron)
     if (current.agents && previous.agents) {
       const changedAgents = current.agents.filter((agent) => {
         const prevAgent = prevAgentMap.get(agent.id);
@@ -118,7 +114,6 @@ export class DeltaEncoder {
       changes.agents = current.agents;
     }
 
-    // Comparar entidades (solo incluir las que cambiaron)
     if (current.entities && previous.entities) {
       const changedEntities = current.entities.filter((entity) => {
         const prevEntity = prevEntityMap.get(entity.id);
@@ -132,12 +127,10 @@ export class DeltaEncoder {
       changes.entities = current.entities;
     }
 
-    // Comparar zones (solo si cambió el array completo)
     if (current.zones && this.hasArrayChanged(previous.zones, current.zones)) {
       changes.zones = current.zones;
     }
 
-    // Comparar recursos (casi siempre cambia)
     if (current.worldResources) {
       const prevResources = previous.worldResources;
       if (
@@ -148,11 +141,9 @@ export class DeltaEncoder {
       }
     }
 
-    // Comparar animales (solo los que cambiaron de posición o estado)
     if (current.animals && previous.animals) {
       const currentAnimals = current.animals.animals;
       const prevAnimals = previous.animals.animals;
-      // Crear índice O(1) para animales anteriores
       const prevAnimalMap = new Map(prevAnimals.map((a) => [a.id, a]));
       const changedAnimals = currentAnimals.filter((animal) => {
         const prevAnimal = prevAnimalMap.get(animal.id);
@@ -169,7 +160,6 @@ export class DeltaEncoder {
       changes.animals = current.animals;
     }
 
-    // Incluir otros campos solo si cambiaron
     if (current.togetherTime !== previous.togetherTime) {
       changes.togetherTime = current.togetherTime;
     }
@@ -182,7 +172,6 @@ export class DeltaEncoder {
       changes.cycles = current.cycles;
     }
 
-    // Resources casi siempre cambian
     if (current.resources) {
       changes.resources = current.resources;
     }
@@ -190,9 +179,6 @@ export class DeltaEncoder {
     return changes;
   }
 
-  /**
-   * Verifica si un agente cambió comparando campos clave
-   */
   private hasAgentChanged(
     prev: AgentProfile & { needs?: EntityNeedsData; health?: number },
     current: AgentProfile & { needs?: EntityNeedsData; health?: number },
@@ -222,9 +208,6 @@ export class DeltaEncoder {
     return false;
   }
 
-  /**
-   * Verifica si una entidad cambió
-   */
   private hasEntityChanged(
     prev: SimulationEntity & { activity?: string },
     current: SimulationEntity & { activity?: string },
@@ -236,9 +219,6 @@ export class DeltaEncoder {
     );
   }
 
-  /**
-   * Verifica si un animal cambió
-   */
   private hasAnimalChanged(
     prev: Animal & { currentActivity?: string },
     current: Animal & { currentActivity?: string },
@@ -251,17 +231,11 @@ export class DeltaEncoder {
     );
   }
 
-  /**
-   * Compara dos arrays por referencia y longitud
-   */
   private hasArrayChanged<T>(prev: T[] | undefined, current: T[]): boolean {
     if (!prev) return true;
     return prev.length !== current.length;
   }
 
-  /**
-   * Compara dos Records por referencia y número de claves
-   */
   private hasRecordChanged(
     prev: Record<string, unknown>,
     current: Record<string, unknown>,
@@ -275,17 +249,11 @@ export class DeltaEncoder {
     return false;
   }
 
-  /**
-   * Reinicia el encoder
-   */
   public reset(): void {
     this.lastFullSnapshot = null;
     this.ticksSinceFullSnapshot = 0;
   }
 
-  /**
-   * Fuerza el próximo snapshot como completo
-   */
   public forceFullSnapshot(): void {
     this.ticksSinceFullSnapshot = this.FULL_SNAPSHOT_INTERVAL;
   }

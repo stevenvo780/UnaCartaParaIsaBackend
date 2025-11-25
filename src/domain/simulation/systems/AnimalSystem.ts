@@ -115,15 +115,17 @@ export class AnimalSystem {
     const deltaMinutes = (now - this.lastUpdate) / 60000;
     this.lastUpdate = now;
 
-    const liveAnimals = Array.from(this.animals.values()).filter(
-      (a) => !a.isDead,
-    );
+    // Contar animales vivos sin crear array temporal
+    let liveCount = 0;
+    for (const animal of this.animals.values()) {
+      if (!animal.isDead) liveCount++;
+    }
 
-    if (liveAnimals.length >= this.BATCH_THRESHOLD) {
+    if (liveCount >= this.BATCH_THRESHOLD) {
       this.updateBatch(deltaSeconds, deltaMinutes, now);
     } else {
-      this.animals.forEach((animal) => {
-        if (animal.isDead) return;
+      for (const animal of this.animals.values()) {
+        if (animal.isDead) continue;
 
         const oldPosition = { ...animal.position };
 
@@ -133,7 +135,7 @@ export class AnimalSystem {
         this.updateAnimalBehavior(animal, deltaSeconds);
         this.updateSpatialGrid(animal, oldPosition);
         this.checkAnimalDeath(animal);
-      });
+      }
     }
 
     if (now - this.lastCleanup > this.config.cleanupInterval) {

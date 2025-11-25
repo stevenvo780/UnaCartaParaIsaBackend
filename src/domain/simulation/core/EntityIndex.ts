@@ -23,11 +23,10 @@ export class EntityIndex {
   private pendingEntityRemoves = new Set<string>();
 
   /**
-   * OPTIMIZADO: Reconstrucción incremental O(Δn) en lugar de O(n)
+   * Reconstrucción incremental O(Δn) en lugar de O(n)
    * Solo procesa cambios pendientes en lugar de reconstruir todo
    */
   public rebuild(state: GameState): void {
-    // Si no hay cambios pendientes y el conteo es igual, no hacer nada
     const currentAgentCount = state.agents?.length ?? 0;
     const currentEntityCount = state.entities?.length ?? 0;
 
@@ -41,10 +40,9 @@ export class EntityIndex {
       this.pendingEntityRemoves.size > 0;
 
     if (!hasStructuralChanges) {
-      return; // Early return - no hay cambios
+      return;
     }
 
-    // Si hay muchos cambios pendientes o es la primera vez, hacer rebuild completo
     const totalPendingChanges =
       this.pendingAgentAdds.size +
       this.pendingAgentRemoves.size +
@@ -54,10 +52,8 @@ export class EntityIndex {
     const threshold = Math.max(10, currentAgentCount * 0.2);
 
     if (this.dirty || totalPendingChanges > threshold) {
-      // Rebuild completo (pero optimizado)
       this.rebuildFull(state);
     } else {
-      // Rebuild incremental
       this.rebuildIncremental(state);
     }
 
@@ -82,7 +78,6 @@ export class EntityIndex {
       }
     }
 
-    // Limpiar pendientes después del rebuild completo
     this.pendingAgentAdds.clear();
     this.pendingAgentRemoves.clear();
     this.pendingEntityAdds.clear();
@@ -90,7 +85,6 @@ export class EntityIndex {
   }
 
   private rebuildIncremental(state: GameState): void {
-    // Procesar removes primero
     for (const id of this.pendingAgentRemoves) {
       this.agentIndex.delete(id);
     }
@@ -98,7 +92,6 @@ export class EntityIndex {
       this.entityIndex.delete(id);
     }
 
-    // Procesar adds
     if (state.agents) {
       for (const id of this.pendingAgentAdds) {
         const agent = state.agents.find((a) => a.id === id);
@@ -117,40 +110,27 @@ export class EntityIndex {
       }
     }
 
-    // Limpiar pendientes
     this.pendingAgentAdds.clear();
     this.pendingAgentRemoves.clear();
     this.pendingEntityAdds.clear();
     this.pendingEntityRemoves.clear();
   }
 
-  /**
-   * Notificar que se añadió un agente (para rebuild incremental)
-   */
   public notifyAgentAdded(agentId: string): void {
     this.pendingAgentRemoves.delete(agentId);
     this.pendingAgentAdds.add(agentId);
   }
 
-  /**
-   * Notificar que se eliminó un agente (para rebuild incremental)
-   */
   public notifyAgentRemoved(agentId: string): void {
     this.pendingAgentAdds.delete(agentId);
     this.pendingAgentRemoves.add(agentId);
   }
 
-  /**
-   * Notificar que se añadió una entidad (para rebuild incremental)
-   */
   public notifyEntityAdded(entityId: string): void {
     this.pendingEntityRemoves.delete(entityId);
     this.pendingEntityAdds.add(entityId);
   }
 
-  /**
-   * Notificar que se eliminó una entidad (para rebuild incremental)
-   */
   public notifyEntityRemoved(entityId: string): void {
     this.pendingEntityAdds.delete(entityId);
     this.pendingEntityRemoves.add(entityId);
@@ -169,29 +149,22 @@ export class EntityIndex {
       state.entities = [];
     }
 
-    // Construir índice temporal de entidades existentes si no existe en entityIndex
-    // Esto es O(n) una vez, en lugar de O(n) por cada agente
     const entityMap =
       this.entityIndex.size > 0
         ? this.entityIndex
         : new Map(state.entities.map((e) => [e.id, e]));
 
     for (const agent of state.agents) {
-      // Usar lookup O(1) en lugar de .find() O(n)
       const existingEntity = entityMap.get(agent.id);
       if (existingEntity) {
-        // Actualizar posición si el agente tiene posición
         if (agent.position) {
           existingEntity.x = agent.position.x;
           existingEntity.y = agent.position.y;
           existingEntity.position = { ...agent.position };
         }
-        // Actualizar el índice interno
         this.entityIndex.set(agent.id, existingEntity);
         continue;
       }
-
-      // Crear entidad desde agente si no existe
       if (agent.position) {
         const entity: SimulationEntity = {
           id: agent.id,
@@ -252,9 +225,7 @@ export class EntityIndex {
     if (entity) {
       entity.isDead = true;
     }
-    // También remover del índice de agentes para que otros sistemas no lo procesen
     this.agentIndex.delete(entityId);
-    // Marcar como dirty para que se reconstruya en el próximo tick
     this.dirty = true;
   }
 
@@ -282,11 +253,6 @@ export class EntityIndex {
     return this.entityIndex.has(entityId);
   }
 
-  /**
-   * Busca una entidad por ID, primero en entities, luego en agents
-   * Útil para sistemas que necesitan encontrar entidades sin saber
-   * en qué array están almacenadas
-   */
   public findEntityOrAgent(entityId: string): {
     agent?: AgentProfile;
     entity?: SimulationEntity;
@@ -296,18 +262,13 @@ export class EntityIndex {
     return { agent, entity };
   }
 
-  /**
-   * Obtiene una entidad SimulationEntity, creándola desde un AgentProfile si es necesario
-   */
   public getOrCreateEntityFromAgent(
     agentId: string,
     state: GameState,
   ): SimulationEntity | undefined {
-    // Primero intentar obtener la entidad existente
     let entity = this.entityIndex.get(agentId);
     if (entity) return entity;
 
-    // Si no existe, crear desde el agente
     const agent = this.agentIndex.get(agentId);
     if (!agent || !agent.position) return undefined;
 
@@ -327,7 +288,6 @@ export class EntityIndex {
       },
     };
 
-    // Agregar a gameState.entities si no existe
     if (!state.entities) {
       state.entities = [];
     }

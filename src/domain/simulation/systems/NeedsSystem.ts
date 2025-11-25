@@ -29,8 +29,6 @@ export class NeedsSystem extends EventEmitter {
 
   private zoneCache = new Map<string, { zones: Zone[]; timestamp: number }>();
   private readonly ZONE_CACHE_TTL = 15000;
-  
-  // 🔧 FIX: Contador determinista para cleanup en lugar de Math.random()
   private _tickCounter = 0;
 
   private batchProcessor: NeedsBatchProcessor;
@@ -110,8 +108,6 @@ export class NeedsSystem extends EventEmitter {
 
     this.processRespawnQueue(now);
 
-    // 🔧 FIX: Cleanup determinista en lugar de aleatorio
-    // Cada 100 ticks (~10 segundos) en lugar de Math.random() < 0.01
     this._tickCounter = (this._tickCounter || 0) + 1;
     if (this._tickCounter >= 100) {
       this.cleanZoneCache(now);
@@ -216,7 +212,6 @@ export class NeedsSystem extends EventEmitter {
     needs: EntityNeedsData,
     deltaSeconds: number,
   ): void {
-    // Buscar primero en agents, luego en entities
     let position: { x: number; y: number } | undefined;
     const agent = this.gameState.agents?.find((e) => e.id === entityId);
     if (agent?.position) {
@@ -298,20 +293,16 @@ export class NeedsSystem extends EventEmitter {
   }
 
   private checkForDeath(entityId: string, needs: EntityNeedsData): boolean {
-    // Si ya está en cola de respawn, no procesar muerte de nuevo
     if (this.respawnQueue.has(entityId)) {
       return true;
     }
 
-    // Verificar si la entidad ya está marcada como muerta en gameState
     const entity = this.gameState.entities?.find((e) => e.id === entityId);
     if (entity?.isDead) {
       return true;
     }
 
-    // Las entidades inmortales no pueden morir por necesidades
     if (entity?.immortal) {
-      // Restaurar necesidades críticas para inmortales
       if (needs.hunger <= 10) needs.hunger = 20;
       if (needs.thirst <= 10) needs.thirst = 20;
       if (needs.energy <= 10) needs.energy = 20;
@@ -340,7 +331,6 @@ export class NeedsSystem extends EventEmitter {
   ): void {
     logger.info(`💀 Entity ${entityId} died from ${cause}`);
 
-    // Marcar entidad como muerta en gameState para evitar procesar muerte múltiples veces
     if (this.gameState.entities) {
       const entity =
         this.entityIndex?.getEntity(entityId) ??
@@ -371,13 +361,16 @@ export class NeedsSystem extends EventEmitter {
   }
 
   private processRespawnQueue(now: number): void {
-    for (const [entityId, respawnTime] of Array.from(
-      this.respawnQueue.entries(),
-    )) {
+    // Recolectar IDs a procesar para evitar modificar durante iteración
+    const toRespawn: string[] = [];
+    for (const [entityId, respawnTime] of this.respawnQueue) {
       if (now >= respawnTime) {
-        this.respawnEntity(entityId);
-        this.respawnQueue.delete(entityId);
+        toRespawn.push(entityId);
       }
+    }
+    for (const entityId of toRespawn) {
+      this.respawnEntity(entityId);
+      this.respawnQueue.delete(entityId);
     }
   }
 
@@ -403,8 +396,6 @@ export class NeedsSystem extends EventEmitter {
 
     logger.info(`✨ Entity ${entityId} respawned`);
 
-    // Emitir evento para que SimulationRunner maneje la reactivación
-    // Esto elimina la dependencia circular con AISystem y MovementSystem
     simulationEvents.emit(GameEventNames.AGENT_RESPAWNED, {
       agentId: entityId,
       timestamp: Date.now(),
@@ -521,9 +512,8 @@ export class NeedsSystem extends EventEmitter {
     if (!entity?.position) return;
 
     const entityPosition = entity.position;
-    const radiusSq = 100 * 100; // 100² = 10000, evitar sqrt costoso
+    const radiusSq = 100 * 100;
 
-    // Optimizado: usar distancia al cuadrado para evitar Math.hypot/sqrt
     const nearbyEntities = this.gameState.entities.filter((e) => {
       if (e.id === entityId || !e.position) return false;
       const dx = e.position.x - entityPosition.x;

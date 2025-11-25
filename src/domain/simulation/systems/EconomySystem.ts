@@ -87,11 +87,14 @@ export class EconomySystem {
 
   private cleanupOldResiduals(): void {
     if (this.yieldResiduals.size > 100) {
-      const entries = Array.from(this.yieldResiduals.entries());
-      this.yieldResiduals.clear();
-      entries.slice(-50).forEach(([key, value]) => {
-        this.yieldResiduals.set(key, value);
-      });
+      // Eliminar las primeras 50 entradas (las más antiguas)
+      // Maps mantienen orden de inserción, así que iteramos y eliminamos
+      let toDelete = this.yieldResiduals.size - 50;
+      for (const key of this.yieldResiduals.keys()) {
+        if (toDelete <= 0) break;
+        this.yieldResiduals.delete(key);
+        toDelete--;
+      }
     }
   }
 
