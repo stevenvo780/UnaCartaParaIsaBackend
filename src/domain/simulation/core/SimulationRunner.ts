@@ -328,6 +328,30 @@ export class SimulationRunner {
       logger.info(`👨‍👩‍👧‍👦 Family initialized: Isa & Stev with 4 children`);
 
       this.createInitialInfrastructure();
+      // Initialize movement states for all initially spawned agents so that
+      // idle wandering and movement logic can run before any explicit MOVE_TO commands.
+      for (const agent of this.state.agents) {
+        try {
+          if (!agent.position) {
+            agent.position = {
+              x: (this.state.worldSize?.width ?? 128) * 16,
+              y: (this.state.worldSize?.height ?? 128) * 16,
+            };
+          }
+          if (!this.movementSystem.hasMovementState(agent.id)) {
+            this.movementSystem.initializeEntityMovement(
+              agent.id,
+              agent.position,
+            );
+          }
+        } catch (err) {
+          logger.warn(
+            `Failed to initialize movement state for agent ${agent.id}: ${
+              err instanceof Error ? err.message : String(err)
+            }`,
+          );
+        }
+      }
     }
 
     logger.info("📅 SimulationRunner: Registrando sistemas en el scheduler...");
@@ -349,6 +373,7 @@ export class SimulationRunner {
   private configureSchedulerHooks(): void {
     this.scheduler.setHooks({
       preTick: () => {
+        this.processCommands();
         this.entityIndex.rebuild(this.state);
         this.entityIndex.syncAgentsToEntities(this.state);
         this.sharedSpatialIndex.rebuildIfNeeded(
@@ -2350,14 +2375,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                resources?: {
-                  wood?: number;
-                  stone?: number;
-                  food?: number;
-                  water?: number;
-                };
-                minWorkers?: number;
-              }
+                  resources?: {
+                    wood?: number;
+                    stone?: number;
+                    food?: number;
+                    water?: number;
+                  };
+                  minWorkers?: number;
+                }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,
@@ -2399,12 +2424,12 @@ export class SimulationRunner {
       ) {
         this.timeSystem.setWeather(
           weatherType as
-          | "clear"
-          | "cloudy"
-          | "rainy"
-          | "stormy"
-          | "foggy"
-          | "snowy",
+            | "clear"
+            | "cloudy"
+            | "rainy"
+            | "stormy"
+            | "foggy"
+            | "snowy",
         );
         logger.info(`Weather set to ${weatherType} via TIME_COMMAND`);
       } else {
@@ -2507,12 +2532,12 @@ export class SimulationRunner {
       social,
       ai: aiState
         ? {
-          currentGoal: aiState.currentGoal,
-          goalQueue: aiState.goalQueue,
-          currentAction: aiState.currentAction,
-          offDuty: aiState.offDuty,
-          lastDecisionTime: aiState.lastDecisionTime,
-        }
+            currentGoal: aiState.currentGoal,
+            goalQueue: aiState.goalQueue,
+            currentAction: aiState.currentAction,
+            offDuty: aiState.offDuty,
+            lastDecisionTime: aiState.lastDecisionTime,
+          }
         : null,
     };
   }

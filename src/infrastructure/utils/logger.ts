@@ -31,10 +31,12 @@ interface LoggerConfig {
 
 const DEFAULT_CONFIG: LoggerConfig = {
   maxMemoryLogs: 5000,
-  evacuationThreshold: 4000,
-  logDir: path.join(process.cwd(), "logs"),
-  throttleWindowMs: 5000,
-  maxThrottleCount: 3,
+  evacuationThreshold: Number(process.env.LOG_EVACUATION_THRESHOLD ?? 4000),
+  logDir: process.env.LOG_DIR
+    ? path.resolve(process.env.LOG_DIR)
+    : path.join(process.cwd(), "logs"),
+  throttleWindowMs: Number(process.env.LOG_THROTTLE_WINDOW_MS ?? 5000),
+  maxThrottleCount: Number(process.env.LOG_MAX_THROTTLE_COUNT ?? 3),
 };
 
 /**
@@ -57,6 +59,25 @@ class Logger {
 
     // Periodic evacuation check (every 30 seconds)
     this.evacuationInterval = setInterval(() => this.checkEvacuation(), 30000);
+
+    // Flush on common exit signals to avoid losing buffered logs
+    const flushAndExit = async (): Promise<void> => {
+      try {
+        await this.flush();
+      } catch {
+        /* ignore */
+      }
+    };
+    process.on("beforeExit", flushAndExit);
+    process.on("exit", () => this.destroy());
+    process.on("SIGINT", async () => {
+      await flushAndExit();
+      process.exit(0);
+    });
+    process.on("SIGTERM", async () => {
+      await flushAndExit();
+      process.exit(0);
+    });
   }
 
   private ensureLogDir(): void {
@@ -140,11 +161,15 @@ class Logger {
 
   private checkEvacuation(): void {
     const timeSinceLastEvacuation = Date.now() - this.lastEvacuation;
+    const forceIntervalMs = Number(process.env.LOG_FORCE_INTERVAL_MS ?? 60000); // 1 min default
     if (
+      this.memoryBuffer.length >= this.config.evacuationThreshold ||
       this.memoryBuffer.length > this.config.evacuationThreshold / 2 ||
-      (this.memoryBuffer.length > 100 && timeSinceLastEvacuation > 300000)
+      (this.memoryBuffer.length > 100 && timeSinceLastEvacuation > 300000) ||
+      (this.memoryBuffer.length > 0 &&
+        timeSinceLastEvacuation > forceIntervalMs)
     ) {
-      this.evacuateToFile();
+      void this.evacuateToFile();
     }
 
     // Clean throttle map
@@ -276,7 +301,7 @@ class Logger {
     if (this.evacuationInterval) {
       clearInterval(this.evacuationInterval);
     }
-    this.evacuateToFile();
+    void this.evacuateToFile();
   }
 }
 

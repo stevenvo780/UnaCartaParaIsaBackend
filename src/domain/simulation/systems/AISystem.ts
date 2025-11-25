@@ -317,6 +317,9 @@ export class AISystem extends EventEmitter {
           newGoal,
           timestamp: now,
         });
+      } else {
+        // Fallback: if no goal was selected, trigger exploratory movement
+        this.maybeFallbackExplore(agentId, aiState);
       }
     }
 
@@ -335,6 +338,45 @@ export class AISystem extends EventEmitter {
         });
       }
     }
+  }
+
+  /**
+   * Fallback exploratory movement when no goal is selected.
+   * Conditions:
+   * - Inventory empty (no food, water, wood, stone) OR needs all > 70 (low urgency)
+   * - Agent not already moving
+   * - MovementSystem available
+   * Action: pick a random point in radius and move there to stimulate discovery.
+   */
+  private maybeFallbackExplore(agentId: string, _aiState: AIState): void {
+    if (!this._movementSystem) return;
+    if (this._movementSystem.isMoving(agentId)) return;
+
+    const inventory = this.inventorySystem?.getAgentInventory(agentId);
+    const needs = this.needsSystem?.getNeeds(agentId);
+
+    const inventoryEmpty = inventory
+      ? (inventory.food || 0) +
+          (inventory.water || 0) +
+          (inventory.wood || 0) +
+          (inventory.stone || 0) ===
+        0
+      : true;
+    const needsSatisfied = needs
+      ? needs.hunger > 70 && needs.thirst > 70 && needs.energy > 70
+      : false;
+
+    if (!inventoryEmpty && !needsSatisfied) return;
+
+    const pos = this.getAgentPosition(agentId);
+    if (!pos) return;
+
+    const radius = 400 + Math.random() * 600; // encourage broader exploration
+    const angle = Math.random() * Math.PI * 2;
+    const targetX = pos.x + Math.cos(angle) * radius;
+    const targetY = pos.y + Math.sin(angle) * radius;
+    this._movementSystem.moveToPoint(agentId, targetX, targetY);
+    logger.debug(`🚶 [AI] Fallback explore triggered for ${agentId}`);
   }
 
   /**

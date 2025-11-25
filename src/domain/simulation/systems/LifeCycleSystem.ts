@@ -206,13 +206,24 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   private queueHousingAssignment(agentId: string): void {
-    const house = this.householdPort?.getHouseFor(agentId);
-    if (house) return;
+    const agent = this.getAgent(agentId);
+    if (!agent) return;
+
+    const householdId = this.householdSystem?.getHouseFor(agent.id)?.id;
+    if (householdId) {
+      // If they have a household, ensure they are assigned to it in the system
+      // This is a safety check/sync
+      const currentHouse = this.householdSystem?.getHouseFor(agent.id);
+      if (!currentHouse) {
+        this.householdSystem?.assignToHouse(agent.id, householdId);
+      }
+      return;
+    }
     this.pendingHousingAssignments.add(agentId);
   }
 
   private processHousingAssignments(): void {
-    if (!this.householdPort) return;
+    if (!this.householdSystem) return;
 
     let processed = 0;
     for (const agentId of this.pendingHousingAssignments) {
@@ -222,7 +233,7 @@ export class LifeCycleSystem extends EventEmitter {
         this.entityIndex?.getAgent(agentId) ??
         this.gameState.agents?.find((a) => a.id === agentId);
       if (agent && agent.lifeStage === "adult") {
-        const assigned = this.householdPort?.assignToHouse(agentId);
+        const assigned = this.householdSystem?.assignToHouse(agent.id);
         if (assigned) {
           this.pendingHousingAssignments.delete(agentId);
         }
@@ -234,12 +245,14 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   private consumeResourcesPeriodically(): void {
-    if (!this.inventoryPort) return;
-
-    const agents = this.gameState.agents || [];
-    for (const agent of agents) {
-      const needs = { food: 1, water: 1 };
-      this.inventoryPort.consumeFromAgent(agent.id, needs);
+    if (this.inventorySystem) {
+      const agents = this.gameState.agents || [];
+      for (const agent of agents) {
+        // Calculate consumption
+        const needs = { food: 1, water: 1 }; // Example consumption
+        // Remove from inventory
+        this.inventorySystem.consumeFromAgent(agent.id, needs);
+      }
     }
   }
 
@@ -392,14 +405,14 @@ export class LifeCycleSystem extends EventEmitter {
       }
     }
 
-    if (this.needsPort) {
-      this.needsPort.initializeEntityNeeds(id);
+    if (this.needsSystem) {
+      this.needsSystem.initializeEntityNeeds(id);
     }
-    if (this.inventoryPort) {
-      this.inventoryPort.initializeAgentInventory(id);
+    if (this.inventorySystem) {
+      this.inventorySystem.initializeAgentInventory(id);
     }
     if (profile.position) {
-      this._movementPort?.moveToPoint(
+      this._movementSystem?.moveToPoint(
         id,
         profile.position.x,
         profile.position.y,
@@ -520,8 +533,8 @@ export class LifeCycleSystem extends EventEmitter {
       this.entityIndex?.getAgent(agentId) ??
       this.gameState.agents?.find((a) => a.id === agentId);
 
-    if (this.inventoryPort) {
-      const inv = this.inventoryPort.getAgentInventory(agentId);
+    if (this.inventorySystem) {
+      const inv = this.inventorySystem.getAgentInventory(agentId);
       if (
         inv &&
         (inv.wood > 0 || inv.stone > 0 || inv.food > 0 || inv.water > 0)
@@ -548,7 +561,7 @@ export class LifeCycleSystem extends EventEmitter {
       this.needsSystem.removeEntityNeeds(agentId);
     }
 
-    if (this._socialPort) {
+    if (this._socialSystem) {
       // Social port might not have removeRelationships yet, skipping for now or adding to port
       // this._socialPort.removeRelationships(agentId);
     }
