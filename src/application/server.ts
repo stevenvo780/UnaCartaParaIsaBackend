@@ -10,21 +10,23 @@ import { detectGPUAvailability } from "../infrastructure/utils/gpuDetector";
 const simulationRunner = container.get<SimulationRunner>(
   TYPES.SimulationRunner,
 );
-simulationRunner.initialize();
 
 simulationRunner
-  .initializeWorldResources({
-    width: 128,
-    height: 128,
-    tileSize: 32,
-    biomeMap: [],
+  .initialize()
+  .then(() => {
+    return simulationRunner.initializeWorldResources({
+      width: 128,
+      height: 128,
+      tileSize: 32,
+      biomeMap: [],
+    });
   })
   .then(() => {
     logger.info("World resources initialized");
     simulationRunner.start();
   })
   .catch((err) => {
-    logger.error("Failed to initialize world resources:", err);
+    logger.error("Failed to initialize simulation:", err);
   });
 import type {
   SimulationCommand,

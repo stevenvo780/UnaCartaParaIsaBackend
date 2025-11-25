@@ -1,22 +1,25 @@
 import type { EntityNeedsData } from "../../types/simulation/needs";
 import { logger } from "../../../infrastructure/utils/logger";
+import type { GPUComputeService } from "../core/GPUComputeService";
+import { inject, injectable, optional } from "inversify";
+import { TYPES } from "../../../config/Types";
 
 /**
  * Procesador batch optimizado para necesidades de entidades
- * Usa TypedArrays para procesamiento eficiente, preparado para migración a GPU
+ * Usa GPU cuando está disponible, fallback a CPU
  */
+@injectable()
 export class NeedsBatchProcessor {
   private needsBuffer: Float32Array | null = null;
   private entityIdArray: string[] = [];
   private readonly NEED_COUNT = 7;
   private bufferDirty = true;
-  private static loggedGPUStatus = false;
+  private gpuService?: GPUComputeService;
 
-  constructor() {
-    if (!NeedsBatchProcessor.loggedGPUStatus) {
-      logger.info("⚙️ NeedsBatchProcessor inicializado - usando CPU para cálculos");
-      NeedsBatchProcessor.loggedGPUStatus = true;
-    }
+  constructor(
+    @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
+  ) {
+    this.gpuService = gpuService;
   }
 
   public rebuildBuffers(entityNeeds: Map<string, EntityNeedsData>): void {
@@ -57,6 +60,29 @@ export class NeedsBatchProcessor {
   ): void {
     if (!this.needsBuffer || this.entityIdArray.length === 0) return;
 
+    // Intentar usar GPU si está disponible
+    if (this.gpuService?.isGPUAvailable()) {
+      try {
+        const newNeeds = this.gpuService.applyNeedsDecayBatch(
+          this.needsBuffer,
+          decayRates,
+          ageMultipliers,
+          divineModifiers,
+          this.NEED_COUNT,
+          deltaSeconds,
+        );
+        this.needsBuffer = newNeeds;
+        this.bufferDirty = true;
+        return;
+      } catch (error) {
+        logger.warn(
+          `⚠️ Error en GPU applyDecayBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        // Continuar con CPU fallback
+      }
+    }
+
+    // Fallback a CPU
     const entityCount = this.entityIdArray.length;
 
     for (let i = 0; i < entityCount; i++) {
@@ -81,6 +107,25 @@ export class NeedsBatchProcessor {
   public applyCrossEffectsBatch(): void {
     if (!this.needsBuffer || this.entityIdArray.length === 0) return;
 
+    // Intentar usar GPU si está disponible
+    if (this.gpuService?.isGPUAvailable()) {
+      try {
+        const newNeeds = this.gpuService.applyNeedsCrossEffectsBatch(
+          this.needsBuffer,
+          this.NEED_COUNT,
+        );
+        this.needsBuffer = newNeeds;
+        this.bufferDirty = true;
+        return;
+      } catch (error) {
+        logger.warn(
+          `⚠️ Error en GPU applyCrossEffectsBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        // Continuar con CPU fallback
+      }
+    }
+
+    // Fallback a CPU
     const entityCount = this.entityIdArray.length;
 
     for (let i = 0; i < entityCount; i++) {

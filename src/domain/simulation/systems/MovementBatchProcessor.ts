@@ -1,10 +1,14 @@
 import type { EntityMovementState } from "./MovementSystem";
 import { logger } from "../../../infrastructure/utils/logger";
+import type { GPUComputeService } from "../core/GPUComputeService";
+import { inject, injectable, optional } from "inversify";
+import { TYPES } from "../../../config/Types";
 
 /**
  * Procesador batch optimizado para movimiento de entidades
- * Usa TypedArrays para procesamiento eficiente, preparado para migración a GPU
+ * Usa GPU cuando está disponible, fallback a CPU
  */
+@injectable()
 export class MovementBatchProcessor {
   private positionBuffer: Float32Array | null = null;
   private targetBuffer: Float32Array | null = null;
@@ -15,13 +19,12 @@ export class MovementBatchProcessor {
 
   private readonly BASE_MOVEMENT_SPEED = 60;
   private readonly FATIGUE_PENALTY_MULTIPLIER = 0.5;
-  private static loggedGPUStatus = false;
+  private gpuService?: GPUComputeService;
 
-  constructor() {
-    if (!MovementBatchProcessor.loggedGPUStatus) {
-      logger.info("⚙️ MovementBatchProcessor inicializado - usando CPU para cálculos");
-      MovementBatchProcessor.loggedGPUStatus = true;
-    }
+  constructor(
+    @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
+  ) {
+    this.gpuService = gpuService;
   }
 
   public rebuildBuffers(
@@ -86,54 +89,107 @@ export class MovementBatchProcessor {
     }
 
     const entityCount = this.entityIdArray.length;
-    const updated = new Array<boolean>(entityCount).fill(false);
+    const updated = new Array<boolean>(entityCount).fill(true);
+
+    // Intentar usar GPU si está disponible
+    if (this.gpuService?.isGPUAvailable()) {
+      try {
+        const speeds = new Float32Array(entityCount).fill(
+          this.BASE_MOVEMENT_SPEED,
+        );
+        const result = this.gpuService.updatePositionsBatch(
+          this.positionBuffer,
+          this.targetBuffer,
+          speeds,
+          this.fatigueBuffer,
+          deltaMs,
+        );
+
+        // Actualizar buffers con resultados de GPU
+        this.positionBuffer = result.newPositions;
+        this.bufferDirty = true;
+
+        // Calcular velocidades
+        if (this.velocityBuffer) {
+          for (let i = 0; i < entityCount; i++) {
+            const posOffset = i * 2;
+            const velOffset = i * 2;
+            const currentX = this.positionBuffer[posOffset];
+            const currentY = this.positionBuffer[posOffset + 1];
+
+            // Necesitamos las posiciones anteriores para calcular velocidad
+            // Por ahora, calculamos basado en el movimiento
+            const targetX = this.targetBuffer[posOffset];
+            const targetY = this.targetBuffer[posOffset + 1];
+            const dx = targetX - currentX;
+            const dy = targetY - currentY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 0.001) {
+              const speed = this.BASE_MOVEMENT_SPEED;
+              this.velocityBuffer[velOffset] = (dx / distance) * speed;
+              this.velocityBuffer[velOffset + 1] = (dy / distance) * speed;
+            } else {
+              this.velocityBuffer[velOffset] = 0;
+              this.velocityBuffer[velOffset + 1] = 0;
+            }
+          }
+        }
+
+        return { updated, arrived: result.arrived };
+      } catch (error) {
+        logger.warn(
+          `⚠️ Error en GPU updatePositionsBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        // Continuar con CPU fallback
+      }
+    }
+
+    // Fallback a CPU
     const arrived = new Array<boolean>(entityCount).fill(false);
 
     for (let i = 0; i < entityCount; i++) {
       const posOffset = i * 2;
       const velOffset = i * 2;
 
-      const currentX = this.positionBuffer[posOffset];
-      const currentY = this.positionBuffer[posOffset + 1];
-      const targetX = this.targetBuffer[posOffset];
-      const targetY = this.targetBuffer[posOffset + 1];
+      const currentX = this.positionBuffer![posOffset];
+      const currentY = this.positionBuffer![posOffset + 1];
+      const targetX = this.targetBuffer![posOffset];
+      const targetY = this.targetBuffer![posOffset + 1];
 
       const dx = targetX - currentX;
       const dy = targetY - currentY;
       const distanceRemaining = Math.sqrt(dx * dx + dy * dy);
 
       if (distanceRemaining < 2) {
-        this.positionBuffer[posOffset] = targetX;
-        this.positionBuffer[posOffset + 1] = targetY;
+        this.positionBuffer![posOffset] = targetX;
+        this.positionBuffer![posOffset + 1] = targetY;
         arrived[i] = true;
-        updated[i] = true;
         continue;
       }
 
-      const fatigue = this.fatigueBuffer[i];
+      const fatigue = this.fatigueBuffer![i];
       const fatigueMultiplier =
         1 / (1 + (fatigue / 100) * this.FATIGUE_PENALTY_MULTIPLIER);
       const effectiveSpeed = this.BASE_MOVEMENT_SPEED * fatigueMultiplier;
       const moveDistance = (effectiveSpeed * deltaMs) / 1000;
 
       if (moveDistance >= distanceRemaining) {
-        this.positionBuffer[posOffset] = targetX;
-        this.positionBuffer[posOffset + 1] = targetY;
+        this.positionBuffer![posOffset] = targetX;
+        this.positionBuffer![posOffset + 1] = targetY;
         arrived[i] = true;
       } else {
         const ratio = moveDistance / distanceRemaining;
-        this.positionBuffer[posOffset] += dx * ratio;
-        this.positionBuffer[posOffset + 1] += dy * ratio;
+        this.positionBuffer![posOffset] += dx * ratio;
+        this.positionBuffer![posOffset + 1] += dy * ratio;
       }
 
-      const deltaX = this.positionBuffer[posOffset] - currentX;
-      const deltaY = this.positionBuffer[posOffset + 1] - currentY;
+      const deltaX = this.positionBuffer![posOffset] - currentX;
+      const deltaY = this.positionBuffer![posOffset + 1] - currentY;
       if (this.velocityBuffer) {
         this.velocityBuffer[velOffset] = (deltaX / deltaMs) * 1000;
         this.velocityBuffer[velOffset + 1] = (deltaY / deltaMs) * 1000;
       }
-
-      updated[i] = true;
     }
 
     this.bufferDirty = true;
@@ -147,6 +203,27 @@ export class MovementBatchProcessor {
   ): void {
     if (!this.fatigueBuffer || this.entityIdArray.length === 0) return;
 
+    // Intentar usar GPU si está disponible
+    if (this.gpuService?.isGPUAvailable()) {
+      try {
+        const newFatigue = this.gpuService.updateFatigueBatch(
+          this.fatigueBuffer,
+          isMoving,
+          isResting,
+          deltaMs,
+        );
+        this.fatigueBuffer = newFatigue;
+        this.bufferDirty = true;
+        return;
+      } catch (error) {
+        logger.warn(
+          `⚠️ Error en GPU updateFatigueBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        // Continuar con CPU fallback
+      }
+    }
+
+    // Fallback a CPU
     const entityCount = this.entityIdArray.length;
     const fatigueDecayRate = 0.1 * (deltaMs / 1000);
     const fatigueRestRate = 0.5 * (deltaMs / 1000);

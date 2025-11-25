@@ -52,6 +52,7 @@ import { MovementSystem } from "../systems/MovementSystem";
 import { TrailSystem } from "../systems/TrailSystem";
 import type { BuildingLabel } from "../../types/simulation/buildings";
 import { AppearanceGenerationSystem } from "../systems/AppearanceGenerationSystem";
+import { GPUComputeService } from "./GPUComputeService";
 import { mapEventName } from "./eventNameMapper";
 import type {
   SimulationCommand,
@@ -158,6 +159,8 @@ export class SimulationRunner {
   @inject(TYPES.TrailSystem) private trailSystem!: TrailSystem;
   @inject(TYPES.AppearanceGenerationSystem)
   private appearanceGenerationSystem!: AppearanceGenerationSystem;
+  @inject(TYPES.GPUComputeService)
+  private gpuComputeService!: GPUComputeService;
 
   private capturedEvents: SimulationEvent[] = [];
   private eventCaptureListener?: (eventName: string, payload: unknown) => void;
@@ -175,7 +178,14 @@ export class SimulationRunner {
     this.stateCache = new StateCache();
   }
 
-  public initialize(): void {
+  public async initialize(): Promise<void> {
+    // Inicializar GPU Compute Service
+    await this.gpuComputeService.initialize();
+    const gpuStats = this.gpuComputeService.getPerformanceStats();
+    logger.info(
+      `🚀 GPU Compute Service: ${gpuStats.gpuAvailable ? "GPU activo" : "CPU fallback"}`,
+    );
+
     // Inicializar índices
     this.entityIndex.rebuild(this.state);
     

@@ -8,14 +8,15 @@ export const simulationRunner = container.get<SimulationRunner>(
   TYPES.SimulationRunner,
 );
 
-simulationRunner.initialize();
-
 simulationRunner
-  .initializeWorldResources({
-    width: 128, // 128x128 tiles
-    height: 128,
-    tileSize: 32,
-    biomeMap: [], // Will be generated internally
+  .initialize()
+  .then(() => {
+    return simulationRunner.initializeWorldResources({
+      width: 128, // 128x128 tiles
+      height: 128,
+      tileSize: 32,
+      biomeMap: [], // Will be generated internally
+    });
   })
   .then(() => {
     logger.info("World initialized, starting simulation loop...");
@@ -23,7 +24,7 @@ simulationRunner
   })
   .catch((err: unknown) => {
     const errorMessage = err instanceof Error ? err.message : String(err);
-    logger.error("Failed to initialize world:", errorMessage);
+    logger.error("Failed to initialize simulation:", errorMessage);
   });
 
 export type { SimulationCommand };

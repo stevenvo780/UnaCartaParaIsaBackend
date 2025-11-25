@@ -51,6 +51,7 @@ import { TrailSystem } from "../domain/simulation/systems/TrailSystem";
 import { AppearanceGenerationSystem } from "../domain/simulation/systems/AppearanceGenerationSystem";
 import { EntityIndex } from "../domain/simulation/core/EntityIndex";
 import { SharedSpatialIndex } from "../domain/simulation/core/SharedSpatialIndex";
+import { GPUComputeService } from "../domain/simulation/core/GPUComputeService";
 
 export const container = new Container();
 
@@ -226,6 +227,12 @@ container
 container
   .bind<AppearanceGenerationSystem>(TYPES.AppearanceGenerationSystem)
   .to(AppearanceGenerationSystem)
+  .inSingletonScope();
+
+// GPU Compute Service para aceleración de cálculos
+container
+  .bind<GPUComputeService>(TYPES.GPUComputeService)
+  .to(GPUComputeService)
   .inSingletonScope();
 
 // Índices centralizados para optimización de consultas

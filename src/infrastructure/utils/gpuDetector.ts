@@ -1,4 +1,8 @@
 import { logger } from "./logger";
+import { createRequire } from "module";
+
+// Crear require para usar en ESM
+const require = createRequire(import.meta.url);
 
 interface GPUInfo {
   available: boolean;
@@ -12,6 +16,41 @@ interface GPUInfo {
     tensorflowGpu?: boolean;
     cuda?: boolean;
   };
+  tf?: unknown; // TensorFlow instance if loaded
+}
+
+// Singleton para TensorFlow cargado
+let cachedTf: unknown = null;
+let tfLoadAttempted = false;
+
+/**
+ * Intenta cargar TensorFlow.js (preferencia GPU)
+ */
+export function getTensorFlow(): unknown {
+  if (tfLoadAttempted) return cachedTf;
+  tfLoadAttempted = true;
+
+  // Primero intentar GPU
+  try {
+    cachedTf = require("@tensorflow/tfjs-node-gpu");
+    logger.info("✅ TensorFlow.js GPU cargado exitosamente");
+    return cachedTf;
+  } catch (gpuErr) {
+    logger.debug("TensorFlow GPU no disponible", {
+      error: gpuErr instanceof Error ? gpuErr.message : String(gpuErr),
+    });
+  }
+
+  // Fallback a CPU
+  try {
+    cachedTf = require("@tensorflow/tfjs-node");
+    logger.info("✅ TensorFlow.js CPU cargado (fallback)");
+    return cachedTf;
+  } catch (_cpuErr) {
+    logger.debug("TensorFlow CPU tampoco disponible");
+  }
+
+  return null;
 }
 
 /**
@@ -24,69 +63,52 @@ export function detectGPUAvailability(): GPUInfo {
     libraries: {},
   };
 
-  // Verificar si TensorFlow.js está instalado
-  try {
-    // Intentar importar TensorFlow.js (si está instalado)
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const tf = require("@tensorflow/tfjs-node");
-    if (tf) {
-      info.libraries!.tensorflow = true;
-      logger.info("✅ TensorFlow.js Node detectado");
+  // Intentar cargar TensorFlow (preferencia GPU)
+  const tf = getTensorFlow() as {
+    getBackend?: () => string;
+    backend?: () => {
+      getGpuDeviceInfo?: () => { deviceName?: string; vendor?: string };
+    };
+  } | null;
 
-      // Verificar backend de TensorFlow
-      const backend = tf.getBackend();
-      info.backend = backend;
-      logger.info(`📦 Backend de TensorFlow: ${backend}`);
+  if (tf && typeof tf.getBackend === "function") {
+    info.tf = tf;
+    info.libraries!.tensorflow = true;
 
-      // Verificar si está usando GPU
-      if (backend === "tensorflow" || backend === "gpu") {
-        info.usingGPU = true;
-        info.available = true;
+    const backend = tf.getBackend();
+    info.backend = backend;
+    logger.info(`📦 Backend de TensorFlow: ${backend}`);
 
-        // Intentar obtener información del dispositivo
-        try {
-          const deviceInfo = tf.backend().getGpuDeviceInfo?.();
-          if (deviceInfo) {
-            info.deviceName = deviceInfo.deviceName;
-            info.vendor = deviceInfo.vendor;
-            logger.info("🎮 GPU detectada y en uso", {
-              backend: backend,
-              deviceName: deviceInfo.deviceName,
-              vendor: deviceInfo.vendor,
-            });
-          } else {
-            logger.info("🎮 GPU en uso (TensorFlow.js)", {
-              backend: backend,
-            });
-          }
-        } catch (err) {
-          logger.info("🎮 GPU en uso (TensorFlow.js)", {
-            backend: backend,
-            error: err instanceof Error ? err.message : String(err),
-          });
-        }
-      } else {
-        logger.warn("⚠️ TensorFlow.js está usando CPU", {
-          backend: backend,
-        });
-      }
-    }
-  } catch (err) {
-    // TensorFlow.js no está instalado
-    info.libraries!.tensorflow = false;
-  }
-
-  // Verificar si TensorFlow.js GPU está instalado
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const tfGpu = require("@tensorflow/tfjs-node-gpu");
-    if (tfGpu) {
-      info.libraries!.tensorflowGpu = true;
-      logger.info("✅ TensorFlow.js Node GPU detectado");
-      info.available = true;
+    // El backend "tensorflow" significa que está usando GPU en tfjs-node-gpu
+    if (backend === "tensorflow") {
       info.usingGPU = true;
+      info.available = true;
+      info.libraries!.tensorflowGpu = true;
+
+      // Intentar obtener información del dispositivo
+      try {
+        const backendInstance = tf.backend?.();
+        const deviceInfo = backendInstance?.getGpuDeviceInfo?.();
+        if (deviceInfo) {
+          info.deviceName = deviceInfo.deviceName;
+          info.vendor = deviceInfo.vendor;
+          logger.info("🎮 GPU detectada y en uso", {
+            backend: backend,
+            deviceName: deviceInfo.deviceName,
+            vendor: deviceInfo.vendor,
+          });
+        } else {
+          logger.info("🎮 GPU en uso (TensorFlow.js)", { backend });
+        }
+      } catch (_err) {
+        logger.info("🎮 GPU en uso (TensorFlow.js)", { backend });
+      }
+    } else {
+      info.libraries!.tensorflowGpu = false;
+      logger.info("⚠️ TensorFlow.js usando backend CPU", { backend });
     }
-  } catch (err) {
+  } else {
+    info.libraries!.tensorflow = false;
     info.libraries!.tensorflowGpu = false;
   }
 
@@ -105,10 +127,14 @@ export function detectGPUAvailability(): GPUInfo {
 
   // Verificar si hay bibliotecas nativas de CUDA disponibles
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { execSync } = require("child_process");
+    const { execSync } = require("child_process") as {
+      execSync: (
+        cmd: string,
+        opts?: { encoding?: string; timeout?: number },
+      ) => string;
+    };
     try {
-      const nvidiaSmi = execSync(
+      const nvidiaSmi: string = execSync(
         "nvidia-smi --query-gpu=name --format=csv,noheader",
         {
           encoding: "utf8",
@@ -123,10 +149,10 @@ export function detectGPUAvailability(): GPUInfo {
           deviceName: nvidiaSmi.trim(),
         });
       }
-    } catch (err) {
+    } catch (_err) {
       // nvidia-smi no disponible o error
     }
-  } catch (err) {
+  } catch (_err2) {
     // execSync no disponible
   }
 
@@ -137,13 +163,18 @@ export function detectGPUAvailability(): GPUInfo {
       deviceName: info.deviceName,
       vendor: info.vendor,
     });
+  } else if (info.available) {
+    // GPU detectada pero no configurada para TensorFlow
+    logger.info("ℹ️ GPU detectada pero TensorFlow usa CPU", {
+      deviceName: info.deviceName,
+      reason: "CUDA Toolkit 11.x no instalado o incompatible",
+      note: "El rendimiento en CPU es suficiente para esta simulación",
+    });
   } else {
-    logger.warn("⚠️ No se detectó uso de GPU para cálculos", {
+    // No hay GPU disponible - esto es normal en muchos sistemas
+    logger.debug("ℹ️ Ejecutando en modo CPU (normal)", {
       tensorflowInstalled: info.libraries?.tensorflow ?? false,
-      tensorflowGpuInstalled: info.libraries?.tensorflowGpu ?? false,
-      cudaAvailable: info.libraries?.cuda ?? false,
-      message:
-        "Los cálculos se están ejecutando en CPU. Para usar GPU, instala @tensorflow/tfjs-node-gpu",
+      note: "GPU no requerida para esta simulación",
     });
   }
 

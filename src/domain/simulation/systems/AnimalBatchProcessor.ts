@@ -1,10 +1,14 @@
 import type { Animal } from "../../types/simulation/animals";
 import { logger } from "../../../infrastructure/utils/logger";
+import type { GPUComputeService } from "../core/GPUComputeService";
+import { inject, injectable, optional } from "inversify";
+import { TYPES } from "../../../config/Types";
 
 /**
  * Procesador batch optimizado para animales
- * Usa TypedArrays para procesamiento eficiente, preparado para migración a GPU
+ * Usa GPU cuando está disponible, fallback a CPU
  */
+@injectable()
 export class AnimalBatchProcessor {
   private positionBuffer: Float32Array | null = null;
   private needsBuffer: Float32Array | null = null;
@@ -14,13 +18,12 @@ export class AnimalBatchProcessor {
   private bufferDirty = true;
 
   private readonly NEED_COUNT = 4;
-  private static loggedGPUStatus = false;
+  private gpuService?: GPUComputeService;
 
-  constructor() {
-    if (!AnimalBatchProcessor.loggedGPUStatus) {
-      logger.info("⚙️ AnimalBatchProcessor inicializado - usando CPU para cálculos");
-      AnimalBatchProcessor.loggedGPUStatus = true;
-    }
+  constructor(
+    @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
+  ) {
+    this.gpuService = gpuService;
   }
 
   public rebuildBuffers(animals: Map<string, Animal>): void {
@@ -71,6 +74,64 @@ export class AnimalBatchProcessor {
   ): void {
     if (!this.needsBuffer || this.animalIdArray.length === 0) return;
 
+    // Intentar usar GPU si está disponible
+    if (this.gpuService?.isGPUAvailable()) {
+      try {
+        // Convertir deltaMinutes a deltaSeconds para GPUComputeService
+        const deltaSeconds = deltaMinutes * 60;
+
+        // Crear decayRates array para GPUComputeService (necesita un array por necesidad)
+        // Para animales: [hungerDecay, thirstDecay, fearDecay, reproductiveUrgeDecay]
+        const animalCount = this.animalIdArray.length;
+        const decayRates = new Float32Array(this.NEED_COUNT);
+        decayRates[0] = hungerDecayRates[0] || 0; // Usar primer valor como tasa base
+        decayRates[1] = thirstDecayRates[0] || 0;
+        decayRates[2] = 0.5 / 60; // Fear decay rate (0.5 por minuto = 0.5/60 por segundo)
+        decayRates[3] = 0; // Reproductive urge no decay automático
+
+        // Crear ageMultipliers y divineModifiers (todos 1.0 para animales por ahora)
+        const ageMultipliers = new Float32Array(animalCount).fill(1.0);
+        const divineModifiers = new Float32Array(animalCount).fill(1.0);
+
+        // Aplicar decay usando GPU
+        const newNeeds = this.gpuService.applyNeedsDecayBatch(
+          this.needsBuffer,
+          decayRates,
+          ageMultipliers,
+          divineModifiers,
+          this.NEED_COUNT,
+          deltaSeconds,
+        );
+
+        // Aplicar decay específico por animal para hunger y thirst
+        // (ya que tienen tasas individuales)
+        for (let i = 0; i < animalCount; i++) {
+          const needsOffset = i * this.NEED_COUNT;
+          const hungerDecay = hungerDecayRates[i] * deltaMinutes;
+          newNeeds[needsOffset + 0] = Math.max(
+            0,
+            newNeeds[needsOffset + 0] - hungerDecay,
+          );
+
+          const thirstDecay = thirstDecayRates[i] * deltaMinutes;
+          newNeeds[needsOffset + 1] = Math.max(
+            0,
+            newNeeds[needsOffset + 1] - thirstDecay,
+          );
+        }
+
+        this.needsBuffer = newNeeds;
+        this.bufferDirty = true;
+        return;
+      } catch (error) {
+        logger.warn(
+          `⚠️ Error en GPU updateNeedsBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        // Continuar con CPU fallback
+      }
+    }
+
+    // Fallback a CPU
     const animalCount = this.animalIdArray.length;
 
     for (let i = 0; i < animalCount; i++) {

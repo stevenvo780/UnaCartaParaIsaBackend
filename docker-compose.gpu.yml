@@ -1,0 +1,30 @@
+services:
+  backend-gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile.gpu
+    ports:
+      - "8080:8080"
+    volumes:
+      # Montar código para desarrollo (hot reload)
+      - ./src:/app/src:ro
+      - ./saves:/app/saves
+      # No montar node_modules para usar los del contenedor
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - NODE_ENV=development
+      - TF_FORCE_GPU_ALLOW_GROWTH=true
+      - TF_CPP_MIN_LOG_LEVEL=2
+      - CUDA_VISIBLE_DEVICES=0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/sim/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
