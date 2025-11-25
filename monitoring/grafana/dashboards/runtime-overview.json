@@ -270,8 +270,8 @@
       },
       "targets": [
         {
-          "expr": "sum by (system, operation) (increase(backend_subsystem_total_duration_ms[1m]))",
-          "legendFormat": "{{system}}:{{operation}}",
+          "expr": "sum by (system, operation, entity_id) (increase(backend_subsystem_total_duration_ms[1m]))",
+          "legendFormat": "{{system}}:{{operation}} {{entity_id}}",
           "refId": "A"
         }
       ],
@@ -315,8 +315,8 @@
       },
       "targets": [
         {
-          "expr": "topk(10, sum by (system, operation) (increase(backend_subsystem_total_duration_ms[1m])))",
-          "legendFormat": "{{system}}:{{operation}}",
+          "expr": "topk(10, sum by (system, operation, entity_id) (increase(backend_subsystem_total_duration_ms[1m])))",
+          "legendFormat": "{{system}}:{{operation}} {{entity_id}}",
           "refId": "A"
         }
       ],

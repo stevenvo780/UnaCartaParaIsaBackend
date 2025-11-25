@@ -1656,6 +1656,26 @@ export class SimulationRunner {
       activeLegends,
     };
 
+    // Enriquecer agentes con datos de AI
+    if (snapshotState.agents) {
+      snapshotState.agents = snapshotState.agents.map((agent) => {
+        const aiState = this.aiSystem.getAIState(agent.id);
+        if (aiState) {
+          return {
+            ...agent,
+            ai: {
+              currentGoal: aiState.currentGoal,
+              goalQueue: aiState.goalQueue,
+              currentAction: aiState.currentAction,
+              offDuty: aiState.offDuty,
+              lastDecisionTime: aiState.lastDecisionTime,
+            },
+          };
+        }
+        return agent;
+      });
+    }
+
     return {
       state: snapshotState,
       tick: this.tickCounter,
@@ -1688,6 +1708,26 @@ export class SimulationRunner {
       records: allLegends,
       activeLegends,
     };
+
+    // Enriquecer agentes con datos de AI
+    if (snapshotState.agents) {
+      snapshotState.agents = snapshotState.agents.map((agent) => {
+        const aiState = this.aiSystem.getAIState(agent.id);
+        if (aiState) {
+          return {
+            ...agent,
+            ai: {
+              currentGoal: aiState.currentGoal,
+              goalQueue: aiState.goalQueue,
+              currentAction: aiState.currentAction,
+              offDuty: aiState.offDuty,
+              lastDecisionTime: aiState.lastDecisionTime,
+            },
+          };
+        }
+        return agent;
+      });
+    }
 
     const tickState = { ...snapshotState };
     delete tickState.terrainTiles;
