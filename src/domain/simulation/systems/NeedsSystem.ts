@@ -29,6 +29,9 @@ export class NeedsSystem extends EventEmitter {
 
   private zoneCache = new Map<string, { zones: Zone[]; timestamp: number }>();
   private readonly ZONE_CACHE_TTL = 15000;
+  
+  // 🔧 FIX: Contador determinista para cleanup en lugar de Math.random()
+  private _tickCounter = 0;
 
   private batchProcessor: NeedsBatchProcessor;
   /**
@@ -107,7 +110,13 @@ export class NeedsSystem extends EventEmitter {
 
     this.processRespawnQueue(now);
 
-    if (Math.random() < 0.01) this.cleanZoneCache(now);
+    // 🔧 FIX: Cleanup determinista en lugar de aleatorio
+    // Cada 100 ticks (~10 segundos) en lugar de Math.random() < 0.01
+    this._tickCounter = (this._tickCounter || 0) + 1;
+    if (this._tickCounter >= 100) {
+      this.cleanZoneCache(now);
+      this._tickCounter = 0;
+    }
 
     if (now - this.lastUpdate < this.config.updateIntervalMs) {
       return;

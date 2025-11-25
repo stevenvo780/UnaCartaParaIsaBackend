@@ -123,7 +123,9 @@ export class MovementSystem extends EventEmitter {
     callback: (result: PathfindingResult) => void;
   }> = [];
   private activePaths = 0;
-  private readonly MAX_CONCURRENT_PATHS = 3; // Máximo 3 cálculos simultáneos
+  // 🔧 FIX: Aumentar paths concurrentes de 3 a 5
+  // Con 3, la cola se acumulaba cuando muchos agentes se movían
+  private readonly MAX_CONCURRENT_PATHS = 5;
   private entityIndex?: EntityIndex;
 
   constructor(

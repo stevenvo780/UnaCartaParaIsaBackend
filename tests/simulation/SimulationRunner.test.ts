@@ -11,6 +11,7 @@ describe('SimulationRunner', () => {
   let initialState: GameState;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     initialState = createMockGameState();
     container.unbind(TYPES.GameState);
     container.unbind(TYPES.SimulationConfig);
@@ -23,6 +24,7 @@ describe('SimulationRunner', () => {
 
   afterEach(() => {
     runner.stop();
+    vi.useRealTimers();
   });
 
   describe('Inicialización', () => {
@@ -130,10 +132,11 @@ describe('SimulationRunner', () => {
     it('debe ejecutar un paso de simulación', async () => {
       const initialTick = runner.getSnapshot().tick;
       // El método step es privado, pero podemos usar el scheduler para avanzar
-      // O simplemente verificar que el tick se incrementa cuando se inicia el runner
+      // Iniciar el runner y avanzar el tiempo para que el scheduler ejecute ticks
       runner.start();
-      // Esperar un poco para que el scheduler ejecute al menos un tick
-      await new Promise(resolve => setTimeout(resolve, 150));
+      // Avanzar el tiempo para que el scheduler ejecute al menos un tick
+      // El scheduler tiene diferentes frecuencias (FAST: 100ms, MEDIUM: 500ms, SLOW: 1000ms)
+      vi.advanceTimersByTime(150);
       const newTick = runner.getSnapshot().tick;
       
       // El tick debería incrementarse cuando el scheduler ejecuta
