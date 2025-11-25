@@ -5,7 +5,7 @@ import { AnimalNeeds } from "./AnimalNeeds";
 import { AnimalGenetics } from "./AnimalGenetics";
 import { simulationEvents, GameEventNames } from "../../core/events";
 
-const BASE_ANIMAL_SPEED = 50;
+const BASE_ANIMAL_SPEED = 60; // Slightly increased from 50
 
 export class AnimalBehavior {
   private static wanderAngles = new Map<string, number>();

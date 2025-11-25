@@ -1266,7 +1266,7 @@ export class AISystem extends EventEmitter {
             if (resource) {
               // Map world resource type to inventory resource type
               let inventoryResourceType: ResourceType | null = null;
-              
+
               // water_source -> water
               if (resource.type === "water_source") {
                 inventoryResourceType = "water";
@@ -1275,18 +1275,30 @@ export class AISystem extends EventEmitter {
                 }
               }
               // Food resources -> food
-              else if (["berry_bush", "mushroom_patch", "wheat_crop"].includes(resource.type)) {
+              else if (
+                ["berry_bush", "mushroom_patch", "wheat_crop"].includes(
+                  resource.type,
+                )
+              ) {
                 inventoryResourceType = "food";
                 if (this.needsSystem) {
                   this.needsSystem.satisfyNeed(action.agentId, "hunger", 25);
                 }
               }
               // Wood resources -> wood
-              else if (["tree", "oak_tree", "pine_tree", "fallen_log"].includes(resource.type)) {
+              else if (
+                ["tree", "oak_tree", "pine_tree", "fallen_log"].includes(
+                  resource.type,
+                )
+              ) {
                 inventoryResourceType = "wood";
               }
               // Stone resources -> stone
-              else if (["stone_deposit", "rock", "iron_ore", "gold_ore"].includes(resource.type)) {
+              else if (
+                ["stone_deposit", "rock", "iron_ore", "gold_ore"].includes(
+                  resource.type,
+                )
+              ) {
                 inventoryResourceType = "stone";
               }
 

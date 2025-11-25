@@ -17,7 +17,7 @@ import {
 import { MovementBatchProcessor } from "./MovementBatchProcessor";
 
 const MOVEMENT_CONSTANTS = {
-  BASE_MOVEMENT_SPEED: 60,
+  BASE_MOVEMENT_SPEED: 80, // Slightly increased from 60 for better feel
   FATIGUE_PENALTY_MULTIPLIER: 0.5,
   PATHFINDING: {
     TIMEOUT_MS: 50,
@@ -25,7 +25,7 @@ const MOVEMENT_CONSTANTS = {
     MAX_ITERATIONS: 500,
   },
   IDLE_WANDER: {
-    COOLDOWN_MS: 800,
+    COOLDOWN_MS: 600, // Slightly reduced from 800
     PROBABILITY: 0.85,
     RADIUS_MIN: 80,
     RADIUS_MAX: 280,
@@ -431,6 +431,12 @@ export class MovementSystem extends EventEmitter {
       success: true,
       position: { ...state.currentPosition },
       targetZone: arrivedZone,
+    });
+
+    simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_COMPLETED, {
+      entityId: state.entityId,
+      activity: "moving",
+      position: { ...state.currentPosition },
     });
   }
 

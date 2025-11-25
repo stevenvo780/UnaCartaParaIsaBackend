@@ -13,14 +13,14 @@ import { updateFrameTime } from "../../../shared/FrameTime";
  */
 
 export interface TickRates {
-  FAST: number; // 100ms = 10 Hz
-  MEDIUM: number; // 500ms = 2 Hz
+  FAST: number; // 50ms = 20 Hz for smooth movement
+  MEDIUM: number; // 250ms = 4 Hz
   SLOW: number; // 1000ms = 1 Hz
 }
 
 export const DEFAULT_TICK_RATES: TickRates = {
-  FAST: 100,
-  MEDIUM: 500,
+  FAST: 50, // Reduced from 100ms for smoother movement
+  MEDIUM: 250, // Reduced from 500ms
   SLOW: 1000,
 };
 

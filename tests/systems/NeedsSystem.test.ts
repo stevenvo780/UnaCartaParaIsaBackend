@@ -93,4 +93,37 @@ describe("NeedsSystem", () => {
     expect(respawnedNeeds?.hunger).toBe(100);
     expect(gameState.entities?.[0].isDead).toBe(false);
   });
+  it("update tradicional aplica decaimiento y emite eventos críticos", () => {
+    system.initializeEntityNeeds(entityId);
+    system.updateConfig({ updateIntervalMs: 0, criticalThreshold: 90 });
+    const needs = system.getNeeds(entityId)!;
+    needs.hunger = 85;
+    needs.thirst = 85;
+
+    (system as any).lastUpdate = Date.now() - 2000;
+    system.update(0);
+
+    expect(needs.hunger).toBeLessThan(85);
+    expect(emitSpy).toHaveBeenCalledWith(
+      GameEventNames.NEED_CRITICAL,
+      expect.objectContaining({ agentId: entityId, need: "hunger" }),
+    );
+  });
+
+  it("updateBatch procesa conjuntos grandes y sincroniza necesidades", () => {
+    system.updateConfig({ updateIntervalMs: 0 });
+    for (let i = 0; i < 25; i++) {
+      const id = `agent-${i}`;
+      gameState.agents?.push({ id, position: { x: i, y: 0 } } as any);
+      gameState.entities?.push({ id, position: { x: i, y: 0 }, isDead: false } as any);
+      const data = system.initializeEntityNeeds(id);
+      data.hunger = 80;
+    }
+
+    (system as any).lastUpdate = Date.now() - 2000;
+    system.update(0);
+
+    expect(system.getNeeds("agent-0")?.hunger).toBeLessThan(80);
+  });
+
 });

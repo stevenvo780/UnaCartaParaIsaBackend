@@ -329,7 +329,7 @@ export class SimulationRunner {
         if (simulationEvents instanceof BatchedEventEmitter) {
           simulationEvents.flushEvents();
         }
-        
+
         // Mark all sections as dirty since scheduler updates multiple systems
         this.stateCache.markDirtyMultiple([
           "agents",
@@ -351,7 +351,7 @@ export class SimulationRunner {
           "knowledgeGraph",
           "tasks",
         ]);
-        
+
         // Emit tick snapshot to WebSocket clients
         this.tickCounter += 1;
         const snapshot = this.getTickSnapshot();
@@ -498,7 +498,7 @@ export class SimulationRunner {
 
     this.scheduler.registerSystem({
       name: "AnimalSystem",
-      rate: "SLOW",
+      rate: "FAST", // Changed from SLOW for smoother animal movement
       update: (delta: number) => this.animalSystem.update(delta),
       enabled: true,
     });
