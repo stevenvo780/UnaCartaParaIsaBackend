@@ -72,7 +72,7 @@ import type {
 import type { NeedsConfig } from "../../types/simulation/needs";
 import type { TaskType, TaskMetadata } from "../../types/simulation/tasks";
 
-import { injectable, inject, optional } from "inversify";
+import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 
 @injectable()
@@ -742,118 +742,127 @@ export class SimulationRunner {
     return this.getTickSnapshot();
   }
 
+  private isStepping = false;
+
   private async step(): Promise<void> {
-    const now = Date.now();
-    const delta = now - this.lastUpdate;
-    this.lastUpdate = now;
-
-    this.processCommands();
-    const scaledDelta = delta * this.timeScale;
-
-    this.entityIndex.rebuild(this.state);
-    this.sharedSpatialIndex.rebuildIfNeeded(
-      this.state.entities || [],
-      this.animalSystem.getAnimals(),
-    );
-
-    const dirtySections: string[] = [];
-
-    this.advanceSimulation(scaledDelta);
-
-    await Promise.all([
-      Promise.resolve(this.worldResourceSystem.update(scaledDelta)),
-      Promise.resolve(this.animalSystem.update(scaledDelta)),
-      Promise.resolve(this.timeSystem.update(scaledDelta)),
-      Promise.resolve(this.trailSystem.update(scaledDelta)),
-      Promise.resolve(this.itemGenerationSystem.update(scaledDelta)),
-      Promise.resolve(this.reputationSystem.update()),
-      Promise.resolve(this._researchSystem.update()),
-      Promise.resolve(this.emergenceSystem.update(scaledDelta)),
-      Promise.resolve(this.knowledgeNetworkSystem.update(scaledDelta)),
-      Promise.resolve(this.productionSystem.update(scaledDelta)),
-      Promise.resolve(this._recipeDiscoverySystem.update()),
-      Promise.resolve(this._normsSystem.update()),
-    ]);
-    dirtySections.push(
-      "worldResources",
-      "animals",
-      "research",
-      "recipes",
-      "norms",
-    );
-
-    await Promise.all([
-      Promise.resolve(this.livingLegendsSystem.update(scaledDelta)),
-      Promise.resolve(this.lifeCycleSystem.update(scaledDelta)),
-      Promise.resolve(this.inventorySystem.update()),
-      Promise.resolve(this.resourceReservationSystem.update()),
-    ]);
-    dirtySections.push("agents", "entities", "inventory");
-
-    await Promise.all([
-      Promise.resolve(this.needsSystem.update(scaledDelta)),
-      Promise.resolve(this.socialSystem.update(scaledDelta)),
-      Promise.resolve(this.economySystem.update(scaledDelta)),
-      Promise.resolve(this.marketSystem.update(scaledDelta)),
-    ]);
-    dirtySections.push("socialGraph", "market");
-
-    this.roleSystem.update(scaledDelta);
-    this.aiSystem.update(scaledDelta);
-    dirtySections.push("agents");
-
-    await Promise.all([
-      Promise.resolve(this.divineFavorSystem.update(scaledDelta)),
-      Promise.resolve(this.governanceSystem.update(scaledDelta)),
-      Promise.resolve(this.householdSystem.update(scaledDelta)),
-      Promise.resolve(this.buildingSystem.update(scaledDelta)),
-      Promise.resolve(this.buildingMaintenanceSystem.update(scaledDelta)),
-      Promise.resolve(this.productionSystem.update(scaledDelta)),
-      Promise.resolve(this.enhancedCraftingSystem.update()),
-    ]);
-    dirtySections.push("zones");
-
-    this.combatSystem.update(scaledDelta);
-    this.taskSystem.update();
-    dirtySections.push("entities", "tasks");
-
-    await Promise.all([
-      Promise.resolve(this.questSystem.update()),
-      Promise.resolve(this.tradeSystem.update()),
-      Promise.resolve(this.marriageSystem.update()),
-      Promise.resolve(this.conflictResolutionSystem.update()),
-      Promise.resolve(this.resourceAttractionSystem.update(scaledDelta)),
-      Promise.resolve(this.crisisPredictorSystem.update(scaledDelta)),
-      Promise.resolve(this.ambientAwarenessSystem.update(scaledDelta)),
-      Promise.resolve(this.cardDialogueSystem.update(scaledDelta)),
-      Promise.resolve(this.emergenceSystem.update(scaledDelta)),
-      Promise.resolve(this.interactionGameSystem.update(scaledDelta)),
-      Promise.resolve(this.knowledgeNetworkSystem.update(scaledDelta)),
-    ]);
-    dirtySections.push(
-      "reputation",
-      "quests",
-      "trade",
-      "marriage",
-      "conflicts",
-      "knowledgeGraph",
-    );
-
-    this.movementSystem.update(scaledDelta);
-    dirtySections.push("entities");
-
-    this.stateCache.markDirtyMultiple(dirtySections);
-
-    this.tickCounter += 1;
-
-    if (simulationEvents instanceof BatchedEventEmitter) {
-      simulationEvents.flushEvents();
+    if (this.isStepping) {
+      logger.warn("Simulation step skipped: previous step still running");
+      return;
     }
+    this.isStepping = true;
 
-    const snapshot = this.getTickSnapshot();
-    this.emitter.emit("tick", snapshot);
+    try {
+      const now = Date.now();
+      const delta = now - this.lastUpdate;
+      this.lastUpdate = now;
 
-    this.capturedEvents = [];
+      this.processCommands();
+      const scaledDelta = delta * this.timeScale;
+
+      this.entityIndex.rebuild(this.state);
+      this.sharedSpatialIndex.rebuildIfNeeded(
+        this.state.entities || [],
+        this.animalSystem.getAnimals(),
+      );
+
+      const dirtySections: string[] = [];
+
+      this.advanceSimulation(scaledDelta);
+
+      await Promise.all([
+        Promise.resolve(this.worldResourceSystem.update(scaledDelta)),
+        Promise.resolve(this.animalSystem.update(scaledDelta)),
+        Promise.resolve(this.timeSystem.update(scaledDelta)),
+        Promise.resolve(this.trailSystem.update(scaledDelta)),
+        Promise.resolve(this.itemGenerationSystem.update(scaledDelta)),
+        Promise.resolve(this.reputationSystem.update()),
+        Promise.resolve(this._researchSystem.update()),
+        Promise.resolve(this.emergenceSystem.update(scaledDelta)),
+        Promise.resolve(this.knowledgeNetworkSystem.update(scaledDelta)),
+        Promise.resolve(this.productionSystem.update(scaledDelta)),
+        Promise.resolve(this._recipeDiscoverySystem.update()),
+        Promise.resolve(this._normsSystem.update()),
+      ]);
+      dirtySections.push(
+        "worldResources",
+        "animals",
+        "research",
+        "recipes",
+        "norms",
+      );
+
+      await Promise.all([
+        Promise.resolve(this.livingLegendsSystem.update(scaledDelta)),
+        Promise.resolve(this.lifeCycleSystem.update(scaledDelta)),
+        Promise.resolve(this.inventorySystem.update()),
+        Promise.resolve(this.resourceReservationSystem.update()),
+      ]);
+      dirtySections.push("agents", "entities", "inventory");
+
+      await Promise.all([
+        Promise.resolve(this.needsSystem.update(scaledDelta)),
+        Promise.resolve(this.socialSystem.update(scaledDelta)),
+        Promise.resolve(this.economySystem.update(scaledDelta)),
+        Promise.resolve(this.marketSystem.update(scaledDelta)),
+      ]);
+      dirtySections.push("socialGraph", "market");
+
+      this.roleSystem.update(scaledDelta);
+      this.aiSystem.update(scaledDelta);
+      dirtySections.push("agents");
+
+      await Promise.all([
+        Promise.resolve(this.divineFavorSystem.update(scaledDelta)),
+        Promise.resolve(this.governanceSystem.update(scaledDelta)),
+        Promise.resolve(this.householdSystem.update(scaledDelta)),
+        Promise.resolve(this.buildingSystem.update(scaledDelta)),
+        Promise.resolve(this.buildingMaintenanceSystem.update(scaledDelta)),
+        Promise.resolve(this.enhancedCraftingSystem.update()),
+      ]);
+      dirtySections.push("zones");
+
+      this.combatSystem.update(scaledDelta);
+      this.taskSystem.update();
+      dirtySections.push("entities", "tasks");
+
+      await Promise.all([
+        Promise.resolve(this.questSystem.update()),
+        Promise.resolve(this.tradeSystem.update()),
+        Promise.resolve(this.marriageSystem.update()),
+        Promise.resolve(this.conflictResolutionSystem.update()),
+        Promise.resolve(this.resourceAttractionSystem.update(scaledDelta)),
+        Promise.resolve(this.crisisPredictorSystem.update(scaledDelta)),
+        Promise.resolve(this.ambientAwarenessSystem.update(scaledDelta)),
+        Promise.resolve(this.cardDialogueSystem.update(scaledDelta)),
+        Promise.resolve(this.interactionGameSystem.update(scaledDelta)),
+      ]);
+      dirtySections.push(
+        "reputation",
+        "quests",
+        "trade",
+        "marriage",
+        "conflicts",
+        "knowledgeGraph",
+      );
+
+      this.movementSystem.update(scaledDelta);
+      dirtySections.push("entities");
+
+      this.stateCache.markDirtyMultiple(dirtySections);
+
+      this.tickCounter += 1;
+
+      if (simulationEvents instanceof BatchedEventEmitter) {
+        simulationEvents.flushEvents();
+      }
+
+      const snapshot = this.getTickSnapshot();
+      this.emitter.emit("tick", snapshot);
+
+      this.capturedEvents = [];
+    } finally {
+      this.isStepping = false;
+    }
   }
 
   private processCommands(): void {
@@ -1282,14 +1291,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                  resources?: {
-                    wood?: number;
-                    stone?: number;
-                    food?: number;
-                    water?: number;
-                  };
-                  minWorkers?: number;
-                }
+                resources?: {
+                  wood?: number;
+                  stone?: number;
+                  food?: number;
+                  water?: number;
+                };
+                minWorkers?: number;
+              }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,
@@ -1376,7 +1385,7 @@ export class SimulationRunner {
     return lineageId;
   }
 
-  public getEntityDetails(entityId: string): any {
+  public getEntityDetails(entityId: string): Record<string, unknown> | null {
     const entity = this.state.entities.find((e) => e.id === entityId);
     if (!entity) return null;
 
