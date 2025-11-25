@@ -61,7 +61,6 @@ import { TimeSystem } from "../domain/simulation/systems/TimeSystem";
 import { InteractionGameSystem } from "../domain/simulation/systems/InteractionGameSystem";
 import { KnowledgeNetworkSystem } from "../domain/simulation/systems/KnowledgeNetworkSystem";
 import { MovementSystem } from "../domain/simulation/systems/MovementSystem";
-import { TrailSystem } from "../domain/simulation/systems/TrailSystem";
 import { AppearanceGenerationSystem } from "../domain/simulation/systems/AppearanceGenerationSystem";
 import { EntityIndex } from "../domain/simulation/core/EntityIndex";
 import { SharedSpatialIndex } from "../domain/simulation/core/SharedSpatialIndex";
@@ -233,10 +232,6 @@ container
 container
   .bind<MovementSystem>(TYPES.MovementSystem)
   .to(MovementSystem)
-  .inSingletonScope();
-container
-  .bind<TrailSystem>(TYPES.TrailSystem)
-  .to(TrailSystem)
   .inSingletonScope();
 container
   .bind<AppearanceGenerationSystem>(TYPES.AppearanceGenerationSystem)

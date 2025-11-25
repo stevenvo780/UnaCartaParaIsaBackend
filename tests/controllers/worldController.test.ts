@@ -10,24 +10,21 @@ vi.mock('../../src/infrastructure/services/world/worldGenerationService.ts', () 
   })),
 }));
 
-vi.mock('../../src/config/container.ts', () => {
-  // Importar TYPES dentro del mock factory usando require
-  const { TYPES } = require('../../src/config/Types');
+// Mock del container - usar una función que se ejecuta después de que los módulos se carguen
+vi.mock('../../src/config/container.ts', async () => {
+  // Importar TYPES de forma dinámica
+  const { TYPES } = await import('../../src/config/Types');
   
   return {
     container: {
       get: vi.fn((type: symbol) => {
-        // Usar Symbol.keyFor para comparar símbolos de forma más confiable
-        const typeKey = Symbol.keyFor(type);
-        const worldGenKey = Symbol.keyFor(TYPES.WorldGenerationService);
-        const animalSystemKey = Symbol.keyFor(TYPES.AnimalSystem);
-        
-        if (typeKey === worldGenKey) {
+        // Comparar símbolos directamente
+        if (type === TYPES.WorldGenerationService) {
           return {
             generateChunk: mockGenerateChunk,
           };
         }
-        if (typeKey === animalSystemKey) {
+        if (type === TYPES.AnimalSystem) {
           return {
             spawnAnimalsForChunk: mockSpawnAnimalsForChunk,
           };
