@@ -107,7 +107,12 @@ export class MovementSystem extends EventEmitter {
   private lastCacheCleanup: number = 0;
 
   private batchProcessor: MovementBatchProcessor;
-  private readonly BATCH_THRESHOLD = 15; // Usar batch processing si hay 15+ entidades moviéndose
+  /**
+   * Umbral para activar procesamiento por lotes.
+   * 15 entidades: MovementSystem tiene overhead de pathfinding y cálculos de fatiga,
+   * por lo que el batch processing se activa antes para amortizar el costo.
+   */
+  private readonly BATCH_THRESHOLD = 15;
 
   constructor(@inject(TYPES.GameState) gameState: GameState) {
     super();
@@ -365,7 +370,11 @@ export class MovementSystem extends EventEmitter {
     this.calculatePath(state.currentPosition, { x: targetX, y: targetY })
       .then((pathResult) => {
         state.isPathfinding = false;
-        if (!pathResult.success) return;
+        if (!pathResult.success || pathResult.path.length === 0) {
+          // Pathfinding falló, no intentar moverse
+          logger.warn(`Pathfinding failed for ${entityId} to zone ${targetZoneId}`);
+          return;
+        }
 
         const now = Date.now();
         const travelTime = estimateTravelTime(
@@ -458,6 +467,10 @@ export class MovementSystem extends EventEmitter {
     return this.movementStates.has(entityId);
   }
 
+  public removeEntityMovement(entityId: string): void {
+    this.movementStates.delete(entityId);
+  }
+
   private async calculatePath(
     from: { x: number; y: number },
     to: { x: number; y: number },
@@ -517,11 +530,14 @@ export class MovementSystem extends EventEmitter {
             this.pathCache.set(pathKey, { result, timestamp: now });
             resolve(result);
           } else {
-            // Pathfinding falló, marcar como no exitoso
+            // Pathfinding falló completamente
+            // No devolver un path directo ya que podría atravesar obstáculos
+            // En su lugar, devolver un path vacío para que el sistema de movimiento
+            // pueda manejar el fallo apropiadamente (por ejemplo, buscar un destino alternativo)
             const distance = Math.hypot(to.x - from.x, to.y - from.y);
             resolve({
-              success: false, // Fallback marcado como fallido para evitar atravesar obstáculos
-              path: [from, to], // Path directo como último recurso
+              success: false,
+              path: [], // Path vacío - no intentar moverse si no hay path válido
               estimatedTime: estimateTravelTime(
                 distance,
                 0,

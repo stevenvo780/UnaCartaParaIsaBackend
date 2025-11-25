@@ -288,10 +288,12 @@ export class LifeCycleSystem extends EventEmitter {
 
     const world = this.gameState.worldSize ?? { width: 2000, height: 2000 };
     if (!profile.position) {
-      profile.position = {
-        x: Math.floor(world.width / 2 + (Math.random() - 0.5) * 200),
-        y: Math.floor(world.height / 2 + (Math.random() - 0.5) * 200),
-      };
+      profile.position = this.findValidSpawnPosition(world);
+    } else {
+      // Validar posición proporcionada
+      if (!this.isPositionValid(profile.position, world)) {
+        profile.position = this.findValidSpawnPosition(world);
+      }
     }
 
     if (!this.gameState.agents) this.gameState.agents = [];
@@ -404,11 +406,53 @@ export class LifeCycleSystem extends EventEmitter {
           this.gameState.entities[entityIndex].isDead = true;
         }
       }
+      
+      // Limpiar estados en todos los sistemas
+      this.cleanupAgentState(id);
+      
       simulationEvents.emit(GameEventNames.AGENT_DEATH, {
         entityId: id,
         reason: "removed",
       });
     }
+  }
+
+  /**
+   * Limpia todos los estados relacionados con un agente en todos los sistemas
+   */
+  private cleanupAgentState(agentId: string): void {
+    // Limpiar AI state
+    if (this._aiSystem) {
+      this._aiSystem.removeEntityAI(agentId);
+    }
+    
+    // Limpiar needs
+    if (this.needsSystem) {
+      this.needsSystem.removeEntityNeeds(agentId);
+    }
+    
+    // Limpiar social relationships
+    if (this._socialSystem) {
+      this._socialSystem.removeRelationships(agentId);
+    }
+    
+    // Limpiar movement state
+    if (this._movementSystem) {
+      this._movementSystem.stopMovement(agentId);
+      this._movementSystem.removeEntityMovement(agentId);
+    }
+    
+    // Limpiar genealogy (se mantiene para historial, pero podemos limpiar referencias activas)
+    // GenealogySystem mantiene historial, así que no limpiamos aquí
+    
+    // Limpiar household assignment
+    if (this.householdSystem) {
+      // HouseholdSystem debería tener un método para remover agente
+      // Por ahora, se mantiene la asignación para historial
+    }
+    
+    // Limpiar del EntityIndex
+    // Esto se hace en SimulationRunner cuando se llama rebuild()
   }
 
   public killAgent(id: string): boolean {
@@ -417,11 +461,110 @@ export class LifeCycleSystem extends EventEmitter {
     if (index === -1) return false;
 
     this.gameState.agents.splice(index, 1);
+    
+    // Limpiar estados en todos los sistemas
+    this.cleanupAgentState(id);
 
     simulationEvents.emit(GameEventNames.AGENT_DEATH, {
       entityId: id,
       reason: "killed",
     });
+
+    return true;
+  }
+
+  /**
+   * Encuentra una posición válida para spawn de agentes
+   * Valida que no esté en agua, dentro de edificios, o fuera de límites
+   */
+  private findValidSpawnPosition(world: {
+    width: number;
+    height: number;
+  }): { x: number; y: number } {
+    const MAX_ATTEMPTS = 100;
+    const SPAWN_RADIUS = 200;
+
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      const x =
+        Math.floor(world.width / 2) +
+        Math.floor((Math.random() - 0.5) * SPAWN_RADIUS);
+      const y =
+        Math.floor(world.height / 2) +
+        Math.floor((Math.random() - 0.5) * SPAWN_RADIUS);
+
+      const position = { x, y };
+      if (this.isPositionValid(position, world)) {
+        return position;
+      }
+    }
+
+    // Fallback: posición central si no se encuentra una válida
+    return {
+      x: Math.floor(world.width / 2),
+      y: Math.floor(world.height / 2),
+    };
+  }
+
+  /**
+   * Valida si una posición es válida para spawn
+   */
+  private isPositionValid(
+    position: { x: number; y: number },
+    world: { width: number; height: number },
+  ): boolean {
+    // Verificar límites del mundo
+    if (
+      position.x < 0 ||
+      position.y < 0 ||
+      position.x >= world.width ||
+      position.y >= world.height
+    ) {
+      return false;
+    }
+
+    // Verificar que no esté en agua usando terrainTiles
+    if (this.gameState.terrainTiles) {
+      const nearbyWater = this.gameState.terrainTiles.some((tile) => {
+        const dx = tile.x - position.x;
+        const dy = tile.y - position.y;
+        const dist = Math.hypot(dx, dy);
+        // Verificar si está cerca de agua (dentro de 32px, tamaño típico de tile)
+        return dist < 32 && tile.type === "water";
+      });
+
+      if (nearbyWater) {
+        return false;
+      }
+
+      // Verificar isWalkable si está disponible
+      const nearbyTile = this.gameState.terrainTiles.find((tile) => {
+        const dx = Math.abs(tile.x - position.x);
+        const dy = Math.abs(tile.y - position.y);
+        return dx < 16 && dy < 16; // Dentro del tile
+      });
+
+      if (nearbyTile && nearbyTile.isWalkable === false) {
+        return false;
+      }
+    }
+
+    // Verificar que no esté dentro de una zona de construcción o edificio
+    if (this.gameState.zones) {
+      const insideZone = this.gameState.zones.some((zone) => {
+        if (!zone.bounds) return false;
+        return (
+          position.x >= zone.bounds.x &&
+          position.x <= zone.bounds.x + zone.bounds.width &&
+          position.y >= zone.bounds.y &&
+          position.y <= zone.bounds.y + zone.bounds.height &&
+          zone.metadata?.underConstruction === true
+        );
+      });
+
+      if (insideZone) {
+        return false;
+      }
+    }
 
     return true;
   }

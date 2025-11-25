@@ -32,6 +32,56 @@ export class EntityIndex {
     this.dirty = false;
   }
 
+  /**
+   * Sincroniza agents con entities en GameState.
+   * Asegura que cada agente tenga su entidad correspondiente en gameState.entities.
+   * Este es el lugar centralizado para esta sincronización.
+   */
+  public syncAgentsToEntities(state: GameState): void {
+    if (!state.agents) return;
+
+    if (!state.entities) {
+      state.entities = [];
+    }
+
+    for (const agent of state.agents) {
+      // Verificar si ya existe la entidad
+      const existingEntity = state.entities.find((e) => e.id === agent.id);
+      if (existingEntity) {
+        // Actualizar posición si el agente tiene posición
+        if (agent.position) {
+          existingEntity.x = agent.position.x;
+          existingEntity.y = agent.position.y;
+          existingEntity.position = { ...agent.position };
+        }
+        // Actualizar el índice interno
+        this.entityIndex.set(agent.id, existingEntity);
+        continue;
+      }
+
+      // Crear entidad desde agente si no existe
+      if (agent.position) {
+        const entity: SimulationEntity = {
+          id: agent.id,
+          name: agent.name,
+          x: agent.position.x,
+          y: agent.position.y,
+          position: { ...agent.position },
+          isDead: false,
+          type: "agent",
+          traits: agent.traits as EntityTraits,
+          immortal: agent.immortal,
+          stats: {
+            health: 100,
+            stamina: 100,
+          },
+        };
+        state.entities.push(entity);
+        this.entityIndex.set(agent.id, entity);
+      }
+    }
+  }
+
   public markDirty(): void {
     this.dirty = true;
   }

@@ -816,9 +816,9 @@ export class AISystem extends EventEmitter {
       return true;
     }
 
-    // Aumentar timeout a 5 minutos (300000ms) y solo marcar como completado
-    // si realmente se cumplió el objetivo, no solo por tiempo
-    const GOAL_TIMEOUT_MS = 300000; // 5 minutos
+    // Timeout reducido a 60 segundos para evitar que agentes queden atascados
+    // en objetivos imposibles
+    const GOAL_TIMEOUT_MS = 60000; // 60 segundos
     if (now - goal.createdAt > GOAL_TIMEOUT_MS) {
       // Verificar si el goal realmente se completó antes de marcarlo como tal
       // Si no se completó, se marcará como inválido en isGoalInvalid

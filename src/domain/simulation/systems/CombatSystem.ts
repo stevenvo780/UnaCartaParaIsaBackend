@@ -75,8 +75,8 @@ export class CombatSystem {
     @inject(TYPES.SocialSystem) private readonly socialSystem: SocialSystem,
     @inject(TYPES.AnimalSystem) @optional() animalSystem?: AnimalSystem,
     @inject(TYPES.NormsSystem) @optional() normsSystem?: NormsSystem,
-    @inject("EntityIndex") @optional() entityIndex?: EntityIndex,
-    @inject("SharedSpatialIndex") @optional() sharedSpatialIndex?: SharedSpatialIndex,
+    @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
+    @inject(TYPES.SharedSpatialIndex) @optional() sharedSpatialIndex?: SharedSpatialIndex,
   ) {
     this.animalSystem = animalSystem;
     this.normsSystem = normsSystem;
@@ -102,8 +102,14 @@ export class CombatSystem {
     }
     this.lastUpdate = now;
 
-    // Sincronizar agents con entities si es necesario
-    this.syncAgentsToEntities();
+    // Sincronización ahora se hace centralmente en SimulationRunner
+    // Mantener este método por compatibilidad pero delegar a EntityIndex si está disponible
+    if (this.entityIndex) {
+      this.entityIndex.syncAgentsToEntities(this.state);
+    } else {
+      // Fallback si EntityIndex no está disponible
+      this.syncAgentsToEntities();
+    }
 
     const entities = this.state.entities;
     if (!entities || entities.length === 0) return;
@@ -154,7 +160,13 @@ export class CombatSystem {
       (e) => e.position && !e.isDead,
     );
 
-    if (potentialAttackers.length > 10) {
+    /**
+     * Umbral para activar procesamiento por lotes en combate.
+     * 10 entidades: CombatSystem realiza consultas espaciales costosas y cálculos de daño,
+     * por lo que el batch processing se activa con menos entidades para mejorar rendimiento.
+     */
+    const BATCH_THRESHOLD = 10;
+    if (potentialAttackers.length > BATCH_THRESHOLD) {
       this.updateBatch(potentialAttackers, entitiesById, now);
     } else {
       for (const attacker of potentialAttackers) {
@@ -606,11 +618,11 @@ export class CombatSystem {
   }
 
   /**
-   * Sincroniza agents con entities para asegurar que todos los agentes
-   * tengan su entidad correspondiente en gameState.entities
+   * @deprecated La sincronización ahora se hace centralmente en EntityIndex.syncAgentsToEntities()
+   * Mantener este método solo como fallback si EntityIndex no está disponible
    */
   private syncAgentsToEntities(): void {
-    if (!this.state.agents || !this.entityIndex) return;
+    if (!this.state.agents) return;
 
     if (!this.state.entities) {
       this.state.entities = [];

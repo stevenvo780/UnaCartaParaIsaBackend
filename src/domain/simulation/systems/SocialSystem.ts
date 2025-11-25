@@ -50,8 +50,8 @@ export class SocialSystem {
     const dt = deltaTimeMs / 1000;
     this.lastUpdate += deltaTimeMs;
 
-    // Sincronizar agents con entities
-    this.syncAgentsToEntities();
+    // Sincronización ahora se hace centralmente en SimulationRunner
+    // Mantener este método por compatibilidad pero ya no es necesario llamarlo aquí
 
     this.spatialGrid.clear();
     const entities = this.gameState.entities || [];
@@ -357,8 +357,8 @@ export class SocialSystem {
   }
 
   /**
-   * Sincroniza agents con entities para asegurar que todos los agentes
-   * tengan su entidad correspondiente en gameState.entities
+   * @deprecated La sincronización ahora se hace centralmente en EntityIndex.syncAgentsToEntities()
+   * Mantener este método solo como fallback si EntityIndex no está disponible
    */
   private syncAgentsToEntities(): void {
     if (!this.gameState.agents) return;

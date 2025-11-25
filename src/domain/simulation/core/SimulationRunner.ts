@@ -162,8 +162,8 @@ export class SimulationRunner {
   private capturedEvents: SimulationEvent[] = [];
   private eventCaptureListener?: (eventName: string, payload: unknown) => void;
   private stateCache: StateCache;
-  private entityIndex: EntityIndex;
-  private sharedSpatialIndex: SharedSpatialIndex;
+  @inject(TYPES.EntityIndex) private entityIndex!: EntityIndex;
+  @inject(TYPES.SharedSpatialIndex) private sharedSpatialIndex!: SharedSpatialIndex;
 
   constructor(
     @inject(TYPES.GameState) state: GameState,
@@ -173,18 +173,12 @@ export class SimulationRunner {
     this.tickIntervalMs = _config.tickIntervalMs ?? 200;
     this.maxCommandQueue = _config.maxCommandQueue ?? 200;
     this.stateCache = new StateCache();
-    this.entityIndex = new EntityIndex();
-    this.entityIndex.rebuild(this.state);
-    const worldWidth = this.state.worldSize?.width ?? 2000;
-    const worldHeight = this.state.worldSize?.height ?? 2000;
-    this.sharedSpatialIndex = new SharedSpatialIndex(
-      worldWidth,
-      worldHeight,
-      70,
-    );
   }
 
   public initialize(): void {
+    // Inicializar índices
+    this.entityIndex.rebuild(this.state);
+    
     if (this.buildingSystem) {
       this.buildingSystem.setTaskSystem(this.taskSystem);
     }
@@ -308,6 +302,11 @@ export class SimulationRunner {
       GameEventNames.AGENT_DEATH,
       (data: { entityId: string; reason?: string }) => {
         this._genealogySystem.recordDeath(data.entityId);
+        // Limpiar del EntityIndex
+        this.entityIndex.removeAgent(data.entityId);
+        this.entityIndex.removeEntity(data.entityId);
+        // Marcar como dirty para reconstruir en el próximo tick
+        this.entityIndex.markDirty();
       },
     );
 
@@ -738,6 +737,8 @@ export class SimulationRunner {
       const scaledDelta = delta * this.timeScale;
 
       this.entityIndex.rebuild(this.state);
+      // Sincronizar agents con entities antes de reconstruir índices espaciales
+      this.entityIndex.syncAgentsToEntities(this.state);
       this.sharedSpatialIndex.rebuildIfNeeded(
         this.state.entities || [],
         this.animalSystem.getAnimals(),

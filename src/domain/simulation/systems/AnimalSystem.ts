@@ -57,7 +57,12 @@ export class AnimalSystem {
   private readonly CACHE_DURATION = 15000;
 
   private batchProcessor: AnimalBatchProcessor;
-  private readonly BATCH_THRESHOLD = 30; // Usar batch processing si hay 30+ animales
+  /**
+   * Umbral para activar procesamiento por lotes.
+   * 30 animales: AnimalSystem procesa comportamientos más complejos (genética, necesidades, reproducción),
+   * por lo que requiere más animales para justificar el overhead del batch processing.
+   */
+  private readonly BATCH_THRESHOLD = 30;
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,

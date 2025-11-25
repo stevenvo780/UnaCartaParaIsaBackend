@@ -34,7 +34,12 @@ export class NeedsSystem extends EventEmitter {
   private readonly ZONE_CACHE_TTL = 15000;
 
   private batchProcessor: NeedsBatchProcessor;
-  private readonly BATCH_THRESHOLD = 20; // Usar batch processing si hay 20+ entidades
+  /**
+   * Umbral para activar procesamiento por lotes.
+   * 20 entidades: balance entre overhead de batch setup y beneficios de procesamiento vectorizado.
+   * NeedsSystem procesa 7 necesidades por entidad, así que 20 entidades = 140 operaciones.
+   */
+  private readonly BATCH_THRESHOLD = 20;
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
@@ -641,6 +646,11 @@ export class NeedsSystem extends EventEmitter {
 
   public getAllNeeds(): Map<string, EntityNeedsData> {
     return this.entityNeeds;
+  }
+
+  public removeEntityNeeds(entityId: string): void {
+    this.entityNeeds.delete(entityId);
+    this.respawnQueue.delete(entityId);
   }
 
   public updateConfig(partial: Partial<NeedsConfig>): void {

@@ -49,6 +49,8 @@ import { KnowledgeNetworkSystem } from "../domain/simulation/systems/KnowledgeNe
 import { MovementSystem } from "../domain/simulation/systems/MovementSystem";
 import { TrailSystem } from "../domain/simulation/systems/TrailSystem";
 import { AppearanceGenerationSystem } from "../domain/simulation/systems/AppearanceGenerationSystem";
+import { EntityIndex } from "../domain/simulation/core/EntityIndex";
+import { SharedSpatialIndex } from "../domain/simulation/core/SharedSpatialIndex";
 
 export const container = new Container();
 
@@ -224,4 +226,20 @@ container
 container
   .bind<AppearanceGenerationSystem>(TYPES.AppearanceGenerationSystem)
   .to(AppearanceGenerationSystem)
+  .inSingletonScope();
+
+// Índices centralizados para optimización de consultas
+container
+  .bind<EntityIndex>(TYPES.EntityIndex)
+  .to(EntityIndex)
+  .inSingletonScope();
+// SharedSpatialIndex requiere parámetros del GameState, se inicializa en SimulationRunner
+container
+  .bind<SharedSpatialIndex>(TYPES.SharedSpatialIndex)
+  .toDynamicValue(() => {
+    const gameState = container.get<GameState>(TYPES.GameState);
+    const worldWidth = gameState.worldSize?.width ?? 2000;
+    const worldHeight = gameState.worldSize?.height ?? 2000;
+    return new SharedSpatialIndex(worldWidth, worldHeight, 70);
+  })
   .inSingletonScope();

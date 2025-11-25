@@ -48,4 +48,6 @@ export const TYPES = {
   SimulationConfig: Symbol.for("SimulationConfig"),
   VoronoiGenerator: Symbol.for("VoronoiGenerator"),
   WorldGenerationService: Symbol.for("WorldGenerationService"),
+  EntityIndex: Symbol.for("EntityIndex"),
+  SharedSpatialIndex: Symbol.for("SharedSpatialIndex"),
 };
