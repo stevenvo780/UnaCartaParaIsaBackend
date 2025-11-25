@@ -305,7 +305,16 @@ export class MovementSystem extends EventEmitter {
         this.entityIndex?.getAgent(entityId) ??
         this.gameState.agents.find((a) => a.id === entityId);
       if (agent) {
-        agent.position = { ...state.currentPosition };
+        // Optimizado: mutar directamente en lugar de crear objeto nuevo
+        if (!agent.position) {
+          agent.position = {
+            x: state.currentPosition.x,
+            y: state.currentPosition.y,
+          };
+        } else {
+          agent.position.x = state.currentPosition.x;
+          agent.position.y = state.currentPosition.y;
+        }
       }
     }
   }
@@ -352,7 +361,16 @@ export class MovementSystem extends EventEmitter {
       this.entityIndex?.getAgent(state.entityId) ??
       this.gameState.agents.find((a) => a.id === state.entityId);
     if (agent) {
-      agent.position = { ...state.currentPosition };
+      // Optimizado: mutar directamente en lugar de crear objeto nuevo
+      if (!agent.position) {
+        agent.position = {
+          x: state.currentPosition.x,
+          y: state.currentPosition.y,
+        };
+      } else {
+        agent.position.x = state.currentPosition.x;
+        agent.position.y = state.currentPosition.y;
+      }
     }
   }
 
@@ -383,13 +401,23 @@ export class MovementSystem extends EventEmitter {
     state.currentActivity = "idle";
 
     if (state.targetPosition) {
-      state.currentPosition = { ...state.targetPosition };
+      // Optimizado: mutar directamente en lugar de crear objetos nuevos
+      state.currentPosition.x = state.targetPosition.x;
+      state.currentPosition.y = state.targetPosition.y;
 
       const agent =
         this.entityIndex?.getAgent(state.entityId) ??
         this.gameState.agents.find((a) => a.id === state.entityId);
       if (agent) {
-        agent.position = { ...state.currentPosition };
+        if (!agent.position) {
+          agent.position = {
+            x: state.currentPosition.x,
+            y: state.currentPosition.y,
+          };
+        } else {
+          agent.position.x = state.currentPosition.x;
+          agent.position.y = state.currentPosition.y;
+        }
       }
     }
 

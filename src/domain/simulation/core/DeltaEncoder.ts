@@ -88,6 +88,7 @@ export class DeltaEncoder {
 
   /**
    * Detecta los cambios entre dos estados
+   * Optimizado: usa Maps para lookups O(1) en lugar de O(n)
    */
   private detectChanges(
     previous: GameState,
@@ -95,10 +96,18 @@ export class DeltaEncoder {
   ): Partial<GameState> {
     const changes: Partial<GameState> = {};
 
+    // Crear índices O(1) para el estado anterior
+    const prevAgentMap = previous.agents
+      ? new Map(previous.agents.map((a) => [a.id, a]))
+      : new Map<string, AgentProfile>();
+    const prevEntityMap = previous.entities
+      ? new Map(previous.entities.map((e) => [e.id, e]))
+      : new Map<string, SimulationEntity>();
+
     // Comparar agentes (solo incluir los que cambiaron)
     if (current.agents && previous.agents) {
       const changedAgents = current.agents.filter((agent) => {
-        const prevAgent = previous.agents.find((a) => a.id === agent.id);
+        const prevAgent = prevAgentMap.get(agent.id);
         return !prevAgent || this.hasAgentChanged(prevAgent, agent);
       });
 
@@ -112,7 +121,7 @@ export class DeltaEncoder {
     // Comparar entidades (solo incluir las que cambiaron)
     if (current.entities && previous.entities) {
       const changedEntities = current.entities.filter((entity) => {
-        const prevEntity = previous.entities.find((e) => e.id === entity.id);
+        const prevEntity = prevEntityMap.get(entity.id);
         return !prevEntity || this.hasEntityChanged(prevEntity, entity);
       });
 
@@ -143,8 +152,10 @@ export class DeltaEncoder {
     if (current.animals && previous.animals) {
       const currentAnimals = current.animals.animals;
       const prevAnimals = previous.animals.animals;
+      // Crear índice O(1) para animales anteriores
+      const prevAnimalMap = new Map(prevAnimals.map((a) => [a.id, a]));
       const changedAnimals = currentAnimals.filter((animal) => {
-        const prevAnimal = prevAnimals.find((a) => a.id === animal.id);
+        const prevAnimal = prevAnimalMap.get(animal.id);
         return !prevAnimal || this.hasAnimalChanged(prevAnimal, animal);
       });
 

@@ -50,12 +50,12 @@ export class BuildingMaintenanceSystem {
     private readonly inventorySystem: InventorySystem,
   ) {
     this.config = DEFAULT_CONFIG;
-    this.now = () => Date.now();
+    this.now = (): number => Date.now();
 
     this.bootstrapExistingZones();
     simulationEvents.on(
       GameEventNames.BUILDING_CONSTRUCTED,
-      (payload: { zoneId: string }) =>
+      (payload: { zoneId: string }): void =>
         this.initializeBuildingState(payload.zoneId),
     );
   }

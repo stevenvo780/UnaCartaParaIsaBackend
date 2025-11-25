@@ -67,7 +67,7 @@ export class BuildingSystem {
     @inject(TYPES.TaskSystem) @optional() taskSystem?: TaskSystem,
   ) {
     this.config = DEFAULT_CONFIG;
-    this.now = () => Date.now();
+    this.now = (): number => Date.now();
     this.taskSystem = taskSystem;
   }
 

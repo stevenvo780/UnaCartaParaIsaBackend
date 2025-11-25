@@ -1185,20 +1185,16 @@ export class SimulationRunner {
         knowledgeType: string;
         timestamp: number;
       }) => {
-        // Desbloquear nuevas capacidades en AI basadas en conocimiento
-        // Por ejemplo, si aprende "advanced_crafting", puede hacer nuevas recetas
-        // Esto se puede implementar en el AISystem si tiene un sistema de capacidades
-        // Por ahora solo registramos el evento
+        // Evento registrado para futuras implementaciones de capacidades en AI
+        void _data;
       },
     );
 
     simulationEvents.on(
       GameEventNames.NEED_SATISFIED,
       (_data: { agentId: string; need: string; value: number }) => {
-        // El agente ya no necesita buscar esa necesidad
-        // Puede liberar reservaciones de recursos si las tiene
-        // Por ahora solo registramos el evento
-        // En el futuro, ResourceReservationSystem podría escuchar esto
+        // Evento registrado para futuras implementaciones de liberación de reservaciones
+        void _data;
       },
     );
 
@@ -1300,7 +1296,10 @@ export class SimulationRunner {
         biome?: string;
         leavesCorpse?: boolean;
         timestamp: number;
-      }) => {},
+      }) => {
+        // Evento registrado para futuras implementaciones de generación de recursos
+        void _data;
+      },
     );
 
     const eventCaptureListener = (

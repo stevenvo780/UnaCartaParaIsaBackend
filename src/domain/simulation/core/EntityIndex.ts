@@ -36,6 +36,7 @@ export class EntityIndex {
    * Sincroniza agents con entities en GameState.
    * Asegura que cada agente tenga su entidad correspondiente en gameState.entities.
    * Este es el lugar centralizado para esta sincronización.
+   * Optimizado: usa el índice interno para lookups O(1)
    */
   public syncAgentsToEntities(state: GameState): void {
     if (!state.agents) return;
@@ -44,9 +45,16 @@ export class EntityIndex {
       state.entities = [];
     }
 
+    // Construir índice temporal de entidades existentes si no existe en entityIndex
+    // Esto es O(n) una vez, en lugar de O(n) por cada agente
+    const entityMap =
+      this.entityIndex.size > 0
+        ? this.entityIndex
+        : new Map(state.entities.map((e) => [e.id, e]));
+
     for (const agent of state.agents) {
-      // Verificar si ya existe la entidad
-      const existingEntity = state.entities.find((e) => e.id === agent.id);
+      // Usar lookup O(1) en lugar de .find() O(n)
+      const existingEntity = entityMap.get(agent.id);
       if (existingEntity) {
         // Actualizar posición si el agente tiene posición
         if (agent.position) {

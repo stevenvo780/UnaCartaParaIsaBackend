@@ -512,13 +512,15 @@ export class NeedsSystem extends EventEmitter {
     if (!entity?.position) return;
 
     const entityPosition = entity.position;
+    const radiusSq = 100 * 100; // 100² = 10000, evitar sqrt costoso
 
+    // Optimizado: usar distancia al cuadrado para evitar Math.hypot/sqrt
     const nearbyEntities = this.gameState.entities.filter((e) => {
       if (e.id === entityId || !e.position) return false;
       const dx = e.position.x - entityPosition.x;
       const dy = e.position.y - entityPosition.y;
-      const distance = Math.hypot(dx, dy);
-      return distance <= 100;
+      const distanceSq = dx * dx + dy * dy;
+      return distanceSq <= radiusSq;
     });
 
     if (nearbyEntities.length === 0) return;
