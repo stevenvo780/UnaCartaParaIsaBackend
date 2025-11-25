@@ -1,3 +1,12 @@
+/**
+ * Core game type definitions.
+ *
+ * Defines the complete game state structure, including agents, entities,
+ * zones, resources, and all simulation subsystems.
+ *
+ * @module domain/types/game-types
+ */
+
 import type { WorldResourceInstance } from "./simulation/worldResources";
 import type { GovernanceSnapshot } from "./simulation/governance";
 import type { CombatLogEntry } from "./simulation/combat";
@@ -15,6 +24,9 @@ import type { AgentRole } from "./simulation/roles";
 import type { LegendRecord } from "./simulation/legends";
 import type { FamilyTree, SerializedFamilyTree } from "./simulation/genealogy";
 import type { Inventory } from "./simulation/economy";
+/**
+ * Economy system state tracking work actions and resource production.
+ */
 export interface EconomyState {
   totalWorkActions: number;
   totalResourcesProduced: {
@@ -49,11 +61,17 @@ import type {
   NormComplianceStats,
 } from "./simulation/norms";
 
+/**
+ * 2D position coordinates.
+ */
 export interface Position {
   x: number;
   y: number;
 }
 
+/**
+ * World map configuration.
+ */
 export interface GameMap {
   width: number;
   height: number;
@@ -84,9 +102,10 @@ export interface Size {
   height: number;
 }
 
-export interface Rect extends Position, Size {
-  //any
-}
+/**
+ * Rectangle with position and size.
+ */
+export interface Rect extends Position, Size {}
 
 export type InteractionType =
   | "NOURISH"
@@ -411,6 +430,12 @@ export interface TrailState {
   };
 }
 
+/**
+ * Complete game state containing all simulation data.
+ *
+ * This is the root state object that holds all agents, entities, zones,
+ * resources, and subsystem states. Used for serialization and client synchronization.
+ */
 export interface GameState {
   agents: AgentProfile[];
   entities: SimulationEntity[];

@@ -5,6 +5,9 @@ import path from "path";
 import { CONFIG } from "../../../config/config.js";
 import { logger } from "@/infrastructure/utils/logger";
 
+/**
+ * Game statistics for save metadata.
+ */
 export interface GameStats {
   population?: number;
   resources?: Record<string, number>;
