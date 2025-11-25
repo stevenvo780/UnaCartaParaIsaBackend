@@ -37,7 +37,6 @@ export class TaskSystem {
           // Cancelar tarea muy vieja
           this.cancelStalledTask(task.id, "timeout");
         } else if (timeSinceLastContribution > STALLED_THRESHOLD) {
-          // Emitir evento de tarea stalled para que otros sistemas reaccionen
           simulationEvents.emit(GameEventNames.TASK_STALLED, {
             taskId: task.id,
             taskType: task.type,

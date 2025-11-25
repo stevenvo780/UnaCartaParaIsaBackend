@@ -162,7 +162,6 @@ export class MovementSystem extends EventEmitter {
 
     this.processPathfindingQueue();
 
-    // Contar sin crear array temporal
     let movingCount = 0;
     for (const state of this.movementStates.values()) {
       if (state.isMoving) movingCount++;

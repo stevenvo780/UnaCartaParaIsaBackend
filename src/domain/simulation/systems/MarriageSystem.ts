@@ -144,7 +144,6 @@ export class MarriageSystem {
     const group = this.marriageGroups.get(groupId);
     if (!group) return false;
 
-    // Emitir DIVORCE_INITIATED al inicio del proceso
     simulationEvents.emit(GameEventNames.DIVORCE_INITIATED, {
       agentId,
       groupId,
@@ -154,7 +153,6 @@ export class MarriageSystem {
 
     const remainingMembers = group.members.filter((id) => id !== agentId);
 
-    // Emitir MARRIAGE_MEMBER_LEFT cuando un miembro sale voluntariamente
     simulationEvents.emit(GameEventNames.MARRIAGE_MEMBER_LEFT, {
       agentId,
       groupId,

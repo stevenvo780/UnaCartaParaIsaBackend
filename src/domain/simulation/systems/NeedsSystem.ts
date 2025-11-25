@@ -361,7 +361,6 @@ export class NeedsSystem extends EventEmitter {
   }
 
   private processRespawnQueue(now: number): void {
-    // Recolectar IDs a procesar para evitar modificar durante iteración
     const toRespawn: string[] = [];
     for (const [entityId, respawnTime] of this.respawnQueue) {
       if (now >= respawnTime) {

@@ -115,7 +115,6 @@ export class AnimalSystem {
     const deltaMinutes = (now - this.lastUpdate) / 60000;
     this.lastUpdate = now;
 
-    // Contar animales vivos sin crear array temporal
     let liveCount = 0;
     for (const animal of this.animals.values()) {
       if (!animal.isDead) liveCount++;

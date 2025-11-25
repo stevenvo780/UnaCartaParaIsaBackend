@@ -262,7 +262,6 @@ export class LifeCycleSystem extends EventEmitter {
 
     if (!father || !mother) return;
 
-    // Emitir REPRODUCTION_ATTEMPT antes de intentar
     simulationEvents.emit(GameEventNames.REPRODUCTION_ATTEMPT, {
       parent1: fatherId,
       parent2: motherId,
@@ -326,12 +325,10 @@ export class LifeCycleSystem extends EventEmitter {
     if (!this.gameState.agents) this.gameState.agents = [];
     this.gameState.agents.push(profile);
 
-    // Crear entidad correspondiente en gameState.entities
     if (profile.position) {
       if (!this.gameState.entities) {
         this.gameState.entities = [];
       }
-      // Verificar si ya existe la entidad
       const existingEntity =
         this.entityIndex?.getEntity(id) ??
         this.gameState.entities.find((e) => e.id === id);
@@ -438,7 +435,6 @@ export class LifeCycleSystem extends EventEmitter {
         }
       }
 
-      // Limpiar estados en todos los sistemas
       this.cleanupAgentState(id);
 
       simulationEvents.emit(GameEventNames.AGENT_DEATH, {
@@ -456,7 +452,6 @@ export class LifeCycleSystem extends EventEmitter {
       this.entityIndex?.getAgent(agentId) ??
       this.gameState.agents?.find((a) => a.id === agentId);
 
-    // Emitir INVENTORY_DROPPED si el agente tiene inventario
     if (this.inventorySystem) {
       const inv = this.inventorySystem.getAgentInventory(agentId);
       if (
@@ -477,7 +472,6 @@ export class LifeCycleSystem extends EventEmitter {
       }
     }
 
-    // Limpiar AI state
     if (this._aiSystem) {
       this._aiSystem.removeEntityAI(agentId);
     }
@@ -494,15 +488,6 @@ export class LifeCycleSystem extends EventEmitter {
       this._movementSystem.stopMovement(agentId);
       this._movementSystem.removeEntityMovement(agentId);
     }
-
-    // Limpiar household assignment
-    if (this.householdSystem) {
-      // HouseholdSystem debería tener un método para remover agente
-      // Por ahora, se mantiene la asignación para historial
-    }
-
-    // Limpiar del EntityIndex
-    // Esto se hace en SimulationRunner cuando se llama rebuild()
   }
 
   public killAgent(id: string): boolean {
@@ -512,7 +497,6 @@ export class LifeCycleSystem extends EventEmitter {
 
     this.gameState.agents.splice(index, 1);
 
-    // Limpiar estados en todos los sistemas
     this.cleanupAgentState(id);
 
     simulationEvents.emit(GameEventNames.AGENT_DEATH, {
@@ -562,7 +546,6 @@ export class LifeCycleSystem extends EventEmitter {
     position: { x: number; y: number },
     world: { width: number; height: number },
   ): boolean {
-    // Verificar límites del mundo
     if (
       position.x < 0 ||
       position.y < 0 ||
@@ -572,13 +555,11 @@ export class LifeCycleSystem extends EventEmitter {
       return false;
     }
 
-    // Verificar que no esté en agua usando terrainTiles
     if (this.gameState.terrainTiles) {
       const nearbyWater = this.gameState.terrainTiles.some((tile) => {
         const dx = tile.x - position.x;
         const dy = tile.y - position.y;
         const dist = Math.hypot(dx, dy);
-        // Verificar si está cerca de agua (dentro de 32px, tamaño típico de tile)
         return dist < 32 && tile.type === "water";
       });
 
@@ -586,7 +567,6 @@ export class LifeCycleSystem extends EventEmitter {
         return false;
       }
 
-      // Verificar isWalkable si está disponible
       const nearbyTile = this.gameState.terrainTiles.find((tile) => {
         const dx = Math.abs(tile.x - position.x);
         const dy = Math.abs(tile.y - position.y);
@@ -598,7 +578,6 @@ export class LifeCycleSystem extends EventEmitter {
       }
     }
 
-    // Verificar que no esté dentro de una zona de construcción o edificio
     if (this.gameState.zones) {
       const insideZone = this.gameState.zones.some((zone) => {
         if (!zone.bounds) return false;

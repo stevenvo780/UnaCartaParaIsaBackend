@@ -1623,7 +1623,6 @@ export class SimulationRunner {
       this.scheduler.stop();
     }
 
-    // Deprecated - limpiar timer viejo si existe
     if (this.tickHandle) {
       clearInterval(this.tickHandle);
       this.tickHandle = undefined;

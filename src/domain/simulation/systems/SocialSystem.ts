@@ -23,7 +23,7 @@ export class SocialSystem {
   private infamy = new Map<string, number>();
   private zoneHeat = new Map<string, number>();
   private lastUpdate = 0;
-  
+
   private knownEntities = new Set<string>();
   private positionCache = new Map<string, { x: number; y: number }>();
   private readonly POSITION_THRESHOLD = 2; // Solo actualizar si se movió más de 2 unidades
@@ -49,7 +49,6 @@ export class SocialSystem {
   }
 
   private setupMarriageListeners(): void {
-    // Listener para cuando se acepta un matrimonio
     simulationEvents.on(
       GameEventNames.MARRIAGE_ACCEPTED,
       (data: {
@@ -62,7 +61,6 @@ export class SocialSystem {
       },
     );
 
-    // Listener para cuando se completa un divorcio
     simulationEvents.on(
       GameEventNames.DIVORCE_COMPLETED,
       (data: {
@@ -90,7 +88,6 @@ export class SocialSystem {
     const dt = deltaTimeMs / 1000;
     this.lastUpdate += deltaTimeMs;
 
-    // 🔧 FIX: Actualización incremental del spatial grid en lugar de clear() completo
     this.updateSpatialGridIncremental();
 
     this.updateProximity(dt);
@@ -101,13 +98,12 @@ export class SocialSystem {
       this.lastUpdate = 0;
     }
 
-    // 🔧 FIX: Cachear timestamp para evitar múltiples Date.now()
     const now = Date.now();
     this.updateTruces(now);
   }
 
   /**
-   * 🔧 FIX: Actualización incremental del spatial grid
+   * Actualización incremental del spatial grid
    * Solo actualiza entidades que se movieron significativamente o son nuevas/eliminadas
    */
   private updateSpatialGridIncremental(): void {
@@ -116,20 +112,22 @@ export class SocialSystem {
 
     for (const entity of entities) {
       if (!entity.position) continue;
-      
+
       currentIds.add(entity.id);
       const cachedPos = this.positionCache.get(entity.id);
 
       if (!cachedPos) {
         // Nueva entidad
         this.spatialGrid.insert(entity.id, entity.position);
-        this.positionCache.set(entity.id, { x: entity.position.x, y: entity.position.y });
+        this.positionCache.set(entity.id, {
+          x: entity.position.x,
+          y: entity.position.y,
+        });
         this.knownEntities.add(entity.id);
       } else {
-        // Entidad existente - solo actualizar si se movió significativamente
         const dx = Math.abs(entity.position.x - cachedPos.x);
         const dy = Math.abs(entity.position.y - cachedPos.y);
-        
+
         if (dx > this.POSITION_THRESHOLD || dy > this.POSITION_THRESHOLD) {
           // insert() ya hace remove() internamente
           this.spatialGrid.insert(entity.id, entity.position);
@@ -421,10 +419,9 @@ export class SocialSystem {
           members: groupMembers,
           leader: bestLeader.id,
           cohesion,
-          morale: 100, // Default morale for now
+          morale: 100,
         });
 
-        // Emitir SOCIAL_RALLY cuando se forma un grupo con alta cohesión
         if (cohesion > 0.7 && groupMembers.length >= 3) {
           simulationEvents.emit(GameEventNames.SOCIAL_RALLY, {
             groupId: `group_${groupMembers[0]}`,

@@ -23,7 +23,11 @@ export class SharedSpatialIndex {
   private positionPool: Array<{ x: number; y: number }> = [];
   private readonly POSITION_POOL_SIZE = 200;
 
-  constructor(worldWidth: number = 3200, worldHeight: number = 3200, cellSize: number = 70) {
+  constructor(
+    worldWidth: number = 3200,
+    worldHeight: number = 3200,
+    cellSize: number = 70,
+  ) {
     this.grid = new SpatialGrid(worldWidth, worldHeight, cellSize);
     for (let i = 0; i < this.POSITION_POOL_SIZE; i++) {
       this.positionPool.push({ x: 0, y: 0 });
@@ -61,26 +65,30 @@ export class SharedSpatialIndex {
 
     for (const entity of entities) {
       if (entity.isDead || !entity.position) continue;
-      
+
       currentEntityIds.add(entity.id);
       const lastPos = this.positionCache.get(entity.id);
-      
-      if (!lastPos || 
-          Math.abs(lastPos.x - entity.position.x) > 1 || 
-          Math.abs(lastPos.y - entity.position.y) > 1) {
+
+      if (
+        !lastPos ||
+        Math.abs(lastPos.x - entity.position.x) > 1 ||
+        Math.abs(lastPos.y - entity.position.y) > 1
+      ) {
         this.updateEntityPosition(entity.id, entity.position, "agent");
       }
     }
 
     for (const [animalId, animal] of animals) {
       if (animal.isDead || !animal.position) continue;
-      
+
       currentAnimalIds.add(animalId);
       const lastPos = this.positionCache.get(animalId);
-      
-      if (!lastPos || 
-          Math.abs(lastPos.x - animal.position.x) > 1 || 
-          Math.abs(lastPos.y - animal.position.y) > 1) {
+
+      if (
+        !lastPos ||
+        Math.abs(lastPos.x - animal.position.x) > 1 ||
+        Math.abs(lastPos.y - animal.position.y) > 1
+      ) {
         this.updateEntityPosition(animalId, animal.position, "animal");
       }
     }
@@ -108,22 +116,26 @@ export class SharedSpatialIndex {
   ): void {
     for (const entity of entities) {
       if (entity.isDead || !entity.position) continue;
-      
+
       const cached = this.positionCache.get(entity.id);
-      if (cached && (
-          Math.abs(cached.x - entity.position.x) > 1 || 
-          Math.abs(cached.y - entity.position.y) > 1)) {
+      if (
+        cached &&
+        (Math.abs(cached.x - entity.position.x) > 1 ||
+          Math.abs(cached.y - entity.position.y) > 1)
+      ) {
         this.updateEntityPosition(entity.id, entity.position, "agent");
       }
     }
 
     for (const [animalId, animal] of animals) {
       if (animal.isDead || !animal.position) continue;
-      
+
       const cached = this.positionCache.get(animalId);
-      if (cached && (
-          Math.abs(cached.x - animal.position.x) > 1 || 
-          Math.abs(cached.y - animal.position.y) > 1)) {
+      if (
+        cached &&
+        (Math.abs(cached.x - animal.position.x) > 1 ||
+          Math.abs(cached.y - animal.position.y) > 1)
+      ) {
         this.updateEntityPosition(animalId, animal.position, "animal");
       }
     }
@@ -135,7 +147,7 @@ export class SharedSpatialIndex {
     type: EntityType,
   ): void {
     this.grid.insert(id, position);
-    
+
     let cached = this.entityPositions.get(id);
     if (cached) {
       cached.x = position.x;
@@ -147,7 +159,7 @@ export class SharedSpatialIndex {
       this.entityPositions.set(id, cached);
     }
 
-    let posCache = this.positionCache.get(id);
+    const posCache = this.positionCache.get(id);
     if (posCache) {
       posCache.x = position.x;
       posCache.y = position.y;
