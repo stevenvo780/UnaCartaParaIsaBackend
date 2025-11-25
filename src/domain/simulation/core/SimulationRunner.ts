@@ -533,7 +533,7 @@ export class SimulationRunner {
 
     this.scheduler.registerSystem({
       name: "AnimalSystem",
-      rate: "MEDIUM", // Life cycles work fine at 4Hz, movement interpolated on frontend
+      rate: "MEDIUM",
       update: (delta: number) => this.animalSystem.update(delta),
       enabled: true,
     });
@@ -599,7 +599,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: () => this.tradeSystem.update(),
       enabled: true,
-      minEntities: 10, // Comercio requiere múltiples participantes
+      minEntities: 10,
     });
 
     this.scheduler.registerSystem({
@@ -614,7 +614,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: () => this.conflictResolutionSystem.update(),
       enabled: true,
-      minEntities: 10, // Resolución de conflictos necesita grupos
+      minEntities: 10,
     });
 
     this.scheduler.registerSystem({
@@ -629,7 +629,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: (delta: number) => this.crisisPredictorSystem.update(delta),
       enabled: true,
-      minEntities: 20, // Predicción de crisis necesita suficientes datos
+      minEntities: 20,
     });
 
     this.scheduler.registerSystem({
@@ -679,7 +679,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: () => this._normsSystem.update(),
       enabled: true,
-      minEntities: 15, // Normas sociales para sociedades más grandes
+      minEntities: 15,
     });
 
     this.scheduler.registerSystem({
@@ -687,7 +687,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: (delta: number) => this.emergenceSystem.update(delta),
       enabled: true,
-      minEntities: 15, // Solo tiene sentido con suficientes entidades
+      minEntities: 15,
     });
 
     this.scheduler.registerSystem({
@@ -695,7 +695,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: (delta: number) => this.knowledgeNetworkSystem.update(delta),
       enabled: true,
-      minEntities: 10, // Redes de conocimiento requieren múltiples agentes
+      minEntities: 10,
     });
 
     logger.info("📋 All systems registered in multi-rate scheduler", {
@@ -706,10 +706,8 @@ export class SimulationRunner {
   }
 
   /**
-   * Crea infraestructuras básicas iniciales para que la familia pueda comenzar
-   * - Casa familiar
-   * - Mesa de trabajo (workbench)
-   * - Zona de almacenamiento
+   * Creates initial basic infrastructure for the family to begin.
+   * Includes family house, workbench, storage zone, rest zone, and kitchen.
    */
   private createInitialInfrastructure(): void {
     const baseX = 100;
@@ -1596,10 +1594,9 @@ export class SimulationRunner {
   }
 
   /**
-   * Inicia la simulación usando el scheduler multi-rate
+   * Starts the simulation using the multi-rate scheduler.
    */
   start(): void {
-    // Deprecated path - mantener por compatibilidad pero delegar a scheduler
     if (!this.scheduler) {
       logger.error("⚠️ Scheduler not initialized, cannot start simulation");
       return;
@@ -1610,7 +1607,7 @@ export class SimulationRunner {
   }
 
   /**
-   * Detiene la simulación
+   * Stops the simulation and clears all intervals.
    */
   stop(): void {
     if (this.scheduler) {
@@ -1623,6 +1620,12 @@ export class SimulationRunner {
     }
   }
 
+  /**
+   * Enqueues a command for processing in the next tick.
+   *
+   * @param command - Simulation command to enqueue
+   * @returns True if command was enqueued, false if queue is full
+   */
   enqueueCommand(command: SimulationCommand): boolean {
     if (this.commands.length >= this.maxCommandQueue) {
       this.emitter.emit("commandRejected", command);
@@ -1633,8 +1636,10 @@ export class SimulationRunner {
   }
 
   /**
-   * Obtiene un snapshot completo (incluye datos estáticos)
-   * Usar solo al conectar un cliente nuevo
+   * Gets a complete snapshot including static data.
+   * Use only when connecting a new client.
+   *
+   * @returns Full simulation snapshot with all state data
    */
   getInitialSnapshot(): SimulationSnapshot {
     const events =
@@ -1659,8 +1664,10 @@ export class SimulationRunner {
   }
 
   /**
-   * Obtiene un snapshot optimizado para ticks (sin datos estáticos)
-   * Usa StateCache para solo clonar lo que cambió
+   * Gets an optimized snapshot for ticks (without static data).
+   * Uses StateCache to only clone what changed.
+   *
+   * @returns Optimized simulation snapshot
    */
   getTickSnapshot(): SimulationSnapshot {
     const events =
@@ -1695,16 +1702,21 @@ export class SimulationRunner {
   }
 
   /**
-   * @deprecated Usar getInitialSnapshot() o getTickSnapshot() según el caso
-   * Mantenido para compatibilidad
+   * Gets a snapshot (delegates to getTickSnapshot).
+   *
+   * @deprecated Use getInitialSnapshot() or getTickSnapshot() instead
+   * @returns Simulation snapshot
    */
   getSnapshot(): SimulationSnapshot {
     return this.getTickSnapshot();
   }
 
   /**
-   * Obtiene un snapshot delta (solo cambios desde el último snapshot)
-   * Reduce significativamente el tamaño del payload para WebSockets
+   * Gets a delta snapshot (only changes since last snapshot).
+   * Significantly reduces payload size for WebSocket transmission.
+   *
+   * @param forceFull - Force a full snapshot regardless of interval
+   * @returns Delta snapshot with only changes
    */
   getDeltaSnapshot(forceFull = false): DeltaSnapshot {
     const tickSnapshot = this.getTickSnapshot();
@@ -1713,7 +1725,10 @@ export class SimulationRunner {
 
   private isStepping = false;
 
-  // Método step() deprecated, usar el scheduler en su lugar
+  /**
+   * @deprecated Use scheduler instead
+   * @internal
+   */
   // @ts-expect-error - Método deprecated pero mantenido para compatibilidad
   private async step(): Promise<void> {
     if (this.isStepping) {
@@ -2397,6 +2412,11 @@ export class SimulationRunner {
     };
   }
 
+  /**
+   * Gets the player's agent ID (first agent in the state).
+   *
+   * @returns Player agent ID or empty string if no agents exist
+   */
   public getPlayerId(): string {
     return this.state.agents[0]?.id || "";
   }

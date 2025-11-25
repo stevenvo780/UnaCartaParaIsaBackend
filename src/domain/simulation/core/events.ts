@@ -1,7 +1,17 @@
 import { BatchedEventEmitter } from "./BatchedEventEmitter";
 
+/**
+ * Global event emitter for simulation events.
+ * Uses batched event processing to improve performance during ticks.
+ *
+ * @see BatchedEventEmitter for batching behavior
+ */
 export const simulationEvents = new BatchedEventEmitter();
 
+/**
+ * Game event name constants.
+ * All simulation systems emit and listen to these events for coordination.
+ */
 export const GameEventNames = {
   RESOURCE_GATHERED: "RESOURCE_GATHERED",
   CHUNK_RENDERED: "CHUNK_RENDERED",

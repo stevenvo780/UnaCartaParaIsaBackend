@@ -43,6 +43,21 @@ interface AISystemConfig {
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 
+/**
+ * AI system for agent decision-making and goal planning.
+ *
+ * Processes agents in batches to maintain performance. Each agent has:
+ * - Personality traits derived from agent traits
+ * - Memory of visited zones, successful activities, and failed attempts
+ * - Current goal and action being executed
+ * - Goal queue for future planning
+ *
+ * Uses AgentGoalPlanner to evaluate and select goals based on needs, roles,
+ * available resources, and social context.
+ *
+ * @see AgentGoalPlanner for goal selection logic
+ * @see PriorityManager for need prioritization
+ */
 @injectable()
 export class AISystem extends EventEmitter {
   private gameState: GameState;
@@ -83,6 +98,25 @@ export class AISystem extends EventEmitter {
   private _goalsCompleted = 0;
   private _goalsFailed = 0;
 
+  /**
+   * Creates a new AI system.
+   *
+   * @param gameState - Current game state
+   * @param needsSystem - Optional needs system dependency
+   * @param roleSystem - Optional role system dependency
+   * @param worldResourceSystem - Optional world resource system dependency
+   * @param inventorySystem - Optional inventory system dependency
+   * @param socialSystem - Optional social system dependency
+   * @param craftingSystem - Optional crafting system dependency
+   * @param householdSystem - Optional household system dependency
+   * @param taskSystem - Optional task system dependency
+   * @param combatSystem - Optional combat system dependency
+   * @param animalSystem - Optional animal system dependency
+   * @param movementSystem - Optional movement system dependency
+   * @param questSystem - Optional quest system dependency
+   * @param timeSystem - Optional time system dependency
+   * @param entityIndex - Optional entity index dependency
+   */
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
     @inject(TYPES.NeedsSystem) @optional() needsSystem?: NeedsSystem,
@@ -147,6 +181,12 @@ export class AISystem extends EventEmitter {
     );
   }
 
+  /**
+   * Sets system dependencies after construction.
+   * Allows for circular dependency resolution.
+   *
+   * @param systems - Object containing system dependencies
+   */
   public setDependencies(systems: {
     needsSystem?: NeedsSystem;
     roleSystem?: RoleSystem;
@@ -178,6 +218,13 @@ export class AISystem extends EventEmitter {
     if (systems.timeSystem) this.timeSystem = systems.timeSystem;
   }
 
+  /**
+   * Updates the AI system, processing agents in batches.
+   * Processes up to 25 agents per update to maintain performance.
+   * Skips player-controlled agents and agents that are off-duty.
+   *
+   * @param _deltaTimeMs - Elapsed time in milliseconds (not used, uses config interval)
+   */
   public update(_deltaTimeMs: number): void {
     const now = Date.now();
     if (now - this.lastUpdate < this.config.updateIntervalMs) {
@@ -218,6 +265,14 @@ export class AISystem extends EventEmitter {
     this.agentIndex = (this.agentIndex + batchSize) % agents.length;
   }
 
+  /**
+   * Processes a single agent's AI state.
+   * Checks if current goal is completed or invalid, then makes a new decision if needed.
+   *
+   * @param agentId - Agent identifier
+   * @param aiState - Agent's AI state
+   * @param now - Current timestamp
+   */
   private processAgent(agentId: string, aiState: AIState, now: number): void {
     if (aiState.currentGoal) {
       if (this.isGoalCompleted(aiState.currentGoal, agentId)) {
