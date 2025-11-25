@@ -102,14 +102,8 @@ export class CombatSystem {
     }
     this.lastUpdate = now;
 
-    // Sincronización ahora se hace centralmente en SimulationRunner
-    // Mantener este método por compatibilidad pero delegar a EntityIndex si está disponible
-    if (this.entityIndex) {
-      this.entityIndex.syncAgentsToEntities(this.state);
-    } else {
-      // Fallback si EntityIndex no está disponible
-      this.syncAgentsToEntities();
-    }
+    // La sincronización se hace centralmente en SimulationRunner.step()
+    // No es necesario sincronizar aquí
 
     const entities = this.state.entities;
     if (!entities || entities.length === 0) return;

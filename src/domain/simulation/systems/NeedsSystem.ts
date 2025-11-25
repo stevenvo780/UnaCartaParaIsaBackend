@@ -363,24 +363,10 @@ export class NeedsSystem extends EventEmitter {
       }
     }
 
-    // Notificar a AISystem que el agente está activo de nuevo
-    if (this.aiSystem) {
-      this.aiSystem.setAgentOffDuty(entityId, false);
-    }
-
-    // Asegurar que MovementSystem tenga el estado de movimiento inicializado
-    const agent = this.gameState.agents?.find((a) => a.id === entityId);
-    if (this.movementSystem && agent?.position) {
-      if (!this.movementSystem.hasMovementState(entityId)) {
-        this.movementSystem.initializeEntityMovement(
-          entityId,
-          agent.position,
-        );
-      }
-    }
-
     logger.info(`✨ Entity ${entityId} respawned`);
 
+    // Emitir evento para que SimulationRunner maneje la reactivación
+    // Esto elimina la dependencia circular con AISystem y MovementSystem
     simulationEvents.emit(GameEventNames.AGENT_RESPAWNED, {
       agentId: entityId,
       timestamp: Date.now(),

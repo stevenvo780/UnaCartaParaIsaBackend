@@ -371,8 +371,24 @@ export class MovementSystem extends EventEmitter {
       .then((pathResult) => {
         state.isPathfinding = false;
         if (!pathResult.success || pathResult.path.length === 0) {
-          // Pathfinding falló, no intentar moverse
+          // Pathfinding falló, emitir eventos para que otros sistemas reaccionen
           logger.warn(`Pathfinding failed for ${entityId} to zone ${targetZoneId}`);
+          
+          // Emitir evento de fallo de pathfinding
+          simulationEvents.emit(GameEventNames.PATHFINDING_FAILED, {
+            entityId,
+            targetZoneId,
+            reason: "no_path_found",
+            timestamp: Date.now(),
+          });
+          
+          // Notificar que la acción falló
+          simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+            agentId: entityId,
+            actionType: "move",
+            success: false,
+            targetZone: targetZoneId,
+          });
           return;
         }
 

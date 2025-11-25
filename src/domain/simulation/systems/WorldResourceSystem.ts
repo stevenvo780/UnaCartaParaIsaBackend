@@ -82,6 +82,7 @@ export class WorldResourceSystem {
     const { width, height, tileSize, biomeMap } = worldConfig;
     let spawned = 0;
     const sampleStep = 64;
+    const biomesFound = new Set<string>();
 
     for (let x = 0; x < width; x += sampleStep) {
       for (let y = 0; y < height; y += sampleStep) {
@@ -95,6 +96,7 @@ export class WorldResourceSystem {
           tileX < biomeMap[0].length
         ) {
           const biome = biomeMap[tileY][tileX];
+          if (biome) biomesFound.add(biome);
           const resourceConfigs = this.getResourcesForBiome(biome);
 
           for (const config of resourceConfigs) {
@@ -106,6 +108,7 @@ export class WorldResourceSystem {
         }
       }
     }
+    logger.info(`[WorldResourceSystem] Biomes found: ${Array.from(biomesFound).join(", ")}`);
     logger.info(`[WorldResourceSystem] Spawned ${spawned} resources in world`);
   }
 

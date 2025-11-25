@@ -25,7 +25,7 @@ export class TaskSystem {
     this.lastUpdate = now;
 
     const STALLED_THRESHOLD = 300000; // 5 minutes
-    const stalledTasks: string[] = [];
+    const MAX_STALLED_AGE = 600000; // 10 minutes - cancelar después de esto
 
     this.tasks.forEach((task) => {
       if (task.completed) return;
@@ -33,8 +33,18 @@ export class TaskSystem {
       if (task.lastContribution) {
         const timeSinceLastContribution = now - task.lastContribution;
 
-        if (timeSinceLastContribution > STALLED_THRESHOLD) {
-          stalledTasks.push(task.id);
+        if (timeSinceLastContribution > MAX_STALLED_AGE) {
+          // Cancelar tarea muy vieja
+          this.cancelStalledTask(task.id, "timeout");
+        } else if (timeSinceLastContribution > STALLED_THRESHOLD) {
+          // Emitir evento de tarea stalled para que otros sistemas reaccionen
+          simulationEvents.emit(GameEventNames.TASK_STALLED, {
+            taskId: task.id,
+            taskType: task.type,
+            zoneId: task.zoneId,
+            stalledDuration: timeSinceLastContribution,
+            timestamp: now,
+          });
         }
       }
     });
@@ -272,6 +282,26 @@ export class TaskSystem {
       stalled: stalled.length,
       avgProgress,
     };
+  }
+
+  private cancelStalledTask(taskId: string, reason: string): void {
+    const task = this.tasks.get(taskId);
+    if (!task) return;
+
+    task.completed = true;
+    task.cancelled = true;
+    task.cancellationReason = reason;
+
+    simulationEvents.emit(GameEventNames.TASK_COMPLETED, {
+      taskId,
+      completedBy: task.contributors
+        ? Array.from(task.contributors.keys())
+        : [],
+      completedAt: Date.now(),
+      cancelled: true,
+      reason,
+      timestamp: Date.now(),
+    });
   }
 
   public cleanup(): void {

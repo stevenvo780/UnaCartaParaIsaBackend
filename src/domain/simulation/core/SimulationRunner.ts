@@ -301,12 +301,25 @@ export class SimulationRunner {
     simulationEvents.on(
       GameEventNames.AGENT_DEATH,
       (data: { entityId: string; reason?: string }) => {
+        // Marcar como muerto inmediatamente en EntityIndex para prevenir race conditions
+        this.entityIndex.markEntityDead(data.entityId);
         this._genealogySystem.recordDeath(data.entityId);
-        // Limpiar del EntityIndex
-        this.entityIndex.removeAgent(data.entityId);
+        // Limpiar del EntityIndex (ya se hace en markEntityDead, pero mantener por compatibilidad)
         this.entityIndex.removeEntity(data.entityId);
-        // Marcar como dirty para reconstruir en el próximo tick
-        this.entityIndex.markDirty();
+      },
+    );
+
+    simulationEvents.on(
+      GameEventNames.AGENT_RESPAWNED,
+      (data: { agentId: string; timestamp: number }) => {
+        // Reactivar AI del agente respawneado
+        this.aiSystem.setAgentOffDuty(data.agentId, false);
+        
+        // Asegurar que MovementSystem tenga el estado de movimiento inicializado
+        const agent = this.entityIndex.getAgent(data.agentId);
+        if (agent?.position && !this.movementSystem.hasMovementState(data.agentId)) {
+          this.movementSystem.initializeEntityMovement(data.agentId, agent.position);
+        }
       },
     );
 
@@ -490,7 +503,7 @@ export class SimulationRunner {
                 biome: String(tile.biome),
                 isWalkable: tile.isWalkable ?? true,
               });
-              biomeMap[tile.y][tile.x] = tile.biome;
+              biomeMap[tile.y][tile.x] = String(tile.biome);
             }
           }
         }

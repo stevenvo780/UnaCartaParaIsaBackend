@@ -46,6 +46,8 @@ export interface Task {
   };
   metadata?: TaskMetadata;
   completed: boolean;
+  cancelled?: boolean;
+  cancellationReason?: string;
   contributors?: Map<string, number>;
   lastContribution?: number;
   targetAnimalId?: string;

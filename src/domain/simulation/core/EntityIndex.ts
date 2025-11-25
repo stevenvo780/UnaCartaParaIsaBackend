@@ -110,6 +110,22 @@ export class EntityIndex {
     this.entityIndex.delete(entityId);
   }
 
+  /**
+   * Marca una entidad como muerta inmediatamente y la remueve del índice de agentes.
+   * Esto previene race conditions donde otros sistemas procesan agentes muertos
+   * antes de que el índice se reconstruya en el próximo tick.
+   */
+  public markEntityDead(entityId: string): void {
+    const entity = this.entityIndex.get(entityId);
+    if (entity) {
+      entity.isDead = true;
+    }
+    // También remover del índice de agentes para que otros sistemas no lo procesen
+    this.agentIndex.delete(entityId);
+    // Marcar como dirty para que se reconstruya en el próximo tick
+    this.dirty = true;
+  }
+
   public getAllAgents(): IterableIterator<AgentProfile> {
     return this.agentIndex.values();
   }
