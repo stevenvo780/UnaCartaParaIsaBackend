@@ -36,6 +36,7 @@ interface LifeCycleConfig {
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
+import type { TaskSystem } from "./TaskSystem";
 
 /**
  * System for managing agent lifecycle: birth, aging, death, and reproduction.
@@ -71,6 +72,7 @@ export class LifeCycleSystem extends EventEmitter {
   private _divineFavorSystem?: DivineFavorSystem;
   private _movementSystem?: MovementSystem;
   private _roleSystem?: RoleSystem;
+  private _taskSystem?: TaskSystem;
   private dependenciesChecked = false;
   private entityIndex?: EntityIndex;
 
@@ -107,6 +109,7 @@ export class LifeCycleSystem extends EventEmitter {
     divineFavorSystem?: DivineFavorSystem;
     movementSystem?: MovementSystem;
     roleSystem?: RoleSystem;
+    taskSystem?: TaskSystem;
   }): void {
     if (systems.needsSystem) this.needsSystem = systems.needsSystem;
     if (systems.aiSystem) this._aiSystem = systems.aiSystem;
@@ -119,6 +122,7 @@ export class LifeCycleSystem extends EventEmitter {
     if (systems.divineFavorSystem)
       this._divineFavorSystem = systems.divineFavorSystem;
     if (systems.movementSystem) this._movementSystem = systems.movementSystem;
+    if (systems.taskSystem) this._taskSystem = systems.taskSystem;
     if (systems.roleSystem) {
       this._roleSystem = systems.roleSystem;
       this.assignRolesToEligibleAdults();
@@ -140,6 +144,7 @@ export class LifeCycleSystem extends EventEmitter {
     if (!this._divineFavorSystem) missing.push("DivineFavorSystem");
     if (!this._movementSystem) missing.push("MovementSystem");
     if (!this._roleSystem) missing.push("RoleSystem");
+    if (!this._taskSystem) missing.push("TaskSystem");
     if (missing.length > 0) {
       logger.warn(
         `LifeCycleSystem: missing dependencies -> ${missing.join(", ")}`,
@@ -524,7 +529,12 @@ export class LifeCycleSystem extends EventEmitter {
 
     if (this._movementSystem) {
       this._movementSystem.stopMovement(agentId);
+      this._movementSystem.stopMovement(agentId);
       this._movementSystem.removeEntityMovement(agentId);
+    }
+
+    if (this._taskSystem) {
+      this._taskSystem.removeAgentFromAllTasks(agentId);
     }
   }
 

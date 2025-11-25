@@ -13,7 +13,6 @@ import {
   SOCIAL_GROUP_SYMBOLS,
   SKIN_TONES,
 } from "../../../shared/types/simulation/appearance";
-import { GeneticSpriteSystem } from "./GeneticSpriteSystem";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { injectable, unmanaged } from "inversify";
 
@@ -27,7 +26,6 @@ interface AppearanceConfig {
 @injectable()
 export class AppearanceGenerationSystem {
   private config: AppearanceConfig;
-  private geneticSpriteSystem: GeneticSpriteSystem;
 
   private agentAppearances = new Map<string, AgentAppearance>();
   private generationThemes = new Map<number, GenerationVisualTheme>();
@@ -41,8 +39,6 @@ export class AppearanceGenerationSystem {
       inheritanceStrength: 0.7,
       ...config,
     };
-
-    this.geneticSpriteSystem = new GeneticSpriteSystem();
 
     this.initializeGenerationThemes();
 
@@ -249,17 +245,16 @@ export class AppearanceGenerationSystem {
       };
     }
 
-    const variantConfig = {
+    // Generate a unique variant key based on genetic data
+    // The actual rendering is done by frontend's GeneticSpriteSystem
+    const variantKey = this.generateVariantKey(
       generation,
       sex,
-      fatherSkinVariant: fatherApp?.geneticLineage?.inheritedSkinVariant,
-      motherSkinVariant: motherApp?.geneticLineage?.inheritedSkinVariant,
+      fatherApp?.geneticLineage?.inheritedSkinVariant,
+      motherApp?.geneticLineage?.inheritedSkinVariant,
       skinTone,
       hairColor,
-    };
-
-    const variantInfo =
-      this.geneticSpriteSystem.generateSpriteVariant(variantConfig);
+    );
 
     let generationMix = 1.0;
     if (fatherApp && motherApp) {
@@ -269,11 +264,34 @@ export class AppearanceGenerationSystem {
     }
 
     return {
-      fatherSkinVariant: variantConfig.fatherSkinVariant,
-      motherSkinVariant: variantConfig.motherSkinVariant,
-      inheritedSkinVariant: variantInfo.key,
+      fatherSkinVariant: fatherApp?.geneticLineage?.inheritedSkinVariant,
+      motherSkinVariant: motherApp?.geneticLineage?.inheritedSkinVariant,
+      inheritedSkinVariant: variantKey,
       generationMix,
     };
+  }
+
+  /**
+   * Generates a unique key for genetic variant identification.
+   * Frontend uses this key to render the appropriate sprite variant.
+   */
+  private generateVariantKey(
+    generation: number,
+    sex: string,
+    fatherVariant?: string,
+    motherVariant?: string,
+    skinTone?: string,
+    hairColor?: string,
+  ): string {
+    const parts = [
+      `gen${generation}`,
+      sex,
+      fatherVariant || "nofather",
+      motherVariant || "nomother",
+      skinTone || "default",
+      hairColor || "default",
+    ];
+    return parts.join("_");
   }
 
   public assignSocialGroupMarkers(agentId: string, groupId: string): void {
