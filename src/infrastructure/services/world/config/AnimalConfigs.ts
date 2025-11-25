@@ -30,7 +30,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     waterConsumptionRate: 3,
 
     spawnProbability: 0.25,
-    suitableBiomes: ["grassland", "forest", "mystical"],
+    suitableBiomes: ["grassland", "forest", "mystical", "village"],
     groupSize: { min: 3, max: 7 },
     minDistanceBetweenGroups: 200,
   },
@@ -64,7 +64,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     waterConsumptionRate: 4,
 
     spawnProbability: 0.15,
-    suitableBiomes: ["forest", "mystical"],
+    suitableBiomes: ["forest", "mystical", "village"],
     groupSize: { min: 2, max: 4 },
     minDistanceBetweenGroups: 300,
   },
@@ -98,7 +98,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     waterConsumptionRate: 3,
 
     spawnProbability: 0.1,
-    suitableBiomes: ["forest", "grassland"],
+    suitableBiomes: ["forest", "grassland", "village"],
     groupSize: { min: 1, max: 2 },
     minDistanceBetweenGroups: 350,
   },
@@ -132,7 +132,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     waterConsumptionRate: 2,
 
     spawnProbability: 0.25,
-    suitableBiomes: ["forest", "mystical", "grassland", "wetland"],
+    suitableBiomes: ["forest", "mystical", "grassland", "wetland", "village"],
     groupSize: { min: 3, max: 8 },
     minDistanceBetweenGroups: 200,
   },

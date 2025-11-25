@@ -1015,6 +1015,29 @@ export class AISystem extends EventEmitter {
     }
   }
 
+  /**
+   * Fuerza una reevaluación inmediata de goals para un agente.
+   * Útil cuando ocurre un evento crítico que requiere respuesta inmediata.
+   */
+  public forceGoalReevaluation(agentId: string): void {
+    const aiState = this.aiStates.get(agentId);
+    if (aiState) {
+      aiState.currentGoal = null;
+      aiState.currentAction = null;
+    }
+  }
+
+  /**
+   * Marca el goal actual de un agente como fallido.
+   * Útil cuando una acción falla (ej: pathfinding fallido).
+   */
+  public failCurrentGoal(agentId: string): void {
+    const aiState = this.aiStates.get(agentId);
+    if (aiState) {
+      this.failGoal(aiState, agentId);
+    }
+  }
+
   private findNearestResourceForEntity(
     entityId: string,
     resourceType: string,

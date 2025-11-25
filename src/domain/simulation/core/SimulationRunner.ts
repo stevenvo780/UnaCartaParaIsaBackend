@@ -407,6 +407,58 @@ export class SimulationRunner {
       },
     );
 
+    // Handler para necesidades críticas - triggear AI de emergencia
+    simulationEvents.on(
+      GameEventNames.NEED_CRITICAL,
+      (data: { agentId: string; need: string; value: number }) => {
+        const aiState = this.aiSystem.getAIState(data.agentId);
+        if (aiState && !aiState.currentGoal) {
+          // Forzar reevaluación inmediata de goals
+          this.aiSystem.forceGoalReevaluation(data.agentId);
+        }
+      },
+    );
+
+    // Handler para pathfinding fallido
+    simulationEvents.on(
+      GameEventNames.PATHFINDING_FAILED,
+      (data: {
+        entityId: string;
+        targetZoneId: string;
+        reason: string;
+        timestamp: number;
+      }) => {
+        const aiState = this.aiSystem.getAIState(data.entityId);
+        if (aiState?.currentGoal?.targetZoneId === data.targetZoneId) {
+          // Marcar el goal actual como fallido
+          this.aiSystem.failCurrentGoal(data.entityId);
+        }
+      },
+    );
+
+    // Handler para tareas stalled - notificar a agentes asignados
+    simulationEvents.on(
+      GameEventNames.TASK_STALLED,
+      (data: {
+        taskId: string;
+        taskType: string;
+        zoneId?: string;
+        stalledDuration: number;
+        timestamp: number;
+      }) => {
+        // Los agentes trabajando en esta tarea deberían buscar otra cosa que hacer
+        const task = this.taskSystem.getTask(data.taskId);
+        if (task?.contributors) {
+          for (const agentId of task.contributors.keys()) {
+            const aiState = this.aiSystem.getAIState(agentId);
+            if (aiState?.currentGoal?.data?.taskId === data.taskId) {
+              this.aiSystem.failCurrentGoal(agentId);
+            }
+          }
+        }
+      },
+    );
+
     const eventCaptureListener = (
       eventName: string,
       payload: unknown,

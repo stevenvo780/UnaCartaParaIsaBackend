@@ -6,6 +6,7 @@ import {
   BuildingLabel,
 } from "../../types/simulation/buildings";
 import type { TaskType } from "../../types/simulation/tasks";
+import { logger } from "../../../infrastructure/utils/logger";
 
 import { TaskSystem } from "./TaskSystem";
 
@@ -156,7 +157,28 @@ export class BuildingSystem {
       return false;
     }
 
-    const zone = this.createConstructionZone(label, position);
+    const worldSize = this.state.worldSize ?? { width: 2000, height: 2000 };
+    const boundsPosition = position ?? {
+      x: Math.floor(Math.random() * worldSize.width),
+      y: Math.floor(Math.random() * worldSize.height),
+    };
+
+    // Validar posición antes de crear la zona
+    const validatedPosition = this.validateAndAdjustPosition(
+      boundsPosition,
+      worldSize,
+      label,
+    );
+
+    if (!validatedPosition) {
+      logger.warn(
+        `Cannot schedule construction for ${label}: no valid position found`,
+      );
+      this.reservationSystem.release(reservationId);
+      return false;
+    }
+
+    const zone = this.createConstructionZone(label, validatedPosition);
     const mutableZone = zone as MutableZone;
     (this.state.zones as MutableZone[]).push(mutableZone);
 
@@ -201,20 +223,9 @@ export class BuildingSystem {
 
   private createConstructionZone(
     label: BuildingLabel,
-    overridePosition?: { x: number; y: number },
+    validatedPosition: { x: number; y: number },
   ): MutableZone {
     const worldSize = this.state.worldSize ?? { width: 2000, height: 2000 };
-    let boundsPosition = overridePosition ?? {
-      x: Math.floor(Math.random() * worldSize.width),
-      y: Math.floor(Math.random() * worldSize.height),
-    };
-
-    // Validar y ajustar posición si es necesario
-    boundsPosition = this.validateAndAdjustPosition(
-      boundsPosition,
-      worldSize,
-      label,
-    );
 
     const zoneId = `zone_${label}_${Math.random().toString(36).slice(2)}`;
     const metadata: MutableZone["metadata"] = {
@@ -227,14 +238,8 @@ export class BuildingSystem {
       id: zoneId,
       type: "work",
       bounds: {
-        x: Math.max(
-          0,
-          Math.min(boundsPosition.x, Math.max(0, worldSize.width - 120)),
-        ),
-        y: Math.max(
-          0,
-          Math.min(boundsPosition.y, Math.max(0, worldSize.height - 80)),
-        ),
+        x: Math.max(0, Math.min(validatedPosition.x, worldSize.width - 120)),
+        y: Math.max(0, Math.min(validatedPosition.y, worldSize.height - 80)),
         width: 120,
         height: 80,
       },
@@ -308,12 +313,13 @@ export class BuildingSystem {
    * - Colisiones con otras zonas
    * - Posiciones en agua
    * - Posiciones fuera de límites
+   * @returns Posición válida o null si no se encuentra después de MAX_ATTEMPTS
    */
   private validateAndAdjustPosition(
     position: { x: number; y: number },
     worldSize: { width: number; height: number },
     _buildingType: BuildingLabel,
-  ): { x: number; y: number } {
+  ): { x: number; y: number } | null {
     const BUILDING_WIDTH = 120;
     const BUILDING_HEIGHT = 80;
     const MAX_ATTEMPTS = 50;
@@ -370,11 +376,10 @@ export class BuildingSystem {
       return { x: testX, y: testY };
     }
 
-    // Si no se encontró una posición válida después de MAX_ATTEMPTS,
-    // usar la posición original pero ajustada a los límites
-    return {
-      x: Math.max(0, Math.min(position.x, worldSize.width - BUILDING_WIDTH)),
-      y: Math.max(0, Math.min(position.y, worldSize.height - BUILDING_HEIGHT)),
-    };
+    // Si no se encontró una posición válida después de MAX_ATTEMPTS, retornar null
+    logger.warn(
+      `Could not find valid position for building after ${MAX_ATTEMPTS} attempts`,
+    );
+    return null;
   }
 }

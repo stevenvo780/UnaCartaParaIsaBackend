@@ -80,7 +80,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     },
 
     spawnProbability: 0.12,
-    suitableBiomes: ["mountainous", "grassland", "wetland"],
+    suitableBiomes: ["mountainous", "grassland", "wetland", "village"],
     clusterSize: { min: 2, max: 5 },
     minDistanceBetweenClusters: 150,
   },
@@ -153,7 +153,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     },
 
     spawnProbability: 0.1,
-    suitableBiomes: ["wetland", "forest", "grassland"],
+    suitableBiomes: ["wetland", "forest", "grassland", "village"],
     clusterSize: { min: 1, max: 1 },
     minDistanceBetweenClusters: 500,
   },
@@ -189,7 +189,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     },
 
     spawnProbability: 0.2,
-    suitableBiomes: ["forest", "grassland"],
+    suitableBiomes: ["forest", "grassland", "village"],
     clusterSize: { min: 4, max: 10 },
     minDistanceBetweenClusters: 100,
   },
@@ -225,7 +225,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     },
 
     spawnProbability: 0.15,
-    suitableBiomes: ["forest", "wetland", "mystical"],
+    suitableBiomes: ["forest", "wetland", "mystical", "village"],
     clusterSize: { min: 3, max: 6 },
     minDistanceBetweenClusters: 150,
   },
@@ -261,7 +261,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     },
 
     spawnProbability: 0.1,
-    suitableBiomes: ["grassland"],
+    suitableBiomes: ["grassland", "village"],
     clusterSize: { min: 10, max: 20 },
     minDistanceBetweenClusters: 400,
   },
