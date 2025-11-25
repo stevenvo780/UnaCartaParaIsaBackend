@@ -2,6 +2,36 @@ import { vi } from "vitest";
 import type { GameState } from "../src/domain/types/game-types.js";
 import { createInitialGameState } from "../src/domain/simulation/core/defaultState.js";
 
+// Mock TensorFlow para evitar errores de módulo nativo en tests
+vi.mock("@tensorflow/tfjs-node-gpu", () => {
+  const createMockTensor = (data: number | number[] | Float32Array, shape?: number[]) => {
+    const values = Array.isArray(data) ? data : [data];
+    return {
+      dataSync: () => (Array.isArray(data) ? new Float32Array(data) : new Float32Array([data])),
+      dispose: vi.fn(),
+      shape: shape || [values.length],
+    };
+  };
+
+  return {
+    default: {
+      ready: vi.fn().mockResolvedValue(undefined),
+      getBackend: vi.fn().mockReturnValue("cpu"),
+      tensor1d: vi.fn((data) => createMockTensor(data)),
+      tensor2d: vi.fn((data, shape) => createMockTensor(data, shape)),
+      scalar: vi.fn((value) => createMockTensor(value)),
+      tidy: vi.fn((fn) => {
+        try {
+          return fn();
+        } finally {
+          // Cleanup simulado
+        }
+      }),
+      disposeVariables: vi.fn(),
+    },
+  };
+});
+
 export function createMockGameState(overrides?: Partial<GameState>): GameState {
   const baseState = createInitialGameState();
   return {
