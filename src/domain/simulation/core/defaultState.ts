@@ -79,7 +79,11 @@ export function createInitialGameState(): GameState {
 }
 
 /**
- * Clona el estado completo usando structuredClone (2-3x más rápido que JSON.parse/stringify)
+ * Clones the complete game state using structuredClone.
+ * 2-3x faster than JSON.parse/stringify for deep cloning.
+ *
+ * @param state - Game state to clone
+ * @returns Deep clone of the game state
  */
 export function cloneGameState(state: GameState): GameState {
   try {
@@ -92,8 +96,13 @@ export function cloneGameState(state: GameState): GameState {
 }
 
 /**
- * Clona solo las secciones del estado que han cambiado (marcadas como dirty)
- * Esto es mucho más eficiente cuando solo cambian partes pequeñas del estado
+ * Clones only the sections of state that have changed (marked as dirty).
+ * Much more efficient when only small parts of the state change.
+ *
+ * @param state - Current game state
+ * @param dirtyFlags - Flags indicating which sections are dirty
+ * @param previousSnapshot - Previous snapshot to reuse for non-dirty sections
+ * @returns Cloned game state with only dirty sections re-cloned
  */
 export function cloneGameStateDelta(
   state: GameState,

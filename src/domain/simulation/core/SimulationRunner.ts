@@ -78,22 +78,45 @@ import type { TaskType, TaskMetadata } from "../../types/simulation/tasks";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 
+/**
+ * Main simulation orchestrator and coordinator.
+ *
+ * Manages the game state, coordinates all simulation systems, handles commands,
+ * and provides snapshots for client synchronization. Uses MultiRateScheduler
+ * for optimized system updates at different frequencies.
+ *
+ * @see MultiRateScheduler for update rate management
+ * @see StateCache for snapshot optimization
+ * @see DeltaEncoder for delta snapshot generation
+ */
 @injectable()
 export class SimulationRunner {
   private state: GameState;
   private readonly emitter = new EventEmitter();
   private readonly commands: SimulationCommand[] = [];
-  // tickIntervalMs deprecated, kept for compatibility but not used
   private readonly maxCommandQueue: number;
-  private tickHandle?: NodeJS.Timeout; // Deprecated, use scheduler instead
+  /** @deprecated Use scheduler instead */
+  private tickHandle?: NodeJS.Timeout;
   private tickCounter = 0;
   private scheduler: MultiRateScheduler;
 
+  /**
+   * Registers an event listener.
+   *
+   * @param event - Event name
+   * @param listener - Event listener function
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public on(event: string, listener: (...args: any[]) => void): void {
     this.emitter.on(event, listener);
   }
 
+  /**
+   * Removes an event listener.
+   *
+   * @param event - Event name
+   * @param listener - Event listener function to remove
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public off(event: string, listener: (...args: any[]) => void): void {
     this.emitter.off(event, listener);
@@ -173,6 +196,12 @@ export class SimulationRunner {
   @inject(TYPES.SharedSpatialIndex)
   private sharedSpatialIndex!: SharedSpatialIndex;
 
+  /**
+   * Creates a new simulation runner.
+   *
+   * @param state - Initial game state
+   * @param _config - Optional simulation configuration
+   */
   constructor(
     @inject(TYPES.GameState) state: GameState,
     @inject(TYPES.SimulationConfig) _config?: SimulationConfig,
@@ -183,12 +212,17 @@ export class SimulationRunner {
     this.deltaEncoder = new DeltaEncoder();
 
     this.scheduler = new MultiRateScheduler({
-      FAST: 50, // 20 Hz - movement, combat, trails, animals (smooth)
-      MEDIUM: 250, // 4 Hz - AI, needs, social
-      SLOW: 1000, // 1 Hz - economy, research, etc.
+      FAST: 50,
+      MEDIUM: 250,
+      SLOW: 1000,
     });
   }
 
+  /**
+   * Initializes the simulation runner.
+   * Sets up GPU compute service, rebuilds indices, configures system dependencies,
+   * and creates initial agents and infrastructure if needed.
+   */
   public async initialize(): Promise<void> {
     await this.gpuComputeService.initialize();
     const gpuStats = this.gpuComputeService.getPerformanceStats();
@@ -315,8 +349,8 @@ export class SimulationRunner {
   }
 
   /**
-   * Configura los hooks de sincronización global del scheduler
-   * Estos se ejecutan antes/después de cada tick para mantener índices actualizados
+   * Configures global synchronization hooks for the scheduler.
+   * These execute before/after each tick to maintain updated indices.
    */
   private configureSchedulerHooks(): void {
     this.scheduler.setHooks({
@@ -333,7 +367,6 @@ export class SimulationRunner {
           simulationEvents.flushEvents();
         }
 
-        // Mark all sections as dirty since scheduler updates multiple systems
         this.stateCache.markDirtyMultiple([
           "agents",
           "entities",
@@ -355,7 +388,6 @@ export class SimulationRunner {
           "tasks",
         ]);
 
-        // Emit tick snapshot to WebSocket clients
         this.tickCounter += 1;
         const snapshot = this.getTickSnapshot();
         this.emitter.emit("tick", snapshot);
@@ -370,12 +402,12 @@ export class SimulationRunner {
   }
 
   /**
-   * Registra todos los sistemas en el scheduler multi-rate
-   * - FAST (100ms): Movimiento, combate, trails
-   * - MEDIUM (500ms): IA, necesidades, social, household
-   * - SLOW (1000ms): Economía, investigación, mercado, etc.
+   * Registers all systems in the multi-rate scheduler.
+   * - FAST (50ms): Movement, combat, trails, animals
+   * - MEDIUM (250ms): AI, needs, social, household
+   * - SLOW (1000ms): Economy, research, market, etc.
    *
-   * Los sistemas pueden especificar minEntities para ser saltados con pocas entidades
+   * Systems can specify minEntities to be skipped when entity count is low.
    */
   private registerSystemsInScheduler(): void {
     this.scheduler.registerSystem({
@@ -467,7 +499,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: (delta: number) => this.marketSystem.update(delta),
       enabled: true,
-      minEntities: 10, // Mercados necesitan suficientes participantes
+      minEntities: 10,
     });
 
     this.scheduler.registerSystem({
@@ -489,7 +521,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: (delta: number) => this.governanceSystem.update(delta),
       enabled: true,
-      minEntities: 15, // Gobernanza para comunidades más grandes
+      minEntities: 15,
     });
 
     this.scheduler.registerSystem({

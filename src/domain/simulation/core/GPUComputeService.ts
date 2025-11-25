@@ -278,7 +278,9 @@ export class GPUComputeService {
   }
 
   /**
-   * Fallback CPU para decay de necesidades
+   * CPU fallback for needs decay.
+   *
+   * @internal
    */
   private applyNeedsDecayBatchCPU(
     needs: Float32Array,
@@ -315,9 +317,12 @@ export class GPUComputeService {
   }
 
   /**
-   * Aplica efectos cruzados entre necesidades (ej: hambre baja afecta energía)
-   * @param needs Array plano de necesidades [h1, t1, e1, ...]
-   * @param needCount Número de necesidades por entidad
+   * Applies cross-effects between needs (e.g., low hunger affects energy).
+   * Falls back to CPU if GPU unavailable or entity count < 10.
+   *
+   * @param needs - Flat array of needs [h1, t1, e1, ...]
+   * @param needCount - Number of needs per entity
+   * @returns Updated needs array with cross-effects applied
    */
   applyNeedsCrossEffectsBatch(
     needs: Float32Array,
@@ -396,7 +401,9 @@ export class GPUComputeService {
   }
 
   /**
-   * Fallback CPU para efectos cruzados
+   * CPU fallback for cross-effects.
+   *
+   * @internal
    */
   private applyNeedsCrossEffectsBatchCPU(
     needs: Float32Array,
@@ -454,11 +461,14 @@ export class GPUComputeService {
   }
 
   /**
-   * Actualiza fatiga de entidades en batch
-   * @param fatigue Array de valores de fatiga
-   * @param isMoving Array de booleanos indicando si se están moviendo
-   * @param isResting Array de booleanos indicando si están descansando
-   * @param deltaMs Tiempo transcurrido en milisegundos
+   * Updates entity fatigue in batch using GPU acceleration.
+   * Falls back to CPU if GPU unavailable or entity count < 10.
+   *
+   * @param fatigue - Array of fatigue values
+   * @param isMoving - Array of booleans indicating if entities are moving
+   * @param isResting - Array of booleans indicating if entities are resting
+   * @param deltaMs - Elapsed time in milliseconds
+   * @returns Updated fatigue array
    */
   updateFatigueBatch(
     fatigue: Float32Array,
@@ -515,7 +525,9 @@ export class GPUComputeService {
   }
 
   /**
-   * Fallback CPU para actualización de fatiga
+   * CPU fallback for fatigue updates.
+   *
+   * @internal
    */
   private updateFatigueBatchCPU(
     fatigue: Float32Array,
@@ -547,7 +559,9 @@ export class GPUComputeService {
   }
 
   /**
-   * Obtiene estadísticas de rendimiento
+   * Gets performance statistics for GPU and CPU operations.
+   *
+   * @returns Performance stats including operation counts and average times
    */
   getPerformanceStats(): {
     gpuAvailable: boolean;
@@ -574,11 +588,14 @@ export class GPUComputeService {
   }
 
   /**
-   * Aplica un decaimiento lineal a un array de valores en batch
-   * @param values Array de valores a decaer
-   * @param decayRate Tasa de decaimiento por segundo
-   * @param deltaSeconds Tiempo transcurrido en segundos
-   * @param threshold Umbral mínimo (valores menores se vuelven 0)
+   * Applies linear decay to an array of values in batch.
+   * Falls back to CPU if GPU unavailable or count < 100.
+   *
+   * @param values - Array of values to decay
+   * @param decayRate - Decay rate per second
+   * @param deltaSeconds - Elapsed time in seconds
+   * @param threshold - Minimum threshold (values below become 0)
+   * @returns Decayed values array
    */
   computeGeneralDecay(
     values: Float32Array,
@@ -661,7 +678,7 @@ export class GPUComputeService {
   }
 
   /**
-   * Limpia memoria de TensorFlow (llamar periódicamente)
+   * Cleans up TensorFlow memory. Should be called periodically.
    */
   dispose(): void {
     tf.disposeVariables();
