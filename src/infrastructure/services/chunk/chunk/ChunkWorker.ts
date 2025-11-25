@@ -26,6 +26,14 @@ interface ChunkWorkerResponse {
 
 import { VoronoiGenerator } from "../../../../domain/world/generation/VoronoiGenerator";
 
+/**
+ * Worker thread for terrain chunk generation.
+ *
+ * Runs in a separate thread to avoid blocking the main event loop.
+ * Receives generation requests via parentPort and responds with generated chunks.
+ * Measures generation time for performance monitoring.
+ */
+
 const voronoiGenerator = new VoronoiGenerator();
 const generator = new WorldGenerationService(voronoiGenerator);
 

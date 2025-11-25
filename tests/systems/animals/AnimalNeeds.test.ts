@@ -14,7 +14,9 @@ describe("AnimalNeeds", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    vi.setSystemTime(100000); // Tiempo base para tests deterministas
 
+    const now = Date.now();
     mockAnimal = {
       id: "test-animal-1",
       type: "rabbit",
@@ -35,8 +37,8 @@ describe("AnimalNeeds", () => {
       },
       health: 100,
       age: 0,
-      lastReproduction: Date.now() - 100000, // Hace 100 segundos
-      spawnedAt: Date.now(),
+      lastReproduction: now - 100000, // Hace 100 segundos
+      spawnedAt: now,
       generation: 0,
       parentIds: [null, null],
       targetPosition: null,
@@ -105,7 +107,8 @@ describe("AnimalNeeds", () => {
 
     it("debe incrementar reproductiveUrge después de cooldown", () => {
       mockAnimal.needs.reproductiveUrge = 0;
-      mockAnimal.lastReproduction = Date.now() - 70000; // Hace 70 segundos (> 60s cooldown)
+      const now = Date.now();
+      mockAnimal.lastReproduction = now - 70000; // Hace 70 segundos (> 60s cooldown)
 
       AnimalNeeds.updateNeeds(mockAnimal, 1); // 1 minuto
 
@@ -116,7 +119,8 @@ describe("AnimalNeeds", () => {
 
     it("no debe incrementar reproductiveUrge si no ha pasado el cooldown", () => {
       mockAnimal.needs.reproductiveUrge = 0;
-      mockAnimal.lastReproduction = Date.now() - 30000; // Hace 30 segundos (< 60s cooldown)
+      const now = Date.now();
+      mockAnimal.lastReproduction = now - 30000; // Hace 30 segundos (< 60s cooldown)
 
       AnimalNeeds.updateNeeds(mockAnimal, 1);
 
@@ -268,9 +272,10 @@ describe("AnimalNeeds", () => {
 
       AnimalNeeds.satisfyReproductiveUrge(mockAnimal);
 
+      const afterTime = Date.now();
       expect(mockAnimal.needs.reproductiveUrge).toBe(0);
       expect(mockAnimal.lastReproduction).toBeGreaterThanOrEqual(beforeTime);
-      expect(mockAnimal.lastReproduction).toBeLessThanOrEqual(Date.now());
+      expect(mockAnimal.lastReproduction).toBeLessThanOrEqual(afterTime);
     });
   });
 });

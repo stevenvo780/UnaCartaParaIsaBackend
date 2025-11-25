@@ -1,3 +1,11 @@
+/**
+ * Dependency injection type symbols.
+ *
+ * Used by Inversify container to identify and resolve dependencies.
+ * Each symbol represents a unique service or system type.
+ *
+ * @module config
+ */
 export const TYPES = {
   SimulationRunner: Symbol.for("SimulationRunner"),
   GameState: Symbol.for("GameState"),

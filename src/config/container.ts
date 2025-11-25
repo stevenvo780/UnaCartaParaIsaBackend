@@ -1,6 +1,20 @@
 import "reflect-metadata";
 import { Container } from "inversify";
 import { TYPES } from "./Types";
+
+/**
+ * Dependency injection container configuration.
+ *
+ * Sets up Inversify container with all simulation systems, services, and core components.
+ * All systems are registered as singletons to maintain state consistency.
+ *
+ * Systems registered:
+ * - Core: SimulationRunner, EntityIndex, SharedSpatialIndex, GPUComputeService
+ * - Simulation: 30+ systems (AI, Needs, Movement, Economy, etc.)
+ * - Infrastructure: WorldGenerationService, VoronoiGenerator
+ *
+ * @module config
+ */
 import { VoronoiGenerator } from "../domain/world/generation/VoronoiGenerator";
 import { WorldGenerationService } from "../infrastructure/services/world/worldGenerationService";
 import { SimulationRunner } from "../domain/simulation/core/SimulationRunner";

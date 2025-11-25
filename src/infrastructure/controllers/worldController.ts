@@ -2,6 +2,9 @@ import { Request, Response } from "express";
 
 import { logger } from "../utils/logger.js";
 
+/**
+ * Request body for chunk generation endpoint.
+ */
 interface ChunkRequest {
   x?: number;
   y?: number;
@@ -21,7 +24,22 @@ import { TYPES } from "../../config/Types";
 import { WorldGenerationService } from "../services/world/worldGenerationService";
 import { AnimalSystem } from "../../domain/simulation/systems/AnimalSystem";
 
+/**
+ * Controller for world generation operations.
+ *
+ * Handles terrain chunk generation with biome resolution and asset placement.
+ * Automatically spawns animals for generated chunks.
+ */
 export class WorldController {
+  /**
+   * Generates a terrain chunk at specified coordinates.
+   *
+   * Validates and sanitizes input parameters (coordinates, dimensions, seed).
+   * Generates chunk using WorldGenerationService and spawns animals via AnimalSystem.
+   *
+   * @param {Request} req - Express request with ChunkRequest in body
+   * @param {Response} res - Express response with generated chunk data
+   */
   async generateChunk(req: Request, res: Response): Promise<void> {
     try {
       const worldGenerationService = container.get<WorldGenerationService>(

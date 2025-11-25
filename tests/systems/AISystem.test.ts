@@ -4,7 +4,12 @@ import { NeedsSystem } from "../../src/domain/simulation/systems/NeedsSystem.ts"
 import { RoleSystem } from "../../src/domain/simulation/systems/RoleSystem.ts";
 import { WorldResourceSystem } from "../../src/domain/simulation/systems/WorldResourceSystem.ts";
 import { LifeCycleSystem } from "../../src/domain/simulation/systems/LifeCycleSystem.ts";
-import { createMockGameState } from "../setup.ts";
+import {
+  createMockGameState,
+  createMockAISystemDependencies,
+  setupFakeTimers,
+  restoreRealTimers,
+} from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events.ts";
 
@@ -17,7 +22,7 @@ describe("AISystem", () => {
   let lifeCycleSystem: LifeCycleSystem;
 
   beforeEach(() => {
-    vi.useFakeTimers();
+    setupFakeTimers(0);
     gameState = createMockGameState({
       agents: [
         {
@@ -54,9 +59,22 @@ describe("AISystem", () => {
     needsSystem = new NeedsSystem(gameState, lifeCycleSystem);
     roleSystem = new RoleSystem(gameState);
     worldResourceSystem = new WorldResourceSystem(gameState);
+    
+    // Usar mocks completos para evitar warnings
+    const mockDeps = createMockAISystemDependencies();
     aiSystem = new AISystem(gameState, needsSystem, {
       roleSystem,
       worldResourceSystem,
+      inventorySystem: mockDeps.inventorySystem,
+      socialSystem: mockDeps.socialSystem,
+      craftingSystem: mockDeps.craftingSystem,
+      householdSystem: mockDeps.householdSystem,
+      taskSystem: mockDeps.taskSystem,
+      combatSystem: mockDeps.combatSystem,
+      animalSystem: mockDeps.animalSystem,
+      movementSystem: mockDeps.movementSystem,
+      questSystem: mockDeps.questSystem,
+      timeSystem: mockDeps.timeSystem,
     });
   });
 
@@ -180,10 +198,11 @@ describe("AISystem", () => {
       aiSystem.update(1000);
       const state = aiSystem.getAIState("agent-1");
       if (state) {
+        const now = Date.now();
         state.currentGoal = {
           type: "explore",
           priority: 0.5,
-          createdAt: Date.now(),
+          createdAt: now,
           targetPosition: { x: 200, y: 200 },
         };
         aiSystem.setAgentOffDuty("agent-1", true);
@@ -224,10 +243,11 @@ describe("AISystem", () => {
       const state = aiSystem.getAIState("agent-1");
       
       if (state) {
+        const now = Date.now();
         state.currentGoal = {
           type: "explore",
           priority: 0.5,
-          createdAt: Date.now() - 200, // Objetivo antiguo
+          createdAt: now - 200, // Objetivo antiguo
           targetPosition: { x: 200, y: 200 },
         };
 
@@ -504,19 +524,21 @@ describe("AISystem", () => {
       aiSystem.update(1000);
       const state = aiSystem.getAIState("agent-1");
       if (state) {
+        const now = Date.now();
         state.currentGoal = {
           type: "work",
           priority: 0.5,
-          createdAt: Date.now(),
+          createdAt: now,
           targetZoneId: "work-zone-1",
         };
       }
 
+      const now = Date.now();
       simulationEvents.emit(GameEventNames.ACTION_COMPLETED, {
         entityId: "agent-1",
         actionType: "work",
         success: true,
-        timestamp: Date.now(),
+        timestamp: now,
       });
 
       // El sistema debería procesar el evento
@@ -577,10 +599,11 @@ describe("AISystem", () => {
       aiSystem.update(1000);
       const state = aiSystem.getAIState("agent-1");
       if (state) {
+        const now = Date.now();
         state.currentGoal = {
           type: "explore",
           priority: 0.5,
-          createdAt: Date.now() - 70000, // Más de 60 segundos
+          createdAt: now - 70000, // Más de 60 segundos
           targetPosition: { x: 200, y: 200 },
         };
         
@@ -594,10 +617,11 @@ describe("AISystem", () => {
       aiSystem.update(1000);
       const state = aiSystem.getAIState("agent-1");
       if (state) {
+        const now = Date.now();
         state.currentGoal = {
           type: "work",
           priority: 0.5,
-          createdAt: Date.now(),
+          createdAt: now,
           targetZoneId: "nonexistent-zone",
         };
         
@@ -624,10 +648,11 @@ describe("AISystem", () => {
       aiSystem.update(1000);
       const state = aiSystem.getAIState("agent-1");
       if (state) {
+        const now = Date.now();
         state.currentGoal = {
           type: "assist_medical",
           priority: 0.8,
-          createdAt: Date.now(),
+          createdAt: now,
           targetId: "agent-3",
           data: { targetAgentId: "agent-3" },
         };
@@ -652,10 +677,11 @@ describe("AISystem", () => {
       aiSystem.update(1000);
       const state = aiSystem.getAIState("agent-1");
       if (state) {
+        const now = Date.now();
         state.currentGoal = {
           type: "gather",
           priority: 0.6,
-          createdAt: Date.now(),
+          createdAt: now,
           targetId: "tree-1",
           data: { resourceType: "tree" },
         };
@@ -736,7 +762,7 @@ describe("AISystem", () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
+    restoreRealTimers();
     simulationEvents.clearQueue();
     simulationEvents.removeAllListeners();
   });

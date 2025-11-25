@@ -1,6 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { NeedsSystem } from "../../src/domain/simulation/systems/NeedsSystem";
-import { createMockGameState } from "../setup";
+import {
+  createMockGameState,
+  setupFakeTimers,
+  restoreRealTimers,
+} from "../setup";
 import type { GameState } from "../../src/domain/types/game-types";
 import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events";
 
@@ -12,6 +16,7 @@ describe("NeedsSystem", () => {
   let emitSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    setupFakeTimers(0);
     gameState = createMockGameState({
       agents: [{ id: entityId, position: { x: 0, y: 0 } } as any],
       zones: [
@@ -28,6 +33,7 @@ describe("NeedsSystem", () => {
   });
 
   afterEach(() => {
+    restoreRealTimers();
     emitSpy.mockRestore();
     simulationEvents.clearQueue();
     simulationEvents.removeAllListeners();
@@ -87,7 +93,9 @@ describe("NeedsSystem", () => {
       expect.objectContaining({ agentId: entityId, cause: "starvation" }),
     );
 
-    const respawnTime = Date.now() + 31000;
+    const now = Date.now();
+    const respawnTime = now + 31000;
+    vi.advanceTimersByTime(31000);
     (system as any).processRespawnQueue(respawnTime);
     const respawnedNeeds = system.getNeeds(entityId);
     expect(respawnedNeeds?.hunger).toBe(100);
@@ -100,7 +108,8 @@ describe("NeedsSystem", () => {
     needs.hunger = 85;
     needs.thirst = 85;
 
-    (system as any).lastUpdate = Date.now() - 2000;
+    const now = Date.now();
+    (system as any).lastUpdate = now - 2000;
     system.update(0);
 
     expect(needs.hunger).toBeLessThan(85);
@@ -120,7 +129,8 @@ describe("NeedsSystem", () => {
       data.hunger = 80;
     }
 
-    (system as any).lastUpdate = Date.now() - 2000;
+    const now = Date.now();
+    (system as any).lastUpdate = now - 2000;
     system.update(0);
 
     expect(system.getNeeds("agent-0")?.hunger).toBeLessThan(80);

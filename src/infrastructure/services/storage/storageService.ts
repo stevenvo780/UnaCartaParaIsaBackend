@@ -74,6 +74,16 @@ export class StorageService {
     }
   }
 
+  /**
+   * Checks storage service health status.
+   *
+   * Verifies that the configured storage backend (GCS or local) is accessible.
+   *
+   * @returns {Promise<Object>} Health status with storage backend type
+   * @returns {string} returns.status - "ok" if healthy
+   * @returns {number} returns.timestamp - Current timestamp
+   * @returns {string} returns.storage - "gcs" or "local"
+   */
   async isHealthy(): Promise<{
     status: string;
     timestamp: number;
@@ -88,6 +98,14 @@ export class StorageService {
     }
   }
 
+  /**
+   * Lists all available save files with metadata.
+   *
+   * Retrieves save metadata from either GCS or local storage.
+   * Saves are sorted by timestamp (newest first).
+   *
+   * @returns {Promise<SaveMetadata[]>} Array of save metadata, sorted by timestamp descending
+   */
   async listSaves(): Promise<SaveMetadata[]> {
     let saves: SaveMetadata[] = [];
 
@@ -158,6 +176,12 @@ export class StorageService {
     return saves.sort((a, b) => b.timestamp - a.timestamp);
   }
 
+  /**
+   * Retrieves a specific save file by ID.
+   *
+   * @param {string} id - Save file ID (format: save_<timestamp>)
+   * @returns {Promise<SaveData | null>} Save data or null if not found/invalid
+   */
   async getSave(id: string): Promise<SaveData | null> {
     if (this.useGCS && this.bucket) {
       const file = this.bucket.file(`${id}.json`);
@@ -191,6 +215,18 @@ export class StorageService {
     }
   }
 
+  /**
+   * Saves game state to storage.
+   *
+   * Saves to GCS or local filesystem based on configuration.
+   * Automatically triggers NAS backup if enabled (async, non-blocking).
+   * Triggers cleanup of old saves (keeps 10 most recent, async, non-blocking).
+   *
+   * @param {SaveData} saveData - Complete game state to save
+   * @returns {Promise<Object>} Save operation result
+   * @returns {string} returns.saveId - Generated save ID (save_<timestamp>)
+   * @returns {number} returns.size - Size of saved file in bytes
+   */
   async saveGame(
     saveData: SaveData,
   ): Promise<{ saveId: string; size: number }> {
@@ -225,6 +261,12 @@ export class StorageService {
     return { saveId, size };
   }
 
+  /**
+   * Deletes a save file by ID.
+   *
+   * @param {string} id - Save file ID to delete
+   * @returns {Promise<boolean>} True if deleted successfully, false if not found
+   */
   async deleteSave(id: string): Promise<boolean> {
     if (this.useGCS && this.bucket) {
       const file = this.bucket.file(`${id}.json`);
@@ -247,6 +289,12 @@ export class StorageService {
     }
   }
 
+  /**
+   * Type guard to validate save data structure.
+   *
+   * @param {unknown} value - Value to validate
+   * @returns {boolean} True if value matches SaveData interface
+   */
   private isSaveData(value: unknown): value is SaveData {
     if (!value || typeof value !== "object") {
       return false;
@@ -261,6 +309,12 @@ export class StorageService {
     );
   }
 
+  /**
+   * Safely parses JSON save data with validation.
+   *
+   * @param {string} rawContent - Raw JSON string to parse
+   * @returns {SaveData | null} Parsed and validated save data, or null if invalid
+   */
   private safelyParseSaveData(rawContent: string): SaveData | null {
     try {
       const parsed: unknown = JSON.parse(rawContent);
@@ -270,14 +324,30 @@ export class StorageService {
     }
   }
 
+  /**
+   * Ensures local saves directory exists.
+   *
+   * Creates directory recursively if it doesn't exist.
+   * Silently handles errors (directory may already exist).
+   */
   private async ensureLocalDir(): Promise<void> {
     try {
       await fs.mkdir(CONFIG.LOCAL_SAVES_PATH, { recursive: true });
     } catch {
-      // Ignore - directory may already exist
+      // Directory may already exist, ignore error
     }
   }
 
+  /**
+   * Backs up save file to Network Attached Storage via SFTP.
+   *
+   * Creates remote directory if it doesn't exist.
+   * Non-blocking operation - errors are logged but don't fail the save.
+   *
+   * @param {string} saveId - Save file ID
+   * @param {string} content - JSON content to backup
+   * @returns {Promise<boolean>} True if backup succeeded
+   */
   private async backupToNAS(saveId: string, content: string): Promise<boolean> {
     const sftp = new SftpClient();
     try {
@@ -308,6 +378,12 @@ export class StorageService {
     }
   }
 
+  /**
+   * Cleans up old save files, keeping only the 10 most recent.
+   *
+   * Works with both GCS and local storage.
+   * Non-blocking operation - errors are logged but don't affect saves.
+   */
   private async cleanOldSaves(): Promise<void> {
     try {
       if (this.useGCS && this.bucket) {

@@ -10,13 +10,18 @@ import simulationRoutes from "./routes/simulationRoutes.js";
 import { logger } from "../infrastructure/utils/logger.js";
 
 /**
- * Express application setup.
+ * Express application instance.
  *
- * Configures CORS, JSON parsing, routes, and error handling.
+ * Configures middleware, routes, and error handling for the simulation server.
+ * Supports CORS for cross-origin requests and JSON payloads up to 50MB.
+ *
  * Routes:
- * - /save - Save/load game state
- * - /world - World generation endpoints
- * - /simulation - Simulation control endpoints
+ * - `/api/saves` - Save/load game state operations
+ * - `/api/world` - World generation endpoints
+ * - `/api/sim` - Simulation control and state endpoints
+ * - `/health` - Health check endpoint
+ *
+ * @module application
  */
 const app = express();
 

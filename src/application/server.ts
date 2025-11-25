@@ -17,11 +17,15 @@ import { logger } from "../infrastructure/utils/logger.js";
 /**
  * Main server entry point.
  *
- * Initializes the simulation runner, sets up WebSocket servers for:
- * - Simulation state streaming (/ws/sim)
- * - Chunk generation streaming (/ws/chunks)
+ * Initializes the simulation runner and sets up HTTP and WebSocket servers.
+ * Handles WebSocket upgrades for two endpoints:
+ * - `/ws/sim` - Real-time simulation state streaming (50Hz snapshots)
+ * - `/ws/chunks` - Asynchronous terrain chunk generation streaming
  *
- * Handles WebSocket upgrades and message routing.
+ * The simulation runner maintains authoritative game state and broadcasts
+ * tick snapshots to connected clients via MessagePack encoding.
+ *
+ * @module application
  */
 
 const simulationRunner = container.get<SimulationRunner>(

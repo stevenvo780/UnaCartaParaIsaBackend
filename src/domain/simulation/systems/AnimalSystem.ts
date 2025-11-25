@@ -127,7 +127,7 @@ export class AnimalSystem {
     const shouldLogState = now - this.lastStateLog > this.STATE_LOG_INTERVAL;
     let liveCount = 0;
     let stateCount: Record<string, number> | null = null;
-    
+
     if (shouldLogState) {
       stateCount = {};
       for (const animal of this.animals.values()) {
@@ -219,8 +219,13 @@ export class AnimalSystem {
       if (!animal || animal.isDead) continue;
 
       // Skip idle/wandering animals on non-update frames
-      const isIdleState = animal.state === "idle" || animal.state === "wandering";
-      if (isIdleState && (i % this.IDLE_UPDATE_DIVISOR) !== (this.updateFrame % this.IDLE_UPDATE_DIVISOR)) {
+      const isIdleState =
+        animal.state === "idle" || animal.state === "wandering";
+      if (
+        isIdleState &&
+        i % this.IDLE_UPDATE_DIVISOR !==
+          this.updateFrame % this.IDLE_UPDATE_DIVISOR
+      ) {
         continue;
       }
 

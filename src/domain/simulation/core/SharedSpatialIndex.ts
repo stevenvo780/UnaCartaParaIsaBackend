@@ -132,7 +132,7 @@ export class SharedSpatialIndex {
     // === OPTIMIZATION: Only check entities that are likely to have moved ===
     // Skip position check if difference is < 2 pixels (rounding errors)
     const MOVE_THRESHOLD_SQ = 4; // 2 pixels squared
-    
+
     for (const entity of entities) {
       if (entity.isDead || !entity.position) continue;
 
@@ -151,11 +151,11 @@ export class SharedSpatialIndex {
     const animalArray = Array.from(animals.entries());
     const checkLimit = Math.min(animalArray.length, 200); // Max 200 animals per frame
     const startIdx = (Date.now() % 100) * Math.floor(animalArray.length / 100);
-    
+
     for (let i = 0; i < checkLimit; i++) {
       const idx = (startIdx + i) % animalArray.length;
       const [animalId, animal] = animalArray[idx];
-      
+
       if (animal.isDead || !animal.position) continue;
 
       const cached = this.positionCache.get(animalId);

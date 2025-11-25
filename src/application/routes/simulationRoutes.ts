@@ -6,6 +6,12 @@ import { logger } from "@/infrastructure/utils/logger";
 
 const router = Router();
 
+/**
+ * Type guard to validate simulation command structure.
+ *
+ * @param {unknown} body - Request body to validate
+ * @returns {boolean} True if body is a valid SimulationCommand
+ */
 function validateSimulationCommand(body: unknown): body is SimulationCommand {
   if (!body || typeof body !== "object") {
     return false;
@@ -40,6 +46,11 @@ router.post(
   },
 );
 
+/**
+ * Health check endpoint for simulation.
+ *
+ * Returns current simulation tick number.
+ */
 router.get("/api/sim/health", (_req: Request, res: Response): void => {
   try {
     const snapshot = simulationRunner.getSnapshot();
@@ -52,6 +63,9 @@ router.get("/api/sim/health", (_req: Request, res: Response): void => {
   }
 });
 
+/**
+ * Retrieves current simulation state snapshot.
+ */
 router.get("/api/sim/state", (_req: Request, res: Response): void => {
   try {
     const snapshot = simulationRunner.getSnapshot();
@@ -64,6 +78,12 @@ router.get("/api/sim/state", (_req: Request, res: Response): void => {
   }
 });
 
+/**
+ * Enqueues a simulation command for execution.
+ *
+ * Validates command format and enqueues to simulation runner.
+ * Returns 429 if command queue is full.
+ */
 router.post("/api/sim/command", (req: Request, res: Response): void => {
   try {
     if (!validateSimulationCommand(req.body)) {

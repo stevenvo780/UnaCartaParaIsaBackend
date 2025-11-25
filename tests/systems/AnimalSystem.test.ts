@@ -140,7 +140,8 @@ describe("AnimalSystem", () => {
 
   it("usa el procesador por lotes cuando hay muchos animales", () => {
     const animals: Animal[] = [];
-    for (let i = 0; i < 35; i++) {
+    // BATCH_THRESHOLD es 50, así que necesitamos al menos 50 animales
+    for (let i = 0; i < 50; i++) {
       const creature = createAnimal(`animal-${i}`);
       animals.push(creature);
       addAnimal(creature);

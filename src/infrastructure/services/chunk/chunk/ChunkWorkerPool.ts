@@ -46,12 +46,25 @@ interface WorkerMessage {
   };
 }
 
+/**
+ * Statistics for chunk worker pool.
+ */
 export interface ChunkPoolStats {
   queueSize: number;
   workers: number;
   busyWorkers: number;
 }
 
+/**
+ * Worker pool for asynchronous terrain chunk generation.
+ *
+ * Manages a pool of worker threads that generate terrain chunks in parallel.
+ * Supports job queuing, cancellation via AbortSignal, and automatic worker
+ * restart on failure. Worker count is configurable via CHUNK_WORKERS env var
+ * or defaults to CPU core count.
+ *
+ * @see ChunkWorker for individual worker implementation
+ */
 export class ChunkWorkerPool extends EventEmitter {
   private readonly workers: WorkerEnvelope[] = [];
   private readonly queue: ChunkJob[] = [];
@@ -78,6 +91,11 @@ export class ChunkWorkerPool extends EventEmitter {
     }
   }
 
+  /**
+   * Gets current pool statistics.
+   *
+   * @returns {ChunkPoolStats} Current queue size and worker status
+   */
   public getStats(): ChunkPoolStats {
     const busyWorkers = this.workers.filter((w) => w?.busy).length;
     return {
@@ -87,6 +105,11 @@ export class ChunkWorkerPool extends EventEmitter {
     };
   }
 
+  /**
+   * Shuts down all workers and clears the queue.
+   *
+   * Waits for all worker terminations to complete.
+   */
   public async destroy(): Promise<void> {
     this.disposed = true;
     const terminations: Array<Promise<number>> = [];
@@ -98,6 +121,19 @@ export class ChunkWorkerPool extends EventEmitter {
     await Promise.allSettled(terminations);
   }
 
+  /**
+   * Enqueues a chunk generation job.
+   *
+   * @param {string} requestId - Unique request identifier
+   * @param {Object} coords - Chunk coordinates
+   * @param {number} coords.x - Chunk X coordinate
+   * @param {number} coords.y - Chunk Y coordinate
+   * @param {WorldGenConfig} config - World generation configuration
+   * @param {Object} [options] - Optional job options
+   * @param {AbortSignal} [options.signal] - Abort signal for cancellation
+   * @returns {Promise<ChunkWorkerResult>} Promise resolving to generated chunk
+   * @throws {Error} If pool is disposed
+   */
   public enqueue(
     requestId: string,
     coords: { x: number; y: number },
