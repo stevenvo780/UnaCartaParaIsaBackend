@@ -42,7 +42,8 @@ export class SocialSystem {
 
   private knownEntities = new Set<string>();
   private positionCache = new Map<string, { x: number; y: number }>();
-  private readonly POSITION_THRESHOLD = 2; // Solo actualizar si se movió más de 2 unidades
+  /** Only update position if entity moved more than this threshold */
+  private readonly POSITION_THRESHOLD = 2;
 
   constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;

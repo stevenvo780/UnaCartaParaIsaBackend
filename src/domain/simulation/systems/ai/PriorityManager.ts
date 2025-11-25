@@ -14,6 +14,10 @@ export type GoalDomain =
   | "rest"
   | "inspect";
 
+/**
+ * Priority weights for different goal domains.
+ * Higher weights increase the priority of goals in that domain.
+ */
 export interface DomainWeights {
   survival: number;
   work: number;
@@ -27,10 +31,23 @@ export interface DomainWeights {
   inspect: number;
 }
 
+/**
+ * Configuration for priority manager.
+ */
 export interface PriorityManagerConfig {
   weights?: Partial<DomainWeights>;
 }
 
+/**
+ * Manages priority weights for different goal domains.
+ *
+ * Adjusts priorities based on:
+ * - Role-based weights
+ * - Resource scarcity (boosts survival/logistics when resources are low)
+ * - Agent-specific configurations
+ *
+ * Used by AgentGoalPlanner to determine which goals are most important.
+ */
 export class PriorityManager {
   private gameState: GameState;
   private roleSystem?: RoleSystem;
@@ -68,6 +85,14 @@ export class PriorityManager {
     return { ...this.weights };
   }
 
+  /**
+   * Adjusts a base priority value based on domain weights and resource scarcity.
+   *
+   * @param agentId - Agent identifier (for future role-based adjustments)
+   * @param domain - Goal domain category
+   * @param basePriority - Base priority value (0-1)
+   * @returns Adjusted priority value
+   */
   public adjust(
     agentId: string,
     domain: GoalDomain,

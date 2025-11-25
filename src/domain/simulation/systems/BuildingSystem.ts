@@ -54,6 +54,19 @@ type MutableZone = Zone & {
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 
+/**
+ * System for managing building construction and placement.
+ *
+ * Features:
+ * - Construction job queue management
+ * - Resource reservation for construction materials
+ * - Task system integration for worker assignment
+ * - Building limits per type (houses, mines, workbenches)
+ * - Zone-based building placement
+ *
+ * @see ResourceReservationSystem for material reservation
+ * @see TaskSystem for construction task management
+ */
 @injectable()
 export class BuildingSystem {
   private readonly config: BuildingSystemConfig;

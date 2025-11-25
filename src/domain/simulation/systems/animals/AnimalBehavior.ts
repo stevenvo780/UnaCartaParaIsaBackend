@@ -78,7 +78,6 @@ export class AnimalBehavior {
       this.wanderAngles.set(animal.id, wanderAngle);
     }
 
-    // Lower chance to stop wandering (was 5%, now 2%)
     if (Math.random() < 0.02) {
       animal.state = "idle";
       return;

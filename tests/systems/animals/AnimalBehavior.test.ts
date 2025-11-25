@@ -191,9 +191,9 @@ describe("AnimalBehavior", () => {
       randomSpy.mockRestore();
     });
 
-    it("debe poner state a idle con probabilidad 0.05", () => {
+    it("debe poner state a idle con probabilidad 0.02", () => {
       mockAnimal.state = "wandering";
-      vi.spyOn(Math, "random").mockReturnValue(0.03); // < 0.05
+      vi.spyOn(Math, "random").mockReturnValue(0.01); // < 0.02
 
       AnimalBehavior.wander(mockAnimal, 1.0, 0.1);
 

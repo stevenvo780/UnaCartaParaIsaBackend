@@ -1054,7 +1054,6 @@ export class AISystem extends EventEmitter {
 
     switch (goal.type) {
       case "satisfy_need":
-        // Handle satisfy_need goals with targetPosition (resource-based)
         if (goal.targetId && goal.targetPosition) {
           const agentPos = this.getAgentPosition(agentId);
           if (agentPos) {
@@ -1062,7 +1061,6 @@ export class AISystem extends EventEmitter {
               agentPos.x - goal.targetPosition.x,
               agentPos.y - goal.targetPosition.y,
             );
-            // If close enough to resource, harvest it
             if (dist < 60) {
               return {
                 actionType: "harvest",
@@ -1072,7 +1070,6 @@ export class AISystem extends EventEmitter {
                 timestamp,
               };
             }
-            // Move towards resource
             return {
               actionType: "move",
               agentId,
@@ -1081,7 +1078,6 @@ export class AISystem extends EventEmitter {
             };
           }
         }
-        // Fallback to zone-based movement or rest
         if (goal.targetZoneId) {
           return {
             actionType: "move",
@@ -1090,7 +1086,6 @@ export class AISystem extends EventEmitter {
             timestamp,
           };
         }
-        // For energy/rest needs without specific target
         if (goal.data?.need === "energy") {
           return {
             actionType: "idle",
@@ -1346,7 +1341,6 @@ export class AISystem extends EventEmitter {
     switch (action.actionType) {
       case "move":
         if (action.targetZoneId) {
-          // Check if already moving to this zone
           if (
             this._movementSystem.isMovingToZone(
               action.agentId,
@@ -1357,7 +1351,6 @@ export class AISystem extends EventEmitter {
           }
           this._movementSystem.moveToZone(action.agentId, action.targetZoneId);
         } else if (action.targetPosition) {
-          // Check if already moving to this position
           if (
             this._movementSystem.isMovingToPosition(
               action.agentId,
@@ -1394,22 +1387,17 @@ export class AISystem extends EventEmitter {
             action.agentId,
           );
 
-          // After harvesting, apply need satisfaction and add to inventory
           if (result.success) {
             const resource = this.gameState.worldResources?.[action.targetId];
             if (resource) {
-              // Map world resource type to inventory resource type
               let inventoryResourceType: ResourceType | null = null;
 
-              // water_source -> water
               if (resource.type === "water_source") {
                 inventoryResourceType = "water";
                 if (this.needsSystem) {
                   this.needsSystem.satisfyNeed(action.agentId, "thirst", 30);
                 }
-              }
-              // Food resources -> food
-              else if (
+              } else if (
                 ["berry_bush", "mushroom_patch", "wheat_crop"].includes(
                   resource.type,
                 )
@@ -1418,17 +1406,13 @@ export class AISystem extends EventEmitter {
                 if (this.needsSystem) {
                   this.needsSystem.satisfyNeed(action.agentId, "hunger", 25);
                 }
-              }
-              // Wood resources -> wood
-              else if (
+              } else if (
                 ["tree", "oak_tree", "pine_tree", "fallen_log"].includes(
                   resource.type,
                 )
               ) {
                 inventoryResourceType = "wood";
-              }
-              // Stone resources -> stone
-              else if (
+              } else if (
                 ["stone_deposit", "rock", "iron_ore", "gold_ore"].includes(
                   resource.type,
                 )
@@ -1436,7 +1420,6 @@ export class AISystem extends EventEmitter {
                 inventoryResourceType = "stone";
               }
 
-              // Add harvested resource to agent's inventory
               if (inventoryResourceType && this.inventorySystem) {
                 const added = this.inventorySystem.addResource(
                   action.agentId,
@@ -1461,11 +1444,9 @@ export class AISystem extends EventEmitter {
         }
         break;
       case "idle":
-        // Agent is resting in place - apply small energy recovery
         if (this.needsSystem) {
           this.needsSystem.satisfyNeed(action.agentId, "energy", 5);
         }
-        // Mark action as complete
         simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
           agentId: action.agentId,
           actionType: "idle",

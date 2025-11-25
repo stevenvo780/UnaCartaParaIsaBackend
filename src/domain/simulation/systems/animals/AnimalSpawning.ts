@@ -131,7 +131,6 @@ export class AnimalSpawning {
             isWalkable = tile.isWalkable;
           }
         } else {
-          // Fallback to noise if no tiles provided
           const biomeNoise = Math.sin(x * 0.02) + Math.cos(y * 0.02);
           if (biomeNoise > 0.6) biome = "mystical";
           else if (biomeNoise > 0.3) biome = "forest";
@@ -142,21 +141,15 @@ export class AnimalSpawning {
         const animalConfigs = getAnimalsForBiome(biome);
 
         for (const config of animalConfigs) {
-          // Skip if terrain doesn't match aquatic requirement
           if (config.isAquatic) {
-            // Aquatic animals need non-walkable terrain (water)
-            // Or explicit water biome check if isWalkable is not enough
             if (isWalkable && biome !== "wetland") continue;
           } else {
-            // Land animals need walkable terrain
             if (!isWalkable) continue;
           }
 
-          // Much lower spawn rate for chunks to prevent overpopulation
           const chunkSpawnProb = config.spawnProbability * 0.1;
 
           if (Math.random() < chunkSpawnProb) {
-            // Spawn smaller groups in chunks (1-2 instead of full group)
             const groupSize = Math.min(
               2,
               Math.max(1, Math.floor(Math.random() * 2) + 1),

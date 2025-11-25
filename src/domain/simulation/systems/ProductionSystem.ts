@@ -210,7 +210,6 @@ export class ProductionSystem {
       workers: Array.from(workers),
     });
 
-    // Farming logic
     if (resource === "food" && this.terrainSystem) {
       const tilesToModify = Math.min(workers.size, 3);
       const TILE_SIZE = 64;

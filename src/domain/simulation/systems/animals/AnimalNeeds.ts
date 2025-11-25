@@ -6,7 +6,6 @@ export class AnimalNeeds {
     const config = getAnimalConfig(animal.type);
     if (!config) return;
 
-    // Faster decay so animals seek food/water more actively (was 0.7x, now 1.5x)
     animal.needs.hunger = Math.max(
       0,
       animal.needs.hunger - config.hungerDecayRate * deltaMinutes * 1.5,

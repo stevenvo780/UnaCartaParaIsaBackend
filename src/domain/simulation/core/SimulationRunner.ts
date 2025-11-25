@@ -1729,7 +1729,11 @@ export class SimulationRunner {
    * @deprecated Use scheduler instead
    * @internal
    */
-  // @ts-expect-error - Método deprecated pero mantenido para compatibilidad
+  /**
+   * @deprecated Use scheduler instead
+   * @internal
+   */
+  // @ts-expect-error - Deprecated method kept for compatibility
   private async step(): Promise<void> {
     if (this.isStepping) {
       logger.warn("Simulation step skipped: previous step still running");

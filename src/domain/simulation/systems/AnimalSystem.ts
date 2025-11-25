@@ -60,9 +60,9 @@ export class AnimalSystem {
 
   private batchProcessor: AnimalBatchProcessor;
   /**
-   * Umbral para activar procesamiento por lotes.
-   * 30 animales: AnimalSystem procesa comportamientos más complejos (genética, necesidades, reproducción),
-   * por lo que requiere más animales para justificar el overhead del batch processing.
+   * Threshold for activating batch processing.
+   * 30 animals: AnimalSystem processes more complex behaviors (genetics, needs, reproduction),
+   * so it requires more animals to justify the batch processing overhead.
    */
   private readonly BATCH_THRESHOLD = 30;
 
@@ -111,7 +111,6 @@ export class AnimalSystem {
 
   public update(deltaMs: number): void {
     const now = getFrameTime();
-    // No internal throttle - scheduler controls tick rate (MEDIUM = 250ms)
     const deltaSeconds = deltaMs / 1000;
     const deltaMinutes = deltaMs / 60000;
 
@@ -124,7 +123,6 @@ export class AnimalSystem {
       }
     }
 
-    // Log animal states every 5 seconds (every ~20 updates at 250ms)
     if (Math.random() < 0.05) {
       logger.info(
         `🐾 [AnimalSystem] States: ${JSON.stringify(stateCount)}, deltaMs=${deltaMs.toFixed(0)}`,
@@ -274,7 +272,6 @@ export class AnimalSystem {
           );
           return;
         } else if (this.terrainSystem) {
-          // Grazing logic
           const TILE_SIZE = 64;
           const tileX = Math.floor(animal.position.x / TILE_SIZE);
           const tileY = Math.floor(animal.position.y / TILE_SIZE);
@@ -289,7 +286,6 @@ export class AnimalSystem {
             if (!animal.stateEndTime) {
               animal.stateEndTime = Date.now() + 2000;
             } else if (Date.now() > animal.stateEndTime) {
-              // Finish eating
               this.terrainSystem.modifyTile(tileX, tileY, {
                 assets: { terrain: "terrain_dirt" },
               });
@@ -343,16 +339,12 @@ export class AnimalSystem {
       return;
     }
 
-    // Default behavior: always wander if nothing else to do
-    // High probability to keep moving for visual feedback
     if (animal.state === "idle") {
-      // 80% chance to start wandering from idle (was 20%)
       if (Math.random() < 0.8) {
         animal.state = "wandering";
         AnimalBehavior.wander(animal, 0.5, deltaSeconds);
       }
     } else {
-      // Keep wandering
       animal.state = "wandering";
       AnimalBehavior.wander(animal, 0.5, deltaSeconds);
     }
@@ -562,7 +554,6 @@ export class AnimalSystem {
       byType[animal.type] = (byType[animal.type] || 0) + 1;
     }
 
-    // DEBUG: Log animal counts every 5 seconds
     const now = Date.now();
     if (!this._lastAnimalCountLog || now - this._lastAnimalCountLog > 5000) {
       logger.info(

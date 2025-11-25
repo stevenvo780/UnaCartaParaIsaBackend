@@ -4,6 +4,9 @@ import type {
   GameState,
 } from "../../types/game-types";
 
+/**
+ * Default resource values for new game states.
+ */
 const defaultResources: GameResources = {
   energy: 100,
   materials: {
@@ -17,6 +20,12 @@ const defaultResources: GameResources = {
   unlockedFeatures: [],
 };
 
+/**
+ * Creates an initial conversation state.
+ *
+ * @param now - Current timestamp
+ * @returns Initial conversation state with no active participants
+ */
 export function createInitialConversation(now: number): ConversationState {
   return {
     isActive: false,
@@ -27,6 +36,12 @@ export function createInitialConversation(now: number): ConversationState {
   };
 }
 
+/**
+ * Creates a new game state with default values.
+ * Initializes all required fields with empty arrays and default resources.
+ *
+ * @returns Fresh game state ready for simulation
+ */
 export function createInitialGameState(): GameState {
   const now = Date.now();
   return {
@@ -90,7 +105,10 @@ export function cloneGameState(state: GameState): GameState {
     return structuredClone(state);
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.warn("structuredClone failed, falling back to JSON:", err);
+    console.warn(
+      "structuredClone failed, falling back to JSON:",
+      err instanceof Error ? err.message : String(err),
+    );
     return JSON.parse(JSON.stringify(state)) as GameState;
   }
 }

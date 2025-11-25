@@ -38,13 +38,13 @@ export class GPUComputeService {
       this.gpuAvailable = gpuBackends.includes(backend?.toLowerCase() ?? "");
 
       logger.info(
-        `🚀 GPUComputeService inicializado - Backend: ${backend} (GPU: ${this.gpuAvailable ? "disponible" : "no disponible, usando CPU"})`,
+        `🚀 GPUComputeService initialized - Backend: ${backend} (GPU: ${this.gpuAvailable ? "available" : "unavailable, using CPU"})`,
       );
 
       this.initialized = true;
     } catch (error) {
       logger.warn(
-        `⚠️ Error inicializando TensorFlow, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+        `⚠️ Error initializing TensorFlow, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
       );
       this.gpuAvailable = false;
       this.initialized = true;
@@ -132,7 +132,7 @@ export class GPUComputeService {
       });
     } catch (error) {
       logger.warn(
-        `⚠️ Error en GPU updatePositionsBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+        `⚠️ Error in GPU updatePositionsBatch, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
       );
       this.performanceStats.cpuFallbacks++;
       return this.updatePositionsBatchCPU(
@@ -263,7 +263,7 @@ export class GPUComputeService {
       });
     } catch (error) {
       logger.warn(
-        `⚠️ Error en GPU applyNeedsDecayBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+        `⚠️ Error in GPU applyNeedsDecayBatch, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
       );
       this.performanceStats.cpuFallbacks++;
       return this.applyNeedsDecayBatchCPU(
@@ -393,7 +393,7 @@ export class GPUComputeService {
       });
     } catch (error) {
       logger.warn(
-        `⚠️ Error en GPU applyNeedsCrossEffectsBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+        `⚠️ Error in GPU applyNeedsCrossEffectsBatch, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
       );
       this.performanceStats.cpuFallbacks++;
       return this.applyNeedsCrossEffectsBatchCPU(needs, needCount);
@@ -517,7 +517,7 @@ export class GPUComputeService {
       });
     } catch (error) {
       logger.warn(
-        `⚠️ Error en GPU updateFatigueBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+        `⚠️ Error in GPU updateFatigueBatch, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
       );
       this.performanceStats.cpuFallbacks++;
       return this.updateFatigueBatchCPU(fatigue, isMoving, isResting, deltaMs);
@@ -619,17 +619,8 @@ export class GPUComputeService {
       return tf.tidy(() => {
         const valuesT = tf.tensor1d(values);
         const decayAmount = tf.scalar(decayRate * deltaSeconds);
-
-        // values - decayAmount
         const decayed = valuesT.sub(decayAmount);
-
-        // max(0, decayed) -> para no tener negativos
-        // Si es menor que threshold, deberíamos hacerlo 0.
-        // Una forma eficiente: tf.where(decayed < threshold, 0, decayed)
-
         const resultT = decayed.maximum(0);
-
-        // Aplicar threshold: si es < threshold, poner a 0
         const finalT = tf.where(resultT.less(threshold), tf.scalar(0), resultT);
 
         const result = finalT.dataSync() as Float32Array;
@@ -642,7 +633,7 @@ export class GPUComputeService {
       });
     } catch (error) {
       logger.warn(
-        `⚠️ Error en GPU computeGeneralDecay, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+        `⚠️ Error in GPU computeGeneralDecay, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
       );
       this.performanceStats.cpuFallbacks++;
       return this.computeGeneralDecayCPU(
@@ -682,6 +673,6 @@ export class GPUComputeService {
    */
   dispose(): void {
     tf.disposeVariables();
-    logger.debug("🧹 GPUComputeService: Memoria TensorFlow limpiada");
+    logger.debug("🧹 GPUComputeService: TensorFlow memory cleaned");
   }
 }

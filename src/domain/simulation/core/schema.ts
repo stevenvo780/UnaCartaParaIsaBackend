@@ -1,3 +1,12 @@
+/**
+ * Core simulation schema definitions.
+ *
+ * Defines the structure of entities, resources, and game state components
+ * used throughout the simulation system.
+ *
+ * @module domain/simulation/core/schema
+ */
+
 import type {
   Zone,
   MapElement,
@@ -6,8 +15,14 @@ import type {
   ObjectLayer,
 } from "../../types/game-types";
 
+/**
+ * Material resource types available in the game.
+ */
 export type MaterialType = "wood" | "stone" | "food" | "water";
 
+/**
+ * State container for material resources.
+ */
 export interface MaterialsState {
   wood: number;
   stone: number;
@@ -15,6 +30,9 @@ export interface MaterialsState {
   water: number;
 }
 
+/**
+ * Complete resource state including materials, energy, currency, and progression.
+ */
 export interface ResourcesState {
   energy: number;
   materials: MaterialsState;
@@ -23,6 +41,9 @@ export interface ResourcesState {
   unlockedFeatures: string[];
 }
 
+/**
+ * Single dialogue entry in a conversation.
+ */
 export interface DialogueEntry {
   speaker: string;
   text: string;
@@ -30,6 +51,9 @@ export interface DialogueEntry {
   activity: string;
 }
 
+/**
+ * Current state of an active conversation between entities.
+ */
 export interface ConversationState {
   isActive: boolean;
   participants: string[];
@@ -38,6 +62,9 @@ export interface ConversationState {
   startTime: number;
 }
 
+/**
+ * State for connection animations between entities.
+ */
 export interface ConnectionAnimationState {
   active: boolean;
   startTime: number;
@@ -45,6 +72,10 @@ export interface ConnectionAnimationState {
   entityId?: string;
 }
 
+/**
+ * Entity statistics including health, stamina, and other attributes.
+ * Supports dynamic properties via index signature.
+ */
 export interface EntityStats {
   health?: number;
   morale?: number;
@@ -57,6 +88,10 @@ export interface EntityStats {
   [key: string]: number | undefined;
 }
 
+/**
+ * Personality and behavioral traits for entities.
+ * Supports dynamic properties via index signature.
+ */
 export interface EntityTraits {
   aggression?: number;
   cooperation?: number;
@@ -69,6 +104,10 @@ export interface EntityTraits {
   [key: string]: number | undefined;
 }
 
+/**
+ * Core entity representation in the simulation.
+ * Represents agents, NPCs, and other interactive objects.
+ */
 export interface SimulationEntity {
   id: string;
   name?: string;
@@ -84,11 +123,18 @@ export interface SimulationEntity {
   immortal?: boolean;
 }
 
+/**
+ * 2D size dimensions.
+ */
 export interface Size2D {
   width: number;
   height: number;
 }
 
+/**
+ * Complete simulation game state structure.
+ * Contains all entities, zones, resources, and world configuration.
+ */
 export interface SimulationGameState {
   entities: SimulationEntity[];
   resonance: number;

@@ -5,6 +5,19 @@ import { simulationEvents, GameEventNames } from "../core/events";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 
+/**
+ * System for managing tasks and work assignments.
+ *
+ * Features:
+ * - Task creation with resource requirements
+ * - Progress tracking with contributor system
+ * - Stalled task detection and cancellation
+ * - Social synergy multipliers for collaborative work
+ * - Task statistics and state management
+ *
+ * @see BuildingSystem for construction tasks
+ * @see AISystem for task assignment
+ */
 @injectable()
 export class TaskSystem {
   private gameState: GameState;

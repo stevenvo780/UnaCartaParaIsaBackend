@@ -30,6 +30,10 @@ import {
 } from "./utils";
 import type { Quest } from "../../../types/simulation/quests";
 
+/**
+ * Dependencies interface for goal planning.
+ * Provides all necessary functions and data for evaluating and selecting goals.
+ */
 export interface AgentGoalPlannerDeps {
   gameState: GameState;
   priorityManager: PriorityManager;
@@ -69,6 +73,28 @@ export interface AgentGoalPlannerDeps {
   getEntityPosition?: (id: string) => { x: number; y: number } | null;
 }
 
+/**
+ * Plans goals for an agent based on current state and available opportunities.
+ *
+ * Evaluates multiple goal categories:
+ * - Critical needs (hunger, thirst, energy)
+ * - Combat and defense
+ * - Assistance to other agents
+ * - Construction and building
+ * - Resource gathering and deposit
+ * - Crafting
+ * - Work opportunities
+ * - Exploration
+ * - Quests
+ * - Trade
+ *
+ * Goals are prioritized and sorted by importance.
+ *
+ * @param deps - Dependencies providing game state and query functions
+ * @param aiState - Current AI state of the agent
+ * @param minPriority - Minimum priority threshold for goals (default: 0.3)
+ * @returns Array of goals sorted by priority (highest first)
+ */
 export function planGoals(
   deps: AgentGoalPlannerDeps,
   aiState: AIState,
