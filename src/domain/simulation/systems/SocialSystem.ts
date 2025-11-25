@@ -4,6 +4,7 @@ import { SpatialGrid } from "../../../utils/SpatialGrid";
 import { SocialGroup } from "../../../shared/types/simulation/agents";
 import { simulationEvents, GameEventNames } from "../core/events";
 import type { SimulationEntity, EntityTraits } from "../core/schema";
+import { logger } from "../../../infrastructure/utils/logger";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -143,6 +144,11 @@ export class SocialSystem {
       this.addEdge(aId, bId, Math.abs(current) * 0.5);
     }
 
+    // DEBUG: Log truces
+    logger.debug(
+      `🤝 [SOCIAL] Truce imposed: ${aId} <-> ${bId} for ${durationMs}ms`,
+    );
+
     simulationEvents.emit(GameEventNames.SOCIAL_TRUCE_IMPOSED, {
       aId,
       bId,
@@ -238,6 +244,11 @@ export class SocialSystem {
     if (current < 0.5) {
       this.addEdge(aId, bId, 0.5 - current);
     }
+
+    // DEBUG: Log permanent bonds
+    logger.debug(
+      `💕 [SOCIAL] Permanent bond: ${type} between ${aId} and ${bId}`,
+    );
   }
 
   public addInfamy(agentId: string, amount: number): void {

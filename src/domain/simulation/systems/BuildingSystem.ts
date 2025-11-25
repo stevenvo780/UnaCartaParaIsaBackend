@@ -211,6 +211,11 @@ export class BuildingSystem {
 
     this.constructionJobs.set(job.id, job);
 
+    // DEBUG: Log building construction start
+    logger.debug(
+      `🏗️ [BUILDING] Construction started: ${label} at (${validatedPosition.x}, ${validatedPosition.y}) - completes in ${cost.time}ms`,
+    );
+
     simulationEvents.emit(GameEventNames.BUILDING_CONSTRUCTION_STARTED, {
       jobId: job.id,
       zoneId: job.zoneId,
@@ -299,6 +304,11 @@ export class BuildingSystem {
     };
     zone.durability = 100;
     zone.maxDurability = 100;
+
+    // DEBUG: Log building completion
+    logger.debug(
+      `🏠 [BUILDING] Construction completed: ${job.label} (zone: ${job.zoneId})`,
+    );
 
     simulationEvents.emit(GameEventNames.BUILDING_CONSTRUCTED, {
       jobId: job.id,

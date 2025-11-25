@@ -13,6 +13,7 @@ import { LifeCycleSystem } from "./LifeCycleSystem";
 import { InventorySystem } from "./InventorySystem";
 import { DivineFavorSystem } from "./DivineFavorSystem";
 import { ResourceReservationSystem } from "./ResourceReservationSystem";
+import { logger } from "../../../infrastructure/utils/logger";
 
 interface GovernanceConfig {
   checkIntervalMs: number;
@@ -266,6 +267,11 @@ export class GovernanceSystem {
         priority: modifiedPriority,
       },
     });
+
+    // DEBUG: Log governance demands
+    logger.debug(
+      `🏛️ [GOVERNANCE] Demand created: ${type} (priority: ${modifiedPriority}) - ${reason}`,
+    );
 
     if (this.config.autoGenerateProjects) {
       this.resolveWithProject(demand);

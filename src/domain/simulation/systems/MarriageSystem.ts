@@ -7,6 +7,7 @@ import {
   MarriageStats,
 } from "../../types/simulation/marriage";
 import { simulationEvents, GameEventNames } from "../core/events";
+import { logger } from "../../../infrastructure/utils/logger";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -54,6 +55,11 @@ export class MarriageSystem {
       targetGroupId: proposerGroup?.id,
       timestamp: Date.now(),
     });
+
+    // DEBUG: Log marriage proposals
+    logger.debug(
+      `💍 [MARRIAGE] Proposal: ${proposerId} -> ${targetId}`,
+    );
 
     simulationEvents.emit(GameEventNames.MARRIAGE_PROPOSED, {
       proposerId,

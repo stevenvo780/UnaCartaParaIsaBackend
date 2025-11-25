@@ -8,6 +8,7 @@ import {
   SerializedReputationData,
 } from "../../types/simulation/reputation";
 import { simulationEvents, GameEventNames } from "../core/events";
+import { logger } from "../../../infrastructure/utils/logger";
 
 const REPUTATION_CONFIG = {
   decay: {
@@ -121,6 +122,13 @@ export class ReputationSystem {
         history.shift();
       }
       this.reputationHistory.set(agentId, history);
+
+      // DEBUG: Log significant reputation changes
+      if (Math.abs(delta) >= 0.05) {
+        logger.debug(
+          `⭐ [REPUTATION] ${agentId}: ${oldValue.toFixed(2)} -> ${r.value.toFixed(2)} (${delta > 0 ? "+" : ""}${delta.toFixed(2)}) - ${reason || "unknown"}`,
+        );
+      }
     }
   }
 

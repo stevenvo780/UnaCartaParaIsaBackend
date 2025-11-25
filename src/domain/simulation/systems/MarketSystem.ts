@@ -4,6 +4,7 @@ import type {
   ResourceType,
 } from "../../types/simulation/economy";
 import { InventorySystem } from "./InventorySystem";
+import { logger } from "../../../infrastructure/utils/logger";
 
 const DEFAULT_MARKET_CONFIG: MarketConfig = {
   scarcityThresholds: { low: 20, high: 100 },
@@ -198,6 +199,11 @@ export class MarketSystem {
                     : 0;
                 seller.stats.money = sellerMoney + cost;
               }
+
+              // DEBUG: Log auto-trades
+              logger.debug(
+                `🔄 [MARKET] Auto-trade: ${seller.id} sold ${removed} ${resource} to ${buyer.id} for ${cost}`,
+              );
               return;
             }
           }

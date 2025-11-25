@@ -54,6 +54,7 @@ import type { BuildingLabel } from "../../types/simulation/buildings";
 import { AppearanceGenerationSystem } from "../systems/AppearanceGenerationSystem";
 import { GPUComputeService } from "./GPUComputeService";
 import { mapEventName } from "./eventNameMapper";
+import { MultiRateScheduler } from "./MultiRateScheduler";
 import type {
   SimulationCommand,
   SimulationConfig,
@@ -81,10 +82,11 @@ export class SimulationRunner {
   private state: GameState;
   private readonly emitter = new EventEmitter();
   private readonly commands: SimulationCommand[] = [];
-  private readonly tickIntervalMs: number;
+  private readonly tickIntervalMs: number; // Deprecated, kept for compatibility
   private readonly maxCommandQueue: number;
-  private tickHandle?: NodeJS.Timeout;
+  private tickHandle?: NodeJS.Timeout; // Deprecated, use scheduler instead
   private tickCounter = 0;
+  private scheduler: MultiRateScheduler;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public on(event: string, listener: (...args: any[]) => void): void {
@@ -173,9 +175,16 @@ export class SimulationRunner {
     @inject(TYPES.SimulationConfig) _config: SimulationConfig,
   ) {
     this.state = state;
-    this.tickIntervalMs = _config.tickIntervalMs ?? 200;
+    this.tickIntervalMs = _config.tickIntervalMs ?? 200; // Deprecated
     this.maxCommandQueue = _config.maxCommandQueue ?? 200;
     this.stateCache = new StateCache();
+
+    // Initialize multi-rate scheduler
+    this.scheduler = new MultiRateScheduler({
+      FAST: 100,    // 10 Hz - movement, combat, trails
+      MEDIUM: 500,  // 2 Hz - AI, needs, social
+      SLOW: 1000,   // 1 Hz - economy, research, etc.
+    });
   }
 
   public async initialize(): Promise<void> {
@@ -188,7 +197,7 @@ export class SimulationRunner {
 
     // Inicializar índices
     this.entityIndex.rebuild(this.state);
-    
+
     if (this.buildingSystem) {
       this.buildingSystem.setTaskSystem(this.taskSystem);
     }
@@ -308,6 +317,309 @@ export class SimulationRunner {
       // Crear infraestructura básica inicial
       this.createInitialInfrastructure();
     }
+
+    // Register systems in multi-rate scheduler
+    this.registerSystemsInScheduler();
+  }
+
+  /**
+   * Registra todos los sistemas en el scheduler multi-rate
+   * - FAST (100ms): Movimiento, combate, trails
+   * - MEDIUM (500ms): IA, necesidades, social, household
+   * - SLOW (1000ms): Economía, investigación, mercado, etc.
+   */
+  private registerSystemsInScheduler(): void {
+    // ========== FAST SYSTEMS (10 Hz) ==========
+    // Sistemas críticos que requieren alta responsividad
+    this.scheduler.registerSystem({
+      name: "MovementSystem",
+      rate: "FAST",
+      update: (delta: number) => this.movementSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "CombatSystem",
+      rate: "FAST",
+      update: (delta: number) => this.combatSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "TrailSystem",
+      rate: "FAST",
+      update: (delta: number) => this.trailSystem.update(delta),
+      enabled: true,
+    });
+
+    // ========== MEDIUM SYSTEMS (2 Hz) ==========
+    // Sistemas importantes pero menos sensibles al tiempo
+    this.scheduler.registerSystem({
+      name: "AISystem",
+      rate: "MEDIUM",
+      update: (delta: number) => this.aiSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "NeedsSystem",
+      rate: "MEDIUM",
+      update: (delta: number) => this.needsSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "SocialSystem",
+      rate: "MEDIUM",
+      update: (delta: number) => this.socialSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "HouseholdSystem",
+      rate: "MEDIUM",
+      update: (delta: number) => this.householdSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "LifeCycleSystem",
+      rate: "MEDIUM",
+      update: (delta: number) => this.lifeCycleSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "TimeSystem",
+      rate: "MEDIUM",
+      update: (delta: number) => this.timeSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "RoleSystem",
+      rate: "MEDIUM",
+      update: (delta: number) => this.roleSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "TaskSystem",
+      rate: "MEDIUM",
+      update: () => this.taskSystem.update(),
+      enabled: true,
+    });
+
+    // ========== SLOW SYSTEMS (1 Hz) ==========
+    // Sistemas que pueden ejecutarse con baja frecuencia
+    this.scheduler.registerSystem({
+      name: "EconomySystem",
+      rate: "SLOW",
+      update: (delta: number) => this.economySystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "MarketSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.marketSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "ResearchSystem",
+      rate: "SLOW",
+      update: () => this._researchSystem.update(),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "ReputationSystem",
+      rate: "SLOW",
+      update: () => this.reputationSystem.update(),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "GovernanceSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.governanceSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "WorldResourceSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.worldResourceSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "AnimalSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.animalSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "ProductionSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.productionSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "BuildingSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.buildingSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "BuildingMaintenanceSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.buildingMaintenanceSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "EnhancedCraftingSystem",
+      rate: "SLOW",
+      update: () => this.enhancedCraftingSystem.update(),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "InventorySystem",
+      rate: "SLOW",
+      update: () => this.inventorySystem.update(),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "ResourceReservationSystem",
+      rate: "SLOW",
+      update: () => this.resourceReservationSystem.update(),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "DivineFavorSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.divineFavorSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "QuestSystem",
+      rate: "SLOW",
+      update: () => this.questSystem.update(),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "TradeSystem",
+      rate: "SLOW",
+      update: () => this.tradeSystem.update(),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "MarriageSystem",
+      rate: "SLOW",
+      update: () => this.marriageSystem.update(),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "ConflictResolutionSystem",
+      rate: "SLOW",
+      update: () => this.conflictResolutionSystem.update(),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "ResourceAttractionSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.resourceAttractionSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "CrisisPredictorSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.crisisPredictorSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "AmbientAwarenessSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.ambientAwarenessSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "CardDialogueSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.cardDialogueSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "InteractionGameSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.interactionGameSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "LivingLegendsSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.livingLegendsSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "ItemGenerationSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.itemGenerationSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "RecipeDiscoverySystem",
+      rate: "SLOW",
+      update: () => this._recipeDiscoverySystem.update(),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "NormsSystem",
+      rate: "SLOW",
+      update: () => this._normsSystem.update(),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "EmergenceSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.emergenceSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "KnowledgeNetworkSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.knowledgeNetworkSystem.update(delta),
+      enabled: true,
+    });
+
+    logger.info("📋 All systems registered in multi-rate scheduler", {
+      fast: 3,
+      medium: 8,
+      slow: 29,
+    });
   }
 
   /**
@@ -497,7 +809,7 @@ export class SimulationRunner {
       (data: { agentId: string; timestamp: number }) => {
         // Reactivar AI del agente respawneado
         this.aiSystem.setAgentOffDuty(data.agentId, false);
-        
+
         // Asegurar que MovementSystem tenga el estado de movimiento inicializado
         const agent = this.entityIndex.getAgent(data.agentId);
         if (agent?.position && !this.movementSystem.hasMovementState(data.agentId)) {
@@ -639,6 +951,16 @@ export class SimulationRunner {
             }
           }
         }
+      },
+    );
+
+    // Handler para cuando un agente llega a una zona - CRÍTICO para completar goals
+    simulationEvents.on(
+      GameEventNames.MOVEMENT_ARRIVED_AT_ZONE,
+      (data: { entityId: string; zoneId: string }) => {
+        // Notificar al AISystem que el agente llegó a su destino
+        // Esto permite que el agente ejecute la actividad correspondiente a la zona
+        this.aiSystem.notifyEntityArrived(data.entityId, data.zoneId);
       },
     );
 
@@ -875,19 +1197,34 @@ export class SimulationRunner {
     return colors[zoneType] || "#C4B998";
   }
 
+  /**
+   * Inicia la simulación usando el scheduler multi-rate
+   */
   start(): void {
-    if (this.tickHandle) return;
-    this.tickHandle = setInterval(() => {
-      this.step().catch((err) => {
-        logger.error("Error in simulation step:", err);
-      });
-    }, this.tickIntervalMs);
+    // Deprecated path - mantener por compatibilidad pero delegar a scheduler
+    if (!this.scheduler) {
+      logger.error("⚠️ Scheduler not initialized, cannot start simulation");
+      return;
+    }
+
+    this.scheduler.start();
+    logger.info("🚀 Multi-rate simulation started");
   }
 
+  /**
+   * Detiene la simulación
+   */
   stop(): void {
-    if (!this.tickHandle) return;
-    clearInterval(this.tickHandle);
-    this.tickHandle = undefined;
+    if (this.scheduler) {
+      this.scheduler.stop();
+    }
+
+    // Deprecated - limpiar timer viejo si existe
+    if (this.tickHandle) {
+      clearInterval(this.tickHandle);
+      this.tickHandle = undefined;
+    }
+
   }
 
   enqueueCommand(command: SimulationCommand): boolean {
@@ -1518,14 +1855,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                  resources?: {
-                    wood?: number;
-                    stone?: number;
-                    food?: number;
-                    water?: number;
-                  };
-                  minWorkers?: number;
-                }
+                resources?: {
+                  wood?: number;
+                  stone?: number;
+                  food?: number;
+                  water?: number;
+                };
+                minWorkers?: number;
+              }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,

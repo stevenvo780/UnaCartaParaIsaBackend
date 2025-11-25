@@ -9,6 +9,7 @@ import { RoleSystem } from "./RoleSystem.js";
 import { DivineFavorSystem } from "./DivineFavorSystem.js";
 import { GenealogySystem } from "./GenealogySystem.js";
 import { simulationEvents, GameEventNames } from "../core/events.js";
+import { logger } from "../../../infrastructure/utils/logger.js";
 
 const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
   workDurationMs: 5000,
@@ -185,6 +186,11 @@ export class EconomySystem {
       this.state.economy.totalSalariesPaid =
         (this.state.economy.totalSalariesPaid || 0) + totalSalaries;
     }
+
+    // DEBUG: Log salary payments
+    if (totalSalaries > 0) {
+      logger.debug(`💰 [ECONOMY] Salary payments: ${totalSalaries} total to ${this.state.agents.length} agents`);
+    }
   }
 
   public handleWorkAction(agentId: string, zoneId: string): void {
@@ -283,6 +289,11 @@ export class EconomySystem {
           typeof agent.stats.money === "number" ? agent.stats.money : 0;
         agent.stats.money = currentMoney + salary;
       }
+
+      // DEBUG: Log work action
+      logger.debug(
+        `⚒️ [ECONOMY] Work: ${agentId} produced ${amount} ${resourceType} (yield: ${totalYield.toFixed(2)}, bonus: ${teamBonus.toFixed(2)})`,
+      );
     }
   }
 
