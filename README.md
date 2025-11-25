@@ -161,3 +161,19 @@ O si el backend no está disponible:
 - El nombre del archivo es `save_{timestamp}.json`
 - El backend es opcional: el juego funciona sin él usando localStorage
 - Con TB de almacenamiento disponible, puedes guardar años de progreso
+
+## 📚 Documentación
+
+El proyecto cuenta con documentación generada automáticamente a partir del código fuente utilizando **TypeDoc**.
+
+### Generar documentación
+```bash
+npm run docs
+```
+
+Esto generará un sitio web estático en la carpeta `docs/` con toda la información sobre:
+- Sistemas de Simulación (Producción, IA, Clima, etc.)
+- Estructuras de Datos (Quests, Items, Biomas)
+- Flujos de eventos y arquitectura
+
+Para ver la documentación, abre `docs/index.html` en tu navegador.

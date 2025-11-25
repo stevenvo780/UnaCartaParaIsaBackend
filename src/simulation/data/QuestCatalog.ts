@@ -1,5 +1,15 @@
 import type { Quest } from "../../domain/types/simulation/quests";
 
+/**
+ * Catálogo estático de todas las misiones (Quests) disponibles en el juego.
+ * Actúa como una base de datos en memoria de las definiciones de misiones.
+ *
+ * Contiene:
+ * - Misiones de historia principal (`main_story`)
+ * - Misiones secundarias (`side_quest`)
+ * - Misiones diarias (`daily`)
+ * - Misiones de exploración (`exploration`)
+ */
 export class QuestCatalog {
   private static readonly quests: Quest[] = [
     {
@@ -557,38 +567,75 @@ export class QuestCatalog {
     },
   ];
 
+  /**
+   * Obtiene todas las misiones disponibles en el catálogo.
+   * @returns Una copia del array de misiones.
+   */
   public static getAllQuests(): Quest[] {
     return [...this.quests];
   }
 
+  /**
+   * Busca una misión por su ID.
+   * @param questId ID único de la misión.
+   * @returns La misión encontrada o null si no existe.
+   */
   public static getQuestById(questId: string): Quest | null {
     return this.quests.find((quest) => quest.id === questId) || null;
   }
 
+  /**
+   * Filtra las misiones por categoría.
+   * @param category Categoría de la misión (ej. 'main_story', 'side_quest').
+   * @returns Array de misiones que coinciden con la categoría.
+   */
   public static getQuestsByCategory(category: string): Quest[] {
     return this.quests.filter((quest) => quest.category === category);
   }
 
+  /**
+   * Filtra las misiones por dificultad.
+   * @param difficulty Dificultad de la misión (ej. 'easy', 'medium', 'hard').
+   * @returns Array de misiones que coinciden con la dificultad.
+   */
   public static getQuestsByDifficulty(difficulty: string): Quest[] {
     return this.quests.filter((quest) => quest.difficulty === difficulty);
   }
 
+  /**
+   * Busca misiones que contengan al menos uno de los tags proporcionados.
+   * @param tags Array de tags a buscar.
+   * @returns Array de misiones que tienen alguno de los tags.
+   */
   public static getQuestsByTags(tags: string[]): Quest[] {
     return this.quests.filter((quest) =>
       tags.some((tag) => quest.tags?.includes(tag)),
     );
   }
 
+  /**
+   * Obtiene todas las misiones de la historia principal, ordenadas por ID.
+   * @returns Array de misiones de historia principal ordenadas.
+   */
   public static getMainStoryQuests(): Quest[] {
     return this.quests
       .filter((quest) => quest.category === "main_story")
       .sort((a, b) => a.id.localeCompare(b.id));
   }
 
+  /**
+   * Obtiene todas las misiones que son repetibles.
+   * @returns Array de misiones repetibles.
+   */
   public static getRepeatableQuests(): Quest[] {
     return this.quests.filter((quest) => quest.isRepeatable);
   }
 
+  /**
+   * Busca misiones cuyo título, descripción, lore o tags coincidan con el término de búsqueda.
+   * @param searchTerm Término a buscar (case-insensitive).
+   * @returns Array de misiones que coinciden con la búsqueda.
+   */
   public static searchQuests(searchTerm: string): Quest[] {
     const term = searchTerm.toLowerCase();
     return this.quests.filter(
