@@ -1,4 +1,5 @@
 import type { Animal } from "../../types/simulation/animals";
+import { logger } from "../../../infrastructure/utils/logger";
 
 /**
  * Procesador batch optimizado para animales
@@ -13,6 +14,14 @@ export class AnimalBatchProcessor {
   private bufferDirty = true;
 
   private readonly NEED_COUNT = 4;
+  private static loggedGPUStatus = false;
+
+  constructor() {
+    if (!AnimalBatchProcessor.loggedGPUStatus) {
+      logger.info("⚙️ AnimalBatchProcessor inicializado - usando CPU para cálculos");
+      AnimalBatchProcessor.loggedGPUStatus = true;
+    }
+  }
 
   public rebuildBuffers(animals: Map<string, Animal>): void {
     const animalCount = animals.size;

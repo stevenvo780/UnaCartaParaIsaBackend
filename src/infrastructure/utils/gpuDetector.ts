@@ -27,6 +27,7 @@ export function detectGPUAvailability(): GPUInfo {
   // Verificar si TensorFlow.js está instalado
   try {
     // Intentar importar TensorFlow.js (si está instalado)
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const tf = require("@tensorflow/tfjs-node");
     if (tf) {
       info.libraries!.tensorflow = true;
@@ -77,6 +78,7 @@ export function detectGPUAvailability(): GPUInfo {
 
   // Verificar si TensorFlow.js GPU está instalado
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const tfGpu = require("@tensorflow/tfjs-node-gpu");
     if (tfGpu) {
       info.libraries!.tensorflowGpu = true;
@@ -103,12 +105,16 @@ export function detectGPUAvailability(): GPUInfo {
 
   // Verificar si hay bibliotecas nativas de CUDA disponibles
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { execSync } = require("child_process");
     try {
-      const nvidiaSmi = execSync("nvidia-smi --query-gpu=name --format=csv,noheader", {
-        encoding: "utf8",
-        timeout: 2000,
-      });
+      const nvidiaSmi = execSync(
+        "nvidia-smi --query-gpu=name --format=csv,noheader",
+        {
+          encoding: "utf8",
+          timeout: 2000,
+        },
+      );
       if (nvidiaSmi && nvidiaSmi.trim()) {
         info.available = true;
         info.deviceName = nvidiaSmi.trim();

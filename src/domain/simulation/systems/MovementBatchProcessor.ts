@@ -1,4 +1,5 @@
 import type { EntityMovementState } from "./MovementSystem";
+import { logger } from "../../../infrastructure/utils/logger";
 
 /**
  * Procesador batch optimizado para movimiento de entidades
@@ -14,6 +15,14 @@ export class MovementBatchProcessor {
 
   private readonly BASE_MOVEMENT_SPEED = 60;
   private readonly FATIGUE_PENALTY_MULTIPLIER = 0.5;
+  private static loggedGPUStatus = false;
+
+  constructor() {
+    if (!MovementBatchProcessor.loggedGPUStatus) {
+      logger.info("⚙️ MovementBatchProcessor inicializado - usando CPU para cálculos");
+      MovementBatchProcessor.loggedGPUStatus = true;
+    }
+  }
 
   public rebuildBuffers(
     movementStates: Map<string, EntityMovementState>,

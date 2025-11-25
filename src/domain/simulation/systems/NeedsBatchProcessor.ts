@@ -1,4 +1,5 @@
 import type { EntityNeedsData } from "../../types/simulation/needs";
+import { logger } from "../../../infrastructure/utils/logger";
 
 /**
  * Procesador batch optimizado para necesidades de entidades
@@ -9,6 +10,14 @@ export class NeedsBatchProcessor {
   private entityIdArray: string[] = [];
   private readonly NEED_COUNT = 7;
   private bufferDirty = true;
+  private static loggedGPUStatus = false;
+
+  constructor() {
+    if (!NeedsBatchProcessor.loggedGPUStatus) {
+      logger.info("⚙️ NeedsBatchProcessor inicializado - usando CPU para cálculos");
+      NeedsBatchProcessor.loggedGPUStatus = true;
+    }
+  }
 
   public rebuildBuffers(entityNeeds: Map<string, EntityNeedsData>): void {
     const entityCount = entityNeeds.size;
