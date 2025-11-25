@@ -91,7 +91,6 @@ export class MovementBatchProcessor {
     const entityCount = this.entityIdArray.length;
     const updated = new Array<boolean>(entityCount).fill(true);
 
-    // Intentar usar GPU si está disponible
     if (this.gpuService?.isGPUAvailable()) {
       try {
         const speeds = new Float32Array(entityCount).fill(
@@ -105,11 +104,9 @@ export class MovementBatchProcessor {
           deltaMs,
         );
 
-        // Actualizar buffers con resultados de GPU
         this.positionBuffer = result.newPositions;
         this.bufferDirty = true;
 
-        // Calcular velocidades
         if (this.velocityBuffer) {
           for (let i = 0; i < entityCount; i++) {
             const posOffset = i * 2;
@@ -117,8 +114,6 @@ export class MovementBatchProcessor {
             const currentX = this.positionBuffer[posOffset];
             const currentY = this.positionBuffer[posOffset + 1];
 
-            // Necesitamos las posiciones anteriores para calcular velocidad
-            // Por ahora, calculamos basado en el movimiento
             const targetX = this.targetBuffer[posOffset];
             const targetY = this.targetBuffer[posOffset + 1];
             const dx = targetX - currentX;
@@ -141,11 +136,9 @@ export class MovementBatchProcessor {
         logger.warn(
           `⚠️ Error en GPU updatePositionsBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
         );
-        // Continuar con CPU fallback
       }
     }
 
-    // Fallback a CPU
     const arrived = new Array<boolean>(entityCount).fill(false);
 
     for (let i = 0; i < entityCount; i++) {
@@ -203,7 +196,6 @@ export class MovementBatchProcessor {
   ): void {
     if (!this.fatigueBuffer || this.entityIdArray.length === 0) return;
 
-    // Intentar usar GPU si está disponible
     if (this.gpuService?.isGPUAvailable()) {
       try {
         const newFatigue = this.gpuService.updateFatigueBatch(
@@ -219,11 +211,9 @@ export class MovementBatchProcessor {
         logger.warn(
           `⚠️ Error en GPU updateFatigueBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
         );
-        // Continuar con CPU fallback
       }
     }
 
-    // Fallback a CPU
     const entityCount = this.entityIdArray.length;
     const fatigueDecayRate = 0.1 * (deltaMs / 1000);
     const fatigueRestRate = 0.5 * (deltaMs / 1000);

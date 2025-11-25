@@ -461,9 +461,9 @@ export class AnimalSystem {
         const cell = this.spatialGrid.get(cellKey);
         if (!cell) continue;
 
-        cell.forEach((animalId) => {
+        for (const animalId of cell) {
           const animal = this.animals.get(animalId);
-          if (!animal || animal.isDead) return;
+          if (!animal || animal.isDead) continue;
 
           const dx = animal.position.x - position.x;
           const dy = animal.position.y - position.y;
@@ -472,7 +472,7 @@ export class AnimalSystem {
           if (distSq <= radiusSq) {
             result.push(animal);
           }
-        });
+        }
       }
     }
 
@@ -514,9 +514,9 @@ export class AnimalSystem {
     const liveAnimals = [...this.animals.values()].filter((a) => !a.isDead);
 
     const byType: Record<string, number> = {};
-    liveAnimals.forEach((animal) => {
+    for (const animal of liveAnimals) {
       byType[animal.type] = (byType[animal.type] || 0) + 1;
-    });
+    }
 
     this.gameState.animals.animals = liveAnimals;
     this.gameState.animals.stats = {
@@ -646,20 +646,20 @@ export class AnimalSystem {
   private cleanupDeadAnimals(): void {
     const toRemove: string[] = [];
 
-    this.animals.forEach((animal, id) => {
+    for (const [id, animal] of this.animals) {
       if (animal.isDead) {
         toRemove.push(id);
       }
-    });
+    }
 
-    toRemove.forEach((id) => {
+    for (const id of toRemove) {
       const animal = this.animals.get(id);
       if (animal) {
         const cellKey = this.getGridCell(animal.position);
         this.spatialGrid.get(cellKey)?.delete(id);
       }
       this.animals.delete(id);
-    });
+    }
 
     if (toRemove.length > 0) {
       logger.info(`🧹 Cleaned up ${toRemove.length} dead animals`);

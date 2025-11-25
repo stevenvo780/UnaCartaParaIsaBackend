@@ -6,6 +6,7 @@ import { container } from "../config/container";
 import { TYPES } from "../config/Types";
 import { SimulationRunner } from "../domain/simulation/core/SimulationRunner";
 import { detectGPUAvailability } from "../infrastructure/utils/gpuDetector";
+import { encodeMsgPack, decodeMessage } from "../shared/MessagePackCodec";
 
 const simulationRunner = container.get<SimulationRunner>(
   TYPES.SimulationRunner,
@@ -49,7 +50,7 @@ const server = app.listen(CONFIG.PORT, () => {
 const simulationWss = new WebSocketServer({ noServer: true });
 const chunkStreamServer = new ChunkStreamServer({ maxInflight: 128 });
 
-let cachedTickMessage: string | null = null;
+let cachedTickBuffer: Buffer | null = null;
 let cachedTickNumber = -1;
 
 server.on("upgrade", (request, socket, head) => {
@@ -87,15 +88,15 @@ simulationWss.on("connection", (ws: WebSocket) => {
   logger.info("Client connected to simulation");
 
   ws.send(
-    JSON.stringify({
+    encodeMsgPack({
       type: "SNAPSHOT",
       payload: simulationRunner.getInitialSnapshot(),
     }),
   );
 
   const tickHandler = (): void => {
-    if (ws.readyState === WebSocket.OPEN && cachedTickMessage) {
-      ws.send(cachedTickMessage);
+    if (ws.readyState === WebSocket.OPEN && cachedTickBuffer) {
+      ws.send(cachedTickBuffer);
     }
   };
 
@@ -107,18 +108,7 @@ simulationWss.on("connection", (ws: WebSocket) => {
 
   ws.on("message", (data: Buffer) => {
     try {
-      const message = data.toString();
-      if (message.length > 10000) {
-        ws.send(
-          JSON.stringify({
-            type: "ERROR",
-            message: "Message too large",
-          }),
-        );
-        return;
-      }
-
-      const parsed = JSON.parse(message) as Record<string, unknown>;
+      const parsed = decodeMessage<Record<string, unknown>>(data);
       if (
         !parsed ||
         typeof parsed !== "object" ||
@@ -126,7 +116,7 @@ simulationWss.on("connection", (ws: WebSocket) => {
         typeof parsed.type !== "string"
       ) {
         ws.send(
-          JSON.stringify({
+          encodeMsgPack({
             type: "ERROR",
             message: "Invalid command format",
           }),
@@ -155,7 +145,7 @@ simulationWss.on("connection", (ws: WebSocket) => {
         }
 
         ws.send(
-          JSON.stringify({
+          encodeMsgPack({
             type: "RESPONSE",
             requestId: request.requestId,
             payload: responsePayload,
@@ -169,14 +159,14 @@ simulationWss.on("connection", (ws: WebSocket) => {
       );
       if (!accepted) {
         ws.send(
-          JSON.stringify({ type: "ERROR", message: "Command queue full" }),
+          encodeMsgPack({ type: "ERROR", message: "Command queue full" }),
         );
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
       logger.error("Failed to parse command:", errorMessage);
       ws.send(
-        JSON.stringify({
+        encodeMsgPack({
           type: "ERROR",
           message: "Failed to parse command",
         }),
@@ -187,17 +177,17 @@ simulationWss.on("connection", (ws: WebSocket) => {
 
 simulationRunner.on("tick", (snapshot: unknown) => {
   const currentTick = (snapshot as { tick?: number }).tick ?? 0;
-  if (currentTick !== cachedTickNumber || !cachedTickMessage) {
-    cachedTickMessage = JSON.stringify({
+  if (currentTick !== cachedTickNumber || !cachedTickBuffer) {
+    cachedTickBuffer = encodeMsgPack({
       type: "TICK",
       payload: snapshot,
     });
     cachedTickNumber = currentTick;
   }
 
-  simulationWss.clients.forEach((client) => {
+  for (const client of simulationWss.clients) {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(cachedTickMessage!);
+      client.send(cachedTickBuffer!);
     }
-  });
+  }
 });

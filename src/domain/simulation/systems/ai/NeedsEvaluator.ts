@@ -81,7 +81,6 @@ export function evaluateCriticalNeeds(
   if (needs.hunger < hungerThreshold) {
     let foodTarget = null;
     if (deps.findNearestResource) {
-      // Usar "wheat_crop" en lugar de "wheat" para coincidir con WorldResourceSystem
       foodTarget = deps.findNearestResource(aiState.entityId, "wheat_crop");
 
       if (!foodTarget) {

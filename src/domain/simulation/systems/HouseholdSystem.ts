@@ -92,7 +92,7 @@ export class HouseholdSystem {
     this.households.clear();
     const houses = zones.filter((z: Zone) => z.type === "rest");
 
-    houses.forEach((z: Zone) => {
+    for (const z of houses) {
       const capacity = Math.max(
         2,
         Math.floor((z.bounds.width * z.bounds.height) / 2000),
@@ -113,7 +113,7 @@ export class HouseholdSystem {
         capacity,
         sharedInventory: existingInventory,
       });
-    });
+    }
   }
 
   public findFreeHouse(): Household | null {

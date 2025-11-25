@@ -30,17 +30,14 @@ export function encodeMsgPack<T>(data: T): Buffer {
  */
 export function decodeMessage<T>(raw: string | Buffer | ArrayBuffer): T {
   if (typeof raw === "string") {
-    // Fallback JSON para compatibilidad
     return JSON.parse(raw) as T;
   }
 
   const buffer = raw instanceof ArrayBuffer ? Buffer.from(raw) : raw;
 
-  // Intentar MessagePack primero, luego JSON como fallback
   try {
     return decode(buffer) as T;
   } catch {
-    // Si falla MessagePack, intentar como JSON string
     return JSON.parse(buffer.toString()) as T;
   }
 }
@@ -52,7 +49,6 @@ export function sendBinaryMessage<T>(
   ws: { send: (data: Buffer | string) => void; readyState?: number },
   data: T,
 ): void {
-  // readyState 1 = OPEN
   if (ws.readyState !== undefined && ws.readyState !== 1) {
     return;
   }

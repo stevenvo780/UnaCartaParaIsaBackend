@@ -233,7 +233,6 @@ export class GovernanceSystem {
             reason: data.reason,
           },
         });
-        // Si se pierden muchos trabajadores, podría crear demanda de trabajadores
         const recentLosses = this.history.filter(
           (e) =>
             e.type === "production_worker_lost" &&

@@ -8,6 +8,10 @@ import type {
 } from "../../../../domain/world/generation/types";
 import { ChunkWorkerPool } from "./ChunkWorkerPool";
 import type { ChunkPoolStats } from "./ChunkWorkerPool";
+import {
+  encodeMsgPack,
+  decodeMessage,
+} from "../../../../shared/MessagePackCodec";
 
 interface ChunkRequestMessage {
   type: "CHUNK_REQUEST";
@@ -95,7 +99,7 @@ export class ChunkStreamServer {
       type: "CHUNK_STREAM_READY",
       stats: this.pool.getStats(),
     };
-    ws.send(JSON.stringify(hello));
+    ws.send(encodeMsgPack(hello));
   }
 
   private handleMessage(
@@ -104,19 +108,13 @@ export class ChunkStreamServer {
   ): void {
     let json: unknown;
     try {
-      const data =
-        raw instanceof ArrayBuffer
-          ? Buffer.from(raw)
-          : typeof raw === "string"
-            ? Buffer.from(raw)
-            : raw;
-      json = JSON.parse(data.toString());
+      json = decodeMessage<unknown>(raw);
     } catch (error) {
       ctx.ws.send(
-        JSON.stringify({
+        encodeMsgPack({
           type: "CHUNK_ERROR",
           requestId: "unknown",
-          error: `Invalid JSON: ${error instanceof Error ? error.message : error}`,
+          error: `Invalid message: ${error instanceof Error ? error.message : error}`,
         }),
       );
       return;
@@ -137,7 +135,7 @@ export class ChunkStreamServer {
         ? ((json as { requestId?: string }).requestId as string)
         : "unknown";
     ctx.ws.send(
-      JSON.stringify({
+      encodeMsgPack({
         type: "CHUNK_ERROR",
         requestId: fallbackId,
         error: "Unsupported chunk message type",
@@ -155,7 +153,7 @@ export class ChunkStreamServer {
         requestId: message.requestId ?? "unknown",
         error: `Too many inflight chunk requests (max ${this.maxInflightPerClient})`,
       };
-      ctx.ws.send(JSON.stringify(payload));
+      ctx.ws.send(encodeMsgPack(payload));
       return;
     }
 
@@ -170,7 +168,7 @@ export class ChunkStreamServer {
       requestId,
       queueSize: this.pool.getStats().queueSize,
     };
-    ctx.ws.send(JSON.stringify(accepted));
+    ctx.ws.send(encodeMsgPack(accepted));
 
     this.pool
       .enqueue(requestId, message.coords, message.config, {
@@ -184,7 +182,7 @@ export class ChunkStreamServer {
           chunk: result.chunk,
           timings: result.timings,
         };
-        ctx.ws.send(JSON.stringify(payload));
+        ctx.ws.send(encodeMsgPack(payload));
       })
       .catch((error: Error) => {
         const payload: ChunkErrorPayload = {
@@ -192,7 +190,7 @@ export class ChunkStreamServer {
           requestId,
           error: error.message,
         };
-        ctx.ws.send(JSON.stringify(payload));
+        ctx.ws.send(encodeMsgPack(payload));
       })
       .finally(() => {
         ctx.inflight.delete(requestId);
@@ -206,7 +204,7 @@ export class ChunkStreamServer {
     const entry = ctx.inflight.get(message.requestId);
     if (!entry) {
       ctx.ws.send(
-        JSON.stringify({
+        encodeMsgPack({
           type: "CHUNK_ERROR",
           requestId: message.requestId,
           error: "Request not found or already completed",
@@ -217,7 +215,7 @@ export class ChunkStreamServer {
     entry.abort();
     ctx.inflight.delete(message.requestId);
     ctx.ws.send(
-      JSON.stringify({
+      encodeMsgPack({
         type: "CHUNK_CANCELLED",
         requestId: message.requestId,
       }),

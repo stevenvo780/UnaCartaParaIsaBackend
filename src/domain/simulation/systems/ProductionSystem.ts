@@ -63,7 +63,6 @@ export class ProductionSystem {
     for (const [zoneId, workers] of this.assignments.entries()) {
       if (workers.has(entityId)) {
         workers.delete(entityId);
-        // Emit update to notify UI or other systems if necessary
         simulationEvents.emit(GameEventNames.PRODUCTION_WORKER_REMOVED, {
           zoneId,
           workerId: entityId,

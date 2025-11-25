@@ -704,7 +704,7 @@ export class MovementSystem extends EventEmitter {
       }
     }
 
-    this.occupiedTiles.forEach((key) => {
+    for (const key of this.occupiedTiles) {
       const [x, y] = key.split(",").map(Number);
       if (
         x >= 0 &&
@@ -715,7 +715,7 @@ export class MovementSystem extends EventEmitter {
       ) {
         this.cachedGrid[y][x] = 1;
       }
-    });
+    }
 
     this.gridCacheTime = now;
     this.gridDirty = false;
@@ -727,7 +727,7 @@ export class MovementSystem extends EventEmitter {
     this.occupiedTiles.clear();
 
     if (this.gameState.mapElements) {
-      this.gameState.mapElements.forEach((element) => {
+      for (const element of this.gameState.mapElements) {
         if (this.isObstacle(element)) {
           const gridPos = worldToGrid(
             element.position.x,
@@ -745,7 +745,7 @@ export class MovementSystem extends EventEmitter {
             }
           }
         }
-      });
+      }
     }
 
     this.gridDirty = true;

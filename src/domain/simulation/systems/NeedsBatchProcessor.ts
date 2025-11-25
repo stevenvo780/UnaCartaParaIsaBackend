@@ -60,7 +60,6 @@ export class NeedsBatchProcessor {
   ): void {
     if (!this.needsBuffer || this.entityIdArray.length === 0) return;
 
-    // Intentar usar GPU si está disponible
     if (this.gpuService?.isGPUAvailable()) {
       try {
         const newNeeds = this.gpuService.applyNeedsDecayBatch(
@@ -78,11 +77,9 @@ export class NeedsBatchProcessor {
         logger.warn(
           `⚠️ Error en GPU applyDecayBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
         );
-        // Continuar con CPU fallback
       }
     }
 
-    // Fallback a CPU
     const entityCount = this.entityIdArray.length;
 
     for (let i = 0; i < entityCount; i++) {
@@ -107,7 +104,6 @@ export class NeedsBatchProcessor {
   public applyCrossEffectsBatch(): void {
     if (!this.needsBuffer || this.entityIdArray.length === 0) return;
 
-    // Intentar usar GPU si está disponible
     if (this.gpuService?.isGPUAvailable()) {
       try {
         const newNeeds = this.gpuService.applyNeedsCrossEffectsBatch(
@@ -121,11 +117,9 @@ export class NeedsBatchProcessor {
         logger.warn(
           `⚠️ Error en GPU applyCrossEffectsBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
         );
-        // Continuar con CPU fallback
       }
     }
 
-    // Fallback a CPU
     const entityCount = this.entityIdArray.length;
 
     for (let i = 0; i < entityCount; i++) {

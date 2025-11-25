@@ -27,7 +27,6 @@ export class GPUComputeService {
       await tf.ready();
       const backend = tf.getBackend();
 
-      // Detectar backends que usan GPU (CUDA en Node.js, WebGL en browser)
       const gpuBackends = ["tensorflow", "cuda", "webgl", "webgpu"];
       this.gpuAvailable = gpuBackends.includes(backend?.toLowerCase() ?? "");
 
@@ -318,11 +317,6 @@ export class GPUComputeService {
     try {
       return tf.tidy(() => {
         const needsT = tf.tensor2d(needs, [entityCount, needCount]);
-
-        // Efectos cruzados (fórmulas idénticas a la versión CPU):
-        // - Energía baja (<30): penalty = (30 - energy) * 0.02
-        // - Hambre baja (<40): penalty = (40 - hunger) * 0.03
-        // - Sed baja (<30): penalty = (30 - thirst) * 0.05
 
         const energy = needsT.slice([0, 2], [entityCount, 1]);
         const hunger = needsT.slice([0, 0], [entityCount, 1]);

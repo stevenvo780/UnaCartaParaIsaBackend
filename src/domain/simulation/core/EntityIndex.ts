@@ -14,7 +14,6 @@ export class EntityIndex {
   private entityIndex = new Map<string, SimulationEntity>();
   private dirty = true;
 
-  // Tracking granular para evitar reconstrucciones innecesarias
   private lastAgentCount = 0;
   private lastEntityCount = 0;
   private pendingAgentAdds = new Set<string>();

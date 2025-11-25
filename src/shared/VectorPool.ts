@@ -103,7 +103,6 @@ class VectorPoolImpl {
   }
 }
 
-// Singleton exportado
 export const VectorPool = new VectorPoolImpl();
 
 /**

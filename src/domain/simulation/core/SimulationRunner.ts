@@ -325,7 +325,6 @@ export class SimulationRunner {
           this.animalSystem.getAnimals(),
         );
       },
-      // Post-tick: flush de eventos acumulados
       postTick: () => {
         if (simulationEvents instanceof BatchedEventEmitter) {
           simulationEvents.flushEvents();
@@ -925,7 +924,6 @@ export class SimulationRunner {
       (data: { agentId: string; need: string; value: number }) => {
         const aiState = this.aiSystem.getAIState(data.agentId);
         if (aiState && !aiState.currentGoal) {
-          // Forzar reevaluación inmediata de goals
           this.aiSystem.forceGoalReevaluation(data.agentId);
         }
       },

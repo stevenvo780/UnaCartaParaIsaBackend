@@ -13,9 +13,7 @@ export interface DeltaSnapshot {
   tick: number;
   updatedAt: number;
   events?: unknown[];
-  // Campos que cambiaron (solo se incluyen si hay cambios)
   changes?: Partial<GameState>;
-  // IDs de entidades/agentes que cambiaron (para optimizar más)
   changedAgentIds?: string[];
   changedEntityIds?: string[];
 }

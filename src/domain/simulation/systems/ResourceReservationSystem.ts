@@ -29,7 +29,6 @@ export class ResourceReservationSystem {
   }
 
   private setupEventListeners(): void {
-    // Cuando una necesidad se satisface, liberar reservas relacionadas si el agente ya no necesita esos recursos
     simulationEvents.on(
       GameEventNames.NEED_SATISFIED,
       (data: { agentId: string; need: string; value: number }) => {
