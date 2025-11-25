@@ -51,7 +51,7 @@ describe("NeedsEvaluator", () => {
         if (resourceType === "water_source") {
           return { id: "water-1", x: 100, y: 100 };
         }
-        if (resourceType === "wheat") {
+        if (resourceType === "wheat_crop") {
           return { id: "wheat-1", x: 200, y: 200 };
         }
         if (resourceType === "berry_bush") {

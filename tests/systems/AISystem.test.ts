@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { AISystem } from "../../src/domain/simulation/systems/AISystem.ts";
 import { NeedsSystem } from "../../src/domain/simulation/systems/NeedsSystem.ts";
 import { RoleSystem } from "../../src/domain/simulation/systems/RoleSystem.ts";
@@ -715,12 +715,22 @@ describe("AISystem", () => {
         });
       }
 
-      for (let i = 0; i < 20; i++) {
-        aiSystem.update(1000);
+      // El updateIntervalMs es 500ms por defecto, así que necesitamos avanzar el tiempo
+      // Hacer suficientes updates para que se procesen todos los agentes
+      // (se procesan en lotes de 10, así que con 15 agentes necesitamos al menos 2 iteraciones)
+      for (let i = 0; i < 30; i++) {
+        // Avanzar el tiempo y actualizar
+        vi.advanceTimersByTime(600); // Más que el intervalo de 500ms
+        aiSystem.update(600);
       }
       
       const states = aiSystem.getAllAIStates();
+      // Debería haber creado estados AI para al menos algunos de los agentes
       expect(states.length).toBeGreaterThan(0);
     });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 });

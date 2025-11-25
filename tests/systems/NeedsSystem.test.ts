@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { NeedsSystem } from "../../src/domain/simulation/systems/NeedsSystem.ts";
 import { LifeCycleSystem } from "../../src/domain/simulation/systems/LifeCycleSystem.ts";
 import { createMockGameState } from "../setup.ts";
@@ -11,9 +11,14 @@ describe("NeedsSystem", () => {
   let lifeCycleSystem: LifeCycleSystem;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     gameState = createMockGameState();
     lifeCycleSystem = new LifeCycleSystem(gameState);
     needsSystem = new NeedsSystem(gameState, lifeCycleSystem);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe("Inicialización", () => {
@@ -58,8 +63,9 @@ describe("NeedsSystem", () => {
       const initialNeeds = needsSystem.getEntityNeeds("entity-5");
       const initialHunger = initialNeeds?.hunger || 100;
       
-      // Esperar más tiempo para que se actualice (updateIntervalMs es 1000ms)
-      needsSystem.update(2000); // 2 segundos para asegurar que pase el intervalo
+      // Avanzar el tiempo para que se actualice (updateIntervalMs es 1000ms)
+      vi.advanceTimersByTime(2000); // 2 segundos para asegurar que pase el intervalo
+      needsSystem.update(2000);
       
       const updatedNeeds = needsSystem.getEntityNeeds("entity-5");
       expect(updatedNeeds?.hunger).toBeLessThan(initialHunger);
@@ -67,7 +73,8 @@ describe("NeedsSystem", () => {
 
     it("debe degradar hambre con el tiempo", () => {
       needsSystem.initializeEntityNeeds("entity-6");
-      // Esperar más tiempo para que se actualice
+      // Avanzar el tiempo para que se actualice
+      vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
       
       const needs = needsSystem.getEntityNeeds("entity-6");
@@ -76,7 +83,8 @@ describe("NeedsSystem", () => {
 
     it("debe degradar sed con el tiempo", () => {
       needsSystem.initializeEntityNeeds("entity-7");
-      // Esperar más tiempo para que se actualice
+      // Avanzar el tiempo para que se actualice
+      vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
       
       const needs = needsSystem.getEntityNeeds("entity-7");
@@ -85,7 +93,8 @@ describe("NeedsSystem", () => {
 
     it("debe degradar energía con el tiempo", () => {
       needsSystem.initializeEntityNeeds("entity-8");
-      // Esperar más tiempo para que se actualice
+      // Avanzar el tiempo para que se actualice
+      vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
       
       const needs = needsSystem.getEntityNeeds("entity-8");
@@ -182,8 +191,12 @@ describe("NeedsSystem", () => {
       // Establecer hambre por debajo del umbral crítico (20 por defecto)
       needsSystem.modifyNeed("entity-15", "hunger", -85); // 100 - 85 = 15, por debajo de 20
       
-      // Esperar tiempo suficiente para que se actualice
+      // Avanzar el tiempo para que se actualice
+      vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
+      
+      // Flush eventos para que se emitan inmediatamente
+      simulationEvents.flushEvents();
       
       // Debería emitir NEED_CRITICAL porque hunger < 20
       expect(emitSpy).toHaveBeenCalledWith(
@@ -202,8 +215,12 @@ describe("NeedsSystem", () => {
       needsSystem.modifyNeed("entity-16", "hunger", -10); // 100 - 10 = 90
       needsSystem.satisfyNeed("entity-16", "hunger", 5); // 90 + 5 = 95, por encima de 90
       
-      // Esperar tiempo suficiente para que se actualice
+      // Avanzar el tiempo para que se actualice
+      vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
+      
+      // Flush eventos para que se emitan inmediatamente
+      simulationEvents.flushEvents();
       
       // Debería emitir evento de necesidad satisfecha si está por encima de 90
       expect(emitSpy).toHaveBeenCalledWith(
@@ -252,7 +269,8 @@ describe("NeedsSystem", () => {
       const before = needsSystem.getEntityNeeds(agent.id);
       const initialHunger = before?.hunger || 50;
       
-      // Actualizar con intervalo pequeño para que se procese
+      // Avanzar el tiempo y actualizar
+      vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
       
       const after = needsSystem.getEntityNeeds(agent.id);
@@ -270,8 +288,12 @@ describe("NeedsSystem", () => {
       // Establecer hambre por debajo del umbral crítico (20 por defecto)
       needsSystem.modifyNeed("entity-17", "hunger", -85); // 100 - 85 = 15, por debajo de 20
       
-      // Esperar tiempo suficiente para que se actualice
+      // Avanzar el tiempo para que se actualice
+      vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
+      
+      // Flush eventos para que se emitan inmediatamente
+      simulationEvents.flushEvents();
       
       // Debería emitir NEED_CRITICAL porque hunger < 20
       expect(emitSpy).toHaveBeenCalledWith(
@@ -290,8 +312,12 @@ describe("NeedsSystem", () => {
       // Establecer hambre a 0 para causar muerte
       needsSystem.modifyNeed("entity-18", "hunger", -100); // 100 - 100 = 0
       
-      // Esperar tiempo suficiente para que se actualice
+      // Avanzar el tiempo para que se actualice
+      vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
+      
+      // Flush eventos para que se emitan inmediatamente
+      simulationEvents.flushEvents();
       
       expect(emitSpy).toHaveBeenCalledWith(
         GameEventNames.AGENT_DEATH,
@@ -403,7 +429,8 @@ describe("NeedsSystem", () => {
       needsSystem.modifyNeed("entity-29", "hunger", -50);
       const initialHunger = needsSystem.getEntityNeeds("entity-29")?.hunger || 0;
       
-      // Esperar tiempo suficiente para que se actualice y se apliquen beneficios
+      // Avanzar el tiempo y actualizar para que se apliquen beneficios
+      vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
       
       const updatedHunger = needsSystem.getEntityNeeds("entity-29")?.hunger || 0;
@@ -440,7 +467,8 @@ describe("NeedsSystem", () => {
       needsSystem.modifyNeed("entity-30", "thirst", -50);
       const initialThirst = needsSystem.getEntityNeeds("entity-30")?.thirst || 0;
       
-      // Esperar tiempo suficiente para que se actualice y se apliquen beneficios
+      // Avanzar el tiempo y actualizar para que se apliquen beneficios
+      vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
       
       const updatedThirst = needsSystem.getEntityNeeds("entity-30")?.thirst || 0;
@@ -475,7 +503,8 @@ describe("NeedsSystem", () => {
       needsSystem.modifyNeed("entity-31", "energy", -50);
       const initialEnergy = needsSystem.getEntityNeeds("entity-31")?.energy || 0;
       
-      // Esperar tiempo suficiente para que se actualice y se apliquen beneficios
+      // Avanzar el tiempo y actualizar para que se apliquen beneficios
+      vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
       
       const updatedEnergy = needsSystem.getEntityNeeds("entity-31")?.energy || 0;
@@ -510,7 +539,8 @@ describe("NeedsSystem", () => {
       needsSystem.modifyNeed("entity-32", "hygiene", -50);
       const initialHygiene = needsSystem.getEntityNeeds("entity-32")?.hygiene || 0;
       
-      // Esperar tiempo suficiente para que se actualice y se apliquen beneficios
+      // Avanzar el tiempo y actualizar para que se apliquen beneficios
+      vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
       
       const updatedHygiene = needsSystem.getEntityNeeds("entity-32")?.hygiene || 0;
@@ -547,7 +577,8 @@ describe("NeedsSystem", () => {
       const initialFun = needsSystem.getEntityNeeds("entity-33")?.fun || 0;
       const initialMentalHealth = needsSystem.getEntityNeeds("entity-33")?.mentalHealth || 0;
       
-      // Esperar tiempo suficiente para que se actualice y se apliquen beneficios
+      // Avanzar el tiempo y actualizar para que se apliquen beneficios
+      vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
       
       const updatedFun = needsSystem.getEntityNeeds("entity-33")?.fun || 0;
@@ -586,7 +617,8 @@ describe("NeedsSystem", () => {
       const initialMentalHealth = needsSystem.getEntityNeeds("entity-34")?.mentalHealth || 0;
       const initialSocial = needsSystem.getEntityNeeds("entity-34")?.social || 0;
       
-      // Esperar tiempo suficiente para que se actualice y se apliquen beneficios
+      // Avanzar el tiempo y actualizar para que se apliquen beneficios
+      vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
       
       const updatedMentalHealth = needsSystem.getEntityNeeds("entity-34")?.mentalHealth || 0;
@@ -625,7 +657,8 @@ describe("NeedsSystem", () => {
       const initialFun = needsSystem.getEntityNeeds("entity-35")?.fun || 0;
       const initialMentalHealth = needsSystem.getEntityNeeds("entity-35")?.mentalHealth || 0;
       
-      // Esperar tiempo suficiente para que se actualice y se apliquen beneficios
+      // Avanzar el tiempo y actualizar para que se apliquen beneficios
+      vi.advanceTimersByTime(2000);
       needsSystem.update(2000);
       
       const updatedFun = needsSystem.getEntityNeeds("entity-35")?.fun || 0;

@@ -23,6 +23,11 @@ export class SocialSystem {
   private infamy = new Map<string, number>();
   private zoneHeat = new Map<string, number>();
   private lastUpdate = 0;
+  
+  // 🔧 FIX: Tracking incremental para evitar clear() completo cada tick
+  private knownEntities = new Set<string>();
+  private positionCache = new Map<string, { x: number; y: number }>();
+  private readonly POSITION_THRESHOLD = 2; // Solo actualizar si se movió más de 2 unidades
 
   constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
@@ -86,49 +91,97 @@ export class SocialSystem {
     const dt = deltaTimeMs / 1000;
     this.lastUpdate += deltaTimeMs;
 
-    this.spatialGrid.clear();
-    const entities = this.gameState.entities || [];
-    for (const entity of entities) {
-      if (entity.position) {
-        this.spatialGrid.insert(entity.id, entity.position);
-      }
-    }
+    // 🔧 FIX: Actualización incremental del spatial grid en lugar de clear() completo
+    this.updateSpatialGridIncremental();
 
     this.updateProximity(dt);
-    this.decayEdges(dt);
+    this.decayEdgesOptimized(dt);
 
     if (this.lastUpdate > 1000) {
       this.recomputeGroups();
       this.lastUpdate = 0;
     }
 
-    this.updateTruces(Date.now());
+    // 🔧 FIX: Cachear timestamp para evitar múltiples Date.now()
+    const now = Date.now();
+    this.updateTruces(now);
   }
 
-  private decayEdges(dt: number): void {
-    this.edges.forEach((neighbors, aId) => {
-      neighbors.forEach((affinity, bId) => {
-        if (affinity !== 0) {
-          const bondType =
-            this.permanentBonds.get(aId)?.get(bId) ||
-            this.permanentBonds.get(bId)?.get(aId);
+  /**
+   * 🔧 FIX: Actualización incremental del spatial grid
+   * Solo actualiza entidades que se movieron significativamente o son nuevas/eliminadas
+   */
+  private updateSpatialGridIncremental(): void {
+    const entities = this.gameState.entities || [];
+    const currentIds = new Set<string>();
 
-          let decayRate = this.config.decayPerSecond;
-          if (bondType) {
-            decayRate *= 0.05; // Slower decay for family/marriage
-          }
+    for (const entity of entities) {
+      if (!entity.position) continue;
+      
+      currentIds.add(entity.id);
+      const cachedPos = this.positionCache.get(entity.id);
 
-          let newAffinity = affinity;
-          if (affinity > 0) {
-            newAffinity = Math.max(0, affinity - decayRate * dt);
-          } else {
-            newAffinity = Math.min(0, affinity + decayRate * dt);
-          }
-
-          neighbors.set(bId, newAffinity);
+      if (!cachedPos) {
+        // Nueva entidad
+        this.spatialGrid.insert(entity.id, entity.position);
+        this.positionCache.set(entity.id, { x: entity.position.x, y: entity.position.y });
+        this.knownEntities.add(entity.id);
+      } else {
+        // Entidad existente - solo actualizar si se movió significativamente
+        const dx = Math.abs(entity.position.x - cachedPos.x);
+        const dy = Math.abs(entity.position.y - cachedPos.y);
+        
+        if (dx > this.POSITION_THRESHOLD || dy > this.POSITION_THRESHOLD) {
+          // insert() ya hace remove() internamente
+          this.spatialGrid.insert(entity.id, entity.position);
+          cachedPos.x = entity.position.x;
+          cachedPos.y = entity.position.y;
         }
-      });
-    });
+      }
+    }
+
+    // Eliminar entidades que ya no existen
+    for (const id of this.knownEntities) {
+      if (!currentIds.has(id)) {
+        this.spatialGrid.remove(id);
+        this.positionCache.delete(id);
+        this.knownEntities.delete(id);
+      }
+    }
+  }
+
+  /**
+   * 🔧 FIX: Decay optimizado que solo procesa edges con valores no-cero significativos
+   */
+  private decayEdgesOptimized(dt: number): void {
+    const decayAmount = this.config.decayPerSecond * dt;
+    const bondDecayAmount = decayAmount * 0.05;
+    const minAffinity = 0.001; // Umbral mínimo para considerar valor
+
+    for (const [aId, neighbors] of this.edges) {
+      for (const [bId, affinity] of neighbors) {
+        // Skip si ya es efectivamente 0
+        if (Math.abs(affinity) < minAffinity) {
+          if (affinity !== 0) neighbors.set(bId, 0);
+          continue;
+        }
+
+        const bondType =
+          this.permanentBonds.get(aId)?.get(bId) ||
+          this.permanentBonds.get(bId)?.get(aId);
+
+        const decay = bondType ? bondDecayAmount : decayAmount;
+
+        let newAffinity: number;
+        if (affinity > 0) {
+          newAffinity = Math.max(0, affinity - decay);
+        } else {
+          newAffinity = Math.min(0, affinity + decay);
+        }
+
+        neighbors.set(bId, newAffinity);
+      }
+    }
   }
 
   private updateProximity(dt: number): void {

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { HouseholdSystem } from "../../src/domain/simulation/systems/HouseholdSystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
@@ -9,6 +9,7 @@ describe("HouseholdSystem", () => {
   let householdSystem: HouseholdSystem;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     gameState = createMockGameState({
       zones: [
         {
@@ -219,7 +220,12 @@ describe("HouseholdSystem", () => {
         householdSystem.assignToHouse(`agent-${i}`, "other");
       }
       
-      householdSystem.update(10000);
+      // Avanzar el tiempo y actualizar (updateIntervalMs es 5000ms por defecto)
+      vi.advanceTimersByTime(6000); // Más que el intervalo de 5000ms
+      householdSystem.update(6000);
+      
+      // Flush eventos para que se emitan inmediatamente
+      simulationEvents.flushEvents();
       
       expect(emitSpy).toHaveBeenCalledWith(
         GameEventNames.HOUSEHOLD_HIGH_OCCUPANCY,
@@ -250,7 +256,12 @@ describe("HouseholdSystem", () => {
         }
       }
       
-      householdSystem.update(10000);
+      // Avanzar el tiempo y actualizar (updateIntervalMs es 5000ms por defecto)
+      vi.advanceTimersByTime(6000); // Más que el intervalo de 5000ms
+      householdSystem.update(6000);
+      
+      // Flush eventos para que se emitan inmediatamente
+      simulationEvents.flushEvents();
       
       expect(emitSpy).toHaveBeenCalledWith(
         GameEventNames.HOUSEHOLD_AGENTS_HOMELESS,
@@ -321,6 +332,10 @@ describe("HouseholdSystem", () => {
       const zone = householdSystem.getHouseFor("non-existent");
       expect(zone).toBeNull();
     });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 });
 

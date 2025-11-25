@@ -1,19 +1,72 @@
 import type { AgentProfile } from "../../types/simulation/agents";
 import type { SimulationEntity, EntityTraits } from "./schema";
 import type { GameState } from "../../types/game-types";
+import { injectable } from "inversify";
 
 /**
  * Servicio centralizado para índices O(1) de entidades y agentes
- * Elimina búsquedas O(n) repetidas con array.find()
+ * OPTIMIZADO: Usa dirty tracking granular para evitar reconstrucciones O(n)
+ * Solo reconstruye cuando hay cambios reales en la estructura de datos
  */
+@injectable()
 export class EntityIndex {
   private agentIndex = new Map<string, AgentProfile>();
   private entityIndex = new Map<string, SimulationEntity>();
   private dirty = true;
 
-  public rebuild(state: GameState): void {
-    if (!this.dirty) return;
+  // Tracking granular para evitar reconstrucciones innecesarias
+  private lastAgentCount = 0;
+  private lastEntityCount = 0;
+  private pendingAgentAdds = new Set<string>();
+  private pendingAgentRemoves = new Set<string>();
+  private pendingEntityAdds = new Set<string>();
+  private pendingEntityRemoves = new Set<string>();
 
+  /**
+   * OPTIMIZADO: Reconstrucción incremental O(Δn) en lugar de O(n)
+   * Solo procesa cambios pendientes en lugar de reconstruir todo
+   */
+  public rebuild(state: GameState): void {
+    // Si no hay cambios pendientes y el conteo es igual, no hacer nada
+    const currentAgentCount = state.agents?.length ?? 0;
+    const currentEntityCount = state.entities?.length ?? 0;
+
+    const hasStructuralChanges =
+      this.dirty ||
+      currentAgentCount !== this.lastAgentCount ||
+      currentEntityCount !== this.lastEntityCount ||
+      this.pendingAgentAdds.size > 0 ||
+      this.pendingAgentRemoves.size > 0 ||
+      this.pendingEntityAdds.size > 0 ||
+      this.pendingEntityRemoves.size > 0;
+
+    if (!hasStructuralChanges) {
+      return; // Early return - no hay cambios
+    }
+
+    // Si hay muchos cambios pendientes o es la primera vez, hacer rebuild completo
+    const totalPendingChanges =
+      this.pendingAgentAdds.size +
+      this.pendingAgentRemoves.size +
+      this.pendingEntityAdds.size +
+      this.pendingEntityRemoves.size;
+
+    const threshold = Math.max(10, currentAgentCount * 0.2);
+
+    if (this.dirty || totalPendingChanges > threshold) {
+      // Rebuild completo (pero optimizado)
+      this.rebuildFull(state);
+    } else {
+      // Rebuild incremental
+      this.rebuildIncremental(state);
+    }
+
+    this.lastAgentCount = currentAgentCount;
+    this.lastEntityCount = currentEntityCount;
+    this.dirty = false;
+  }
+
+  private rebuildFull(state: GameState): void {
     this.agentIndex.clear();
     this.entityIndex.clear();
 
@@ -29,7 +82,78 @@ export class EntityIndex {
       }
     }
 
-    this.dirty = false;
+    // Limpiar pendientes después del rebuild completo
+    this.pendingAgentAdds.clear();
+    this.pendingAgentRemoves.clear();
+    this.pendingEntityAdds.clear();
+    this.pendingEntityRemoves.clear();
+  }
+
+  private rebuildIncremental(state: GameState): void {
+    // Procesar removes primero
+    for (const id of this.pendingAgentRemoves) {
+      this.agentIndex.delete(id);
+    }
+    for (const id of this.pendingEntityRemoves) {
+      this.entityIndex.delete(id);
+    }
+
+    // Procesar adds
+    if (state.agents) {
+      for (const id of this.pendingAgentAdds) {
+        const agent = state.agents.find((a) => a.id === id);
+        if (agent) {
+          this.agentIndex.set(id, agent);
+        }
+      }
+    }
+
+    if (state.entities) {
+      for (const id of this.pendingEntityAdds) {
+        const entity = state.entities.find((e) => e.id === id);
+        if (entity) {
+          this.entityIndex.set(id, entity);
+        }
+      }
+    }
+
+    // Limpiar pendientes
+    this.pendingAgentAdds.clear();
+    this.pendingAgentRemoves.clear();
+    this.pendingEntityAdds.clear();
+    this.pendingEntityRemoves.clear();
+  }
+
+  /**
+   * Notificar que se añadió un agente (para rebuild incremental)
+   */
+  public notifyAgentAdded(agentId: string): void {
+    this.pendingAgentRemoves.delete(agentId);
+    this.pendingAgentAdds.add(agentId);
+  }
+
+  /**
+   * Notificar que se eliminó un agente (para rebuild incremental)
+   */
+  public notifyAgentRemoved(agentId: string): void {
+    this.pendingAgentAdds.delete(agentId);
+    this.pendingAgentRemoves.add(agentId);
+  }
+
+  /**
+   * Notificar que se añadió una entidad (para rebuild incremental)
+   */
+  public notifyEntityAdded(entityId: string): void {
+    this.pendingEntityRemoves.delete(entityId);
+    this.pendingEntityAdds.add(entityId);
+  }
+
+  /**
+   * Notificar que se eliminó una entidad (para rebuild incremental)
+   */
+  public notifyEntityRemoved(entityId: string): void {
+    this.pendingEntityAdds.delete(entityId);
+    this.pendingEntityRemoves.add(entityId);
   }
 
   /**

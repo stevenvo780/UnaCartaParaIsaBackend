@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { AnimalSystem } from "../../src/domain/simulation/systems/AnimalSystem.ts";
 import { WorldResourceSystem } from "../../src/domain/simulation/systems/WorldResourceSystem.ts";
 import { createMockGameState } from "../setup.ts";
@@ -11,6 +11,7 @@ describe("AnimalSystem", () => {
   let worldResourceSystem: WorldResourceSystem;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     gameState = createMockGameState({
       worldResources: {},
     });
@@ -199,8 +200,11 @@ describe("AnimalSystem", () => {
   describe("Estadísticas", () => {
     it("debe actualizar estadísticas en gameState", () => {
       animalSystem.spawnAnimalsInWorld(100, 100);
+      // Avanzar el tiempo y actualizar (updateInterval es 1000ms por defecto)
+      vi.advanceTimersByTime(2000); // Más que el intervalo de 1000ms
       animalSystem.update(2000);
       
+      // updateGameStateSnapshot se llama en update, así que debería estar definido
       expect(gameState.animals).toBeDefined();
       if (gameState.animals) {
         expect(gameState.animals.stats).toBeDefined();

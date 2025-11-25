@@ -1,72 +1,185 @@
 import { SpatialGrid } from "../../../utils/SpatialGrid";
 import type { SimulationEntity } from "./schema";
 import type { Animal } from "../../types/simulation/animals";
+import { injectable } from "inversify";
 
 export type EntityType = "agent" | "animal" | "all";
 
 /**
  * Índice espacial compartido para todos los sistemas
- * Elimina reconstrucciones redundantes de spatial grids
+ * OPTIMIZADO: Actualización incremental O(Δn) en lugar de reconstrucción O(n)
  */
+@injectable()
 export class SharedSpatialIndex {
   private grid: SpatialGrid<string>;
   private entityPositions = new Map<string, { x: number; y: number }>();
   private entityTypes = new Map<string, EntityType>();
   private dirty = true;
 
-  constructor(worldWidth: number, worldHeight: number, cellSize: number = 70) {
+  // Tracking para actualizaciones incrementales
+  private lastEntityIds = new Set<string>();
+  private lastAnimalIds = new Set<string>();
+  private positionCache = new Map<string, { x: number; y: number }>();
+
+  // Pool de objetos de posición para evitar GC
+  private positionPool: Array<{ x: number; y: number }> = [];
+  private readonly POSITION_POOL_SIZE = 200;
+
+  constructor(worldWidth: number = 3200, worldHeight: number = 3200, cellSize: number = 70) {
     this.grid = new SpatialGrid(worldWidth, worldHeight, cellSize);
+    // Pre-llenar pool
+    for (let i = 0; i < this.POSITION_POOL_SIZE; i++) {
+      this.positionPool.push({ x: 0, y: 0 });
+    }
+  }
+
+  private acquirePosition(): { x: number; y: number } {
+    return this.positionPool.pop() || { x: 0, y: 0 };
+  }
+
+  private releasePosition(pos: { x: number; y: number }): void {
+    if (this.positionPool.length < this.POSITION_POOL_SIZE) {
+      this.positionPool.push(pos);
+    }
   }
 
   public markDirty(): void {
     this.dirty = true;
   }
 
+  /**
+   * OPTIMIZADO: Actualización incremental - solo procesa cambios
+   */
   public rebuildIfNeeded(
     entities: SimulationEntity[],
     animals: Map<string, Animal>,
   ): void {
-    if (!this.dirty) return;
+    if (!this.dirty) {
+      // Aún así, actualizar posiciones de entidades que se movieron
+      this.updateMovedPositions(entities, animals);
+      return;
+    }
 
-    this.grid.clear();
-    this.entityPositions.clear();
-    this.entityTypes.clear();
+    const currentEntityIds = new Set<string>();
+    const currentAnimalIds = new Set<string>();
 
+    // Procesar entidades
     for (const entity of entities) {
       if (entity.isDead || !entity.position) continue;
-      this.grid.insert(entity.id, entity.position);
-      // Optimizado: reusar objeto de posición existente o crear solo si es necesario
-      const existing = this.entityPositions.get(entity.id);
-      if (existing) {
-        existing.x = entity.position.x;
-        existing.y = entity.position.y;
-      } else {
-        this.entityPositions.set(entity.id, {
-          x: entity.position.x,
-          y: entity.position.y,
-        });
+      
+      currentEntityIds.add(entity.id);
+      const lastPos = this.positionCache.get(entity.id);
+      
+      // Solo actualizar si la posición cambió significativamente
+      if (!lastPos || 
+          Math.abs(lastPos.x - entity.position.x) > 1 || 
+          Math.abs(lastPos.y - entity.position.y) > 1) {
+        this.updateEntityPosition(entity.id, entity.position, "agent");
       }
-      this.entityTypes.set(entity.id, "agent");
+    }
+
+    // Procesar animales
+    for (const [animalId, animal] of animals) {
+      if (animal.isDead || !animal.position) continue;
+      
+      currentAnimalIds.add(animalId);
+      const lastPos = this.positionCache.get(animalId);
+      
+      if (!lastPos || 
+          Math.abs(lastPos.x - animal.position.x) > 1 || 
+          Math.abs(lastPos.y - animal.position.y) > 1) {
+        this.updateEntityPosition(animalId, animal.position, "animal");
+      }
+    }
+
+    // Remover entidades que ya no existen
+    for (const id of this.lastEntityIds) {
+      if (!currentEntityIds.has(id)) {
+        this.removeEntity(id);
+      }
+    }
+
+    for (const id of this.lastAnimalIds) {
+      if (!currentAnimalIds.has(id)) {
+        this.removeEntity(id);
+      }
+    }
+
+    this.lastEntityIds = currentEntityIds;
+    this.lastAnimalIds = currentAnimalIds;
+    this.dirty = false;
+  }
+
+  /**
+   * Actualiza posiciones de entidades que se movieron (sin marcar dirty)
+   */
+  private updateMovedPositions(
+    entities: SimulationEntity[],
+    animals: Map<string, Animal>,
+  ): void {
+    for (const entity of entities) {
+      if (entity.isDead || !entity.position) continue;
+      
+      const cached = this.positionCache.get(entity.id);
+      if (cached && (
+          Math.abs(cached.x - entity.position.x) > 1 || 
+          Math.abs(cached.y - entity.position.y) > 1)) {
+        this.updateEntityPosition(entity.id, entity.position, "agent");
+      }
     }
 
     for (const [animalId, animal] of animals) {
       if (animal.isDead || !animal.position) continue;
-      this.grid.insert(animalId, animal.position);
-      // Optimizado: reusar objeto de posición existente o crear solo si es necesario
-      const existing = this.entityPositions.get(animalId);
-      if (existing) {
-        existing.x = animal.position.x;
-        existing.y = animal.position.y;
-      } else {
-        this.entityPositions.set(animalId, {
-          x: animal.position.x,
-          y: animal.position.y,
-        });
+      
+      const cached = this.positionCache.get(animalId);
+      if (cached && (
+          Math.abs(cached.x - animal.position.x) > 1 || 
+          Math.abs(cached.y - animal.position.y) > 1)) {
+        this.updateEntityPosition(animalId, animal.position, "animal");
       }
-      this.entityTypes.set(animalId, "animal");
+    }
+  }
+
+  private updateEntityPosition(
+    id: string,
+    position: { x: number; y: number },
+    type: EntityType,
+  ): void {
+    this.grid.insert(id, position);
+    
+    // Actualizar o crear posición cacheada
+    let cached = this.entityPositions.get(id);
+    if (cached) {
+      cached.x = position.x;
+      cached.y = position.y;
+    } else {
+      cached = this.acquirePosition();
+      cached.x = position.x;
+      cached.y = position.y;
+      this.entityPositions.set(id, cached);
     }
 
-    this.dirty = false;
+    // Actualizar caché de posición para detección de movimiento
+    let posCache = this.positionCache.get(id);
+    if (posCache) {
+      posCache.x = position.x;
+      posCache.y = position.y;
+    } else {
+      this.positionCache.set(id, { x: position.x, y: position.y });
+    }
+
+    this.entityTypes.set(id, type);
+  }
+
+  private removeEntity(id: string): void {
+    this.grid.remove(id);
+    const pos = this.entityPositions.get(id);
+    if (pos) {
+      this.releasePosition(pos);
+      this.entityPositions.delete(id);
+    }
+    this.positionCache.delete(id);
+    this.entityTypes.delete(id);
   }
 
   public queryRadius(
