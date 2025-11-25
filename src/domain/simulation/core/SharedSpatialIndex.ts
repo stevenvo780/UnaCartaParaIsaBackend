@@ -52,12 +52,19 @@ export class SharedSpatialIndex {
     }
   }
 
+  /**
+   * Marks the index as dirty, forcing a full rebuild on next rebuildIfNeeded call.
+   */
   public markDirty(): void {
     this.dirty = true;
   }
 
   /**
-   * OPTIMIZADO: Actualización incremental - solo procesa cambios
+   * Rebuilds the spatial index if dirty, otherwise updates only moved positions.
+   * Optimized: incremental update - only processes changes.
+   *
+   * @param entities - List of simulation entities to index
+   * @param animals - Map of animals to index
    */
   public rebuildIfNeeded(
     entities: SimulationEntity[],
@@ -189,6 +196,14 @@ export class SharedSpatialIndex {
     this.entityTypes.delete(id);
   }
 
+  /**
+   * Queries entities within a radius of a position.
+   *
+   * @param position - Center position for the query
+   * @param radius - Query radius in world units
+   * @param filter - Optional entity type filter ("agent", "animal", or "all")
+   * @returns Array of results with entity ID, distance, and type
+   */
   public queryRadius(
     position: { x: number; y: number },
     radius: number,
@@ -216,14 +231,33 @@ export class SharedSpatialIndex {
       }));
   }
 
+  /**
+   * Gets the cached position of an entity.
+   *
+   * @param entityId - Entity identifier
+   * @returns Position or undefined if not found
+   */
   public getPosition(entityId: string): { x: number; y: number } | undefined {
     return this.entityPositions.get(entityId);
   }
 
+  /**
+   * Gets the type of an entity.
+   *
+   * @param entityId - Entity identifier
+   * @returns Entity type or undefined if not found
+   */
   public getType(entityId: string): EntityType | undefined {
     return this.entityTypes.get(entityId);
   }
 
+  /**
+   * Updates an entity's position in the index.
+   *
+   * @param entityId - Entity identifier
+   * @param position - New position
+   * @param type - Entity type (defaults to "agent")
+   */
   public updatePosition(
     entityId: string,
     position: { x: number; y: number },
@@ -234,12 +268,20 @@ export class SharedSpatialIndex {
     this.entityTypes.set(entityId, type);
   }
 
+  /**
+   * Removes an entity from the index.
+   *
+   * @param entityId - Entity identifier to remove
+   */
   public remove(entityId: string): void {
     this.grid.remove(entityId);
     this.entityPositions.delete(entityId);
     this.entityTypes.delete(entityId);
   }
 
+  /**
+   * Clears the entire index.
+   */
   public clear(): void {
     this.grid.clear();
     this.entityPositions.clear();
@@ -247,6 +289,11 @@ export class SharedSpatialIndex {
     this.dirty = true;
   }
 
+  /**
+   * Checks if the index is dirty and needs rebuilding.
+   *
+   * @returns True if dirty
+   */
   public isDirty(): boolean {
     return this.dirty;
   }

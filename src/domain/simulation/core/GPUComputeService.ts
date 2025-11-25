@@ -3,8 +3,14 @@ import { logger } from "../../../infrastructure/utils/logger";
 import { injectable } from "inversify";
 
 /**
- * Servicio de abstracción para computación GPU usando TensorFlow.js
- * Proporciona métodos optimizados para operaciones batch en entidades
+ * GPU computation service abstraction using TensorFlow.js.
+ *
+ * Provides optimized batch operations for entity processing.
+ * Automatically falls back to CPU if GPU is unavailable or for small batches.
+ * Tracks performance statistics for monitoring.
+ *
+ * @see NeedsSystem for needs decay batch processing
+ * @see MovementSystem for position update batch processing
  */
 @injectable()
 export class GPUComputeService {
@@ -18,7 +24,8 @@ export class GPUComputeService {
   };
 
   /**
-   * Inicializa TensorFlow.js y detecta disponibilidad de GPU
+   * Initializes TensorFlow.js and detects GPU availability.
+   * Must be called before using any GPU operations.
    */
   async initialize(): Promise<void> {
     if (this.initialized) return;
@@ -45,20 +52,24 @@ export class GPUComputeService {
   }
 
   /**
-   * Verifica si GPU está disponible
+   * Checks if GPU is available for computation.
+   *
+   * @returns True if GPU backend is available
    */
   isGPUAvailable(): boolean {
     return this.gpuAvailable;
   }
 
   /**
-   * Actualiza posiciones de entidades en batch usando GPU
-   * @param positions Array plano [x1, y1, x2, y2, ...] de posiciones actuales
-   * @param targets Array plano [x1, y1, x2, y2, ...] de posiciones objetivo
-   * @param speeds Array de velocidades por entidad
-   * @param fatigue Array de fatiga por entidad (0-100)
-   * @param deltaMs Tiempo transcurrido en milisegundos
-   * @returns Nuevas posiciones y array de booleanos indicando si llegaron al destino
+   * Updates entity positions in batch using GPU acceleration.
+   * Falls back to CPU if GPU unavailable or entity count < 10.
+   *
+   * @param positions - Flat array [x1, y1, x2, y2, ...] of current positions
+   * @param targets - Flat array [x1, y1, x2, y2, ...] of target positions
+   * @param speeds - Array of speeds per entity
+   * @param fatigue - Array of fatigue values per entity (0-100)
+   * @param deltaMs - Elapsed time in milliseconds
+   * @returns New positions and boolean array indicating arrival at destination
    */
   updatePositionsBatch(
     positions: Float32Array,
@@ -135,7 +146,9 @@ export class GPUComputeService {
   }
 
   /**
-   * Fallback CPU para actualización de posiciones
+   * CPU fallback for position updates.
+   *
+   * @internal
    */
   private updatePositionsBatchCPU(
     positions: Float32Array,
@@ -192,13 +205,16 @@ export class GPUComputeService {
   }
 
   /**
-   * Aplica decay a necesidades de entidades en batch
-   * @param needs Array plano [h1, t1, e1, ...] donde cada entidad tiene NEED_COUNT valores
-   * @param decayRates Array de tasas de decay por necesidad [rate0, rate1, ...]
-   * @param ageMultipliers Multiplicadores por edad [mult0, mult1, ...]
-   * @param divineModifiers Multiplicadores divinos [mod0, mod1, ...]
-   * @param needCount Número de necesidades por entidad
-   * @param deltaSeconds Tiempo transcurrido en segundos
+   * Applies decay to entity needs in batch using GPU acceleration.
+   * Falls back to CPU if GPU unavailable or entity count < 10.
+   *
+   * @param needs - Flat array [h1, t1, e1, ...] where each entity has needCount values
+   * @param decayRates - Array of decay rates per need [rate0, rate1, ...]
+   * @param ageMultipliers - Age multipliers [mult0, mult1, ...]
+   * @param divineModifiers - Divine favor modifiers [mod0, mod1, ...]
+   * @param needCount - Number of needs per entity
+   * @param deltaSeconds - Elapsed time in seconds
+   * @returns Updated needs array
    */
   applyNeedsDecayBatch(
     needs: Float32Array,
