@@ -1688,6 +1688,11 @@ export class SimulationRunner {
         if (aiState) {
           return {
             ...agent,
+            currentGoal: aiState.currentGoal,
+            goalQueue: aiState.goalQueue,
+            currentAction: aiState.currentAction,
+            offDuty: aiState.offDuty,
+            lastDecisionTime: aiState.lastDecisionTime,
             ai: {
               currentGoal: aiState.currentGoal,
               goalQueue: aiState.goalQueue,
@@ -1741,6 +1746,11 @@ export class SimulationRunner {
         if (aiState) {
           return {
             ...agent,
+            currentGoal: aiState.currentGoal,
+            goalQueue: aiState.goalQueue,
+            currentAction: aiState.currentAction,
+            offDuty: aiState.offDuty,
+            lastDecisionTime: aiState.lastDecisionTime,
             ai: {
               currentGoal: aiState.currentGoal,
               goalQueue: aiState.goalQueue,
@@ -1922,9 +1932,13 @@ export class SimulationRunner {
   }
 
   private processCommands(): void {
+    if (this.commands.length > 0) {
+      logger.info(`🎯 Processing ${this.commands.length} command(s)`);
+    }
     while (this.commands.length > 0) {
       const command = this.commands.shift();
       if (!command) break;
+      logger.info(`📝 Processing command: ${command.type}`, command);
       switch (command.type) {
         case "SET_TIME_SCALE":
           this.timeScale = Math.max(0.1, Math.min(10, command.multiplier));
@@ -1952,6 +1966,7 @@ export class SimulationRunner {
           }
           break;
         case "SPAWN_AGENT": {
+          logger.info("🔵 SPAWN_AGENT command received", command.payload);
           const spawnPayload = (command.payload ??
             {}) as SpawnAgentCommandPayload;
 
@@ -1967,7 +1982,11 @@ export class SimulationRunner {
             agentPayload.id = spawnPayload.requestId;
           }
 
-          this.lifeCycleSystem.spawnAgent(agentPayload);
+          logger.info("🟢 Spawning agent with payload:", agentPayload);
+          const newAgent = this.lifeCycleSystem.spawnAgent(agentPayload);
+          logger.info(`✅ Agent spawned successfully: ${newAgent.id}`, {
+            totalAgents: this.state.agents.length,
+          });
           break;
         }
         case "KILL_AGENT":

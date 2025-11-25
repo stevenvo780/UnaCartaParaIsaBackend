@@ -174,13 +174,17 @@ simulationWss.on("connection", (ws: WebSocket) => {
         return;
       }
 
+      logger.info(`📨 Received command from client: ${command.type}`, command);
       const accepted = simulationRunner.enqueueCommand(
         command as SimulationCommand,
       );
       if (!accepted) {
+        logger.warn(`⚠️ Command rejected (queue full): ${command.type}`);
         ws.send(
           encodeMsgPack({ type: "ERROR", message: "Command queue full" }),
         );
+      } else {
+        logger.info(`✅ Command enqueued successfully: ${command.type}`);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
