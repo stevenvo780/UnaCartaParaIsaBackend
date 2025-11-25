@@ -55,6 +55,7 @@ import { AppearanceGenerationSystem } from "../systems/AppearanceGenerationSyste
 import { GPUComputeService } from "./GPUComputeService";
 import { mapEventName } from "./eventNameMapper";
 import { MultiRateScheduler } from "./MultiRateScheduler";
+import { performanceMonitor } from "./PerformanceMonitor";
 import { DeltaEncoder, type DeltaSnapshot } from "./DeltaEncoder";
 import type {
   SimulationCommand,
@@ -391,6 +392,8 @@ export class SimulationRunner {
         this.tickCounter += 1;
         const snapshot = this.getTickSnapshot();
         this.emitter.emit("tick", snapshot);
+
+        performanceMonitor.setSchedulerStats(this.scheduler.getStats());
       },
       getEntityCount: () => {
         return (
@@ -1873,6 +1876,19 @@ export class SimulationRunner {
             amount: command.amount,
           });
           break;
+        case "GIVE_RESOURCE":
+          if (
+            command.payload.agentId &&
+            command.payload.resource &&
+            command.payload.amount
+          ) {
+            this.inventorySystem.addResource(
+              command.payload.agentId,
+              command.payload.resource,
+              command.payload.amount,
+            );
+          }
+          break;
         case "SPAWN_AGENT":
           this.lifeCycleSystem.spawnAgent(
             command.payload as Partial<
@@ -2285,14 +2301,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                  resources?: {
-                    wood?: number;
-                    stone?: number;
-                    food?: number;
-                    water?: number;
-                  };
-                  minWorkers?: number;
-                }
+                resources?: {
+                  wood?: number;
+                  stone?: number;
+                  food?: number;
+                  water?: number;
+                };
+                minWorkers?: number;
+              }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,
@@ -2334,12 +2350,12 @@ export class SimulationRunner {
       ) {
         this.timeSystem.setWeather(
           weatherType as
-            | "clear"
-            | "cloudy"
-            | "rainy"
-            | "stormy"
-            | "foggy"
-            | "snowy",
+          | "clear"
+          | "cloudy"
+          | "rainy"
+          | "stormy"
+          | "foggy"
+          | "snowy",
         );
         logger.info(`Weather set to ${weatherType} via TIME_COMMAND`);
       } else {
@@ -2375,14 +2391,33 @@ export class SimulationRunner {
     }
   }
 
+  /**
+   * Ensures an agent has a movement state initialized.
+   * If not, attempts to initialize it from the agent's current position.
+   *
+   * @param agentId - The agent ID to check
+   * @returns true if movement state exists or was successfully created
+   */
   private ensureMovementState(agentId: string): boolean {
     if (this.movementSystem.hasMovementState(agentId)) {
       return true;
     }
 
     const agent = this.entityIndex.getAgent(agentId);
-    if (!agent || !agent.position) {
+    if (!agent) {
+      logger.warn(`ensureMovementState: Agent ${agentId} not found`);
       return false;
+    }
+
+    if (!agent.position) {
+      // Assign default position near world center if missing
+      agent.position = {
+        x: (this.state.worldSize?.width ?? 128) * 16,
+        y: (this.state.worldSize?.height ?? 128) * 16,
+      };
+      logger.warn(
+        `ensureMovementState: Agent ${agentId} had no position, assigned default`
+      );
     }
 
     this.movementSystem.initializeEntityMovement(agentId, agent.position);

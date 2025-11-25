@@ -1,5 +1,7 @@
+import { performance } from "node:perf_hooks";
 import { logger } from "../../../infrastructure/utils/logger";
 import { updateFrameTime } from "../../../shared/FrameTime";
+import { performanceMonitor } from "./PerformanceMonitor";
 
 /**
  * Tick rate configuration for multi-rate scheduling.
@@ -21,6 +23,21 @@ export const DEFAULT_TICK_RATES: TickRates = {
 };
 
 export type TickRate = "FAST" | "MEDIUM" | "SLOW";
+
+export interface SchedulerStatsSnapshot {
+  fast: {
+    count: number;
+    totalMs: number;
+    avgMs: number;
+    skipped: number;
+    systems: number;
+    enabled: number;
+  };
+  medium: SchedulerStatsSnapshot["fast"];
+  slow: SchedulerStatsSnapshot["fast"];
+  isRunning: boolean;
+  entityCount: number;
+}
 
 /**
  * Configuration for a system registered in the multi-rate scheduler.
@@ -232,6 +249,7 @@ export class MultiRateScheduler {
      * Performance threshold: warn only for ticks >120ms.
      * Lower thresholds (e.g., 80ms) are too aggressive with 1000+ entities.
      */
+    performanceMonitor.recordTick("FAST", elapsed);
     if (elapsed > 120) {
       logger.warn(
         `⚠️ FAST tick took ${elapsed.toFixed(2)}ms (>120ms threshold)`,
@@ -263,6 +281,7 @@ export class MultiRateScheduler {
     this.stats.medium.avgMs =
       this.stats.medium.totalMs / this.stats.medium.count;
 
+    performanceMonitor.recordTick("MEDIUM", elapsed);
     if (elapsed > 400) {
       logger.warn(
         `⚠️ MEDIUM tick took ${elapsed.toFixed(2)}ms (>400ms threshold)`,
@@ -293,6 +312,7 @@ export class MultiRateScheduler {
     this.stats.slow.totalMs += elapsed;
     this.stats.slow.avgMs = this.stats.slow.totalMs / this.stats.slow.count;
 
+    performanceMonitor.recordTick("SLOW", elapsed);
     if (elapsed > 800) {
       logger.warn(
         `⚠️ SLOW tick took ${elapsed.toFixed(2)}ms (>800ms threshold)`,
@@ -321,10 +341,17 @@ export class MultiRateScheduler {
       }
 
       try {
+        const start = performance.now();
         const result = system.update(deltaMs);
         if (result instanceof Promise) {
           await result;
         }
+        const duration = performance.now() - start;
+        performanceMonitor.recordSystemExecution(
+          system.rate,
+          system.name,
+          duration,
+        );
       } catch (error) {
         logger.error(`Error updating system "${system.name}":`, error);
       }
@@ -336,34 +363,7 @@ export class MultiRateScheduler {
    *
    * @returns Statistics including tick counts, average times, and system counts
    */
-  public getStats(): {
-    fast: {
-      count: number;
-      totalMs: number;
-      avgMs: number;
-      skipped: number;
-      systems: number;
-      enabled: number;
-    };
-    medium: {
-      count: number;
-      totalMs: number;
-      avgMs: number;
-      skipped: number;
-      systems: number;
-      enabled: number;
-    };
-    slow: {
-      count: number;
-      totalMs: number;
-      avgMs: number;
-      skipped: number;
-      systems: number;
-      enabled: number;
-    };
-    isRunning: boolean;
-    entityCount: number;
-  } {
+  public getStats(): SchedulerStatsSnapshot {
     return {
       fast: {
         ...this.stats.fast,

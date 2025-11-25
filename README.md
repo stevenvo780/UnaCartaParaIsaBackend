@@ -50,28 +50,16 @@ VITE_SAVE_API_URL=http://localhost:3001
 GET /health
 ```
 
+### Métricas en tiempo real
+
+| Endpoint              | Descripción                                                   |
+| --------------------- | ------------------------------------------------------------- |
+| `GET /metrics`        | Formato Prometheus 0.0.4 listo para ser scrapeado             |
+| `GET /metrics/runtime`| Snapshot JSON con promedios, máximos y memoria del proceso   |
+
 ### Listar guardados
 ```
 GET /api/saves
-```
-
-Response:
-```json
-{
-  "saves": [
-    {
-      "id": "save_1234567890",
-      "timestamp": 1234567890,
-      "gameTime": 5000,
-      "stats": {
-        "playtime": 5000,
-        "daysPassed": 0
-      },
-      "size": 12345,
-      "modified": "2025-11-22T10:00:00.000Z"
-    }
-  ]
-}
 ```
 
 ### Obtener un guardado
@@ -83,29 +71,30 @@ GET /api/saves/:id
 ```
 POST /api/saves
 Content-Type: application/json
-
-{
-  "version": "1.0.0",
-  "timestamp": 1234567890,
-  "gameTime": 5000,
-  ...
-}
-```
-
-Response:
-```json
-{
-  "success": true,
-  "saveId": "save_1234567890",
-  "size": 12345,
-  "timestamp": 1234567890
-}
 ```
 
 ### Eliminar guardado
 ```
 DELETE /api/saves/:id
 ```
+
+## 📈 Monitoreo en tiempo real
+
+Se añadió un monitor interno que agrega métricas por _tick rate_, sistema y memoria sin afectar el rendimiento.  
+Las métricas se exponen vía `/metrics` (Prometheus) y `/metrics/runtime` (JSON).
+
+### Stack Docker (backend + Prometheus + Grafana)
+
+```bash
+docker compose -f docker-compose.monitoring.yml up
+```
+
+- El contenedor `backend` levanta el servidor en `http://localhost:8080`.
+- Prometheus (http://localhost:9090) scrapea `/metrics` cada 5 s.
+- Grafana queda disponible en http://localhost:3001 (usuario/password `admin`).
+- Se aprovisiona automáticamente un data source de Prometheus y el dashboard `Simulation Runtime Overview`.
+
+> Nota: el primer arranque instala dependencias dentro del contenedor `backend`. Para producción se recomienda construir la imagen oficial y apuntar Prometheus al dominio correspondiente.
 
 ## 📁 Estructura de Archivos
 

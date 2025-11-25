@@ -7,6 +7,7 @@ import cors from "cors";
 import saveRoutes from "./routes/saveRoutes.js";
 import worldRoutes from "./routes/worldRoutes.js";
 import simulationRoutes from "./routes/simulationRoutes.js";
+import metricsRoutes from "./routes/metricsRoutes.js";
 import { logger } from "../infrastructure/utils/logger.js";
 
 /**
@@ -44,6 +45,7 @@ if (process.env.NODE_ENV !== "production") {
 app.use("/", saveRoutes);
 app.use("/", worldRoutes);
 app.use("/", simulationRoutes);
+app.use("/", metricsRoutes);
 
 app.use(
   (err: Error, _req: Request, res: Response, _next: NextFunction): void => {
