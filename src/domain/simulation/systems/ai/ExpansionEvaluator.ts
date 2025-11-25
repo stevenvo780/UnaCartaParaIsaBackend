@@ -47,6 +47,10 @@ export function evaluateExpansionGoals(
   const mapHeight = ctx.gameState.worldSize?.height || 2000;
   const pos = ctx.getEntityPosition(aiState.entityId);
 
+  import { RandomUtils } from "../../../../shared/utils/RandomUtils";
+
+  // ...
+
   if (pos) {
     // Encourage moving away from center if crowded?
     // Or just random expansion
@@ -56,8 +60,8 @@ export function evaluateExpansionGoals(
       priority: 0.3 + aiState.personality.curiosity * 0.3,
       data: {
         explorationType: "territory_expansion",
-        targetRegionX: Math.random() * mapWidth,
-        targetRegionY: Math.random() * mapHeight,
+        targetRegionX: RandomUtils.floatRange(0, mapWidth),
+        targetRegionY: RandomUtils.floatRange(0, mapHeight),
       },
       createdAt: now,
       expiresAt: now + 15000,

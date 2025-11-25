@@ -708,6 +708,29 @@ export class NeedsSystem extends EventEmitter {
   }
 
   /**
+   * Initializes needs for a new entity (alias for initializeEntityNeeds).
+   *
+   * @param entityId - Entity identifier
+   */
+  public initializeNeeds(entityId: string): void {
+    this.initializeEntityNeeds(entityId);
+  }
+
+  /**
+   * Checks if an entity has any critical needs.
+   *
+   * @param entityId - Entity identifier
+   * @returns True if any need is below criticalThreshold
+   */
+  public hasCriticalNeeds(entityId: string): boolean {
+    const needs = this.getNeeds(entityId);
+    if (!needs) return false;
+
+    const threshold = this.config.criticalThreshold;
+    return Object.values(needs).some((value) => value < threshold);
+  }
+
+  /**
    * Initializes needs for an entity with default values (all at 100).
    *
    * @param entityId - Entity identifier

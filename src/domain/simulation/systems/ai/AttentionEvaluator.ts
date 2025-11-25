@@ -31,11 +31,16 @@ export function evaluateAttention(
     .filter(({ d }) => d > 50 && d < ATTENTION_RADIUS)
     .sort((a, b) => a.d - b.d);
 
+  import { RandomUtils } from "../../../../shared/utils/RandomUtils";
+
+  // ...
+
   if (nearby.length === 0) return [];
 
   const curiosityBoost = 0.7 + aiState.personality.openness * 0.6;
 
-  const pick = nearby[Math.floor(Math.random() * Math.min(8, nearby.length))];
+  const pick = RandomUtils.element(nearby);
+  if (!pick) return [];
 
   return [
     {

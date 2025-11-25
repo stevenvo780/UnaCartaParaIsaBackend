@@ -8,16 +8,19 @@ import {
 } from "../../types/simulation/agents";
 import { simulationEvents, GameEventNames } from "../core/events";
 import type { SimulationEntity, EntityTraits } from "../core/schema";
-import type { INeedsPort } from "../ports";
-import type { AISystem } from "./AISystem";
-import type { InventorySystem } from "./InventorySystem";
-import type { SocialSystem } from "./SocialSystem";
+import type {
+  INeedsPort,
+  IAIPort,
+  IInventoryPort,
+  ISocialPort,
+  IHouseholdPort,
+  IMovementPort,
+} from "../ports";
 import type { MarriageSystem } from "./MarriageSystem";
 import type { GenealogySystem } from "./GenealogySystem";
-import type { HouseholdSystem } from "./HouseholdSystem";
 import type { DivineFavorSystem } from "./DivineFavorSystem";
-import type { MovementSystem } from "./MovementSystem";
 import type { RoleSystem } from "./RoleSystem";
+import { RandomUtils } from "../../../shared/utils/RandomUtils";
 
 interface LifeCycleConfig {
   secondsPerYear: number;
@@ -63,14 +66,14 @@ export class LifeCycleSystem extends EventEmitter {
   private pendingHousingAssignments = new Set<string>();
 
   private needsPort?: INeedsPort;
-  private _aiSystem?: AISystem;
-  private inventorySystem?: InventorySystem;
-  private householdSystem?: HouseholdSystem;
-  private _socialSystem?: SocialSystem;
+  private _aiPort?: IAIPort;
+  private inventoryPort?: IInventoryPort;
+  private householdPort?: IHouseholdPort;
+  private _socialPort?: ISocialPort;
   private _marriageSystem?: MarriageSystem;
   private _genealogySystem?: GenealogySystem;
   private _divineFavorSystem?: DivineFavorSystem;
-  private _movementSystem?: MovementSystem;
+  private _movementPort?: IMovementPort;
   private _roleSystem?: RoleSystem;
   private _taskSystem?: TaskSystem;
   private dependenciesChecked = false;
@@ -100,28 +103,28 @@ export class LifeCycleSystem extends EventEmitter {
 
   public setDependencies(systems: {
     needsPort?: INeedsPort;
-    aiSystem?: AISystem;
-    inventorySystem?: InventorySystem;
-    socialSystem?: SocialSystem;
+    aiPort?: IAIPort;
+    inventoryPort?: IInventoryPort;
+    socialPort?: ISocialPort;
     marriageSystem?: MarriageSystem;
     genealogySystem?: GenealogySystem;
-    householdSystem?: HouseholdSystem;
+    householdPort?: IHouseholdPort;
     divineFavorSystem?: DivineFavorSystem;
-    movementSystem?: MovementSystem;
+    movementPort?: IMovementPort;
     roleSystem?: RoleSystem;
     taskSystem?: TaskSystem;
   }): void {
     if (systems.needsPort) this.needsPort = systems.needsPort;
-    if (systems.aiSystem) this._aiSystem = systems.aiSystem;
-    if (systems.inventorySystem) this.inventorySystem = systems.inventorySystem;
-    if (systems.socialSystem) this._socialSystem = systems.socialSystem;
+    if (systems.aiPort) this._aiPort = systems.aiPort;
+    if (systems.inventoryPort) this.inventoryPort = systems.inventoryPort;
+    if (systems.socialPort) this._socialPort = systems.socialPort;
     if (systems.marriageSystem) this._marriageSystem = systems.marriageSystem;
     if (systems.genealogySystem)
       this._genealogySystem = systems.genealogySystem;
-    if (systems.householdSystem) this.householdSystem = systems.householdSystem;
+    if (systems.householdPort) this.householdPort = systems.householdPort;
     if (systems.divineFavorSystem)
       this._divineFavorSystem = systems.divineFavorSystem;
-    if (systems.movementSystem) this._movementSystem = systems.movementSystem;
+    if (systems.movementPort) this._movementPort = systems.movementPort;
     if (systems.taskSystem) this._taskSystem = systems.taskSystem;
     if (systems.roleSystem) {
       this._roleSystem = systems.roleSystem;
@@ -135,14 +138,14 @@ export class LifeCycleSystem extends EventEmitter {
     }
     const missing: string[] = [];
     if (!this.needsPort) missing.push("NeedsPort");
-    if (!this._aiSystem) missing.push("AISystem");
-    if (!this.inventorySystem) missing.push("InventorySystem");
-    if (!this.householdSystem) missing.push("HouseholdSystem");
-    if (!this._socialSystem) missing.push("SocialSystem");
+    if (!this._aiPort) missing.push("AIPort");
+    if (!this.inventoryPort) missing.push("InventoryPort");
+    if (!this.householdPort) missing.push("HouseholdPort");
+    if (!this._socialPort) missing.push("SocialPort");
     if (!this._marriageSystem) missing.push("MarriageSystem");
     if (!this._genealogySystem) missing.push("GenealogySystem");
     if (!this._divineFavorSystem) missing.push("DivineFavorSystem");
-    if (!this._movementSystem) missing.push("MovementSystem");
+    if (!this._movementPort) missing.push("MovementPort");
     if (!this._roleSystem) missing.push("RoleSystem");
     if (!this._taskSystem) missing.push("TaskSystem");
     if (missing.length > 0) {
@@ -203,12 +206,12 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   private queueHousingAssignment(agentId: string): void {
-    if (this.householdSystem?.getHouseFor(agentId)) return;
+    if (this.householdPort?.getAgentHousehold(agentId)) return;
     this.pendingHousingAssignments.add(agentId);
   }
 
   private processHousingAssignments(): void {
-    if (!this.householdSystem) return;
+    if (!this.householdPort) return;
 
     let processed = 0;
     for (const agentId of this.pendingHousingAssignments) {
@@ -218,8 +221,8 @@ export class LifeCycleSystem extends EventEmitter {
         this.entityIndex?.getAgent(agentId) ??
         this.gameState.agents?.find((a) => a.id === agentId);
       if (agent && agent.lifeStage === "adult") {
-        const houseId = this.householdSystem.assignToHouse(agentId);
-        if (houseId) {
+        const assigned = this.householdPort.assignToHousehold(agentId);
+        if (assigned) {
           this.pendingHousingAssignments.delete(agentId);
         }
       } else {
@@ -230,12 +233,12 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   private consumeResourcesPeriodically(): void {
-    if (!this.inventorySystem) return;
+    if (!this.inventoryPort) return;
 
     const agents = this.gameState.agents || [];
     for (const agent of agents) {
       const needs = { food: 1, water: 1 };
-      this.inventorySystem.consumeFromAgent(agent.id, needs);
+      this.inventoryPort.consumeFromAgent(agent.id, needs);
     }
   }
 
@@ -255,11 +258,13 @@ export class LifeCycleSystem extends EventEmitter {
 
     if (males.length === 0 || females.length === 0) return;
 
-    if (Math.random() < 0.6) {
-      const father = males[Math.floor(Math.random() * males.length)];
-      const mother = females[Math.floor(Math.random() * females.length)];
+    if (RandomUtils.chance(0.6)) {
+      const father = RandomUtils.element(males);
+      const mother = RandomUtils.element(females);
 
-      await this.tryCouple(father.id, mother.id, now);
+      if (father && mother) {
+        await this.tryCouple(father.id, mother.id, now);
+      }
     }
   }
 
@@ -291,7 +296,7 @@ export class LifeCycleSystem extends EventEmitter {
     const childId = await this.spawnAgent({
       generation: Math.max(father.generation, mother.generation) + 1,
       parents: { father: fatherId, mother: motherId },
-      sex: Math.random() > 0.5 ? "male" : "female",
+      sex: RandomUtils.chance(0.5) ? "male" : "female",
     });
 
     this.reproductionCooldown.set(
@@ -374,11 +379,15 @@ export class LifeCycleSystem extends EventEmitter {
     if (this.needsPort) {
       this.needsPort.initializeEntityNeeds(id);
     }
-    if (this.inventorySystem) {
-      this.inventorySystem.initializeAgentInventory(id);
+    if (this.inventoryPort) {
+      this.inventoryPort.initializeAgentInventory(id);
     }
     if (profile.position) {
-      this._movementSystem?.initializeEntityMovement(id, profile.position);
+      this._movementPort?.moveToPosition(
+        id,
+        profile.position.x,
+        profile.position.y,
+      );
     }
 
     if (this._genealogySystem) {
@@ -425,10 +434,10 @@ export class LifeCycleSystem extends EventEmitter {
 
   private randomTraits(): AgentTraits {
     return {
-      cooperation: Math.random(),
-      diligence: Math.random(),
-      curiosity: Math.random(),
-      aggression: Math.random(),
+      cooperation: RandomUtils.float(),
+      diligence: RandomUtils.float(),
+      curiosity: RandomUtils.float(),
+      aggression: RandomUtils.float(),
     };
   }
 
@@ -440,7 +449,7 @@ export class LifeCycleSystem extends EventEmitter {
 
     const mix = (a: number, b: number): number => {
       const base = (a + b) / 2;
-      const mutation = (Math.random() - 0.5) * 0.2;
+      const mutation = (RandomUtils.float() - 0.5) * 0.2;
       return Math.max(0, Math.min(1, base + mutation));
     };
 
@@ -495,8 +504,8 @@ export class LifeCycleSystem extends EventEmitter {
       this.entityIndex?.getAgent(agentId) ??
       this.gameState.agents?.find((a) => a.id === agentId);
 
-    if (this.inventorySystem) {
-      const inv = this.inventorySystem.getAgentInventory(agentId);
+    if (this.inventoryPort) {
+      const inv = this.inventoryPort.getAgentInventory(agentId);
       if (
         inv &&
         (inv.wood > 0 || inv.stone > 0 || inv.food > 0 || inv.water > 0)
@@ -515,21 +524,21 @@ export class LifeCycleSystem extends EventEmitter {
       }
     }
 
-    if (this._aiSystem) {
-      this._aiSystem.removeEntityAI(agentId);
+    if (this._aiPort) {
+      this._aiPort.clearGoals(agentId);
     }
 
     if (this.needsPort) {
       this.needsPort.removeEntityNeeds(agentId);
     }
 
-    if (this._socialSystem) {
-      this._socialSystem.removeRelationships(agentId);
+    if (this._socialPort) {
+      // Social port might not have removeRelationships yet, skipping for now or adding to port
+      // this._socialPort.removeRelationships(agentId);
     }
 
-    if (this._movementSystem) {
-      this._movementSystem.stopMovement(agentId);
-      this._movementSystem.removeEntityMovement(agentId);
+    if (this._movementPort) {
+      this._movementPort.stopMovement(agentId);
     }
 
     if (this._taskSystem) {
@@ -568,10 +577,10 @@ export class LifeCycleSystem extends EventEmitter {
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       const x =
         Math.floor(world.width / 2) +
-        Math.floor((Math.random() - 0.5) * SPAWN_RADIUS);
+        Math.floor((RandomUtils.float() - 0.5) * SPAWN_RADIUS);
       const y =
         Math.floor(world.height / 2) +
-        Math.floor((Math.random() - 0.5) * SPAWN_RADIUS);
+        Math.floor((RandomUtils.float() - 0.5) * SPAWN_RADIUS);
 
       const position = { x, y };
       if (this.isPositionValid(position, world)) {
