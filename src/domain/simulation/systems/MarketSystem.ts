@@ -16,6 +16,7 @@ const DEFAULT_MARKET_CONFIG: MarketConfig = {
     stone: 6,
     food: 8,
     water: 2,
+    rare_materials: 25,
   },
 };
 

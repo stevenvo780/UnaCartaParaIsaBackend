@@ -259,6 +259,21 @@ export class TaskSystem {
     );
   }
 
+  public removeContributor(taskId: string, agentId: string): void {
+    const task = this.tasks.get(taskId);
+    if (task && task.contributors) {
+      task.contributors.delete(agentId);
+    }
+  }
+
+  public removeAgentFromAllTasks(agentId: string): void {
+    for (const task of this.tasks.values()) {
+      if (task.contributors?.has(agentId)) {
+        task.contributors.delete(agentId);
+      }
+    }
+  }
+
   public getStalledTasks(thresholdMs = 300000): Task[] {
     const now = Date.now();
     return Array.from(this.tasks.values()).filter((task) => {
@@ -282,7 +297,7 @@ export class TaskSystem {
     const avgProgress =
       active.length > 0
         ? active.reduce((sum, t) => sum + t.progress / t.requiredWork, 0) /
-          active.length
+        active.length
         : 0;
 
     return {

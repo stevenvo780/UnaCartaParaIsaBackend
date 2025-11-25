@@ -18,12 +18,14 @@ const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
     stone: 1,
     food: 2,
     water: 3,
+    rare_materials: 0.5,
   },
   salaryRates: {
     wood: 5,
     stone: 8,
     food: 10,
     water: 3,
+    rare_materials: 20,
   },
 };
 

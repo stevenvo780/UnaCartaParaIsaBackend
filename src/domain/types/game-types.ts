@@ -137,6 +137,7 @@ export interface GameResources {
     stone: number;
     food: number;
     water: number;
+    rare_materials: number;
   };
   currency: number;
   experience: number;
