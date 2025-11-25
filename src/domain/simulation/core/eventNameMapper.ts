@@ -41,6 +41,7 @@ export const eventNameMapper: Record<string, string> = {
   MOVEMENT_ARRIVED_AT_ZONE: "movement:arrived:zone",
   MOVEMENT_ACTIVITY_COMPLETED: "movement:activity:completed",
   MOVEMENT_ACTIVITY_STARTED: "movement:activity:started",
+  PATHFINDING_FAILED: "pathfinding:failed",
 
   DIALOGUE_SHOW_CARD: "dialogue:card:show",
   DIALOGUE_CARD_EXPIRED: "dialogue:card:expired",
