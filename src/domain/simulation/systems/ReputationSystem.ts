@@ -123,7 +123,6 @@ export class ReputationSystem {
       }
       this.reputationHistory.set(agentId, history);
 
-      // DEBUG: Log significant reputation changes
       if (Math.abs(delta) >= 0.05) {
         logger.debug(
           `⭐ [REPUTATION] ${agentId}: ${oldValue.toFixed(2)} -> ${r.value.toFixed(2)} (${delta > 0 ? "+" : ""}${delta.toFixed(2)}) - ${reason || "unknown"}`,

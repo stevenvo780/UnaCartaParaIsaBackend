@@ -1,7 +1,6 @@
 import { logger } from "./logger";
 import { createRequire } from "module";
 
-// Crear require para usar en ESM
 const require = createRequire(import.meta.url);
 
 interface GPUInfo {
@@ -19,7 +18,6 @@ interface GPUInfo {
   tf?: unknown; // TensorFlow instance if loaded
 }
 
-// Singleton para TensorFlow cargado
 let cachedTf: unknown = null;
 let tfLoadAttempted = false;
 
@@ -30,7 +28,6 @@ export function getTensorFlow(): unknown {
   if (tfLoadAttempted) return cachedTf;
   tfLoadAttempted = true;
 
-  // Primero intentar GPU
   try {
     cachedTf = require("@tensorflow/tfjs-node-gpu");
     logger.info("✅ TensorFlow.js GPU cargado exitosamente");
@@ -41,7 +38,6 @@ export function getTensorFlow(): unknown {
     });
   }
 
-  // Fallback a CPU
   try {
     cachedTf = require("@tensorflow/tfjs-node");
     logger.info("✅ TensorFlow.js CPU cargado (fallback)");
@@ -79,13 +75,11 @@ export function detectGPUAvailability(): GPUInfo {
     info.backend = backend;
     logger.info(`📦 Backend de TensorFlow: ${backend}`);
 
-    // El backend "tensorflow" significa que está usando GPU en tfjs-node-gpu
     if (backend === "tensorflow") {
       info.usingGPU = true;
       info.available = true;
       info.libraries!.tensorflowGpu = true;
 
-      // Intentar obtener información del dispositivo
       try {
         const backendInstance = tf.backend?.();
         const deviceInfo = backendInstance?.getGpuDeviceInfo?.();
@@ -125,7 +119,6 @@ export function detectGPUAvailability(): GPUInfo {
     });
   }
 
-  // Verificar si hay bibliotecas nativas de CUDA disponibles
   try {
     const { execSync } = require("child_process") as {
       execSync: (
@@ -150,13 +143,10 @@ export function detectGPUAvailability(): GPUInfo {
         });
       }
     } catch (_err) {
-      // nvidia-smi no disponible o error
     }
   } catch (_err2) {
-    // execSync no disponible
   }
 
-  // Resumen final
   if (info.usingGPU) {
     logger.info("✅ GPU está siendo utilizada para cálculos", {
       backend: info.backend,
@@ -164,14 +154,12 @@ export function detectGPUAvailability(): GPUInfo {
       vendor: info.vendor,
     });
   } else if (info.available) {
-    // GPU detectada pero no configurada para TensorFlow
     logger.info("ℹ️ GPU detectada pero TensorFlow usa CPU", {
       deviceName: info.deviceName,
       reason: "CUDA Toolkit 11.x no instalado o incompatible",
       note: "El rendimiento en CPU es suficiente para esta simulación",
     });
   } else {
-    // No hay GPU disponible - esto es normal en muchos sistemas
     logger.debug("ℹ️ Ejecutando en modo CPU (normal)", {
       tensorflowInstalled: info.libraries?.tensorflow ?? false,
       note: "GPU no requerida para esta simulación",
@@ -180,4 +168,3 @@ export function detectGPUAvailability(): GPUInfo {
 
   return info;
 }
-

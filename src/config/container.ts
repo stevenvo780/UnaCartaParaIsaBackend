@@ -229,18 +229,16 @@ container
   .to(AppearanceGenerationSystem)
   .inSingletonScope();
 
-// GPU Compute Service para aceleración de cálculos
 container
   .bind<GPUComputeService>(TYPES.GPUComputeService)
   .to(GPUComputeService)
   .inSingletonScope();
 
-// Índices centralizados para optimización de consultas
 container
   .bind<EntityIndex>(TYPES.EntityIndex)
   .to(EntityIndex)
   .inSingletonScope();
-// SharedSpatialIndex requiere parámetros del GameState, se inicializa en SimulationRunner
+
 container
   .bind<SharedSpatialIndex>(TYPES.SharedSpatialIndex)
   .toDynamicValue(() => {

@@ -1,6 +1,6 @@
 import { vi } from "vitest";
-import type { GameState } from "../src/domain/types/game-types";
-import { createInitialGameState } from "../src/domain/simulation/core/defaultState";
+import type { GameState } from "../src/domain/types/game-types.js";
+import { createInitialGameState } from "../src/domain/simulation/core/defaultState.js";
 
 export function createMockGameState(overrides?: Partial<GameState>): GameState {
   const baseState = createInitialGameState();

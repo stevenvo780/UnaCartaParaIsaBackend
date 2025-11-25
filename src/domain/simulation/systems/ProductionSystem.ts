@@ -52,7 +52,10 @@ export class ProductionSystem {
   }
 
   private setupEventListeners(): void {
-    simulationEvents.on(GameEventNames.AGENT_DEATH, this.handleAgentDeath.bind(this));
+    simulationEvents.on(
+      GameEventNames.AGENT_DEATH,
+      this.handleAgentDeath.bind(this),
+    );
   }
 
   private handleAgentDeath(data: { entityId: string }): void {

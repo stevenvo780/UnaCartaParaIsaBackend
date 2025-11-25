@@ -2,19 +2,19 @@ import { logger } from "../../../infrastructure/utils/logger";
 
 /**
  * Multi-Rate Scheduler para optimizar rendimiento de simulación
- * 
+ *
  * Divide sistemas en 3 frecuencias:
  * - FAST (100ms): Sistemas críticos que requieren alta responsividad
  * - MEDIUM (500ms): Sistemas importantes pero menos sensibles al tiempo
  * - SLOW (1000ms): Sistemas que pueden ejecutarse con baja frecuencia
- * 
+ *
  * Beneficio: Reduce carga CPU de ~50% sin afectar jugabilidad
  */
 
 export interface TickRates {
-  FAST: number;    // 100ms = 10 Hz
-  MEDIUM: number;  // 500ms = 2 Hz
-  SLOW: number;    // 1000ms = 1 Hz
+  FAST: number; // 100ms = 10 Hz
+  MEDIUM: number; // 500ms = 2 Hz
+  SLOW: number; // 1000ms = 1 Hz
 }
 
 export const DEFAULT_TICK_RATES: TickRates = {
@@ -23,13 +23,27 @@ export const DEFAULT_TICK_RATES: TickRates = {
   SLOW: 1000,
 };
 
-export type TickRate = 'FAST' | 'MEDIUM' | 'SLOW';
+export type TickRate = "FAST" | "MEDIUM" | "SLOW";
 
 export interface ScheduledSystem {
   name: string;
   rate: TickRate;
   update: (deltaMs: number) => void | Promise<void>;
   enabled: boolean;
+  /** Umbral mínimo de entidades para ejecutar este sistema */
+  minEntities?: number;
+}
+
+/**
+ * Hooks para sincronización global antes/después de cada tick
+ */
+export interface SchedulerHooks {
+  /** Se ejecuta antes de cada tick (cualquier rate) para sincronizar índices */
+  preTick?: () => void;
+  /** Se ejecuta después de cada tick para flush de eventos */
+  postTick?: () => void;
+  /** Retorna el número actual de entidades para optimización */
+  getEntityCount?: () => number;
 }
 
 export class MultiRateScheduler {
@@ -48,42 +62,57 @@ export class MultiRateScheduler {
   private isRunning = false;
   private tickRates: TickRates;
 
-  // Estadísticas de performance
+  private hooks: SchedulerHooks = {};
+
+  private cachedEntityCount = 0;
+  private lastEntityCountUpdate = 0;
+  private readonly ENTITY_COUNT_CACHE_MS = 500;
+
   private stats = {
-    fast: { count: 0, totalMs: 0, avgMs: 0 },
-    medium: { count: 0, totalMs: 0, avgMs: 0 },
-    slow: { count: 0, totalMs: 0, avgMs: 0 },
+    fast: { count: 0, totalMs: 0, avgMs: 0, skipped: 0 },
+    medium: { count: 0, totalMs: 0, avgMs: 0, skipped: 0 },
+    slow: { count: 0, totalMs: 0, avgMs: 0, skipped: 0 },
   };
 
   constructor(tickRates: TickRates = DEFAULT_TICK_RATES) {
     this.tickRates = tickRates;
   }
 
-  /**
-   * Registra un sistema para ser ejecutado a una frecuencia específica
-   */
+  public setHooks(hooks: SchedulerHooks): void {
+    this.hooks = hooks;
+    logger.info("🔗 Scheduler hooks configured");
+  }
+
   public registerSystem(system: ScheduledSystem): void {
     switch (system.rate) {
-      case 'FAST':
+      case "FAST":
         this.fastSystems.push(system);
         break;
-      case 'MEDIUM':
+      case "MEDIUM":
         this.mediumSystems.push(system);
         break;
-      case 'SLOW':
+      case "SLOW":
         this.slowSystems.push(system);
         break;
     }
 
-    logger.debug(`📋 Registered system "${system.name}" at ${system.rate} rate`);
+    logger.debug(
+      `📋 Registered system "${system.name}" at ${system.rate} rate${system.minEntities ? ` (min: ${system.minEntities} entities)` : ""}`,
+    );
   }
 
-  /**
-   * Inicia todos los loops de tick
-   */
+  private getEntityCount(): number {
+    const now = Date.now();
+    if (now - this.lastEntityCountUpdate > this.ENTITY_COUNT_CACHE_MS) {
+      this.cachedEntityCount = this.hooks.getEntityCount?.() ?? 0;
+      this.lastEntityCountUpdate = now;
+    }
+    return this.cachedEntityCount;
+  }
+
   public start(): void {
     if (this.isRunning) {
-      logger.warn('⚠️ MultiRateScheduler already running');
+      logger.warn("⚠️ MultiRateScheduler already running");
       return;
     }
 
@@ -92,37 +121,31 @@ export class MultiRateScheduler {
     this.lastMediumTick = Date.now();
     this.lastSlowTick = Date.now();
 
-    // FAST loop: Movimiento, combate, trail (10 Hz)
     this.fastHandle = setInterval(() => {
-      this.tickFast().catch(err => {
-        logger.error('Error in FAST tick:', err);
+      this.tickFast().catch((err) => {
+        logger.error("Error in FAST tick:", err);
       });
     }, this.tickRates.FAST);
 
-    // MEDIUM loop: IA, necesidades, social (2 Hz)
     this.mediumHandle = setInterval(() => {
-      this.tickMedium().catch(err => {
-        logger.error('Error in MEDIUM tick:', err);
+      this.tickMedium().catch((err) => {
+        logger.error("Error in MEDIUM tick:", err);
       });
     }, this.tickRates.MEDIUM);
 
-    // SLOW loop: Economía, investigación, otros (1 Hz)
     this.slowHandle = setInterval(() => {
-      this.tickSlow().catch(err => {
-        logger.error('Error in SLOW tick:', err);
+      this.tickSlow().catch((err) => {
+        logger.error("Error in SLOW tick:", err);
       });
     }, this.tickRates.SLOW);
 
-    logger.info('🚀 MultiRateScheduler started', {
+    logger.info("🚀 MultiRateScheduler started", {
       fast: `${this.fastSystems.length} systems @ ${this.tickRates.FAST}ms`,
       medium: `${this.mediumSystems.length} systems @ ${this.tickRates.MEDIUM}ms`,
       slow: `${this.slowSystems.length} systems @ ${this.tickRates.SLOW}ms`,
     });
   }
 
-  /**
-   * Detiene todos los loops
-   */
   public stop(): void {
     if (!this.isRunning) return;
 
@@ -135,12 +158,9 @@ export class MultiRateScheduler {
     this.slowHandle = undefined;
     this.isRunning = false;
 
-    logger.info('🛑 MultiRateScheduler stopped');
+    logger.info("🛑 MultiRateScheduler stopped");
   }
 
-  /**
-   * Tick para sistemas FAST (10 Hz)
-   */
   private async tickFast(): Promise<void> {
     const now = Date.now();
     const delta = now - this.lastFastTick;
@@ -148,7 +168,12 @@ export class MultiRateScheduler {
 
     const startTime = performance.now();
 
-    await this.executeSystems(this.fastSystems, delta);
+    this.hooks.preTick?.();
+
+    const entityCount = this.getEntityCount();
+    await this.executeSystems(this.fastSystems, delta, entityCount);
+
+    this.hooks.postTick?.();
 
     const elapsed = performance.now() - startTime;
     this.stats.fast.count++;
@@ -156,13 +181,12 @@ export class MultiRateScheduler {
     this.stats.fast.avgMs = this.stats.fast.totalMs / this.stats.fast.count;
 
     if (elapsed > 80) {
-      logger.warn(`⚠️ FAST tick took ${elapsed.toFixed(2)}ms (>80ms threshold)`);
+      logger.warn(
+        `⚠️ FAST tick took ${elapsed.toFixed(2)}ms (>80ms threshold)`,
+      );
     }
   }
 
-  /**
-   * Tick para sistemas MEDIUM (2 Hz)
-   */
   private async tickMedium(): Promise<void> {
     const now = Date.now();
     const delta = now - this.lastMediumTick;
@@ -170,21 +194,26 @@ export class MultiRateScheduler {
 
     const startTime = performance.now();
 
-    await this.executeSystems(this.mediumSystems, delta);
+    this.hooks.preTick?.();
+
+    const entityCount = this.getEntityCount();
+    await this.executeSystems(this.mediumSystems, delta, entityCount);
+
+    this.hooks.postTick?.();
 
     const elapsed = performance.now() - startTime;
     this.stats.medium.count++;
     this.stats.medium.totalMs += elapsed;
-    this.stats.medium.avgMs = this.stats.medium.totalMs / this.stats.medium.count;
+    this.stats.medium.avgMs =
+      this.stats.medium.totalMs / this.stats.medium.count;
 
     if (elapsed > 400) {
-      logger.warn(`⚠️ MEDIUM tick took ${elapsed.toFixed(2)}ms (>400ms threshold)`);
+      logger.warn(
+        `⚠️ MEDIUM tick took ${elapsed.toFixed(2)}ms (>400ms threshold)`,
+      );
     }
   }
 
-  /**
-   * Tick para sistemas SLOW (1 Hz)
-   */
   private async tickSlow(): Promise<void> {
     const now = Date.now();
     const delta = now - this.lastSlowTick;
@@ -192,7 +221,12 @@ export class MultiRateScheduler {
 
     const startTime = performance.now();
 
-    await this.executeSystems(this.slowSystems, delta);
+    this.hooks.preTick?.();
+
+    const entityCount = this.getEntityCount();
+    await this.executeSystems(this.slowSystems, delta, entityCount);
+
+    this.hooks.postTick?.();
 
     const elapsed = performance.now() - startTime;
     this.stats.slow.count++;
@@ -200,19 +234,23 @@ export class MultiRateScheduler {
     this.stats.slow.avgMs = this.stats.slow.totalMs / this.stats.slow.count;
 
     if (elapsed > 800) {
-      logger.warn(`⚠️ SLOW tick took ${elapsed.toFixed(2)}ms (>800ms threshold)`);
+      logger.warn(
+        `⚠️ SLOW tick took ${elapsed.toFixed(2)}ms (>800ms threshold)`,
+      );
     }
   }
 
-  /**
-   * Ejecuta lista de sistemas
-   */
   private async executeSystems(
     systems: ScheduledSystem[],
-    deltaMs: number
+    deltaMs: number,
+    entityCount: number,
   ): Promise<void> {
     for (const system of systems) {
       if (!system.enabled) continue;
+
+      if (system.minEntities && entityCount < system.minEntities) {
+        continue;
+      }
 
       try {
         const result = system.update(deltaMs);
@@ -225,33 +263,28 @@ export class MultiRateScheduler {
     }
   }
 
-  /**
-   * Obtiene estadísticas de performance
-   */
   public getStats() {
     return {
       fast: {
         ...this.stats.fast,
         systems: this.fastSystems.length,
-        enabled: this.fastSystems.filter(s => s.enabled).length,
+        enabled: this.fastSystems.filter((s) => s.enabled).length,
       },
       medium: {
         ...this.stats.medium,
         systems: this.mediumSystems.length,
-        enabled: this.mediumSystems.filter(s => s.enabled).length,
+        enabled: this.mediumSystems.filter((s) => s.enabled).length,
       },
       slow: {
         ...this.stats.slow,
         systems: this.slowSystems.length,
-        enabled: this.slowSystems.filter(s => s.enabled).length,
+        enabled: this.slowSystems.filter((s) => s.enabled).length,
       },
       isRunning: this.isRunning,
+      entityCount: this.cachedEntityCount,
     };
   }
 
-  /**
-   * Habilita/deshabilita un sistema por nombre
-   */
   public setSystemEnabled(name: string, enabled: boolean): boolean {
     const allSystems = [
       ...this.fastSystems,
@@ -259,27 +292,30 @@ export class MultiRateScheduler {
       ...this.slowSystems,
     ];
 
-    const system = allSystems.find(s => s.name === name);
+    const system = allSystems.find((s) => s.name === name);
     if (system) {
       system.enabled = enabled;
-      logger.info(`${enabled ? '✅' : '❌'} System "${name}" ${enabled ? 'enabled' : 'disabled'}`);
+      logger.info(
+        `${enabled ? "✅" : "❌"} System "${name}" ${enabled ? "enabled" : "disabled"}`,
+      );
       return true;
     }
 
     return false;
   }
 
-  /**
-   * Obtiene lista de todos los sistemas registrados
-   */
-  public getSystemsList(): Array<{ name: string; rate: TickRate; enabled: boolean }> {
+  public getSystemsList(): Array<{
+    name: string;
+    rate: TickRate;
+    enabled: boolean;
+  }> {
     const allSystems = [
       ...this.fastSystems,
       ...this.mediumSystems,
       ...this.slowSystems,
     ];
 
-    return allSystems.map(s => ({
+    return allSystems.map((s) => ({
       name: s.name,
       rate: s.rate,
       enabled: s.enabled,

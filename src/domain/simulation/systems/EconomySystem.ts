@@ -27,8 +27,9 @@ const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
   },
 };
 
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import type { EntityIndex } from "../core/EntityIndex";
 
 @injectable()
 export class EconomySystem {
@@ -41,18 +42,21 @@ export class EconomySystem {
   private config: EconomyConfig;
   private yieldResiduals = new Map<string, number>();
   private lastUpdate = Date.now();
-  private readonly UPDATE_INTERVAL_MS = 10000; // Update every 10 seconds
+  private readonly UPDATE_INTERVAL_MS = 10000;
   private lastSalaryPayment = 0;
-  private readonly SALARY_INTERVAL_MS = 60000; // Pay salaries every minute
+  private readonly SALARY_INTERVAL_MS = 60000;
+  private entityIndex?: EntityIndex;
 
   constructor(
     @inject(TYPES.GameState) state: GameState,
     @inject(TYPES.InventorySystem) inventorySystem: InventorySystem,
     @inject(TYPES.SocialSystem) socialSystem: SocialSystem,
+    @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
   ) {
     this.state = state;
     this.inventorySystem = inventorySystem;
     this.socialSystem = socialSystem;
+    this.entityIndex = entityIndex;
     this.config = DEFAULT_ECONOMY_CONFIG;
   }
 
@@ -82,9 +86,6 @@ export class EconomySystem {
   }
 
   private cleanupOldResiduals(): void {
-    const _maxAge = 3600000;
-    const _now = Date.now();
-
     if (this.yieldResiduals.size > 100) {
       const entries = Array.from(this.yieldResiduals.entries());
       this.yieldResiduals.clear();
@@ -186,18 +187,15 @@ export class EconomySystem {
       this.state.economy.totalSalariesPaid =
         (this.state.economy.totalSalariesPaid || 0) + totalSalaries;
     }
-
-    // DEBUG: Log salary payments
-    if (totalSalaries > 0) {
-      logger.debug(`💰 [ECONOMY] Salary payments: ${totalSalaries} total to ${this.state.agents.length} agents`);
-    }
   }
 
   public handleWorkAction(agentId: string, zoneId: string): void {
     const zone = this.state.zones.find((z) => z.id === zoneId);
     if (!zone) return;
 
-    const agent = this.state.entities.find((e) => e.id === agentId);
+    const agent =
+      this.entityIndex?.getEntity(agentId) ??
+      this.state.entities.find((e) => e.id === agentId);
     if (!agent) return;
 
     let resourceType: ResourceType | null = null;
@@ -259,7 +257,7 @@ export class EconomySystem {
         "productivity_boost",
       );
       if (productivityMult > 1.0) {
-        teamBonus += (productivityMult - 1.0);
+        teamBonus += productivityMult - 1.0;
       }
     }
 

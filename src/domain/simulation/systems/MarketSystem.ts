@@ -200,7 +200,6 @@ export class MarketSystem {
                 seller.stats.money = sellerMoney + cost;
               }
 
-              // DEBUG: Log auto-trades
               logger.debug(
                 `🔄 [MARKET] Auto-trade: ${seller.id} sold ${removed} ${resource} to ${buyer.id} for ${cost}`,
               );

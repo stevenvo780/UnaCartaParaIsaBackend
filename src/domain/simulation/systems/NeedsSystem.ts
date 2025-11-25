@@ -7,12 +7,11 @@ import type { LifeCycleSystem } from "./LifeCycleSystem";
 import type { DivineFavorSystem } from "./DivineFavorSystem";
 import type { InventorySystem } from "./InventorySystem";
 import type { SocialSystem } from "./SocialSystem";
-import type { AISystem } from "./AISystem";
-import type { MovementSystem } from "./MovementSystem";
 import type { Zone } from "../../types/game-types";
 import { NeedsBatchProcessor } from "./NeedsBatchProcessor";
-import { injectable, inject, unmanaged } from "inversify";
+import { injectable, inject, unmanaged, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import type { EntityIndex } from "../core/EntityIndex";
 
 @injectable()
 export class NeedsSystem extends EventEmitter {
@@ -25,8 +24,6 @@ export class NeedsSystem extends EventEmitter {
   private divineFavorSystem?: DivineFavorSystem;
   private inventorySystem?: InventorySystem;
   private socialSystem?: SocialSystem;
-  private aiSystem?: AISystem;
-  private movementSystem?: MovementSystem;
 
   private respawnQueue = new Map<string, number>();
 
@@ -40,19 +37,23 @@ export class NeedsSystem extends EventEmitter {
    * NeedsSystem procesa 7 necesidades por entidad, así que 20 entidades = 140 operaciones.
    */
   private readonly BATCH_THRESHOLD = 20;
+  private entityIndex?: EntityIndex;
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
     @unmanaged() config?: Partial<NeedsConfig>,
-    @unmanaged() systems?: {
+    @unmanaged()
+    systems?: {
       lifeCycleSystem?: LifeCycleSystem;
       divineFavorSystem?: DivineFavorSystem;
       inventorySystem?: InventorySystem;
       socialSystem?: SocialSystem;
     },
+    @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
   ) {
     super();
     this.gameState = gameState;
+    this.entityIndex = entityIndex;
     this.config = {
       decayRates: {
         hunger: 1.0,
@@ -93,16 +94,12 @@ export class NeedsSystem extends EventEmitter {
     divineFavorSystem?: DivineFavorSystem;
     inventorySystem?: InventorySystem;
     socialSystem?: SocialSystem;
-    aiSystem?: AISystem;
-    movementSystem?: MovementSystem;
   }): void {
     if (systems.lifeCycleSystem) this.lifeCycleSystem = systems.lifeCycleSystem;
     if (systems.divineFavorSystem)
       this.divineFavorSystem = systems.divineFavorSystem;
     if (systems.inventorySystem) this.inventorySystem = systems.inventorySystem;
     if (systems.socialSystem) this.socialSystem = systems.socialSystem;
-    if (systems.aiSystem) this.aiSystem = systems.aiSystem;
-    if (systems.movementSystem) this.movementSystem = systems.movementSystem;
   }
 
   public update(_deltaTimeMs: number): void {
@@ -336,7 +333,9 @@ export class NeedsSystem extends EventEmitter {
 
     // Marcar entidad como muerta en gameState para evitar procesar muerte múltiples veces
     if (this.gameState.entities) {
-      const entity = this.gameState.entities.find((e) => e.id === entityId);
+      const entity =
+        this.entityIndex?.getEntity(entityId) ??
+        this.gameState.entities.find((e) => e.id === entityId);
       if (entity) {
         entity.isDead = true;
       }
@@ -385,7 +384,9 @@ export class NeedsSystem extends EventEmitter {
 
     // Marcar entidad como no muerta si existe
     if (this.gameState.entities) {
-      const entity = this.gameState.entities.find((e) => e.id === entityId);
+      const entity =
+        this.entityIndex?.getEntity(entityId) ??
+        this.gameState.entities.find((e) => e.id === entityId);
       if (entity) {
         entity.isDead = false;
       }
@@ -505,7 +506,9 @@ export class NeedsSystem extends EventEmitter {
   ): void {
     if (!this.socialSystem || !this.gameState.entities) return;
 
-    const entity = this.gameState.entities.find((e) => e.id === entityId);
+    const entity =
+      this.entityIndex?.getEntity(entityId) ??
+      this.gameState.entities.find((e) => e.id === entityId);
     if (!entity?.position) return;
 
     const entityPosition = entity.position;

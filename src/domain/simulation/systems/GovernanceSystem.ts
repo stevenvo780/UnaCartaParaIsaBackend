@@ -150,6 +150,36 @@ export class GovernanceSystem {
       GameEventNames.HOUSEHOLD_NO_FREE_HOUSES,
       this.handleNoHouses,
     );
+
+    simulationEvents.on(
+      GameEventNames.CRISIS_IMMEDIATE_WARNING,
+      (data: {
+        prediction: {
+          type: string;
+          probability: number;
+          severity: number;
+          recommendedActions: string[];
+        };
+        timestamp: number;
+      }) => {
+        const prediction = data.prediction;
+        let demandType: DemandType = "housing_full";
+        if (prediction.type === "resource_shortage") {
+          demandType = "food_shortage";
+        } else if (prediction.type === "population_crisis") {
+          demandType = "housing_full";
+        }
+        this.createDemand(
+          demandType,
+          10, // máxima prioridad
+          `Crisis predicha: ${prediction.type}`,
+          {
+            probability: prediction.probability,
+            severity: prediction.severity,
+          },
+        );
+      },
+    );
   }
 
   public update(_deltaTimeMs: number): void {
@@ -268,7 +298,6 @@ export class GovernanceSystem {
       },
     });
 
-    // DEBUG: Log governance demands
     logger.debug(
       `🏛️ [GOVERNANCE] Demand created: ${type} (priority: ${modifiedPriority}) - ${reason}`,
     );
@@ -308,6 +337,13 @@ export class GovernanceSystem {
       timestamp: demand.resolvedAt,
       type: "demand_resolved",
       details: { demandId: demand.id, action: solution.project },
+    });
+
+    simulationEvents.emit(GameEventNames.GOVERNANCE_ACTION, {
+      demandId: demand.id,
+      action: solution.project,
+      cost: solution.cost,
+      timestamp: Date.now(),
     });
   }
 

@@ -3,7 +3,6 @@ import { SocialConfig } from "../../types/simulation/social";
 import { SpatialGrid } from "../../../utils/SpatialGrid";
 import { SocialGroup } from "../../../shared/types/simulation/agents";
 import { simulationEvents, GameEventNames } from "../core/events";
-import type { SimulationEntity, EntityTraits } from "../core/schema";
 import { logger } from "../../../infrastructure/utils/logger";
 
 import { injectable, inject } from "inversify";
@@ -41,6 +40,42 @@ export class SocialSystem {
       worldHeight,
       this.config.proximityRadius,
     );
+
+    this.setupMarriageListeners();
+  }
+
+  private setupMarriageListeners(): void {
+    // Listener para cuando se acepta un matrimonio
+    simulationEvents.on(
+      GameEventNames.MARRIAGE_ACCEPTED,
+      (data: {
+        proposerId: string;
+        targetId: string;
+        groupId: string;
+        timestamp: number;
+      }) => {
+        this.registerPermanentBond(data.proposerId, data.targetId, "marriage");
+      },
+    );
+
+    // Listener para cuando se completa un divorcio
+    simulationEvents.on(
+      GameEventNames.DIVORCE_COMPLETED,
+      (data: {
+        agentId: string;
+        groupId: string;
+        reason: string;
+        remainingMembers: string[];
+        timestamp: number;
+      }) => {
+        // Reducir afinidad con los miembros restantes pero no eliminar completamente
+        for (const memberId of data.remainingMembers) {
+          if (memberId !== data.agentId) {
+            this.modifyAffinity(data.agentId, memberId, -0.3);
+          }
+        }
+      },
+    );
   }
 
   public getGroupForAgent(agentId: string): SocialGroup | undefined {
@@ -50,9 +85,6 @@ export class SocialSystem {
   public update(deltaTimeMs: number): void {
     const dt = deltaTimeMs / 1000;
     this.lastUpdate += deltaTimeMs;
-
-    // Sincronización ahora se hace centralmente en SimulationRunner
-    // Mantener este método por compatibilidad pero ya no es necesario llamarlo aquí
 
     this.spatialGrid.clear();
     const entities = this.gameState.entities || [];
@@ -144,7 +176,6 @@ export class SocialSystem {
       this.addEdge(aId, bId, Math.abs(current) * 0.5);
     }
 
-    // DEBUG: Log truces
     logger.debug(
       `🤝 [SOCIAL] Truce imposed: ${aId} <-> ${bId} for ${durationMs}ms`,
     );
@@ -245,7 +276,6 @@ export class SocialSystem {
       this.addEdge(aId, bId, 0.5 - current);
     }
 
-    // DEBUG: Log permanent bonds
     logger.debug(
       `💕 [SOCIAL] Permanent bond: ${type} between ${aId} and ${bId}`,
     );
@@ -341,6 +371,17 @@ export class SocialSystem {
           cohesion,
           morale: 100, // Default morale for now
         });
+
+        // Emitir SOCIAL_RALLY cuando se forma un grupo con alta cohesión
+        if (cohesion > 0.7 && groupMembers.length >= 3) {
+          simulationEvents.emit(GameEventNames.SOCIAL_RALLY, {
+            groupId: `group_${groupMembers[0]}`,
+            leaderId: bestLeader.id,
+            members: groupMembers,
+            cohesion,
+            timestamp: Date.now(),
+          });
+        }
       }
     }
 
@@ -366,5 +407,4 @@ export class SocialSystem {
     }
     return connections;
   }
-
 }

@@ -3,8 +3,9 @@ import EasyStar from "easystarjs";
 import { GameState, MapElement } from "../../types/game-types";
 import { logger } from "../../../infrastructure/utils/logger";
 import { GameEventNames, simulationEvents } from "../core/events";
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import type { EntityIndex } from "../core/EntityIndex";
 import {
   estimateTravelTime,
   assessRouteDifficultyByDistance,
@@ -114,9 +115,24 @@ export class MovementSystem extends EventEmitter {
    */
   private readonly BATCH_THRESHOLD = 15;
 
-  constructor(@inject(TYPES.GameState) gameState: GameState) {
+  // Pathfinding queue para limitar concurrencia
+  private pathfindingQueue: Array<{
+    entityId: string;
+    from: { x: number; y: number };
+    to: { x: number; y: number };
+    callback: (result: PathfindingResult) => void;
+  }> = [];
+  private activePaths = 0;
+  private readonly MAX_CONCURRENT_PATHS = 3; // Máximo 3 cálculos simultáneos
+  private entityIndex?: EntityIndex;
+
+  constructor(
+    @inject(TYPES.GameState) gameState: GameState,
+    @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
+  ) {
     super();
     this.gameState = gameState;
+    this.entityIndex = entityIndex;
 
     this.pathfinder = new EasyStar.js();
     this.pathfinder.setAcceptableTiles([0]);
@@ -145,6 +161,8 @@ export class MovementSystem extends EventEmitter {
   public update(deltaMs: number): void {
     const now = Date.now();
 
+    this.processPathfindingQueue();
+
     const movingCount = Array.from(this.movementStates.values()).filter(
       (s) => s.isMoving,
     ).length;
@@ -166,6 +184,80 @@ export class MovementSystem extends EventEmitter {
     }
 
     this.pathfinder.calculate();
+  }
+
+  /**
+   * Procesa la cola de pathfinding, limitando la concurrencia
+   */
+  private processPathfindingQueue(): void {
+    if (this.activePaths >= this.MAX_CONCURRENT_PATHS) {
+      return;
+    }
+
+    while (
+      this.pathfindingQueue.length > 0 &&
+      this.activePaths < this.MAX_CONCURRENT_PATHS
+    ) {
+      const request = this.pathfindingQueue.shift();
+      if (!request) break;
+
+      this.activePaths++;
+
+      this.calculatePath(request.from, request.to)
+        .then((result) => {
+          this.activePaths--;
+          request.callback(result);
+
+          if (this.pathfindingQueue.length > 10) {
+            logger.warn(
+              `Pathfinding queue has ${this.pathfindingQueue.length} pending requests`,
+            );
+          }
+        })
+        .catch((err) => {
+          this.activePaths--;
+          logger.error(
+            `Pathfinding error for entity ${request.entityId}:`,
+            err,
+          );
+
+          const distance = Math.hypot(
+            request.to.x - request.from.x,
+            request.to.y - request.from.y,
+          );
+          request.callback({
+            success: false,
+            path: [],
+            estimatedTime: estimateTravelTime(
+              distance,
+              0,
+              MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
+              MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+            ),
+            distance,
+          });
+        });
+    }
+  }
+
+  /**
+   * Encola un request de pathfinding en lugar de calcularlo inmediatamente
+   */
+  private enqueuePathfinding(
+    entityId: string,
+    from: { x: number; y: number },
+    to: { x: number; y: number },
+    callback: (result: PathfindingResult) => void,
+  ): void {
+    const existingIndex = this.pathfindingQueue.findIndex(
+      (r) => r.entityId === entityId,
+    );
+
+    if (existingIndex !== -1) {
+      this.pathfindingQueue[existingIndex] = { entityId, from, to, callback };
+    } else {
+      this.pathfindingQueue.push({ entityId, from, to, callback });
+    }
   }
 
   private updateBatch(deltaMs: number, now: number): void {
@@ -209,7 +301,9 @@ export class MovementSystem extends EventEmitter {
       this.updateEntityActivity(state, now);
       this.maybeStartIdleWander(state, now);
 
-      const agent = this.gameState.agents.find((a) => a.id === entityId);
+      const agent =
+        this.entityIndex?.getAgent(entityId) ??
+        this.gameState.agents.find((a) => a.id === entityId);
       if (agent) {
         agent.position = { ...state.currentPosition };
       }
@@ -254,7 +348,9 @@ export class MovementSystem extends EventEmitter {
       state.currentPosition.y += dy * ratio;
     }
 
-    const agent = this.gameState.agents.find((a) => a.id === state.entityId);
+    const agent =
+      this.entityIndex?.getAgent(state.entityId) ??
+      this.gameState.agents.find((a) => a.id === state.entityId);
     if (agent) {
       agent.position = { ...state.currentPosition };
     }
@@ -289,7 +385,9 @@ export class MovementSystem extends EventEmitter {
     if (state.targetPosition) {
       state.currentPosition = { ...state.targetPosition };
 
-      const agent = this.gameState.agents.find((a) => a.id === state.entityId);
+      const agent =
+        this.entityIndex?.getAgent(state.entityId) ??
+        this.gameState.agents.find((a) => a.id === state.entityId);
       if (agent) {
         agent.position = { ...state.currentPosition };
       }
@@ -349,7 +447,9 @@ export class MovementSystem extends EventEmitter {
 
     this.movementStates.set(entityId, movementState);
 
-    const agent = this.gameState.agents.find((a) => a.id === entityId);
+    const agent =
+      this.entityIndex?.getAgent(entityId) ??
+      this.gameState.agents.find((a) => a.id === entityId);
     if (agent) {
       agent.position = { ...initialPosition };
     }
@@ -367,22 +467,24 @@ export class MovementSystem extends EventEmitter {
     const targetX = targetZone.bounds.x + targetZone.bounds.width / 2;
     const targetY = targetZone.bounds.y + targetZone.bounds.height / 2;
 
-    this.calculatePath(state.currentPosition, { x: targetX, y: targetY })
-      .then((pathResult) => {
+    this.enqueuePathfinding(
+      entityId,
+      state.currentPosition,
+      { x: targetX, y: targetY },
+      (pathResult) => {
         state.isPathfinding = false;
         if (!pathResult.success || pathResult.path.length === 0) {
-          // Pathfinding falló, emitir eventos para que otros sistemas reaccionen
-          logger.warn(`Pathfinding failed for ${entityId} to zone ${targetZoneId}`);
-          
-          // Emitir evento de fallo de pathfinding
+          logger.warn(
+            `Pathfinding failed for ${entityId} to zone ${targetZoneId}`,
+          );
+
           simulationEvents.emit(GameEventNames.PATHFINDING_FAILED, {
             entityId,
             targetZoneId,
             reason: "no_path_found",
             timestamp: Date.now(),
           });
-          
-          // Notificar que la acción falló
+
           simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
             agentId: entityId,
             actionType: "move",
@@ -415,11 +517,8 @@ export class MovementSystem extends EventEmitter {
           destination: state.targetPosition,
           path: pathResult.path,
         });
-      })
-      .catch((err) => {
-        state.isPathfinding = false;
-        logger.error(`Pathfinding error for ${entityId}`, err);
-      });
+      },
+    );
 
     return true;
   }
@@ -546,14 +645,10 @@ export class MovementSystem extends EventEmitter {
             this.pathCache.set(pathKey, { result, timestamp: now });
             resolve(result);
           } else {
-            // Pathfinding falló completamente
-            // No devolver un path directo ya que podría atravesar obstáculos
-            // En su lugar, devolver un path vacío para que el sistema de movimiento
-            // pueda manejar el fallo apropiadamente (por ejemplo, buscar un destino alternativo)
             const distance = Math.hypot(to.x - from.x, to.y - from.y);
             resolve({
               success: false,
-              path: [], // Path vacío - no intentar moverse si no hay path válido
+              path: [],
               estimatedTime: estimateTravelTime(
                 distance,
                 0,

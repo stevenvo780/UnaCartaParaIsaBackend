@@ -26,7 +26,7 @@ export class GPUComputeService {
     try {
       await tf.ready();
       const backend = tf.getBackend();
-      
+
       // Detectar backends que usan GPU (CUDA en Node.js, WebGL en browser)
       const gpuBackends = ["tensorflow", "cuda", "webgl", "webgpu"];
       this.gpuAvailable = gpuBackends.includes(backend?.toLowerCase() ?? "");
@@ -72,7 +72,6 @@ export class GPUComputeService {
     const entityCount = positions.length / 2;
 
     if (!this.gpuAvailable || entityCount < 10) {
-      // Fallback a CPU para pocas entidades o sin GPU
       return this.updatePositionsBatchCPU(
         positions,
         targets,
@@ -84,36 +83,28 @@ export class GPUComputeService {
 
     try {
       return tf.tidy(() => {
-        // Convertir a tensores
         const posT = tf.tensor2d(positions, [entityCount, 2]);
         const tarT = tf.tensor2d(targets, [entityCount, 2]);
         const spdT = tf.tensor1d(speeds);
         const fatT = tf.tensor1d(fatigue);
 
-        // Calcular dirección y distancia
         const direction = tarT.sub(posT);
         const distance = direction.norm("euclidean", 1, true);
 
-        // Aplicar multiplicador de fatiga (1 / (1 + fatigue/100 * 0.5))
-        const fatigueMultiplier = tf.onesLike(fatT).div(
-          tf.onesLike(fatT).add(fatT.div(100).mul(0.5)),
-        );
+        const fatigueMultiplier = tf
+          .onesLike(fatT)
+          .div(tf.onesLike(fatT).add(fatT.div(100).mul(0.5)));
         const effectiveSpeed = spdT.mul(fatigueMultiplier);
 
-        // Calcular movimiento
-        const moveDistance = effectiveSpeed
-          .expandDims(1)
-          .mul(deltaMs / 1000);
+        const moveDistance = effectiveSpeed.expandDims(1).mul(deltaMs / 1000);
         const normalized = direction.div(distance.add(0.001));
         const movement = normalized.mul(moveDistance);
 
-        // Determinar si llegaron al destino (distancia < 2)
         const arrivedMask = distance.less(2);
         const arrivedArray = Array.from(arrivedMask.dataSync()).map(
           (v) => v !== 0,
         );
 
-        // Aplicar movimiento o establecer posición objetivo
         const shouldMove = distance.greaterEqual(2);
         const moveAmount = movement.mul(shouldMove.expandDims(1));
         const targetPos = tarT.mul(arrivedMask.expandDims(1));
@@ -234,16 +225,13 @@ export class GPUComputeService {
 
     try {
       return tf.tidy(() => {
-        // Reshape needs a [entityCount, needCount]
         const needsT = tf.tensor2d(needs, [entityCount, needCount]);
         const decayRatesT = tf.tensor1d(decayRates);
         const ageMultT = tf.tensor1d(ageMultipliers).expandDims(1);
         const divineMultT = tf.tensor1d(divineModifiers).expandDims(1);
 
-        // Calcular multiplicador final
         const finalMultiplier = ageMultT.mul(divineMultT);
 
-        // Aplicar decay: needs = max(0, needs - decayRates * multiplier * deltaSeconds)
         const decayAmount = decayRatesT
           .expandDims(0)
           .mul(finalMultiplier)
@@ -298,7 +286,10 @@ export class GPUComputeService {
       for (let needIdx = 0; needIdx < needCount; needIdx++) {
         const rate = decayRates[needIdx] * finalMultiplier;
         const currentValue = needs[offset + needIdx];
-        newNeeds[offset + needIdx] = Math.max(0, currentValue - rate * deltaSeconds);
+        newNeeds[offset + needIdx] = Math.max(
+          0,
+          currentValue - rate * deltaSeconds,
+        );
       }
     }
 
@@ -337,12 +328,10 @@ export class GPUComputeService {
         const hunger = needsT.slice([0, 0], [entityCount, 1]);
         const thirst = needsT.slice([0, 1], [entityCount, 1]);
 
-        // Penalizaciones: max(0, threshold - value) * rate
         const energyPenalty = tf.scalar(30).sub(energy).maximum(0).mul(0.02);
         const hungerPenalty = tf.scalar(40).sub(hunger).maximum(0).mul(0.03);
         const thirstPenalty = tf.scalar(30).sub(thirst).maximum(0).mul(0.05);
 
-        // Aplicar penalizaciones
         const hungerCol = needsT.slice([0, 0], [entityCount, 1]);
         const thirstCol = needsT.slice([0, 1], [entityCount, 1]);
         const energyCol = needsT
@@ -350,8 +339,12 @@ export class GPUComputeService {
           .sub(hungerPenalty)
           .sub(thirstPenalty.mul(2));
         const hygieneCol = needsT.slice([0, 3], [entityCount, 1]);
-        const socialCol = needsT.slice([0, 4], [entityCount, 1]).sub(energyPenalty);
-        const funCol = needsT.slice([0, 5], [entityCount, 1]).sub(energyPenalty);
+        const socialCol = needsT
+          .slice([0, 4], [entityCount, 1])
+          .sub(energyPenalty);
+        const funCol = needsT
+          .slice([0, 5], [entityCount, 1])
+          .sub(energyPenalty);
         const mentalHealthCol = needsT
           .slice([0, 6], [entityCount, 1])
           .sub(energyPenalty.mul(1.5))
@@ -359,7 +352,18 @@ export class GPUComputeService {
           .sub(thirstPenalty);
 
         const newNeeds = tf
-          .concat([hungerCol, thirstCol, energyCol, hygieneCol, socialCol, funCol, mentalHealthCol], 1)
+          .concat(
+            [
+              hungerCol,
+              thirstCol,
+              energyCol,
+              hygieneCol,
+              socialCol,
+              funCol,
+              mentalHealthCol,
+            ],
+            1,
+          )
           .as2D(entityCount, needCount)
           .maximum(0)
           .minimum(100);
@@ -409,7 +413,10 @@ export class GPUComputeService {
       const hunger = newNeeds[offset + 0];
       if (hunger < 40) {
         const hungerPenalty = (40 - hunger) * 0.03;
-        newNeeds[offset + 2] = Math.max(0, newNeeds[offset + 2] - hungerPenalty); // energy
+        newNeeds[offset + 2] = Math.max(
+          0,
+          newNeeds[offset + 2] - hungerPenalty,
+        ); // energy
         newNeeds[offset + 6] = Math.max(
           0,
           newNeeds[offset + 6] - hungerPenalty * 0.5,
@@ -459,17 +466,16 @@ export class GPUComputeService {
     try {
       return tf.tidy(() => {
         const fatigueT = tf.tensor1d(fatigue);
-        const isMovingT = tf.tensor1d(
-          isMoving.map((v) => (v ? 1 : 0)),
-        ).cast("float32");
-        const isRestingT = tf.tensor1d(
-          isResting.map((v) => (v ? 1 : 0)),
-        ).cast("float32");
+        const isMovingT = tf
+          .tensor1d(isMoving.map((v) => (v ? 1 : 0)))
+          .cast("float32");
+        const isRestingT = tf
+          .tensor1d(isResting.map((v) => (v ? 1 : 0)))
+          .cast("float32");
 
         const fatigueDecayRate = 0.1 * (deltaMs / 1000);
         const fatigueRestRate = 0.5 * (deltaMs / 1000);
 
-        // Si se mueve: +0.1, si descansa: -0.5, sino: -0.1
         const movingChange = isMovingT.mul(0.1);
         const restingChange = isRestingT.mul(-fatigueRestRate);
         const idleChange = tf
@@ -551,7 +557,8 @@ export class GPUComputeService {
           : 0,
       avgCpuTime:
         this.performanceStats.cpuFallbacks > 0
-          ? this.performanceStats.totalCpuTime / this.performanceStats.cpuFallbacks
+          ? this.performanceStats.totalCpuTime /
+            this.performanceStats.cpuFallbacks
           : 0,
     };
   }
@@ -564,4 +571,3 @@ export class GPUComputeService {
     logger.debug("🧹 GPUComputeService: Memoria TensorFlow limpiada");
   }
 }
-

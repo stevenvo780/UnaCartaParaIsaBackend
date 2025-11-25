@@ -34,7 +34,6 @@ export class BatchedEventEmitter extends EventEmitter {
     const batch = this.eventQueue.splice(0);
     const wasBatchingEnabled = this.batchingEnabled;
 
-    // Temporalmente deshabilitar batching para emitir eventos directamente
     this.batchingEnabled = false;
 
     try {

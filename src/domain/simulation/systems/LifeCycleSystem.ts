@@ -32,8 +32,9 @@ interface LifeCycleConfig {
   mortalInterbirthSec: number;
 }
 
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import type { EntityIndex } from "../core/EntityIndex";
 
 @injectable()
 export class LifeCycleSystem extends EventEmitter {
@@ -55,10 +56,15 @@ export class LifeCycleSystem extends EventEmitter {
   private _divineFavorSystem?: DivineFavorSystem;
   private _movementSystem?: MovementSystem;
   private dependenciesChecked = false;
+  private entityIndex?: EntityIndex;
 
-  constructor(@inject(TYPES.GameState) gameState: GameState) {
+  constructor(
+    @inject(TYPES.GameState) gameState: GameState,
+    @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
+  ) {
     super();
     this.gameState = gameState;
+    this.entityIndex = entityIndex;
     this.config = {
       secondsPerYear: 30,
       adultAge: 16,
@@ -187,7 +193,9 @@ export class LifeCycleSystem extends EventEmitter {
     for (const agentId of this.pendingHousingAssignments) {
       if (processed >= 3) break;
 
-      const agent = this.gameState.agents?.find((a) => a.id === agentId);
+      const agent =
+        this.entityIndex?.getAgent(agentId) ??
+        this.gameState.agents?.find((a) => a.id === agentId);
       if (agent && agent.lifeStage === "adult") {
         const houseId = this.householdSystem.assignToHouse(agentId);
         if (houseId) {
@@ -245,10 +253,21 @@ export class LifeCycleSystem extends EventEmitter {
 
     if (now < cooldown) return;
 
-    const father = this.gameState.agents?.find((a) => a.id === fatherId);
-    const mother = this.gameState.agents?.find((a) => a.id === motherId);
+    const father =
+      this.entityIndex?.getAgent(fatherId) ??
+      this.gameState.agents?.find((a) => a.id === fatherId);
+    const mother =
+      this.entityIndex?.getAgent(motherId) ??
+      this.gameState.agents?.find((a) => a.id === motherId);
 
     if (!father || !mother) return;
+
+    // Emitir REPRODUCTION_ATTEMPT antes de intentar
+    simulationEvents.emit(GameEventNames.REPRODUCTION_ATTEMPT, {
+      parent1: fatherId,
+      parent2: motherId,
+      timestamp: now,
+    });
 
     const childId = await this.spawnAgent({
       generation: Math.max(father.generation, mother.generation) + 1,
@@ -313,7 +332,9 @@ export class LifeCycleSystem extends EventEmitter {
         this.gameState.entities = [];
       }
       // Verificar si ya existe la entidad
-      const existingEntity = this.gameState.entities.find((e) => e.id === id);
+      const existingEntity =
+        this.entityIndex?.getEntity(id) ??
+        this.gameState.entities.find((e) => e.id === id);
       if (!existingEntity) {
         const entity: SimulationEntity = {
           id,
@@ -392,7 +413,10 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   public getAgent(id: string): AgentProfile | undefined {
-    return this.gameState.agents?.find((a) => a.id === id);
+    return (
+      this.entityIndex?.getAgent(id) ??
+      this.gameState.agents?.find((a) => a.id === id)
+    );
   }
 
   public getAgents(): AgentProfile[] {
@@ -405,7 +429,6 @@ export class LifeCycleSystem extends EventEmitter {
     const index = this.gameState.agents.findIndex((a) => a.id === id);
     if (index !== -1) {
       this.gameState.agents.splice(index, 1);
-      // También remover de entities si existe
       if (this.gameState.entities) {
         const entityIndex = this.gameState.entities.findIndex(
           (e) => e.id === id,
@@ -429,29 +452,48 @@ export class LifeCycleSystem extends EventEmitter {
    * Limpia todos los estados relacionados con un agente en todos los sistemas
    */
   private cleanupAgentState(agentId: string): void {
+    const agent =
+      this.entityIndex?.getAgent(agentId) ??
+      this.gameState.agents?.find((a) => a.id === agentId);
+
+    // Emitir INVENTORY_DROPPED si el agente tiene inventario
+    if (this.inventorySystem) {
+      const inv = this.inventorySystem.getAgentInventory(agentId);
+      if (
+        inv &&
+        (inv.wood > 0 || inv.stone > 0 || inv.food > 0 || inv.water > 0)
+      ) {
+        simulationEvents.emit(GameEventNames.INVENTORY_DROPPED, {
+          agentId,
+          position: agent?.position,
+          inventory: {
+            wood: inv.wood,
+            stone: inv.stone,
+            food: inv.food,
+            water: inv.water,
+          },
+          timestamp: Date.now(),
+        });
+      }
+    }
+
     // Limpiar AI state
     if (this._aiSystem) {
       this._aiSystem.removeEntityAI(agentId);
     }
 
-    // Limpiar needs
     if (this.needsSystem) {
       this.needsSystem.removeEntityNeeds(agentId);
     }
 
-    // Limpiar social relationships
     if (this._socialSystem) {
       this._socialSystem.removeRelationships(agentId);
     }
 
-    // Limpiar movement state
     if (this._movementSystem) {
       this._movementSystem.stopMovement(agentId);
       this._movementSystem.removeEntityMovement(agentId);
     }
-
-    // Limpiar genealogy (se mantiene para historial, pero podemos limpiar referencias activas)
-    // GenealogySystem mantiene historial, así que no limpiamos aquí
 
     // Limpiar household assignment
     if (this.householdSystem) {
@@ -485,10 +527,10 @@ export class LifeCycleSystem extends EventEmitter {
    * Encuentra una posición válida para spawn de agentes
    * Valida que no esté en agua, dentro de edificios, o fuera de límites
    */
-  private findValidSpawnPosition(world: {
-    width: number;
-    height: number;
-  }): { x: number; y: number } {
+  private findValidSpawnPosition(world: { width: number; height: number }): {
+    x: number;
+    y: number;
+  } {
     const MAX_ATTEMPTS = 100;
     const SPAWN_RADIUS = 200;
 

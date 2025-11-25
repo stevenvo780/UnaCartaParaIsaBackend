@@ -56,10 +56,7 @@ export class MarriageSystem {
       timestamp: Date.now(),
     });
 
-    // DEBUG: Log marriage proposals
-    logger.debug(
-      `💍 [MARRIAGE] Proposal: ${proposerId} -> ${targetId}`,
-    );
+    logger.debug(`💍 [MARRIAGE] Proposal: ${proposerId} -> ${targetId}`);
 
     simulationEvents.emit(GameEventNames.MARRIAGE_PROPOSED, {
       proposerId,
@@ -147,7 +144,26 @@ export class MarriageSystem {
     const group = this.marriageGroups.get(groupId);
     if (!group) return false;
 
-    group.members = group.members.filter((id) => id !== agentId);
+    // Emitir DIVORCE_INITIATED al inicio del proceso
+    simulationEvents.emit(GameEventNames.DIVORCE_INITIATED, {
+      agentId,
+      groupId,
+      reason,
+      timestamp: Date.now(),
+    });
+
+    const remainingMembers = group.members.filter((id) => id !== agentId);
+
+    // Emitir MARRIAGE_MEMBER_LEFT cuando un miembro sale voluntariamente
+    simulationEvents.emit(GameEventNames.MARRIAGE_MEMBER_LEFT, {
+      agentId,
+      groupId,
+      reason,
+      remainingMembers,
+      timestamp: Date.now(),
+    });
+
+    group.members = remainingMembers;
 
     if (group.members.length <= 1) {
       this.marriageGroups.delete(groupId);

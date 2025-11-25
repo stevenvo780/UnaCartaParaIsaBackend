@@ -55,6 +55,7 @@ import { AppearanceGenerationSystem } from "../systems/AppearanceGenerationSyste
 import { GPUComputeService } from "./GPUComputeService";
 import { mapEventName } from "./eventNameMapper";
 import { MultiRateScheduler } from "./MultiRateScheduler";
+import { DeltaEncoder, type DeltaSnapshot } from "./DeltaEncoder";
 import type {
   SimulationCommand,
   SimulationConfig,
@@ -167,8 +168,10 @@ export class SimulationRunner {
   private capturedEvents: SimulationEvent[] = [];
   private eventCaptureListener?: (eventName: string, payload: unknown) => void;
   private stateCache: StateCache;
+  private deltaEncoder: DeltaEncoder;
   @inject(TYPES.EntityIndex) private entityIndex!: EntityIndex;
-  @inject(TYPES.SharedSpatialIndex) private sharedSpatialIndex!: SharedSpatialIndex;
+  @inject(TYPES.SharedSpatialIndex)
+  private sharedSpatialIndex!: SharedSpatialIndex;
 
   constructor(
     @inject(TYPES.GameState) state: GameState,
@@ -178,12 +181,13 @@ export class SimulationRunner {
     this.tickIntervalMs = _config.tickIntervalMs ?? 200; // Deprecated
     this.maxCommandQueue = _config.maxCommandQueue ?? 200;
     this.stateCache = new StateCache();
+    this.deltaEncoder = new DeltaEncoder();
 
     // Initialize multi-rate scheduler
     this.scheduler = new MultiRateScheduler({
-      FAST: 100,    // 10 Hz - movement, combat, trails
-      MEDIUM: 500,  // 2 Hz - AI, needs, social
-      SLOW: 1000,   // 1 Hz - economy, research, etc.
+      FAST: 100, // 10 Hz - movement, combat, trails
+      MEDIUM: 500, // 2 Hz - AI, needs, social
+      SLOW: 1000, // 1 Hz - economy, research, etc.
     });
   }
 
@@ -320,6 +324,44 @@ export class SimulationRunner {
 
     // Register systems in multi-rate scheduler
     this.registerSystemsInScheduler();
+
+    // Configurar hooks de sincronización para el scheduler
+    this.configureSchedulerHooks();
+  }
+
+  /**
+   * Configura los hooks de sincronización global del scheduler
+   * Estos se ejecutan antes/después de cada tick para mantener índices actualizados
+   */
+  private configureSchedulerHooks(): void {
+    this.scheduler.setHooks({
+      preTick: () => {
+        // Reconstruir EntityIndex si está dirty
+        this.entityIndex.rebuild(this.state);
+        // Sincronizar agents con entities
+        this.entityIndex.syncAgentsToEntities(this.state);
+        // Reconstruir spatial index si es necesario
+        this.sharedSpatialIndex.rebuildIfNeeded(
+          this.state.entities || [],
+          this.animalSystem.getAnimals(),
+        );
+      },
+      // Post-tick: flush de eventos acumulados
+      postTick: () => {
+        if (simulationEvents instanceof BatchedEventEmitter) {
+          simulationEvents.flushEvents();
+        }
+      },
+      // Retornar count de entidades para optimización de sistemas
+      getEntityCount: () => {
+        return (
+          (this.state.agents?.length ?? 0) +
+          (this.animalSystem?.getAnimals().size ?? 0)
+        );
+      },
+    });
+
+    logger.info("🔗 Scheduler hooks configured for index synchronization");
   }
 
   /**
@@ -327,6 +369,8 @@ export class SimulationRunner {
    * - FAST (100ms): Movimiento, combate, trails
    * - MEDIUM (500ms): IA, necesidades, social, household
    * - SLOW (1000ms): Economía, investigación, mercado, etc.
+   *
+   * Los sistemas pueden especificar minEntities para ser saltados con pocas entidades
    */
   private registerSystemsInScheduler(): void {
     // ========== FAST SYSTEMS (10 Hz) ==========
@@ -424,6 +468,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: (delta: number) => this.marketSystem.update(delta),
       enabled: true,
+      minEntities: 10, // Mercados necesitan suficientes participantes
     });
 
     this.scheduler.registerSystem({
@@ -445,6 +490,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: (delta: number) => this.governanceSystem.update(delta),
       enabled: true,
+      minEntities: 15, // Gobernanza para comunidades más grandes
     });
 
     this.scheduler.registerSystem({
@@ -522,6 +568,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: () => this.tradeSystem.update(),
       enabled: true,
+      minEntities: 10, // Comercio requiere múltiples participantes
     });
 
     this.scheduler.registerSystem({
@@ -536,6 +583,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: () => this.conflictResolutionSystem.update(),
       enabled: true,
+      minEntities: 10, // Resolución de conflictos necesita grupos
     });
 
     this.scheduler.registerSystem({
@@ -550,6 +598,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: (delta: number) => this.crisisPredictorSystem.update(delta),
       enabled: true,
+      minEntities: 20, // Predicción de crisis necesita suficientes datos
     });
 
     this.scheduler.registerSystem({
@@ -599,6 +648,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: () => this._normsSystem.update(),
       enabled: true,
+      minEntities: 15, // Normas sociales para sociedades más grandes
     });
 
     this.scheduler.registerSystem({
@@ -606,6 +656,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: (delta: number) => this.emergenceSystem.update(delta),
       enabled: true,
+      minEntities: 15, // Solo tiene sentido con suficientes entidades
     });
 
     this.scheduler.registerSystem({
@@ -613,6 +664,7 @@ export class SimulationRunner {
       rate: "SLOW",
       update: (delta: number) => this.knowledgeNetworkSystem.update(delta),
       enabled: true,
+      minEntities: 10, // Redes de conocimiento requieren múltiples agentes
     });
 
     logger.info("📋 All systems registered in multi-rate scheduler", {
@@ -812,8 +864,14 @@ export class SimulationRunner {
 
         // Asegurar que MovementSystem tenga el estado de movimiento inicializado
         const agent = this.entityIndex.getAgent(data.agentId);
-        if (agent?.position && !this.movementSystem.hasMovementState(data.agentId)) {
-          this.movementSystem.initializeEntityMovement(data.agentId, agent.position);
+        if (
+          agent?.position &&
+          !this.movementSystem.hasMovementState(data.agentId)
+        ) {
+          this.movementSystem.initializeEntityMovement(
+            data.agentId,
+            agent.position,
+          );
         }
       },
     );
@@ -961,6 +1019,289 @@ export class SimulationRunner {
         // Notificar al AISystem que el agente llegó a su destino
         // Esto permite que el agente ejecute la actividad correspondiente a la zona
         this.aiSystem.notifyEntityArrived(data.entityId, data.zoneId);
+      },
+    );
+
+    // Handler para crisis inmediatas - forzar reevaluación de goals
+    simulationEvents.on(
+      GameEventNames.CRISIS_IMMEDIATE_WARNING,
+      (data: {
+        prediction: {
+          type: string;
+          probability: number;
+          severity: number;
+          recommendedActions: string[];
+        };
+        timestamp: number;
+      }) => {
+        for (const agent of this.state.agents) {
+          this.aiSystem.forceGoalReevaluation(agent.id);
+        }
+      },
+    );
+
+    // Handler para patrones emergentes - notificar a GovernanceSystem
+    simulationEvents.on(
+      GameEventNames.EMERGENCE_PATTERN_DETECTED,
+      (data: {
+        patternId: string;
+        patternType: string;
+        strength: number;
+        timestamp: number;
+      }) => {
+        // Los patrones emergentes pueden requerir nuevas políticas
+        // GovernanceSystem escuchará esto para ajustar políticas
+        // Por ahora solo registramos el evento
+      },
+    );
+
+    // Handler para cuando un agente envejece
+    simulationEvents.on(
+      GameEventNames.AGENT_AGED,
+      (data: {
+        entityId: string;
+        newAge: number;
+        previousStage: string;
+        currentStage: string;
+      }) => {
+        const agent = this.entityIndex.getAgent(data.entityId);
+        if (!agent) return;
+
+        if (data.currentStage === "adult" && data.previousStage === "child") {
+          // Agente se volvió adulto - puede trabajar, casarse, etc.
+          // Evaluar si puede tener un rol
+          const role = this.roleSystem.getAgentRole(data.entityId);
+          if (!role) {
+            // Forzar asignación de rol para adultos
+            this.roleSystem.assignBestRole(agent);
+          }
+          // Intentar asignar a household si no tiene uno
+          const house = this.householdSystem.getHouseFor(data.entityId);
+          if (!house) {
+            this.householdSystem.assignToHouse(data.entityId, "other");
+          }
+        }
+        if (data.currentStage === "elder") {
+          // Reducir carga de trabajo para ancianos - quitar roles físicos
+          const role = this.roleSystem.getAgentRole(data.entityId);
+          if (role) {
+            const physicalRoles = ["logger", "quarryman", "builder", "guard"];
+            if (physicalRoles.includes(role.roleType)) {
+              // Reasignar a rol menos físico si es posible
+              const agent = this.entityIndex.getAgent(data.entityId);
+              if (agent) {
+                this.roleSystem.reassignRole(data.entityId, "gatherer");
+              }
+            }
+          }
+        }
+      },
+    );
+
+    // Handler para cambios de tiempo - ajustar comportamientos según hora del día
+    simulationEvents.on(
+      GameEventNames.TIME_CHANGED,
+      (data: {
+        time: {
+          phase: string;
+          hour: number;
+          temperature: number;
+        };
+        timestamp: number;
+      }) => {
+        // Ajustar comportamientos según hora del día
+        const period = data.time?.phase || "";
+        if (period === "night" || period === "deep_night") {
+          // Durante la noche, agentes sin goals deberían buscar descanso
+          for (const agent of this.state.agents) {
+            const aiState = this.aiSystem.getAIState(agent.id);
+            if (aiState && !aiState.currentGoal && !aiState.offDuty) {
+              // El AISystem ya prioriza descanso cuando la energía es baja
+              // pero podemos forzar una reevaluación aquí
+              const needs = this.needsSystem.getNeeds(agent.id);
+              if (needs && needs.energy < 70) {
+                this.aiSystem.forceGoalReevaluation(agent.id);
+              }
+            }
+          }
+        }
+      },
+    );
+
+    // Handler para tareas completadas - otorgar reputación y notificar quests
+    simulationEvents.on(
+      GameEventNames.TASK_COMPLETED,
+      (data: {
+        taskId: string;
+        completedBy: string[];
+        completedAt: number;
+        timestamp: number;
+        cancelled?: boolean;
+        reason?: string;
+      }) => {
+        if (data.cancelled) return; // No otorgar recompensas por tareas canceladas
+
+        // Otorgar reputación a contribuidores
+        for (const agentId of data.completedBy) {
+          this.reputationSystem.updateReputation(
+            agentId,
+            0.05,
+            "task_completed",
+          );
+        }
+
+        // Notificar al QuestSystem
+        for (const agentId of data.completedBy) {
+          this.questSystem.handleEvent({
+            type: "task_completed",
+            entityId: agentId,
+            timestamp: data.timestamp,
+            data: { taskId: data.taskId },
+          });
+        }
+      },
+    );
+
+    // Handler para conocimiento aprendido - desbloquear capacidades
+    simulationEvents.on(
+      GameEventNames.KNOWLEDGE_LEARNED,
+      (data: {
+        agentId: string;
+        knowledgeId: string;
+        knowledgeType: string;
+        timestamp: number;
+      }) => {
+        // Desbloquear nuevas capacidades en AI basadas en conocimiento
+        // Por ejemplo, si aprende "advanced_crafting", puede hacer nuevas recetas
+        // Esto se puede implementar en el AISystem si tiene un sistema de capacidades
+        // Por ahora solo registramos el evento
+      },
+    );
+
+    // Handler para necesidades satisfechas - optimizaciones
+    simulationEvents.on(
+      GameEventNames.NEED_SATISFIED,
+      (data: { agentId: string; need: string; value: number }) => {
+        // El agente ya no necesita buscar esa necesidad
+        // Puede liberar reservaciones de recursos si las tiene
+        // Por ahora solo registramos el evento
+        // En el futuro, ResourceReservationSystem podría escuchar esto
+      },
+    );
+
+    // Handler para asignación de roles - otorgar reputación
+    simulationEvents.on(
+      GameEventNames.ROLE_ASSIGNED,
+      (data: {
+        agentId: string;
+        roleType: string;
+        roleId?: string;
+        timestamp: number;
+      }) => {
+        // Algunos roles otorgan estatus social
+        if (data.roleType === "leader" || data.roleType === "guard") {
+          this.reputationSystem.updateReputation(
+            data.agentId,
+            0.1,
+            `role_assigned_${data.roleType}`,
+          );
+        }
+      },
+    );
+
+    // Handler para sanciones de normas - aplicar penalty de reputación
+    simulationEvents.on(
+      GameEventNames.NORM_SANCTION_APPLIED,
+      (data: {
+        agentId: string;
+        violationType: string;
+        reputationPenalty: number;
+        trustPenalty?: number;
+        truceDuration?: number;
+        timestamp: number;
+      }) => {
+        // Aplicar penalty de reputación definido en la sanción
+        this.reputationSystem.updateReputation(
+          data.agentId,
+          data.reputationPenalty,
+          `norm_violation_${data.violationType}`,
+        );
+      },
+    );
+
+    // Handler para tregua aceptada - mejorar relaciones sociales
+    simulationEvents.on(
+      GameEventNames.CONFLICT_TRUCE_ACCEPTED,
+      (data: {
+        cardId: string;
+        attackerId: string;
+        targetId: string;
+        truceBonus?: number;
+        timestamp: number;
+      }) => {
+        // Mejorar relación entre las partes
+        this.socialSystem.modifyAffinity(
+          data.attackerId,
+          data.targetId,
+          data.truceBonus || 0.1,
+        );
+        // Otorgar reputación positiva al que acepta la tregua
+        this.reputationSystem.updateReputation(
+          data.targetId,
+          0.02,
+          "truce_accepted",
+        );
+      },
+    );
+
+    // Handler para tregua rechazada - empeorar relaciones sociales
+    simulationEvents.on(
+      GameEventNames.CONFLICT_TRUCE_REJECTED,
+      (data: {
+        cardId: string;
+        attackerId: string;
+        targetId: string;
+        timestamp: number;
+      }) => {
+        // Empeorar relación entre las partes
+        this.socialSystem.modifyAffinity(
+          data.attackerId,
+          data.targetId,
+          -0.15,
+        );
+      },
+    );
+
+    // Handler para golpes en combate - efectos en necesidades y relaciones
+    simulationEvents.on(
+      GameEventNames.COMBAT_HIT,
+      (data: {
+        attackerId: string;
+        targetId: string;
+        damage: number;
+        weaponId?: string;
+        timestamp: number;
+      }) => {
+        // Reducir energía del defensor
+        this.needsSystem.modifyNeed(data.targetId, "energy", -5);
+        // Afectar relación social
+        this.socialSystem.modifyAffinity(data.attackerId, data.targetId, -0.2);
+      },
+    );
+
+    // Handler para muerte de animales - generar recursos
+    simulationEvents.on(
+      GameEventNames.ANIMAL_DIED,
+      (data: {
+        animalId: string;
+        position?: { x: number; y: number };
+        biome?: string;
+        leavesCorpse?: boolean;
+        timestamp: number;
+      }) => {
+        // Potencialmente generar recursos en la posición si deja cadáver
+        // Por ahora, los animales cazados ya generan comida a través de ANIMAL_HUNTED
+        // Este evento se puede usar para otros efectos en el futuro
       },
     );
 
@@ -1224,7 +1565,6 @@ export class SimulationRunner {
       clearInterval(this.tickHandle);
       this.tickHandle = undefined;
     }
-
   }
 
   enqueueCommand(command: SimulationCommand): boolean {
@@ -1302,6 +1642,15 @@ export class SimulationRunner {
    */
   getSnapshot(): SimulationSnapshot {
     return this.getTickSnapshot();
+  }
+
+  /**
+   * Obtiene un snapshot delta (solo cambios desde el último snapshot)
+   * Reduce significativamente el tamaño del payload para WebSockets
+   */
+  getDeltaSnapshot(forceFull = false): DeltaSnapshot {
+    const tickSnapshot = this.getTickSnapshot();
+    return this.deltaEncoder.encodeDelta(tickSnapshot, forceFull);
   }
 
   private isStepping = false;
@@ -1855,14 +2204,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                resources?: {
-                  wood?: number;
-                  stone?: number;
-                  food?: number;
-                  water?: number;
-                };
-                minWorkers?: number;
-              }
+                  resources?: {
+                    wood?: number;
+                    stone?: number;
+                    food?: number;
+                    water?: number;
+                  };
+                  minWorkers?: number;
+                }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,

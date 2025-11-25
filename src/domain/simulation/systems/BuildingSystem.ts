@@ -211,7 +211,6 @@ export class BuildingSystem {
 
     this.constructionJobs.set(job.id, job);
 
-    // DEBUG: Log building construction start
     logger.debug(
       `🏗️ [BUILDING] Construction started: ${label} at (${validatedPosition.x}, ${validatedPosition.y}) - completes in ${cost.time}ms`,
     );
@@ -305,7 +304,6 @@ export class BuildingSystem {
     zone.durability = 100;
     zone.maxDurability = 100;
 
-    // DEBUG: Log building completion
     logger.debug(
       `🏠 [BUILDING] Construction completed: ${job.label} (zone: ${job.zoneId})`,
     );
@@ -335,12 +333,14 @@ export class BuildingSystem {
     const MAX_ATTEMPTS = 50;
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-      const testX = attempt === 0
-        ? position.x
-        : Math.floor(Math.random() * (worldSize.width - BUILDING_WIDTH));
-      const testY = attempt === 0
-        ? position.y
-        : Math.floor(Math.random() * (worldSize.height - BUILDING_HEIGHT));
+      const testX =
+        attempt === 0
+          ? position.x
+          : Math.floor(Math.random() * (worldSize.width - BUILDING_WIDTH));
+      const testY =
+        attempt === 0
+          ? position.y
+          : Math.floor(Math.random() * (worldSize.height - BUILDING_HEIGHT));
 
       // Verificar límites del mundo
       if (

@@ -35,7 +35,6 @@ import type {
 import { ChunkStreamServer } from "../infrastructure/services/chunk/chunk/ChunkStreamServer";
 import { logger } from "../infrastructure/utils/logger.js";
 
-// Detectar disponibilidad de GPU al inicio
 detectGPUAvailability();
 
 const server = app.listen(CONFIG.PORT, () => {

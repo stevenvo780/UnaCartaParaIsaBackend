@@ -101,7 +101,8 @@ export class EmergenceSystem extends EventEmitter {
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
     @unmanaged() config?: Partial<EmergenceConfig>,
-    @unmanaged() systems?: {
+    @unmanaged()
+    systems?: {
       needsSystem?: NeedsSystem;
       socialSystem?: SocialSystem;
       lifeCycleSystem?: LifeCycleSystem;

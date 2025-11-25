@@ -12,7 +12,7 @@ import type {
 } from "../../types/simulation/combat";
 import { getWeapon } from "../../../simulation/data/WeaponCatalog";
 import type { ResourceType } from "../../types/simulation/economy";
-import type { SimulationEntity, EntityTraits } from "../core/schema";
+import type { SimulationEntity } from "../core/schema";
 import { InventorySystem } from "./InventorySystem";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 import { SocialSystem } from "./SocialSystem";
@@ -48,7 +48,6 @@ const WEAPON_COSTS: Record<WeaponId, Partial<Record<ResourceType, number>>> = {
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
-import { EntityIndex } from "../core/EntityIndex";
 import { SharedSpatialIndex } from "../core/SharedSpatialIndex";
 
 @injectable()
@@ -63,7 +62,6 @@ export class CombatSystem {
 
   private animalSystem?: AnimalSystem;
   private normsSystem?: NormsSystem;
-  private entityIndex?: EntityIndex;
   private sharedSpatialIndex?: SharedSpatialIndex;
 
   constructor(
@@ -75,12 +73,12 @@ export class CombatSystem {
     @inject(TYPES.SocialSystem) private readonly socialSystem: SocialSystem,
     @inject(TYPES.AnimalSystem) @optional() animalSystem?: AnimalSystem,
     @inject(TYPES.NormsSystem) @optional() normsSystem?: NormsSystem,
-    @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
-    @inject(TYPES.SharedSpatialIndex) @optional() sharedSpatialIndex?: SharedSpatialIndex,
+    @inject(TYPES.SharedSpatialIndex)
+    @optional()
+    sharedSpatialIndex?: SharedSpatialIndex,
   ) {
     this.animalSystem = animalSystem;
     this.normsSystem = normsSystem;
-    this.entityIndex = entityIndex;
     this.sharedSpatialIndex = sharedSpatialIndex;
     this.config = DEFAULT_COMBAT_CONFIG;
     const worldWidth = state.worldSize?.width ?? 2000;
@@ -228,7 +226,11 @@ export class CombatSystem {
 
       let nearby: SimulationEntity[];
       if (this.sharedSpatialIndex) {
-        const results = this.sharedSpatialIndex.queryRadius(center, radius, "all");
+        const results = this.sharedSpatialIndex.queryRadius(
+          center,
+          radius,
+          "all",
+        );
         nearby = results
           .filter((candidate) => candidate.entity !== attacker.id)
           .map((candidate) => entitiesById.get(candidate.entity))
@@ -610,5 +612,4 @@ export class CombatSystem {
       timestamp: Date.now(),
     } as T;
   }
-
 }

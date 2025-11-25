@@ -31,10 +31,7 @@ import type { AnimalSystem } from "./AnimalSystem";
 import type { MovementSystem } from "./MovementSystem";
 import type { QuestSystem } from "./QuestSystem";
 import type { TimeSystem } from "./TimeSystem";
-import type { BuildingSystem } from "./BuildingSystem";
-import type { ProductionSystem } from "./ProductionSystem";
-import type { TradeSystem } from "./TradeSystem";
-import type { ReputationSystem } from "./ReputationSystem";
+import type { EntityIndex } from "../core/EntityIndex";
 
 interface AISystemConfig {
   updateIntervalMs: number;
@@ -67,10 +64,7 @@ export class AISystem extends EventEmitter {
   private _movementSystem?: MovementSystem;
   private questSystem?: QuestSystem;
   private timeSystem?: TimeSystem;
-  private _buildingSystem?: BuildingSystem;
-  private _productionSystem?: ProductionSystem;
-  private _tradeSystem?: TradeSystem;
-  private _reputationSystem?: ReputationSystem;
+  private entityIndex?: EntityIndex;
 
   private agentIndex = 0;
 
@@ -112,17 +106,13 @@ export class AISystem extends EventEmitter {
     @inject(TYPES.MovementSystem) @optional() movementSystem?: MovementSystem,
     @inject(TYPES.QuestSystem) @optional() questSystem?: QuestSystem,
     @inject(TYPES.TimeSystem) @optional() timeSystem?: TimeSystem,
-    @inject(TYPES.BuildingSystem) @optional() buildingSystem?: BuildingSystem,
-    @inject(TYPES.ProductionSystem)
+    @inject(TYPES.EntityIndex)
     @optional()
-    productionSystem?: ProductionSystem,
-    @inject(TYPES.TradeSystem) @optional() tradeSystem?: TradeSystem,
-    @inject(TYPES.ReputationSystem)
-    @optional()
-    reputationSystem?: ReputationSystem,
+    entityIndex?: EntityIndex,
   ) {
     super();
     this.gameState = gameState;
+    this.entityIndex = entityIndex;
     this.config = {
       updateIntervalMs: 1000,
       enablePersonality: true,
@@ -150,10 +140,6 @@ export class AISystem extends EventEmitter {
     this._movementSystem = movementSystem;
     this.questSystem = questSystem;
     this.timeSystem = timeSystem;
-    this._buildingSystem = buildingSystem;
-    this._productionSystem = productionSystem;
-    this._tradeSystem = tradeSystem;
-    this._reputationSystem = reputationSystem;
 
     simulationEvents.on(
       GameEventNames.AGENT_ACTION_COMPLETE,
@@ -175,10 +161,6 @@ export class AISystem extends EventEmitter {
     movementSystem?: MovementSystem;
     questSystem?: QuestSystem;
     timeSystem?: TimeSystem;
-    buildingSystem?: BuildingSystem;
-    productionSystem?: ProductionSystem;
-    tradeSystem?: TradeSystem;
-    reputationSystem?: ReputationSystem;
   }): void {
     if (systems.needsSystem) this.needsSystem = systems.needsSystem;
     if (systems.roleSystem) this.roleSystem = systems.roleSystem;
@@ -194,12 +176,6 @@ export class AISystem extends EventEmitter {
     if (systems.movementSystem) this._movementSystem = systems.movementSystem;
     if (systems.questSystem) this.questSystem = systems.questSystem;
     if (systems.timeSystem) this.timeSystem = systems.timeSystem;
-    if (systems.buildingSystem) this._buildingSystem = systems.buildingSystem;
-    if (systems.productionSystem)
-      this._productionSystem = systems.productionSystem;
-    if (systems.tradeSystem) this._tradeSystem = systems.tradeSystem;
-    if (systems.reputationSystem)
-      this._reputationSystem = systems.reputationSystem;
   }
 
   public update(_deltaTimeMs: number): void {
@@ -297,7 +273,9 @@ export class AISystem extends EventEmitter {
       getAgentInventory: (id: string) =>
         this.inventorySystem?.getAgentInventory(id),
       getCurrentZone: (id: string) => {
-        const agent = this.gameState.agents.find((a) => a.id === id);
+        const agent =
+          this.entityIndex?.getAgent(id) ??
+          this.gameState.agents.find((a) => a.id === id);
         if (!agent?.position) return undefined;
         const zone = this.gameState.zones.find((z) => {
           return (
@@ -416,11 +394,15 @@ export class AISystem extends EventEmitter {
           }
         : undefined,
       getEntityPosition: (id: string) => {
-        const agent = this.gameState.agents.find((a) => a.id === id);
+        const agent =
+          this.entityIndex?.getAgent(id) ??
+          this.gameState.agents.find((a) => a.id === id);
         if (agent?.position) {
           return { x: agent.position.x, y: agent.position.y };
         }
-        const entity = this.gameState.entities?.find((e) => e.id === id);
+        const entity =
+          this.entityIndex?.getEntity(id) ??
+          this.gameState.entities?.find((e) => e.id === id);
         if (entity?.position) {
           return { x: entity.position.x, y: entity.position.y };
         }
@@ -816,13 +798,9 @@ export class AISystem extends EventEmitter {
       return true;
     }
 
-    // Timeout reducido a 60 segundos para evitar que agentes queden atascados
-    // en objetivos imposibles
-    const GOAL_TIMEOUT_MS = 60000; // 60 segundos
+    const GOAL_TIMEOUT_MS = 60000;
     if (now - goal.createdAt > GOAL_TIMEOUT_MS) {
-      // Verificar si el goal realmente se completó antes de marcarlo como tal
-      // Si no se completó, se marcará como inválido en isGoalInvalid
-      return false; // Dejar que isGoalInvalid lo maneje
+      return false;
     }
 
     if (goal.type.startsWith("satisfy_")) {

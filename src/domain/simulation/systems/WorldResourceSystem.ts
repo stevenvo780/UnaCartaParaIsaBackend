@@ -108,7 +108,9 @@ export class WorldResourceSystem {
         }
       }
     }
-    logger.info(`[WorldResourceSystem] Biomes found: ${Array.from(biomesFound).join(", ")}`);
+    logger.info(
+      `[WorldResourceSystem] Biomes found: ${Array.from(biomesFound).join(", ")}`,
+    );
     logger.info(`[WorldResourceSystem] Spawned ${spawned} resources in world`);
   }
 

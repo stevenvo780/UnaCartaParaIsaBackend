@@ -1,6 +1,5 @@
 import path from "path";
 
-// Validate required environment variables for NAS if enabled
 if (process.env.NAS_ENABLED === "true") {
   const requiredNasVars = ["NAS_HOST", "NAS_USER", "NAS_PASSWORD", "NAS_PATH"];
   const missingVars = requiredNasVars.filter(

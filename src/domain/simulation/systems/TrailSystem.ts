@@ -4,8 +4,9 @@ import { GameEventNames, simulationEvents } from "../core/events";
 
 export type { TrailSegment, HeatMapCell };
 
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import type { EntityIndex } from "../core/EntityIndex";
 
 @injectable()
 export class TrailSystem {
@@ -31,9 +32,14 @@ export class TrailSystem {
     hottestPath: "",
     averageIntensity: 0,
   };
+  private entityIndex?: EntityIndex;
 
-  constructor(@inject(TYPES.GameState) gameState: GameState) {
+  constructor(
+    @inject(TYPES.GameState) gameState: GameState,
+    @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
+  ) {
     this.gameState = gameState;
+    this.entityIndex = entityIndex;
     this.setupEventListeners();
     logger.info("🛤️ TrailSystem initialized");
   }
@@ -76,7 +82,9 @@ export class TrailSystem {
         this.addTrailSegment(start, end, purpose);
       }
     } else {
-      const agent = this.gameState.agents.find((a) => a.id === data.entityId);
+      const agent =
+        this.entityIndex?.getAgent(data.entityId) ??
+        this.gameState.agents.find((a) => a.id === data.entityId);
       if (agent && agent.position) {
         this.addTrailSegment(agent.position, data.destination, purpose);
       }
