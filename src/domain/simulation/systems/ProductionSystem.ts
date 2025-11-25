@@ -2,6 +2,7 @@ import type { GameState, Zone } from "../../types/game-types";
 import type { ResourceType } from "../../types/simulation/economy";
 import { InventorySystem } from "./InventorySystem";
 import { LifeCycleSystem } from "./LifeCycleSystem";
+import { WorldResourceSystem } from "./WorldResourceSystem";
 import { TerrainSystem } from "./TerrainSystem";
 import { simulationEvents, GameEventNames } from "../core/events";
 
@@ -47,6 +48,9 @@ export class ProductionSystem {
     private readonly inventorySystem: InventorySystem,
     @inject(TYPES.LifeCycleSystem)
     private readonly lifeCycleSystem: LifeCycleSystem,
+    @inject(TYPES.WorldResourceSystem)
+    @optional()
+    private readonly worldResourceSystem?: WorldResourceSystem,
     @inject(TYPES.TerrainSystem)
     @optional()
     private readonly terrainSystem?: TerrainSystem,
@@ -176,10 +180,27 @@ export class ProductionSystem {
         const tileY = Math.floor(worldY / TILE_SIZE);
 
         const tile = this.terrainSystem.getTile(tileX, tileY);
-        if (tile && tile.assets.terrain === "terrain_grassland")
+
+        let hasObstacle = false;
+        if (this.worldResourceSystem) {
+          const resources = this.worldResourceSystem.getResourcesNear(
+            { x: worldX, y: worldY },
+            32,
+          );
+          if (resources.length > 0) {
+            hasObstacle = true;
+          }
+        }
+
+        if (
+          tile &&
+          tile.assets.terrain === "terrain_grassland" &&
+          !hasObstacle
+        ) {
           this.terrainSystem.modifyTile(tileX, tileY, {
             assets: { terrain: "terrain_dirt" },
           });
+        }
       }
     }
   }

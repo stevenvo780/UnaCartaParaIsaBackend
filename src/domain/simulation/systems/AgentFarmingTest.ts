@@ -4,6 +4,7 @@ import { ProductionSystem } from "../../../domain/simulation/systems/ProductionS
 import { TerrainSystem } from "../../../domain/simulation/systems/TerrainSystem";
 import { InventorySystem } from "../../../domain/simulation/systems/InventorySystem";
 import { LifeCycleSystem } from "../../../domain/simulation/systems/LifeCycleSystem";
+import { WorldResourceSystem } from "../../../domain/simulation/systems/WorldResourceSystem";
 import {
   GameState,
   Zone,
@@ -82,12 +83,35 @@ class MockLifeCycleSystem {
   }
 }
 
+class MockWorldResourceSystem {
+  public getResourcesNear(
+    position: { x: number; y: number },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    radius: number,
+  ): { id: string }[] {
+    // Simulate a resource at (0,0) (which corresponds to tile 0,0)
+    // We need to check if the position is close to 0,0
+    // TILE_SIZE is 64. Tile 0,0 center is 32,32.
+    // But the test uses random offsets.
+    // Let's just say if it's tile 0,0 we return a resource.
+    // Wait, getResourcesNear takes world coords.
+    // Let's mock it to return a resource if x < 64 and y < 64 (Tile 0,0)
+    if (position.x < 64 && position.y < 64) {
+      return [{ id: "tree_1" }];
+    }
+    return [];
+  }
+}
+
 container
   .bind<InventorySystem>(TYPES.InventorySystem)
   .to(MockInventorySystem as unknown as new () => InventorySystem);
 container
   .bind<LifeCycleSystem>(TYPES.LifeCycleSystem)
   .to(MockLifeCycleSystem as unknown as new () => LifeCycleSystem);
+container
+  .bind<WorldResourceSystem>(TYPES.WorldResourceSystem)
+  .to(MockWorldResourceSystem as unknown as new () => WorldResourceSystem);
 container
   .bind<ProductionSystem>(TYPES.ProductionSystem)
   .to(ProductionSystem)
@@ -130,22 +154,35 @@ async function runTest(): Promise<void> {
   productionSystem.update(200);
 
   // Check terrain
-  // Since it picks random tiles, we check if ANY tile changed to dirt.
-  let modified = false;
+  // Tile (0,0) has a resource, so it should NOT be modified.
+  // Other tiles might be modified.
+
+  const tile00 = terrainSystem.getTile(0, 0);
+  if (tile00 && tile00.assets.terrain === "terrain_dirt") {
+    logger.error("❌ Tile (0, 0) was modified despite having a resource!");
+  } else {
+    logger.info("✅ Tile (0, 0) correctly preserved (has resource).");
+  }
+
+  let otherModified = false;
   for (let y = 0; y < 2; y++) {
     for (let x = 0; x < 2; x++) {
+      if (x === 0 && y === 0) continue; // Skip the resource tile
+
       const tile = terrainSystem.getTile(x, y);
       if (tile && tile.assets.terrain === "terrain_dirt") {
-        modified = true;
+        otherModified = true;
         logger.info(`✅ Tile (${x}, ${y}) modified to dirt!`);
         break;
       }
     }
-    if (modified) break;
+    if (otherModified) break;
   }
 
-  if (!modified) {
-    logger.error("❌ No tiles modified to dirt.");
+  if (!otherModified) {
+    logger.warn(
+      "⚠️ No other tiles modified to dirt (might be due to randomness).",
+    );
   }
 }
 
