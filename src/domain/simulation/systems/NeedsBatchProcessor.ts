@@ -60,26 +60,32 @@ export class NeedsBatchProcessor {
   ): void {
     if (!this.needsBuffer || this.entityIdArray.length === 0) return;
 
+    // Create work buffer (double buffering to avoid race conditions)
+    const workBuffer = new Float32Array(this.needsBuffer);
+
     if (this.gpuService?.isGPUAvailable()) {
       try {
-        const newNeeds = this.gpuService.applyNeedsDecayBatch(
-          this.needsBuffer,
+        const result = this.gpuService.applyNeedsDecayBatch(
+          workBuffer,
           decayRates,
           ageMultipliers,
           divineModifiers,
           this.NEED_COUNT,
           deltaSeconds,
         );
-        this.needsBuffer = newNeeds;
+        // Atomic swap: only update if GPU succeeded
+        this.needsBuffer = result;
         this.bufferDirty = true;
         return;
       } catch (error) {
         logger.warn(
           `⚠️ Error en GPU applyDecayBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
         );
+        // workBuffer is intact for CPU path
       }
     }
 
+    // CPU fallback: work on copy, then swap
     const entityCount = this.entityIdArray.length;
 
     for (let i = 0; i < entityCount; i++) {
@@ -90,14 +96,16 @@ export class NeedsBatchProcessor {
 
       for (let needIdx = 0; needIdx < this.NEED_COUNT; needIdx++) {
         const rate = decayRates[needIdx] * finalMultiplier;
-        const currentValue = this.needsBuffer[offset + needIdx];
-        this.needsBuffer[offset + needIdx] = Math.max(
+        const currentValue = workBuffer[offset + needIdx];
+        workBuffer[offset + needIdx] = Math.max(
           0,
           currentValue - rate * deltaSeconds,
         );
       }
     }
 
+    // Atomic swap after CPU processing completes
+    this.needsBuffer = workBuffer;
     this.bufferDirty = true;
   }
 

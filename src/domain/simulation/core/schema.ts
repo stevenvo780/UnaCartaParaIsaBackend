@@ -74,17 +74,33 @@ export interface ConnectionAnimationState {
 
 /**
  * Entity statistics including health, stamina, and other attributes.
+ * Synchronized with EntityNeedsData to ensure consistency.
+ * All needs properties are now part of stats for unified access.
  * Supports dynamic properties via index signature.
  */
 export interface EntityStats {
+  // Core stats
   health?: number;
-  morale?: number;
-  stress?: number;
   stamina?: number;
   wounds?: number;
-  energy?: number;
+
+  // Needs (synchronized with NeedsSystem)
   hunger?: number;
   thirst?: number;
+  energy?: number;
+  hygiene?: number;
+  social?: number;
+  fun?: number;
+  mentalHealth?: number;
+
+  // Social/emotional stats
+  morale?: number;
+  stress?: number;
+
+  // Economy
+  money?: number;
+
+  // Dynamic properties for extensibility
   [key: string]: number | undefined;
 }
 

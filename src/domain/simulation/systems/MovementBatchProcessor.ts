@@ -91,62 +91,72 @@ export class MovementBatchProcessor {
     const entityCount = this.entityIdArray.length;
     const updated = new Array<boolean>(entityCount).fill(true);
 
+    // Double buffering: create work copies
+    const workPositions = new Float32Array(this.positionBuffer);
+    const workVelocities = this.velocityBuffer
+      ? new Float32Array(this.velocityBuffer)
+      : new Float32Array(entityCount * 2);
+
     if (this.gpuService?.isGPUAvailable()) {
       try {
         const speeds = new Float32Array(entityCount).fill(
           this.BASE_MOVEMENT_SPEED,
         );
         const result = this.gpuService.updatePositionsBatch(
-          this.positionBuffer,
+          workPositions,
           this.targetBuffer,
           speeds,
           this.fatigueBuffer,
           deltaMs,
         );
 
+        // Atomic swap: update buffers only after GPU success
         this.positionBuffer = result.newPositions;
-        this.bufferDirty = true;
 
-        if (this.velocityBuffer) {
-          for (let i = 0; i < entityCount; i++) {
-            const posOffset = i * 2;
-            const velOffset = i * 2;
-            const currentX = this.positionBuffer[posOffset];
-            const currentY = this.positionBuffer[posOffset + 1];
+        // Update velocities based on new positions
+        for (let i = 0; i < entityCount; i++) {
+          const posOffset = i * 2;
+          const velOffset = i * 2;
+          const currentX = this.positionBuffer[posOffset];
+          const currentY = this.positionBuffer[posOffset + 1];
 
-            const targetX = this.targetBuffer[posOffset];
-            const targetY = this.targetBuffer[posOffset + 1];
-            const dx = targetX - currentX;
-            const dy = targetY - currentY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+          const targetX = this.targetBuffer[posOffset];
+          const targetY = this.targetBuffer[posOffset + 1];
+          const dx = targetX - currentX;
+          const dy = targetY - currentY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
 
-            if (distance > 0.001) {
-              const speed = this.BASE_MOVEMENT_SPEED;
-              this.velocityBuffer[velOffset] = (dx / distance) * speed;
-              this.velocityBuffer[velOffset + 1] = (dy / distance) * speed;
-            } else {
-              this.velocityBuffer[velOffset] = 0;
-              this.velocityBuffer[velOffset + 1] = 0;
-            }
+          if (distance > 0.001) {
+            const speed = this.BASE_MOVEMENT_SPEED;
+            workVelocities[velOffset] = (dx / distance) * speed;
+            workVelocities[velOffset + 1] = (dy / distance) * speed;
+          } else {
+            workVelocities[velOffset] = 0;
+            workVelocities[velOffset + 1] = 0;
           }
         }
+
+        this.velocityBuffer = workVelocities;
+        this.bufferDirty = true;
 
         return { updated, arrived: result.arrived };
       } catch (error) {
         logger.warn(
           `⚠️ Error en GPU updatePositionsBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
         );
+        // workPositions and workVelocities are intact for CPU fallback
       }
     }
 
+    // CPU fallback: work on copies, then swap
     const arrived = new Array<boolean>(entityCount).fill(false);
 
     for (let i = 0; i < entityCount; i++) {
       const posOffset = i * 2;
       const velOffset = i * 2;
 
-      const currentX = this.positionBuffer![posOffset];
-      const currentY = this.positionBuffer![posOffset + 1];
+      const currentX = workPositions[posOffset];
+      const currentY = workPositions[posOffset + 1];
       const targetX = this.targetBuffer![posOffset];
       const targetY = this.targetBuffer![posOffset + 1];
 
@@ -168,23 +178,24 @@ export class MovementBatchProcessor {
       const moveDistance = (effectiveSpeed * deltaMs) / 1000;
 
       if (moveDistance >= distanceRemaining) {
-        this.positionBuffer![posOffset] = targetX;
-        this.positionBuffer![posOffset + 1] = targetY;
+        workPositions[posOffset] = targetX;
+        workPositions[posOffset + 1] = targetY;
         arrived[i] = true;
       } else {
         const ratio = moveDistance / distanceRemaining;
-        this.positionBuffer![posOffset] += dx * ratio;
-        this.positionBuffer![posOffset + 1] += dy * ratio;
+        workPositions[posOffset] += dx * ratio;
+        workPositions[posOffset + 1] += dy * ratio;
       }
 
-      const deltaX = this.positionBuffer![posOffset] - currentX;
-      const deltaY = this.positionBuffer![posOffset + 1] - currentY;
-      if (this.velocityBuffer) {
-        this.velocityBuffer[velOffset] = (deltaX / deltaMs) * 1000;
-        this.velocityBuffer[velOffset + 1] = (deltaY / deltaMs) * 1000;
-      }
+      const deltaX = workPositions[posOffset] - currentX;
+      const deltaY = workPositions[posOffset + 1] - currentY;
+      workVelocities[velOffset] = (deltaX / deltaMs) * 1000;
+      workVelocities[velOffset + 1] = (deltaY / deltaMs) * 1000;
     }
 
+    // Atomic swap after CPU processing completes
+    this.positionBuffer = workPositions;
+    this.velocityBuffer = workVelocities;
     this.bufferDirty = true;
     return { updated, arrived };
   }
@@ -196,15 +207,19 @@ export class MovementBatchProcessor {
   ): void {
     if (!this.fatigueBuffer || this.entityIdArray.length === 0) return;
 
+    // Double buffering for fatigue
+    const workFatigue = new Float32Array(this.fatigueBuffer);
+
     if (this.gpuService?.isGPUAvailable()) {
       try {
-        const newFatigue = this.gpuService.updateFatigueBatch(
-          this.fatigueBuffer,
+        const result = this.gpuService.updateFatigueBatch(
+          workFatigue,
           isMoving,
           isResting,
           deltaMs,
         );
-        this.fatigueBuffer = newFatigue;
+        // Atomic swap on GPU success
+        this.fatigueBuffer = result;
         this.bufferDirty = true;
         return;
       } catch (error) {

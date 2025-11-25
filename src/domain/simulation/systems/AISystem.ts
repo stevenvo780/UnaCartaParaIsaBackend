@@ -10,6 +10,10 @@ import {
 } from "../../types/simulation/ai";
 import type { AgentTraits, LifeStage } from "../../types/simulation/agents";
 import type { WorldResourceType } from "../../types/simulation/worldResources";
+import {
+  toInventoryResource,
+  isWorldResourceType,
+} from "../../types/simulation/resourceMapping";
 import { getAnimalConfig } from "../../../infrastructure/services/world/config/AnimalConfigs";
 import type { Task } from "../../types/simulation/tasks";
 import type { WeaponId as CraftingWeaponId } from "../../types/simulation/crafting";
@@ -964,7 +968,7 @@ export class AISystem extends EventEmitter {
     if (goal.targetId && goal.data?.resourceType) {
       const resourceTypeStr = goal.data.resourceType as string;
       if (this.worldResourceSystem) {
-        if (this.isValidWorldResourceType(resourceTypeStr)) {
+        if (isWorldResourceType(resourceTypeStr)) {
           const resources =
             this.worldResourceSystem.getResourcesByType(resourceTypeStr);
           const targetResource = resources.find((r) => r.id === goal.targetId);
@@ -1010,7 +1014,7 @@ export class AISystem extends EventEmitter {
     if (goal.targetId && goal.data?.resourceType) {
       const resourceTypeStr = goal.data.resourceType as string;
       if (this.worldResourceSystem) {
-        if (this.isValidWorldResourceType(resourceTypeStr)) {
+        if (isWorldResourceType(resourceTypeStr)) {
           const resources =
             this.worldResourceSystem.getResourcesByType(resourceTypeStr);
           const targetResource = resources.find((r) => r.id === goal.targetId);
@@ -1359,19 +1363,6 @@ export class AISystem extends EventEmitter {
     if (!this.householdSystem) logger.warn("AISystem: HouseholdSystem missing");
   }
 
-  private isValidWorldResourceType(value: string): value is WorldResourceType {
-    const validTypes: WorldResourceType[] = [
-      "tree",
-      "rock",
-      "trash_pile",
-      "water_source",
-      "berry_bush",
-      "mushroom_patch",
-      "wheat_crop",
-    ];
-    return validTypes.includes(value as WorldResourceType);
-  }
-
   private executeAction(action: AgentAction): void {
     if (!this._movementSystem) return;
 
@@ -1417,36 +1408,22 @@ export class AISystem extends EventEmitter {
           if (result.success) {
             const resource = this.gameState.worldResources?.[action.targetId];
             if (resource) {
-              let inventoryResourceType: ResourceType | null = null;
+              // Use type-safe resource mapping
+              const inventoryResourceType = toInventoryResource(resource.type);
 
-              if (resource.type === "water_source") {
-                inventoryResourceType = "water";
-                if (this.needsSystem) {
-                  this.needsSystem.satisfyNeed(action.agentId, "thirst", 30);
-                }
+              // Satisfy immediate needs based on resource type
+              if (resource.type === "water_source" && this.needsSystem) {
+                this.needsSystem.satisfyNeed(action.agentId, "thirst", 30);
               } else if (
                 ["berry_bush", "mushroom_patch", "wheat_crop"].includes(
                   resource.type,
-                )
+                ) &&
+                this.needsSystem
               ) {
-                inventoryResourceType = "food";
-                if (this.needsSystem) {
-                  this.needsSystem.satisfyNeed(action.agentId, "hunger", 25);
-                }
-              } else if (
-                ["tree", "oak_tree", "pine_tree", "fallen_log"].includes(
-                  resource.type,
-                )
-              ) {
-                inventoryResourceType = "wood";
-              } else if (
-                ["stone_deposit", "rock", "iron_ore", "gold_ore"].includes(
-                  resource.type,
-                )
-              ) {
-                inventoryResourceType = "stone";
+                this.needsSystem.satisfyNeed(action.agentId, "hunger", 25);
               }
 
+              // Add to inventory if mapping exists
               if (inventoryResourceType && this.inventorySystem) {
                 const added = this.inventorySystem.addResource(
                   action.agentId,

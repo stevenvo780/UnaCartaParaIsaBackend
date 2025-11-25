@@ -252,6 +252,87 @@ export class InventorySystem {
     return transferred;
   }
 
+  /**
+   * Transfers resources between two agents atomically.
+   * Validates capacity and availability before executing to prevent resource loss.
+   *
+   * @throws {Error} If validation fails (insufficient resources or capacity)
+   */
+  public transferBetweenAgents(
+    fromAgentId: string,
+    toAgentId: string,
+    resources: Partial<Record<ResourceType, number>>,
+  ): Record<ResourceType, number> {
+    const fromInv = this.getAgentInventory(fromAgentId);
+    const toInv = this.getAgentInventory(toAgentId);
+
+    if (!fromInv) {
+      throw new Error(`Source agent ${fromAgentId} has no inventory`);
+    }
+    if (!toInv) {
+      throw new Error(`Target agent ${toAgentId} has no inventory`);
+    }
+
+    const transferred: Record<ResourceType, number> = {
+      wood: 0,
+      stone: 0,
+      food: 0,
+      water: 0,
+      rare_materials: 0,
+    };
+
+    // Phase 1: Validate source has sufficient resources
+    for (const [resource, amount] of Object.entries(resources)) {
+      if (!amount || amount <= 0) continue;
+      const resourceType = resource as ResourceType;
+
+      if ((fromInv[resourceType] ?? 0) < amount) {
+        throw new Error(
+          `Insufficient ${resource}: agent ${fromAgentId} has ${fromInv[resourceType] ?? 0}, requested ${amount}`,
+        );
+      }
+    }
+
+    // Phase 2: Validate target has capacity
+    const toCurrentLoad =
+      toInv.wood +
+      toInv.stone +
+      toInv.food +
+      toInv.water +
+      toInv.rare_materials;
+    const toAvailableCapacity = toInv.capacity - toCurrentLoad;
+
+    const transferTotal = Object.values(resources).reduce(
+      (sum, amt) => sum + (amt || 0),
+      0,
+    );
+
+    if (transferTotal > toAvailableCapacity) {
+      throw new Error(
+        `Insufficient capacity: agent ${toAgentId} has ${toAvailableCapacity} space, transfer requires ${transferTotal}`,
+      );
+    }
+
+    // Phase 3: Execute atomic transfer
+    for (const [resource, amount] of Object.entries(resources)) {
+      if (!amount || amount <= 0) continue;
+      const resourceType = resource as ResourceType;
+
+      fromInv[resourceType] -= amount;
+      toInv[resourceType] += amount;
+      transferred[resourceType] = amount;
+    }
+
+    fromInv.lastUpdateTime = Date.now();
+    toInv.lastUpdateTime = Date.now();
+
+    logger.debug(
+      `💱 [Inventory] Transfer: ${fromAgentId} → ${toAgentId} | ${JSON.stringify(transferred)}`,
+    );
+
+    return transferred;
+  }
+
   public update(): void {
     const now = Date.now();
     if (now - this.lastDeprecationCheck < this.DEPRECATION_INTERVAL) return;
