@@ -129,29 +129,42 @@ export class SharedSpatialIndex {
     entities: SimulationEntity[],
     animals: Map<string, Animal>,
   ): void {
+    // === OPTIMIZATION: Only check entities that are likely to have moved ===
+    // Skip position check if difference is < 2 pixels (rounding errors)
+    const MOVE_THRESHOLD_SQ = 4; // 2 pixels squared
+    
     for (const entity of entities) {
       if (entity.isDead || !entity.position) continue;
 
       const cached = this.positionCache.get(entity.id);
-      if (
-        cached &&
-        (Math.abs(cached.x - entity.position.x) > 1 ||
-          Math.abs(cached.y - entity.position.y) > 1)
-      ) {
-        this.updateEntityPosition(entity.id, entity.position, "agent");
+      if (cached) {
+        const dx = cached.x - entity.position.x;
+        const dy = cached.y - entity.position.y;
+        if (dx * dx + dy * dy > MOVE_THRESHOLD_SQ) {
+          this.updateEntityPosition(entity.id, entity.position, "agent");
+        }
       }
     }
 
-    for (const [animalId, animal] of animals) {
+    // === OPTIMIZATION: Sample animals instead of checking all ===
+    // For 1000+ animals, only check a subset per frame
+    const animalArray = Array.from(animals.entries());
+    const checkLimit = Math.min(animalArray.length, 200); // Max 200 animals per frame
+    const startIdx = (Date.now() % 100) * Math.floor(animalArray.length / 100);
+    
+    for (let i = 0; i < checkLimit; i++) {
+      const idx = (startIdx + i) % animalArray.length;
+      const [animalId, animal] = animalArray[idx];
+      
       if (animal.isDead || !animal.position) continue;
 
       const cached = this.positionCache.get(animalId);
-      if (
-        cached &&
-        (Math.abs(cached.x - animal.position.x) > 1 ||
-          Math.abs(cached.y - animal.position.y) > 1)
-      ) {
-        this.updateEntityPosition(animalId, animal.position, "animal");
+      if (cached) {
+        const dx = cached.x - animal.position.x;
+        const dy = cached.y - animal.position.y;
+        if (dx * dx + dy * dy > MOVE_THRESHOLD_SQ) {
+          this.updateEntityPosition(animalId, animal.position, "animal");
+        }
       }
     }
   }
