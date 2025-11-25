@@ -41,7 +41,7 @@ export class BuildingMaintenanceSystem {
   private readonly config: BuildingMaintenanceConfig;
   private readonly now: () => number;
   private readonly buildingStates = new Map<string, BuildingState>();
-  private lastUpdate = 0;
+  private lastUpdate = Date.now();
   private readonly updateIntervalMs = 5_000;
 
   constructor(

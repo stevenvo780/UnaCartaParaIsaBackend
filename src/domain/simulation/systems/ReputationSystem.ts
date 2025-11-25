@@ -46,7 +46,7 @@ export class ReputationSystem {
   private gameState: GameState;
   private trust = new Map<string, Map<string, TrustEdge>>();
   private reputation = new Map<string, ReputationEntry>();
-  private lastUpdate = 0;
+  private lastUpdate = Date.now();
   private reputationHistory = new Map<string, ReputationChange[]>();
   private readonly MAX_HISTORY_PER_AGENT = 50;
 

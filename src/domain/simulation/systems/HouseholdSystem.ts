@@ -21,7 +21,7 @@ export class HouseholdSystem {
   private gameState: GameState;
   private config: HouseholdSystemConfig;
   private households = new Map<string, Household>();
-  private lastUpdate = 0;
+  private lastUpdate = Date.now();
 
   constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;

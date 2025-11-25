@@ -10,7 +10,7 @@ export class TaskSystem {
   private gameState: GameState;
   private tasks = new Map<string, Task>();
   private seq = 0;
-  private lastUpdate = 0;
+  private lastUpdate = Date.now();
 
   constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;

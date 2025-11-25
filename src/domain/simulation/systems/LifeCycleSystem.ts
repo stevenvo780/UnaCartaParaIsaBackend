@@ -263,6 +263,7 @@ export class LifeCycleSystem extends EventEmitter {
 
   public spawnAgent(partial: Partial<AgentProfile> = {}): AgentProfile {
     const id = `agent_${++this.spawnCounter}`;
+    logger.info(`🧑 Spawning agent ${id} (${partial.name || "unnamed"})`);
 
     let traits = this.randomTraits();
     if (partial.parents?.father && partial.parents?.mother) {

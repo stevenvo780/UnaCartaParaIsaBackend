@@ -19,7 +19,7 @@ export class NeedsSystem extends EventEmitter {
   private gameState: GameState;
   private config: NeedsConfig;
   private entityNeeds: Map<string, EntityNeedsData>;
-  private lastUpdate: number = 0;
+  private lastUpdate: number = Date.now();
 
   private lifeCycleSystem?: LifeCycleSystem;
   private divineFavorSystem?: DivineFavorSystem;

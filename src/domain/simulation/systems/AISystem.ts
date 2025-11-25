@@ -51,7 +51,7 @@ export class AISystem extends EventEmitter {
   private gameState: GameState;
   private config: AISystemConfig;
   private aiStates: Map<string, AIState>;
-  private lastUpdate: number = 0;
+  private lastUpdate: number = Date.now();
   private priorityManager: PriorityManager;
 
   private needsSystem?: NeedsSystem;

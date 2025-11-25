@@ -55,7 +55,7 @@ import { SharedSpatialIndex } from "../core/SharedSpatialIndex";
 export class CombatSystem {
   private readonly config: CombatConfig;
   private readonly spatialGrid: SpatialGrid<string>;
-  private lastUpdate = 0;
+  private lastUpdate = Date.now();
   private readonly lastAttackAt = new Map<string, number>();
   private readonly equippedWeapons = new Map<string, WeaponId>();
   private readonly maxLogEntries = 200;

@@ -38,7 +38,7 @@ export class ProductionSystem {
   private readonly config: ProductionConfig;
   private readonly lastProduction = new Map<string, number>();
   private readonly assignments = new Map<string, Set<string>>();
-  private lastUpdate = 0;
+  private lastUpdate = Date.now();
 
   constructor(
     @inject(TYPES.GameState) private readonly state: GameState,

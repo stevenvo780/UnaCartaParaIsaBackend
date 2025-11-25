@@ -39,7 +39,7 @@ export class EconomySystem {
   private genealogySystem?: GenealogySystem;
   private config: EconomyConfig;
   private yieldResiduals = new Map<string, number>();
-  private lastUpdate = 0;
+  private lastUpdate = Date.now();
   private readonly UPDATE_INTERVAL_MS = 10000; // Update every 10 seconds
   private lastSalaryPayment = 0;
   private readonly SALARY_INTERVAL_MS = 60000; // Pay salaries every minute

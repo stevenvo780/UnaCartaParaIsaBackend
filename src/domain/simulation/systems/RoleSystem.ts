@@ -128,7 +128,7 @@ export class RoleSystem extends EventEmitter {
     rest: [],
   };
   private currentShift: WorkShift = "morning";
-  private lastUpdate = 0;
+  private lastUpdate = Date.now();
   private lastStatsUpdate = 0;
   private lastReassignment = 0;
 

@@ -30,8 +30,8 @@ export class AnimalSystem {
   private animals = new Map<string, Animal>();
   private worldResourceSystem?: WorldResourceSystem;
 
-  private lastUpdate = 0;
-  private lastCleanup = 0;
+  private lastUpdate = Date.now();
+  private lastCleanup = Date.now();
 
   private spatialGrid = new Map<string, Set<string>>();
   private readonly GRID_CELL_SIZE = 256;
