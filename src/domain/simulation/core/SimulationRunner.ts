@@ -212,6 +212,7 @@ export class SimulationRunner {
       marriageSystem: this.marriageSystem,
       divineFavorSystem: this.divineFavorSystem,
       aiSystem: this.aiSystem,
+      roleSystem: this.roleSystem,
     });
 
     this.needsSystem.setDependencies({

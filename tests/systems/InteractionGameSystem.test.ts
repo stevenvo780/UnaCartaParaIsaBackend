@@ -139,5 +139,10 @@ describe("InteractionGameSystem", () => {
       expect(interactionSystem).toBeDefined();
     });
   });
+
+  afterEach(() => {
+    simulationEvents.clearQueue();
+    simulationEvents.removeAllListeners();
+  });
 });
 

@@ -737,5 +737,7 @@ describe("AISystem", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    simulationEvents.clearQueue();
+    simulationEvents.removeAllListeners();
   });
 });

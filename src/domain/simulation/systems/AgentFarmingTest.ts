@@ -86,8 +86,7 @@ class MockLifeCycleSystem {
 class MockWorldResourceSystem {
   public getResourcesNear(
     position: { x: number; y: number },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    radius: number,
+    _radius: number,
   ): { id: string }[] {
     // Simulate a resource at (0,0) (which corresponds to tile 0,0)
     // We need to check if the position is close to 0,0

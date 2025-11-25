@@ -38,6 +38,8 @@ describe("AppearanceGenerationSystem", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    simulationEvents.clearQueue();
+    simulationEvents.removeAllListeners();
   });
 
   it("genera y almacena apariencias emitiendo APPEARANCE_GENERATED", () => {

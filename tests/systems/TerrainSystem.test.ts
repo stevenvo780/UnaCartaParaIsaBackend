@@ -42,6 +42,8 @@ describe("TerrainSystem", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    simulationEvents.clearQueue();
+    simulationEvents.removeAllListeners();
   });
 
   it("debe retornar una instancia válida al llamar getTile()", () => {

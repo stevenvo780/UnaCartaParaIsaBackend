@@ -16,7 +16,6 @@ export class TrailBatchProcessor {
   private trailIdArray: string[] = [];
   private heatMapIdArray: string[] = [];
 
-  private bufferDirty = true;
   private gpuService?: GPUComputeService;
 
   constructor(
@@ -62,8 +61,6 @@ export class TrailBatchProcessor {
       this.heatMapBuffer = null;
       this.heatMapIdArray = [];
     }
-
-    this.bufferDirty = false;
   }
 
   public updateDecayBatch(
@@ -107,8 +104,6 @@ export class TrailBatchProcessor {
         );
       }
     }
-
-    this.bufferDirty = true;
   }
 
   public syncToState(

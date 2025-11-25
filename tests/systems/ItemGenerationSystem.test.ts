@@ -196,4 +196,9 @@ describe("ItemGenerationSystem", () => {
       expect(stats.totalItems).toBe(0);
     });
   });
+
+  afterEach(() => {
+    simulationEvents.clearQueue();
+    simulationEvents.removeAllListeners();
+  });
 });

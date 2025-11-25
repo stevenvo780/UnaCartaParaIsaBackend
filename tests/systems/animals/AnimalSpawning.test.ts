@@ -95,6 +95,8 @@ describe("AnimalSpawning", () => {
   afterEach(() => {
     vi.useRealTimers();
     (AnimalSpawning as any).spawnedChunks.clear();
+    simulationEvents.clearQueue();
+    simulationEvents.removeAllListeners();
   });
 
   describe("spawnAnimalsInWorld", () => {

@@ -17,6 +17,7 @@ import type { GenealogySystem } from "./GenealogySystem";
 import type { HouseholdSystem } from "./HouseholdSystem";
 import type { DivineFavorSystem } from "./DivineFavorSystem";
 import type { MovementSystem } from "./MovementSystem";
+import type { RoleSystem } from "./RoleSystem";
 
 interface LifeCycleConfig {
   secondsPerYear: number;
@@ -55,6 +56,7 @@ export class LifeCycleSystem extends EventEmitter {
   private _genealogySystem?: GenealogySystem;
   private _divineFavorSystem?: DivineFavorSystem;
   private _movementSystem?: MovementSystem;
+  private _roleSystem?: RoleSystem;
   private dependenciesChecked = false;
   private entityIndex?: EntityIndex;
 
@@ -90,6 +92,7 @@ export class LifeCycleSystem extends EventEmitter {
     householdSystem?: HouseholdSystem;
     divineFavorSystem?: DivineFavorSystem;
     movementSystem?: MovementSystem;
+    roleSystem?: RoleSystem;
   }): void {
     if (systems.needsSystem) this.needsSystem = systems.needsSystem;
     if (systems.aiSystem) this._aiSystem = systems.aiSystem;
@@ -102,6 +105,10 @@ export class LifeCycleSystem extends EventEmitter {
     if (systems.divineFavorSystem)
       this._divineFavorSystem = systems.divineFavorSystem;
     if (systems.movementSystem) this._movementSystem = systems.movementSystem;
+    if (systems.roleSystem) {
+      this._roleSystem = systems.roleSystem;
+      this.assignRolesToEligibleAdults();
+    }
   }
 
   private checkDependencies(): void {
@@ -118,6 +125,7 @@ export class LifeCycleSystem extends EventEmitter {
     if (!this._genealogySystem) missing.push("GenealogySystem");
     if (!this._divineFavorSystem) missing.push("DivineFavorSystem");
     if (!this._movementSystem) missing.push("MovementSystem");
+    if (!this._roleSystem) missing.push("RoleSystem");
     if (missing.length > 0) {
       logger.warn(
         `LifeCycleSystem: missing dependencies -> ${missing.join(", ")}`,
@@ -362,6 +370,16 @@ export class LifeCycleSystem extends EventEmitter {
       );
     }
 
+    if (
+      this._roleSystem &&
+      (profile.lifeStage === "adult" || profile.lifeStage === "elder")
+    ) {
+      const existingRole = this._roleSystem.getAgentRole(id);
+      if (!existingRole) {
+        this._roleSystem.assignBestRole(profile);
+      }
+    }
+
     simulationEvents.emit(GameEventNames.AGENT_BIRTH, {
       entityId: id,
       parentIds: profile.parents
@@ -370,6 +388,20 @@ export class LifeCycleSystem extends EventEmitter {
     });
 
     return profile;
+  }
+
+  private assignRolesToEligibleAdults(): void {
+    if (!this._roleSystem) return;
+
+    const agents = this.gameState.agents || [];
+    for (const agent of agents) {
+      if (agent.lifeStage === "adult" || agent.lifeStage === "elder") {
+        const role = this._roleSystem.getAgentRole(agent.id);
+        if (!role) {
+          this._roleSystem.assignBestRole(agent);
+        }
+      }
+    }
   }
 
   private randomTraits(): AgentTraits {

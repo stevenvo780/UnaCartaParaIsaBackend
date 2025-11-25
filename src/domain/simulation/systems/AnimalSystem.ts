@@ -33,7 +33,6 @@ export class AnimalSystem {
   private animals = new Map<string, Animal>();
   private worldResourceSystem?: WorldResourceSystem;
 
-  private lastUpdate = Date.now();
   private lastCleanup = Date.now();
 
   private spatialGrid = new Map<string, Set<string>>();
@@ -115,7 +114,6 @@ export class AnimalSystem {
     // No internal throttle - scheduler controls tick rate (MEDIUM = 250ms)
     const deltaSeconds = deltaMs / 1000;
     const deltaMinutes = deltaMs / 60000;
-    this.lastUpdate = now;
 
     let liveCount = 0;
     for (const animal of this.animals.values()) {

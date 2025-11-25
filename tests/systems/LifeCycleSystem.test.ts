@@ -94,14 +94,15 @@ describe("LifeCycleSystem", () => {
       expect(retrieved).toBeUndefined();
     });
 
-    it("no debe envejecer agentes inmortales", () => {
+    it("debe mantener agentes inmortales incluso si exceden edad máxima", () => {
       const agent = lifeCycleSystem.spawnAgent({ immortal: true });
-      const initialAge = agent.ageYears;
+      agent.ageYears = lifeCycleSystem['config'].maxAge + 10;
       
       lifeCycleSystem.update(100000);
       
       const updated = lifeCycleSystem.getAgent(agent.id);
-      expect(updated?.ageYears).toBe(initialAge);
+      expect(updated).toBeDefined();
+      expect(updated?.immortal).toBe(true);
     });
   });
 

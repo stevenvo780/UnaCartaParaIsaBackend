@@ -8,6 +8,13 @@ export class BatchedEventEmitter extends EventEmitter {
   private eventQueue: Array<{ name: string; payload: unknown }> = [];
   private batchingEnabled = true;
 
+  constructor() {
+    super();
+    // Aumentar maxListeners para evitar warnings en tests y producción
+    // cuando múltiples sistemas se suscriben a eventos
+    this.setMaxListeners(50);
+  }
+
   /**
    * Sobrescribe emit() para usar queueEvent() automáticamente cuando batching está habilitado
    */

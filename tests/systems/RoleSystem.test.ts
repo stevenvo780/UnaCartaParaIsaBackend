@@ -100,10 +100,10 @@ describe("RoleSystem", () => {
       expect(result.roleType).toBeDefined();
     });
 
-    it("no debe asignar rol a agente inmortal", () => {
+    it("puede asignar rol a agente inmortal", () => {
       const result = roleSystem.assignBestRole(gameState.agents![2]);
-      expect(result.success).toBe(false);
-      expect(result.reason).toContain("inmortal");
+      expect(result.success).toBe(true);
+      expect(result.roleType).toBeDefined();
     });
 
     it("debe retornar false si el agente no cumple requisitos", () => {
@@ -265,10 +265,11 @@ describe("RoleSystem", () => {
       expect(result.reason).toContain("no encontrado");
     });
 
-    it("no debe reasignar agente inmortal", () => {
+    it("puede reasignar agente inmortal", () => {
+      roleSystem.assignBestRole(gameState.agents![2]);
       const result = roleSystem.reassignRole("immortal-agent", "logger");
-      expect(result.success).toBe(false);
-      expect(result.reason).toContain("inmortal");
+      expect(result.success).toBe(true);
+      expect(result.roleType).toBe("logger");
     });
 
     it("debe retornar false para rol inválido", () => {

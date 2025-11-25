@@ -336,6 +336,8 @@ describe("HouseholdSystem", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    simulationEvents.clearQueue();
+    simulationEvents.removeAllListeners();
   });
 });
 

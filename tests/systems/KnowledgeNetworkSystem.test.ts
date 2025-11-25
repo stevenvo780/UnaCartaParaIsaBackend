@@ -280,5 +280,10 @@ describe("KnowledgeNetworkSystem", () => {
       expect(gameState.knowledgeGraph?.nodes.length).toBeGreaterThan(0);
     });
   });
+
+  afterEach(() => {
+    simulationEvents.clearQueue();
+    simulationEvents.removeAllListeners();
+  });
 });
 

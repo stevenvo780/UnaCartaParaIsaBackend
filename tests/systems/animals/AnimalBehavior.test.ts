@@ -90,6 +90,8 @@ describe("AnimalBehavior", () => {
   afterEach(() => {
     vi.useRealTimers();
     AnimalBehavior["wanderAngles"].clear();
+    simulationEvents.clearQueue();
+    simulationEvents.removeAllListeners();
   });
 
   describe("moveAwayFrom", () => {
