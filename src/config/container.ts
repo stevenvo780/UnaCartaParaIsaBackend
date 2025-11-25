@@ -52,6 +52,7 @@ import { AppearanceGenerationSystem } from "../domain/simulation/systems/Appeara
 import { EntityIndex } from "../domain/simulation/core/EntityIndex";
 import { SharedSpatialIndex } from "../domain/simulation/core/SharedSpatialIndex";
 import { GPUComputeService } from "../domain/simulation/core/GPUComputeService";
+import { TerrainSystem } from "../domain/simulation/systems/TerrainSystem";
 
 export const container = new Container();
 

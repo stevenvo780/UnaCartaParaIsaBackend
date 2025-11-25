@@ -51,11 +51,9 @@ describe("MessagePackCodec", () => {
     });
 
     it("debe hacer fallback a JSON si MsgPack falla", () => {
-      const invalidMsgPack = Buffer.from("invalid");
-      // Debe intentar parsear como JSON
-      expect(() => {
-        decodeMessage(invalidMsgPack);
-      }).not.toThrow();
+      const fallbackBuffer = Buffer.from('{"test":123}');
+
+      expect(decodeMessage(fallbackBuffer)).toEqual({ test: 123 });
     });
   });
 

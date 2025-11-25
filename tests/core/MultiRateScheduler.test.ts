@@ -197,7 +197,7 @@ describe("MultiRateScheduler", () => {
   });
 
   describe("getStats", () => {
-    it("debe retornar estadísticas de ejecución", () => {
+    it("debe retornar estadísticas de ejecución", async () => {
       const system: ScheduledSystem = {
         name: "test",
         rate: "FAST",
@@ -208,7 +208,7 @@ describe("MultiRateScheduler", () => {
       scheduler.registerSystem(system);
       scheduler.start();
 
-      vi.advanceTimersByTime(DEFAULT_TICK_RATES.FAST * 2);
+      await vi.advanceTimersByTimeAsync(DEFAULT_TICK_RATES.FAST * 2);
 
       const stats = scheduler.getStats();
 

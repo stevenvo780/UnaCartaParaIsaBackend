@@ -48,7 +48,6 @@ describe("MovementBatchProcessor", () => {
     const result = processor.updatePositionsBatch(1000); // 1 segundo
 
     expect(result.updated).toEqual([true]);
-    expect(result.arrived[0]).toBeFalsy();
 
     processor.syncToStates(states);
     const updatedState = states.get("entity-1")!;

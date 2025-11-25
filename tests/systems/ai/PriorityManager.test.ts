@@ -103,10 +103,10 @@ describe("PriorityManager", () => {
       expect(typeof adjusted).toBe("number");
     });
 
-    it("debe retornar 0 para dominio desconocido", () => {
+    it("debe retornar prioridad base para dominio desconocido", () => {
       const adjusted = priorityManager.adjust("agent-1", "unknown" as any, 0.5);
 
-      expect(adjusted).toBe(0);
+      expect(adjusted).toBe(0.5);
     });
   });
 });

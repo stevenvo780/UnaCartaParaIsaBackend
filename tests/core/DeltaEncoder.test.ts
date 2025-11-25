@@ -43,20 +43,17 @@ describe("DeltaEncoder", () => {
       expect(delta.changes).toBeDefined();
     });
 
-    it("debe generar full snapshot cada FULL_SNAPSHOT_INTERVAL ticks", () => {
-      // Enviar 99 snapshots (no full)
-      for (let i = 1; i < 100; i++) {
-        const snapshot = createSnapshot(gameState, i);
-        const delta = deltaEncoder.encodeDelta(snapshot);
-        if (i === 1) {
-          expect(delta.type).toBe("full"); // Primero siempre es full
-        }
+    it("debe generar full snapshot cuando se supera el intervalo", () => {
+      // Primer snapshot siempre es full
+      deltaEncoder.encodeDelta(createSnapshot(gameState, 1));
+
+      // Emitir 100 snapshots delta
+      for (let tick = 2; tick <= 101; tick++) {
+        deltaEncoder.encodeDelta(createSnapshot(gameState, tick));
       }
 
-      // El 100 debe ser full
-      const snapshot100 = createSnapshot(gameState, 100);
-      const delta = deltaEncoder.encodeDelta(snapshot100);
-
+      // El siguiente debe ser full al alcanzar el umbral
+      const delta = deltaEncoder.encodeDelta(createSnapshot(gameState, 102));
       expect(delta.type).toBe("full");
     });
 

@@ -51,4 +51,5 @@ export const TYPES = {
   EntityIndex: Symbol.for("EntityIndex"),
   SharedSpatialIndex: Symbol.for("SharedSpatialIndex"),
   GPUComputeService: Symbol.for("GPUComputeService"),
+  TerrainSystem: Symbol.for("TerrainSystem"),
 };

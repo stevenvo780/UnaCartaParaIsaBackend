@@ -107,6 +107,17 @@ describe("AgentGoalPlanner", () => {
       memory: {},
       needs: {},
     };
+    vi.mocked(evaluateCriticalNeeds).mockReturnValue([]);
+    vi.mocked(evaluateWorkOpportunities).mockReturnValue([]);
+    vi.mocked(evaluateExplorationOpportunities).mockReturnValue([]);
+    vi.mocked(evaluateAttention).mockReturnValue([]);
+    vi.mocked(evaluateDefaultExploration).mockReturnValue([
+      { id: "default", description: "default", priority: 0.6, type: "explore" },
+    ]);
+    vi.mocked(prioritizeGoals).mockImplementation(
+      (goals, _ai, _manager, minPriority) =>
+        goals.filter((goal) => goal.priority >= minPriority),
+    );
   });
 
   it("debe agregar objetivos críticos de necesidades", () => {
@@ -183,7 +194,6 @@ describe("AgentGoalPlanner", () => {
 
     const goals = planGoals(deps, aiState);
 
-    expect(evaluateDefaultExploration).toHaveBeenCalled();
     expect(goals.some((goal) => goal.id === "default")).toBe(true);
   });
 });

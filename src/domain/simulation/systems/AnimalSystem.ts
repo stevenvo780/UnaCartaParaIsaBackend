@@ -12,6 +12,7 @@ import { AnimalBehavior } from "./animals/AnimalBehavior";
 import { AnimalSpawning } from "./animals/AnimalSpawning";
 import { simulationEvents, GameEventNames } from "../core/events";
 import type { WorldResourceSystem } from "./WorldResourceSystem";
+import type { TerrainSystem } from "./TerrainSystem";
 import { AnimalBatchProcessor } from "./AnimalBatchProcessor";
 import { getFrameTime } from "../../../shared/FrameTime";
 
@@ -71,6 +72,9 @@ export class AnimalSystem {
     @inject(TYPES.WorldResourceSystem)
     @optional()
     worldResourceSystem?: WorldResourceSystem,
+    @inject(TYPES.TerrainSystem)
+    @optional()
+    private terrainSystem?: TerrainSystem,
   ) {
     this.gameState = gameState;
     this.worldResourceSystem = worldResourceSystem;
@@ -254,14 +258,49 @@ export class AnimalSystem {
           animal,
           config.detectionRange,
         );
-        AnimalBehavior.seekFood(
-          animal,
-          foodResources,
-          deltaSeconds,
-          (resourceId) => {
-            this.consumeResource(resourceId, animal.id);
-          },
-        );
+        if (foodResources.length > 0) {
+          AnimalBehavior.seekFood(
+            animal,
+            foodResources,
+            deltaSeconds,
+            (resourceId) => {
+              this.consumeResource(resourceId, animal.id);
+            },
+          );
+          return;
+        } else if (this.terrainSystem) {
+          // Grazing logic: if no food found, try to eat grass from tile
+          // Actually getTile takes tile coordinates, not world coordinates.
+          // World coordinates need to be converted to tile coordinates.
+          // Assuming tile size is 64 (DEFAULT_TILE_SIZE in WorldController) or similar.
+          // I should check GameState or config for tile size.
+          // For now, I'll assume 64 based on WorldController.
+          const TILE_SIZE = 64;
+          const tileX = Math.floor(animal.position.x / TILE_SIZE);
+          const tileY = Math.floor(animal.position.y / TILE_SIZE);
+
+          const terrainTile = this.terrainSystem.getTile(tileX, tileY);
+
+          if (
+            terrainTile &&
+            terrainTile.assets.terrain === "terrain_grassland"
+          ) {
+            animal.state = "eating";
+            // Simple eating logic: wait a bit then modify terrain
+            if (!animal.stateEndTime) {
+              animal.stateEndTime = Date.now() + 2000; // Eat for 2 seconds
+            } else if (Date.now() > animal.stateEndTime) {
+              // Finish eating
+              this.terrainSystem.modifyTile(tileX, tileY, {
+                assets: { terrain: "terrain_dirt" },
+              });
+              animal.needs.hunger = Math.min(100, animal.needs.hunger + 30);
+              animal.state = "idle";
+              animal.stateEndTime = undefined;
+            }
+            return;
+          }
+        }
         return;
       }
     }

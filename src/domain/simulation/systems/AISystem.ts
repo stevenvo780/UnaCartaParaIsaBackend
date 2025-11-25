@@ -373,25 +373,25 @@ export class AISystem extends EventEmitter {
         : undefined,
       getCurrentTimeOfDay: this.timeSystem
         ? ():
-          | "dawn"
-          | "morning"
-          | "midday"
-          | "afternoon"
-          | "dusk"
-          | "night"
-          | "deep_night" => {
-          const time = this.timeSystem!.getCurrentTimeOfDay();
-          if (time === "evening") return "dusk";
-          if (time === "rest") return "deep_night";
-          return time as
             | "dawn"
             | "morning"
             | "midday"
             | "afternoon"
             | "dusk"
             | "night"
-            | "deep_night";
-        }
+            | "deep_night" => {
+            const time = this.timeSystem!.getCurrentTimeOfDay();
+            if (time === "evening") return "dusk";
+            if (time === "rest") return "deep_night";
+            return time as
+              | "dawn"
+              | "morning"
+              | "midday"
+              | "afternoon"
+              | "dusk"
+              | "night"
+              | "deep_night";
+          }
         : undefined,
       getEntityPosition: (id: string) => {
         const agent =
@@ -448,10 +448,10 @@ export class AISystem extends EventEmitter {
       socialPreference: isChild
         ? "extroverted"
         : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 >
-          0.6
+            0.6
           ? "extroverted"
           : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 <
-            0.4
+              0.4
             ? "introverted"
             : "balanced",
       workEthic: isChild
@@ -459,7 +459,7 @@ export class AISystem extends EventEmitter {
         : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 > 0.7
           ? "workaholic"
           : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 <
-            0.3
+              0.3
             ? "lazy"
             : "balanced",
       explorationType:

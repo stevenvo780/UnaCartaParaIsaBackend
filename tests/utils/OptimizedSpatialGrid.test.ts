@@ -28,11 +28,9 @@ describe("OptimizedSpatialGrid", () => {
       grid.insert("entity-1", { x: 100, y: 100 });
       grid.insert("entity-1", { x: 200, y: 200 });
 
-      const oldCell = grid.getCell(100, 100);
-      const newCell = grid.getCell(200, 200);
-
-      expect(oldCell?.has("entity-1")).toBe(false);
-      expect(newCell?.has("entity-1")).toBe(true);
+      expect(grid.getCell(200, 200)?.has("entity-1")).toBe(true);
+      // La celda anterior puede eliminarse por completo, basta con verificar que ya no contiene al entity
+      expect(grid.getCell(100, 100)?.has("entity-1")).toBeFalsy();
     });
   });
 
@@ -42,7 +40,7 @@ describe("OptimizedSpatialGrid", () => {
       grid.remove("entity-1");
 
       const cell = grid.getCell(150, 150);
-      expect(cell?.has("entity-1")).toBe(false);
+      expect(cell?.has("entity-1")).toBeFalsy();
     });
 
     it("no debe hacer nada si entidad no existe", () => {

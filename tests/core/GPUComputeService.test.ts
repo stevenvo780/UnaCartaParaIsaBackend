@@ -3,120 +3,13 @@ import { GPUComputeService } from "../../src/domain/simulation/core/GPUComputeSe
 import * as tf from "@tensorflow/tfjs-node-gpu";
 
 vi.mock("@tensorflow/tfjs-node-gpu", () => ({
-  default: {
-    ready: vi.fn().mockResolvedValue(undefined),
-    getBackend: vi.fn().mockReturnValue("cpu"),
-    tensor1d: vi.fn((data) => ({
-      dataSync: () => new Float32Array(Array.isArray(data) ? data : [data]),
-      dispose: vi.fn(),
-      shape: [Array.isArray(data) ? data.length : 1],
-      expandDims: vi.fn(function (dim: number) {
-        return this;
-      }),
-      mul: vi.fn(function (other: unknown) {
-        return this;
-      }),
-      div: vi.fn(function (other: unknown) {
-        return this;
-      }),
-      sub: vi.fn(function (other: unknown) {
-        return this;
-      }),
-      add: vi.fn(function (other: unknown) {
-        return this;
-      }),
-      maximum: vi.fn(function (other: unknown) {
-        return this;
-      }),
-      minimum: vi.fn(function (other: unknown) {
-        return this;
-      }),
-      less: vi.fn(function (other: unknown) {
-        return {
-          dataSync: () => new Float32Array([1]),
-        };
-      }),
-      greaterEqual: vi.fn(function (other: unknown) {
-        return {
-          dataSync: () => new Float32Array([1]),
-          expandDims: vi.fn(() => this),
-        };
-      }),
-      norm: vi.fn(function () {
-        return {
-          dataSync: () => new Float32Array([10]),
-          add: vi.fn(() => this),
-          expandDims: vi.fn(() => this),
-        };
-      }),
-      slice: vi.fn(function () {
-        return {
-          sub: vi.fn(() => this),
-          mul: vi.fn(() => this),
-          expandDims: vi.fn(() => this),
-        };
-      }),
-      concat: vi.fn(function () {
-        return {
-          as2D: vi.fn(() => this),
-          maximum: vi.fn(() => this),
-          minimum: vi.fn(() => this),
-        };
-      }),
-      onesLike: vi.fn(function () {
-        return {
-          div: vi.fn(() => this),
-          add: vi.fn(() => this),
-          sub: vi.fn(() => this),
-          mul: vi.fn(() => this),
-        };
-      }),
-    }),
-    tensor2d: vi.fn((data, shape) => ({
-      dataSync: () => new Float32Array(Array.isArray(data) ? data.flat() : [data]),
-      dispose: vi.fn(),
-      shape: shape || [1, 1],
-      sub: vi.fn(function (other: unknown) {
-        return {
-          norm: vi.fn(() => ({
-            dataSync: () => new Float32Array([10]),
-            add: vi.fn(() => this),
-            expandDims: vi.fn(() => this),
-          })),
-        };
-      }),
-      mul: vi.fn(function (other: unknown) {
-        return this;
-      }),
-      slice: vi.fn(() => ({
-        sub: vi.fn(() => this),
-        mul: vi.fn(() => this),
-        expandDims: vi.fn(() => this),
-      })),
-    })),
-    scalar: vi.fn((value) => ({
-      dataSync: () => new Float32Array([value]),
-      dispose: vi.fn(),
-      sub: vi.fn(function (other: unknown) {
-        return {
-          maximum: vi.fn(() => ({
-            mul: vi.fn(() => this),
-          })),
-        };
-      }),
-    })),
-    tidy: vi.fn((fn) => {
-      try {
-        return fn();
-      } finally {
-      }
-    }),
-    disposeVariables: vi.fn(),
-  },
+  ready: vi.fn().mockResolvedValue(undefined),
+  getBackend: vi.fn().mockReturnValue("cpu"),
+  disposeVariables: vi.fn(),
 }));
 
 describe("GPUComputeService", () => {
-  let service: GPUComputeService;
+  let service;
 
   beforeEach(() => {
     service = new GPUComputeService();
@@ -126,7 +19,7 @@ describe("GPUComputeService", () => {
     it("debe detectar backend y GPU availability", async () => {
       await service.initialize();
 
-      expect(tf.default.ready).toHaveBeenCalled();
+      expect(tf.ready).toHaveBeenCalled();
     });
   });
 
@@ -288,7 +181,7 @@ describe("GPUComputeService", () => {
     it("debe limpiar memoria TensorFlow", () => {
       service.dispose();
 
-      expect(tf.default.disposeVariables).toHaveBeenCalled();
+      expect(tf.disposeVariables).toHaveBeenCalled();
     });
   });
 });

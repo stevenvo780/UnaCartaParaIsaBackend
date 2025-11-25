@@ -3,7 +3,7 @@ import { AnimalBehavior } from "../../../src/domain/simulation/systems/animals/A
 import type { Animal } from "../../../src/domain/types/simulation/animals";
 import { getAnimalConfig } from "../../../src/infrastructure/services/world/config/AnimalConfigs";
 import { simulationEvents, GameEventNames } from "../../../src/domain/simulation/core/events";
-import { AnimalNeeds } from "./AnimalNeeds";
+import { AnimalNeeds } from "../../../src/domain/simulation/systems/animals/AnimalNeeds";
 
 // Mocks
 vi.mock("../../../src/infrastructure/services/world/config/AnimalConfigs", () => ({
@@ -204,16 +204,19 @@ describe("AnimalBehavior", () => {
       mockAnimal.position = { x: 0, y: 0 };
       const resource = {
         id: "resource-1",
-        position: { x: 10, y: 10 },
+        position: { x: 120, y: 120 },
         type: "vegetation",
       };
 
       const onConsume = vi.fn();
+      const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.5);
 
       AnimalBehavior.seekFood(mockAnimal, [resource], 0.1, onConsume);
 
       expect(mockAnimal.currentTarget).toBeDefined();
       expect(mockAnimal.targetPosition).toEqual(resource.position);
+
+      randomSpy.mockRestore();
     });
 
     it("debe consumir cuando está cerca del recurso", () => {
