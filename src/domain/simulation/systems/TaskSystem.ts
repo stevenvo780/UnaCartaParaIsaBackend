@@ -259,6 +259,12 @@ export class TaskSystem {
     );
   }
 
+  /**
+   * Removes a specific agent from a task's contributors.
+   *
+   * @param taskId - The ID of the task.
+   * @param agentId - The ID of the agent to remove.
+   */
   public removeContributor(taskId: string, agentId: string): void {
     const task = this.tasks.get(taskId);
     if (task && task.contributors) {
@@ -266,6 +272,12 @@ export class TaskSystem {
     }
   }
 
+  /**
+   * Removes an agent from all tasks they are currently contributing to.
+   * Useful when an agent dies or is removed from the simulation.
+   *
+   * @param agentId - The ID of the agent to remove.
+   */
   public removeAgentFromAllTasks(agentId: string): void {
     for (const task of this.tasks.values()) {
       if (task.contributors?.has(agentId)) {
@@ -297,7 +309,7 @@ export class TaskSystem {
     const avgProgress =
       active.length > 0
         ? active.reduce((sum, t) => sum + t.progress / t.requiredWork, 0) /
-        active.length
+          active.length
         : 0;
 
     return {

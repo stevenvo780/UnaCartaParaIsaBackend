@@ -1,5 +1,5 @@
 import { performance } from "node:perf_hooks";
-import type { TickRate, SchedulerStatsSnapshot } from "./MultiRateScheduler";
+import type { TickRate, SchedulerStatsSnapshot } from "./SchedulerTypes";
 
 interface SimpleStats {
   count: number;

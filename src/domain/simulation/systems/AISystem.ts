@@ -465,25 +465,25 @@ export class AISystem extends EventEmitter {
         : undefined,
       getCurrentTimeOfDay: this.timeSystem
         ? ():
-          | "dawn"
-          | "morning"
-          | "midday"
-          | "afternoon"
-          | "dusk"
-          | "night"
-          | "deep_night" => {
-          const time = this.timeSystem!.getCurrentTimeOfDay();
-          if (time === "evening") return "dusk";
-          if (time === "rest") return "deep_night";
-          return time as
             | "dawn"
             | "morning"
             | "midday"
             | "afternoon"
             | "dusk"
             | "night"
-            | "deep_night";
-        }
+            | "deep_night" => {
+            const time = this.timeSystem!.getCurrentTimeOfDay();
+            if (time === "evening") return "dusk";
+            if (time === "rest") return "deep_night";
+            return time as
+              | "dawn"
+              | "morning"
+              | "midday"
+              | "afternoon"
+              | "dusk"
+              | "night"
+              | "deep_night";
+          }
         : undefined,
       getEntityPosition: (id: string) => {
         const agent =
@@ -540,10 +540,10 @@ export class AISystem extends EventEmitter {
       socialPreference: isChild
         ? "extroverted"
         : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 >
-          0.6
+            0.6
           ? "extroverted"
           : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 <
-            0.4
+              0.4
             ? "introverted"
             : "balanced",
       workEthic: isChild
@@ -551,7 +551,7 @@ export class AISystem extends EventEmitter {
         : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 > 0.7
           ? "workaholic"
           : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 <
-            0.3
+              0.3
             ? "lazy"
             : "balanced",
       explorationType:
@@ -1321,14 +1321,20 @@ export class AISystem extends EventEmitter {
   private handleActionComplete(payload: {
     agentId: string;
     success: boolean;
+    actionType?: string;
+    data?: Record<string, unknown>;
   }): void {
     const aiState = this.aiStates.get(payload.agentId);
     if (aiState) {
       aiState.currentAction = null;
       if (payload.success) {
         // If action was work, check if task is actually completed
-        if (payload.actionType === "work" && payload.data?.taskId) {
-          const task = this.taskSystem?.getTask(payload.data.taskId as string);
+        if (
+          payload.actionType === "work" &&
+          payload.data &&
+          typeof payload.data.taskId === "string"
+        ) {
+          const task = this.taskSystem?.getTask(payload.data.taskId);
           if (task && !task.completed) {
             // Task not done, don't complete goal yet
             return;
@@ -1398,56 +1404,8 @@ export class AISystem extends EventEmitter {
           );
         }
         break;
-        break;
       case "work":
-        if (action.targetZoneId) {
-          if (
-            this._movementSystem.isMovingToZone(
-              action.agentId,
-              action.targetZoneId,
-            )
-          ) {
-            return;
-          }
-
-          // Check if already in zone
-          const agentPos = this.getAgentPosition(action.agentId);
-          const zone = this.gameState.zones?.find(z => z.id === action.targetZoneId);
-
-          if (agentPos && zone && zone.bounds) {
-            const inZone =
-              agentPos.x >= zone.bounds.x &&
-              agentPos.x <= zone.bounds.x + zone.bounds.width &&
-              agentPos.y >= zone.bounds.y &&
-              agentPos.y <= zone.bounds.y + zone.bounds.height;
-
-            if (inZone) {
-              // Perform work
-              if (this.taskSystem && action.data?.taskId) {
-                const result = this.taskSystem.contributeToTask(
-                  action.data.taskId as string,
-                  action.agentId,
-                  10, // Base contribution
-                  1.0 // Synergy
-                );
-
-                simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
-                  agentId: action.agentId,
-                  actionType: "work",
-                  success: true,
-                  data: {
-                    taskId: action.data.taskId,
-                    progressMade: result.progressMade,
-                    completed: result.completed
-                  }
-                });
-                return;
-              }
-            }
-          }
-
-          this._movementSystem.moveToZone(action.agentId, action.targetZoneId);
-        }
+        this.executeWorkAction(action);
         break;
       case "harvest":
         if (action.targetId && this.worldResourceSystem) {
@@ -1525,5 +1483,60 @@ export class AISystem extends EventEmitter {
       default:
         break;
     }
+  }
+
+  /**
+   * Executes a work action for an agent.
+   * Checks if the agent is in the target zone and contributes to the task if so.
+   * Otherwise, moves the agent to the target zone.
+   *
+   * @param action - The action to execute.
+   */
+  private executeWorkAction(action: AgentAction): void {
+    if (!action.targetZoneId) return;
+
+    if (
+      this._movementSystem?.isMovingToZone(action.agentId, action.targetZoneId)
+    ) {
+      return;
+    }
+
+    const agentPos = this.getAgentPosition(action.agentId);
+    const zone = this.gameState.zones?.find(
+      (z) => z.id === action.targetZoneId,
+    );
+
+    if (agentPos && zone && zone.bounds) {
+      const inZone =
+        agentPos.x >= zone.bounds.x &&
+        agentPos.x <= zone.bounds.x + zone.bounds.width &&
+        agentPos.y >= zone.bounds.y &&
+        agentPos.y <= zone.bounds.y + zone.bounds.height;
+
+      if (inZone) {
+        if (this.taskSystem && action.data?.taskId) {
+          const result = this.taskSystem.contributeToTask(
+            action.data.taskId as string,
+            action.agentId,
+            10, // Base contribution
+            1.0, // Synergy
+          );
+
+          simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+            agentId: action.agentId,
+            actionType: "work",
+            success: true,
+            data: {
+              taskId: action.data.taskId,
+              progressMade: result.progressMade,
+              completed: result.completed,
+            },
+          });
+          return;
+        }
+      }
+    }
+
+    this._movementSystem?.moveToZone(action.agentId, action.targetZoneId);
   }
 }

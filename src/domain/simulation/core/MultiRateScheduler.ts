@@ -2,6 +2,10 @@ import { performance } from "node:perf_hooks";
 import { logger } from "../../../infrastructure/utils/logger";
 import { updateFrameTime } from "../../../shared/FrameTime";
 import { performanceMonitor } from "./PerformanceMonitor";
+import type { TickRate, SchedulerStatsSnapshot } from "./SchedulerTypes";
+
+// Re-export types for backwards compatibility
+export type { TickRate, SchedulerStatsSnapshot } from "./SchedulerTypes";
 
 /**
  * Tick rate configuration for multi-rate scheduling.
@@ -21,23 +25,6 @@ export const DEFAULT_TICK_RATES: TickRates = {
   MEDIUM: 250,
   SLOW: 1000,
 };
-
-export type TickRate = "FAST" | "MEDIUM" | "SLOW";
-
-export interface SchedulerStatsSnapshot {
-  fast: {
-    count: number;
-    totalMs: number;
-    avgMs: number;
-    skipped: number;
-    systems: number;
-    enabled: number;
-  };
-  medium: SchedulerStatsSnapshot["fast"];
-  slow: SchedulerStatsSnapshot["fast"];
-  isRunning: boolean;
-  entityCount: number;
-}
 
 /**
  * Configuration for a system registered in the multi-rate scheduler.
