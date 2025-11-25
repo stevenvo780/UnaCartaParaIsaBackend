@@ -186,7 +186,11 @@ export class NeedsSystem extends EventEmitter {
       this.emitNeedEvents(entityId, needs);
     }
     const duration = performance.now() - startTime;
-    performanceMonitor.recordSubsystemExecution("NeedsSystem", "updateTraditional", duration);
+    performanceMonitor.recordSubsystemExecution(
+      "NeedsSystem",
+      "updateTraditional",
+      duration,
+    );
   }
 
   private updateBatch(dtSeconds: number, _now: number): void {
@@ -248,7 +252,11 @@ export class NeedsSystem extends EventEmitter {
       this.emitNeedEvents(entityId, needs);
     }
     const duration = performance.now() - startTime;
-    performanceMonitor.recordSubsystemExecution("NeedsSystem", "updateBatch", duration);
+    performanceMonitor.recordSubsystemExecution(
+      "NeedsSystem",
+      "updateBatch",
+      duration,
+    );
   }
 
   private handleZoneBenefits(

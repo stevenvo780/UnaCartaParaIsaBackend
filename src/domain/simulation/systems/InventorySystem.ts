@@ -46,6 +46,7 @@ export class InventorySystem {
       stone: 0,
       food: 0,
       water: 0,
+      rare_materials: 0,
       capacity: capacity ?? this.DEFAULT_AGENT_CAPACITY,
       lastUpdateTime: Date.now(),
     };
@@ -67,6 +68,7 @@ export class InventorySystem {
         stone: 0,
         food: 0,
         water: 0,
+        rare_materials: 0,
         capacity: capacity ?? this.DEFAULT_STOCKPILE_CAPACITY,
         lastUpdateTime: Date.now(),
       },
@@ -112,7 +114,7 @@ export class InventorySystem {
     const inv = this.agentInventories.get(agentId);
     if (!inv) return false;
 
-    const currentLoad = inv.wood + inv.stone + inv.food + inv.water;
+    const currentLoad = inv.wood + inv.stone + inv.food + inv.water + inv.rare_materials;
     const available = inv.capacity - currentLoad;
     const toAdd = Math.min(amount, available);
 
@@ -134,7 +136,8 @@ export class InventorySystem {
       sp.inventory.wood +
       sp.inventory.stone +
       sp.inventory.food +
-      sp.inventory.water;
+      sp.inventory.water +
+      sp.inventory.rare_materials;
     const available = sp.capacity - currentLoad;
     const toAdd = Math.min(amount, available);
 
@@ -212,6 +215,7 @@ export class InventorySystem {
       stone: 0,
       food: 0,
       water: 0,
+      rare_materials: 0,
     };
 
     const entries = Object.entries(resources) as [ResourceType, number][];
@@ -228,7 +232,8 @@ export class InventorySystem {
         sp.inventory.wood +
         sp.inventory.stone +
         sp.inventory.food +
-        sp.inventory.water;
+        sp.inventory.water +
+        sp.inventory.rare_materials;
       const availableSpace = sp.capacity - currentLoad;
 
       if (availableSpace <= 0) continue;
@@ -285,6 +290,7 @@ export class InventorySystem {
             stone: 0,
             food: 0,
             water: 0,
+            rare_materials: 0,
             capacity: 0,
             lastUpdateTime: now,
           },
@@ -297,20 +303,21 @@ export class InventorySystem {
       for (const stockpile of this.stockpiles.values()) {
         stockpilesObj[stockpile.id] = stockpile.inventory;
       }
-      this.gameState.inventory.stockpiles = stockpilesObj;
+      this.gameState.inventory!.stockpiles = stockpilesObj;
 
       const agentsObj: Record<string, Inventory> = {};
       for (const [agentId, inv] of this.agentInventories) {
         agentsObj[agentId] = inv;
       }
-      this.gameState.inventory.agents = agentsObj;
+      this.gameState.inventory!.agents = agentsObj;
 
       const stats = this.getSystemStats();
-      this.gameState.inventory.global = {
+      this.gameState.inventory!.global = {
         wood: stats.stockpiled.wood + stats.inAgents.wood,
         stone: stats.stockpiled.stone + stats.inAgents.stone,
         food: stats.stockpiled.food + stats.inAgents.food,
         water: stats.stockpiled.water + stats.inAgents.water,
+        rare_materials: stats.stockpiled.rare_materials + stats.inAgents.rare_materials,
         capacity: 0,
         lastUpdateTime: now,
       };
@@ -325,28 +332,32 @@ export class InventorySystem {
       stone: number;
       food: number;
       water: number;
+      rare_materials: number;
     };
     inAgents: {
       wood: number;
       stone: number;
       food: number;
       water: number;
+      rare_materials: number;
     };
   } {
-    const totalStockpiled = { wood: 0, stone: 0, food: 0, water: 0 };
+    const totalStockpiled = { wood: 0, stone: 0, food: 0, water: 0, rare_materials: 0 };
     for (const sp of this.stockpiles.values()) {
       totalStockpiled.wood += sp.inventory.wood;
       totalStockpiled.stone += sp.inventory.stone;
       totalStockpiled.food += sp.inventory.food;
       totalStockpiled.water += sp.inventory.water;
+      totalStockpiled.rare_materials += sp.inventory.rare_materials;
     }
 
-    const totalInAgents = { wood: 0, stone: 0, food: 0, water: 0 };
+    const totalInAgents = { wood: 0, stone: 0, food: 0, water: 0, rare_materials: 0 };
     for (const inv of this.agentInventories.values()) {
       totalInAgents.wood += inv.wood;
       totalInAgents.stone += inv.stone;
       totalInAgents.food += inv.food;
       totalInAgents.water += inv.water;
+      totalInAgents.rare_materials += inv.rare_materials;
     }
 
     return {

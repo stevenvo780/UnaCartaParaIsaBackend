@@ -315,9 +315,6 @@ class PerformanceMonitor {
       lines.push(
         `backend_subsystem_calls_total{system="${system}",operation="${operation}"} ${stats.count}`,
       );
-      lines.push(
-        `backend_subsystem_calls_total{system="${system}",operation="${operation}"} ${stats.count}`,
-      );
     }
 
     lines.push(

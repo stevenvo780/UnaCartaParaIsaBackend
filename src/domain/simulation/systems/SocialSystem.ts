@@ -120,7 +120,11 @@ export class SocialSystem {
     const now = getFrameTime();
     this.updateTruces(now);
     const duration = performance.now() - startTime;
-    performanceMonitor.recordSubsystemExecution("SocialSystem", "update", duration);
+    performanceMonitor.recordSubsystemExecution(
+      "SocialSystem",
+      "update",
+      duration,
+    );
   }
 
   /**
@@ -484,7 +488,11 @@ export class SocialSystem {
       count: this.groups.length,
     });
     const duration = performance.now() - startTime;
-    performanceMonitor.recordSubsystemExecution("SocialSystem", "recomputeGroups", duration);
+    performanceMonitor.recordSubsystemExecution(
+      "SocialSystem",
+      "recomputeGroups",
+      duration,
+    );
   }
 
   public getGroups(): SocialGroup[] {

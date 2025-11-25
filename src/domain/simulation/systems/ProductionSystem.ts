@@ -252,7 +252,11 @@ export class ProductionSystem {
       }
     }
     const duration = performance.now() - startTime;
-    performanceMonitor.recordSubsystemExecution("ProductionSystem", "processProduction", duration);
+    performanceMonitor.recordSubsystemExecution(
+      "ProductionSystem",
+      "processProduction",
+      duration,
+    );
   }
 
   /**

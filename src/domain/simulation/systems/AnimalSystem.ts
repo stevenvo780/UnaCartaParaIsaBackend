@@ -183,7 +183,11 @@ export class AnimalSystem {
 
     this.updateGameStateSnapshot();
     const duration = performance.now() - startTime;
-    performanceMonitor.recordSubsystemExecution("AnimalSystem", "update", duration);
+    performanceMonitor.recordSubsystemExecution(
+      "AnimalSystem",
+      "update",
+      duration,
+    );
   }
 
   private updateBatch(
@@ -237,7 +241,7 @@ export class AnimalSystem {
       if (
         isIdleState &&
         i % this.IDLE_UPDATE_DIVISOR !==
-        this.updateFrame % this.IDLE_UPDATE_DIVISOR
+          this.updateFrame % this.IDLE_UPDATE_DIVISOR
       ) {
         continue;
       }
@@ -248,7 +252,11 @@ export class AnimalSystem {
       this.checkAnimalDeath(animal);
     }
     const duration = performance.now() - startTime;
-    performanceMonitor.recordSubsystemExecution("AnimalSystem", "updateBatch", duration);
+    performanceMonitor.recordSubsystemExecution(
+      "AnimalSystem",
+      "updateBatch",
+      duration,
+    );
   }
 
   private updateAnimalBehavior(animal: Animal, deltaSeconds: number): void {

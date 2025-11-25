@@ -294,7 +294,11 @@ export class AISystem extends EventEmitter {
       this._decisionTimeTotalMs += duration;
       this._decisionCount++;
 
-      performanceMonitor.recordSubsystemExecution("AISystem", "makeDecision", duration);
+      performanceMonitor.recordSubsystemExecution(
+        "AISystem",
+        "makeDecision",
+        duration,
+      );
 
       if (newGoal) {
         aiState.currentGoal = newGoal;
@@ -330,11 +334,20 @@ export class AISystem extends EventEmitter {
    * Makes a decision for an agent, selecting the best goal based on current state.
    * Uses AgentGoalPlanner to evaluate available goals and select the highest priority one.
    *
-   * @param _agentId - Agent identifier
+   * @param agentId - Agent identifier
    * @param aiState - Agent's AI state
    * @returns Selected goal or null if no suitable goal found
    */
-  private makeDecision(_agentId: string, aiState: AIState): AIGoal | null {
+  private makeDecision(agentId: string, aiState: AIState): AIGoal | null {
+    const t0 = performance.now();
+    const goal = this.processGoals(agentId, aiState);
+    const d0 = performance.now() - t0;
+    performanceMonitor.recordSubsystemExecution("AISystem", "processGoals", d0);
+
+    return goal;
+  }
+
+  private processGoals(_agentId: string, aiState: AIState): AIGoal | null {
     const deps: AgentGoalPlannerDeps = {
       gameState: this.gameState,
       priorityManager: this.priorityManager,

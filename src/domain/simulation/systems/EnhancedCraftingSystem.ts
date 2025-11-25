@@ -143,20 +143,26 @@ export class EnhancedCraftingSystem {
     });
   }
 
+  /**
+   * Applies the output of a completed crafting recipe.
+   *
+   * NOTE: Due to the simplified inventory system (ResourceType only),
+   * crafted items are converted to their base resource type.
+   * A proper item-based inventory would store items individually.
+   */
   private applyOutput(agentId: string, recipe: CraftingRecipe): void {
     const output = recipe.output.itemId;
-    if (
-      output === "wood" ||
-      output === "stone" ||
-      output === "food" ||
-      output === "water"
-    ) {
-      this.inventorySystem.addResource(agentId, output, recipe.output.quantity);
+
+    // Check if it's a weapon first
+    if (BASE_WEAPONS.includes(output as WeaponId)) {
+      this.equippedWeapons.set(agentId, output as WeaponId);
       return;
     }
 
-    if (BASE_WEAPONS.includes(output as WeaponId)) {
-      this.equippedWeapons.set(agentId, output as WeaponId);
+    // Map the output to a resource type and add to inventory
+    const resourceKey = this.mapToResourceKey(output);
+    if (resourceKey) {
+      this.inventorySystem.addResource(agentId, resourceKey, recipe.output.quantity);
     }
   }
 
@@ -183,18 +189,59 @@ export class EnhancedCraftingSystem {
     }
   }
 
+  /**
+   * Maps item IDs to base resource types.
+   *
+   * NOTE: This is a workaround for the architectural mismatch between:
+   * - RecipesCatalog (uses specific item IDs like "fiber", "iron_ore", "wheat")
+   * - Inventory system (uses only ResourceType: wood|stone|food|water|rare_materials)
+   *
+   * Items are collapsed into their closest resource category.
+   * A proper fix would require an item-based inventory system.
+   */
   private mapToResourceKey(itemId: string): ResourceType | null {
+    // Direct resource types
     if (
       itemId === "wood" ||
       itemId === "stone" ||
       itemId === "food" ||
-      itemId === "water"
+      itemId === "water" ||
+      itemId === "rare_materials"
     ) {
       return itemId;
     }
-    if (itemId === "wood_log") {
+
+    // Wood-based materials
+    const woodItems = ["wood_log", "plank", "fiber", "rope", "leather", "leather_hide", "cloth"];
+    if (woodItems.includes(itemId)) {
       return "wood";
     }
+
+    // Stone/mineral-based materials
+    const stoneItems = [
+      "iron_ore", "copper_ore", "coal", "clay", "brick",
+      "iron_ingot", "copper_ingot", "obsidian", "flint"
+    ];
+    if (stoneItems.includes(itemId)) {
+      return "stone";
+    }
+
+    // Food items (raw and cooked)
+    const foodItems = [
+      "wheat", "flour", "bread", "berries", "mushrooms",
+      "raw_meat", "cooked_meat", "fish", "cooked_fish",
+      "meat_stew", "fruit", "vegetables", "honey"
+    ];
+    if (foodItems.includes(itemId)) {
+      return "food";
+    }
+
+    // Rare materials (gems, crystals, special items)
+    const rareItems = ["crystal", "gem", "diamond", "gold_nugget", "silver_nugget"];
+    if (rareItems.includes(itemId)) {
+      return "rare_materials";
+    }
+
     return null;
   }
 

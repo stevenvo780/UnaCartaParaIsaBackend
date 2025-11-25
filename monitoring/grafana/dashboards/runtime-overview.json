@@ -270,7 +270,7 @@
       },
       "targets": [
         {
-          "expr": "increase(backend_subsystem_total_duration_ms[1m])",
+          "expr": "sum by (system, operation) (increase(backend_subsystem_total_duration_ms[1m]))",
           "legendFormat": "{{system}}:{{operation}}",
           "refId": "A"
         }
@@ -315,7 +315,7 @@
       },
       "targets": [
         {
-          "expr": "topk(10, increase(backend_subsystem_total_duration_ms[1m]))",
+          "expr": "topk(10, sum by (system, operation) (increase(backend_subsystem_total_duration_ms[1m])))",
           "legendFormat": "{{system}}:{{operation}}",
           "refId": "A"
         }

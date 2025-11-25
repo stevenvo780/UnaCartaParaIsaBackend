@@ -223,7 +223,11 @@ export class CombatSystem {
       }
     }
     const duration = performance.now() - startTime;
-    performanceMonitor.recordSubsystemExecution("CombatSystem", "update", duration);
+    performanceMonitor.recordSubsystemExecution(
+      "CombatSystem",
+      "update",
+      duration,
+    );
   }
 
   private updateBatch(
@@ -283,7 +287,11 @@ export class CombatSystem {
       }
     }
     const duration = performance.now() - startTime;
-    performanceMonitor.recordSubsystemExecution("CombatSystem", "updateBatch", duration);
+    performanceMonitor.recordSubsystemExecution(
+      "CombatSystem",
+      "updateBatch",
+      duration,
+    );
   }
 
   public getNearbyEnemies(

@@ -1,13 +1,13 @@
-export type ResourceType = "wood" | "stone" | "food" | "water";
+export type ResourceType = "wood" | "stone" | "food" | "water" | "rare_materials";
 
 export interface Inventory {
   wood: number;
   stone: number;
   food: number;
   water: number;
+  rare_materials: number;
   capacity: number;
-  lastUpdateTime?: number;
-}
+  lastUpdateTime?: number;}
 
 export interface Stockpile {
   id: string;
@@ -25,12 +25,14 @@ export interface EconomyConfig {
     stone: number;
     food: number;
     water: number;
+    rare_materials: number;
   };
   salaryRates: {
     wood: number;
     stone: number;
     food: number;
     water: number;
+    rare_materials: number;
   };
 }
 
