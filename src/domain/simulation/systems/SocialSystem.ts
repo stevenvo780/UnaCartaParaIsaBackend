@@ -24,7 +24,6 @@ export class SocialSystem {
   private zoneHeat = new Map<string, number>();
   private lastUpdate = 0;
   
-  // 🔧 FIX: Tracking incremental para evitar clear() completo cada tick
   private knownEntities = new Set<string>();
   private positionCache = new Map<string, { x: number; y: number }>();
   private readonly POSITION_THRESHOLD = 2; // Solo actualizar si se movió más de 2 unidades

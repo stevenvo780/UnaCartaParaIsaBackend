@@ -27,8 +27,8 @@ export class TaskSystem {
     const STALLED_THRESHOLD = 300000; // 5 minutes
     const MAX_STALLED_AGE = 600000; // 10 minutes - cancelar después de esto
 
-    this.tasks.forEach((task) => {
-      if (task.completed) return;
+    for (const task of this.tasks.values()) {
+      if (task.completed) continue;
 
       if (task.lastContribution) {
         const timeSinceLastContribution = now - task.lastContribution;
@@ -47,7 +47,7 @@ export class TaskSystem {
           });
         }
       }
-    });
+    }
 
     if (!this.gameState.tasks) {
       this.gameState.tasks = {

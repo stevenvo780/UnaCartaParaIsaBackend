@@ -193,9 +193,6 @@ export class AISystem extends EventEmitter {
     this.lastUpdate = now;
     const agents = this.gameState.agents || [];
 
-    // 🔧 FIX: Aumentar batch size para reducir latencia en toma de decisiones
-    // Con 100 agentes y BATCH_SIZE=10, tardaba 10 ticks (5s) en procesar todos
-    // Con BATCH_SIZE=25, tarda 4 ticks (2s) - mejora 60%
     const BATCH_SIZE = 25;
     const batchSize = Math.min(BATCH_SIZE, agents.length);
     let _processed = 0;

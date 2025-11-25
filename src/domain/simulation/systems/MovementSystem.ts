@@ -355,7 +355,6 @@ export class MovementSystem extends EventEmitter {
       this.entityIndex?.getAgent(state.entityId) ??
       this.gameState.agents.find((a) => a.id === state.entityId);
     if (agent) {
-      // Optimizado: mutar directamente en lugar de crear objeto nuevo
       if (!agent.position) {
         agent.position = {
           x: state.currentPosition.x,
@@ -395,7 +394,6 @@ export class MovementSystem extends EventEmitter {
     state.currentActivity = "idle";
 
     if (state.targetPosition) {
-      // Optimizado: mutar directamente en lugar de crear objetos nuevos
       state.currentPosition.x = state.targetPosition.x;
       state.currentPosition.y = state.targetPosition.y;
 

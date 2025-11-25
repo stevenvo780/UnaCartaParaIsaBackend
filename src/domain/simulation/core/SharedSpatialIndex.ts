@@ -16,18 +16,15 @@ export class SharedSpatialIndex {
   private entityTypes = new Map<string, EntityType>();
   private dirty = true;
 
-  // Tracking para actualizaciones incrementales
   private lastEntityIds = new Set<string>();
   private lastAnimalIds = new Set<string>();
   private positionCache = new Map<string, { x: number; y: number }>();
 
-  // Pool de objetos de posición para evitar GC
   private positionPool: Array<{ x: number; y: number }> = [];
   private readonly POSITION_POOL_SIZE = 200;
 
   constructor(worldWidth: number = 3200, worldHeight: number = 3200, cellSize: number = 70) {
     this.grid = new SpatialGrid(worldWidth, worldHeight, cellSize);
-    // Pre-llenar pool
     for (let i = 0; i < this.POSITION_POOL_SIZE; i++) {
       this.positionPool.push({ x: 0, y: 0 });
     }
@@ -55,7 +52,6 @@ export class SharedSpatialIndex {
     animals: Map<string, Animal>,
   ): void {
     if (!this.dirty) {
-      // Aún así, actualizar posiciones de entidades que se movieron
       this.updateMovedPositions(entities, animals);
       return;
     }
@@ -63,14 +59,12 @@ export class SharedSpatialIndex {
     const currentEntityIds = new Set<string>();
     const currentAnimalIds = new Set<string>();
 
-    // Procesar entidades
     for (const entity of entities) {
       if (entity.isDead || !entity.position) continue;
       
       currentEntityIds.add(entity.id);
       const lastPos = this.positionCache.get(entity.id);
       
-      // Solo actualizar si la posición cambió significativamente
       if (!lastPos || 
           Math.abs(lastPos.x - entity.position.x) > 1 || 
           Math.abs(lastPos.y - entity.position.y) > 1) {
@@ -78,7 +72,6 @@ export class SharedSpatialIndex {
       }
     }
 
-    // Procesar animales
     for (const [animalId, animal] of animals) {
       if (animal.isDead || !animal.position) continue;
       
@@ -92,7 +85,6 @@ export class SharedSpatialIndex {
       }
     }
 
-    // Remover entidades que ya no existen
     for (const id of this.lastEntityIds) {
       if (!currentEntityIds.has(id)) {
         this.removeEntity(id);
@@ -110,9 +102,6 @@ export class SharedSpatialIndex {
     this.dirty = false;
   }
 
-  /**
-   * Actualiza posiciones de entidades que se movieron (sin marcar dirty)
-   */
   private updateMovedPositions(
     entities: SimulationEntity[],
     animals: Map<string, Animal>,
@@ -147,7 +136,6 @@ export class SharedSpatialIndex {
   ): void {
     this.grid.insert(id, position);
     
-    // Actualizar o crear posición cacheada
     let cached = this.entityPositions.get(id);
     if (cached) {
       cached.x = position.x;
@@ -159,7 +147,6 @@ export class SharedSpatialIndex {
       this.entityPositions.set(id, cached);
     }
 
-    // Actualizar caché de posición para detección de movimiento
     let posCache = this.positionCache.get(id);
     if (posCache) {
       posCache.x = position.x;

@@ -174,7 +174,7 @@ export class RoleSystem extends EventEmitter {
   }
 
   private updateRoleStats(dt: number): void {
-    this.roles.forEach((role) => {
+    for (const role of this.roles.values()) {
       if (
         role.currentShift === this.currentShift &&
         role.currentShift !== "rest"
@@ -189,7 +189,7 @@ export class RoleSystem extends EventEmitter {
         0,
         role.satisfaction - this.config.satisfactionDecayPerSecond * dt,
       );
-    });
+    }
   }
 
   public updateCurrentShift(

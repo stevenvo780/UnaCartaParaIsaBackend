@@ -276,15 +276,15 @@ export class InventorySystem {
       }
 
       const stockpilesObj: Record<string, Inventory> = {};
-      this.stockpiles.forEach((stockpile) => {
+      for (const stockpile of this.stockpiles.values()) {
         stockpilesObj[stockpile.id] = stockpile.inventory;
-      });
+      }
       this.gameState.inventory.stockpiles = stockpilesObj;
 
       const agentsObj: Record<string, Inventory> = {};
-      this.agentInventories.forEach((inv, agentId) => {
+      for (const [agentId, inv] of this.agentInventories) {
         agentsObj[agentId] = inv;
-      });
+      }
       this.gameState.inventory.agents = agentsObj;
 
       const stats = this.getSystemStats();
