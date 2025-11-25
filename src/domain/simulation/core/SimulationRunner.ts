@@ -233,9 +233,14 @@ export class SimulationRunner {
     this.setupEventListeners();
 
     if (this.state.agents.length === 0) {
-      this.lifeCycleSystem.spawnAgent({
+      // Crear a Isa y Stev como fundadores adultos (generación 0)
+      const isa = this.lifeCycleSystem.spawnAgent({
         name: "Isa",
         sex: "female",
+        ageYears: 25,
+        lifeStage: "adult",
+        generation: 0,
+        immortal: true,
         traits: {
           cooperation: 0.8,
           aggression: 0.2,
@@ -244,9 +249,13 @@ export class SimulationRunner {
         },
       });
 
-      this.lifeCycleSystem.spawnAgent({
+      const stev = this.lifeCycleSystem.spawnAgent({
         name: "Stev",
         sex: "male",
+        ageYears: 27,
+        lifeStage: "adult",
+        generation: 0,
+        immortal: true,
         traits: {
           cooperation: 0.7,
           aggression: 0.3,
@@ -254,6 +263,37 @@ export class SimulationRunner {
           curiosity: 0.8,
         },
       });
+
+      // Registrar a Isa y Stev como fundadores en el árbol genealógico (sin padres)
+      this._genealogySystem.registerBirth(isa, undefined, undefined);
+      this._genealogySystem.registerBirth(stev, undefined, undefined);
+
+      // Crear 4 hijos (generación 1)
+      const childNames = [
+        { name: "Luna", sex: "female" as const },
+        { name: "Sol", sex: "male" as const },
+        { name: "Estrella", sex: "female" as const },
+        { name: "Cielo", sex: "male" as const },
+      ];
+
+      for (const childData of childNames) {
+        const child = this.lifeCycleSystem.spawnAgent({
+          name: childData.name,
+          sex: childData.sex,
+          ageYears: 5,
+          lifeStage: "child",
+          generation: 1,
+          parents: {
+            father: stev.id,
+            mother: isa.id,
+          },
+        });
+
+        // Registrar nacimiento en el árbol genealógico
+        this._genealogySystem.registerBirth(child, stev.id, isa.id);
+      }
+
+      logger.info(`👨‍👩‍👧‍👦 Family initialized: Isa & Stev with 4 children`);
     }
   }
 

@@ -292,6 +292,26 @@ export class NeedsSystem extends EventEmitter {
   }
 
   private checkForDeath(entityId: string, needs: EntityNeedsData): boolean {
+    // Si ya está en cola de respawn, no procesar muerte de nuevo
+    if (this.respawnQueue.has(entityId)) {
+      return true;
+    }
+
+    // Verificar si la entidad ya está marcada como muerta en gameState
+    const entity = this.gameState.entities?.find((e) => e.id === entityId);
+    if (entity?.isDead) {
+      return true;
+    }
+
+    // Las entidades inmortales no pueden morir por necesidades
+    if (entity?.immortal) {
+      // Restaurar necesidades críticas para inmortales
+      if (needs.hunger <= 10) needs.hunger = 20;
+      if (needs.thirst <= 10) needs.thirst = 20;
+      if (needs.energy <= 10) needs.energy = 20;
+      return false;
+    }
+
     if (needs.hunger <= (this.config.deathThresholds?.hunger ?? 0)) {
       this.handleEntityDeath(entityId, needs, "starvation");
       return true;
@@ -313,6 +333,14 @@ export class NeedsSystem extends EventEmitter {
     cause: "starvation" | "dehydration" | "exhaustion",
   ): void {
     logger.info(`💀 Entity ${entityId} died from ${cause}`);
+
+    // Marcar entidad como muerta en gameState para evitar procesar muerte múltiples veces
+    if (this.gameState.entities) {
+      const entity = this.gameState.entities.find((e) => e.id === entityId);
+      if (entity) {
+        entity.isDead = true;
+      }
+    }
 
     simulationEvents.emit(GameEventNames.AGENT_DEATH, {
       agentId: entityId,

@@ -8,6 +8,7 @@ export const WEAPON_CATALOG: Record<WeaponId, Weapon> = {
     critChance: 0.05,
     critMultiplier: 1.5,
     range: 40,
+    attackSpeed: 1.0,
   },
   wooden_club: {
     id: "wooden_club",

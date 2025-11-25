@@ -221,28 +221,27 @@ export class EconomySystem {
 
     if (!resourceType || baseYield === 0) return;
 
-    const teamBonus = this.computeTeamBonus(agentId, zone);
-    let totalYield = baseYield * teamBonus;
+    let teamBonus = this.computeTeamBonus(agentId, zone);
 
     if (this.roleSystem) {
       const role = this.roleSystem.getAgentRole(agentId);
       if (role?.roleType) {
         if (role.roleType === "farmer" && resourceType === "food")
-          totalYield *= 1.5;
+          teamBonus += 0.5;
         if (role.roleType === "quarryman" && resourceType === "stone")
-          totalYield *= 1.8;
+          teamBonus += 0.8;
         if (role.roleType === "logger" && resourceType === "wood")
-          totalYield *= 1.6;
+          teamBonus += 0.6;
         if (
           role.roleType === "gatherer" &&
           (resourceType === "water" || resourceType === "food")
         )
-          totalYield *= 1.3;
+          teamBonus += 0.3;
         if (
           role.roleType === "builder" &&
           (resourceType === "wood" || resourceType === "stone")
         )
-          totalYield *= 1.3;
+          teamBonus += 0.3;
       }
     }
 
@@ -254,9 +253,11 @@ export class EconomySystem {
         "productivity_boost",
       );
       if (productivityMult > 1.0) {
-        totalYield *= productivityMult;
+        teamBonus += (productivityMult - 1.0);
       }
     }
+
+    const totalYield = baseYield * teamBonus;
 
     const key = `${agentId}:${resourceType}`;
     const residual = this.yieldResiduals.get(key) || 0;

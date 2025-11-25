@@ -210,7 +210,13 @@ export class LifeCycleSystem extends EventEmitter {
     }
   }
 
+  private lastBreedingCheck = 0;
+  private readonly BREEDING_CHECK_INTERVAL = 60000; // Check every minute
+
   private async tryBreeding(now: number): Promise<void> {
+    if (now - this.lastBreedingCheck < this.BREEDING_CHECK_INTERVAL) return;
+    this.lastBreedingCheck = now;
+
     const agents = this.gameState.agents || [];
     if (agents.length >= this.config.maxPopulation) return;
 
@@ -220,7 +226,8 @@ export class LifeCycleSystem extends EventEmitter {
 
     if (males.length === 0 || females.length === 0) return;
 
-    if (Math.random() < 0.05) {
+    // Reduced probability since we check less often, but still want it to be an event
+    if (Math.random() < 0.3) {
       const father = males[Math.floor(Math.random() * males.length)];
       const mother = females[Math.floor(Math.random() * females.length)];
 
@@ -407,10 +414,10 @@ export class LifeCycleSystem extends EventEmitter {
           this.gameState.entities[entityIndex].isDead = true;
         }
       }
-      
+
       // Limpiar estados en todos los sistemas
       this.cleanupAgentState(id);
-      
+
       simulationEvents.emit(GameEventNames.AGENT_DEATH, {
         entityId: id,
         reason: "removed",
@@ -426,32 +433,32 @@ export class LifeCycleSystem extends EventEmitter {
     if (this._aiSystem) {
       this._aiSystem.removeEntityAI(agentId);
     }
-    
+
     // Limpiar needs
     if (this.needsSystem) {
       this.needsSystem.removeEntityNeeds(agentId);
     }
-    
+
     // Limpiar social relationships
     if (this._socialSystem) {
       this._socialSystem.removeRelationships(agentId);
     }
-    
+
     // Limpiar movement state
     if (this._movementSystem) {
       this._movementSystem.stopMovement(agentId);
       this._movementSystem.removeEntityMovement(agentId);
     }
-    
+
     // Limpiar genealogy (se mantiene para historial, pero podemos limpiar referencias activas)
     // GenealogySystem mantiene historial, así que no limpiamos aquí
-    
+
     // Limpiar household assignment
     if (this.householdSystem) {
       // HouseholdSystem debería tener un método para remover agente
       // Por ahora, se mantiene la asignación para historial
     }
-    
+
     // Limpiar del EntityIndex
     // Esto se hace en SimulationRunner cuando se llama rebuild()
   }
@@ -462,7 +469,7 @@ export class LifeCycleSystem extends EventEmitter {
     if (index === -1) return false;
 
     this.gameState.agents.splice(index, 1);
-    
+
     // Limpiar estados en todos los sistemas
     this.cleanupAgentState(id);
 

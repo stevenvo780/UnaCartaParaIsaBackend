@@ -48,6 +48,26 @@ export class ProductionSystem {
     private readonly lifeCycleSystem: LifeCycleSystem,
   ) {
     this.config = DEFAULT_CONFIG;
+    this.setupEventListeners();
+  }
+
+  private setupEventListeners(): void {
+    simulationEvents.on(GameEventNames.AGENT_DEATH, this.handleAgentDeath.bind(this));
+  }
+
+  private handleAgentDeath(data: { entityId: string }): void {
+    const { entityId } = data;
+    for (const [zoneId, workers] of this.assignments.entries()) {
+      if (workers.has(entityId)) {
+        workers.delete(entityId);
+        // Emit update to notify UI or other systems if necessary
+        simulationEvents.emit(GameEventNames.PRODUCTION_WORKER_REMOVED, {
+          zoneId,
+          workerId: entityId,
+          reason: "death",
+        });
+      }
+    }
   }
 
   public update(_deltaMs: number): void {
