@@ -114,7 +114,8 @@ export class InventorySystem {
     const inv = this.agentInventories.get(agentId);
     if (!inv) return false;
 
-    const currentLoad = inv.wood + inv.stone + inv.food + inv.water + inv.rare_materials;
+    const currentLoad =
+      inv.wood + inv.stone + inv.food + inv.water + inv.rare_materials;
     const available = inv.capacity - currentLoad;
     const toAdd = Math.min(amount, available);
 
@@ -317,7 +318,8 @@ export class InventorySystem {
         stone: stats.stockpiled.stone + stats.inAgents.stone,
         food: stats.stockpiled.food + stats.inAgents.food,
         water: stats.stockpiled.water + stats.inAgents.water,
-        rare_materials: stats.stockpiled.rare_materials + stats.inAgents.rare_materials,
+        rare_materials:
+          stats.stockpiled.rare_materials + stats.inAgents.rare_materials,
         capacity: 0,
         lastUpdateTime: now,
       };
@@ -342,7 +344,13 @@ export class InventorySystem {
       rare_materials: number;
     };
   } {
-    const totalStockpiled = { wood: 0, stone: 0, food: 0, water: 0, rare_materials: 0 };
+    const totalStockpiled = {
+      wood: 0,
+      stone: 0,
+      food: 0,
+      water: 0,
+      rare_materials: 0,
+    };
     for (const sp of this.stockpiles.values()) {
       totalStockpiled.wood += sp.inventory.wood;
       totalStockpiled.stone += sp.inventory.stone;
@@ -351,7 +359,13 @@ export class InventorySystem {
       totalStockpiled.rare_materials += sp.inventory.rare_materials;
     }
 
-    const totalInAgents = { wood: 0, stone: 0, food: 0, water: 0, rare_materials: 0 };
+    const totalInAgents = {
+      wood: 0,
+      stone: 0,
+      food: 0,
+      water: 0,
+      rare_materials: 0,
+    };
     for (const inv of this.agentInventories.values()) {
       totalInAgents.wood += inv.wood;
       totalInAgents.stone += inv.stone;

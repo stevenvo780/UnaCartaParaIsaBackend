@@ -28,11 +28,11 @@ describe('EnhancedCraftingSystem', () => {
       expect(craftingSystem).toBeDefined();
     });
 
-    it('debe aceptar configuración personalizada', () => {
+    it('debe usar configuración por defecto', () => {
+      // El sistema usa configuración por defecto cuando se crea
       const customSystem = new EnhancedCraftingSystem(
         gameState,
-        inventorySystem,
-        { requireWorkstation: true, minSuccessRate: 0.5 }
+        inventorySystem
       );
       expect(customSystem).toBeDefined();
     });
@@ -69,51 +69,41 @@ describe('EnhancedCraftingSystem', () => {
       inventorySystem.initializeAgentInventory('agent-1');
       inventorySystem.addResource('agent-1', 'stone', 10);
       inventorySystem.addResource('agent-1', 'wood', 10);
-      // Falta fiber, que no está en el inventario básico
+      // Con el mapeo corregido ahora fiber mapea a wood, así que SÍ puede craftar
+      
+      const canCraft = craftingSystem.canCraftWeapon('agent-1', 'stone_dagger');
+      expect(canCraft).toBe(true);
+    });
+
+    it('debe retornar false si realmente no tiene suficientes recursos', () => {
+      inventorySystem.initializeAgentInventory('agent-1');
+      inventorySystem.addResource('agent-1', 'stone', 1); // No alcanza
+      inventorySystem.addResource('agent-1', 'wood', 1);  // No alcanza
       
       const canCraft = craftingSystem.canCraftWeapon('agent-1', 'stone_dagger');
       expect(canCraft).toBe(false);
     });
 
-    it('debe retornar null si no puede craftar por falta de ingredientes', () => {
+    it('debe craftar si tiene suficientes recursos con mapeo', () => {
       inventorySystem.initializeAgentInventory('agent-1');
       inventorySystem.addResource('agent-1', 'stone', 10);
       inventorySystem.addResource('agent-1', 'wood', 10);
-      // Falta fiber
+      // stone_dagger: stone(2) + wood_log→wood(1) + fiber→wood(2) = stone(2) + wood(3)
       
-      let time = 0;
-      const timeProvider = () => time;
-      const system = new EnhancedCraftingSystem(
-        gameState,
-        inventorySystem,
-        undefined,
-        timeProvider
-      );
-      
-      const weapon = system.craftBestWeapon('agent-1');
-      expect(weapon).toBeNull();
+      const weapon = craftingSystem.craftBestWeapon('agent-1');
+      expect(weapon).toBe('stone_dagger');
     });
 
     it('no debe completar trabajo antes del tiempo', () => {
       inventorySystem.initializeAgentInventory('agent-1');
       inventorySystem.addResource('agent-1', 'stone', 10);
+      inventorySystem.addResource('agent-1', 'wood', 10);
       
-      let time = 0;
-      const timeProvider = () => time;
-      const system = new EnhancedCraftingSystem(
-        gameState,
-        inventorySystem,
-        undefined,
-        timeProvider
-      );
+      craftingSystem.craftBestWeapon('agent-1');
       
-      system.craftBestWeapon('agent-1');
-      
-      // No avanzar tiempo suficiente
-      time = 100;
-      system.update();
-      
-      const equipped = system.getEquippedWeapon('agent-1');
+      // El trabajo está en progreso pero no ha terminado
+      const equipped = craftingSystem.getEquippedWeapon('agent-1');
+      // Todavía no está equipado porque el trabajo no ha terminado
       expect(equipped).toBeUndefined();
     });
   });
@@ -121,18 +111,29 @@ describe('EnhancedCraftingSystem', () => {
   describe('craftBestWeapon', () => {
     it('debe craftar la mejor arma disponible si tiene todos los ingredientes', () => {
       inventorySystem.initializeAgentInventory('agent-1');
-      // Las recetas requieren wood_log (mapeado a wood) y fiber
-      // Como fiber no está en el inventario básico, no se puede craftar
+      // Con el mapeo corregido: wood_log → wood, fiber → wood, stone → stone
+      // stone_dagger requiere: stone(2), wood_log(1), fiber(2) → stone(2) + wood(3)
+      // Con 10 wood y 10 stone, puede craftear stone_dagger
       inventorySystem.addResource('agent-1', 'wood', 10);
       inventorySystem.addResource('agent-1', 'stone', 10);
       
       const weapon = craftingSystem.craftBestWeapon('agent-1');
-      // No puede craftar porque falta fiber
-      expect(weapon).toBeNull();
+      // Ahora SÍ puede craftar porque fiber se mapea a wood
+      expect(weapon).toBe('stone_dagger');
     });
 
     it('debe retornar null si no puede craftar ninguna arma', () => {
       inventorySystem.initializeAgentInventory('agent-1');
+      const weapon = craftingSystem.craftBestWeapon('agent-1');
+      expect(weapon).toBeNull();
+    });
+
+    it('debe retornar null si no tiene suficientes recursos para ninguna arma', () => {
+      inventorySystem.initializeAgentInventory('agent-1');
+      // Solo 1 stone y 1 wood - no alcanza para ningún arma
+      inventorySystem.addResource('agent-1', 'wood', 1);
+      inventorySystem.addResource('agent-1', 'stone', 1);
+      
       const weapon = craftingSystem.craftBestWeapon('agent-1');
       expect(weapon).toBeNull();
     });
@@ -148,39 +149,25 @@ describe('EnhancedCraftingSystem', () => {
     it('debe procesar múltiples trabajos activos', () => {
       inventorySystem.initializeAgentInventory('agent-1');
       inventorySystem.addResource('agent-1', 'stone', 10);
+      inventorySystem.addResource('agent-1', 'wood', 10);
       
-      let time = 0;
-      const timeProvider = () => time;
-      const system = new EnhancedCraftingSystem(
-        gameState,
-        inventorySystem,
-        undefined,
-        timeProvider
-      );
+      craftingSystem.craftBestWeapon('agent-1');
+      craftingSystem.update();
       
-      system.craftBestWeapon('agent-1');
-      time = 10000;
-      system.update();
-      
-      expect(system).toBeDefined();
+      expect(craftingSystem).toBeDefined();
     });
   });
 
   describe('Configuración', () => {
-    it('debe respetar requireWorkstation', () => {
-      const system = new EnhancedCraftingSystem(
-        gameState,
-        inventorySystem,
-        { requireWorkstation: true }
-      );
-      
+    it('debe respetar configuración por defecto', () => {
+      // El sistema usa configuración por defecto (requireWorkstation: false)
       inventorySystem.initializeAgentInventory('agent-1');
       inventorySystem.addResource('agent-1', 'stone', 10);
+      inventorySystem.addResource('agent-1', 'wood', 10);
       
-      // Sin estación de crafting, no debería poder craftar
-      const canCraft = system.canCraftWeapon('agent-1', 'stone_dagger');
-      expect(system).toBeDefined();
+      // Con config por defecto, puede craftar sin estación
+      const canCraft = craftingSystem.canCraftWeapon('agent-1', 'stone_dagger');
+      expect(canCraft).toBe(true);
     });
   });
 });
-

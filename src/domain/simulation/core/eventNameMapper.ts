@@ -74,6 +74,7 @@ export const eventNameMapper: Record<string, string> = {
   CRISIS_IMMEDIATE_WARNING: "crisis:immediate:warning",
 
   CHUNK_RENDERED: "chunk:rendered",
+  TERRAIN_MODIFIED: "terrain:modified",
   TIME_CHANGED: "time:changed",
   TIME_WEATHER_CHANGED: "time:weather:changed",
   LEGEND_UPDATE: "legend:update",

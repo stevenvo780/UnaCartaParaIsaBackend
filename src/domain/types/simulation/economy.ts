@@ -1,4 +1,9 @@
-export type ResourceType = "wood" | "stone" | "food" | "water" | "rare_materials";
+export type ResourceType =
+  | "wood"
+  | "stone"
+  | "food"
+  | "water"
+  | "rare_materials";
 
 export interface Inventory {
   wood: number;
@@ -7,7 +12,8 @@ export interface Inventory {
   water: number;
   rare_materials: number;
   capacity: number;
-  lastUpdateTime?: number;}
+  lastUpdateTime?: number;
+}
 
 export interface Stockpile {
   id: string;

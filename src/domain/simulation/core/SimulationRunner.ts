@@ -2457,6 +2457,7 @@ export class SimulationRunner {
     const role = this.roleSystem.getAgentRole(entityId);
     const inventory = this.inventorySystem.getAgentInventory(entityId);
     const social = this.socialSystem.getSocialConnections(entityId);
+    const aiState = this.aiSystem.getAIState(entityId);
 
     return {
       entity,
@@ -2464,6 +2465,15 @@ export class SimulationRunner {
       role,
       inventory,
       social,
+      ai: aiState
+        ? {
+            currentGoal: aiState.currentGoal,
+            goalQueue: aiState.goalQueue,
+            currentAction: aiState.currentAction,
+            offDuty: aiState.offDuty,
+            lastDecisionTime: aiState.lastDecisionTime,
+          }
+        : null,
     };
   }
 

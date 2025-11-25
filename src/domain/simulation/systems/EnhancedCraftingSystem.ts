@@ -162,7 +162,11 @@ export class EnhancedCraftingSystem {
     // Map the output to a resource type and add to inventory
     const resourceKey = this.mapToResourceKey(output);
     if (resourceKey) {
-      this.inventorySystem.addResource(agentId, resourceKey, recipe.output.quantity);
+      this.inventorySystem.addResource(
+        agentId,
+        resourceKey,
+        recipe.output.quantity,
+      );
     }
   }
 
@@ -212,15 +216,30 @@ export class EnhancedCraftingSystem {
     }
 
     // Wood-based materials
-    const woodItems = ["wood_log", "plank", "fiber", "rope", "leather", "leather_hide", "cloth"];
+    const woodItems = [
+      "wood_log",
+      "plank",
+      "fiber",
+      "rope",
+      "leather",
+      "leather_hide",
+      "cloth",
+    ];
     if (woodItems.includes(itemId)) {
       return "wood";
     }
 
     // Stone/mineral-based materials
     const stoneItems = [
-      "iron_ore", "copper_ore", "coal", "clay", "brick",
-      "iron_ingot", "copper_ingot", "obsidian", "flint"
+      "iron_ore",
+      "copper_ore",
+      "coal",
+      "clay",
+      "brick",
+      "iron_ingot",
+      "copper_ingot",
+      "obsidian",
+      "flint",
     ];
     if (stoneItems.includes(itemId)) {
       return "stone";
@@ -228,16 +247,32 @@ export class EnhancedCraftingSystem {
 
     // Food items (raw and cooked)
     const foodItems = [
-      "wheat", "flour", "bread", "berries", "mushrooms",
-      "raw_meat", "cooked_meat", "fish", "cooked_fish",
-      "meat_stew", "fruit", "vegetables", "honey"
+      "wheat",
+      "flour",
+      "bread",
+      "berries",
+      "mushrooms",
+      "raw_meat",
+      "cooked_meat",
+      "fish",
+      "cooked_fish",
+      "meat_stew",
+      "fruit",
+      "vegetables",
+      "honey",
     ];
     if (foodItems.includes(itemId)) {
       return "food";
     }
 
     // Rare materials (gems, crystals, special items)
-    const rareItems = ["crystal", "gem", "diamond", "gold_nugget", "silver_nugget"];
+    const rareItems = [
+      "crystal",
+      "gem",
+      "diamond",
+      "gold_nugget",
+      "silver_nugget",
+    ];
     if (rareItems.includes(itemId)) {
       return "rare_materials";
     }

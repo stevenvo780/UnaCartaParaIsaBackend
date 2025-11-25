@@ -88,8 +88,11 @@ class PerformanceMonitor {
     systemName: string,
     subOperation: string,
     durationMs: number,
+    entityId?: string,
   ): void {
-    const key = `${systemName}:${subOperation}`;
+    const key = entityId
+      ? `${systemName}:${subOperation}:${entityId}`
+      : `${systemName}:${subOperation}`;
     let stats = this.subsystemStats.get(key);
     if (!stats) {
       stats = {
@@ -118,10 +121,10 @@ class PerformanceMonitor {
     totalResources: number;
     totalBuildings: number;
   } = {
-      activeAgents: 0,
-      totalResources: 0,
-      totalBuildings: 0,
-    };
+    activeAgents: 0,
+    totalResources: 0,
+    totalBuildings: 0,
+  };
 
   public setGameLogicStats(stats: {
     activeAgents: number;
@@ -299,10 +302,18 @@ class PerformanceMonitor {
     );
     lines.push("# TYPE backend_subsystem_duration_ms gauge");
     for (const [key, stats] of this.subsystemStats.entries()) {
-      const [system, operation] = key.split(":");
+      const parts = key.split(":");
+      const system = parts[0];
+      const operation = parts[1];
+      const entityId = parts[2];
       const avgMs = stats.count > 0 ? stats.totalMs / stats.count : 0;
+
+      const labels = entityId
+        ? `system="${system}",operation="${operation}",entity_id="${entityId}"`
+        : `system="${system}",operation="${operation}"`;
+
       lines.push(
-        `backend_subsystem_duration_ms{system="${system}",operation="${operation}"} ${avgMs.toFixed(6)}`,
+        `backend_subsystem_duration_ms{${labels}} ${avgMs.toFixed(6)}`,
       );
     }
 
@@ -311,10 +322,16 @@ class PerformanceMonitor {
     );
     lines.push("# TYPE backend_subsystem_calls_total counter");
     for (const [key, stats] of this.subsystemStats.entries()) {
-      const [system, operation] = key.split(":");
-      lines.push(
-        `backend_subsystem_calls_total{system="${system}",operation="${operation}"} ${stats.count}`,
-      );
+      const parts = key.split(":");
+      const system = parts[0];
+      const operation = parts[1];
+      const entityId = parts[2];
+
+      const labels = entityId
+        ? `system="${system}",operation="${operation}",entity_id="${entityId}"`
+        : `system="${system}",operation="${operation}"`;
+
+      lines.push(`backend_subsystem_calls_total{${labels}} ${stats.count}`);
     }
 
     lines.push(
@@ -322,9 +339,17 @@ class PerformanceMonitor {
     );
     lines.push("# TYPE backend_subsystem_total_duration_ms counter");
     for (const [key, stats] of this.subsystemStats.entries()) {
-      const [system, operation] = key.split(":");
+      const parts = key.split(":");
+      const system = parts[0];
+      const operation = parts[1];
+      const entityId = parts[2];
+
+      const labels = entityId
+        ? `system="${system}",operation="${operation}",entity_id="${entityId}"`
+        : `system="${system}",operation="${operation}"`;
+
       lines.push(
-        `backend_subsystem_total_duration_ms{system="${system}",operation="${operation}"} ${stats.totalMs.toFixed(6)}`,
+        `backend_subsystem_total_duration_ms{${labels}} ${stats.totalMs.toFixed(6)}`,
       );
     }
 
