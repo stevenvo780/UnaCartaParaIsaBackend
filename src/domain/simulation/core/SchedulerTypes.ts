@@ -21,4 +21,3 @@ export interface SchedulerStatsSnapshot {
   isRunning: boolean;
   entityCount: number;
 }
-

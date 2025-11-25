@@ -510,8 +510,6 @@ export class SocialSystem {
     return connections;
   }
 
-
-
   public getFriends(agentId: string): string[] {
     const neighbors = this.edges.get(agentId);
     if (!neighbors) return [];

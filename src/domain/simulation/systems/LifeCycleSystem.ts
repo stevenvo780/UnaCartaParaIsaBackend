@@ -65,15 +65,15 @@ export class LifeCycleSystem extends EventEmitter {
   private spawnCounter = 0;
   private pendingHousingAssignments = new Set<string>();
 
-  private needsPort?: INeedsPort;
-  private _aiPort?: IAIPort;
-  private inventoryPort?: IInventoryPort;
-  private householdPort?: IHouseholdPort;
-  private _socialPort?: ISocialPort;
+  private needsSystem?: INeedsPort;
+  private _aiSystem?: IAIPort;
+  private inventorySystem?: IInventoryPort;
+  private householdSystem?: IHouseholdPort;
+  private _socialSystem?: ISocialPort;
   private _marriageSystem?: MarriageSystem;
   private _genealogySystem?: GenealogySystem;
   private _divineFavorSystem?: DivineFavorSystem;
-  private _movementPort?: IMovementPort;
+  private _movementSystem?: IMovementPort;
   private _roleSystem?: RoleSystem;
   private _taskSystem?: TaskSystem;
   private dependenciesChecked = false;
@@ -102,29 +102,29 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   public setDependencies(systems: {
-    needsPort?: INeedsPort;
-    aiPort?: IAIPort;
-    inventoryPort?: IInventoryPort;
-    socialPort?: ISocialPort;
+    needsSystem?: INeedsPort;
+    aiSystem?: IAIPort;
+    inventorySystem?: IInventoryPort;
+    socialSystem?: ISocialPort;
     marriageSystem?: MarriageSystem;
     genealogySystem?: GenealogySystem;
-    householdPort?: IHouseholdPort;
+    householdSystem?: IHouseholdPort;
     divineFavorSystem?: DivineFavorSystem;
-    movementPort?: IMovementPort;
+    movementSystem?: IMovementPort;
     roleSystem?: RoleSystem;
     taskSystem?: TaskSystem;
   }): void {
-    if (systems.needsPort) this.needsPort = systems.needsPort;
-    if (systems.aiPort) this._aiPort = systems.aiPort;
-    if (systems.inventoryPort) this.inventoryPort = systems.inventoryPort;
-    if (systems.socialPort) this._socialPort = systems.socialPort;
+    if (systems.needsSystem) this.needsSystem = systems.needsSystem;
+    if (systems.aiSystem) this._aiSystem = systems.aiSystem;
+    if (systems.inventorySystem) this.inventorySystem = systems.inventorySystem;
+    if (systems.socialSystem) this._socialSystem = systems.socialSystem;
     if (systems.marriageSystem) this._marriageSystem = systems.marriageSystem;
     if (systems.genealogySystem)
       this._genealogySystem = systems.genealogySystem;
-    if (systems.householdPort) this.householdPort = systems.householdPort;
+    if (systems.householdSystem) this.householdSystem = systems.householdSystem;
     if (systems.divineFavorSystem)
       this._divineFavorSystem = systems.divineFavorSystem;
-    if (systems.movementPort) this._movementPort = systems.movementPort;
+    if (systems.movementSystem) this._movementSystem = systems.movementSystem;
     if (systems.taskSystem) this._taskSystem = systems.taskSystem;
     if (systems.roleSystem) {
       this._roleSystem = systems.roleSystem;
@@ -137,15 +137,15 @@ export class LifeCycleSystem extends EventEmitter {
       return;
     }
     const missing: string[] = [];
-    if (!this.needsPort) missing.push("NeedsPort");
-    if (!this._aiPort) missing.push("AIPort");
-    if (!this.inventoryPort) missing.push("InventoryPort");
-    if (!this.householdPort) missing.push("HouseholdPort");
-    if (!this._socialPort) missing.push("SocialPort");
+    if (!this.needsSystem) missing.push("NeedsSystem");
+    if (!this._aiSystem) missing.push("AISystem");
+    if (!this.inventorySystem) missing.push("InventorySystem");
+    if (!this.householdSystem) missing.push("HouseholdSystem");
+    if (!this._socialSystem) missing.push("SocialSystem");
     if (!this._marriageSystem) missing.push("MarriageSystem");
     if (!this._genealogySystem) missing.push("GenealogySystem");
     if (!this._divineFavorSystem) missing.push("DivineFavorSystem");
-    if (!this._movementPort) missing.push("MovementPort");
+    if (!this._movementSystem) missing.push("MovementSystem");
     if (!this._roleSystem) missing.push("RoleSystem");
     if (!this._taskSystem) missing.push("TaskSystem");
     if (missing.length > 0) {
@@ -316,16 +316,15 @@ export class LifeCycleSystem extends EventEmitter {
     spec:
       | Partial<AgentProfile>
       | {
-        id?: string;
-        name?: string;
-        sex: "male" | "female";
-        ageYears: number;
-        lifeStage: LifeStage;
-        generation: number;
-        immortal?: boolean;
-        traits?: Partial<AgentTraits>;
-      }
-      = {},
+          id?: string;
+          name?: string;
+          sex: "male" | "female";
+          ageYears: number;
+          lifeStage: LifeStage;
+          generation: number;
+          immortal?: boolean;
+          traits?: Partial<AgentTraits>;
+        } = {},
   ): AgentProfile {
     // Convert spec to Partial<AgentProfile> for internal processing
     const partial = spec as Partial<AgentProfile>;

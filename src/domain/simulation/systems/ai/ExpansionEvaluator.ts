@@ -48,7 +48,6 @@ export function evaluateExpansionGoals(
   const mapHeight = ctx.gameState.worldSize?.height || 2000;
   const pos = ctx.getEntityPosition(aiState.entityId);
 
-
   // ...
 
   if (pos) {

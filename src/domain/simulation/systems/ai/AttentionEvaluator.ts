@@ -32,7 +32,6 @@ export function evaluateAttention(
     .filter(({ d }) => d > 50 && d < ATTENTION_RADIUS)
     .sort((a, b) => a.d - b.d);
 
-
   // ...
 
   if (nearby.length === 0) return [];

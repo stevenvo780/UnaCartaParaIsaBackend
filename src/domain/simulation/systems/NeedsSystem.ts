@@ -727,7 +727,9 @@ export class NeedsSystem extends EventEmitter {
     if (!needs) return false;
 
     const threshold = this.config.criticalThreshold;
-    return Object.values(needs).some((value) => value !== undefined && value < threshold);
+    return Object.values(needs).some(
+      (value) => value !== undefined && value < threshold,
+    );
   }
 
   /**

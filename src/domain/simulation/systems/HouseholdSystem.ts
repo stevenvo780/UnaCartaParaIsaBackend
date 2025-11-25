@@ -233,7 +233,12 @@ export class HouseholdSystem {
     for (const [res, amount] of Object.entries(resources)) {
       const resource = res as ResourceType;
       // Solo procesamos los recursos básicos que el inventario del hogar puede almacenar
-      if (resource !== "wood" && resource !== "stone" && resource !== "food" && resource !== "water") {
+      if (
+        resource !== "wood" &&
+        resource !== "stone" &&
+        resource !== "food" &&
+        resource !== "water"
+      ) {
         continue;
       }
 
@@ -277,7 +282,12 @@ export class HouseholdSystem {
     for (const [res, amount] of Object.entries(resources)) {
       const resource = res as ResourceType;
       // Solo procesamos los recursos básicos que el inventario del hogar puede almacenar
-      if (resource !== "wood" && resource !== "stone" && resource !== "food" && resource !== "water") {
+      if (
+        resource !== "wood" &&
+        resource !== "stone" &&
+        resource !== "food" &&
+        resource !== "water"
+      ) {
         continue;
       }
 
@@ -315,6 +325,4 @@ export class HouseholdSystem {
     }
     return null;
   }
-
-
 }

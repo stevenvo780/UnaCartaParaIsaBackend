@@ -219,15 +219,15 @@ export class SimulationRunner {
     }
 
     this.lifeCycleSystem.setDependencies({
-      needsPort: this.needsSystem,
-      inventoryPort: this.inventorySystem,
-      householdPort: this.householdSystem,
-      movementPort: this.movementSystem,
+      needsSystem: this.needsSystem,
+      inventorySystem: this.inventorySystem,
+      householdSystem: this.householdSystem,
+      movementSystem: this.movementSystem,
       genealogySystem: this._genealogySystem,
-      socialPort: this.socialSystem,
+      socialSystem: this.socialSystem,
       marriageSystem: this.marriageSystem,
       divineFavorSystem: this.divineFavorSystem,
-      aiPort: this.aiSystem,
+      aiSystem: this.aiSystem,
       roleSystem: this.roleSystem,
     });
 
