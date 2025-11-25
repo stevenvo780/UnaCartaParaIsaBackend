@@ -5,19 +5,16 @@ import type { EntityMovementState } from "./MovementSystem";
  * Usa TypedArrays para procesamiento eficiente, preparado para migración a GPU
  */
 export class MovementBatchProcessor {
-  private positionBuffer: Float32Array | null = null; // [x0, y0, x1, y1, ...]
-  private targetBuffer: Float32Array | null = null; // [targetX0, targetY0, ...]
-  private velocityBuffer: Float32Array | null = null; // [vx0, vy0, ...]
-  private fatigueBuffer: Float32Array | null = null; // [fatigue0, fatigue1, ...]
+  private positionBuffer: Float32Array | null = null;
+  private targetBuffer: Float32Array | null = null;
+  private velocityBuffer: Float32Array | null = null;
+  private fatigueBuffer: Float32Array | null = null;
   private entityIdArray: string[] = [];
   private bufferDirty = true;
 
   private readonly BASE_MOVEMENT_SPEED = 60;
   private readonly FATIGUE_PENALTY_MULTIPLIER = 0.5;
 
-  /**
-   * Reconstruye los buffers desde un Map de estados de movimiento
-   */
   public rebuildBuffers(
     movementStates: Map<string, EntityMovementState>,
   ): void {
@@ -36,7 +33,7 @@ export class MovementBatchProcessor {
     this.targetBuffer = new Float32Array(entityCount * 2);
     this.velocityBuffer = new Float32Array(entityCount * 2);
     this.fatigueBuffer = new Float32Array(entityCount);
-    this.entityIdArray = new Array(entityCount);
+    this.entityIdArray = new Array<string>(entityCount);
 
     let index = 0;
     for (const [entityId, state] of movementStates.entries()) {
@@ -66,9 +63,6 @@ export class MovementBatchProcessor {
     this.bufferDirty = false;
   }
 
-  /**
-   * Actualiza todas las posiciones en batch
-   */
   public updatePositionsBatch(deltaMs: number): {
     updated: boolean[];
     arrived: boolean[];
@@ -137,9 +131,6 @@ export class MovementBatchProcessor {
     return { updated, arrived };
   }
 
-  /**
-   * Actualiza fatiga en batch
-   */
   public updateFatigueBatch(
     isMoving: boolean[],
     isResting: boolean[],
@@ -170,9 +161,6 @@ export class MovementBatchProcessor {
     this.bufferDirty = true;
   }
 
-  /**
-   * Sincroniza los buffers de vuelta a los estados de movimiento
-   */
   public syncToStates(movementStates: Map<string, EntityMovementState>): void {
     if (
       !this.positionBuffer ||
@@ -198,44 +186,26 @@ export class MovementBatchProcessor {
     }
   }
 
-  /**
-   * Obtiene el buffer de posiciones
-   */
   public getPositionBuffer(): Float32Array | null {
     return this.positionBuffer;
   }
 
-  /**
-   * Obtiene el buffer de targets
-   */
   public getTargetBuffer(): Float32Array | null {
     return this.targetBuffer;
   }
 
-  /**
-   * Obtiene el buffer de fatiga
-   */
   public getFatigueBuffer(): Float32Array | null {
     return this.fatigueBuffer;
   }
 
-  /**
-   * Obtiene el array de IDs de entidades
-   */
   public getEntityIdArray(): string[] {
     return this.entityIdArray;
   }
 
-  /**
-   * Marca los buffers como dirty
-   */
   public markDirty(): void {
     this.bufferDirty = true;
   }
 
-  /**
-   * Verifica si los buffers están dirty
-   */
   public isDirty(): boolean {
     return this.bufferDirty;
   }

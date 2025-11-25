@@ -76,6 +76,7 @@ export interface Zone {
   type: string;
   bounds: { x: number; y: number; width: number; height: number };
   props?: ZoneProps;
+  metadata?: Record<string, unknown>;
 }
 
 export interface Size {

@@ -10,25 +10,16 @@ export class StateCache {
   private dirtyFlags: Map<string, boolean> = new Map();
   private lastTick = -1;
 
-  /**
-   * Marca una sección del estado como "dirty" (ha cambiado)
-   */
   public markDirty(section: string): void {
     this.dirtyFlags.set(section, true);
   }
 
-  /**
-   * Marca múltiples secciones como dirty
-   */
   public markDirtyMultiple(sections: string[]): void {
     for (const section of sections) {
       this.dirtyFlags.set(section, true);
     }
   }
 
-  /**
-   * Resetea todos los dirty flags
-   */
   public clearDirtyFlags(): void {
     this.dirtyFlags.clear();
   }
@@ -65,9 +56,6 @@ export class StateCache {
     return snapshot;
   }
 
-  /**
-   * Verifica si todas las secciones están marcadas como dirty
-   */
   private isEverythingDirty(): boolean {
     if (this.dirtyFlags.size === 0) {
       return true;
@@ -97,18 +85,12 @@ export class StateCache {
     return allSections.every((section) => this.dirtyFlags.get(section));
   }
 
-  /**
-   * Resetea el cache completamente (útil cuando el estado cambia drásticamente)
-   */
   public reset(): void {
     this.previousSnapshot = null;
     this.clearDirtyFlags();
     this.lastTick = -1;
   }
 
-  /**
-   * Obtiene el snapshot previo sin clonarlo (para comparaciones)
-   */
   public getPreviousSnapshot(): GameState | null {
     return this.previousSnapshot;
   }

@@ -8,9 +8,6 @@ export class BatchedEventEmitter extends EventEmitter {
   private eventQueue: Array<{ name: string; payload: unknown }> = [];
   private batchingEnabled = true;
 
-  /**
-   * Encola un evento para procesamiento posterior
-   */
   public queueEvent(name: string, payload: unknown): void {
     if (!this.batchingEnabled) {
       this.emit(name, payload);
@@ -20,9 +17,6 @@ export class BatchedEventEmitter extends EventEmitter {
     this.eventQueue.push({ name, payload });
   }
 
-  /**
-   * Procesa todos los eventos encolados
-   */
   public flushEvents(): void {
     if (this.eventQueue.length === 0) return;
 
@@ -35,9 +29,6 @@ export class BatchedEventEmitter extends EventEmitter {
     });
   }
 
-  /**
-   * Habilita o deshabilita el batching
-   */
   public setBatchingEnabled(enabled: boolean): void {
     this.batchingEnabled = enabled;
     if (!enabled) {
@@ -45,16 +36,10 @@ export class BatchedEventEmitter extends EventEmitter {
     }
   }
 
-  /**
-   * Limpia la cola de eventos sin procesarlos
-   */
   public clearQueue(): void {
     this.eventQueue = [];
   }
 
-  /**
-   * Obtiene el número de eventos en cola
-   */
   public getQueueSize(): number {
     return this.eventQueue.length;
   }

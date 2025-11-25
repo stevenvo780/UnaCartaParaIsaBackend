@@ -2,7 +2,6 @@ import { GameState, TrailSegment, HeatMapCell } from "../../types/game-types";
 import { logger } from "../../../infrastructure/utils/logger";
 import { GameEventNames, simulationEvents } from "../core/events";
 
-// Re-export interfaces for backward compatibility
 export type { TrailSegment, HeatMapCell };
 
 import { injectable, inject } from "inversify";
@@ -104,7 +103,7 @@ export class TrailSystem {
       trade: "trade",
       flee: "emergency",
       fight: "emergency",
-      moving: "work", // Default moving to work if unspecified
+      moving: "work",
     };
 
     return purposeMap[activityType.toLowerCase()] || "unknown";

@@ -46,7 +46,7 @@ export class OptimizedSpatialGrid<T = string> {
     }
 
     this.positionBuffer = new Float32Array(entityCount * 2);
-    this.entityIdArray = new Array(entityCount);
+    this.entityIdArray = new Array<T>(entityCount);
 
     let index = 0;
     for (const [entity, pos] of this.entityPositions.entries()) {

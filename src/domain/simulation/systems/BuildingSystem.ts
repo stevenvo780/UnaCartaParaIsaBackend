@@ -162,7 +162,7 @@ export class BuildingSystem {
     let taskId: string | undefined;
     if (this.taskSystem) {
       const task = this.taskSystem.createTask({
-        type: `build_${label}` as any,
+        type: `build_${label}`,
         requiredWork: cost.time / 1000,
         zoneId: mutableZone.id,
         bounds: mutableZone.bounds,

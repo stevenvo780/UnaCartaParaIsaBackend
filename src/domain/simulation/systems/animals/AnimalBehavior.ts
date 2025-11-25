@@ -101,9 +101,6 @@ export class AnimalBehavior {
     animal.position.y += dy * moveDistance * smoothing;
   }
 
-  /**
-   * Seek and consume vegetation (for herbivores)
-   */
   public static seekFood(
     animal: Animal,
     availableResources: Array<{

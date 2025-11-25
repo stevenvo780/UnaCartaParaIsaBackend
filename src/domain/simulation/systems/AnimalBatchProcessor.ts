@@ -5,18 +5,15 @@ import type { Animal } from "../../types/simulation/animals";
  * Usa TypedArrays para procesamiento eficiente, preparado para migración a GPU
  */
 export class AnimalBatchProcessor {
-  private positionBuffer: Float32Array | null = null; // [x0, y0, x1, y1, ...]
-  private needsBuffer: Float32Array | null = null; // [hunger0, thirst0, fear0, reproductiveUrge0, ...]
-  private ageBuffer: Float32Array | null = null; // [age0, age1, ...]
-  private healthBuffer: Float32Array | null = null; // [health0, health1, ...]
+  private positionBuffer: Float32Array | null = null;
+  private needsBuffer: Float32Array | null = null;
+  private ageBuffer: Float32Array | null = null;
+  private healthBuffer: Float32Array | null = null;
   private animalIdArray: string[] = [];
   private bufferDirty = true;
 
-  private readonly NEED_COUNT = 4; // hunger, thirst, fear, reproductiveUrge
+  private readonly NEED_COUNT = 4;
 
-  /**
-   * Reconstruye los buffers desde un Map de animales
-   */
   public rebuildBuffers(animals: Map<string, Animal>): void {
     const animalCount = animals.size;
     if (animalCount === 0) {
@@ -33,7 +30,7 @@ export class AnimalBatchProcessor {
     this.needsBuffer = new Float32Array(animalCount * this.NEED_COUNT);
     this.ageBuffer = new Float32Array(animalCount);
     this.healthBuffer = new Float32Array(animalCount);
-    this.animalIdArray = new Array(animalCount);
+    this.animalIdArray = new Array<string>(animalCount);
 
     let index = 0;
     for (const [animalId, animal] of animals.entries()) {
@@ -58,11 +55,8 @@ export class AnimalBatchProcessor {
     this.bufferDirty = false;
   }
 
-  /**
-   * Actualiza necesidades en batch
-   */
   public updateNeedsBatch(
-    hungerDecayRates: Float32Array, // Tasa de decaimiento por animal
+    hungerDecayRates: Float32Array,
     thirstDecayRates: Float32Array,
     deltaMinutes: number,
   ): void {
@@ -94,9 +88,6 @@ export class AnimalBatchProcessor {
     this.bufferDirty = true;
   }
 
-  /**
-   * Actualiza edades en batch
-   */
   public updateAgesBatch(ageIncrement: number): void {
     if (!this.ageBuffer || this.animalIdArray.length === 0) return;
 
@@ -109,9 +100,6 @@ export class AnimalBatchProcessor {
     this.bufferDirty = true;
   }
 
-  /**
-   * Sincroniza los buffers de vuelta al Map de animales
-   */
   public syncToAnimals(animals: Map<string, Animal>): void {
     if (
       !this.positionBuffer ||
@@ -146,37 +134,22 @@ export class AnimalBatchProcessor {
     }
   }
 
-  /**
-   * Obtiene el buffer de posiciones
-   */
   public getPositionBuffer(): Float32Array | null {
     return this.positionBuffer;
   }
 
-  /**
-   * Obtiene el buffer de necesidades
-   */
   public getNeedsBuffer(): Float32Array | null {
     return this.needsBuffer;
   }
 
-  /**
-   * Obtiene el array de IDs de animales
-   */
   public getAnimalIdArray(): string[] {
     return this.animalIdArray;
   }
 
-  /**
-   * Marca los buffers como dirty
-   */
   public markDirty(): void {
     this.bufferDirty = true;
   }
 
-  /**
-   * Verifica si los buffers están dirty
-   */
   public isDirty(): boolean {
     return this.bufferDirty;
   }

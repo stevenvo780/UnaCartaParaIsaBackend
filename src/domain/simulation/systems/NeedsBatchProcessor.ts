@@ -7,12 +7,9 @@ import type { EntityNeedsData } from "../../types/simulation/needs";
 export class NeedsBatchProcessor {
   private needsBuffer: Float32Array | null = null;
   private entityIdArray: string[] = [];
-  private readonly NEED_COUNT = 7; // hunger, thirst, energy, hygiene, social, fun, mentalHealth
+  private readonly NEED_COUNT = 7;
   private bufferDirty = true;
 
-  /**
-   * Reconstruye los buffers desde un Map de necesidades
-   */
   public rebuildBuffers(entityNeeds: Map<string, EntityNeedsData>): void {
     const entityCount = entityNeeds.size;
     if (entityCount === 0) {
@@ -23,7 +20,7 @@ export class NeedsBatchProcessor {
     }
 
     this.needsBuffer = new Float32Array(entityCount * this.NEED_COUNT);
-    this.entityIdArray = new Array(entityCount);
+    this.entityIdArray = new Array<string>(entityCount);
 
     let index = 0;
     for (const [entityId, needs] of entityNeeds.entries()) {
@@ -43,13 +40,10 @@ export class NeedsBatchProcessor {
     this.bufferDirty = false;
   }
 
-  /**
-   * Aplica decaimiento a todas las necesidades en batch
-   */
   public applyDecayBatch(
-    decayRates: Float32Array, // Array de 7 elementos con las tasas de decaimiento
-    ageMultipliers: Float32Array, // Multiplicador por edad para cada entidad
-    divineModifiers: Float32Array, // Modificador divino para cada entidad
+    decayRates: Float32Array,
+    ageMultipliers: Float32Array,
+    divineModifiers: Float32Array,
     deltaSeconds: number,
   ): void {
     if (!this.needsBuffer || this.entityIdArray.length === 0) return;
@@ -75,9 +69,6 @@ export class NeedsBatchProcessor {
     this.bufferDirty = true;
   }
 
-  /**
-   * Aplica cross-effects en batch
-   */
   public applyCrossEffectsBatch(): void {
     if (!this.needsBuffer || this.entityIdArray.length === 0) return;
 
@@ -133,9 +124,6 @@ export class NeedsBatchProcessor {
     this.bufferDirty = true;
   }
 
-  /**
-   * Sincroniza los buffers de vuelta al Map de necesidades
-   */
   public syncToMap(entityNeeds: Map<string, EntityNeedsData>): void {
     if (!this.needsBuffer || this.entityIdArray.length === 0) return;
 
@@ -157,23 +145,14 @@ export class NeedsBatchProcessor {
     }
   }
 
-  /**
-   * Obtiene el buffer de necesidades (útil para migración a GPU)
-   */
   public getNeedsBuffer(): Float32Array | null {
     return this.needsBuffer;
   }
 
-  /**
-   * Obtiene el array de IDs de entidades
-   */
   public getEntityIdArray(): string[] {
     return this.entityIdArray;
   }
 
-  /**
-   * Obtiene el valor de una necesidad específica para una entidad
-   */
   public getNeedValue(entityIndex: number, needIndex: number): number {
     if (
       !this.needsBuffer ||
@@ -186,9 +165,6 @@ export class NeedsBatchProcessor {
     return this.needsBuffer[offset + needIndex];
   }
 
-  /**
-   * Establece el valor de una necesidad específica para una entidad
-   */
   public setNeedValue(
     entityIndex: number,
     needIndex: number,
@@ -206,16 +182,10 @@ export class NeedsBatchProcessor {
     this.bufferDirty = true;
   }
 
-  /**
-   * Marca los buffers como dirty
-   */
   public markDirty(): void {
     this.bufferDirty = true;
   }
 
-  /**
-   * Verifica si los buffers están dirty
-   */
   public isDirty(): boolean {
     return this.bufferDirty;
   }

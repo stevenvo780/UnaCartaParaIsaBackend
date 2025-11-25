@@ -18,16 +18,10 @@ export class SharedSpatialIndex {
     this.grid = new SpatialGrid(worldWidth, worldHeight, cellSize);
   }
 
-  /**
-   * Marca el índice como dirty (necesita reconstrucción)
-   */
   public markDirty(): void {
     this.dirty = true;
   }
 
-  /**
-   * Reconstruye el índice si es necesario
-   */
   public rebuildIfNeeded(
     entities: SimulationEntity[],
     animals: Map<string, Animal>,
@@ -55,9 +49,6 @@ export class SharedSpatialIndex {
     this.dirty = false;
   }
 
-  /**
-   * Consulta entidades en un radio
-   */
   public queryRadius(
     position: { x: number; y: number },
     radius: number,
@@ -85,23 +76,14 @@ export class SharedSpatialIndex {
       }));
   }
 
-  /**
-   * Obtiene la posición de una entidad
-   */
   public getPosition(entityId: string): { x: number; y: number } | undefined {
     return this.entityPositions.get(entityId);
   }
 
-  /**
-   * Obtiene el tipo de una entidad
-   */
   public getType(entityId: string): EntityType | undefined {
     return this.entityTypes.get(entityId);
   }
 
-  /**
-   * Actualiza la posición de una entidad
-   */
   public updatePosition(
     entityId: string,
     position: { x: number; y: number },
@@ -112,18 +94,12 @@ export class SharedSpatialIndex {
     this.entityTypes.set(entityId, type);
   }
 
-  /**
-   * Elimina una entidad del índice
-   */
   public remove(entityId: string): void {
     this.grid.remove(entityId);
     this.entityPositions.delete(entityId);
     this.entityTypes.delete(entityId);
   }
 
-  /**
-   * Limpia el índice completamente
-   */
   public clear(): void {
     this.grid.clear();
     this.entityPositions.clear();
@@ -131,9 +107,6 @@ export class SharedSpatialIndex {
     this.dirty = true;
   }
 
-  /**
-   * Verifica si el índice está dirty
-   */
   public isDirty(): boolean {
     return this.dirty;
   }

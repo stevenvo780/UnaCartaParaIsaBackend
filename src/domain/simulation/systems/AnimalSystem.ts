@@ -143,7 +143,7 @@ export class AnimalSystem {
   private updateBatch(
     deltaSeconds: number,
     deltaMinutes: number,
-    now: number,
+    _now: number,
   ): void {
     this.batchProcessor.rebuildBuffers(this.animals);
 

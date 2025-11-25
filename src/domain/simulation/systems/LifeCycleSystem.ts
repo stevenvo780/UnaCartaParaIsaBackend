@@ -31,7 +31,7 @@ interface LifeCycleConfig {
   mortalInterbirthSec: number;
 }
 
-import { injectable, inject, optional } from "inversify";
+import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 
 @injectable()

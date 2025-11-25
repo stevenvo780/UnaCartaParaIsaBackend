@@ -109,9 +109,6 @@ function estimateDistance(
   return Math.hypot(zoneCenterX - entity.x, zoneCenterY - entity.y);
 }
 
-/**
- * Returns list of zone IDs that haven't been visited by the agent
- */
 export function getUnexploredZones(
   aiState: AIState,
   gameState: GameState,
@@ -123,9 +120,6 @@ export function getUnexploredZones(
   );
 }
 
-/**
- * Prioritizes goals using domain weights and tiering
- */
 export function prioritizeGoals(
   goals: AIGoal[],
   aiState: AIState,

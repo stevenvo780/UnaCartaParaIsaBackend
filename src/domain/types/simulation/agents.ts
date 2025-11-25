@@ -31,6 +31,6 @@ export interface AgentProfile {
   stats?: {
     money?: number;
     reputation?: number;
-    [key: string]: any;
+    [key: string]: string | number | boolean | undefined;
   };
 }

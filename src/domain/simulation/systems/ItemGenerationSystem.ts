@@ -111,9 +111,6 @@ export class ItemGenerationSystem {
     logger.info(`🎁 Generated ${quantity}x ${rule.itemId} in zone ${zone.id}`);
   }
 
-  /**
-   * Collect items from a zone (called by agent/player)
-   */
   public collectItemsFromZone(
     zoneId: string,
     agentId: string,
