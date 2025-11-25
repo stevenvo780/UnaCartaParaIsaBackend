@@ -31,6 +31,19 @@ import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
 
+/**
+ * System for managing economic activities: resource production, salaries, and work yields.
+ *
+ * Features:
+ * - Resource yield calculations based on work duration
+ * - Salary payment system for agents with roles
+ * - Yield residuals for fractional resource accumulation
+ * - Integration with role system for work assignments
+ * - Divine favor modifiers for production bonuses
+ *
+ * @see RoleSystem for agent role assignments
+ * @see InventorySystem for resource storage
+ */
 @injectable()
 export class EconomySystem {
   private state: GameState;

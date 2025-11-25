@@ -85,6 +85,20 @@ export interface ZoneDistance {
   difficulty: Difficulty;
 }
 
+/**
+ * System for managing entity movement, pathfinding, and activities.
+ *
+ * Features:
+ * - A* pathfinding using EasyStar.js
+ * - Batch processing for performance with many moving entities
+ * - Zone-based movement and activity management
+ * - Fatigue system affecting movement speed
+ * - Idle wandering behavior
+ * - Path caching and grid caching for optimization
+ *
+ * @see MovementBatchProcessor for batch processing
+ * @see EasyStar.js for pathfinding algorithm
+ */
 @injectable()
 export class MovementSystem extends EventEmitter {
   private gameState: GameState;
@@ -110,9 +124,9 @@ export class MovementSystem extends EventEmitter {
 
   private batchProcessor: MovementBatchProcessor;
   /**
-   * Umbral para activar procesamiento por lotes.
-   * 15 entidades: MovementSystem tiene overhead de pathfinding y cálculos de fatiga,
-   * por lo que el batch processing se activa antes para amortizar el costo.
+   * Threshold for activating batch processing.
+   * 15 entities: MovementSystem has pathfinding overhead and fatigue calculations,
+   * so batch processing activates earlier to amortize the cost.
    */
   private readonly BATCH_THRESHOLD = 15;
 

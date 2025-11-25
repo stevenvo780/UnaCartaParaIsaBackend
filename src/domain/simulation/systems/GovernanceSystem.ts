@@ -15,6 +15,9 @@ import { DivineFavorSystem } from "./DivineFavorSystem";
 import { ResourceReservationSystem } from "./ResourceReservationSystem";
 import { logger } from "../../../infrastructure/utils/logger";
 
+/**
+ * Configuration for governance system behavior.
+ */
 interface GovernanceConfig {
   checkIntervalMs: number;
   demandExpirationMs: number;

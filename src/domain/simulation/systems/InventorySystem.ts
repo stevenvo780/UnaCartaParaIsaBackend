@@ -4,10 +4,23 @@ import {
   ResourceType,
 } from "../../types/simulation/economy";
 import type { GameState } from "../../types/game-types";
+import { logger } from "../../../infrastructure/utils/logger";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 
+/**
+ * System for managing agent inventories and zone stockpiles.
+ *
+ * Features:
+ * - Per-agent inventory with capacity limits
+ * - Zone-based stockpiles for shared storage
+ * - Resource transfer between agents and stockpiles
+ * - Automatic deprecation of old inventories
+ * - Resource type management (wood, stone, food, water)
+ *
+ * @see ResourceType for available resource types
+ */
 @injectable()
 export class InventorySystem {
   private gameState?: GameState;
@@ -238,9 +251,8 @@ export class InventorySystem {
     if (now - this.lastDeprecationCheck < this.DEPRECATION_INTERVAL) return;
     this.lastDeprecationCheck = now;
 
-    // Debug: log stats to see if aggregation is working
     const statsDebug = this.getSystemStats();
-    console.log(
+    logger.debug(
       `[InventorySystem] update() - Agents: ${statsDebug.totalAgentInventories}, inAgents: food=${statsDebug.inAgents.food}, water=${statsDebug.inAgents.water}, wood=${statsDebug.inAgents.wood}, stone=${statsDebug.inAgents.stone}`,
     );
 

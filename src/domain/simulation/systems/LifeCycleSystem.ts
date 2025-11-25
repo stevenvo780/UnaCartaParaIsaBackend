@@ -37,6 +37,20 @@ import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
 
+/**
+ * System for managing agent lifecycle: birth, aging, death, and reproduction.
+ *
+ * Features:
+ * - Age progression with life stages (child, adult, elder)
+ * - Reproduction with fertility windows and cooldowns
+ * - Death handling with respawn support
+ * - Resource consumption over time
+ * - Role assignment on reaching adulthood
+ * - Housing assignment for new agents
+ *
+ * @see GenealogySystem for family tree tracking
+ * @see HouseholdSystem for housing management
+ */
 @injectable()
 export class LifeCycleSystem extends EventEmitter {
   private gameState: GameState;

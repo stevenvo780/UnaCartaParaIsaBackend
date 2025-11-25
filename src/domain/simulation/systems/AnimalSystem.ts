@@ -123,10 +123,12 @@ export class AnimalSystem {
         stateCount[animal.state] = (stateCount[animal.state] || 0) + 1;
       }
     }
-    
+
     // Log animal states every 5 seconds (every ~20 updates at 250ms)
     if (Math.random() < 0.05) {
-      logger.info(`🐾 [AnimalSystem] States: ${JSON.stringify(stateCount)}, deltaMs=${deltaMs.toFixed(0)}`);
+      logger.info(
+        `🐾 [AnimalSystem] States: ${JSON.stringify(stateCount)}, deltaMs=${deltaMs.toFixed(0)}`,
+      );
     }
 
     if (liveCount >= this.BATCH_THRESHOLD) {

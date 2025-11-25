@@ -322,6 +322,14 @@ export class AISystem extends EventEmitter {
     }
   }
 
+  /**
+   * Makes a decision for an agent, selecting the best goal based on current state.
+   * Uses AgentGoalPlanner to evaluate available goals and select the highest priority one.
+   *
+   * @param _agentId - Agent identifier
+   * @param aiState - Agent's AI state
+   * @returns Selected goal or null if no suitable goal found
+   */
   private makeDecision(_agentId: string, aiState: AIState): AIGoal | null {
     const deps: AgentGoalPlannerDeps = {
       gameState: this.gameState,
@@ -580,6 +588,13 @@ export class AISystem extends EventEmitter {
     };
   }
 
+  /**
+   * Notifies the AI system that an entity has arrived at a zone.
+   * Handles goal completion for zone-based goals and executes zone-specific actions.
+   *
+   * @param entityId - Entity identifier
+   * @param zoneId - Zone identifier where entity arrived
+   */
   public notifyEntityArrived(entityId: string, zoneId: string): void {
     const aiState = this.aiStates.get(entityId);
     if (!aiState || !aiState.currentGoal) return;
@@ -790,6 +805,13 @@ export class AISystem extends EventEmitter {
     }
   }
 
+  /**
+   * Sets whether an entity is player-controlled.
+   * Player-controlled entities skip AI processing.
+   *
+   * @param entityId - Entity identifier
+   * @param controlled - Whether the entity is player-controlled
+   */
   public setPlayerControl(entityId: string, controlled: boolean): void {
     if (controlled) {
       this.playerControlledAgents.add(entityId);
@@ -803,10 +825,22 @@ export class AISystem extends EventEmitter {
     }
   }
 
+  /**
+   * Checks if an entity is player-controlled.
+   *
+   * @param entityId - Entity identifier
+   * @returns True if player-controlled
+   */
   public isPlayerControlled(entityId: string): boolean {
     return this.playerControlledAgents.has(entityId);
   }
 
+  /**
+   * Sets the priority mode for an entity.
+   *
+   * @param entityId - Entity identifier
+   * @param priority - Priority mode ("survival", "normal", or "social")
+   */
   public setEntityPriority(
     entityId: string,
     priority: "survival" | "normal" | "social",
@@ -814,6 +848,11 @@ export class AISystem extends EventEmitter {
     this.agentPriorities.set(entityId, priority);
   }
 
+  /**
+   * Gets a status snapshot of the AI system.
+   *
+   * @returns Status metrics including agent counts and decision times
+   */
   public getStatusSnapshot(): Record<string, number> {
     return {
       totalAgents: this.aiStates.size,
@@ -828,6 +867,11 @@ export class AISystem extends EventEmitter {
     };
   }
 
+  /**
+   * Gets performance metrics for the AI system.
+   *
+   * @returns Performance metrics including decision counts and goal completion rates
+   */
   public getPerformanceMetrics(): Record<string, number> {
     return {
       totalDecisions: this._decisionCount,
@@ -840,6 +884,11 @@ export class AISystem extends EventEmitter {
     };
   }
 
+  /**
+   * Removes AI state for an entity.
+   *
+   * @param entityId - Entity identifier to remove
+   */
   public removeEntityAI(entityId: string): void {
     this.aiStates.delete(entityId);
     this.playerControlledAgents.delete(entityId);
@@ -847,6 +896,9 @@ export class AISystem extends EventEmitter {
     this.agentStrategies.delete(entityId);
   }
 
+  /**
+   * Cleans up all AI states and removes all event listeners.
+   */
   public cleanup(): void {
     this.aiStates.clear();
     this.removeAllListeners();
@@ -1124,14 +1176,31 @@ export class AISystem extends EventEmitter {
     return null;
   }
 
+  /**
+   * Gets the AI state for an agent.
+   *
+   * @param agentId - Agent identifier
+   * @returns AI state or undefined if not found
+   */
   public getAIState(agentId: string): AIState | undefined {
     return this.aiStates.get(agentId);
   }
 
+  /**
+   * Gets all AI states.
+   *
+   * @returns Array of all AI states
+   */
   public getAllAIStates(): AIState[] {
     return Array.from(this.aiStates.values());
   }
 
+  /**
+   * Sets whether an agent is off-duty (skips AI processing).
+   *
+   * @param agentId - Agent identifier
+   * @param offDuty - Whether the agent is off-duty
+   */
   public setAgentOffDuty(agentId: string, offDuty: boolean): void {
     const aiState = this.aiStates.get(agentId);
     if (aiState) {
@@ -1142,6 +1211,11 @@ export class AISystem extends EventEmitter {
     }
   }
 
+  /**
+   * Forces goal reevaluation for an agent on the next update.
+   *
+   * @param agentId - Agent identifier
+   */
   public forceGoalReevaluation(agentId: string): void {
     const aiState = this.aiStates.get(agentId);
     if (aiState) {
@@ -1150,6 +1224,11 @@ export class AISystem extends EventEmitter {
     }
   }
 
+  /**
+   * Fails the current goal for an agent.
+   *
+   * @param agentId - Agent identifier
+   */
   public failCurrentGoal(agentId: string): void {
     const aiState = this.aiStates.get(agentId);
     if (aiState) {

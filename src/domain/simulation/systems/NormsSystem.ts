@@ -10,6 +10,18 @@ import { simulationEvents, GameEventNames } from "../core/events";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 
+/**
+ * System for managing social norms and violations.
+ *
+ * Features:
+ * - Norm violation detection (e.g., combat in restricted zones)
+ * - Sanction application with reputation penalties
+ * - Guard dispatch for enforcement
+ * - Compliance statistics tracking
+ * - Violation history with configurable limits
+ *
+ * @see ReputationSystem for sanction effects
+ */
 @injectable()
 export class NormsSystem {
   private gameState: GameState;

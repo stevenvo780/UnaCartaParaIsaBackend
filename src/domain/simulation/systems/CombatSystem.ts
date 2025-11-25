@@ -51,6 +51,20 @@ import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import { SharedSpatialIndex } from "../core/SharedSpatialIndex";
 
+/**
+ * System for managing combat between entities.
+ *
+ * Features:
+ * - Spatial grid for efficient enemy detection
+ * - Weapon system with damage calculations
+ * - Attack cooldowns and engagement radius
+ * - Combat logging for history tracking
+ * - Integration with social system for relationship effects
+ * - Animal combat support
+ *
+ * @see SpatialGrid for spatial queries
+ * @see WeaponCatalog for weapon definitions
+ */
 @injectable()
 export class CombatSystem {
   private readonly config: CombatConfig;

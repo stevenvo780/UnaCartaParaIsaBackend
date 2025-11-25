@@ -15,6 +15,24 @@ import type { EntityIndex } from "../core/EntityIndex";
 import type { SharedSpatialIndex } from "../core/SharedSpatialIndex";
 import { getFrameTime } from "../../../shared/FrameTime";
 
+/**
+ * System for managing entity needs (hunger, thirst, energy, hygiene, social, fun, mental health).
+ *
+ * Features:
+ * - Decay rates configurable per need type
+ * - Cross-effects between needs (e.g., low energy affects social needs)
+ * - Zone-based bonuses when entities are in appropriate zones
+ * - Social morale boost from nearby friendly entities
+ * - Emergency auto-satisfaction when needs are critical
+ * - Batch processing for performance with many entities
+ * - Age-based decay multipliers (children decay slower, elders faster)
+ * - Divine favor modifiers to reduce decay
+ *
+ * Uses NeedsBatchProcessor for vectorized operations when entity count >= 20.
+ *
+ * @see NeedsBatchProcessor for batch processing implementation
+ * @see GPUComputeService for GPU-accelerated needs decay
+ */
 @injectable()
 export class NeedsSystem extends EventEmitter {
   private gameState: GameState;
@@ -35,9 +53,9 @@ export class NeedsSystem extends EventEmitter {
 
   private batchProcessor: NeedsBatchProcessor;
   /**
-   * Umbral para activar procesamiento por lotes.
-   * 20 entidades: balance entre overhead de batch setup y beneficios de procesamiento vectorizado.
-   * NeedsSystem procesa 7 necesidades por entidad, así que 20 entidades = 140 operaciones.
+   * Threshold for activating batch processing.
+   * 20 entities: balance between batch setup overhead and vectorized processing benefits.
+   * NeedsSystem processes 7 needs per entity, so 20 entities = 140 operations.
    */
   private readonly BATCH_THRESHOLD = 20;
   private entityIndex?: EntityIndex;
@@ -97,6 +115,11 @@ export class NeedsSystem extends EventEmitter {
     }
   }
 
+  /**
+   * Sets system dependencies after construction.
+   *
+   * @param systems - Object containing system dependencies
+   */
   public setDependencies(systems: {
     lifeCycleSystem?: LifeCycleSystem;
     divineFavorSystem?: DivineFavorSystem;
@@ -110,6 +133,12 @@ export class NeedsSystem extends EventEmitter {
     if (systems.socialSystem) this.socialSystem = systems.socialSystem;
   }
 
+  /**
+   * Updates the needs system, processing all entity needs.
+   * Uses batch processing if entity count >= BATCH_THRESHOLD.
+   *
+   * @param _deltaTimeMs - Elapsed time in milliseconds (uses config interval)
+   */
   public update(_deltaTimeMs: number): void {
     const now = getFrameTime();
 
@@ -519,7 +548,6 @@ export class NeedsSystem extends EventEmitter {
     const entityPosition = entity.position;
     const radius = 100;
 
-    // OPTIMIZADO: Usa SharedSpatialIndex O(log n) en lugar de filter O(n)
     let nearbyEntities: Array<{ id: string }>;
     if (this.spatialIndex) {
       const nearbyResults = this.spatialIndex.queryRadius(
@@ -663,6 +691,12 @@ export class NeedsSystem extends EventEmitter {
     }
   }
 
+  /**
+   * Initializes needs for an entity with default values (all at 100).
+   *
+   * @param entityId - Entity identifier
+   * @returns Initialized needs data
+   */
   public initializeEntityNeeds(entityId: string): EntityNeedsData {
     const needs: EntityNeedsData = {
       hunger: 100,
@@ -677,28 +711,63 @@ export class NeedsSystem extends EventEmitter {
     return needs;
   }
 
+  /**
+   * Gets the needs for an entity.
+   *
+   * @param entityId - Entity identifier
+   * @returns Needs data or undefined if not found
+   */
   public getNeeds(entityId: string): EntityNeedsData | undefined {
     return this.entityNeeds.get(entityId);
   }
 
+  /**
+   * Gets the needs for an entity (alias for getNeeds).
+   *
+   * @param entityId - Entity identifier
+   * @returns Needs data or undefined if not found
+   */
   public getEntityNeeds(entityId: string): EntityNeedsData | undefined {
     return this.getNeeds(entityId);
   }
 
+  /**
+   * Gets all entity needs.
+   *
+   * @returns Map of entity ID to needs data
+   */
   public getAllNeeds(): Map<string, EntityNeedsData> {
     return this.entityNeeds;
   }
 
+  /**
+   * Removes needs for an entity.
+   *
+   * @param entityId - Entity identifier to remove
+   */
   public removeEntityNeeds(entityId: string): void {
     this.entityNeeds.delete(entityId);
     this.respawnQueue.delete(entityId);
   }
 
+  /**
+   * Updates the needs configuration.
+   *
+   * @param partial - Partial configuration to merge
+   */
   public updateConfig(partial: Partial<NeedsConfig>): void {
     this.config = { ...this.config, ...partial };
     this.emit("configUpdated", this.config);
   }
 
+  /**
+   * Satisfies a need for an entity, increasing its value.
+   *
+   * @param entityId - Entity identifier
+   * @param needType - Type of need to satisfy
+   * @param amount - Amount to add (clamped to 0-100)
+   * @returns True if need was satisfied, false if entity not found
+   */
   public satisfyNeed(
     entityId: string,
     needType: string,
@@ -718,6 +787,14 @@ export class NeedsSystem extends EventEmitter {
     return false;
   }
 
+  /**
+   * Modifies a need for an entity by a delta amount.
+   *
+   * @param entityId - Entity identifier
+   * @param needType - Type of need to modify
+   * @param delta - Amount to add/subtract (clamped to 0-100)
+   * @returns True if need was modified, false if entity not found
+   */
   public modifyNeed(
     entityId: string,
     needType: string,

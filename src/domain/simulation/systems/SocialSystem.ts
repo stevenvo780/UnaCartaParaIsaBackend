@@ -9,6 +9,21 @@ import { getFrameTime } from "../../../shared/FrameTime";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 
+/**
+ * System for managing social relationships between agents.
+ *
+ * Features:
+ * - Affinity tracking between agent pairs
+ * - Social group formation based on affinity thresholds
+ * - Truce system for conflict resolution
+ * - Proximity-based relationship reinforcement
+ * - Permanent bonds (family, marriage)
+ * - Infamy tracking for reputation effects
+ * - Zone heat tracking for conflict areas
+ *
+ * @see MarriageSystem for marriage relationships
+ * @see ReputationSystem for reputation effects
+ */
 @injectable()
 export class SocialSystem {
   private gameState: GameState;

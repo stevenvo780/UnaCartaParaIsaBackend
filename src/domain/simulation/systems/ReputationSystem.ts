@@ -42,6 +42,18 @@ const REPUTATION_CONFIG = {
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 
+/**
+ * System for managing agent reputation and trust relationships.
+ *
+ * Features:
+ * - Reputation scores per agent (0-1 scale)
+ * - Trust relationships between agent pairs
+ * - Decay over time toward neutral values
+ * - Impact from combat, social interactions, and task completion
+ * - Integration with social system for relationship effects
+ *
+ * @see SocialSystem for social relationship integration
+ */
 @injectable()
 export class ReputationSystem {
   private gameState: GameState;

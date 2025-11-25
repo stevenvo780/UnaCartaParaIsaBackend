@@ -280,13 +280,13 @@ export class SimulationRunner {
 
     this.setupEventListeners();
 
-      if (this.state.agents.length === 0) {
-        const isa = this.lifeCycleSystem.spawnAgent({
-          id: "isa",
-          name: "Isa",
-          sex: "female",
-          ageYears: 25,
-          lifeStage: "adult",
+    if (this.state.agents.length === 0) {
+      const isa = this.lifeCycleSystem.spawnAgent({
+        id: "isa",
+        name: "Isa",
+        sex: "female",
+        ageYears: 25,
+        lifeStage: "adult",
         generation: 0,
         immortal: true,
         traits: {
@@ -297,11 +297,11 @@ export class SimulationRunner {
         },
       });
 
-        const stev = this.lifeCycleSystem.spawnAgent({
-          id: "stev",
-          name: "Stev",
-          sex: "male",
-          ageYears: 27,
+      const stev = this.lifeCycleSystem.spawnAgent({
+        id: "stev",
+        name: "Stev",
+        sex: "male",
+        ageYears: 27,
         lifeStage: "adult",
         generation: 0,
         immortal: true,
@@ -2281,14 +2281,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                resources?: {
-                  wood?: number;
-                  stone?: number;
-                  food?: number;
-                  water?: number;
-                };
-                minWorkers?: number;
-              }
+                  resources?: {
+                    wood?: number;
+                    stone?: number;
+                    food?: number;
+                    water?: number;
+                  };
+                  minWorkers?: number;
+                }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,
@@ -2328,7 +2328,15 @@ export class SimulationRunner {
         "setWeather" in this.timeSystem &&
         typeof this.timeSystem.setWeather === "function"
       ) {
-        this.timeSystem.setWeather(weatherType as any);
+        this.timeSystem.setWeather(
+          weatherType as
+            | "clear"
+            | "cloudy"
+            | "rainy"
+            | "stormy"
+            | "foggy"
+            | "snowy",
+        );
         logger.info(`Weather set to ${weatherType} via TIME_COMMAND`);
       } else {
         logger.warn("TimeSystem.setWeather not available");

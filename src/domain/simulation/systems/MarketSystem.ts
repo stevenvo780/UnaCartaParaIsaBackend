@@ -22,6 +22,17 @@ const DEFAULT_MARKET_CONFIG: MarketConfig = {
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 
+/**
+ * System for managing market dynamics and resource trading.
+ *
+ * Features:
+ * - Dynamic pricing based on resource scarcity
+ * - Automatic trading between agents
+ * - Market orders and transactions
+ * - Price multipliers for low/high scarcity scenarios
+ *
+ * @see InventorySystem for resource management
+ */
 @injectable()
 export class MarketSystem {
   private state: GameState;
