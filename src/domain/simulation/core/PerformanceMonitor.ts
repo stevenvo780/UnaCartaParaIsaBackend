@@ -86,6 +86,24 @@ class PerformanceMonitor {
     this.schedulerStats = stats;
   }
 
+  private gameLogicStats: {
+    activeAgents: number;
+    totalResources: number;
+    totalBuildings: number;
+  } = {
+      activeAgents: 0,
+      totalResources: 0,
+      totalBuildings: 0,
+    };
+
+  public setGameLogicStats(stats: {
+    activeAgents: number;
+    totalResources: number;
+    totalBuildings: number;
+  }): void {
+    this.gameLogicStats = stats;
+  }
+
   /**
    * Generates a JSON-friendly snapshot for dashboards or REST responses.
    */
@@ -97,6 +115,11 @@ class PerformanceMonitor {
     >;
     systems: Array<SystemStats & { avgMs: number }>;
     scheduler?: SchedulerStatsSnapshot | null;
+    gameLogic: {
+      activeAgents: number;
+      totalResources: number;
+      totalBuildings: number;
+    };
     memory: NodeJS.MemoryUsage;
     eventLoopLagMs: number;
   } {
@@ -127,6 +150,7 @@ class PerformanceMonitor {
       tickRates,
       systems,
       scheduler: this.schedulerStats,
+      gameLogic: this.gameLogicStats,
       memory: process.memoryUsage(),
       eventLoopLagMs:
         performance.eventLoopUtilization?.()?.utilization ?? 0,
@@ -214,6 +238,29 @@ class PerformanceMonitor {
         `backend_scheduler_entity_count ${snapshot.scheduler.entityCount}`,
       );
     }
+
+    // Game Logic Metrics
+    lines.push("# HELP backend_active_agents_total Total number of active agents");
+    lines.push("# TYPE backend_active_agents_total gauge");
+    lines.push(
+      `backend_active_agents_total ${snapshot.gameLogic.activeAgents}`,
+    );
+
+    lines.push(
+      "# HELP backend_total_resources Total number of world resources",
+    );
+    lines.push("# TYPE backend_total_resources gauge");
+    lines.push(
+      `backend_total_resources ${snapshot.gameLogic.totalResources}`,
+    );
+
+    lines.push(
+      "# HELP backend_total_buildings Total number of buildings/zones",
+    );
+    lines.push("# TYPE backend_total_buildings gauge");
+    lines.push(
+      `backend_total_buildings ${snapshot.gameLogic.totalBuildings}`,
+    );
 
     lines.push(
       "# HELP backend_event_loop_utilization Proportion of time event loop was busy",

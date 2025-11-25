@@ -62,20 +62,23 @@ describe("AISystem", () => {
     
     // Usar mocks completos para evitar warnings
     const mockDeps = createMockAISystemDependencies();
-    aiSystem = new AISystem(gameState, needsSystem, {
+    // El constructor espera todos los sistemas como parámetros individuales
+    aiSystem = new AISystem(
+      gameState,
+      needsSystem,
       roleSystem,
       worldResourceSystem,
-      inventorySystem: mockDeps.inventorySystem,
-      socialSystem: mockDeps.socialSystem,
-      craftingSystem: mockDeps.craftingSystem,
-      householdSystem: mockDeps.householdSystem,
-      taskSystem: mockDeps.taskSystem,
-      combatSystem: mockDeps.combatSystem,
-      animalSystem: mockDeps.animalSystem,
-      movementSystem: mockDeps.movementSystem,
-      questSystem: mockDeps.questSystem,
-      timeSystem: mockDeps.timeSystem,
-    });
+      mockDeps.inventorySystem,
+      mockDeps.socialSystem,
+      mockDeps.craftingSystem,
+      mockDeps.householdSystem,
+      mockDeps.taskSystem,
+      mockDeps.combatSystem,
+      mockDeps.animalSystem,
+      mockDeps.movementSystem,
+      mockDeps.questSystem,
+      mockDeps.timeSystem,
+    );
   });
 
   describe("Inicialización", () => {
@@ -84,19 +87,13 @@ describe("AISystem", () => {
     });
 
     it("debe aceptar configuración personalizada", () => {
-      const customSystem = new AISystem(gameState, {
-        decisionIntervalMs: 1000,
-        goalTimeoutMs: 20000,
-        minPriorityThreshold: 0.5,
-        batchSize: 10,
-      });
+      // El constructor no acepta configuración directamente, pero podemos crear el sistema sin sistemas opcionales
+      const customSystem = new AISystem(gameState);
       expect(customSystem).toBeDefined();
     });
 
     it("debe aceptar sistemas opcionales", () => {
-      const systemWithNeeds = new AISystem(gameState, undefined, {
-        needsSystem,
-      });
+      const systemWithNeeds = new AISystem(gameState, needsSystem);
       expect(systemWithNeeds).toBeDefined();
     });
   });

@@ -72,6 +72,7 @@ import type {
   BuildingCommandPayload,
   ReputationCommandPayload,
   TaskCommandPayload,
+  SpawnAgentCommandPayload,
 } from "../../../shared/types/commands/SimulationCommand";
 import type { NeedsConfig } from "../../types/simulation/needs";
 import type { TaskType, TaskMetadata } from "../../types/simulation/tasks";
@@ -279,6 +280,8 @@ export class SimulationRunner {
       genealogySystem: this._genealogySystem,
     });
 
+    logger.info("\ud83d\udd17 SimulationRunner: Dependencias entre sistemas configuradas");
+
     this.setupEventListeners();
 
     if (this.state.agents.length === 0) {
@@ -345,8 +348,16 @@ export class SimulationRunner {
       this.createInitialInfrastructure();
     }
 
+    logger.info("📅 SimulationRunner: Registrando sistemas en el scheduler...");
     this.registerSystemsInScheduler();
     this.configureSchedulerHooks();
+
+    logger.info("✅ SimulationRunner: Inicialización completada exitosamente", {
+      agentsCount: this.state.agents.length,
+      zonesCount: this.state.zones?.length ?? 0,
+      entitiesCount: this.state.entities?.length ?? 0,
+      tickCounter: this.tickCounter,
+    });
   }
 
   /**
@@ -394,6 +405,14 @@ export class SimulationRunner {
         this.emitter.emit("tick", snapshot);
 
         performanceMonitor.setSchedulerStats(this.scheduler.getStats());
+
+        performanceMonitor.setGameLogicStats({
+          activeAgents: this.state.agents.length,
+          totalResources: this.state.worldResources
+            ? Object.keys(this.state.worldResources).length
+            : 0,
+          totalBuildings: this.state.zones ? this.state.zones.length : 0,
+        });
       },
       getEntityCount: () => {
         return (
@@ -1605,8 +1624,12 @@ export class SimulationRunner {
       return;
     }
 
+    logger.info("🔄 SimulationRunner: Iniciando scheduler de simulación...");
     this.scheduler.start();
-    logger.info("🚀 Multi-rate simulation started");
+    logger.info("🚀 Multi-rate simulation started", {
+      rates: { FAST: "50ms", MEDIUM: "250ms", SLOW: "1000ms" },
+      agentsCount: this.state.agents.length,
+    });
   }
 
   /**
@@ -1889,13 +1912,25 @@ export class SimulationRunner {
             );
           }
           break;
-        case "SPAWN_AGENT":
-          this.lifeCycleSystem.spawnAgent(
-            command.payload as Partial<
+        case "SPAWN_AGENT": {
+          const spawnPayload = (command.payload ??
+            {}) as SpawnAgentCommandPayload;
+
+          const agentPayload: Partial<
+            import("../../types/simulation/agents").AgentProfile
+          > = {
+            ...(spawnPayload as Partial<
               import("../../types/simulation/agents").AgentProfile
-            >,
-          );
+            >),
+          };
+
+          if (!agentPayload.id && spawnPayload.requestId) {
+            agentPayload.id = spawnPayload.requestId;
+          }
+
+          this.lifeCycleSystem.spawnAgent(agentPayload);
           break;
+        }
         case "KILL_AGENT":
           this.lifeCycleSystem.removeAgent(command.agentId);
           break;

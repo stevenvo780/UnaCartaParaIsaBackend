@@ -8,11 +8,7 @@ const SAVE_ID_PATTERN = /^save_\d+$/;
 
 /**
  * Sanitizes and validates a save ID.
- *
  * Removes path traversal attempts and enforces format: save_<timestamp>
- *
- * @param {string} id - Raw save ID to sanitize
- * @returns {string | null} Sanitized ID or null if invalid format
  */
 function sanitizeSaveId(id: string): string | null {
   const sanitized = id
@@ -25,12 +21,6 @@ function sanitizeSaveId(id: string): string | null {
   return sanitized;
 }
 
-/**
- * Type guard to validate save data structure.
- *
- * @param {unknown} data - Data to validate
- * @returns {boolean} True if data matches SaveData interface
- */
 function validateSaveData(data: unknown): data is SaveData {
   if (!data || typeof data !== "object") {
     return false;
@@ -56,14 +46,6 @@ function validateSaveData(data: unknown): data is SaveData {
  * All save IDs are sanitized to prevent path traversal attacks.
  */
 export class SaveController {
-  /**
-   * Health check endpoint.
-   *
-   * Verifies storage service availability.
-   *
-   * @param {Request} _req - Express request (unused)
-   * @param {Response} res - Express response
-   */
   async healthCheck(_req: Request, res: Response): Promise<void> {
     try {
       const status = await storageService.isHealthy();
@@ -76,12 +58,6 @@ export class SaveController {
     }
   }
 
-  /**
-   * Lists all available save files.
-   *
-   * @param {Request} _req - Express request (unused)
-   * @param {Response} res - Express response with saves array
-   */
   async listSaves(_req: Request, res: Response): Promise<void> {
     try {
       const saves = await storageService.listSaves();
@@ -94,12 +70,6 @@ export class SaveController {
     }
   }
 
-  /**
-   * Retrieves a specific save file by ID.
-   *
-   * @param {Request} req - Express request with save ID in params
-   * @param {Response} res - Express response with save data or error
-   */
   async getSave(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -130,14 +100,6 @@ export class SaveController {
     }
   }
 
-  /**
-   * Saves game state.
-   *
-   * Validates save data structure before saving.
-   *
-   * @param {Request} req - Express request with SaveData in body
-   * @param {Response} res - Express response with save result
-   */
   async saveGame(req: Request, res: Response): Promise<void> {
     try {
       if (!validateSaveData(req.body)) {
@@ -162,12 +124,6 @@ export class SaveController {
     }
   }
 
-  /**
-   * Deletes a save file by ID.
-   *
-   * @param {Request} req - Express request with save ID in params
-   * @param {Response} res - Express response with deletion result
-   */
   async deleteSave(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;

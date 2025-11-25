@@ -5,6 +5,7 @@ import { SimulationRunner } from "../../src/domain/simulation/core/SimulationRun
 import { createMockGameState } from '../setup.ts';
 import type { GameState } from '../../src/domain/types/game-types.ts';
 import type { SimulationCommand } from '../../src/domain/simulation/types.ts';
+import type { LifeCycleSystem } from "../../src/domain/simulation/systems/LifeCycleSystem.ts";
 
 describe('SimulationRunner', () => {
   let runner: SimulationRunner;
@@ -190,5 +191,27 @@ describe('SimulationRunner', () => {
       expect(rejectedCommand).toBeDefined();
     });
   });
-});
 
+  describe('SPAWN_AGENT command', () => {
+    it('debe reutilizar requestId como id del agente', () => {
+      const lifeCycleSystem = container.get<LifeCycleSystem>(TYPES.LifeCycleSystem);
+      const spawnSpy = vi.spyOn(lifeCycleSystem, 'spawnAgent');
+
+      runner.enqueueCommand({
+        type: 'SPAWN_AGENT',
+        payload: {
+          requestId: 'agent_custom_id',
+          name: 'Custom UI Agent',
+        },
+      });
+
+      (runner as unknown as { processCommands: () => void }).processCommands();
+
+      expect(spawnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'agent_custom_id', name: 'Custom UI Agent' }),
+      );
+
+      spawnSpy.mockRestore();
+    });
+  });
+});

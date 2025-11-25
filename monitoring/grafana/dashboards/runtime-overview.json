@@ -10,7 +10,12 @@
     {
       "type": "timeseries",
       "title": "Tick Duration (avg ms)",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
       "targets": [
         {
           "expr": "backend_tick_duration_ms",
@@ -29,7 +34,12 @@
     {
       "type": "timeseries",
       "title": "System Hotspots (avg ms)",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
       "targets": [
         {
           "expr": "topk(10, backend_system_execution_ms)",
@@ -48,7 +58,12 @@
     {
       "type": "stat",
       "title": "Entities en scheduler",
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 8
+      },
       "targets": [
         {
           "expr": "backend_scheduler_entity_count",
@@ -65,7 +80,12 @@
     {
       "type": "stat",
       "title": "Memoria usada (MB)",
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 8 },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 8
+      },
       "targets": [
         {
           "expr": "backend_memory_bytes{type=\"heapUsed\"} / 1024 / 1024",
@@ -82,7 +102,12 @@
     {
       "type": "stat",
       "title": "Event Loop Utilization",
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 8 },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 8
+      },
       "targets": [
         {
           "expr": "backend_event_loop_utilization",
@@ -92,6 +117,81 @@
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Active Agents",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 12
+      },
+      "targets": [
+        {
+          "expr": "backend_active_agents_total",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Total Resources",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 12
+      },
+      "targets": [
+        {
+          "expr": "backend_total_resources",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Total Buildings",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 12
+      },
+      "targets": [
+        {
+          "expr": "backend_total_buildings",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          }
         },
         "overrides": []
       }
@@ -105,4 +205,3 @@
     "to": "now"
   }
 }
-

@@ -74,16 +74,6 @@ export class StorageService {
     }
   }
 
-  /**
-   * Checks storage service health status.
-   *
-   * Verifies that the configured storage backend (GCS or local) is accessible.
-   *
-   * @returns {Promise<Object>} Health status with storage backend type
-   * @returns {string} returns.status - "ok" if healthy
-   * @returns {number} returns.timestamp - Current timestamp
-   * @returns {string} returns.storage - "gcs" or "local"
-   */
   async isHealthy(): Promise<{
     status: string;
     timestamp: number;
@@ -100,11 +90,7 @@ export class StorageService {
 
   /**
    * Lists all available save files with metadata.
-   *
-   * Retrieves save metadata from either GCS or local storage.
    * Saves are sorted by timestamp (newest first).
-   *
-   * @returns {Promise<SaveMetadata[]>} Array of save metadata, sorted by timestamp descending
    */
   async listSaves(): Promise<SaveMetadata[]> {
     let saves: SaveMetadata[] = [];
@@ -176,12 +162,6 @@ export class StorageService {
     return saves.sort((a, b) => b.timestamp - a.timestamp);
   }
 
-  /**
-   * Retrieves a specific save file by ID.
-   *
-   * @param {string} id - Save file ID (format: save_<timestamp>)
-   * @returns {Promise<SaveData | null>} Save data or null if not found/invalid
-   */
   async getSave(id: string): Promise<SaveData | null> {
     if (this.useGCS && this.bucket) {
       const file = this.bucket.file(`${id}.json`);
@@ -261,12 +241,6 @@ export class StorageService {
     return { saveId, size };
   }
 
-  /**
-   * Deletes a save file by ID.
-   *
-   * @param {string} id - Save file ID to delete
-   * @returns {Promise<boolean>} True if deleted successfully, false if not found
-   */
   async deleteSave(id: string): Promise<boolean> {
     if (this.useGCS && this.bucket) {
       const file = this.bucket.file(`${id}.json`);
@@ -289,12 +263,6 @@ export class StorageService {
     }
   }
 
-  /**
-   * Type guard to validate save data structure.
-   *
-   * @param {unknown} value - Value to validate
-   * @returns {boolean} True if value matches SaveData interface
-   */
   private isSaveData(value: unknown): value is SaveData {
     if (!value || typeof value !== "object") {
       return false;
@@ -309,12 +277,6 @@ export class StorageService {
     );
   }
 
-  /**
-   * Safely parses JSON save data with validation.
-   *
-   * @param {string} rawContent - Raw JSON string to parse
-   * @returns {SaveData | null} Parsed and validated save data, or null if invalid
-   */
   private safelyParseSaveData(rawContent: string): SaveData | null {
     try {
       const parsed: unknown = JSON.parse(rawContent);
@@ -324,12 +286,6 @@ export class StorageService {
     }
   }
 
-  /**
-   * Ensures local saves directory exists.
-   *
-   * Creates directory recursively if it doesn't exist.
-   * Silently handles errors (directory may already exist).
-   */
   private async ensureLocalDir(): Promise<void> {
     try {
       await fs.mkdir(CONFIG.LOCAL_SAVES_PATH, { recursive: true });
