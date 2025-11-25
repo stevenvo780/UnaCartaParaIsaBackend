@@ -38,7 +38,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     },
 
     spawnProbability: 0.15,
-    suitableBiomes: ["forest", "mystical", "grassland"],
+    suitableBiomes: ["forest", "mystical", "grassland", "village"],
     clusterSize: { min: 3, max: 8 },
     minDistanceBetweenClusters: 200,
   },
