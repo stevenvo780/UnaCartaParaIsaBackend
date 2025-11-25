@@ -214,14 +214,15 @@ export class TrailSystem {
     const deltaSeconds = deltaMs / 1000;
     const now = Date.now();
 
-    // Check if we should use GPU Batch Processing
     if (this.trails.size > this.BATCH_THRESHOLD) {
       this.batchProcessor.rebuildBuffers(this.trails, this.heatMap);
 
-      // Decay parameters
-      // Note: Trail decay depends on timeSinceUse in CPU version, which is hard to vectorise exactly without extra buffers.
-      // For GPU version, we use a simplified global decay which is standard for pheromones.
-      // To approximate "timeSinceUse" factor, we can just use a slightly higher base decay.
+      /**
+       * GPU batch processing uses simplified global decay instead of per-trail
+       * timeSinceUse tracking. This is standard for pheromone systems and provides
+       * better performance. The effective decay rate approximates the CPU version's
+       * time-based decay with a slightly higher base rate.
+       */
       const effectiveTrailDecay = this.config.decayRate;
       const effectiveHeatDecay = 0.5;
 

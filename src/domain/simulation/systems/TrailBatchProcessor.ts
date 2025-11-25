@@ -24,11 +24,16 @@ export class TrailBatchProcessor {
     this.gpuService = gpuService;
   }
 
+  /**
+   * Rebuilds GPU buffers from trail and heat map state.
+   *
+   * @param {Map<string, TrailSegment>} trails - Trail segments map
+   * @param {Map<string, HeatMapCell>} heatMap - Heat map cells map
+   */
   public rebuildBuffers(
     trails: Map<string, TrailSegment>,
     heatMap: Map<string, HeatMapCell>,
   ): void {
-    // Rebuild Trail Buffer
     const trailCount = trails.size;
     if (trailCount > 0) {
       this.trailIntensityBuffer = new Float32Array(trailCount);
@@ -45,7 +50,6 @@ export class TrailBatchProcessor {
       this.trailIdArray = [];
     }
 
-    // Rebuild HeatMap Buffer
     const heatCount = heatMap.size;
     if (heatCount > 0) {
       this.heatMapBuffer = new Float32Array(heatCount);
@@ -63,6 +67,14 @@ export class TrailBatchProcessor {
     }
   }
 
+  /**
+   * Updates decay for trails and heat map using GPU batch processing.
+   *
+   * @param {number} trailDecayRate - Trail decay rate per second
+   * @param {number} heatMapDecayRate - Heat map decay rate per second
+   * @param {number} deltaSeconds - Time delta in seconds
+   * @param {number} minIntensity - Minimum intensity threshold
+   */
   public updateDecayBatch(
     trailDecayRate: number,
     heatMapDecayRate: number,
@@ -71,7 +83,6 @@ export class TrailBatchProcessor {
   ): void {
     if (!this.gpuService?.isGPUAvailable()) return;
 
-    // Process Trails
     if (this.trailIntensityBuffer && this.trailIntensityBuffer.length > 0) {
       try {
         const newIntensities = this.gpuService.computeGeneralDecay(
@@ -83,12 +94,11 @@ export class TrailBatchProcessor {
         this.trailIntensityBuffer = newIntensities;
       } catch (error) {
         logger.warn(
-          `⚠️ Error en GPU Trail Decay: ${error instanceof Error ? error.message : String(error)}`,
+          `⚠️ Error in GPU Trail Decay: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }
 
-    // Process HeatMap
     if (this.heatMapBuffer && this.heatMapBuffer.length > 0) {
       try {
         const newHeat = this.gpuService.computeGeneralDecay(
@@ -100,17 +110,23 @@ export class TrailBatchProcessor {
         this.heatMapBuffer = newHeat;
       } catch (error) {
         logger.warn(
-          `⚠️ Error en GPU HeatMap Decay: ${error instanceof Error ? error.message : String(error)}`,
+          `⚠️ Error in GPU HeatMap Decay: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }
   }
 
+  /**
+   * Synchronizes GPU buffer results back to trail and heat map state.
+   * Removes trails and cells that have decayed below threshold.
+   *
+   * @param {Map<string, TrailSegment>} trails - Trail segments map to update
+   * @param {Map<string, HeatMapCell>} heatMap - Heat map cells map to update
+   */
   public syncToState(
     trails: Map<string, TrailSegment>,
     heatMap: Map<string, HeatMapCell>,
   ): void {
-    // Sync Trails
     if (this.trailIntensityBuffer && this.trailIdArray.length > 0) {
       const count = this.trailIdArray.length;
       const toRemove: string[] = [];
@@ -129,13 +145,11 @@ export class TrailBatchProcessor {
         }
       }
 
-      // Remove dead trails
       for (const id of toRemove) {
         trails.delete(id);
       }
     }
 
-    // Sync HeatMap
     if (this.heatMapBuffer && this.heatMapIdArray.length > 0) {
       const count = this.heatMapIdArray.length;
       const toRemove: string[] = [];
@@ -154,7 +168,6 @@ export class TrailBatchProcessor {
         }
       }
 
-      // Remove dead cells
       for (const id of toRemove) {
         heatMap.delete(id);
       }

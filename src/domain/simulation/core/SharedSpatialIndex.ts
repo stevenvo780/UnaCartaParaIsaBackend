@@ -125,13 +125,15 @@ export class SharedSpatialIndex {
     this.dirty = false;
   }
 
+  /**
+   * Updates spatial index positions for entities that have moved.
+   * Skips position checks for movements < 2 pixels to avoid rounding error updates.
+   */
   private updateMovedPositions(
     entities: SimulationEntity[],
     animals: Map<string, Animal>,
   ): void {
-    // === OPTIMIZATION: Only check entities that are likely to have moved ===
-    // Skip position check if difference is < 2 pixels (rounding errors)
-    const MOVE_THRESHOLD_SQ = 4; // 2 pixels squared
+    const MOVE_THRESHOLD_SQ = 4;
 
     for (const entity of entities) {
       if (entity.isDead || !entity.position) continue;
@@ -146,10 +148,12 @@ export class SharedSpatialIndex {
       }
     }
 
-    // === OPTIMIZATION: Sample animals instead of checking all ===
-    // For 1000+ animals, only check a subset per frame
+    /**
+     * Performance optimization: sample animals instead of checking all.
+     * For 1000+ animals, only check a subset per frame (max 200).
+     */
     const animalArray = Array.from(animals.entries());
-    const checkLimit = Math.min(animalArray.length, 200); // Max 200 animals per frame
+    const checkLimit = Math.min(animalArray.length, 200);
     const startIdx = (Date.now() % 100) * Math.floor(animalArray.length / 100);
 
     for (let i = 0; i < checkLimit; i++) {

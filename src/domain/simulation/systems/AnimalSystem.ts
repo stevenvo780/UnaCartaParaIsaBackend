@@ -56,7 +56,10 @@ export class AnimalSystem {
       timestamp: number;
     }
   >();
-  // Cache duration increased to 30s for better performance with 1000+ animals
+  /**
+   * Threat cache duration in milliseconds.
+   * Increased to 30s for better performance with 1000+ animals.
+   */
   private readonly CACHE_DURATION = 30000;
 
   private batchProcessor: AnimalBatchProcessor;
@@ -67,11 +70,17 @@ export class AnimalSystem {
    */
   private readonly BATCH_THRESHOLD = 50;
 
-  // === OPTIMIZATION: Reduce state logging frequency ===
+  /**
+   * State logging optimization: log every 2s instead of 5% random chance.
+   */
   private lastStateLog = 0;
-  private readonly STATE_LOG_INTERVAL = 2000; // Log every 2s instead of 5% random
+  private readonly STATE_LOG_INTERVAL = 2000;
 
-  // === OPTIMIZATION: Staggered updates for idle/wandering animals ===
+  /**
+   * Staggered update optimization for idle/wandering animals.
+   * Critical states (fleeing, hunting, etc.) update every frame.
+   * Idle/wandering animals update less frequently to reduce CPU load.
+   */
   private updateFrame = 0;
   private readonly IDLE_UPDATE_DIVISOR = 3; // Update idle/wandering animals every 3rd frame
 
@@ -123,7 +132,6 @@ export class AnimalSystem {
     const deltaSeconds = deltaMs / 1000;
     const deltaMinutes = deltaMs / 60000;
 
-    // === OPTIMIZATION: Only count states when logging ===
     const shouldLogState = now - this.lastStateLog > this.STATE_LOG_INTERVAL;
     let liveCount = 0;
     let stateCount: Record<string, number> | null = null;
@@ -210,15 +218,14 @@ export class AnimalSystem {
 
     this.batchProcessor.syncToAnimals(this.animals);
 
-    // === OPTIMIZATION: Stagger behavior updates for idle/wandering animals ===
-    // Critical states (fleeing, hunting, etc.) update every frame
-    // Idle/wandering update every IDLE_UPDATE_DIVISOR frames
+    /**
+     * Staggered behavior updates: critical states (fleeing, hunting, etc.) update
+     * every frame, while idle/wandering animals update less frequently.
+     */
     for (let i = 0; i < animalCount; i++) {
       const animalId = animalIdArray[i];
       const animal = this.animals.get(animalId);
       if (!animal || animal.isDead) continue;
-
-      // Skip idle/wandering animals on non-update frames
       const isIdleState =
         animal.state === "idle" || animal.state === "wandering";
       if (
