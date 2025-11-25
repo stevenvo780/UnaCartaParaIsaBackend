@@ -20,12 +20,11 @@ export class TaskSystem {
   public update(): void {
     const now = Date.now();
     const dtSec = (now - this.lastUpdate) / 1000;
-    // Reducir intervalo de 10s a 2s para detección más rápida de tareas stalled
     if (dtSec < 2) return;
     this.lastUpdate = now;
 
-    const STALLED_THRESHOLD = 300000; // 5 minutes
-    const MAX_STALLED_AGE = 600000; // 10 minutes - cancelar después de esto
+    const STALLED_THRESHOLD = 300000;
+    const MAX_STALLED_AGE = 600000;
 
     for (const task of this.tasks.values()) {
       if (task.completed) continue;
@@ -34,7 +33,6 @@ export class TaskSystem {
         const timeSinceLastContribution = now - task.lastContribution;
 
         if (timeSinceLastContribution > MAX_STALLED_AGE) {
-          // Cancelar tarea muy vieja
           this.cancelStalledTask(task.id, "timeout");
         } else if (timeSinceLastContribution > STALLED_THRESHOLD) {
           simulationEvents.emit(GameEventNames.TASK_STALLED, {

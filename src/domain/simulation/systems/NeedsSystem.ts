@@ -12,6 +12,7 @@ import { NeedsBatchProcessor } from "./NeedsBatchProcessor";
 import { injectable, inject, unmanaged, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
+import { getFrameTime } from "../../../shared/FrameTime";
 
 @injectable()
 export class NeedsSystem extends EventEmitter {
@@ -104,7 +105,7 @@ export class NeedsSystem extends EventEmitter {
   }
 
   public update(_deltaTimeMs: number): void {
-    const now = Date.now();
+    const now = getFrameTime();
 
     this.processRespawnQueue(now);
 

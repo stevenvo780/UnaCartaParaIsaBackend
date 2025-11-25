@@ -178,12 +178,10 @@ export class SimulationRunner {
     @inject(TYPES.SimulationConfig) _config?: SimulationConfig,
   ) {
     this.state = state;
-    // tickIntervalMs deprecated, not stored
     this.maxCommandQueue = _config?.maxCommandQueue ?? 200;
     this.stateCache = new StateCache();
     this.deltaEncoder = new DeltaEncoder();
 
-    // Initialize multi-rate scheduler
     this.scheduler = new MultiRateScheduler({
       FAST: 100, // 10 Hz - movement, combat, trails
       MEDIUM: 500, // 2 Hz - AI, needs, social
@@ -311,10 +309,7 @@ export class SimulationRunner {
       this.createInitialInfrastructure();
     }
 
-    // Register systems in multi-rate scheduler
     this.registerSystemsInScheduler();
-
-    // Configurar hooks de sincronización para el scheduler
     this.configureSchedulerHooks();
   }
 
@@ -345,8 +340,6 @@ export class SimulationRunner {
         );
       },
     });
-
-    logger.info("🔗 Scheduler hooks configured for index synchronization");
   }
 
   /**
@@ -663,7 +656,6 @@ export class SimulationRunner {
     const baseX = 100;
     const baseY = 100;
 
-    // Casa familiar principal (ya construida)
     const houseZone: Zone = {
       id: `zone_house_initial_${Date.now()}`,
       type: "shelter",
@@ -707,7 +699,6 @@ export class SimulationRunner {
       },
     };
 
-    // Zona de almacenamiento
     const storageZone: Zone = {
       id: `zone_storage_initial_${Date.now()}`,
       type: "storage",
@@ -726,7 +717,6 @@ export class SimulationRunner {
       },
     };
 
-    // Zona de descanso (dentro de la casa)
     const restZone: Zone = {
       id: `zone_rest_initial_${Date.now()}`,
       type: "rest",
@@ -745,7 +735,6 @@ export class SimulationRunner {
       },
     };
 
-    // Zona de cocina (dentro de la casa)
     const kitchenZone: Zone = {
       id: `zone_kitchen_initial_${Date.now()}`,
       type: "kitchen",
@@ -764,7 +753,6 @@ export class SimulationRunner {
       },
     };
 
-    // Agregar zonas al estado
     this.state.zones.push(
       houseZone,
       workbenchZone,
@@ -835,10 +823,8 @@ export class SimulationRunner {
     simulationEvents.on(
       GameEventNames.AGENT_RESPAWNED,
       (data: { agentId: string; timestamp: number }) => {
-        // Reactivar AI del agente respawneado
         this.aiSystem.setAgentOffDuty(data.agentId, false);
 
-        // Asegurar que MovementSystem tenga el estado de movimiento inicializado
         const agent = this.entityIndex.getAgent(data.agentId);
         if (
           agent?.position &&
@@ -957,7 +943,6 @@ export class SimulationRunner {
       }) => {
         const aiState = this.aiSystem.getAIState(data.entityId);
         if (aiState?.currentGoal?.targetZoneId === data.targetZoneId) {
-          // Marcar el goal actual como fallido
           this.aiSystem.failCurrentGoal(data.entityId);
         }
       },
@@ -972,7 +957,6 @@ export class SimulationRunner {
         stalledDuration: number;
         timestamp: number;
       }) => {
-        // Los agentes trabajando en esta tarea deberían buscar otra cosa que hacer
         const task = this.taskSystem.getTask(data.taskId);
         if (task?.contributors) {
           for (const agentId of task.contributors.keys()) {
@@ -1009,7 +993,6 @@ export class SimulationRunner {
       },
     );
 
-    // Handler para predicciones de crisis - crear objetivos preventivos
     simulationEvents.on(
       GameEventNames.CRISIS_PREDICTION,
       (data: {
@@ -1021,28 +1004,22 @@ export class SimulationRunner {
         };
         timestamp: number;
       }) => {
-        // Si la probabilidad es alta, algunos agentes deberían prepararse
         if (data.prediction.probability >= 0.6) {
-          // Seleccionar agentes con roles relevantes para preparación
           const relevantAgents = this.state.agents.filter((agent) => {
             const role = this.roleSystem.getAgentRole(agent.id);
             if (!role) return false;
-            // Guardias, constructores y granjeros deberían reaccionar
             return ["guard", "builder", "farmer", "gatherer"].includes(
               role.roleType,
             );
           });
 
-          // Forzar reevaluación en agentes relevantes para que preparen
           for (const agent of relevantAgents.slice(0, 3)) {
-            // Máximo 3 agentes reaccionan a predicciones
             this.aiSystem.forceGoalReevaluation(agent.id);
           }
         }
       },
     );
 
-    // Handler para inicio de construcción - registrar progreso
     simulationEvents.on(
       GameEventNames.BUILDING_CONSTRUCTION_STARTED,
       (data: {
@@ -1051,7 +1028,6 @@ export class SimulationRunner {
         label: string;
         completesAt: number;
       }) => {
-        // Notificar al QuestSystem sobre construcción iniciada
         const job = this.buildingSystem.getConstructionJob(data.jobId);
         if (job?.taskId) {
           const task = this.taskSystem.getTask(job.taskId);
@@ -1071,9 +1047,6 @@ export class SimulationRunner {
         }
       },
     );
-
-    // EMERGENCE_PATTERN_DETECTED: El EmergenceSystem ya procesa estos eventos internamente
-    // No se requiere handler adicional aquí
 
     simulationEvents.on(
       GameEventNames.AGENT_AGED,
@@ -1121,7 +1094,6 @@ export class SimulationRunner {
         };
         timestamp: number;
       }) => {
-        // Ajustar comportamientos según hora del día
         const period = data.time?.phase || "";
         if (period === "night" || period === "deep_night") {
           for (const agent of this.state.agents) {
@@ -1147,9 +1119,8 @@ export class SimulationRunner {
         cancelled?: boolean;
         reason?: string;
       }) => {
-        if (data.cancelled) return; // No otorgar recompensas por tareas canceladas
+        if (data.cancelled) return;
 
-        // Otorgar reputación a contribuidores
         for (const agentId of data.completedBy) {
           this.reputationSystem.updateReputation(
             agentId,
@@ -1158,7 +1129,6 @@ export class SimulationRunner {
           );
         }
 
-        // Notificar al QuestSystem
         for (const agentId of data.completedBy) {
           this.questSystem.handleEvent({
             type: "task_completed",
@@ -1178,24 +1148,16 @@ export class SimulationRunner {
         knowledgeType: string;
         timestamp: number;
       }) => {
-        // Registrar conocimiento en la memoria del agente para que pueda usarlo en decisiones futuras
         const aiState = this.aiSystem.getAIState(data.agentId);
         if (aiState) {
-          // Almacenar conocimiento en la memoria del agente
           if (!aiState.memory.knownResourceLocations) {
             aiState.memory.knownResourceLocations = new Map();
           }
-          // El conocimiento puede desbloquear nuevas capacidades de crafting
-          // Por ahora solo lo registramos, en el futuro podría afectar qué recetas puede hacer
           aiState.memory.lastMemoryCleanup = Date.now();
         }
-        // Forzar reevaluación para que el agente considere nuevas opciones
         this.aiSystem.forceGoalReevaluation(data.agentId);
       },
     );
-
-    // NEED_SATISFIED: El NeedsSystem maneja esto internamente
-    // No se requiere handler adicional aquí
 
     simulationEvents.on(
       GameEventNames.ROLE_ASSIGNED,
@@ -1225,7 +1187,6 @@ export class SimulationRunner {
         truceDuration?: number;
         timestamp: number;
       }) => {
-        // Aplicar penalty de reputación definido en la sanción
         this.reputationSystem.updateReputation(
           data.agentId,
           data.reputationPenalty,
@@ -1243,13 +1204,11 @@ export class SimulationRunner {
         truceBonus?: number;
         timestamp: number;
       }) => {
-        // Mejorar relación entre las partes
         this.socialSystem.modifyAffinity(
           data.attackerId,
           data.targetId,
           data.truceBonus || 0.1,
         );
-        // Otorgar reputación positiva al que acepta la tregua
         this.reputationSystem.updateReputation(
           data.targetId,
           0.02,
@@ -1266,7 +1225,6 @@ export class SimulationRunner {
         targetId: string;
         timestamp: number;
       }) => {
-        // Empeorar relación entre las partes
         this.socialSystem.modifyAffinity(data.attackerId, data.targetId, -0.15);
       },
     );
@@ -1280,17 +1238,11 @@ export class SimulationRunner {
         weaponId?: string;
         timestamp: number;
       }) => {
-        // Reducir energía del defensor
         this.needsSystem.modifyNeed(data.targetId, "energy", -5);
-        // Afectar relación social
         this.socialSystem.modifyAffinity(data.attackerId, data.targetId, -0.2);
       },
     );
 
-    // ANIMAL_DIED: El AnimalSystem maneja esto internamente
-    // No se requiere handler adicional aquí
-
-    // Handler para tareas creadas - notificar a sistemas relevantes
     simulationEvents.on(
       GameEventNames.TASK_CREATED,
       (data: {
@@ -1300,7 +1252,6 @@ export class SimulationRunner {
         createdBy?: string;
         timestamp: number;
       }) => {
-        // Notificar a QuestSystem si hay quests relacionados con construcción
         if (data.taskType === "build" || data.taskType === "repair") {
           this.questSystem.handleEvent({
             type: "task_created",
@@ -1312,7 +1263,6 @@ export class SimulationRunner {
       },
     );
 
-    // Handler para progreso de tareas - actualizar estadísticas
     simulationEvents.on(
       GameEventNames.TASK_PROGRESS,
       (data: {
@@ -1322,12 +1272,9 @@ export class SimulationRunner {
         progress: number;
         timestamp: number;
       }) => {
-        // Registrar contribución para estadísticas de trabajo colaborativo
-        // Esto podría usarse para calcular eficiencia de equipos
         const task = this.taskSystem.getTask(data.taskId);
         if (task && task.contributors) {
           const contributorCount = task.contributors.size;
-          // Si hay múltiples contribuidores, otorgar pequeña bonificación de reputación
           if (contributorCount > 1 && data.contribution > 10) {
             this.reputationSystem.updateReputation(
               data.agentId,
@@ -1339,10 +1286,6 @@ export class SimulationRunner {
       },
     );
 
-    // BUILDING_DAMAGED: El BuildingMaintenanceSystem maneja esto internamente
-    // No se requiere handler adicional aquí
-
-    // Handler para edificios reparados - otorgar reputación al reparador
     simulationEvents.on(
       GameEventNames.BUILDING_REPAIRED,
       (data: {
@@ -1353,7 +1296,6 @@ export class SimulationRunner {
         maxHealth: number;
         timestamp: number;
       }) => {
-        // Otorgar reputación al agente que reparó
         this.reputationSystem.updateReputation(
           data.repairedBy,
           0.03,
@@ -1361,12 +1303,6 @@ export class SimulationRunner {
         );
       },
     );
-
-    // HOUSEHOLD_AGENT_ASSIGNED: El HouseholdSystem maneja esto internamente
-    // No se requiere handler adicional aquí
-
-    // HOUSEHOLD_RESOURCE_DEPOSITED/WITHDRAWN: El HouseholdSystem maneja esto internamente
-    // No se requiere handler adicional aquí
 
     const eventCaptureListener = (
       eventName: string,
@@ -1737,7 +1673,6 @@ export class SimulationRunner {
       const scaledDelta = delta * this.timeScale;
 
       this.entityIndex.rebuild(this.state);
-      // Sincronizar agents con entities antes de reconstruir índices espaciales
       this.entityIndex.syncAgentsToEntities(this.state);
       this.sharedSpatialIndex.rebuildIfNeeded(
         this.state.entities || [],

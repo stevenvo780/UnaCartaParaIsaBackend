@@ -6,6 +6,7 @@ import { GameEventNames, simulationEvents } from "../core/events";
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
+import { getFrameTime } from "../../../shared/FrameTime";
 import {
   estimateTravelTime,
   assessRouteDifficultyByDistance,
@@ -158,7 +159,7 @@ export class MovementSystem extends EventEmitter {
   }
 
   public update(deltaMs: number): void {
-    const now = Date.now();
+    const now = getFrameTime();
 
     this.processPathfindingQueue();
 

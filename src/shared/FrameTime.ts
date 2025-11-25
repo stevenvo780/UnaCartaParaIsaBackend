@@ -8,13 +8,23 @@
  * Beneficio: Reduce ~100+ llamadas a Date.now() por tick a solo 1.
  */
 
-let _frameTimestamp = Date.now();
+let _frameTimestamp = 0; // Inicializar en 0 para forzar actualización
 
 /**
  * Obtiene el timestamp del frame actual.
  * Usar esto en lugar de Date.now() dentro de sistemas.
+ *
+ * IMPORTANTE: Si _frameTimestamp está muy desactualizado (>100ms),
+ * automáticamente se actualiza. Esto permite que los sistemas funcionen
+ * correctamente en tests con fake timers y durante desarrollo.
  */
 export function getFrameTime(): number {
+  const realNow = Date.now();
+  // Si el timestamp está desactualizado (>100ms), actualizarlo
+  // El scheduler lo actualiza cada tick, pero esto es un fallback seguro
+  if (realNow - _frameTimestamp > 100) {
+    _frameTimestamp = realNow;
+  }
   return _frameTimestamp;
 }
 

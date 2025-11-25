@@ -255,7 +255,7 @@ export class StorageService {
     try {
       await fs.mkdir(CONFIG.LOCAL_SAVES_PATH, { recursive: true });
     } catch {
-      // Directory may already exist
+      // Ignore - directory may already exist
     }
   }
 

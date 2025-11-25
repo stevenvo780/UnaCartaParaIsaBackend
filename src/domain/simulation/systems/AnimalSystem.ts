@@ -12,6 +12,7 @@ import { AnimalSpawning } from "./animals/AnimalSpawning";
 import { simulationEvents, GameEventNames } from "../core/events";
 import type { WorldResourceSystem } from "./WorldResourceSystem";
 import { AnimalBatchProcessor } from "./AnimalBatchProcessor";
+import { getFrameTime } from "../../../shared/FrameTime";
 
 const DEFAULT_CONFIG: AnimalSystemConfig = {
   maxAnimals: 500,
@@ -105,7 +106,7 @@ export class AnimalSystem {
   }
 
   public update(_deltaMs: number): void {
-    const now = Date.now();
+    const now = getFrameTime();
 
     if (now - this.lastUpdate < this.config.updateInterval) {
       return;

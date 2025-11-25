@@ -4,6 +4,7 @@ import { SpatialGrid } from "../../../utils/SpatialGrid";
 import { SocialGroup } from "../../../shared/types/simulation/agents";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { logger } from "../../../infrastructure/utils/logger";
+import { getFrameTime } from "../../../shared/FrameTime";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -98,7 +99,7 @@ export class SocialSystem {
       this.lastUpdate = 0;
     }
 
-    const now = Date.now();
+    const now = getFrameTime();
     this.updateTruces(now);
   }
 

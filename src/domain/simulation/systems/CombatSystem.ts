@@ -19,6 +19,7 @@ import { SocialSystem } from "./SocialSystem";
 import { SpatialGrid } from "../../../utils/SpatialGrid";
 import type { AnimalSystem } from "./AnimalSystem";
 import type { NormsSystem } from "./NormsSystem";
+import { getFrameTime } from "../../../shared/FrameTime";
 
 interface CombatConfig {
   decisionIntervalMs: number;
@@ -83,7 +84,6 @@ export class CombatSystem {
     this.config = DEFAULT_COMBAT_CONFIG;
     const worldWidth = state.worldSize?.width ?? 2000;
     const worldHeight = state.worldSize?.height ?? 2000;
-    // Mantener SpatialGrid como fallback si SharedSpatialIndex no está disponible
     this.spatialGrid = new SpatialGrid(
       worldWidth,
       worldHeight,
@@ -94,14 +94,11 @@ export class CombatSystem {
   }
 
   public update(_deltaMs: number): void {
-    const now = Date.now();
+    const now = getFrameTime();
     if (now - this.lastUpdate < this.config.decisionIntervalMs) {
       return;
     }
     this.lastUpdate = now;
-
-    // La sincronización se hace centralmente en SimulationRunner.step()
-    // No es necesario sincronizar aquí
 
     const entities = this.state.entities;
     if (!entities || entities.length === 0) return;
@@ -109,14 +106,11 @@ export class CombatSystem {
     const entitiesById = new Map<string, SimulationEntity>();
     const validEntities = entities.filter((e) => !e.isDead && e.position);
 
-    // Usar SharedSpatialIndex si está disponible, sino usar SpatialGrid local
     if (this.sharedSpatialIndex) {
-      // SharedSpatialIndex ya está reconstruido en SimulationRunner
       for (const entity of validEntities) {
         entitiesById.set(entity.id, entity);
       }
     } else {
-      // Fallback a SpatialGrid local
       this.spatialGrid.clear();
       for (const entity of validEntities) {
         entitiesById.set(entity.id, entity);
