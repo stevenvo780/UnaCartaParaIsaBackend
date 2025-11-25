@@ -6,15 +6,18 @@ import type {
   AmbientState,
   AmbientMood,
 } from "../../types/simulation/ambient";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
 
+@injectable()
 export class AmbientAwarenessSystem {
   private snapshot: AmbientSnapshot;
   private wellbeingHistory: number[] = [];
   private readonly HISTORY_SIZE = 60;
 
   constructor(
-    private readonly gameState: GameState,
-    private readonly needsSystem: NeedsSystem,
+    @inject(TYPES.GameState) private readonly gameState: GameState,
+    @inject(TYPES.NeedsSystem) private readonly needsSystem: NeedsSystem,
   ) {
     this.snapshot = {
       wellbeing: {

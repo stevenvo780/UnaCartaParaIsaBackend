@@ -1,12 +1,15 @@
 import { logger } from "@/infrastructure/utils/logger";
 import { GameState } from "../../types/game-types";
 import { simulationEvents, GameEventNames } from "../core/events";
+import { injectable, inject, unmanaged } from "inversify";
+import { TYPES } from "../../../config/Types";
 
 export interface InteractionConfig {
   interactionCooldownMs: number;
   maxInteractionsPerDay: number;
 }
 
+@injectable()
 export class InteractionGameSystem {
   private activeInteractions = new Map<
     string,
@@ -17,7 +20,10 @@ export class InteractionGameSystem {
     }
   >();
 
-  constructor(_gameState: GameState, _config?: Partial<InteractionConfig>) {
+  constructor(
+    @inject(TYPES.GameState) _gameState: GameState,
+    @unmanaged() _config?: Partial<InteractionConfig>,
+  ) {
     void _gameState;
     void _config;
     logger.info("🎲 InteractionGameSystem (Backend) initialized");

@@ -15,6 +15,7 @@ import {
 } from "../../../shared/types/simulation/appearance";
 import { GeneticSpriteSystem } from "./GeneticSpriteSystem";
 import { simulationEvents, GameEventNames } from "../core/events";
+import { injectable, unmanaged } from "inversify";
 
 interface AppearanceConfig {
   enableGenerationalStyles: boolean;
@@ -23,6 +24,7 @@ interface AppearanceConfig {
   inheritanceStrength: number;
 }
 
+@injectable()
 export class AppearanceGenerationSystem {
   private config: AppearanceConfig;
   private geneticSpriteSystem: GeneticSpriteSystem;
@@ -31,7 +33,7 @@ export class AppearanceGenerationSystem {
   private generationThemes = new Map<number, GenerationVisualTheme>();
   private groupAppearances = new Map<string, SocialGroupAppearance>();
 
-  constructor(config?: Partial<AppearanceConfig>) {
+  constructor(@unmanaged() config?: Partial<AppearanceConfig>) {
     this.config = {
       enableGenerationalStyles: true,
       enableSocialMarkers: true,

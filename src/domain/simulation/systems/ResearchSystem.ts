@@ -5,6 +5,8 @@ import {
   LineageResearchStats,
   TechTreeState,
 } from "../../types/simulation/research";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
 
 const RESEARCH_CATEGORIES: ResearchCategory[] = [
   {
@@ -49,13 +51,14 @@ const RESEARCH_CATEGORIES: ResearchCategory[] = [
   },
 ];
 
+@injectable()
 export class ResearchSystem {
   private gameState: GameState;
   private lineageResearch = new Map<string, Map<string, ResearchNode>>();
   private unlockedCategories = new Map<string, Set<string>>();
   private lineageSpecializations = new Map<string, string[]>();
 
-  constructor(gameState: GameState) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
   }
 

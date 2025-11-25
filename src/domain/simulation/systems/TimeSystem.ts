@@ -1,6 +1,8 @@
 import { EventEmitter } from "node:events";
 import type { GameState } from "../../types/game-types.js";
 import { simulationEvents, GameEventNames } from "../core/events";
+import { injectable, inject, unmanaged } from "inversify";
+import { TYPES } from "../../../config/Types";
 
 export interface TimeOfDay {
   hour: number;
@@ -56,6 +58,7 @@ const DEFAULT_CONFIG: TimeConfig = {
   weatherDurationMax: 900000, // 15 minutes
 };
 
+@injectable()
 export class TimeSystem extends EventEmitter {
   private gameState: GameState;
   private config: TimeConfig;
@@ -65,7 +68,10 @@ export class TimeSystem extends EventEmitter {
   private lastWeatherChange = 0;
   private readonly TIME_UPDATE_INTERVAL = 1000;
 
-  constructor(gameState: GameState, config?: Partial<TimeConfig>) {
+  constructor(
+    @inject(TYPES.GameState) gameState: GameState,
+    @unmanaged() config?: Partial<TimeConfig>,
+  ) {
     super();
     this.gameState = gameState;
     this.config = { ...DEFAULT_CONFIG, ...config };

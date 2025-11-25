@@ -9,7 +9,10 @@ import type { InventorySystem } from "./InventorySystem";
 import type { SocialSystem } from "./SocialSystem";
 import type { Zone } from "../../types/game-types";
 import { NeedsBatchProcessor } from "./NeedsBatchProcessor";
+import { injectable, inject, unmanaged } from "inversify";
+import { TYPES } from "../../../config/Types";
 
+@injectable()
 export class NeedsSystem extends EventEmitter {
   private gameState: GameState;
   private config: NeedsConfig;
@@ -30,9 +33,9 @@ export class NeedsSystem extends EventEmitter {
   private readonly BATCH_THRESHOLD = 20; // Usar batch processing si hay 20+ entidades
 
   constructor(
-    gameState: GameState,
-    config?: Partial<NeedsConfig>,
-    systems?: {
+    @inject(TYPES.GameState) gameState: GameState,
+    @unmanaged() config?: Partial<NeedsConfig>,
+    @unmanaged() systems?: {
       lifeCycleSystem?: LifeCycleSystem;
       divineFavorSystem?: DivineFavorSystem;
       inventorySystem?: InventorySystem;

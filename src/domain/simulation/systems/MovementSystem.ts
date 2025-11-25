@@ -3,6 +3,8 @@ import EasyStar from "easystarjs";
 import { GameState, MapElement } from "../../types/game-types";
 import { logger } from "../../../infrastructure/utils/logger";
 import { GameEventNames, simulationEvents } from "../core/events";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
 import {
   estimateTravelTime,
   assessRouteDifficultyByDistance,
@@ -81,6 +83,7 @@ export interface ZoneDistance {
   difficulty: Difficulty;
 }
 
+@injectable()
 export class MovementSystem extends EventEmitter {
   private gameState: GameState;
   private movementStates = new Map<string, EntityMovementState>();
@@ -106,7 +109,7 @@ export class MovementSystem extends EventEmitter {
   private batchProcessor: MovementBatchProcessor;
   private readonly BATCH_THRESHOLD = 15; // Usar batch processing si hay 15+ entidades moviéndose
 
-  constructor(gameState: GameState) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     super();
     this.gameState = gameState;
 

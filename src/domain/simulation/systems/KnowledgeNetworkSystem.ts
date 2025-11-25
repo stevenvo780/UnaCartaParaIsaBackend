@@ -1,6 +1,8 @@
 import { logger } from "@/infrastructure/utils/logger";
 import { GameState } from "../../types/game-types";
 import { simulationEvents, GameEventNames } from "../core/events";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
 
 export type KnowledgeNodeData =
   | { type: "fact"; content: string; category?: string }
@@ -24,13 +26,14 @@ export interface KnowledgeEdge {
   cor: number;
 }
 
+@injectable()
 export class KnowledgeNetworkSystem {
   private gameState: GameState;
   private nodes = new Map<string, KnowledgeNode>();
   private edges: KnowledgeEdge[] = [];
   private agentKnowledge = new Map<string, Set<string>>(); // agentId -> Set<nodeId>
 
-  constructor(gameState: GameState) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
     logger.info("🧠 KnowledgeNetworkSystem (Backend) initialized");
   }

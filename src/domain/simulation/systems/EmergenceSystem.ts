@@ -6,6 +6,8 @@ import type { SocialSystem } from "./SocialSystem.js";
 import type { LifeCycleSystem } from "./LifeCycleSystem.js";
 import type { EconomySystem } from "./EconomySystem.js";
 import type { EntityNeedsData } from "../../types/simulation/needs.js";
+import { injectable, inject, unmanaged } from "inversify";
+import { TYPES } from "../../../config/Types";
 
 export interface AIModifiers {
   priorityBoost?: number;
@@ -81,6 +83,7 @@ const DEFAULT_CONFIG: EmergenceConfig = {
   historySize: 100,
 };
 
+@injectable()
 export class EmergenceSystem extends EventEmitter {
   private gameState: GameState;
   private config: EmergenceConfig;
@@ -96,9 +99,9 @@ export class EmergenceSystem extends EventEmitter {
   private economySystem?: EconomySystem;
 
   constructor(
-    gameState: GameState,
-    config?: Partial<EmergenceConfig>,
-    systems?: {
+    @inject(TYPES.GameState) gameState: GameState,
+    @unmanaged() config?: Partial<EmergenceConfig>,
+    @unmanaged() systems?: {
       needsSystem?: NeedsSystem;
       socialSystem?: SocialSystem;
       lifeCycleSystem?: LifeCycleSystem;
