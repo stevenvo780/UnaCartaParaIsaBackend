@@ -47,6 +47,15 @@ export function createInitialGameState(): GameState {
     mapElements: [],
     mapSeed: undefined,
     currentConversation: createInitialConversation(now),
+    world: {
+      terrain: [],
+      config: {
+        width: 0,
+        height: 0,
+        tileSize: 64,
+        seed: 0,
+      },
+    },
     terrainTiles: [],
     roads: [],
     objectLayers: [],

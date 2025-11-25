@@ -104,8 +104,8 @@ describe("ProductionSystem", () => {
       gameState,
       inventorySystem as unknown as any,
       lifeCycleSystem as unknown as any,
-      terrainSystem as unknown as any,
     );
+    (productionSystem as any).terrainSystem = terrainSystem as unknown as any;
   });
 
   afterEach(() => {
@@ -139,6 +139,7 @@ describe("ProductionSystem", () => {
     );
     expect(inventorySystem.addToStockpile).toHaveBeenCalled();
     expect(inventorySystem.getResources("zone_food")["food"]).toBe(8);
+    expect(terrainSystem.getTile).toHaveBeenCalled();
     expect(terrainSystem.modifyTile).toHaveBeenCalled();
     expect(emitSpy).toHaveBeenCalledWith(
       GameEventNames.PRODUCTION_OUTPUT_GENERATED,

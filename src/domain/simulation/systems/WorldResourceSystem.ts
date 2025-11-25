@@ -105,7 +105,8 @@ export class WorldResourceSystem {
               const resource = this.spawnResource(config.type, { x, y }, biome);
               if (resource) {
                 spawned++;
-                resourceCounts[config.type] = (resourceCounts[config.type] || 0) + 1;
+                resourceCounts[config.type] =
+                  (resourceCounts[config.type] || 0) + 1;
               }
             }
           }

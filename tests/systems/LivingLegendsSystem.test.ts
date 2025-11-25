@@ -1,129 +1,110 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { LivingLegendsSystem } from "../../src/domain/simulation/systems/LivingLegendsSystem.ts";
-import { createMockGameState } from "../setup.ts";
-import type { GameState } from "../../src/types/game-types.ts";
-import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events.ts";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import type { GameState } from "../../src/domain/types/game-types";
+import { LivingLegendsSystem } from "../../src/domain/simulation/systems/LivingLegendsSystem";
+import {
+  simulationEvents,
+  GameEventNames,
+} from "../../src/domain/simulation/core/events";
+import { createMockGameState } from "../setup";
 
 describe("LivingLegendsSystem", () => {
   let gameState: GameState;
   let livingLegendsSystem: LivingLegendsSystem;
+  let emitSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     gameState = createMockGameState({
       agents: [
         {
           id: "agent-1",
-          name: "Test Agent",
-          ageYears: 25,
+          name: "Hero",
           lifeStage: "adult",
-          immortal: false,
-          position: { x: 100, y: 100 },
-          type: "agent",
+          ageYears: 30,
           traits: {
             cooperation: 0.5,
-            diligence: 0.6,
-            curiosity: 0.4,
+            diligence: 0.5,
+            curiosity: 0.5,
           },
         },
       ],
     });
+
+    emitSpy = vi.spyOn(simulationEvents, "emit");
     livingLegendsSystem = new LivingLegendsSystem(gameState);
   });
 
-  describe("Inicialización", () => {
-    it("debe inicializar correctamente", () => {
-      expect(livingLegendsSystem).toBeDefined();
-    });
+  afterEach(() => {
+    emitSpy.mockRestore();
+    simulationEvents.clearQueue();
+    simulationEvents.removeAllListeners();
   });
 
-  describe("Actualización del sistema", () => {
-    it("debe actualizar sin errores", () => {
-      expect(() => livingLegendsSystem.update(1000)).not.toThrow();
+  const emitReputation = (value: number, delta: number): void => {
+    simulationEvents.emit(GameEventNames.REPUTATION_UPDATED, {
+      entityId: "agent-1",
+      newReputation: value,
+      delta,
+      reason: "test",
     });
+    simulationEvents.flushEvents();
+  };
 
-    it("debe actualizar títulos periódicamente", () => {
-      livingLegendsSystem.update(6000);
-      expect(livingLegendsSystem).toBeDefined();
-    });
+  it("crea y actualiza registros de leyendas al recibir reputación", () => {
+    emitReputation(0.85, 0.2);
+
+    const legend = livingLegendsSystem.getLegend("agent-1");
+    expect(legend?.reputation).toBe(0.85);
+    expect(legend?.reputationTrend).toBe("rising");
+    expect(emitSpy).toHaveBeenCalledWith(
+      GameEventNames.LEGEND_UPDATE,
+      expect.objectContaining({
+        legend: expect.objectContaining({ agentId: "agent-1" }),
+      }),
+    );
   });
 
-  describe("Manejo de eventos de reputación", () => {
-    it("debe manejar cambios de reputación", () => {
-      expect(() => {
-        simulationEvents.emit(GameEventNames.REPUTATION_UPDATED, {
-          entityId: "agent-1",
-          newReputation: 0.8,
-          delta: 0.1,
-          reason: "good_deed",
-        });
-      }).not.toThrow();
-    });
+  it("actualiza títulos y aura cuando se alcanza reputación mítica", () => {
+    emitReputation(0.95, 0.3);
+    livingLegendsSystem.update(6000); // supera titleUpdateInterval
 
-    it("debe crear registro de leyenda cuando cambia reputación", () => {
-      expect(() => {
-        simulationEvents.emit(GameEventNames.REPUTATION_UPDATED, {
-          entityId: "agent-1",
-          newReputation: 0.8,
-          delta: 0.1,
-        });
-      }).not.toThrow();
-    });
-
-    it("debe actualizar tendencia de reputación", () => {
-      expect(() => {
-        simulationEvents.emit(GameEventNames.REPUTATION_UPDATED, {
-          entityId: "agent-1",
-          newReputation: 0.8,
-          delta: 0.1,
-        });
-      }).not.toThrow();
-    });
+    const legend = livingLegendsSystem.getLegend("agent-1");
+    expect(legend?.legendTier).toBe("mythical");
+    expect(legend?.currentTitle).toBe("Mythical Being");
+    expect(livingLegendsSystem.getActiveLegends()).toContain("agent-1");
   });
 
-  describe("Registro de acciones", () => {
-    it("debe registrar acciones exitosas", () => {
-      expect(() => {
-        simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
-          agentId: "agent-1",
-          actionType: "build",
-          success: true,
-          impact: 5,
-        });
-      }).not.toThrow();
+  it("registra deeds exitosos e ignora acciones fallidas", () => {
+    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      agentId: "agent-1",
+      actionType: "build",
+      success: true,
+      impact: 5,
     });
+    simulationEvents.flushEvents();
 
-    it("no debe registrar acciones fallidas", () => {
-      expect(() => {
-        simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
-          agentId: "agent-1",
-          actionType: "build",
-          success: false,
-        });
-      }).not.toThrow();
+    let legend = livingLegendsSystem.getLegend("agent-1");
+    expect(legend?.deeds).toHaveLength(1);
+
+    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      agentId: "agent-1",
+      actionType: "build",
+      success: false,
+      impact: 5,
     });
+    simulationEvents.flushEvents();
+
+    legend = livingLegendsSystem.getLegend("agent-1");
+    expect(legend?.deeds).toHaveLength(1);
   });
 
-  describe("Gestión de leyendas", () => {
-    it("debe manejar eventos de reputación", () => {
-      expect(() => {
-        simulationEvents.emit(GameEventNames.REPUTATION_UPDATED, {
-          entityId: "agent-1",
-          newReputation: 0.8,
-          delta: 0.1,
-        });
-      }).not.toThrow();
-    });
+  it("mantiene historial de reputación limitado", () => {
+    for (let i = 0; i < 60; i++) {
+      emitReputation(0.2 + i * 0.01, 0.01);
+    }
 
-    it("debe manejar eventos de acciones completadas", () => {
-      expect(() => {
-        simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
-          agentId: "agent-1",
-          actionType: "build",
-          success: true,
-          impact: 5,
-        });
-      }).not.toThrow();
-    });
+    const legends = livingLegendsSystem.getAllLegends();
+    const legend = legends.get("agent-1");
+    expect(legend?.lastUpdate).toBeDefined();
+    expect(legend?.reputation).toBeCloseTo(0.2 + 59 * 0.01);
   });
 });
-

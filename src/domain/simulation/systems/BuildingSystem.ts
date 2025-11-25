@@ -10,6 +10,7 @@ import type { TaskType } from "../../types/simulation/tasks";
 import { logger } from "../../../infrastructure/utils/logger";
 
 import { TaskSystem } from "./TaskSystem";
+import { TerrainSystem } from "./TerrainSystem";
 
 interface BuildingSystemConfig {
   decisionIntervalMs: number;
@@ -69,6 +70,9 @@ export class BuildingSystem {
     @inject(TYPES.WorldResourceSystem)
     @optional()
     private readonly worldResourceSystem?: WorldResourceSystem,
+    @inject(TYPES.TerrainSystem)
+    @optional()
+    private readonly terrainSystem?: TerrainSystem,
   ) {
     this.config = DEFAULT_CONFIG;
     this.now = (): number => Date.now();
@@ -250,6 +254,22 @@ export class BuildingSystem {
 
     if (this.worldResourceSystem) {
       this.worldResourceSystem.removeResourcesInArea(bounds);
+    }
+
+    if (this.terrainSystem) {
+      const TILE_SIZE = 64; // Assuming standard tile size, ideally should come from config
+      const startTileX = Math.floor(bounds.x / TILE_SIZE);
+      const startTileY = Math.floor(bounds.y / TILE_SIZE);
+      const endTileX = Math.floor((bounds.x + bounds.width) / TILE_SIZE);
+      const endTileY = Math.floor((bounds.y + bounds.height) / TILE_SIZE);
+
+      for (let y = startTileY; y <= endTileY; y++) {
+        for (let x = startTileX; x <= endTileX; x++) {
+          this.terrainSystem.modifyTile(x, y, {
+            assets: { terrain: "terrain_dirt" },
+          });
+        }
+      }
     }
 
     return {
