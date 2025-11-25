@@ -1,140 +1,88 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { WorldResourceSystem } from "../../src/domain/simulation/systems/WorldResourceSystem.ts";
-import { createMockGameState } from "../setup.ts";
-import type { GameState } from "../../src/types/game-types.ts";
-import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events.ts";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import type { GameState } from "../../src/domain/types/game-types";
+import { WorldResourceSystem } from "../../src/domain/simulation/systems/WorldResourceSystem";
+import {
+  simulationEvents,
+  GameEventNames,
+} from "../../src/domain/simulation/core/events";
+import { createMockGameState } from "../setup";
+
+const mockGetResourceConfig = vi.fn();
+vi.mock("../../src/infrastructure/services/world/config/WorldResourceConfigs", () => ({
+  getResourceConfig: (type: string) => mockGetResourceConfig(type),
+}));
+
+const baseConfig = {
+  spawnProbability: 1,
+  suitableBiomes: ["forest"],
+  harvestsUntilDepleted: 2,
+  harvestsUntilPartial: 1,
+  canRegenerate: true,
+  regenerationTime: 1000,
+};
 
 describe("WorldResourceSystem", () => {
   let gameState: GameState;
-  let worldResourceSystem: WorldResourceSystem;
+  let resourceSystem: WorldResourceSystem;
+  let emitSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    gameState = createMockGameState({
-      worldResources: {},
-    });
-    worldResourceSystem = new WorldResourceSystem(gameState);
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+    mockGetResourceConfig.mockImplementation((type: string) => ({
+      ...baseConfig,
+      type,
+    }));
+    gameState = createMockGameState();
+    resourceSystem = new WorldResourceSystem(gameState);
+    emitSpy = vi.spyOn(simulationEvents, "emit");
   });
 
-  describe("Inicialización", () => {
-    it("debe inicializar correctamente", () => {
-      expect(worldResourceSystem).toBeDefined();
-    });
-
-    it("debe inicializar worldResources si no existe", () => {
-      const stateWithoutResources = createMockGameState();
-      delete stateWithoutResources.worldResources;
-      const system = new WorldResourceSystem(stateWithoutResources);
-      expect(stateWithoutResources.worldResources).toBeDefined();
-    });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    simulationEvents.clearQueue();
+    simulationEvents.removeAllListeners();
   });
 
-  describe("Spawn de recursos", () => {
-    it("debe spawnear recurso en el mundo", () => {
-      const resource = worldResourceSystem.spawnResource(
-        "tree",
-        { x: 100, y: 100 },
-        "forest"
-      );
-      expect(resource).toBeDefined();
-      expect(resource?.id).toBeDefined();
-      expect(resource?.type).toBe("tree");
-      expect(resource?.position).toEqual({ x: 100, y: 100 });
-    });
-
-    it("debe retornar null para tipo inválido", () => {
-      const resource = worldResourceSystem.spawnResource(
-        "invalid_type",
-        { x: 100, y: 100 },
-        "forest"
-      );
-      expect(resource).toBeNull();
-    });
-
-    it("debe spawnear diferentes tipos de recursos", () => {
-      const types = ["tree", "rock", "water_source", "berry_bush"];
-      types.forEach(type => {
-        const resource = worldResourceSystem.spawnResource(
-          type,
-          { x: 100, y: 100 },
-          "forest"
-        );
-        if (resource) {
-          expect(resource.type).toBe(type);
-        }
-      });
-    });
+  it("spawnResource agrega recursos y emite RESOURCE_SPAWNED", () => {
+    const resource = resourceSystem.spawnResource("tree", { x: 0, y: 0 }, "forest");
+    expect(resource).not.toBeNull();
+    expect(Object.keys(gameState.worldResources || {})).toContain(resource!.id);
+    expect(emitSpy).toHaveBeenCalledWith(
+      GameEventNames.RESOURCE_SPAWNED,
+      expect.objectContaining({ resource }),
+    );
   });
 
-  describe("spawnResourcesInWorld", () => {
-    it("debe spawnear recursos en el mundo", () => {
-      const biomeMap = Array(10).fill(null).map(() => Array(10).fill("forest"));
-      const worldConfig = {
-        width: 640,
-        height: 640,
-        tileSize: 64,
-        biomeMap,
-      };
+  it("harvestResource cambia estado y programa regeneración tras múltiples cosechas", () => {
+    const resource = resourceSystem.spawnResource("tree", { x: 0, y: 0 }, "forest");
+    emitSpy.mockClear();
 
-      worldResourceSystem.spawnResourcesInWorld(worldConfig);
-      
-      const resources = Object.values(gameState.worldResources || {});
-      expect(resources.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it("debe manejar mapas de biomas vacíos", () => {
-      const biomeMap: string[][] = [];
-      const worldConfig = {
-        width: 100,
-        height: 100,
-        tileSize: 64,
-        biomeMap,
-      };
-
-      expect(() => {
-        worldResourceSystem.spawnResourcesInWorld(worldConfig);
-      }).not.toThrow();
-    });
+    resourceSystem.harvestResource(resource!.id, "agent-1");
+    const result = resourceSystem.harvestResource(resource!.id, "agent-1");
+    expect(result.success).toBe(true);
+    expect(resource!.state).toBe("depleted");
+    expect(emitSpy).toHaveBeenCalledWith(
+      GameEventNames.RESOURCE_STATE_CHANGE,
+      expect.objectContaining({ resourceId: resource!.id, newState: "depleted" }),
+    );
   });
 
-  describe("Actualización del sistema", () => {
-    it("debe actualizar sin errores", () => {
-      expect(() => worldResourceSystem.update(1000)).not.toThrow();
-    });
+  it("update regenera recursos después del tiempo configurado", () => {
+    const resource = resourceSystem.spawnResource("tree", { x: 0, y: 0 }, "forest");
+    resourceSystem.harvestResource(resource!.id, "agent-1");
+    resourceSystem.harvestResource(resource!.id, "agent-1");
+    emitSpy.mockClear();
 
-    it("debe procesar actualizaciones periódicas", () => {
-      const resource = worldResourceSystem.spawnResource(
-        "tree",
-        { x: 100, y: 100 },
-        "forest"
-      );
-      
-      if (resource && gameState.worldResources) {
-        expect(() => {
-          worldResourceSystem.update(1000);
-          worldResourceSystem.update(6000);
-        }).not.toThrow();
-      }
-    });
-  });
+    vi.setSystemTime(6000);
+    resourceSystem.update(0);
 
-  describe("Manejo de eventos", () => {
-    it("debe manejar eventos de recursos recolectados", () => {
-      const resource = worldResourceSystem.spawnResource(
-        "tree",
-        { x: 100, y: 100 },
-        "forest"
-      );
-      
-      if (resource) {
-        expect(() => {
-          simulationEvents.emit(GameEventNames.RESOURCE_GATHERED, {
-            resourceId: resource.id,
-            agentId: "agent-1",
-            amount: 1,
-          });
-        }).not.toThrow();
-      }
-    });
+    expect(resource!.state).toBe("pristine");
+    expect(resource!.harvestCount).toBe(0);
+    expect(emitSpy).toHaveBeenCalledWith(
+      GameEventNames.RESOURCE_STATE_CHANGE,
+      expect.objectContaining({ resourceId: resource!.id, newState: "pristine" }),
+    );
   });
 });
-

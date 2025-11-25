@@ -1,143 +1,104 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { TrailSystem } from "../../src/domain/simulation/systems/TrailSystem.ts";
-import { createMockGameState } from "../setup.ts";
-import type { GameState } from "../../src/types/game-types.ts";
-import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events.ts";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { TrailSystem } from "../../src/domain/simulation/systems/TrailSystem";
+import { createMockGameState } from "../setup";
+import {
+  simulationEvents,
+  GameEventNames,
+} from "../../src/domain/simulation/core/events";
+
+const emitMovementStarted = (payload: Parameters<typeof simulationEvents.emit>[1]) => {
+  simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, payload as any);
+  simulationEvents.flushEvents();
+};
+
+const emitMovementCompleted = (payload: Parameters<typeof simulationEvents.emit>[1]) => {
+  simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_COMPLETED, payload as any);
+  simulationEvents.flushEvents();
+};
 
 describe("TrailSystem", () => {
-  let gameState: GameState;
+  let gameState = createMockGameState();
   let trailSystem: TrailSystem;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
     gameState = createMockGameState({
       agents: [
         {
           id: "agent-1",
-          name: "Test Agent",
-          position: { x: 100, y: 100 },
-          ageYears: 25,
-          lifeStage: "adult",
-          sex: "female",
-          generation: 0,
-          birthTimestamp: Date.now(),
-          immortal: false,
-          traits: {},
-          socialStatus: "commoner",
+          name: "Walker",
+          position: { x: 0, y: 0 },
         },
       ],
     });
-
     trailSystem = new TrailSystem(gameState);
   });
 
-  describe("Inicialización", () => {
-    it("debe inicializar correctamente", () => {
-      expect(trailSystem).toBeDefined();
-    });
+  afterEach(() => {
+    vi.useRealTimers();
+    simulationEvents.clearQueue();
+    simulationEvents.removeAllListeners();
   });
 
-  describe("Registro de movimiento", () => {
-    it("debe registrar movimiento cuando se inicia una actividad", () => {
-      const emitSpy = vi.spyOn(simulationEvents, "emit");
-
-      simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
-        entityId: "agent-1",
-        activityType: "work",
-        destination: { x: 200, y: 200 },
-        path: [
-          { x: 100, y: 100 },
-          { x: 150, y: 150 },
-          { x: 200, y: 200 },
-        ],
-      });
-
-      // El sistema debería haber registrado el movimiento
-      expect(emitSpy).toHaveBeenCalled();
+  it("registra segmentos y actualiza heatmap cuando se reporta movimiento", () => {
+    emitMovementStarted({
+      entityId: "agent-1",
+      activityType: "gather",
+      destination: { x: 64, y: 0 },
+      path: [
+        { x: 0, y: 0 },
+        { x: 32, y: 0 },
+        { x: 64, y: 0 },
+      ],
     });
 
-    it("debe reforzar senderos cuando se completa una actividad", () => {
-      const emitSpy = vi.spyOn(simulationEvents, "emit");
+    const trails = trailSystem.getAllTrails();
+    expect(trails).toHaveLength(2);
+    expect(trails[0].purpose).toBe("work");
 
-      simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_COMPLETED, {
-        entityId: "agent-1",
-        position: { x: 200, y: 200 },
-      });
-
-      expect(emitSpy).toHaveBeenCalled();
-    });
+    const hotspots = trailSystem.getTrafficHotspots(1);
+    expect(hotspots[0]?.heat).toBeGreaterThan(0);
   });
 
-  describe("Obtener senderos", () => {
-    it("debe retornar todos los senderos", () => {
-      // Primero registrar un movimiento
-      simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
-        entityId: "agent-1",
-        activityType: "work",
-        destination: { x: 200, y: 200 },
-        path: [
-          { x: 100, y: 100 },
-          { x: 200, y: 200 },
-        ],
-      });
+  it("refuerza senderos recientes cuando la actividad se completa", () => {
+    emitMovementStarted({
+      entityId: "agent-1",
+      activityType: "moving",
+      destination: { x: 32, y: 32 },
+      path: [
+        { x: 0, y: 0 },
+        { x: 32, y: 32 },
+      ],
+    });
+    const before = trailSystem.getAllTrails()[0].intensity;
 
-      // Actualizar el sistema
-      trailSystem.update(100);
-
-      const trails = trailSystem.getAllTrails();
-      expect(Array.isArray(trails)).toBe(true);
+    emitMovementCompleted({
+      entityId: "agent-1",
+      position: { x: 32, y: 32 },
     });
 
-    it("debe retornar los senderos más usados", () => {
-      simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
-        entityId: "agent-1",
-        activityType: "work",
-        destination: { x: 200, y: 200 },
-        path: [
-          { x: 100, y: 100 },
-          { x: 200, y: 200 },
-        ],
-      });
-
-      trailSystem.update(100);
-
-      const mostUsed = trailSystem.getMostUsedTrails(5);
-      expect(Array.isArray(mostUsed)).toBe(true);
-    });
-
-    it("debe retornar hotspots de tráfico", () => {
-      simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
-        entityId: "agent-1",
-        activityType: "work",
-        destination: { x: 200, y: 200 },
-      });
-
-      trailSystem.update(100);
-
-      const hotspots = trailSystem.getTrafficHotspots(5);
-      expect(Array.isArray(hotspots)).toBe(true);
-    });
+    const after = trailSystem.getAllTrails()[0].intensity;
+    expect(after).toBeGreaterThan(before);
   });
 
-  describe("Mapa de calor", () => {
-    it("debe actualizar el mapa de calor con movimientos", () => {
-      simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
-        entityId: "agent-1",
-        activityType: "work",
-        destination: { x: 200, y: 200 },
-      });
-
-      // El sistema debería actualizar el mapa de calor
-      expect(trailSystem).toBeDefined();
+  it("decay aplica y actualiza estadísticas globales", () => {
+    emitMovementStarted({
+      entityId: "agent-1",
+      activityType: "moving",
+      destination: { x: 32, y: 0 },
+      path: [
+        { x: 0, y: 0 },
+        { x: 32, y: 0 },
+      ],
     });
-  });
 
-  describe("Estadísticas", () => {
-    it("debe proporcionar estadísticas de senderos", () => {
-      const stats = trailSystem.getStats();
-      expect(stats).toBeDefined();
-      expect(stats.totalTrails).toBeGreaterThanOrEqual(0);
-      expect(stats.activeTrails).toBeGreaterThanOrEqual(0);
-    });
+    vi.setSystemTime(10000);
+    trailSystem.update(2000);
+
+    const stats = trailSystem.getStats();
+    expect(stats.totalTrails).toBeGreaterThan(0);
+    expect(gameState.trails?.trails.length).toBeGreaterThan(0);
+    expect(trailSystem.getMostUsedTrails(1)[0].usageCount).toBeGreaterThan(0);
   });
 });
-

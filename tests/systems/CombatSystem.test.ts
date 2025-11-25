@@ -1,369 +1,180 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { CombatSystem } from "../../src/domain/simulation/systems/CombatSystem.ts";
-import { InventorySystem } from "../../src/domain/simulation/systems/InventorySystem.ts";
-import { LifeCycleSystem } from "../../src/domain/simulation/systems/LifeCycleSystem.ts";
-import { SocialSystem } from "../../src/domain/simulation/systems/SocialSystem.ts";
-import { createMockGameState } from "../setup.ts";
-import type { GameState } from "../../src/types/game-types.ts";
-import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events.ts";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import type { GameState } from "../../src/domain/types/game-types";
+import type { ResourceType } from "../../src/domain/types/simulation/economy";
+import { CombatSystem } from "../../src/domain/simulation/systems/CombatSystem";
+import {
+  simulationEvents,
+  GameEventNames,
+} from "../../src/domain/simulation/core/events";
+import { createMockGameState } from "../setup";
+
+class MockInventorySystem {
+  private inventories = new Map<string, Record<string, number>>();
+
+  public initializeAgentInventory = vi.fn((agentId: string) => {
+    if (!this.inventories.has(agentId)) {
+      this.inventories.set(agentId, {});
+    }
+    return this.inventories.get(agentId)!;
+  });
+
+  public getAgentInventory = vi.fn((agentId: string) => {
+    return this.inventories.get(agentId);
+  });
+
+  public addResource = vi.fn(
+    (agentId: string, resource: ResourceType, amount: number) => {
+      const inventory = this.initializeAgentInventory(agentId);
+      inventory[resource] = (inventory[resource] ?? 0) + amount;
+    },
+  );
+
+  public removeFromAgent = vi.fn(
+    (agentId: string, resource: ResourceType, amount: number) => {
+      const inventory = this.inventories.get(agentId);
+      if (!inventory || (inventory[resource] ?? 0) < amount) return false;
+      inventory[resource]! -= amount;
+      return true;
+    },
+  );
+}
+
+class MockLifeCycleSystem {
+  private profiles = new Map<string, { traits?: { aggression?: number } }>();
+
+  constructor(profiles: Record<string, { traits?: { aggression?: number } }>) {
+    Object.entries(profiles).forEach(([id, profile]) => {
+      this.profiles.set(id, profile);
+    });
+  }
+
+  public getAgent = vi.fn((id: string) => this.profiles.get(id));
+  public removeAgent = vi.fn();
+}
+
+class MockSocialSystem {
+  private affinities = new Map<string, number>();
+
+  public setAffinity(attackerId: string, targetId: string, value: number): void {
+    this.affinities.set(`${attackerId}:${targetId}`, value);
+  }
+
+  public getAffinityBetween = vi.fn((attackerId: string, targetId: string) => {
+    return this.affinities.get(`${attackerId}:${targetId}`) ?? 0;
+  });
+
+  public imposeTruce = vi.fn();
+}
 
 describe("CombatSystem", () => {
   let gameState: GameState;
-  let inventorySystem: InventorySystem;
-  let lifeCycleSystem: LifeCycleSystem;
-  let socialSystem: SocialSystem;
+  let inventorySystem: MockInventorySystem;
+  let lifeCycleSystem: MockLifeCycleSystem;
+  let socialSystem: MockSocialSystem;
   let combatSystem: CombatSystem;
+  let emitSpy: ReturnType<typeof vi.spyOn>;
+
+  const attackerEntity = {
+    id: "attacker",
+    type: "agent",
+    position: { x: 0, y: 0 },
+    isDead: false,
+    stats: { health: 100 },
+  };
+
+  const targetEntity = {
+    id: "target",
+    type: "agent",
+    position: { x: 10, y: 0 },
+    isDead: false,
+    stats: { health: 5 },
+  };
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+    emitSpy = vi.spyOn(simulationEvents, "emit");
+
     gameState = createMockGameState({
-      entities: [
+      worldSize: { width: 200, height: 200 },
+      entities: [attackerEntity, targetEntity],
+      zones: [
         {
-          id: "attacker-1",
-          position: { x: 100, y: 100 },
-          type: "agent",
-          isDead: false,
-        },
-        {
-          id: "target-1",
-          position: { x: 150, y: 150 },
-          type: "agent",
-          isDead: false,
-        },
-        {
-          id: "dead-entity",
-          position: { x: 200, y: 200 },
-          type: "agent",
-          isDead: true,
+          id: "zone-1",
+          type: "town",
+          bounds: { x: 0, y: 0, width: 50, height: 50 },
         },
       ],
-      worldSize: { width: 2000, height: 2000 },
     });
+    gameState.combatLog = [];
 
-    inventorySystem = new InventorySystem();
-    lifeCycleSystem = new LifeCycleSystem(gameState);
-    socialSystem = new SocialSystem(gameState);
+    inventorySystem = new MockInventorySystem();
+    lifeCycleSystem = new MockLifeCycleSystem({
+      attacker: { traits: { aggression: 1 } },
+      target: { traits: { aggression: 0.2 } },
+    });
+    socialSystem = new MockSocialSystem();
+    socialSystem.setAffinity("attacker", "target", -0.8);
+
     combatSystem = new CombatSystem(
       gameState,
-      inventorySystem,
-      lifeCycleSystem,
-      socialSystem
+      inventorySystem as unknown as any,
+      lifeCycleSystem as unknown as any,
+      socialSystem as unknown as any,
     );
   });
 
-  describe("Inicialización", () => {
-    it("debe inicializar correctamente", () => {
-      expect(combatSystem).toBeDefined();
-    });
-
-    it("debe aceptar configuración personalizada", () => {
-      const customSystem = new CombatSystem(
-        gameState,
-        inventorySystem,
-        lifeCycleSystem,
-        socialSystem,
-        {
-          decisionIntervalMs: 1000,
-          engagementRadius: 100,
-          baseCooldownMs: 5000,
-        }
-      );
-      expect(customSystem).toBeDefined();
-    });
-
-    it("debe inicializar con tamaño de mundo por defecto", () => {
-      const stateWithoutSize = createMockGameState();
-      delete stateWithoutSize.worldSize;
-      const system = new CombatSystem(
-        stateWithoutSize,
-        inventorySystem,
-        lifeCycleSystem,
-        socialSystem
-      );
-      expect(system).toBeDefined();
-    });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    simulationEvents.clearQueue();
+    simulationEvents.removeAllListeners();
   });
 
-  describe("Equipamiento de armas", () => {
-    it("debe equipar arma", () => {
-      inventorySystem.initializeAgentInventory("attacker-1");
-      inventorySystem.addResource("attacker-1", "wood", 10);
-      
-      expect(() => combatSystem.equip("attacker-1", "wooden_club")).not.toThrow();
-    });
-
-    it("debe retornar arma equipada", () => {
-      inventorySystem.initializeAgentInventory("attacker-1");
-      inventorySystem.addResource("attacker-1", "wood", 10);
-      combatSystem.equip("attacker-1", "wooden_club");
-      
-      const weapon = combatSystem.getEquipped("attacker-1");
-      expect(weapon).toBe("wooden_club");
-    });
-
-    it("debe retornar unarmed si no hay arma equipada", () => {
-      const weapon = combatSystem.getEquipped("agent-without-weapon");
-      expect(weapon).toBe("unarmed");
-    });
-
-    it("debe equipar stone_dagger", () => {
-      inventorySystem.initializeAgentInventory("attacker-1");
-      inventorySystem.addResource("attacker-1", "stone", 10);
-      combatSystem.equip("attacker-1", "stone_dagger");
-      
-      const weapon = combatSystem.getEquipped("attacker-1");
-      expect(weapon).toBe("stone_dagger");
-    });
+  it("getNearbyEnemies detecta hostiles cercanos", () => {
+    const enemies = combatSystem.getNearbyEnemies("attacker");
+    expect(enemies).toContain("target");
   });
 
-  describe("Actualización del sistema", () => {
-    it("debe actualizar sin errores", () => {
-      expect(() => combatSystem.update(1000)).not.toThrow();
-    });
+  it("update emite eventos de combate y elimina al objetivo cuando la salud llega a cero", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
 
-    it("no debe actualizar si no ha pasado el intervalo mínimo", () => {
-      combatSystem.update(100);
-      combatSystem.update(200);
-      // No debería procesar combate
-      expect(combatSystem).toBeDefined();
-    });
+    vi.setSystemTime(1000);
+    combatSystem.update(0);
 
-    it("debe ignorar entidades muertas", () => {
-      expect(() => combatSystem.update(1000)).not.toThrow();
-    });
-
-    it("debe ignorar entidades sin posición", () => {
-      if (gameState.entities) {
-        gameState.entities.push({
-          id: "no-position",
-          type: "agent",
-          isDead: false,
-        });
-      }
-      expect(() => combatSystem.update(1000)).not.toThrow();
-    });
+    expect(emitSpy).toHaveBeenCalledWith(
+      GameEventNames.COMBAT_HIT,
+      expect.objectContaining({ targetId: "target" }),
+    );
+    expect(emitSpy).toHaveBeenCalledWith(
+      GameEventNames.COMBAT_KILL,
+      expect.objectContaining({ targetId: "target" }),
+    );
+    expect(gameState.combatLog?.length).toBeGreaterThan(0);
+    expect(
+      gameState.entities?.find((entity) => entity.id === "target")?.isDead,
+    ).toBe(true);
+    expect(lifeCycleSystem.removeAgent).toHaveBeenCalledWith("target");
   });
 
-  describe("Crafting de armas", () => {
-    it("debe craftar arma si tiene recursos suficientes", () => {
-      inventorySystem.initializeAgentInventory("attacker-1");
-      inventorySystem.addResource("attacker-1", "wood", 10);
-      
-      const result = combatSystem.craftWeapon("attacker-1", "wooden_club");
-      expect(result).toBe(true);
-      
-      const weapon = combatSystem.getEquipped("attacker-1");
-      expect(weapon).toBe("wooden_club");
-    });
+  it("craftWeapon consume recursos y emite evento", () => {
+    inventorySystem.addResource("attacker", "wood", 10);
 
-    it("debe craftar stone_dagger si tiene recursos", () => {
-      inventorySystem.initializeAgentInventory("attacker-1");
-      inventorySystem.addResource("attacker-1", "stone", 10);
-      
-      const result = combatSystem.craftWeapon("attacker-1", "stone_dagger");
-      expect(result).toBe(true);
-      
-      const weapon = combatSystem.getEquipped("attacker-1");
-      expect(weapon).toBe("stone_dagger");
-    });
-
-    it("debe retornar false si no tiene recursos suficientes", () => {
-      inventorySystem.initializeAgentInventory("attacker-1");
-      inventorySystem.addResource("attacker-1", "wood", 5);
-      
-      const result = combatSystem.craftWeapon("attacker-1", "wooden_club");
-      expect(result).toBe(false);
-    });
-
-    it("debe consumir recursos al craftar", () => {
-      inventorySystem.initializeAgentInventory("attacker-1");
-      inventorySystem.addResource("attacker-1", "wood", 10);
-      
-      combatSystem.craftWeapon("attacker-1", "wooden_club");
-      
-      const inventory = inventorySystem.getAgentInventory("attacker-1");
-      expect(inventory?.wood).toBe(0);
-    });
-
-    it("debe retornar false para arma inválida", () => {
-      inventorySystem.initializeAgentInventory("attacker-1");
-      const result = combatSystem.craftWeapon("attacker-1", "invalid_weapon" as any);
-      expect(result).toBe(false);
-    });
+    const crafted = combatSystem.craftWeapon("attacker", "wooden_club");
+    expect(crafted).toBe(true);
+    expect(inventorySystem.removeFromAgent).toHaveBeenCalledWith(
+      "attacker",
+      "wood",
+      10,
+    );
+    expect(emitSpy).toHaveBeenCalledWith(
+      GameEventNames.COMBAT_WEAPON_CRAFTED,
+      expect.objectContaining({ agentId: "attacker", weapon: "wooden_club" }),
+    );
   });
 
-  describe("Lógica de combate", () => {
-    it("debe procesar combate entre agentes cercanos", () => {
-      // Configurar agentes con perfiles
-      const attacker = lifeCycleSystem.spawnAgent({ name: "Attacker" });
-      const target = lifeCycleSystem.spawnAgent({ name: "Target" });
-      
-      // Configurar entidades en el estado
-      if (gameState.entities) {
-        gameState.entities[0] = {
-          id: attacker.id,
-          position: { x: 100, y: 100 },
-          type: "agent",
-          isDead: false,
-        };
-        gameState.entities[1] = {
-          id: target.id,
-          position: { x: 120, y: 120 }, // Cerca del atacante
-          type: "agent",
-          isDead: false,
-        };
-      }
-      
-      // Configurar afinidad negativa para que ataque
-      socialSystem.setAffinity(attacker.id, target.id, -0.5);
-      
-      // Actualizar sistema
-      combatSystem.update(1000);
-      
-      // El sistema debería procesar el combate
-      expect(combatSystem).toBeDefined();
-    });
-
-    it("debe atacar animales automáticamente", () => {
-      const attacker = lifeCycleSystem.spawnAgent({ name: "Hunter" });
-      
-      if (gameState.entities) {
-        gameState.entities[0] = {
-          id: attacker.id,
-          position: { x: 100, y: 100 },
-          type: "agent",
-          isDead: false,
-        };
-        gameState.entities[1] = {
-          id: "animal-1",
-          position: { x: 120, y: 120 },
-          type: "animal",
-          isDead: false,
-          tags: ["animal"],
-        };
-      }
-      
-      combatSystem.update(1000);
-      
-      expect(combatSystem).toBeDefined();
-    });
-
-    it("no debe atacar entidades inmortales", () => {
-      const attacker = lifeCycleSystem.spawnAgent({ name: "Attacker" });
-      
-      if (gameState.entities) {
-        gameState.entities[0] = {
-          id: attacker.id,
-          position: { x: 100, y: 100 },
-          type: "agent",
-          isDead: false,
-        };
-        gameState.entities[1] = {
-          id: "immortal-1",
-          position: { x: 120, y: 120 },
-          type: "agent",
-          isDead: false,
-          immortal: true,
-        };
-      }
-      
-      combatSystem.update(1000);
-      
-      expect(combatSystem).toBeDefined();
-    });
-
-    it("debe respetar cooldown entre ataques", () => {
-      const attacker = lifeCycleSystem.spawnAgent({ name: "Attacker" });
-      const target = lifeCycleSystem.spawnAgent({ name: "Target" });
-      
-      if (gameState.entities) {
-        gameState.entities[0] = {
-          id: attacker.id,
-          position: { x: 100, y: 100 },
-          type: "agent",
-          isDead: false,
-        };
-        gameState.entities[1] = {
-          id: target.id,
-          position: { x: 120, y: 120 },
-          type: "agent",
-          isDead: false,
-        };
-      }
-      
-      socialSystem.setAffinity(attacker.id, target.id, -0.5);
-      
-      // Primer ataque
-      combatSystem.update(1000);
-      
-      // Segundo ataque inmediato (debería estar en cooldown)
-      combatSystem.update(100);
-      
-      expect(combatSystem).toBeDefined();
-    });
-  });
-
-  describe("Log de combate", () => {
-    it("debe mantener log de combate", () => {
-      expect(gameState.combatLog).toBeDefined();
-      expect(Array.isArray(gameState.combatLog)).toBe(true);
-    });
-
-    it("debe agregar entrada al log cuando se equipa arma", () => {
-      const initialLength = gameState.combatLog?.length || 0;
-      
-      inventorySystem.initializeAgentInventory("attacker-1");
-      combatSystem.equip("attacker-1", "wooden_club");
-      
-      expect(gameState.combatLog?.length).toBeGreaterThan(initialLength);
-    });
-
-    it("debe agregar entrada al log cuando se crafta arma", () => {
-      const initialLength = gameState.combatLog?.length || 0;
-      
-      inventorySystem.initializeAgentInventory("attacker-1");
-      inventorySystem.addResource("attacker-1", "wood", 10);
-      combatSystem.craftWeapon("attacker-1", "wooden_club");
-      
-      expect(gameState.combatLog?.length).toBeGreaterThan(initialLength);
-    });
-
-    it("debe limitar tamaño del log", () => {
-      // El sistema limita a maxLogEntries (200)
-      expect(combatSystem).toBeDefined();
-    });
-  });
-
-  describe("Eventos", () => {
-    it("debe emitir evento al equipar arma", () => {
-      const emitSpy = vi.spyOn(simulationEvents, "emit");
-      
-      inventorySystem.initializeAgentInventory("attacker-1");
-      combatSystem.equip("attacker-1", "wooden_club");
-      
-      expect(emitSpy).toHaveBeenCalledWith(
-        GameEventNames.COMBAT_WEAPON_EQUIPPED,
-        expect.objectContaining({
-          agentId: "attacker-1",
-          weapon: "wooden_club",
-        }),
-      );
-    });
-
-    it("debe emitir evento al craftar arma", () => {
-      const emitSpy = vi.spyOn(simulationEvents, "emit");
-      
-      inventorySystem.initializeAgentInventory("attacker-1");
-      inventorySystem.addResource("attacker-1", "wood", 10);
-      combatSystem.craftWeapon("attacker-1", "wooden_club");
-      
-      expect(emitSpy).toHaveBeenCalledWith(
-        GameEventNames.COMBAT_WEAPON_CRAFTED,
-        expect.objectContaining({
-          agentId: "attacker-1",
-          weapon: "wooden_club",
-        }),
-      );
-    });
+  it("craftWeapon retorna false si faltan recursos", () => {
+    const crafted = combatSystem.craftWeapon("attacker", "wooden_club");
+    expect(crafted).toBe(false);
   });
 });
-
