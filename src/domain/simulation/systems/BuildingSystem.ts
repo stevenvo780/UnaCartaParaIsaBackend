@@ -352,7 +352,6 @@ export class BuildingSystem {
         continue;
       }
 
-      // Verificar colisión con otras zonas
       const hasCollision = this.state.zones?.some((zone) => {
         if (!zone.bounds) return false;
         return !(
@@ -367,7 +366,6 @@ export class BuildingSystem {
         continue;
       }
 
-      // Verificar que no esté en agua (básico - verificar terreno si está disponible)
       if (this.state.terrainTiles) {
         const centerX = testX + BUILDING_WIDTH / 2;
         const centerY = testY + BUILDING_HEIGHT / 2;
@@ -386,7 +384,6 @@ export class BuildingSystem {
       return { x: testX, y: testY };
     }
 
-    // Si no se encontró una posición válida después de MAX_ATTEMPTS, retornar null
     logger.warn(
       `Could not find valid position for building after ${MAX_ATTEMPTS} attempts`,
     );

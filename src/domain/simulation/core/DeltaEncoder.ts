@@ -1,5 +1,9 @@
 import type { GameState } from "../../types/game-types";
 import type { SimulationSnapshot } from "../../../shared/types/commands/SimulationCommand";
+import type { AgentProfile } from "../../types/simulation/agents";
+import type { SimulationEntity } from "../core/schema";
+import type { Animal } from "../../types/simulation/animals";
+import type { EntityNeedsData } from "../../types/simulation/needs";
 
 /**
  * Delta Snapshot - Solo contiene los cambios desde el último snapshot
@@ -21,7 +25,6 @@ export interface DeltaSnapshot {
  */
 export class DeltaEncoder {
   private lastFullSnapshot: GameState | null = null;
-  private lastSnapshotTick = -1;
   private ticksSinceFullSnapshot = 0;
   private readonly FULL_SNAPSHOT_INTERVAL = 100; // Enviar snapshot completo cada 100 ticks
 
@@ -39,7 +42,6 @@ export class DeltaEncoder {
 
     if (shouldSendFull) {
       this.lastFullSnapshot = currentSnapshot.state;
-      this.lastSnapshotTick = currentSnapshot.tick;
       this.ticksSinceFullSnapshot = 0;
 
       return {
@@ -54,13 +56,24 @@ export class DeltaEncoder {
     this.ticksSinceFullSnapshot++;
 
     // Comparar con el último snapshot para detectar cambios
+    // En este punto, lastFullSnapshot no puede ser null porque ya se verificó en shouldSendFull
+    if (!this.lastFullSnapshot) {
+      this.lastFullSnapshot = currentSnapshot.state;
+      return {
+        type: "full",
+        tick: currentSnapshot.tick,
+        updatedAt: currentSnapshot.updatedAt,
+        events: currentSnapshot.events,
+        changes: currentSnapshot.state,
+      };
+    }
+
     const changes = this.detectChanges(
       this.lastFullSnapshot,
       currentSnapshot.state,
     );
 
     this.lastFullSnapshot = currentSnapshot.state;
-    this.lastSnapshotTick = currentSnapshot.tick;
 
     return {
       type: "delta",
@@ -116,22 +129,30 @@ export class DeltaEncoder {
     }
 
     // Comparar recursos (casi siempre cambia)
-    if (
-      current.worldResources &&
-      this.hasArrayChanged(previous.worldResources, current.worldResources)
-    ) {
-      changes.worldResources = current.worldResources;
+    if (current.worldResources) {
+      const prevResources = previous.worldResources;
+      if (
+        !prevResources ||
+        this.hasRecordChanged(prevResources, current.worldResources)
+      ) {
+        changes.worldResources = current.worldResources;
+      }
     }
 
     // Comparar animales (solo los que cambiaron de posición o estado)
     if (current.animals && previous.animals) {
-      const changedAnimals = current.animals.filter((animal) => {
-        const prevAnimal = previous.animals?.find((a) => a.id === animal.id);
+      const currentAnimals = current.animals.animals;
+      const prevAnimals = previous.animals.animals;
+      const changedAnimals = currentAnimals.filter((animal) => {
+        const prevAnimal = prevAnimals.find((a) => a.id === animal.id);
         return !prevAnimal || this.hasAnimalChanged(prevAnimal, animal);
       });
 
       if (changedAnimals.length > 0) {
-        changes.animals = changedAnimals;
+        changes.animals = {
+          ...current.animals,
+          animals: changedAnimals,
+        };
       }
     } else if (current.animals) {
       changes.animals = current.animals;
@@ -161,8 +182,10 @@ export class DeltaEncoder {
   /**
    * Verifica si un agente cambió comparando campos clave
    */
-  private hasAgentChanged(prev: any, current: any): boolean {
-    // Comparar posición
+  private hasAgentChanged(
+    prev: AgentProfile & { needs?: EntityNeedsData; health?: number },
+    current: AgentProfile & { needs?: EntityNeedsData; health?: number },
+  ): boolean {
     if (
       prev.position?.x !== current.position?.x ||
       prev.position?.y !== current.position?.y
@@ -170,9 +193,10 @@ export class DeltaEncoder {
       return true;
     }
 
-    // Comparar needs (si existe)
     if (prev.needs && current.needs) {
-      const needKeys = Object.keys(current.needs);
+      const needKeys = Object.keys(current.needs) as Array<
+        keyof EntityNeedsData
+      >;
       for (const key of needKeys) {
         if (prev.needs[key] !== current.needs[key]) {
           return true;
@@ -180,7 +204,6 @@ export class DeltaEncoder {
       }
     }
 
-    // Comparar health
     if (prev.health !== current.health) {
       return true;
     }
@@ -191,7 +214,10 @@ export class DeltaEncoder {
   /**
    * Verifica si una entidad cambió
    */
-  private hasEntityChanged(prev: any, current: any): boolean {
+  private hasEntityChanged(
+    prev: SimulationEntity & { activity?: string },
+    current: SimulationEntity & { activity?: string },
+  ): boolean {
     return (
       prev.position?.x !== current.position?.x ||
       prev.position?.y !== current.position?.y ||
@@ -202,7 +228,10 @@ export class DeltaEncoder {
   /**
    * Verifica si un animal cambió
    */
-  private hasAnimalChanged(prev: any, current: any): boolean {
+  private hasAnimalChanged(
+    prev: Animal & { currentActivity?: string },
+    current: Animal & { currentActivity?: string },
+  ): boolean {
     return (
       prev.position?.x !== current.position?.x ||
       prev.position?.y !== current.position?.y ||
@@ -214,9 +243,25 @@ export class DeltaEncoder {
   /**
    * Compara dos arrays por referencia y longitud
    */
-  private hasArrayChanged(prev: any[] | undefined, current: any[]): boolean {
+  private hasArrayChanged<T>(prev: T[] | undefined, current: T[]): boolean {
     if (!prev) return true;
     return prev.length !== current.length;
+  }
+
+  /**
+   * Compara dos Records por referencia y número de claves
+   */
+  private hasRecordChanged(
+    prev: Record<string, unknown>,
+    current: Record<string, unknown>,
+  ): boolean {
+    const prevKeys = Object.keys(prev);
+    const currentKeys = Object.keys(current);
+    if (prevKeys.length !== currentKeys.length) return true;
+    for (const key of currentKeys) {
+      if (!(key in prev)) return true;
+    }
+    return false;
   }
 
   /**
@@ -224,7 +269,6 @@ export class DeltaEncoder {
    */
   public reset(): void {
     this.lastFullSnapshot = null;
-    this.lastSnapshotTick = -1;
     this.ticksSinceFullSnapshot = 0;
   }
 

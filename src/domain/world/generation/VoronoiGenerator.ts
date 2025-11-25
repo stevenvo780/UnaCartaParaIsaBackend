@@ -59,8 +59,13 @@ export class VoronoiGenerator {
     const points: Point[] = [];
     const active: Point[] = [];
     const cellSize = minDistance / Math.sqrt(2);
-    const cols = Math.ceil(width / cellSize);
-    const rows = Math.ceil(height / cellSize);
+    const cols = Math.max(1, Math.ceil(width / cellSize));
+    const rows = Math.max(1, Math.ceil(height / cellSize));
+
+    if (rows > 100000 || cols > 100000) {
+      return [];
+    }
+
     const grid: (Point | null)[][] = Array(rows)
       .fill(null)
       .map(() => Array(cols).fill(null) as (Point | null)[]);

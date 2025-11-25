@@ -263,7 +263,34 @@ export class MultiRateScheduler {
     }
   }
 
-  public getStats() {
+  public getStats(): {
+    fast: {
+      count: number;
+      totalMs: number;
+      avgMs: number;
+      skipped: number;
+      systems: number;
+      enabled: number;
+    };
+    medium: {
+      count: number;
+      totalMs: number;
+      avgMs: number;
+      skipped: number;
+      systems: number;
+      enabled: number;
+    };
+    slow: {
+      count: number;
+      totalMs: number;
+      avgMs: number;
+      skipped: number;
+      systems: number;
+      enabled: number;
+    };
+    isRunning: boolean;
+    entityCount: number;
+  } {
     return {
       fast: {
         ...this.stats.fast,

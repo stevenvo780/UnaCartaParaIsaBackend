@@ -87,9 +87,8 @@ export class AnimalBatchProcessor {
         decayRates[0] = hungerDecayRates[0] || 0; // Usar primer valor como tasa base
         decayRates[1] = thirstDecayRates[0] || 0;
         decayRates[2] = 0.5 / 60; // Fear decay rate (0.5 por minuto = 0.5/60 por segundo)
-        decayRates[3] = 0; // Reproductive urge no decay automático
+        decayRates[3] = 0;
 
-        // Crear ageMultipliers y divineModifiers (todos 1.0 para animales por ahora)
         const ageMultipliers = new Float32Array(animalCount).fill(1.0);
         const divineModifiers = new Float32Array(animalCount).fill(1.0);
 

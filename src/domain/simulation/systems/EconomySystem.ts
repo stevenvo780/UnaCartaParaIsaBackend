@@ -288,7 +288,6 @@ export class EconomySystem {
         agent.stats.money = currentMoney + salary;
       }
 
-      // DEBUG: Log work action
       logger.debug(
         `⚒️ [ECONOMY] Work: ${agentId} produced ${amount} ${resourceType} (yield: ${totalYield.toFixed(2)}, bonus: ${teamBonus.toFixed(2)})`,
       );

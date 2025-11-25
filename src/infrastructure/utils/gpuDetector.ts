@@ -142,10 +142,8 @@ export function detectGPUAvailability(): GPUInfo {
           deviceName: nvidiaSmi.trim(),
         });
       }
-    } catch (_err) {
-    }
-  } catch (_err2) {
-  }
+    } catch (_err) {}
+  } catch (_err2) {}
 
   if (info.usingGPU) {
     logger.info("✅ GPU está siendo utilizada para cálculos", {

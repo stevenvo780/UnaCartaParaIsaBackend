@@ -25,6 +25,23 @@ export class ResourceReservationSystem {
     private readonly inventorySystem: InventorySystem,
   ) {
     this.now = (): number => Date.now();
+    this.setupEventListeners();
+  }
+
+  private setupEventListeners(): void {
+    // Cuando una necesidad se satisface, liberar reservas relacionadas si el agente ya no necesita esos recursos
+    simulationEvents.on(
+      GameEventNames.NEED_SATISFIED,
+      (data: { agentId: string; need: string; value: number }) => {
+        // Si la necesidad satisfecha es hunger o thirst, podría liberar reservas de recursos de comida/agua
+        // que el agente ya no necesita urgentemente
+        // Por ahora solo limpiamos reservas obsoletas más agresivamente
+        if (data.need === "hunger" || data.need === "thirst") {
+          // Limpiar reservas muy antiguas cuando necesidades críticas se satisfacen
+          this.cleanupStaleReservations(2 * 60 * 1000); // 2 minutos en lugar de 5
+        }
+      },
+    );
   }
 
   public reserve(taskId: string, cost: ResourceCost): boolean {
