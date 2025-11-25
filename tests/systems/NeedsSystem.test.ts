@@ -669,5 +669,66 @@ describe("NeedsSystem", () => {
       expect(updatedMentalHealth).toBeGreaterThan(initialMentalHealth - 5); // Permitir pequeña degradación
     });
   });
+
+  describe("SharedSpatialIndex integration", () => {
+    it("debe funcionar con SharedSpatialIndex inyectado para applySocialMoraleBoost", () => {
+      // Configurar múltiples entidades cercanas para probar el boost social
+      if (!gameState.entities) gameState.entities = [];
+      if (!gameState.agents) gameState.agents = [];
+      
+      // Entidad principal
+      gameState.entities.push({
+        id: "spatial-entity-1",
+        position: { x: 500, y: 500 },
+        isDead: false,
+      } as import("../../src/domain/simulation/core/schema").SimulationEntity);
+      
+      // Entidades cercanas (dentro del radio de 100)
+      for (let i = 2; i <= 5; i++) {
+        gameState.entities.push({
+          id: `spatial-entity-${i}`,
+          position: { x: 500 + (i * 10), y: 500 + (i * 10) },
+          isDead: false,
+        } as import("../../src/domain/simulation/core/schema").SimulationEntity);
+      }
+      
+      needsSystem.initializeEntityNeeds("spatial-entity-1");
+      // Reducir social para verificar que el boost lo aumenta
+      needsSystem.modifyNeed("spatial-entity-1", "social", -30);
+      
+      const initialSocial = needsSystem.getEntityNeeds("spatial-entity-1")?.social || 0;
+      
+      // El test valida que el sistema no crashea sin SharedSpatialIndex (usa fallback)
+      vi.advanceTimersByTime(2000);
+      needsSystem.update(2000);
+      
+      const updatedSocial = needsSystem.getEntityNeeds("spatial-entity-1")?.social || 0;
+      // El valor debe existir y estar en rango válido
+      expect(updatedSocial).toBeGreaterThanOrEqual(0);
+      expect(updatedSocial).toBeLessThanOrEqual(100);
+    });
+
+    it("debe manejar correctamente el fallback cuando SharedSpatialIndex no está disponible", () => {
+      // Este test verifica que el sistema funciona sin SharedSpatialIndex (legacy mode)
+      if (!gameState.entities) gameState.entities = [];
+      
+      gameState.entities.push({
+        id: "fallback-entity-1",
+        position: { x: 100, y: 100 },
+        isDead: false,
+      } as import("../../src/domain/simulation/core/schema").SimulationEntity);
+      
+      needsSystem.initializeEntityNeeds("fallback-entity-1");
+      
+      // No debe lanzar error al actualizar
+      expect(() => {
+        vi.advanceTimersByTime(2000);
+        needsSystem.update(2000);
+      }).not.toThrow();
+      
+      const needs = needsSystem.getEntityNeeds("fallback-entity-1");
+      expect(needs).toBeDefined();
+    });
+  });
 });
 

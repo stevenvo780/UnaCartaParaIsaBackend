@@ -12,6 +12,7 @@ import { NeedsBatchProcessor } from "./NeedsBatchProcessor";
 import { injectable, inject, unmanaged, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
+import type { SharedSpatialIndex } from "../core/SharedSpatialIndex";
 import { getFrameTime } from "../../../shared/FrameTime";
 
 @injectable()
@@ -40,6 +41,7 @@ export class NeedsSystem extends EventEmitter {
    */
   private readonly BATCH_THRESHOLD = 20;
   private entityIndex?: EntityIndex;
+  private spatialIndex?: SharedSpatialIndex;
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
@@ -52,10 +54,14 @@ export class NeedsSystem extends EventEmitter {
       socialSystem?: SocialSystem;
     },
     @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
+    @inject(TYPES.SharedSpatialIndex)
+    @optional()
+    spatialIndex?: SharedSpatialIndex,
   ) {
     super();
     this.gameState = gameState;
     this.entityIndex = entityIndex;
+    this.spatialIndex = spatialIndex;
     this.config = {
       decayRates: {
         hunger: 1.0,
@@ -511,15 +517,33 @@ export class NeedsSystem extends EventEmitter {
     if (!entity?.position) return;
 
     const entityPosition = entity.position;
-    const radiusSq = 100 * 100;
+    const radius = 100;
 
-    const nearbyEntities = this.gameState.entities.filter((e) => {
-      if (e.id === entityId || !e.position) return false;
-      const dx = e.position.x - entityPosition.x;
-      const dy = e.position.y - entityPosition.y;
-      const distanceSq = dx * dx + dy * dy;
-      return distanceSq <= radiusSq;
-    });
+    // OPTIMIZADO: Usa SharedSpatialIndex O(log n) en lugar de filter O(n)
+    let nearbyEntities: Array<{ id: string }>;
+    if (this.spatialIndex) {
+      const nearbyResults = this.spatialIndex.queryRadius(
+        entityPosition,
+        radius,
+        "agent",
+      );
+      nearbyEntities = nearbyResults
+        .filter((r) => r.entity !== entityId)
+        .map((r) => {
+          const e = this.entityIndex?.getEntity(r.entity);
+          return e ? { id: e.id } : { id: r.entity };
+        });
+    } else {
+      // Fallback para compatibilidad (legacy)
+      const radiusSq = radius * radius;
+      nearbyEntities = this.gameState.entities.filter((e) => {
+        if (e.id === entityId || !e.position) return false;
+        const dx = e.position.x - entityPosition.x;
+        const dy = e.position.y - entityPosition.y;
+        const distanceSq = dx * dx + dy * dy;
+        return distanceSq <= radiusSq;
+      });
+    }
 
     if (nearbyEntities.length === 0) return;
 
@@ -527,6 +551,7 @@ export class NeedsSystem extends EventEmitter {
     let affinityCount = 0;
 
     for (const nearby of nearbyEntities) {
+      if (!nearby.id) continue;
       const affinity = this.socialSystem.getAffinityBetween(
         entityId,
         nearby.id,
