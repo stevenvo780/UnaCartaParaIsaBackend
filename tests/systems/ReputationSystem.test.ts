@@ -1,129 +1,107 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { ReputationSystem } from "../../src/domain/simulation/systems/ReputationSystem.ts";
-import { createMockGameState } from "../setup.ts";
-import type { GameState } from "../../src/types/game-types.ts";
-import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events.ts";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { ReputationSystem } from "../../src/domain/simulation/systems/ReputationSystem";
+import { createMockGameState } from "../setup";
+import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events";
+import type { GameState } from "../../src/domain/types/game-types";
+
+const agentA = "agent-a";
+const agentB = "agent-b";
 
 describe("ReputationSystem", () => {
   let gameState: GameState;
-  let reputationSystem: ReputationSystem;
+  let system: ReputationSystem;
+  let emitSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
     gameState = createMockGameState();
-    reputationSystem = new ReputationSystem(gameState);
+    system = new ReputationSystem(gameState);
+    emitSpy = vi.spyOn(simulationEvents, "emit");
   });
 
-  describe("Inicialización", () => {
-    it("debe inicializar correctamente", () => {
-      expect(reputationSystem).toBeDefined();
-    });
+  afterEach(() => {
+    vi.useRealTimers();
+    emitSpy.mockRestore();
+    simulationEvents.clearQueue();
+    simulationEvents.removeAllListeners();
   });
 
-  describe("Gestión de confianza", () => {
-    it("debe actualizar confianza entre agentes", () => {
-      reputationSystem.updateTrust("agent-1", "agent-2", 0.1);
-      const trust = reputationSystem.getTrust("agent-1", "agent-2");
-      expect(trust).toBeGreaterThan(0.5);
-    });
+  it("updateTrust respeta límites y actualiza timestamp", () => {
+    system.updateTrust(agentA, agentB, 1);
+    expect(system.getTrust(agentA, agentB)).toBe(1);
 
-    it("debe retornar confianza inicial si no existe", () => {
-      const trust = reputationSystem.getTrust("agent-3", "agent-4");
-      expect(trust).toBe(0.5);
-    });
-
-    it("debe limitar confianza entre 0 y 1", () => {
-      reputationSystem.updateTrust("agent-5", "agent-6", 2.0);
-      const trust = reputationSystem.getTrust("agent-5", "agent-6");
-      expect(trust).toBeLessThanOrEqual(1);
-      expect(trust).toBeGreaterThanOrEqual(0);
-    });
+    system.updateTrust(agentA, agentB, -2);
+    expect(system.getTrust(agentA, agentB)).toBe(0);
   });
 
-  describe("Gestión de reputación", () => {
-    it("debe actualizar reputación de agente", () => {
-      reputationSystem.updateReputation("agent-7", 0.1);
-      const reputation = reputationSystem.getReputation("agent-7");
-      expect(reputation).toBeGreaterThan(0.5);
-    });
+  it("updateReputation guarda historial y aplica clamps", () => {
+    system.updateReputation(agentA, 0.6, "quest");
+    system.updateReputation(agentA, -2, "exploit");
 
-    it("debe retornar reputación inicial si no existe", () => {
-      const reputation = reputationSystem.getReputation("agent-8");
-      expect(reputation).toBe(0.5);
-    });
-
-    it("debe limitar reputación entre 0 y 1", () => {
-      reputationSystem.updateReputation("agent-9", 2.0);
-      const reputation = reputationSystem.getReputation("agent-9");
-      expect(reputation).toBeLessThanOrEqual(1);
-      expect(reputation).toBeGreaterThanOrEqual(0);
-    });
+    expect(system.getReputation(agentA)).toBe(0);
+    const history = system.getReputationHistory(agentA);
+    expect(history).toHaveLength(2);
+    expect(history[0].reason).toBe("quest");
   });
 
-  describe("Actualización del sistema", () => {
-    it("debe actualizar sin errores", () => {
-      expect(() => reputationSystem.update(1000)).not.toThrow();
-    });
+  it("update aplica decaimiento y actualiza stats en el gameState", () => {
+    system.updateTrust(agentA, agentB, 0.2);
+    system.updateReputation(agentA, 0.2);
+    vi.setSystemTime(5000);
 
-    it("debe degradar confianza con el tiempo", () => {
-      reputationSystem.updateTrust("agent-10", "agent-11", 0.3);
-      const initialTrust = reputationSystem.getTrust("agent-10", "agent-11");
-      
-      // Simular múltiples updates para que la degradación sea notable
-      for (let i = 0; i < 10; i++) {
-        reputationSystem.update(1000);
-      }
-      
-      const updatedTrust = reputationSystem.getTrust("agent-10", "agent-11");
-      // La confianza puede degradarse hacia el valor objetivo (0.5)
-      expect(updatedTrust).toBeGreaterThanOrEqual(0);
-      expect(updatedTrust).toBeLessThanOrEqual(1);
-    });
+    system.update();
+
+    const stats = system.getSystemStats();
+    expect(stats.agents).toBe(1);
+    expect(gameState.reputation?.data.trust).toBeDefined();
+    expect(gameState.reputation?.stats.agents).toBe(1);
   });
 
-  describe("Manejo de eventos", () => {
-    it("debe manejar cambios en relaciones sociales", () => {
-      expect(() => {
-        simulationEvents.emit(GameEventNames.SOCIAL_RELATION_CHANGED, {
-          agentA: "agent-12",
-          agentB: "agent-13",
-          delta: 0.1,
-        });
-      }).not.toThrow();
-    });
-
-    it("debe manejar eventos de combate", () => {
-      expect(() => {
-        simulationEvents.emit(GameEventNames.COMBAT_HIT, {
-          attackerId: "attacker-1",
-          targetId: "target-1",
-          damage: 10,
-        });
-      }).not.toThrow();
-    });
+  it("handleSocialRelationChanged ajusta confianza y reputación", () => {
+    system.handleSocialRelationChanged({ aId: agentA, bId: agentB, type: "friendship", delta: 2 });
+    expect(system.getTrust(agentA, agentB)).toBeGreaterThan(0.5);
+    expect(system.getReputation(agentA)).toBeGreaterThan(0.5);
   });
 
-  describe("Estadísticas", () => {
-    it("debe retornar estadísticas del sistema", () => {
-      reputationSystem.updateReputation("agent-16", 0.1);
-      const stats = reputationSystem.getSystemStats();
-      expect(stats).toBeDefined();
-      expect(stats.agents).toBeGreaterThanOrEqual(0);
-      expect(stats.avgReputation).toBeGreaterThanOrEqual(0);
-      expect(stats.trustEdges).toBeGreaterThanOrEqual(0);
-    });
+  it("handleCombatHit reduce reputación del atacante", () => {
+    system.updateTrust(agentB, agentA, 0);
+    system.handleCombatHit({ attackerId: agentA, targetId: agentB, damage: 100 });
+    expect(system.getReputation(agentA)).toBeLessThan(0.5);
+    expect(system.getTrust(agentB, agentA)).toBeLessThan(0.5);
   });
 
-  describe("Historial de reputación", () => {
-    it("debe retornar historial de cambios de reputación", () => {
-      reputationSystem.updateReputation("agent-17", 0.1, "test_reason");
-      const history = reputationSystem.getReputationHistory("agent-17");
-      expect(Array.isArray(history)).toBe(true);
-    });
+  it("handleInteractionGame registra eventos y ajusta confiabilidad", () => {
+    system.handleInteractionGame({ game: "pd", aId: agentA, bId: agentB, payoffs: { [agentA]: 1, [agentB]: 1 } });
+    expect(system.getTrust(agentA, agentB)).toBeGreaterThan(0.5);
 
-    it("debe retornar array vacío para agente sin historial", () => {
-      const history = reputationSystem.getReputationHistory("nonexistent");
-      expect(history).toEqual([]);
-    });
+    system.handleInteractionGame({ game: "pd", aId: agentA, bId: agentB, payoffs: { [agentA]: 2, [agentB]: 0 } });
+    expect(system.getTrust(agentB, agentA)).toBeLessThan(0.5);
+    expect(emitSpy).toHaveBeenCalledWith(
+      GameEventNames.INTERACTION_GAME_PLAYED,
+      expect.objectContaining({ agentA: agentA, agentB: agentB }),
+    );
+  });
+
+  it("serialize y deserialize preservan datos", () => {
+    system.updateTrust(agentA, agentB, 0.2);
+    system.updateReputation(agentA, 0.3);
+
+    const payload = system.serialize();
+    const restored = new ReputationSystem(gameState);
+    restored.deserialize(payload);
+
+    expect(restored.getTrust(agentA, agentB)).toBeCloseTo(system.getTrust(agentA, agentB));
+    expect(restored.getReputation(agentA)).toBeCloseTo(system.getReputation(agentA));
+  });
+
+  it("getReputationHistory respeta límite y orden", () => {
+    for (let i = 0; i < 30; i++) {
+      vi.advanceTimersByTime(1000);
+      system.updateReputation(agentA, 0.01, `tick_${i}`);
+    }
+    const history = system.getReputationHistory(agentA, 10);
+    expect(history).toHaveLength(10);
+    expect(history[0].timestamp).toBeGreaterThan(history[9].timestamp);
   });
 });
-

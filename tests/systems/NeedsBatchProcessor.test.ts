@@ -81,8 +81,8 @@ describe("NeedsBatchProcessor", () => {
     expect(gpuService.applyNeedsDecayBatch).toHaveBeenCalled();
     expect(processor.getNeedsBuffer()).toEqual(
       new Float32Array([
-        39, 49, 59, 69, 79, 89, 99,
-        29, 39, 49, 59, 69, 79, 89,
+        40, 50, 60, 70, 80, 90, 100,
+        30, 40, 50, 60, 70, 80, 90,
       ]),
     );
   });

@@ -238,6 +238,10 @@ export class InventorySystem {
     if (now - this.lastDeprecationCheck < this.DEPRECATION_INTERVAL) return;
     this.lastDeprecationCheck = now;
 
+    // Debug: log stats to see if aggregation is working
+    const statsDebug = this.getSystemStats();
+    console.log(`[InventorySystem] update() - Agents: ${statsDebug.totalAgentInventories}, inAgents: food=${statsDebug.inAgents.food}, water=${statsDebug.inAgents.water}, wood=${statsDebug.inAgents.wood}, stone=${statsDebug.inAgents.stone}`);
+
     const FOOD_DECAY_RATE = 0.02;
     const WATER_DECAY_RATE = 0.01;
 

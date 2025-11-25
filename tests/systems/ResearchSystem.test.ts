@@ -1,91 +1,71 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { ResearchSystem } from "../../src/domain/simulation/systems/ResearchSystem.ts";
-import { createMockGameState } from "../setup.ts";
-import type { GameState } from "../../src/types/game-types.ts";
+import { ResearchSystem } from "../../src/domain/simulation/systems/ResearchSystem";
+import { createMockGameState } from "../setup";
+import type { GameState } from "../../src/domain/types/game-types";
+
+const lineageId = "lineage-1";
 
 describe("ResearchSystem", () => {
   let gameState: GameState;
-  let researchSystem: ResearchSystem;
+  let system: ResearchSystem;
 
   beforeEach(() => {
     gameState = createMockGameState();
-    researchSystem = new ResearchSystem(gameState);
+    system = new ResearchSystem(gameState);
+    system.initializeLineage(lineageId);
   });
 
-  describe("Inicialización", () => {
-    it("debe inicializar correctamente", () => {
-      expect(researchSystem).toBeDefined();
-    });
+  it("inicializa linaje con basic_survival desbloqueado", () => {
+    expect(system.isCategoryUnlocked(lineageId, "basic_survival")).toBe(true);
+    expect(system.getAvailableRecipes(lineageId)).toContain("cook_meat");
   });
 
-  describe("Inicialización de linajes", () => {
-    it("debe inicializar linaje", () => {
-      expect(() => researchSystem.initializeLineage("lineage-1")).not.toThrow();
+  it("onRecipeDiscovered incrementa progreso y desbloquea categorías siguientes", () => {
+    const categoryRecipes = ["cook_meat", "cook_fish", "make_rope", "wooden_club"];
+    let unlocked: string[] = [];
+
+    categoryRecipes.forEach((recipe) => {
+      const result = system.onRecipeDiscovered(lineageId, recipe, "agent-1");
+      unlocked = result.unlocked;
     });
 
-    it("debe inicializar múltiples linajes", () => {
-      researchSystem.initializeLineage("lineage-1");
-      researchSystem.initializeLineage("lineage-2");
-      expect(researchSystem).toBeDefined();
-    });
+    expect(unlocked).toContain("woodworking");
+    expect(system.isCategoryUnlocked(lineageId, "woodworking")).toBe(true);
   });
 
-  describe("Descubrimiento de recetas", () => {
-    it("debe procesar descubrimiento de receta", () => {
-      researchSystem.initializeLineage("lineage-1");
-      const result = researchSystem.onRecipeDiscovered("lineage-1", "wood_to_plank", "agent-1");
-      expect(result).toBeDefined();
-      expect(result.completed).toBeDefined();
-      expect(Array.isArray(result.unlocked)).toBe(true);
-    });
+  it("getProficiencyBonus refleja especializaciones", () => {
+    system.onRecipeDiscovered(lineageId, "cook_meat", "agent-1");
+    system.onRecipeDiscovered(lineageId, "cook_fish", "agent-1");
+    system.onRecipeDiscovered(lineageId, "make_rope", "agent-1");
 
-    it("debe inicializar linaje automáticamente si no existe", () => {
-      const result = researchSystem.onRecipeDiscovered("new-lineage", "wood_to_plank", "agent-1");
-      expect(result).toBeDefined();
-    });
-
-    it("debe retornar false para receta sin categoría", () => {
-      researchSystem.initializeLineage("lineage-1");
-      const result = researchSystem.onRecipeDiscovered("lineage-1", "nonexistent_recipe", "agent-1");
-      expect(result.completed).toBe(false);
-      expect(result.unlocked).toEqual([]);
-    });
-
-    it("debe rastrear contribuidores", () => {
-      researchSystem.initializeLineage("lineage-1");
-      researchSystem.onRecipeDiscovered("lineage-1", "wood_to_plank", "agent-1");
-      researchSystem.onRecipeDiscovered("lineage-1", "wood_to_plank", "agent-2");
-      // Debería rastrear ambos contribuidores
-      expect(researchSystem).toBeDefined();
-    });
+    expect(system.getProficiencyBonus(lineageId, "basic_survival")).toBe(0.2);
   });
 
-  describe("Gestión de categorías", () => {
-    it("debe desbloquear categorías cuando se completa investigación", () => {
-      researchSystem.initializeLineage("lineage-1");
-      // Descubrir todas las recetas de basic_survival
-      const basicRecipes = ["cook_meat", "cook_fish", "make_rope", "wooden_club"];
-      basicRecipes.forEach(recipe => {
-        researchSystem.onRecipeDiscovered("lineage-1", recipe, "agent-1");
-      });
-      // Debería desbloquear categorías siguientes
-      expect(researchSystem).toBeDefined();
-    });
+  it("getLineageStats retorna progreso y especializaciones", () => {
+    system.onRecipeDiscovered(lineageId, "cook_meat", "agent-1");
+    system.onRecipeDiscovered(lineageId, "cook_fish", "agent-1");
+    system.onRecipeDiscovered(lineageId, "make_rope", "agent-1");
+
+    const stats = system.getLineageStats(lineageId);
+    expect(stats.unlockedCategories).toBeGreaterThan(0);
+    expect(stats.specializations.length).toBeGreaterThanOrEqual(1);
   });
 
-  describe("Estadísticas de linaje", () => {
-    it("debe retornar estadísticas de linaje", () => {
-      researchSystem.initializeLineage("lineage-1");
-      const stats = researchSystem.getLineageStats("lineage-1");
-      expect(stats).toBeDefined();
-      expect(stats.unlockedCategories).toBeDefined();
-      expect(stats.specializations).toBeDefined();
-    });
+  it("getAvailableCategories respeta prerequisitos", () => {
+    const available = system.getAvailableCategories(lineageId);
+    expect(available.find((cat) => cat.id === "woodworking")).toBeDefined();
+  });
 
-    it("debe retornar estadísticas vacías para linaje no inicializado", () => {
-      const stats = researchSystem.getLineageStats("nonexistent");
-      expect(stats).toBeDefined();
-    });
+  it("update genera estado del tech tree y estadísticas en gameState", () => {
+    system.onRecipeDiscovered(lineageId, "cook_meat", "agent-1");
+    system.update();
+
+    expect(gameState.research?.techTree.nodes.length).toBeGreaterThan(0);
+    expect(gameState.research?.lineages.length).toBeGreaterThan(0);
+  });
+
+  it("cleanup limpia toda la información almacenada", () => {
+    system.cleanup();
+    expect(system.getResearchProgress(lineageId)).toBeUndefined();
   });
 });
-
