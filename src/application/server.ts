@@ -14,6 +14,16 @@ import type {
 import { ChunkStreamServer } from "../infrastructure/services/chunk/chunk/ChunkStreamServer";
 import { logger } from "../infrastructure/utils/logger.js";
 
+/**
+ * Main server entry point.
+ *
+ * Initializes the simulation runner, sets up WebSocket servers for:
+ * - Simulation state streaming (/ws/sim)
+ * - Chunk generation streaming (/ws/chunks)
+ *
+ * Handles WebSocket upgrades and message routing.
+ */
+
 const simulationRunner = container.get<SimulationRunner>(
   TYPES.SimulationRunner,
 );

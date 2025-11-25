@@ -1,22 +1,24 @@
 /**
- * Servicio de timestamp compartido por frame
+ * Shared frame timestamp service.
  *
- * Evita múltiples llamadas a Date.now() durante el mismo tick.
- * El scheduler actualiza este valor una vez al inicio de cada tick,
- * y todos los sistemas consultan este valor en lugar de llamar Date.now().
+ * Avoids multiple Date.now() calls during the same tick.
+ * The scheduler updates this value once at the start of each tick,
+ * and all systems query this value instead of calling Date.now().
  *
- * Beneficio: Reduce ~100+ llamadas a Date.now() por tick a solo 1.
+ * Benefit: Reduces ~100+ Date.now() calls per tick to just 1.
  */
 
-let _frameTimestamp = 0; // Inicializar en 0 para forzar actualización
+let _frameTimestamp = 0;
 
 /**
- * Obtiene el timestamp del frame actual.
- * Usar esto en lugar de Date.now() dentro de sistemas.
+ * Gets the current frame timestamp.
+ * Use this instead of Date.now() within systems.
  *
- * IMPORTANTE: Si _frameTimestamp está muy desactualizado (>100ms),
- * automáticamente se actualiza. Esto permite que los sistemas funcionen
- * correctamente en tests con fake timers y durante desarrollo.
+ * IMPORTANT: If _frameTimestamp is too outdated (>100ms),
+ * it is automatically updated. This allows systems to work
+ * correctly in tests with fake timers and during development.
+ *
+ * @returns Current frame timestamp
  */
 export function getFrameTime(): number {
   const realNow = Date.now();
@@ -27,8 +29,10 @@ export function getFrameTime(): number {
 }
 
 /**
- * Actualiza el timestamp del frame.
- * Solo debe ser llamado por el scheduler al inicio de cada tick.
+ * Updates the frame timestamp.
+ * Should only be called by the scheduler at the start of each tick.
+ *
+ * @returns Updated timestamp
  */
 export function updateFrameTime(): number {
   _frameTimestamp = Date.now();
@@ -36,6 +40,6 @@ export function updateFrameTime(): number {
 }
 
 /**
- * Alias para compatibilidad - retorna el timestamp actual del frame
+ * Alias for compatibility - returns the current frame timestamp.
  */
 export const now = getFrameTime;

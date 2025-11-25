@@ -1,5 +1,17 @@
+/**
+ * Catalog of crafting recipes available in the game.
+ *
+ * Contains all recipes for transforming materials and creating items.
+ * Used by crafting systems to determine what can be crafted and with what ingredients.
+ *
+ * @module simulation/data/RecipesCatalog
+ */
+
 import type { CraftingRecipe } from "../../domain/types/simulation/crafting";
 
+/**
+ * Static catalog of crafting recipes.
+ */
 export class RecipesCatalog {
   private static readonly recipes: CraftingRecipe[] = [
     {

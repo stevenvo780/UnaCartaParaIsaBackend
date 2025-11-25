@@ -62,6 +62,18 @@ interface ChunkServerHello {
   stats: ChunkPoolStats;
 }
 
+/**
+ * WebSocket server for streaming terrain chunk generation to clients.
+ *
+ * Features:
+ * - Asynchronous chunk generation using worker pool
+ * - Request queuing and cancellation
+ * - Per-client inflight request limits
+ * - MessagePack encoding for efficient transmission
+ *
+ * @see ChunkWorkerPool for chunk generation workers
+ * @see MessagePackCodec for message encoding
+ */
 export class ChunkStreamServer {
   private readonly pool: ChunkWorkerPool;
   private readonly wss: WebSocketServer;

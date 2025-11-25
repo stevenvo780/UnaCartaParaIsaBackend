@@ -19,6 +19,9 @@ export interface GameStats {
   [key: string]: string | number | Record<string, number> | undefined;
 }
 
+/**
+ * Metadata for a saved game file.
+ */
 export interface SaveMetadata {
   id: string;
   timestamp: number;
@@ -28,14 +31,27 @@ export interface SaveMetadata {
   modified: string;
 }
 
+/**
+ * Complete save data structure.
+ *
+ * @property state - GameState (typed as unknown to avoid circular dependency)
+ */
 export interface SaveData {
   timestamp: number;
   gameTime: number;
   stats: GameStats;
-  state?: unknown; // GameState - avoiding circular dependency
+  state?: unknown;
   [key: string]: string | number | GameStats | unknown | undefined;
 }
 
+/**
+ * Service for saving and loading game state.
+ *
+ * Supports both Google Cloud Storage (GCS) and local filesystem storage.
+ * Automatically falls back to local storage if GCS is unavailable.
+ *
+ * @see CONFIG for storage configuration
+ */
 export class StorageService {
   private bucket: Bucket | null = null;
   private useGCS: boolean = false;

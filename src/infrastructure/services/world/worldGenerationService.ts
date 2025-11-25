@@ -15,6 +15,15 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types.js";
 import { VoronoiGenerator } from "../../../domain/world/generation/VoronoiGenerator.js";
 
+/**
+ * Service for generating world terrain chunks.
+ *
+ * Uses noise-based generation with biome resolution based on temperature,
+ * moisture, elevation, and continentality values.
+ *
+ * @see BiomeResolver for biome determination logic
+ * @see VoronoiGenerator for Voronoi-based world generation
+ */
 @injectable()
 export class WorldGenerationService {
   private noiseGen: NoiseUtils;

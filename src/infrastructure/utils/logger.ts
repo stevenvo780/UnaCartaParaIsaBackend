@@ -1,7 +1,17 @@
 /* eslint-disable no-console */
 
+/**
+ * Logging utility for the backend.
+ *
+ * Provides structured logging with timestamps and log levels.
+ * In development, all logs are shown. In production, only warnings and errors.
+ */
+
 type LogLevel = "info" | "warn" | "error" | "debug";
 
+/**
+ * Logger class for application-wide logging.
+ */
 class Logger {
   private isDevelopment(): boolean {
     return process.env.NODE_ENV !== "production";

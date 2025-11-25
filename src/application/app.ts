@@ -9,6 +9,15 @@ import worldRoutes from "./routes/worldRoutes.js";
 import simulationRoutes from "./routes/simulationRoutes.js";
 import { logger } from "../infrastructure/utils/logger.js";
 
+/**
+ * Express application setup.
+ *
+ * Configures CORS, JSON parsing, routes, and error handling.
+ * Routes:
+ * - /save - Save/load game state
+ * - /world - World generation endpoints
+ * - /simulation - Simulation control endpoints
+ */
 const app = express();
 
 app.use(
