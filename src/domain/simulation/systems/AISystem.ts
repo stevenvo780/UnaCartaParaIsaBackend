@@ -239,6 +239,7 @@ export class AISystem extends EventEmitter {
 
       if (newGoal) {
         aiState.currentGoal = newGoal;
+        logger.debug(`🎯 [AI] Agent ${agentId} new goal: ${newGoal.type} target=${newGoal.targetId || newGoal.targetZoneId || "none"}`);
         simulationEvents.emit(GameEventNames.AGENT_GOAL_CHANGED, {
           agentId,
           newGoal,
@@ -251,6 +252,7 @@ export class AISystem extends EventEmitter {
       const action = this.planAction(agentId, aiState.currentGoal);
       if (action) {
         aiState.currentAction = action;
+        logger.debug(`🏃 [AI] Agent ${agentId} action: ${action.actionType} -> ${action.targetId || JSON.stringify(action.targetPosition) || action.targetZoneId || "none"}`);
         this.executeAction(action);
         simulationEvents.emit(GameEventNames.AGENT_ACTION_COMMANDED, {
           agentId,
@@ -940,6 +942,53 @@ export class AISystem extends EventEmitter {
     const timestamp = Date.now();
 
     switch (goal.type) {
+      case "satisfy_need":
+        // Handle satisfy_need goals with targetPosition (resource-based)
+        if (goal.targetId && goal.targetPosition) {
+          const agentPos = this.getAgentPosition(agentId);
+          if (agentPos) {
+            const dist = Math.hypot(
+              agentPos.x - goal.targetPosition.x,
+              agentPos.y - goal.targetPosition.y,
+            );
+            // If close enough to resource, harvest it
+            if (dist < 60) {
+              return {
+                actionType: "harvest",
+                agentId,
+                targetId: goal.targetId,
+                targetPosition: goal.targetPosition,
+                timestamp,
+              };
+            }
+            // Move towards resource
+            return {
+              actionType: "move",
+              agentId,
+              targetPosition: goal.targetPosition,
+              timestamp,
+            };
+          }
+        }
+        // Fallback to zone-based movement or rest
+        if (goal.targetZoneId) {
+          return {
+            actionType: "move",
+            agentId,
+            targetZoneId: goal.targetZoneId,
+            timestamp,
+          };
+        }
+        // For energy/rest needs without specific target
+        if (goal.data?.need === "energy") {
+          return {
+            actionType: "idle",
+            agentId,
+            timestamp,
+          };
+        }
+        return null;
+
       case "satisfy_hunger":
       case "satisfy_thirst":
       case "satisfy_energy":
@@ -1207,6 +1256,21 @@ export class AISystem extends EventEmitter {
             action.agentId,
           );
 
+          // After harvesting, apply need satisfaction based on resource type
+          if (result.success && this.needsSystem) {
+            const resource = this.gameState.worldResources?.[action.targetId];
+            if (resource) {
+              // water_source satisfies thirst
+              if (resource.type === "water_source") {
+                this.needsSystem.satisfyNeed(action.agentId, "thirst", 30);
+              }
+              // Food resources satisfy hunger
+              if (["berry_bush", "mushroom_patch", "wheat_crop"].includes(resource.type)) {
+                this.needsSystem.satisfyNeed(action.agentId, "hunger", 25);
+              }
+            }
+          }
+
           simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
             agentId: action.agentId,
             actionType: "harvest",
@@ -1214,6 +1278,18 @@ export class AISystem extends EventEmitter {
             data: { amount: result.amount },
           });
         }
+        break;
+      case "idle":
+        // Agent is resting in place - apply small energy recovery
+        if (this.needsSystem) {
+          this.needsSystem.satisfyNeed(action.agentId, "energy", 5);
+        }
+        // Mark action as complete
+        simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+          agentId: action.agentId,
+          actionType: "idle",
+          success: true,
+        });
         break;
       default:
         break;

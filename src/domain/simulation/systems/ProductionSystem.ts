@@ -2,6 +2,7 @@ import type { GameState, Zone } from "../../types/game-types";
 import type { ResourceType } from "../../types/simulation/economy";
 import { InventorySystem } from "./InventorySystem";
 import { LifeCycleSystem } from "./LifeCycleSystem";
+import { TerrainSystem } from "./TerrainSystem";
 import { simulationEvents, GameEventNames } from "../core/events";
 
 interface ProductionConfig {
@@ -30,7 +31,7 @@ type MutableZone = Zone & {
   metadata?: ProductionMetadata;
 };
 
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 
 @injectable()
@@ -46,6 +47,9 @@ export class ProductionSystem {
     private readonly inventorySystem: InventorySystem,
     @inject(TYPES.LifeCycleSystem)
     private readonly lifeCycleSystem: LifeCycleSystem,
+    @inject(TYPES.TerrainSystem)
+    @optional()
+    private readonly terrainSystem?: TerrainSystem,
   ) {
     this.config = DEFAULT_CONFIG;
     this.setupEventListeners();
@@ -155,6 +159,29 @@ export class ProductionSystem {
       amount,
       workers: Array.from(workers),
     });
+
+    // Farming logic
+    if (resource === "food" && this.terrainSystem) {
+      const tilesToModify = Math.min(workers.size, 3);
+      const TILE_SIZE = 64;
+
+      for (let i = 0; i < tilesToModify; i++) {
+        const xOffset = Math.random() * zone.bounds.width;
+        const yOffset = Math.random() * zone.bounds.height;
+
+        const worldX = zone.bounds.x + xOffset;
+        const worldY = zone.bounds.y + yOffset;
+
+        const tileX = Math.floor(worldX / TILE_SIZE);
+        const tileY = Math.floor(worldY / TILE_SIZE);
+
+        const tile = this.terrainSystem.getTile(tileX, tileY);
+        if (tile && tile.assets.terrain === "terrain_grassland")
+          this.terrainSystem.modifyTile(tileX, tileY, {
+            assets: { terrain: "terrain_dirt" },
+          });
+      }
+    }
   }
 
   private depositToZoneStockpile(

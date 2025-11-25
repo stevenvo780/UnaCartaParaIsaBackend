@@ -81,8 +81,9 @@ export class WorldResourceSystem {
   }): void {
     const { width, height, tileSize, biomeMap } = worldConfig;
     let spawned = 0;
-    const sampleStep = 64;
+    const sampleStep = 32; // Reduced from 64 to sample more frequently
     const biomesFound = new Set<string>();
+    const resourceCounts: Record<string, number> = {};
 
     for (let x = 0; x < width; x += sampleStep) {
       for (let y = 0; y < height; y += sampleStep) {
@@ -102,7 +103,10 @@ export class WorldResourceSystem {
           for (const config of resourceConfigs) {
             if (Math.random() < config.spawnProbability!) {
               const resource = this.spawnResource(config.type, { x, y }, biome);
-              if (resource) spawned++;
+              if (resource) {
+                spawned++;
+                resourceCounts[config.type] = (resourceCounts[config.type] || 0) + 1;
+              }
             }
           }
         }
@@ -112,6 +116,9 @@ export class WorldResourceSystem {
       `[WorldResourceSystem] Biomes found: ${Array.from(biomesFound).join(", ")}`,
     );
     logger.info(`[WorldResourceSystem] Spawned ${spawned} resources in world`);
+    logger.info(
+      `[WorldResourceSystem] Resource breakdown: ${JSON.stringify(resourceCounts)}`,
+    );
   }
 
   public spawnResource(

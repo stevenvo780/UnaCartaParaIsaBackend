@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
-import { GameState } from "../../types/game-types";
+import { GameState, SimulationTerrainTile } from "../../types/game-types";
 import { TerrainTile } from "../../world/generation/types";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { logger } from "@/infrastructure/utils/logger";
@@ -14,7 +14,7 @@ export class TerrainSystem {
     logger.info("🌍 TerrainSystem initialized");
   }
 
-  public getTile(x: number, y: number): TerrainTile | null {
+  public getTile(x: number, y: number): SimulationTerrainTile | null {
     if (!this.gameState.world?.terrain) return null;
 
     // Assuming terrain is a 2D array [y][x] based on WorldGenerationService
@@ -26,13 +26,19 @@ export class TerrainSystem {
         // We cast it to TerrainTile for convenience if it matches, or map it.
         // Looking at GameState definition:
         // world?: { terrain: Array<Array<{ x, y, biome, assets: { terrain, ... }, ... }>> }
-        return row[x] as unknown as TerrainTile;
+        return this.gameState.world.terrain[y][x];
       }
     }
     return null;
   }
 
-  public modifyTile(x: number, y: number, updates: Partial<TerrainTile> | { assets: Partial<TerrainTile["assets"]> }): boolean {
+  public modifyTile(
+    x: number,
+    y: number,
+    updates:
+      | Partial<SimulationTerrainTile>
+      | { assets: Partial<SimulationTerrainTile["assets"]> },
+  ): boolean {
     if (!this.gameState.world?.terrain) return false;
 
     if (y >= 0 && y < this.gameState.world.terrain.length) {
@@ -58,9 +64,8 @@ export class TerrainSystem {
         if (modified) {
           simulationEvents.emit(GameEventNames.TERRAIN_MODIFIED, {
             x,
-            y,
             updates,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           });
           return true;
         }

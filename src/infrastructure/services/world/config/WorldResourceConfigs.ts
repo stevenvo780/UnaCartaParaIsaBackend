@@ -152,7 +152,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
       depleted: "water_source_dry",
     },
 
-    spawnProbability: 0.1,
+    spawnProbability: 0.4, // Increased from 0.1 - water is essential for survival
     suitableBiomes: ["wetland", "forest", "grassland", "village"],
     clusterSize: { min: 1, max: 1 },
     minDistanceBetweenClusters: 500,
@@ -188,7 +188,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
       depleted: "berry_bush_empty",
     },
 
-    spawnProbability: 0.2,
+    spawnProbability: 0.4, // Increased from 0.2 - food is essential for survival
     suitableBiomes: ["forest", "grassland", "village"],
     clusterSize: { min: 4, max: 10 },
     minDistanceBetweenClusters: 100,

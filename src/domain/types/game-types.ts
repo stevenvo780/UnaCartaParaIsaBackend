@@ -84,7 +84,9 @@ export interface Size {
   height: number;
 }
 
-export interface Rect extends Position, Size {}
+export interface Rect extends Position, Size {
+  //any
+}
 
 export type InteractionType =
   | "NOURISH"
@@ -140,6 +142,18 @@ export interface TerrainTile {
   variant?: number;
   isWalkable?: boolean;
   biome?: string;
+}
+
+export interface SimulationTerrainTile {
+  x: number;
+  y: number;
+  biome: string;
+  assets: {
+    terrain: string;
+    vegetation?: string[];
+    structures?: string[];
+  };
+  isWalkable: boolean;
 }
 
 export interface RoadPolyline {
@@ -448,19 +462,7 @@ export interface GameState {
   currentConversation?: ConversationState;
   terrainTiles?: TerrainTile[];
   world?: {
-    terrain: Array<
-      Array<{
-        x: number;
-        y: number;
-        biome: string;
-        assets: {
-          terrain: string;
-          vegetation?: string[];
-          structures?: string[];
-        };
-        isWalkable: boolean;
-      }>
-    >;
+    terrain: SimulationTerrainTile[][];
     config: {
       width: number;
       height: number;

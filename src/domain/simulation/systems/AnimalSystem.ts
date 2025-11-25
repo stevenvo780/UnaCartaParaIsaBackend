@@ -269,12 +269,7 @@ export class AnimalSystem {
           );
           return;
         } else if (this.terrainSystem) {
-          // Grazing logic: if no food found, try to eat grass from tile
-          // Actually getTile takes tile coordinates, not world coordinates.
-          // World coordinates need to be converted to tile coordinates.
-          // Assuming tile size is 64 (DEFAULT_TILE_SIZE in WorldController) or similar.
-          // I should check GameState or config for tile size.
-          // For now, I'll assume 64 based on WorldController.
+          // Grazing logic
           const TILE_SIZE = 64;
           const tileX = Math.floor(animal.position.x / TILE_SIZE);
           const tileY = Math.floor(animal.position.y / TILE_SIZE);
@@ -286,9 +281,8 @@ export class AnimalSystem {
             terrainTile.assets.terrain === "terrain_grassland"
           ) {
             animal.state = "eating";
-            // Simple eating logic: wait a bit then modify terrain
             if (!animal.stateEndTime) {
-              animal.stateEndTime = Date.now() + 2000; // Eat for 2 seconds
+              animal.stateEndTime = Date.now() + 2000;
             } else if (Date.now() > animal.stateEndTime) {
               // Finish eating
               this.terrainSystem.modifyTile(tileX, tileY, {

@@ -31,7 +31,8 @@ export type ActionType =
   | "attack"
   | "craft"
   | "deposit"
-  | "build";
+  | "build"
+  | "idle";
 
 export interface AIGoalData {
   need?: "hunger" | "thirst" | "energy" | "social" | "fun" | "mentalHealth";
