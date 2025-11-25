@@ -2,51 +2,67 @@ import { logger } from "../../../infrastructure/utils/logger";
 import { updateFrameTime } from "../../../shared/FrameTime";
 
 /**
- * Multi-Rate Scheduler para optimizar rendimiento de simulación
- *
- * Divide sistemas en 3 frecuencias:
- * - FAST (100ms): Sistemas críticos que requieren alta responsividad
- * - MEDIUM (500ms): Sistemas importantes pero menos sensibles al tiempo
- * - SLOW (1000ms): Sistemas que pueden ejecutarse con baja frecuencia
- *
- * Beneficio: Reduce carga CPU de ~50% sin afectar jugabilidad
+ * Tick rate configuration for multi-rate scheduling.
+ * Defines update frequencies for different system categories.
  */
-
 export interface TickRates {
-  FAST: number; // 50ms = 20 Hz for smooth movement
-  MEDIUM: number; // 250ms = 4 Hz
-  SLOW: number; // 1000ms = 1 Hz
+  /** Fast rate in milliseconds (50ms = 20 Hz for smooth movement) */
+  FAST: number;
+  /** Medium rate in milliseconds (250ms = 4 Hz) */
+  MEDIUM: number;
+  /** Slow rate in milliseconds (1000ms = 1 Hz) */
+  SLOW: number;
 }
 
 export const DEFAULT_TICK_RATES: TickRates = {
-  FAST: 50, // Reduced from 100ms for smoother movement
-  MEDIUM: 250, // Reduced from 500ms
+  FAST: 50,
+  MEDIUM: 250,
   SLOW: 1000,
 };
 
 export type TickRate = "FAST" | "MEDIUM" | "SLOW";
 
+/**
+ * Configuration for a system registered in the multi-rate scheduler.
+ */
 export interface ScheduledSystem {
+  /** System identifier name */
   name: string;
+  /** Update rate category */
   rate: TickRate;
+  /** Update function called with delta time in milliseconds */
   update: (deltaMs: number) => void | Promise<void>;
+  /** Whether the system is currently enabled */
   enabled: boolean;
-  /** Umbral mínimo de entidades para ejecutar este sistema */
+  /** Minimum entity count required to execute this system (for optimization) */
   minEntities?: number;
 }
 
 /**
- * Hooks para sincronización global antes/después de cada tick
+ * Global hooks for synchronization before/after each tick.
+ * Used to maintain indices and flush events across all rate categories.
  */
 export interface SchedulerHooks {
-  /** Se ejecuta antes de cada tick (cualquier rate) para sincronizar índices */
+  /** Executes before each tick (any rate) to synchronize indices */
   preTick?: () => void;
-  /** Se ejecuta después de cada tick para flush de eventos */
+  /** Executes after each tick to flush events */
   postTick?: () => void;
-  /** Retorna el número actual de entidades para optimización */
+  /** Returns current entity count for optimization decisions */
   getEntityCount?: () => number;
 }
 
+/**
+ * Multi-rate scheduler for optimizing simulation performance.
+ *
+ * Divides systems into three update frequencies:
+ * - FAST (50ms): Critical systems requiring high responsiveness (movement, combat)
+ * - MEDIUM (250ms): Important systems less sensitive to timing (AI, needs, social)
+ * - SLOW (1000ms): Systems that can run at low frequency (economy, research, etc.)
+ *
+ * Benefits: Reduces CPU load by ~50% without affecting gameplay.
+ *
+ * @see SimulationRunner for system registration
+ */
 export class MultiRateScheduler {
   private fastHandle?: NodeJS.Timeout;
   private mediumHandle?: NodeJS.Timeout;
@@ -75,15 +91,30 @@ export class MultiRateScheduler {
     slow: { count: 0, totalMs: 0, avgMs: 0, skipped: 0 },
   };
 
+  /**
+   * Creates a new multi-rate scheduler.
+   *
+   * @param tickRates - Custom tick rates (defaults to DEFAULT_TICK_RATES)
+   */
   constructor(tickRates: TickRates = DEFAULT_TICK_RATES) {
     this.tickRates = tickRates;
   }
 
+  /**
+   * Configures global hooks for synchronization.
+   *
+   * @param hooks - Hook functions for pre-tick, post-tick, and entity counting
+   */
   public setHooks(hooks: SchedulerHooks): void {
     this.hooks = hooks;
     logger.info("🔗 Scheduler hooks configured");
   }
 
+  /**
+   * Registers a system to be updated at the specified rate.
+   *
+   * @param system - System configuration with update function and rate
+   */
   public registerSystem(system: ScheduledSystem): void {
     switch (system.rate) {
       case "FAST":
@@ -102,6 +133,11 @@ export class MultiRateScheduler {
     );
   }
 
+  /**
+   * Gets cached entity count, updating if cache expired.
+   *
+   * @returns Current entity count
+   */
   private getEntityCount(): number {
     const now = Date.now();
     if (now - this.lastEntityCountUpdate > this.ENTITY_COUNT_CACHE_MS) {
@@ -111,6 +147,10 @@ export class MultiRateScheduler {
     return this.cachedEntityCount;
   }
 
+  /**
+   * Starts the scheduler, beginning periodic updates for all registered systems.
+   * Sets up separate intervals for FAST, MEDIUM, and SLOW rates.
+   */
   public start(): void {
     if (this.isRunning) {
       logger.warn("⚠️ MultiRateScheduler already running");
@@ -147,6 +187,9 @@ export class MultiRateScheduler {
     });
   }
 
+  /**
+   * Stops the scheduler and clears all intervals.
+   */
   public stop(): void {
     if (!this.isRunning) return;
 
@@ -162,8 +205,12 @@ export class MultiRateScheduler {
     logger.info("🛑 MultiRateScheduler stopped");
   }
 
+  /**
+   * Executes FAST rate tick (50ms interval).
+   * Updates shared frame time and runs all FAST systems.
+   */
   private async tickFast(): Promise<void> {
-    const now = updateFrameTime(); // Actualiza timestamp compartido
+    const now = updateFrameTime();
     const delta = now - this.lastFastTick;
     this.lastFastTick = now;
 
@@ -188,8 +235,12 @@ export class MultiRateScheduler {
     }
   }
 
+  /**
+   * Executes MEDIUM rate tick (250ms interval).
+   * Updates shared frame time and runs all MEDIUM systems.
+   */
   private async tickMedium(): Promise<void> {
-    const now = updateFrameTime(); // Actualiza timestamp compartido
+    const now = updateFrameTime();
     const delta = now - this.lastMediumTick;
     this.lastMediumTick = now;
 
@@ -215,8 +266,12 @@ export class MultiRateScheduler {
     }
   }
 
+  /**
+   * Executes SLOW rate tick (1000ms interval).
+   * Updates shared frame time and runs all SLOW systems.
+   */
   private async tickSlow(): Promise<void> {
-    const now = updateFrameTime(); // Actualiza timestamp compartido
+    const now = updateFrameTime();
     const delta = now - this.lastSlowTick;
     this.lastSlowTick = now;
 
@@ -241,6 +296,14 @@ export class MultiRateScheduler {
     }
   }
 
+  /**
+   * Executes all systems in the given list with the provided delta time.
+   * Skips disabled systems and systems that don't meet minimum entity requirements.
+   *
+   * @param systems - List of systems to execute
+   * @param deltaMs - Time delta in milliseconds
+   * @param entityCount - Current entity count for minEntities checks
+   */
   private async executeSystems(
     systems: ScheduledSystem[],
     deltaMs: number,
@@ -264,6 +327,11 @@ export class MultiRateScheduler {
     }
   }
 
+  /**
+   * Gets performance statistics for all rate categories.
+   *
+   * @returns Statistics including tick counts, average times, and system counts
+   */
   public getStats(): {
     fast: {
       count: number;
@@ -313,6 +381,13 @@ export class MultiRateScheduler {
     };
   }
 
+  /**
+   * Enables or disables a system by name.
+   *
+   * @param name - System name to modify
+   * @param enabled - Whether to enable or disable the system
+   * @returns True if system was found and updated, false otherwise
+   */
   public setSystemEnabled(name: string, enabled: boolean): boolean {
     const allSystems = [
       ...this.fastSystems,
@@ -332,6 +407,11 @@ export class MultiRateScheduler {
     return false;
   }
 
+  /**
+   * Gets a list of all registered systems with their rate and enabled status.
+   *
+   * @returns Array of system information
+   */
   public getSystemsList(): Array<{
     name: string;
     rate: TickRate;

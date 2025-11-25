@@ -3,11 +3,19 @@ import type { SimulationEntity } from "./schema";
 import type { Animal } from "../../types/simulation/animals";
 import { injectable } from "inversify";
 
+/**
+ * Entity type filter for spatial queries.
+ */
 export type EntityType = "agent" | "animal" | "all";
 
 /**
- * Índice espacial compartido para todos los sistemas
- * OPTIMIZADO: Actualización incremental O(Δn) en lugar de reconstrucción O(n)
+ * Shared spatial index for all systems.
+ *
+ * Provides O(log n) spatial queries using a grid-based spatial hash.
+ * Optimized with incremental O(Δn) updates instead of O(n) full rebuilds.
+ * Uses object pooling to reduce garbage collection pressure.
+ *
+ * @see SpatialGrid for the underlying grid implementation
  */
 @injectable()
 export class SharedSpatialIndex {

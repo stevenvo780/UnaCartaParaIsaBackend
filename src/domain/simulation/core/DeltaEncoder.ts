@@ -6,7 +6,8 @@ import type { Animal } from "../../types/simulation/animals";
 import type { EntityNeedsData } from "../../types/simulation/needs";
 
 /**
- * Delta Snapshot - Solo contiene los cambios desde el último snapshot
+ * Delta snapshot containing only changes since the last snapshot.
+ * Used to reduce WebSocket payload size by sending only modified data.
  */
 export interface DeltaSnapshot {
   type: "delta" | "full";
@@ -19,15 +20,23 @@ export interface DeltaSnapshot {
 }
 
 /**
- * Codificador de deltas para reducir el tamaño de los snapshots enviados por WebSocket
+ * Delta encoder for reducing WebSocket snapshot payload size.
+ *
+ * Compares current state with previous snapshot and sends only changes.
+ * Periodically sends full snapshots to ensure client state consistency.
  */
 export class DeltaEncoder {
   private lastFullSnapshot: GameState | null = null;
   private ticksSinceFullSnapshot = 0;
-  private readonly FULL_SNAPSHOT_INTERVAL = 100; // Enviar snapshot completo cada 100 ticks
+  /** Send full snapshot every 100 ticks to ensure consistency */
+  private readonly FULL_SNAPSHOT_INTERVAL = 100;
 
   /**
-   * Genera un delta snapshot comparando con el snapshot anterior
+   * Generates a delta snapshot by comparing with the previous snapshot.
+   *
+   * @param currentSnapshot - Current simulation snapshot
+   * @param forceFull - Force a full snapshot regardless of interval
+   * @returns Delta snapshot with only changes, or full snapshot if needed
    */
   public encodeDelta(
     currentSnapshot: SimulationSnapshot,
@@ -83,8 +92,12 @@ export class DeltaEncoder {
   }
 
   /**
-   * Detecta los cambios entre dos estados
-   * Optimizado: usa Maps para lookups O(1) en lugar de O(n)
+   * Detects changes between two game states.
+   * Optimized: uses Maps for O(1) lookups instead of O(n).
+   *
+   * @param previous - Previous game state
+   * @param current - Current game state
+   * @returns Partial game state containing only changed sections
    */
   private detectChanges(
     previous: GameState,
@@ -247,11 +260,17 @@ export class DeltaEncoder {
     return false;
   }
 
+  /**
+   * Resets the encoder, clearing the last full snapshot.
+   */
   public reset(): void {
     this.lastFullSnapshot = null;
     this.ticksSinceFullSnapshot = 0;
   }
 
+  /**
+   * Forces the next encodeDelta call to return a full snapshot.
+   */
   public forceFullSnapshot(): void {
     this.ticksSinceFullSnapshot = this.FULL_SNAPSHOT_INTERVAL;
   }

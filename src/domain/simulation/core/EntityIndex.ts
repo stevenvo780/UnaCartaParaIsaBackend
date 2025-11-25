@@ -4,9 +4,13 @@ import type { GameState } from "../../types/game-types";
 import { injectable } from "inversify";
 
 /**
- * Servicio centralizado para índices O(1) de entidades y agentes
- * OPTIMIZADO: Usa dirty tracking granular para evitar reconstrucciones O(n)
- * Solo reconstruye cuando hay cambios reales en la estructura de datos
+ * Centralized service for O(1) entity and agent indexing.
+ *
+ * Uses granular dirty tracking to avoid O(n) full rebuilds.
+ * Only rebuilds when there are actual structural changes to the data.
+ * Supports incremental updates for better performance.
+ *
+ * @see SharedSpatialIndex for spatial queries
  */
 @injectable()
 export class EntityIndex {
@@ -22,8 +26,10 @@ export class EntityIndex {
   private pendingEntityRemoves = new Set<string>();
 
   /**
-   * Reconstrucción incremental O(Δn) en lugar de O(n)
-   * Solo procesa cambios pendientes en lugar de reconstruir todo
+   * Rebuilds the index with incremental O(Δn) updates instead of O(n) full rebuild.
+   * Only processes pending changes unless threshold is exceeded.
+   *
+   * @param state - Current game state to index
    */
   public rebuild(state: GameState): void {
     const currentAgentCount = state.agents?.length ?? 0;
@@ -115,31 +121,57 @@ export class EntityIndex {
     this.pendingEntityRemoves.clear();
   }
 
+  /**
+   * Notifies the index that an agent was added.
+   * Used for incremental updates.
+   *
+   * @param agentId - Agent identifier that was added
+   */
   public notifyAgentAdded(agentId: string): void {
     this.pendingAgentRemoves.delete(agentId);
     this.pendingAgentAdds.add(agentId);
   }
 
+  /**
+   * Notifies the index that an agent was removed.
+   * Used for incremental updates.
+   *
+   * @param agentId - Agent identifier that was removed
+   */
   public notifyAgentRemoved(agentId: string): void {
     this.pendingAgentAdds.delete(agentId);
     this.pendingAgentRemoves.add(agentId);
   }
 
+  /**
+   * Notifies the index that an entity was added.
+   * Used for incremental updates.
+   *
+   * @param entityId - Entity identifier that was added
+   */
   public notifyEntityAdded(entityId: string): void {
     this.pendingEntityRemoves.delete(entityId);
     this.pendingEntityAdds.add(entityId);
   }
 
+  /**
+   * Notifies the index that an entity was removed.
+   * Used for incremental updates.
+   *
+   * @param entityId - Entity identifier that was removed
+   */
   public notifyEntityRemoved(entityId: string): void {
     this.pendingEntityAdds.delete(entityId);
     this.pendingEntityRemoves.add(entityId);
   }
 
   /**
-   * Sincroniza agents con entities en GameState.
-   * Asegura que cada agente tenga su entidad correspondiente en gameState.entities.
-   * Este es el lugar centralizado para esta sincronización.
-   * Optimizado: usa el índice interno para lookups O(1)
+   * Synchronizes agents with entities in GameState.
+   * Ensures each agent has a corresponding entity in gameState.entities.
+   * This is the centralized location for this synchronization.
+   * Uses internal index for O(1) lookups.
+   *
+   * @param state - Game state to synchronize
    */
   public syncAgentsToEntities(state: GameState): void {
     if (!state.agents) return;
@@ -186,38 +218,75 @@ export class EntityIndex {
     }
   }
 
+  /**
+   * Marks the index as dirty, forcing a rebuild on next rebuild() call.
+   */
   public markDirty(): void {
     this.dirty = true;
   }
 
+  /**
+   * Gets an agent by ID.
+   *
+   * @param agentId - Agent identifier
+   * @returns Agent profile or undefined if not found
+   */
   public getAgent(agentId: string): AgentProfile | undefined {
     return this.agentIndex.get(agentId);
   }
 
+  /**
+   * Gets an entity by ID.
+   *
+   * @param entityId - Entity identifier
+   * @returns Simulation entity or undefined if not found
+   */
   public getEntity(entityId: string): SimulationEntity | undefined {
     return this.entityIndex.get(entityId);
   }
 
+  /**
+   * Sets or updates an agent in the index.
+   *
+   * @param agent - Agent profile to index
+   */
   public setAgent(agent: AgentProfile): void {
     this.agentIndex.set(agent.id, agent);
   }
 
+  /**
+   * Sets or updates an entity in the index.
+   *
+   * @param entity - Simulation entity to index
+   */
   public setEntity(entity: SimulationEntity): void {
     this.entityIndex.set(entity.id, entity);
   }
 
+  /**
+   * Removes an agent from the index.
+   *
+   * @param agentId - Agent identifier to remove
+   */
   public removeAgent(agentId: string): void {
     this.agentIndex.delete(agentId);
   }
 
+  /**
+   * Removes an entity from the index.
+   *
+   * @param entityId - Entity identifier to remove
+   */
   public removeEntity(entityId: string): void {
     this.entityIndex.delete(entityId);
   }
 
   /**
-   * Marca una entidad como muerta inmediatamente y la remueve del índice de agentes.
-   * Esto previene race conditions donde otros sistemas procesan agentes muertos
-   * antes de que el índice se reconstruya en el próximo tick.
+   * Marks an entity as dead immediately and removes it from the agent index.
+   * Prevents race conditions where other systems process dead agents
+   * before the index is rebuilt on the next tick.
+   *
+   * @param entityId - ID of the entity to mark as dead
    */
   public markEntityDead(entityId: string): void {
     const entity = this.entityIndex.get(entityId);
@@ -228,30 +297,68 @@ export class EntityIndex {
     this.dirty = true;
   }
 
+  /**
+   * Gets an iterator over all agents.
+   *
+   * @returns Iterator of agent profiles
+   */
   public getAllAgents(): IterableIterator<AgentProfile> {
     return this.agentIndex.values();
   }
 
+  /**
+   * Gets an iterator over all entities.
+   *
+   * @returns Iterator of simulation entities
+   */
   public getAllEntities(): IterableIterator<SimulationEntity> {
     return this.entityIndex.values();
   }
 
+  /**
+   * Gets the total number of indexed agents.
+   *
+   * @returns Agent count
+   */
   public getAgentCount(): number {
     return this.agentIndex.size;
   }
 
+  /**
+   * Gets the total number of indexed entities.
+   *
+   * @returns Entity count
+   */
   public getEntityCount(): number {
     return this.entityIndex.size;
   }
 
+  /**
+   * Checks if an agent exists in the index.
+   *
+   * @param agentId - Agent identifier to check
+   * @returns True if agent exists
+   */
   public hasAgent(agentId: string): boolean {
     return this.agentIndex.has(agentId);
   }
 
+  /**
+   * Checks if an entity exists in the index.
+   *
+   * @param entityId - Entity identifier to check
+   * @returns True if entity exists
+   */
   public hasEntity(entityId: string): boolean {
     return this.entityIndex.has(entityId);
   }
 
+  /**
+   * Finds both agent and entity for a given ID.
+   *
+   * @param entityId - Entity/agent identifier
+   * @returns Object with optional agent and entity
+   */
   public findEntityOrAgent(entityId: string): {
     agent?: AgentProfile;
     entity?: SimulationEntity;
@@ -261,6 +368,14 @@ export class EntityIndex {
     return { agent, entity };
   }
 
+  /**
+   * Gets or creates an entity from an agent.
+   * If entity doesn't exist, creates it in the game state and indexes it.
+   *
+   * @param agentId - Agent identifier
+   * @param state - Game state to modify if entity needs creation
+   * @returns Simulation entity or undefined if agent not found or has no position
+   */
   public getOrCreateEntityFromAgent(
     agentId: string,
     state: GameState,

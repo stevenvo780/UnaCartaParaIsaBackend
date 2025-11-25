@@ -2,32 +2,52 @@ import type { GameState } from "../../types/game-types";
 import { cloneGameState, cloneGameStateDelta } from "./defaultState";
 
 /**
- * Sistema de cache inteligente con dirty flags para optimizar la clonación del estado
- * Solo re-clona las secciones que han cambiado desde el último snapshot
+ * Intelligent caching system with dirty flags to optimize state cloning.
+ * Only re-clones sections that have changed since the last snapshot.
+ *
+ * This significantly reduces memory allocation and improves performance
+ * when sending state updates to clients via WebSocket.
  */
 export class StateCache {
   private previousSnapshot: GameState | null = null;
   private dirtyFlags: Map<string, boolean> = new Map();
   private lastTick = -1;
 
+  /**
+   * Marks a state section as dirty, indicating it has changed.
+   *
+   * @param section - Section name (e.g., "agents", "entities", "zones")
+   */
   public markDirty(section: string): void {
     this.dirtyFlags.set(section, true);
   }
 
+  /**
+   * Marks multiple state sections as dirty.
+   *
+   * @param sections - Array of section names to mark dirty
+   */
   public markDirtyMultiple(sections: string[]): void {
     for (const section of sections) {
       this.dirtyFlags.set(section, true);
     }
   }
 
+  /**
+   * Clears all dirty flags.
+   */
   public clearDirtyFlags(): void {
     this.dirtyFlags.clear();
   }
 
   /**
-   * Obtiene un snapshot optimizado del estado
-   * Si hay un snapshot previo y no todo está dirty, usa clonación delta
-   * Si no, clona todo el estado
+   * Gets an optimized snapshot of the state.
+   * If a previous snapshot exists and not everything is dirty, uses delta cloning.
+   * Otherwise, clones the entire state.
+   *
+   * @param state - Current game state
+   * @param currentTick - Current simulation tick number
+   * @returns Cloned game state snapshot
    */
   public getSnapshot(state: GameState, currentTick: number): GameState {
     if (currentTick !== this.lastTick) {
@@ -85,12 +105,20 @@ export class StateCache {
     return allSections.every((section) => this.dirtyFlags.get(section));
   }
 
+  /**
+   * Resets the cache, clearing previous snapshot and dirty flags.
+   */
   public reset(): void {
     this.previousSnapshot = null;
     this.clearDirtyFlags();
     this.lastTick = -1;
   }
 
+  /**
+   * Gets the previous snapshot without creating a new one.
+   *
+   * @returns Previous snapshot or null if none exists
+   */
   public getPreviousSnapshot(): GameState | null {
     return this.previousSnapshot;
   }
