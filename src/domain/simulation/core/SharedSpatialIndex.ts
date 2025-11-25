@@ -1,4 +1,6 @@
 import { SpatialGrid } from "../../../utils/SpatialGrid";
+import { performance } from "node:perf_hooks";
+import { performanceMonitor } from "./PerformanceMonitor";
 import type { SimulationEntity } from "./schema";
 import type { Animal } from "../../types/simulation/animals";
 import { injectable } from "inversify";
@@ -70,8 +72,15 @@ export class SharedSpatialIndex {
     entities: SimulationEntity[],
     animals: Map<string, Animal>,
   ): void {
+    const startTime = performance.now();
     if (!this.dirty) {
       this.updateMovedPositions(entities, animals);
+      const duration = performance.now() - startTime;
+      performanceMonitor.recordSubsystemExecution(
+        "SharedSpatialIndex",
+        "rebuild",
+        duration,
+      );
       return;
     }
 
@@ -123,6 +132,13 @@ export class SharedSpatialIndex {
     this.lastEntityIds = currentEntityIds;
     this.lastAnimalIds = currentAnimalIds;
     this.dirty = false;
+
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordSubsystemExecution(
+      "SharedSpatialIndex",
+      "rebuild",
+      duration,
+    );
   }
 
   /**
@@ -226,7 +242,14 @@ export class SharedSpatialIndex {
     radius: number,
     filter?: EntityType,
   ): Array<{ entity: string; distance: number; type: EntityType }> {
+    const startTime = performance.now();
     const results = this.grid.queryRadius(position, radius);
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordSubsystemExecution(
+      "SharedSpatialIndex",
+      "queryRadius",
+      duration,
+    );
 
     if (!filter || filter === "all") {
       return results.map((r) => ({

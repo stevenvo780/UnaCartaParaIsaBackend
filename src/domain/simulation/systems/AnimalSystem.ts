@@ -15,6 +15,8 @@ import type { WorldResourceSystem } from "./WorldResourceSystem";
 import type { TerrainSystem } from "./TerrainSystem";
 import { AnimalBatchProcessor } from "./AnimalBatchProcessor";
 import { getFrameTime } from "../../../shared/FrameTime";
+import { performance } from "node:perf_hooks";
+import { performanceMonitor } from "../core/PerformanceMonitor";
 
 const DEFAULT_CONFIG: AnimalSystemConfig = {
   maxAnimals: 500,
@@ -128,6 +130,7 @@ export class AnimalSystem {
   }
 
   public update(deltaMs: number): void {
+    const startTime = performance.now();
     const now = getFrameTime();
     const deltaSeconds = deltaMs / 1000;
     const deltaMinutes = deltaMs / 60000;
@@ -179,6 +182,8 @@ export class AnimalSystem {
     }
 
     this.updateGameStateSnapshot();
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordSubsystemExecution("AnimalSystem", "update", duration);
   }
 
   private updateBatch(
@@ -186,6 +191,7 @@ export class AnimalSystem {
     deltaMinutes: number,
     _now: number,
   ): void {
+    const startTime = performance.now();
     this.updateFrame++;
     this.batchProcessor.rebuildBuffers(this.animals);
 
@@ -231,7 +237,7 @@ export class AnimalSystem {
       if (
         isIdleState &&
         i % this.IDLE_UPDATE_DIVISOR !==
-          this.updateFrame % this.IDLE_UPDATE_DIVISOR
+        this.updateFrame % this.IDLE_UPDATE_DIVISOR
       ) {
         continue;
       }
@@ -241,6 +247,8 @@ export class AnimalSystem {
       this.updateSpatialGrid(animal, oldPosition);
       this.checkAnimalDeath(animal);
     }
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordSubsystemExecution("AnimalSystem", "updateBatch", duration);
   }
 
   private updateAnimalBehavior(animal: Animal, deltaSeconds: number): void {

@@ -5,6 +5,8 @@ import { LifeCycleSystem } from "./LifeCycleSystem";
 import { WorldResourceSystem } from "./WorldResourceSystem";
 import { TerrainSystem } from "./TerrainSystem";
 import { simulationEvents, GameEventNames } from "../core/events";
+import { performance } from "perf_hooks";
+import { performanceMonitor } from "../core/PerformanceMonitor";
 
 interface ProductionConfig {
   updateIntervalMs: number;
@@ -186,6 +188,7 @@ export class ProductionSystem {
    * @param now Timestamp actual.
    */
   private processProduction(zone: MutableZone, now: number): void {
+    const startTime = performance.now();
     const last = this.lastProduction.get(zone.id) ?? 0;
     if (now - last < this.config.productionIntervalMs) {
       return;
@@ -248,6 +251,8 @@ export class ProductionSystem {
         }
       }
     }
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordSubsystemExecution("ProductionSystem", "processProduction", duration);
   }
 
   /**

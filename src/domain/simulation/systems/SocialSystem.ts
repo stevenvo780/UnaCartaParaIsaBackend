@@ -5,6 +5,8 @@ import { SocialGroup } from "../../../shared/types/simulation/agents";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { logger } from "../../../infrastructure/utils/logger";
 import { getFrameTime } from "../../../shared/FrameTime";
+import { performance } from "node:perf_hooks";
+import { performanceMonitor } from "../core/PerformanceMonitor";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -101,6 +103,7 @@ export class SocialSystem {
   }
 
   public update(deltaTimeMs: number): void {
+    const startTime = performance.now();
     const dt = deltaTimeMs / 1000;
     this.lastUpdate += deltaTimeMs;
 
@@ -116,6 +119,8 @@ export class SocialSystem {
 
     const now = getFrameTime();
     this.updateTruces(now);
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordSubsystemExecution("SocialSystem", "update", duration);
   }
 
   /**
@@ -397,6 +402,7 @@ export class SocialSystem {
   }
 
   private recomputeGroups(): void {
+    const startTime = performance.now();
     const visited = new Set<string>();
     const newGroups: SocialGroup[] = [];
     const entities = this.gameState.entities?.map((e) => e.id) || [];
@@ -477,6 +483,8 @@ export class SocialSystem {
       groups: this.groups,
       count: this.groups.length,
     });
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordSubsystemExecution("SocialSystem", "recomputeGroups", duration);
   }
 
   public getGroups(): SocialGroup[] {

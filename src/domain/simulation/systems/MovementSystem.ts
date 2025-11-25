@@ -1,4 +1,6 @@
 import { EventEmitter } from "events";
+import { performance } from "node:perf_hooks";
+import { performanceMonitor } from "../core/PerformanceMonitor";
 import EasyStar from "easystarjs";
 import { GameState, MapElement } from "../../types/game-types";
 import { logger } from "../../../infrastructure/utils/logger";
@@ -50,19 +52,19 @@ export interface EntityMovementState {
   estimatedArrivalTime?: number;
   currentPath: Array<{ x: number; y: number }>;
   currentActivity:
-    | "idle"
-    | "moving"
-    | "eating"
-    | "drinking"
-    | "cleaning"
-    | "playing"
-    | "meditating"
-    | "working"
-    | "resting"
-    | "socializing"
-    | "inspecting"
-    | "fleeing"
-    | "attacking";
+  | "idle"
+  | "moving"
+  | "eating"
+  | "drinking"
+  | "cleaning"
+  | "playing"
+  | "meditating"
+  | "working"
+  | "resting"
+  | "socializing"
+  | "inspecting"
+  | "fleeing"
+  | "attacking";
   activityStartTime?: number;
   activityDuration?: number;
   fatigue: number;
@@ -664,12 +666,20 @@ export class MovementSystem extends EventEmitter {
       const grid = this.getOptimizedGrid();
       this.pathfinder.setGrid(grid);
 
+      const startTime = performance.now();
       this.pathfinder.findPath(
         startGrid.x,
         startGrid.y,
         endGrid.x,
         endGrid.y,
         (path) => {
+          const duration = performance.now() - startTime;
+          performanceMonitor.recordSubsystemExecution(
+            "MovementSystem",
+            "pathfinding",
+            duration,
+          );
+
           if (path) {
             const worldPath = path.map((p) => ({
               x: p.x * this.gridSize + this.gridSize / 2,
@@ -841,8 +851,8 @@ export class MovementSystem extends EventEmitter {
     const radius =
       MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MIN +
       Math.random() *
-        (MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MAX -
-          MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MIN);
+      (MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MAX -
+        MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MIN);
 
     const angle = Math.random() * Math.PI * 2;
     const targetX = state.currentPosition.x + Math.cos(angle) * radius;

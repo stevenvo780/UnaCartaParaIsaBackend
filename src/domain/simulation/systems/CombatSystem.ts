@@ -20,6 +20,8 @@ import { SpatialGrid } from "../../../utils/SpatialGrid";
 import type { AnimalSystem } from "./AnimalSystem";
 import type { NormsSystem } from "./NormsSystem";
 import { getFrameTime } from "../../../shared/FrameTime";
+import { performance } from "node:perf_hooks";
+import { performanceMonitor } from "../core/PerformanceMonitor";
 
 interface CombatConfig {
   decisionIntervalMs: number;
@@ -120,6 +122,7 @@ export class CombatSystem {
   }
 
   public update(_deltaMs: number): void {
+    const startTime = performance.now();
     const now = getFrameTime();
     if (now - this.lastUpdate < this.config.decisionIntervalMs) {
       return;
@@ -219,6 +222,8 @@ export class CombatSystem {
         }
       }
     }
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordSubsystemExecution("CombatSystem", "update", duration);
   }
 
   private updateBatch(
@@ -226,6 +231,7 @@ export class CombatSystem {
     entitiesById: Map<string, SimulationEntity>,
     now: number,
   ): void {
+    const startTime = performance.now();
     const queries = attackers
       .map((attacker) => {
         if (!attacker.position) return null;
@@ -276,6 +282,8 @@ export class CombatSystem {
         break;
       }
     }
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordSubsystemExecution("CombatSystem", "updateBatch", duration);
   }
 
   public getNearbyEnemies(

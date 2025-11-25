@@ -82,6 +82,33 @@ class PerformanceMonitor {
     }
   }
 
+  private subsystemStats = new Map<string, SimpleStats>();
+
+  public recordSubsystemExecution(
+    systemName: string,
+    subOperation: string,
+    durationMs: number,
+  ): void {
+    const key = `${systemName}:${subOperation}`;
+    let stats = this.subsystemStats.get(key);
+    if (!stats) {
+      stats = {
+        count: 0,
+        totalMs: 0,
+        maxMs: 0,
+        lastMs: 0,
+      };
+      this.subsystemStats.set(key, stats);
+    }
+
+    stats.count += 1;
+    stats.totalMs += durationMs;
+    stats.lastMs = durationMs;
+    if (durationMs > stats.maxMs) {
+      stats.maxMs = durationMs;
+    }
+  }
+
   public setSchedulerStats(stats: SchedulerStatsSnapshot): void {
     this.schedulerStats = stats;
   }
@@ -91,10 +118,10 @@ class PerformanceMonitor {
     totalResources: number;
     totalBuildings: number;
   } = {
-    activeAgents: 0,
-    totalResources: 0,
-    totalBuildings: 0,
-  };
+      activeAgents: 0,
+      totalResources: 0,
+      totalBuildings: 0,
+    };
 
   public setGameLogicStats(stats: {
     activeAgents: number;
@@ -266,6 +293,43 @@ class PerformanceMonitor {
     lines.push(
       `backend_event_loop_utilization ${snapshot.eventLoopLagMs.toFixed(6)}`,
     );
+
+    lines.push(
+      "# HELP backend_subsystem_duration_ms Average execution time per subsystem operation",
+    );
+    lines.push("# TYPE backend_subsystem_duration_ms gauge");
+    for (const [key, stats] of this.subsystemStats.entries()) {
+      const [system, operation] = key.split(":");
+      const avgMs = stats.count > 0 ? stats.totalMs / stats.count : 0;
+      lines.push(
+        `backend_subsystem_duration_ms{system="${system}",operation="${operation}"} ${avgMs.toFixed(6)}`,
+      );
+    }
+
+    lines.push(
+      "# HELP backend_subsystem_calls_total Total calls to subsystem operation",
+    );
+    lines.push("# TYPE backend_subsystem_calls_total counter");
+    for (const [key, stats] of this.subsystemStats.entries()) {
+      const [system, operation] = key.split(":");
+      lines.push(
+        `backend_subsystem_calls_total{system="${system}",operation="${operation}"} ${stats.count}`,
+      );
+      lines.push(
+        `backend_subsystem_calls_total{system="${system}",operation="${operation}"} ${stats.count}`,
+      );
+    }
+
+    lines.push(
+      "# HELP backend_subsystem_total_duration_ms Total execution time per subsystem operation",
+    );
+    lines.push("# TYPE backend_subsystem_total_duration_ms counter");
+    for (const [key, stats] of this.subsystemStats.entries()) {
+      const [system, operation] = key.split(":");
+      lines.push(
+        `backend_subsystem_total_duration_ms{system="${system}",operation="${operation}"} ${stats.totalMs.toFixed(6)}`,
+      );
+    }
 
     return `${lines.join("\n")}\n`;
   }

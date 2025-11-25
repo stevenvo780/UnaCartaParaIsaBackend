@@ -32,6 +32,8 @@ import type { MovementSystem } from "./MovementSystem";
 import type { QuestSystem } from "./QuestSystem";
 import type { TimeSystem } from "./TimeSystem";
 import type { EntityIndex } from "../core/EntityIndex";
+import { performance } from "perf_hooks";
+import { performanceMonitor } from "../core/PerformanceMonitor";
 
 interface AISystemConfig {
   updateIntervalMs: number;
@@ -287,10 +289,12 @@ export class AISystem extends EventEmitter {
     if (!aiState.currentGoal) {
       const startTime = performance.now();
       const newGoal = this.makeDecision(agentId, aiState);
-      const endTime = performance.now();
+      const duration = performance.now() - startTime;
 
-      this._decisionTimeTotalMs += endTime - startTime;
+      this._decisionTimeTotalMs += duration;
       this._decisionCount++;
+
+      performanceMonitor.recordSubsystemExecution("AISystem", "makeDecision", duration);
 
       if (newGoal) {
         aiState.currentGoal = newGoal;
@@ -442,25 +446,25 @@ export class AISystem extends EventEmitter {
         : undefined,
       getCurrentTimeOfDay: this.timeSystem
         ? ():
+          | "dawn"
+          | "morning"
+          | "midday"
+          | "afternoon"
+          | "dusk"
+          | "night"
+          | "deep_night" => {
+          const time = this.timeSystem!.getCurrentTimeOfDay();
+          if (time === "evening") return "dusk";
+          if (time === "rest") return "deep_night";
+          return time as
             | "dawn"
             | "morning"
             | "midday"
             | "afternoon"
             | "dusk"
             | "night"
-            | "deep_night" => {
-            const time = this.timeSystem!.getCurrentTimeOfDay();
-            if (time === "evening") return "dusk";
-            if (time === "rest") return "deep_night";
-            return time as
-              | "dawn"
-              | "morning"
-              | "midday"
-              | "afternoon"
-              | "dusk"
-              | "night"
-              | "deep_night";
-          }
+            | "deep_night";
+        }
         : undefined,
       getEntityPosition: (id: string) => {
         const agent =
@@ -517,10 +521,10 @@ export class AISystem extends EventEmitter {
       socialPreference: isChild
         ? "extroverted"
         : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 >
-            0.6
+          0.6
           ? "extroverted"
           : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 <
-              0.4
+            0.4
             ? "introverted"
             : "balanced",
       workEthic: isChild
@@ -528,7 +532,7 @@ export class AISystem extends EventEmitter {
         : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 > 0.7
           ? "workaholic"
           : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 <
-              0.3
+            0.3
             ? "lazy"
             : "balanced",
       explorationType:

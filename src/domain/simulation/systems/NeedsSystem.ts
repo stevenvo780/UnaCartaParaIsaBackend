@@ -14,6 +14,8 @@ import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
 import type { SharedSpatialIndex } from "../core/SharedSpatialIndex";
 import { getFrameTime } from "../../../shared/FrameTime";
+import { performance } from "perf_hooks";
+import { performanceMonitor } from "../core/PerformanceMonitor";
 
 /**
  * System for managing entity needs (hunger, thirst, energy, hygiene, social, fun, mental health).
@@ -165,6 +167,7 @@ export class NeedsSystem extends EventEmitter {
   }
 
   private updateTraditional(dtSeconds: number, _now: number): void {
+    const startTime = performance.now();
     for (const [entityId, needs] of this.entityNeeds.entries()) {
       this.applyNeedDecay(needs, dtSeconds, entityId);
       this.handleZoneBenefits(entityId, needs, dtSeconds);
@@ -182,9 +185,12 @@ export class NeedsSystem extends EventEmitter {
 
       this.emitNeedEvents(entityId, needs);
     }
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordSubsystemExecution("NeedsSystem", "updateTraditional", duration);
   }
 
   private updateBatch(dtSeconds: number, _now: number): void {
+    const startTime = performance.now();
     this.batchProcessor.rebuildBuffers(this.entityNeeds);
 
     const entityCount = this.entityNeeds.size;
@@ -241,6 +247,8 @@ export class NeedsSystem extends EventEmitter {
 
       this.emitNeedEvents(entityId, needs);
     }
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordSubsystemExecution("NeedsSystem", "updateBatch", duration);
   }
 
   private handleZoneBenefits(
