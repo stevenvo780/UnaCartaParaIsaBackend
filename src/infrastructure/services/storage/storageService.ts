@@ -242,9 +242,7 @@ export class StorageService {
   private async ensureLocalDir(): Promise<void> {
     try {
       await fs.mkdir(CONFIG.LOCAL_SAVES_PATH, { recursive: true });
-    } catch (_error) {
-      // Directory may already exist
-    }
+    } catch {}
   }
 
   private async backupToNAS(saveId: string, content: string): Promise<boolean> {

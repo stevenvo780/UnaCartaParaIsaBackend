@@ -237,7 +237,6 @@ export class AISystem extends EventEmitter {
       processed++;
     }
 
-    // Avanzar índice para el siguiente batch
     this.agentIndex = (this.agentIndex + batchSize) % agents.length;
   }
 
@@ -312,14 +311,11 @@ export class AISystem extends EventEmitter {
       getEquipped: (id: string) =>
         this.combatSystem?.getEquipped(id) || "unarmed",
       getSuggestedCraftZone: () => {
-        // Find nearest zone with crafting station (simplified: just find any)
-        // Zone doesn't have metadata directly, check props or use type
         const zone = this.gameState.zones?.find((z) => z.type === "crafting");
         return zone?.id;
       },
       canCraftWeapon: (id: string, weaponId: string) => {
         if (!this.craftingSystem) return false;
-        // Validate weaponId is a valid CraftingWeaponId (doesn't include "unarmed")
         const validWeaponIds: CraftingWeaponId[] = [
           "wooden_club",
           "stone_dagger",
@@ -333,7 +329,6 @@ export class AISystem extends EventEmitter {
         );
       },
       getAllActiveAgentIds: () => {
-        // Check entities for isDead, fallback to agents
         const activeIds: string[] = [];
         for (const agent of this.gameState.agents) {
           const entity = this.gameState.entities?.find(
@@ -346,7 +341,6 @@ export class AISystem extends EventEmitter {
         return activeIds;
       },
       getEntityStats: (id: string) => {
-        // Get stats from entity, not agent
         const entity = this.gameState.entities?.find((e) => e.id === id);
         if (!entity) return null;
         const stats = entity.stats;
@@ -386,8 +380,6 @@ export class AISystem extends EventEmitter {
       },
       getEnemiesForAgent: (id: string, threshold?: number): string[] => {
         if (!this.combatSystem) return [];
-        // Suppress unsafe type warning - CombatSystem.getNearbyEnemies returns string[]
-
         return this.combatSystem.getNearbyEnemies(id, threshold);
       },
       getTasks: this.taskSystem
@@ -409,7 +401,6 @@ export class AISystem extends EventEmitter {
             | "night"
             | "deep_night" => {
             const time = this.timeSystem!.getCurrentTimeOfDay();
-            // Map TimeSystem return type to expected type
             if (time === "evening") return "dusk";
             if (time === "rest") return "deep_night";
             return time as

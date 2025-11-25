@@ -4,7 +4,6 @@ import type {
   ResourceType,
 } from "../../types/simulation/economy";
 import { InventorySystem } from "./InventorySystem";
-import { LifeCycleSystem } from "./LifeCycleSystem";
 
 const DEFAULT_MARKET_CONFIG: MarketConfig = {
   scarcityThresholds: { low: 20, high: 100 },

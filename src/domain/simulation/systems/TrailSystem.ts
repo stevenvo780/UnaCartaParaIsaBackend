@@ -1,15 +1,14 @@
-import {
-  GameState,
-  TrailSegment,
-  HeatMapCell,
-  TrailState,
-} from "../../types/game-types";
+import { GameState, TrailSegment, HeatMapCell } from "../../types/game-types";
 import { logger } from "../../../infrastructure/utils/logger";
 import { GameEventNames, simulationEvents } from "../core/events";
 
 // Re-export interfaces for backward compatibility
 export type { TrailSegment, HeatMapCell };
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class TrailSystem {
   private gameState: GameState;
   private enabled: boolean = true;
@@ -34,7 +33,7 @@ export class TrailSystem {
     averageIntensity: 0,
   };
 
-  constructor(gameState: GameState) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
     this.setupEventListeners();
     logger.info("🛤️ TrailSystem initialized");
@@ -157,15 +156,15 @@ export class TrailSystem {
     const ey = Math.round(end.y / this.GRID_SIZE) * this.GRID_SIZE;
 
     if (sx < ex || (sx === ex && sy < ey)) {
-      return `${sx},${sy}-${ex},${ey}`;
+      return `${sx},${sy} -${ex},${ey} `;
     }
-    return `${ex},${ey}-${sx},${sy}`;
+    return `${ex},${ey} -${sx},${sy} `;
   }
 
   private updateHeatMap(x: number, y: number): void {
     const cellX = Math.floor(x / this.GRID_SIZE);
     const cellY = Math.floor(y / this.GRID_SIZE);
-    const cellId = `${cellX},${cellY}`;
+    const cellId = `${cellX},${cellY} `;
 
     const existing = this.heatMap.get(cellId);
     if (existing) {
@@ -242,7 +241,6 @@ export class TrailSystem {
       activeCount > 0 ? totalIntensity / activeCount : 0;
     this.stats.hottestPath = hottestId;
 
-    // Write trails data to gameState for synchronization
     this.gameState.trails = {
       trails: Array.from(this.trails.values()),
       heatMap: Array.from(this.heatMap.values()),

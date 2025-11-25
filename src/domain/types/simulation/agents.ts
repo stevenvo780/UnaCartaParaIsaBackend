@@ -28,4 +28,9 @@ export interface AgentProfile {
     mother?: string;
   };
   position?: { x: number; y: number };
+  stats?: {
+    money?: number;
+    reputation?: number;
+    [key: string]: any;
+  };
 }

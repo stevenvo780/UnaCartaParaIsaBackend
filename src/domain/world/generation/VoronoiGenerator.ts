@@ -22,19 +22,27 @@ export interface VoronoiRegion {
   biome?: BiomeType;
 }
 
+import { injectable } from "inversify";
+
+@injectable()
 export class VoronoiGenerator {
-  private width: number;
-  private height: number;
-  private rng: seedrandom.PRNG;
+  constructor() {}
 
-  constructor(width: number, height: number, seed?: string) {
-    this.width = width;
-    this.height = height;
-    this.rng = seedrandom(seed || `voronoi-${Date.now()}`);
-  }
-
-  generateRegions(numRegions: number, minDistance = 100): VoronoiRegion[] {
-    const sites = this.poissonDiskSampling(numRegions, minDistance);
+  generateRegions(
+    width: number,
+    height: number,
+    numRegions: number,
+    seed?: string,
+    minDistance = 100,
+  ): VoronoiRegion[] {
+    const rng = seedrandom(seed || `voronoi-${Date.now()}`);
+    const sites = this.poissonDiskSampling(
+      width,
+      height,
+      rng,
+      numRegions,
+      minDistance,
+    );
     const voronoi = this.computeVoronoi(sites);
     const regions = this.convertToRegions(voronoi);
 
@@ -42,20 +50,23 @@ export class VoronoiGenerator {
   }
 
   private poissonDiskSampling(
+    width: number,
+    height: number,
+    rng: seedrandom.PRNG,
     targetCount: number,
     minDistance: number,
   ): Point[] {
     const points: Point[] = [];
     const active: Point[] = [];
     const cellSize = minDistance / Math.sqrt(2);
-    const cols = Math.ceil(this.width / cellSize);
-    const rows = Math.ceil(this.height / cellSize);
+    const cols = Math.ceil(width / cellSize);
+    const rows = Math.ceil(height / cellSize);
     const grid: (Point | null)[][] = Array(rows)
       .fill(null)
       .map(() => Array(cols).fill(null) as (Point | null)[]);
     const initialPoint: Point = {
-      x: this.rng() * this.width,
-      y: this.rng() * this.height,
+      x: rng() * width,
+      y: rng() * height,
     };
 
     points.push(initialPoint);
@@ -68,13 +79,13 @@ export class VoronoiGenerator {
     const k = 30;
 
     while (active.length > 0 && points.length < targetCount) {
-      const randomIndex = Math.floor(this.rng() * active.length);
+      const randomIndex = Math.floor(rng() * active.length);
       const point = active[randomIndex];
       let found = false;
 
       for (let tries = 0; tries < k; tries++) {
-        const angle = this.rng() * 2 * Math.PI;
-        const radius = minDistance * (1 + this.rng());
+        const angle = rng() * 2 * Math.PI;
+        const radius = minDistance * (1 + rng());
         const candidate: Point = {
           x: point.x + radius * Math.cos(angle),
           y: point.y + radius * Math.sin(angle),
@@ -82,9 +93,9 @@ export class VoronoiGenerator {
 
         if (
           candidate.x < 0 ||
-          candidate.x >= this.width ||
+          candidate.x >= width ||
           candidate.y < 0 ||
-          candidate.y >= this.height
+          candidate.y >= height
         ) {
           continue;
         }
@@ -255,17 +266,21 @@ export class VoronoiGenerator {
     return area / 2;
   }
 
-  assignBiomes(regions: VoronoiRegion[]): VoronoiRegion[] {
+  assignBiomes(
+    regions: VoronoiRegion[],
+    width: number,
+    height: number,
+  ): VoronoiRegion[] {
     return regions.map((region) => {
       let selected: BiomeType;
 
-      if (region.center.y < this.height * 0.15) {
+      if (region.center.y < height * 0.15) {
         selected = BiomeType.MOUNTAIN;
-      } else if (region.center.y > this.height * 0.85) {
+      } else if (region.center.y > height * 0.85) {
         selected = BiomeType.SWAMP;
-      } else if (region.center.x < this.width * 0.15) {
+      } else if (region.center.x < width * 0.15) {
         selected = BiomeType.FOREST;
-      } else if (region.center.x > this.height * 0.85) {
+      } else if (region.center.x > height * 0.85) {
         selected = BiomeType.DESERT;
       } else if (region.area < 2000) {
         selected = BiomeType.LAKE;

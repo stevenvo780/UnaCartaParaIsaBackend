@@ -14,15 +14,19 @@ const BASIC_RECIPES = [
   "wooden_club",
 ];
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class RecipeDiscoverySystem {
   private gameState: GameState;
   private agentRecipes = new Map<string, Map<string, AgentKnownRecipe>>();
   private discoveredRecipes = new Set<string>();
   private random: () => number;
 
-  constructor(gameState: GameState, randomFn?: () => number) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
-    this.random = randomFn || Math.random;
+    this.random = Math.random;
     this.initializeBasicRecipes();
   }
 

@@ -1,10 +1,10 @@
 import { EventEmitter } from "node:events";
 import type { GameResources, GameState, Zone } from "../../types/game-types";
-import { cloneGameState, createInitialGameState } from "./defaultState";
+import { cloneGameState } from "./defaultState";
 import { StateCache } from "./StateCache";
 import { EntityIndex } from "./EntityIndex";
 import { SharedSpatialIndex } from "./SharedSpatialIndex";
-import { worldGenerationService } from "../../../infrastructure/services/world/worldGenerationService";
+import { WorldGenerationService } from "../../../infrastructure/services/world/worldGenerationService";
 import { BiomeType } from "../../world/generation/types";
 import { logger } from "../../../infrastructure/utils/logger";
 import { WorldResourceSystem } from "../systems/WorldResourceSystem";
@@ -72,6 +72,10 @@ import type {
 import type { NeedsConfig } from "../../types/simulation/needs";
 import type { TaskType, TaskMetadata } from "../../types/simulation/tasks";
 
+import { injectable, inject, optional } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class SimulationRunner {
   private state: GameState;
   private readonly emitter = new EventEmitter();
@@ -93,58 +97,81 @@ export class SimulationRunner {
 
   private lastUpdate = Date.now();
   private timeScale = 1;
-  private worldResourceSystem: WorldResourceSystem;
-  private livingLegendsSystem: LivingLegendsSystem;
-  private lifeCycleSystem: LifeCycleSystem;
-  private needsSystem: NeedsSystem;
-  private readonly _genealogySystem: GenealogySystem;
-  private socialSystem: SocialSystem;
-  private inventorySystem: InventorySystem;
-  private economySystem: EconomySystem;
-  private marketSystem: MarketSystem;
-  private roleSystem: RoleSystem;
-  private aiSystem: AISystem;
-  private resourceReservationSystem: ResourceReservationSystem;
-  private governanceSystem: GovernanceSystem;
-  private divineFavorSystem: DivineFavorSystem;
-  private householdSystem: HouseholdSystem;
-  private buildingSystem: BuildingSystem;
-  private buildingMaintenanceSystem: BuildingMaintenanceSystem;
-  private productionSystem: ProductionSystem;
-  private enhancedCraftingSystem: EnhancedCraftingSystem;
-  private animalSystem: AnimalSystem;
-  private itemGenerationSystem: ItemGenerationSystem;
-  private combatSystem: CombatSystem;
-  private reputationSystem: ReputationSystem;
-  private _researchSystem: ResearchSystem;
-  private _recipeDiscoverySystem: RecipeDiscoverySystem;
-  private questSystem: QuestSystem;
-  private taskSystem: TaskSystem;
-  private tradeSystem: TradeSystem;
-  private marriageSystem: MarriageSystem;
-  private conflictResolutionSystem: ConflictResolutionSystem;
-  private _normsSystem: NormsSystem;
-  private resourceAttractionSystem: ResourceAttractionSystem;
-  private crisisPredictorSystem: CrisisPredictorSystem;
-  private ambientAwarenessSystem: AmbientAwarenessSystem;
-  private cardDialogueSystem: CardDialogueSystem;
-  private emergenceSystem: EmergenceSystem;
-  private timeSystem: TimeSystem;
-  private interactionGameSystem: InteractionGameSystem;
-  private knowledgeNetworkSystem: KnowledgeNetworkSystem;
-  private movementSystem: MovementSystem;
-  private trailSystem: TrailSystem;
-  private appearanceGenerationSystem: AppearanceGenerationSystem;
+
+  @inject(TYPES.WorldResourceSystem)
+  private worldResourceSystem!: WorldResourceSystem;
+  @inject(TYPES.LivingLegendsSystem)
+  private livingLegendsSystem!: LivingLegendsSystem;
+  @inject(TYPES.LifeCycleSystem) private lifeCycleSystem!: LifeCycleSystem;
+  @inject(TYPES.NeedsSystem) private needsSystem!: NeedsSystem;
+  @inject(TYPES.GenealogySystem) private _genealogySystem!: GenealogySystem;
+  @inject(TYPES.SocialSystem) private socialSystem!: SocialSystem;
+  @inject(TYPES.InventorySystem) private inventorySystem!: InventorySystem;
+  @inject(TYPES.EconomySystem) private economySystem!: EconomySystem;
+  @inject(TYPES.MarketSystem) private marketSystem!: MarketSystem;
+  @inject(TYPES.RoleSystem) private roleSystem!: RoleSystem;
+  @inject(TYPES.AISystem) private aiSystem!: AISystem;
+  @inject(TYPES.ResourceReservationSystem)
+  private resourceReservationSystem!: ResourceReservationSystem;
+  @inject(TYPES.GovernanceSystem) private governanceSystem!: GovernanceSystem;
+  @inject(TYPES.DivineFavorSystem)
+  private divineFavorSystem!: DivineFavorSystem;
+  @inject(TYPES.HouseholdSystem) private householdSystem!: HouseholdSystem;
+  @inject(TYPES.BuildingSystem) private buildingSystem!: BuildingSystem;
+  @inject(TYPES.BuildingMaintenanceSystem)
+  private buildingMaintenanceSystem!: BuildingMaintenanceSystem;
+  @inject(TYPES.ProductionSystem) private productionSystem!: ProductionSystem;
+  @inject(TYPES.EnhancedCraftingSystem)
+  private enhancedCraftingSystem!: EnhancedCraftingSystem;
+  @inject(TYPES.AnimalSystem) private animalSystem!: AnimalSystem;
+  @inject(TYPES.ItemGenerationSystem)
+  private itemGenerationSystem!: ItemGenerationSystem;
+  @inject(TYPES.CombatSystem) private combatSystem!: CombatSystem;
+  @inject(TYPES.ReputationSystem) private reputationSystem!: ReputationSystem;
+  @inject(TYPES.ResearchSystem) private _researchSystem!: ResearchSystem;
+  @inject(TYPES.RecipeDiscoverySystem)
+  private _recipeDiscoverySystem!: RecipeDiscoverySystem;
+  @inject(TYPES.QuestSystem) private questSystem!: QuestSystem;
+  @inject(TYPES.TaskSystem) private taskSystem!: TaskSystem;
+  @inject(TYPES.TradeSystem) private tradeSystem!: TradeSystem;
+  @inject(TYPES.MarriageSystem) private marriageSystem!: MarriageSystem;
+  @inject(TYPES.ConflictResolutionSystem)
+  private conflictResolutionSystem!: ConflictResolutionSystem;
+  @inject(TYPES.NormsSystem) private _normsSystem!: NormsSystem;
+  @inject(TYPES.ResourceAttractionSystem)
+  private resourceAttractionSystem!: ResourceAttractionSystem;
+  @inject(TYPES.CrisisPredictorSystem)
+  private crisisPredictorSystem!: CrisisPredictorSystem;
+  @inject(TYPES.WorldGenerationService)
+  private worldGenerationService!: WorldGenerationService;
+  @inject(TYPES.AmbientAwarenessSystem)
+  private ambientAwarenessSystem!: AmbientAwarenessSystem;
+  @inject(TYPES.CardDialogueSystem)
+  private cardDialogueSystem!: CardDialogueSystem;
+  @inject(TYPES.EmergenceSystem) private emergenceSystem!: EmergenceSystem;
+  @inject(TYPES.TimeSystem) private timeSystem!: TimeSystem;
+  @inject(TYPES.InteractionGameSystem)
+  private interactionGameSystem!: InteractionGameSystem;
+  @inject(TYPES.KnowledgeNetworkSystem)
+  private knowledgeNetworkSystem!: KnowledgeNetworkSystem;
+  @inject(TYPES.MovementSystem) private movementSystem!: MovementSystem;
+  @inject(TYPES.TrailSystem) private trailSystem!: TrailSystem;
+  @inject(TYPES.AppearanceGenerationSystem)
+  private appearanceGenerationSystem!: AppearanceGenerationSystem;
+
   private capturedEvents: SimulationEvent[] = [];
   private eventCaptureListener?: (eventName: string, payload: unknown) => void;
   private stateCache: StateCache;
   private entityIndex: EntityIndex;
   private sharedSpatialIndex: SharedSpatialIndex;
 
-  constructor(config?: Partial<SimulationConfig>, initialState?: GameState) {
-    this.state = initialState ?? createInitialGameState();
-    this.tickIntervalMs = config?.tickIntervalMs ?? 200;
-    this.maxCommandQueue = config?.maxCommandQueue ?? 200;
+  constructor(
+    @inject(TYPES.GameState) state: GameState,
+    @inject(TYPES.SimulationConfig) _config: SimulationConfig,
+  ) {
+    this.state = state;
+    this.tickIntervalMs = _config.tickIntervalMs ?? 200;
+    this.maxCommandQueue = _config.maxCommandQueue ?? 200;
     this.stateCache = new StateCache();
     this.entityIndex = new EntityIndex();
     this.entityIndex.rebuild(this.state);
@@ -155,125 +182,34 @@ export class SimulationRunner {
       worldHeight,
       70,
     );
-    this.worldResourceSystem = new WorldResourceSystem(this.state);
-    this.livingLegendsSystem = new LivingLegendsSystem(this.state);
 
-    this.lifeCycleSystem = new LifeCycleSystem(this.state);
-    this.needsSystem = new NeedsSystem(this.state);
-    this._genealogySystem = new GenealogySystem(this.state);
-    this.socialSystem = new SocialSystem(this.state);
-    this.inventorySystem = new InventorySystem(this.state);
-    this.resourceReservationSystem = new ResourceReservationSystem(
-      this.state,
-      this.inventorySystem,
-    );
-    this.divineFavorSystem = new DivineFavorSystem();
-    this.householdSystem = new HouseholdSystem(this.state);
-    this.marriageSystem = new MarriageSystem(this.state);
-    this.roleSystem = new RoleSystem(this.state);
+    // Systems are injected via properties
 
-    this.governanceSystem = new GovernanceSystem(
-      this.state,
-      this.inventorySystem,
-      this.lifeCycleSystem,
-      this.divineFavorSystem,
-      this.resourceReservationSystem,
-    );
-    this.economySystem = new EconomySystem(
-      this.state,
-      this.inventorySystem,
-      this.socialSystem,
-    );
-    this.economySystem.setDependencies({
-      roleSystem: this.roleSystem,
-      divineFavorSystem: this.divineFavorSystem,
-      genealogySystem: this._genealogySystem,
-    });
-    this.marketSystem = new MarketSystem(
-      this.state,
-      this.inventorySystem,
-      this.lifeCycleSystem,
-    );
+    // Connect TaskSystem to BuildingSystem
+    // Note: In constructor, property injections might not be available yet if using some DI containers,
+    // but Inversify populates them before constructor if using @inject in constructor?
+    // Wait, Inversify property injection happens AFTER constructor.
+    // So we need to move initialization logic to a @postConstruct method or init method.
+  }
 
-    this.aiSystem = new AISystem(this.state);
+  @inject(TYPES.SimulationConfig)
+  @optional()
+  private config?: Partial<SimulationConfig>;
 
-    this.buildingMaintenanceSystem = new BuildingMaintenanceSystem(
-      this.state,
-      this.inventorySystem,
-    );
-    this.buildingSystem = new BuildingSystem(
-      this.state,
-      this.resourceReservationSystem,
-    );
-    this.productionSystem = new ProductionSystem(
-      this.state,
-      this.inventorySystem,
-      this.lifeCycleSystem,
-    );
-    this.enhancedCraftingSystem = new EnhancedCraftingSystem(
-      this.state,
-      this.inventorySystem,
-    );
-    this.animalSystem = new AnimalSystem(
-      this.state,
-      undefined,
-      this.worldResourceSystem,
-    );
-    this.itemGenerationSystem = new ItemGenerationSystem(this.state);
-    this.combatSystem = new CombatSystem(
-      this.state,
-      this.inventorySystem,
-      this.lifeCycleSystem,
-      this.socialSystem,
-      undefined,
-      this.animalSystem,
-      this._normsSystem,
-    );
-    this.reputationSystem = new ReputationSystem(this.state);
-    this._researchSystem = new ResearchSystem(this.state);
-    this._recipeDiscoverySystem = new RecipeDiscoverySystem(this.state);
-    this.questSystem = new QuestSystem(this.state);
-    this.taskSystem = new TaskSystem(this.state);
-    // Connect TaskSystem to BuildingSystem after both are created
+  // We need to use @postConstruct to ensure properties are set before we use them
+  // But Inversify's @postConstruct is what we need.
+  // Let's add an initialize method and call it? Or just rely on the fact that we don't use them in constructor except for setup.
+  // Actually, the original code did a lot of setup in constructor (setDependencies).
+  // We should move that to a post-construct init.
+
+  public initialize(): void {
+    // Connect TaskSystem to BuildingSystem
     if (this.buildingSystem) {
       this.buildingSystem.setTaskSystem(this.taskSystem);
     }
-    this.tradeSystem = new TradeSystem(this.state, this.inventorySystem);
-    this.conflictResolutionSystem = new ConflictResolutionSystem(this.state);
-    this._normsSystem = new NormsSystem(this.state);
-    this.resourceAttractionSystem = new ResourceAttractionSystem(
-      this.state,
-      this.needsSystem,
-    );
-    this.crisisPredictorSystem = new CrisisPredictorSystem(
-      this.state,
-      this.needsSystem,
-    );
-    this.ambientAwarenessSystem = new AmbientAwarenessSystem(
-      this.state,
-      this.needsSystem,
-    );
-    this.cardDialogueSystem = new CardDialogueSystem(
-      this.state,
-      this.needsSystem,
-      this.socialSystem,
-      this.questSystem,
-    );
-    this.timeSystem = new TimeSystem(this.state);
-    this.emergenceSystem = new EmergenceSystem(this.state, undefined, {
-      needsSystem: this.needsSystem,
-      socialSystem: this.socialSystem,
-      lifeCycleSystem: this.lifeCycleSystem,
-      economySystem: this.economySystem,
-    });
-    this.interactionGameSystem = new InteractionGameSystem(this.state);
-    this.knowledgeNetworkSystem = new KnowledgeNetworkSystem(this.state);
-    this.movementSystem = new MovementSystem(this.state);
-    this.trailSystem = new TrailSystem(this.state);
-    this.appearanceGenerationSystem = new AppearanceGenerationSystem();
 
     // Distribuir intervalos de actualización para evitar picos de procesamiento
-    this.assignStaggeredPhases();
+    // this.assignStaggeredPhases(); // TODO: Implement staggered updates if needed
 
     this.lifeCycleSystem.setDependencies({
       needsSystem: this.needsSystem,
@@ -314,6 +250,40 @@ export class SimulationRunner {
       reputationSystem: this.reputationSystem,
     });
 
+    this.economySystem.setDependencies({
+      roleSystem: this.roleSystem,
+      divineFavorSystem: this.divineFavorSystem,
+      genealogySystem: this._genealogySystem,
+    });
+
+    this.setupEventListeners();
+
+    if (this.state.agents.length === 0) {
+      this.lifeCycleSystem.spawnAgent({
+        name: "Isa",
+        sex: "female",
+        traits: {
+          cooperation: 0.8,
+          aggression: 0.2,
+          diligence: 0.7,
+          curiosity: 0.9,
+        },
+      });
+
+      this.lifeCycleSystem.spawnAgent({
+        name: "Stev",
+        sex: "male",
+        traits: {
+          cooperation: 0.7,
+          aggression: 0.3,
+          diligence: 0.8,
+          curiosity: 0.8,
+        },
+      });
+    }
+  }
+
+  private setupEventListeners(): void {
     simulationEvents.on(
       GameEventNames.AGENT_ACTION_COMPLETE,
       (data: { agentId: string; action: string }) => {
@@ -527,32 +497,36 @@ export class SimulationRunner {
 
     for (let cy = 0; cy < chunksY; cy++) {
       for (let cx = 0; cx < chunksX; cx++) {
-        const chunkTiles = await worldGenerationService.generateChunk(cx, cy, {
-          width: worldConfig.width,
-          height: worldConfig.height,
-          tileSize: worldConfig.tileSize,
-          seed: 12345,
-          noise: {
-            temperature: {
-              scale: 0.0005,
-              octaves: 4,
-              persistence: 0.5,
-              lacunarity: 2.0,
-            },
-            moisture: {
-              scale: 0.0005,
-              octaves: 3,
-              persistence: 0.6,
-              lacunarity: 2.0,
-            },
-            elevation: {
-              scale: 0.0005,
-              octaves: 5,
-              persistence: 0.4,
-              lacunarity: 2.0,
+        const chunkTiles = await this.worldGenerationService.generateChunk(
+          cx,
+          cy,
+          {
+            width: worldConfig.width,
+            height: worldConfig.height,
+            tileSize: worldConfig.tileSize,
+            seed: 12345,
+            noise: {
+              temperature: {
+                scale: 0.0005,
+                octaves: 4,
+                persistence: 0.5,
+                lacunarity: 2.0,
+              },
+              moisture: {
+                scale: 0.0005,
+                octaves: 3,
+                persistence: 0.6,
+                lacunarity: 2.0,
+              },
+              elevation: {
+                scale: 0.0005,
+                octaves: 5,
+                persistence: 0.4,
+                lacunarity: 2.0,
+              },
             },
           },
-        });
+        );
 
         for (const row of chunkTiles) {
           for (const tile of row) {
@@ -593,7 +567,6 @@ export class SimulationRunner {
       biomeMap,
     );
 
-    // Generate functional zones based on biomes
     this.generateFunctionalZones(worldConfig, biomeMap);
   }
 
@@ -609,11 +582,10 @@ export class SimulationRunner {
       this.state.zones = [];
     }
 
-    const ZONE_SPACING = 300; // Distance between zones
-    const ZONE_SIZE = 120; // Zone size
+    const ZONE_SPACING = 300;
+    const ZONE_SIZE = 120;
     const zones: Zone[] = [];
 
-    // Generate zones in a grid pattern
     for (let x = ZONE_SPACING; x < worldConfig.width; x += ZONE_SPACING) {
       for (let y = ZONE_SPACING; y < worldConfig.height; y += ZONE_SPACING) {
         const tileX = Math.floor(x / worldConfig.tileSize);
@@ -627,10 +599,8 @@ export class SimulationRunner {
         ) {
           const biome = biomeMap[tileY][tileX];
 
-          // Skip water biomes
           if (biome === "ocean" || biome === "lake") continue;
 
-          // Determine zone type based on biome and position
           const zoneType = this.determineZoneType(biome, x, y, worldConfig);
           if (!zoneType) continue;
 
@@ -655,7 +625,6 @@ export class SimulationRunner {
       }
     }
 
-    // Add zones to state
     this.state.zones.push(...zones);
     logger.info(`Generated ${zones.length} functional zones`);
   }
@@ -666,14 +635,12 @@ export class SimulationRunner {
     y: number,
     worldConfig: { width: number; height: number },
   ): string | null {
-    // Use deterministic randomness based on position
     const seed = x * 1000 + y;
-    const rng = () => {
+    const rng = (): number => {
       const x = Math.sin(seed) * 10000;
       return x - Math.floor(x);
     };
 
-    // Center areas are more likely to be social/work zones
     const centerX = worldConfig.width / 2;
     const centerY = worldConfig.height / 2;
     const distFromCenter = Math.hypot(x - centerX, y - centerY);
@@ -683,17 +650,14 @@ export class SimulationRunner {
       return "social";
     }
 
-    // Forest biomes favor rest zones
     if (biome === "forest" && rng() < 0.4) {
       return "rest";
     }
 
-    // Grassland biomes favor work zones
     if (biome === "grassland" && rng() < 0.3) {
       return "work";
     }
 
-    // Default distribution
     const rand = rng();
     if (rand < 0.25) return "rest";
     if (rand < 0.5) return "work";
@@ -771,7 +735,6 @@ export class SimulationRunner {
     const events =
       this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
 
-    // Usar cache inteligente para solo clonar secciones que cambiaron
     const snapshotState = this.stateCache.getSnapshot(
       this.state,
       this.tickCounter,
@@ -804,7 +767,6 @@ export class SimulationRunner {
    * Mantenido para compatibilidad
    */
   getSnapshot(): SimulationSnapshot {
-    // Por defecto, retornar snapshot de tick (más eficiente)
     return this.getTickSnapshot();
   }
 
@@ -826,7 +788,6 @@ export class SimulationRunner {
 
     this.advanceSimulation(scaledDelta);
 
-    // Fase 1: Sistemas independientes que pueden ejecutarse en paralelo
     await Promise.all([
       Promise.resolve(this.worldResourceSystem.update(scaledDelta)),
       Promise.resolve(this.animalSystem.update(scaledDelta)),
@@ -835,6 +796,9 @@ export class SimulationRunner {
       Promise.resolve(this.itemGenerationSystem.update(scaledDelta)),
       Promise.resolve(this.reputationSystem.update()),
       Promise.resolve(this._researchSystem.update()),
+      Promise.resolve(this.emergenceSystem.update(scaledDelta)),
+      Promise.resolve(this.knowledgeNetworkSystem.update(scaledDelta)),
+      Promise.resolve(this.productionSystem.update(scaledDelta)),
       Promise.resolve(this._recipeDiscoverySystem.update()),
       Promise.resolve(this._normsSystem.update()),
     ]);
@@ -855,7 +819,6 @@ export class SimulationRunner {
     ]);
     dirtySections.push("agents", "entities", "inventory");
 
-    // Fase 3: Sistemas sociales y económicos (pueden ejecutarse en paralelo)
     await Promise.all([
       Promise.resolve(this.needsSystem.update(scaledDelta)),
       Promise.resolve(this.socialSystem.update(scaledDelta)),
@@ -864,12 +827,10 @@ export class SimulationRunner {
     ]);
     dirtySections.push("socialGraph", "market");
 
-    // Fase 4: Sistemas de roles y AI (AI depende de needs/social)
     this.roleSystem.update(scaledDelta);
     this.aiSystem.update(scaledDelta);
     dirtySections.push("agents");
 
-    // Fase 5: Sistemas de construcción y producción (pueden ejecutarse en paralelo)
     await Promise.all([
       Promise.resolve(this.divineFavorSystem.update(scaledDelta)),
       Promise.resolve(this.governanceSystem.update(scaledDelta)),
@@ -881,12 +842,10 @@ export class SimulationRunner {
     ]);
     dirtySections.push("zones");
 
-    // Fase 6: Sistemas de combate y tareas
     this.combatSystem.update(scaledDelta);
-    this.taskSystem.update(scaledDelta);
+    this.taskSystem.update();
     dirtySections.push("entities", "tasks");
 
-    // Fase 7: Sistemas de interacción y emergencia (pueden ejecutarse en paralelo)
     await Promise.all([
       Promise.resolve(this.questSystem.update()),
       Promise.resolve(this.tradeSystem.update()),
@@ -909,11 +868,9 @@ export class SimulationRunner {
       "knowledgeGraph",
     );
 
-    // Fase 8: Sistema de movimiento (debe ejecutarse al final para actualizar posiciones)
     this.movementSystem.update(scaledDelta);
     dirtySections.push("entities");
 
-    // Marcar todas las secciones afectadas como dirty
     this.stateCache.markDirtyMultiple(dirtySections);
 
     this.tickCounter += 1;
@@ -1446,5 +1403,29 @@ export class SimulationRunner {
       this._researchSystem.initializeLineage(lineageId);
     }
     return lineageId;
+  }
+
+  public getEntityDetails(entityId: string): any {
+    const entity = this.state.entities.find((e) => e.id === entityId);
+    if (!entity) return null;
+
+    const needs = this.needsSystem.getEntityNeeds(entityId);
+    const role = this.roleSystem.getAgentRole(entityId);
+    const inventory = this.inventorySystem.getAgentInventory(entityId);
+    const social = this.socialSystem.getSocialConnections(entityId);
+
+    return {
+      entity,
+      needs,
+      role,
+      inventory,
+      social,
+    };
+  }
+
+  public getPlayerId(): string {
+    // Return the ID of the first agent as the player for now
+    // In a real multi-player scenario, this would depend on the session/connection
+    return this.state.agents[0]?.id || "";
   }
 }

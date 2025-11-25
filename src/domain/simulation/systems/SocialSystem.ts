@@ -61,7 +61,6 @@ export class SocialSystem {
     this.updateProximity(dt);
     this.decayEdges(dt);
 
-    // Recompute groups periodically (every ~1s)
     if (this.lastUpdate > 1000) {
       this.recomputeGroups();
       this.lastUpdate = 0;
@@ -74,7 +73,6 @@ export class SocialSystem {
     this.edges.forEach((neighbors, aId) => {
       neighbors.forEach((affinity, bId) => {
         if (affinity !== 0) {
-          // Check for permanent bonds
           const bondType =
             this.permanentBonds.get(aId)?.get(bId) ||
             this.permanentBonds.get(bId)?.get(aId);
@@ -137,7 +135,6 @@ export class SocialSystem {
     const key = this.pairKey(aId, bId);
     this.truces.set(key, Date.now() + durationMs);
 
-    // Reset negative affinity slightly towards neutral
     const current = this.getAffinityBetween(aId, bId);
     if (current < 0) {
       this.addEdge(aId, bId, Math.abs(current) * 0.5);
@@ -192,7 +189,6 @@ export class SocialSystem {
     this.permanentBonds.delete(agentId);
     this.permanentBonds.forEach((bonds) => bonds.delete(agentId));
 
-    // Remove from truces
     for (const key of this.truces.keys()) {
       if (key.includes(agentId)) {
         this.truces.delete(key);
@@ -235,7 +231,6 @@ export class SocialSystem {
     this.permanentBonds.get(aId)!.set(bId, type);
     this.permanentBonds.get(bId)!.set(aId, type);
 
-    // Boost affinity
     const current = this.getAffinityBetween(aId, bId);
     if (current < 0.5) {
       this.addEdge(aId, bId, 0.5 - current);
@@ -252,7 +247,6 @@ export class SocialSystem {
   }
 
   public addHeatAt(pos: { x: number; y: number }, amount: number): void {
-    // Simple zone-based heat map
     const zone = this.gameState.zones?.find(
       (z) =>
         pos.x >= z.bounds.x &&
@@ -299,7 +293,6 @@ export class SocialSystem {
       }
 
       if (groupMembers.length > 1) {
-        // Calculate cohesion and leader
         let totalAffinity = 0;
         let edgeCount = 0;
         let bestLeader = { id: groupMembers[0], score: -Infinity };
@@ -347,5 +340,16 @@ export class SocialSystem {
 
   public getGroups(): SocialGroup[] {
     return this.groups;
+  }
+
+  public getSocialConnections(agentId: string): Record<string, number> {
+    const connections: Record<string, number> = {};
+    const neighbors = this.edges.get(agentId);
+    if (neighbors) {
+      for (const [otherId, affinity] of neighbors.entries()) {
+        connections[otherId] = affinity;
+      }
+    }
+    return connections;
   }
 }

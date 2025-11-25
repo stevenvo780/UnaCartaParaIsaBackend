@@ -20,14 +20,12 @@ export class EntityIndex {
     this.agentIndex.clear();
     this.entityIndex.clear();
 
-    // Indexar agentes
     if (state.agents) {
       for (const agent of state.agents) {
         this.agentIndex.set(agent.id, agent);
       }
     }
 
-    // Indexar entidades
     if (state.entities) {
       for (const entity of state.entities) {
         this.entityIndex.set(entity.id, entity);

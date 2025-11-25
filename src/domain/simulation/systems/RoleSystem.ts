@@ -318,7 +318,6 @@ export class RoleSystem extends EventEmitter {
       `👷 Rol asignado: ${agent.name || agent.id} → ${selectedRole.name}`,
     );
 
-    // Emitir evento de asignación de rol
     simulationEvents.emit(GameEventNames.ROLE_ASSIGNED, {
       agentId: agent.id,
       roleType: selectedRole.type,
@@ -440,7 +439,6 @@ export class RoleSystem extends EventEmitter {
 
     logger.info(`👷 Rol reasignado: ${agentId} → ${roleDef.name}`);
 
-    // Emitir evento de reasignación de rol
     simulationEvents.emit(GameEventNames.ROLE_REASSIGNED, {
       agentId,
       previousRole: existing?.roleType,

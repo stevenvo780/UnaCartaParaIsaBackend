@@ -7,6 +7,10 @@ import {
 } from "../../types/simulation/norms";
 import { simulationEvents, GameEventNames } from "../core/events";
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class NormsSystem {
   private gameState: GameState;
   private violations: NormViolation[] = [];
@@ -15,7 +19,7 @@ export class NormsSystem {
   private readonly MAX_HISTORY = 200;
   private firstViolationTime: number | null = null;
 
-  constructor(gameState: GameState) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
   }
 
@@ -68,7 +72,6 @@ export class NormsSystem {
       this.sanctionHistory.shift();
     }
 
-    // Emitir eventos de violación y sanción
     simulationEvents.emit(GameEventNames.NORM_VIOLATED, {
       violationId: violation.id,
       attackerId,

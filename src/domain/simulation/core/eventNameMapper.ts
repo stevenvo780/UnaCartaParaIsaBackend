@@ -3,14 +3,12 @@
  * This ensures compatibility between backend and frontend event systems
  */
 export const eventNameMapper: Record<string, string> = {
-  // Combat events
   COMBAT_KILL: "combat:kill",
   COMBAT_HIT: "combat:hit",
   COMBAT_ENGAGED: "combat:engaged",
   COMBAT_WEAPON_EQUIPPED: "combat:weapon:equipped",
   COMBAT_WEAPON_CRAFTED: "combat:weapon:crafted",
 
-  // Agent events
   AGENT_BIRTH: "agent:birth",
   AGENT_DEATH: "agent:death",
   AGENT_AGED: "agent:aged",
@@ -19,51 +17,42 @@ export const eventNameMapper: Record<string, string> = {
   AGENT_ACTION_COMMANDED: "agent:action:commanded",
   AGENT_GOAL_CHANGED: "agent:goal:changed",
 
-  // Building events
   BUILDING_CONSTRUCTED: "building:constructed",
   BUILDING_DAMAGED: "building:damaged",
   BUILDING_REPAIRED: "building:repaired",
   BUILDING_CONSTRUCTION_STARTED: "building:construction:started",
 
-  // Resource events
   RESOURCE_GATHERED: "resource:gathered",
   RESOURCE_SPAWNED: "resource:spawned",
   RESOURCE_STATE_CHANGE: "resource:state:change",
 
-  // Animal events
   ANIMAL_SPAWNED: "animal:spawned",
   ANIMAL_DIED: "animal:died",
   ANIMAL_HUNTED: "animal:hunted",
   ANIMAL_CONSUMED_RESOURCE: "animal:consumed:resource",
   ANIMAL_REPRODUCED: "animal:reproduced",
 
-  // Social events
   SOCIAL_RELATION_CHANGED: "social:relation:changed",
   SOCIAL_TRUCE_IMPOSED: "social:truce:imposed",
   SOCIAL_TRUCE_EXPIRED: "social:truce:expired",
   SOCIAL_RALLY: "social:rally",
   SOCIAL_GROUPS_UPDATE: "social:groups:update",
 
-  // Movement events
   MOVEMENT_ARRIVED_AT_ZONE: "movement:arrived:zone",
   MOVEMENT_ACTIVITY_COMPLETED: "movement:activity:completed",
   MOVEMENT_ACTIVITY_STARTED: "movement:activity:started",
 
-  // Dialogue events
   DIALOGUE_SHOW_CARD: "dialogue:card:show",
   DIALOGUE_CARD_EXPIRED: "dialogue:card:expired",
   DIALOGUE_CARD_RESPONDED: "dialogue:card:responded",
 
-  // Appearance events
   APPEARANCE_GENERATED: "appearance:generated",
   APPEARANCE_UPDATED: "appearance:updated",
 
-  // Trade events
   TRADE_OFFER_CREATED: "trade:offer:created",
   TRADE_COMPLETED: "trade:completed",
   TRADE_REJECTED: "trade:rejected",
 
-  // Marriage events
   MARRIAGE_PROPOSED: "marriage:proposed",
   MARRIAGE_ACCEPTED: "marriage:accepted",
   MARRIAGE_REJECTED: "marriage:rejected",
@@ -74,15 +63,12 @@ export const eventNameMapper: Record<string, string> = {
   DIVORCE_COMPLETED: "divorce:completed",
   WIDOWHOOD_REGISTERED: "widowhood:registered",
 
-  // Economy events
   SALARY_PAID: "economy:salary:paid",
   ECONOMY_RESERVATIONS_UPDATE: "economy:reservations:update",
 
-  // Crisis events
   CRISIS_PREDICTION: "crisis:prediction",
   CRISIS_IMMEDIATE_WARNING: "crisis:immediate:warning",
 
-  // Other events
   CHUNK_RENDERED: "chunk:rendered",
   TIME_CHANGED: "time:changed",
   TIME_WEATHER_CHANGED: "time:weather:changed",

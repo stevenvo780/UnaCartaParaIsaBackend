@@ -110,7 +110,7 @@ export class NeedsSystem extends EventEmitter {
     }
   }
 
-  private updateTraditional(dtSeconds: number, now: number): void {
+  private updateTraditional(dtSeconds: number, _now: number): void {
     for (const [entityId, needs] of this.entityNeeds.entries()) {
       this.applyNeedDecay(needs, dtSeconds, entityId);
       this.handleZoneBenefits(entityId, needs, dtSeconds);
@@ -130,7 +130,7 @@ export class NeedsSystem extends EventEmitter {
     }
   }
 
-  private updateBatch(dtSeconds: number, now: number): void {
+  private updateBatch(dtSeconds: number, _now: number): void {
     this.batchProcessor.rebuildBuffers(this.entityNeeds);
 
     const entityCount = this.entityNeeds.size;
@@ -138,9 +138,7 @@ export class NeedsSystem extends EventEmitter {
 
     const ageMultipliers = new Float32Array(entityCount);
     const divineModifiers = new Float32Array(entityCount);
-    const decayRates = new Float32Array(7); // 7 necesidades
-
-    // Llenar tasas de decaimiento base
+    const decayRates = new Float32Array(7);
     decayRates[0] = this.config.decayRates.hunger;
     decayRates[1] = this.config.decayRates.thirst;
     decayRates[2] = this.config.decayRates.energy;

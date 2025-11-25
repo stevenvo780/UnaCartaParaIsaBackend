@@ -21,7 +21,6 @@ export function evaluateBuildingContributionGoals(
   const goals: AIGoal[] = [];
   const now = Date.now();
 
-  // Find zones under construction
   const constructionZones =
     deps.gameState.zones?.filter(
       (z) =>
@@ -51,7 +50,6 @@ export function evaluateBuildingContributionGoals(
       const cy = zone.bounds.y + zone.bounds.height / 2;
       const dist = Math.hypot(cx - myPos.x, cy - myPos.y);
 
-      // Check if zone needs resources
       const buildingType =
         zone.metadata &&
         typeof zone.metadata === "object" &&

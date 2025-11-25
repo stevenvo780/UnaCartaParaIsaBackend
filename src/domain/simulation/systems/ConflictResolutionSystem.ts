@@ -26,6 +26,10 @@ const CONFLICT_CONFIG = {
   },
 } as const;
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class ConflictResolutionSystem {
   private gameState: GameState;
   private activeCards = new Map<string, { aId: string; bId: string }>();
@@ -34,7 +38,7 @@ export class ConflictResolutionSystem {
   private readonly MAX_HISTORY = 200;
   private firstConflictTime: number | null = null;
 
-  constructor(gameState: GameState) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
   }
 
@@ -97,7 +101,6 @@ export class ConflictResolutionSystem {
       this.mediationAttempts.shift();
     }
 
-    // Emitir evento de tregua propuesta
     simulationEvents.emit(GameEventNames.CONFLICT_TRUCE_PROPOSED, {
       cardId,
       attackerId: data.attackerId,
@@ -157,7 +160,6 @@ export class ConflictResolutionSystem {
             : "rejected";
     }
 
-    // Emitir eventos según la resolución
     if (choice === "truce_accept") {
       simulationEvents.emit(GameEventNames.CONFLICT_TRUCE_ACCEPTED, {
         cardId,
@@ -219,9 +221,6 @@ export class ConflictResolutionSystem {
     this.gameState.conflicts.history = this.getConflictHistory(50);
     this.gameState.conflicts.stats = this.getConflictStats();
 
-    // Note: ConflictResolutionSystem manages truces for active conflict mediation,
-    // while NormsSystem manages truces for norm violations. Both write to gameState.norms.truces
-    // but serve different purposes: conflict mediation vs. sanction enforcement.
     if (!this.gameState.norms) {
       this.gameState.norms = {
         violations: [],
@@ -237,7 +236,6 @@ export class ConflictResolutionSystem {
         truces: [],
       };
     }
-    // Sync active conflict truces to norms state for UI display
     this.gameState.norms.truces = activeConflicts.map(
       (conflict: ActiveConflict) => ({
         cardId: conflict.cardId,

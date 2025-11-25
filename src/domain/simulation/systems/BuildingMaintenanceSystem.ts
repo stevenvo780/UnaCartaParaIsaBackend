@@ -46,7 +46,8 @@ export class BuildingMaintenanceSystem {
 
   constructor(
     @inject(TYPES.GameState) private readonly state: GameState,
-    @inject(TYPES.InventorySystem) private readonly inventorySystem: InventorySystem,
+    @inject(TYPES.InventorySystem)
+    private readonly inventorySystem: InventorySystem,
   ) {
     this.config = DEFAULT_CONFIG;
     this.now = () => Date.now();

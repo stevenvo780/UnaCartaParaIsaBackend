@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { worldGenerationService } from "../services/world/worldGenerationService.js";
+
 import { logger } from "../utils/logger.js";
 
 interface ChunkRequest {
@@ -16,9 +16,16 @@ const DEFAULT_TILE_SIZE = 64;
 const MAX_CHUNK_SIZE = 1000;
 const MIN_CHUNK_SIZE = 16;
 
+import { container } from "../../config/container";
+import { TYPES } from "../../config/Types";
+import { WorldGenerationService } from "../services/world/worldGenerationService";
+
 export class WorldController {
   async generateChunk(req: Request, res: Response): Promise<void> {
     try {
+      const worldGenerationService = container.get<WorldGenerationService>(
+        TYPES.WorldGenerationService,
+      );
       const body = req.body as ChunkRequest;
       const { x, y, seed, width, height, tileSize } = body;
 

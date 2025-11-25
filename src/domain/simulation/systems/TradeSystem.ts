@@ -3,6 +3,10 @@ import { TradeOffer, TradeRecord } from "../../types/simulation/trade";
 import type { InventorySystem } from "./InventorySystem";
 import { simulationEvents, GameEventNames } from "../core/events";
 
+import { injectable, inject, optional } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class TradeSystem {
   private gameState: GameState;
   private activeOffers = new Map<string, TradeOffer>();
@@ -14,7 +18,12 @@ export class TradeSystem {
   private readonly BACKGROUND_TRADE_PROBABILITY = 0.1;
   private _lastBackgroundTrade = 0;
 
-  constructor(gameState: GameState, inventorySystem?: InventorySystem) {
+  constructor(
+    @inject(TYPES.GameState) gameState: GameState,
+    @inject(TYPES.InventorySystem)
+    @optional()
+    inventorySystem?: InventorySystem,
+  ) {
     this.gameState = gameState;
     this.inventorySystem = inventorySystem;
   }

@@ -1,7 +1,6 @@
 import { SpatialGrid } from "../../../utils/SpatialGrid";
 import type { SimulationEntity } from "./schema";
 import type { Animal } from "../../types/simulation/animals";
-import type { GameState } from "../../types/game-types";
 
 export type EntityType = "agent" | "animal" | "all";
 
@@ -14,10 +13,8 @@ export class SharedSpatialIndex {
   private entityPositions = new Map<string, { x: number; y: number }>();
   private entityTypes = new Map<string, EntityType>();
   private dirty = true;
-  private readonly cellSize: number;
 
   constructor(worldWidth: number, worldHeight: number, cellSize: number = 70) {
-    this.cellSize = cellSize;
     this.grid = new SpatialGrid(worldWidth, worldHeight, cellSize);
   }
 
@@ -41,7 +38,6 @@ export class SharedSpatialIndex {
     this.entityPositions.clear();
     this.entityTypes.clear();
 
-    // Indexar entidades
     for (const entity of entities) {
       if (entity.isDead || !entity.position) continue;
       this.grid.insert(entity.id, entity.position);
@@ -49,7 +45,6 @@ export class SharedSpatialIndex {
       this.entityTypes.set(entity.id, "agent");
     }
 
-    // Indexar animales
     for (const [animalId, animal] of animals) {
       if (animal.isDead || !animal.position) continue;
       this.grid.insert(animalId, animal.position);

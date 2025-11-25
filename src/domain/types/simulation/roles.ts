@@ -5,6 +5,8 @@ export type RoleType =
   | "farmer"
   | "gatherer"
   | "guard"
+  | "craftsman"
+  | "leader"
   | "idle";
 
 export type WorkShift = "morning" | "afternoon" | "evening" | "night" | "rest";

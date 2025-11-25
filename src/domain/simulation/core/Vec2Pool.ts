@@ -40,5 +40,4 @@ export class Vec2Pool {
   }
 }
 
-// Instancia singleton para uso global
 export const vec2Pool = new Vec2Pool();

@@ -90,12 +90,16 @@ const QUEST_CATALOG: Quest[] = [
   },
 ];
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class QuestSystem {
   private gameState: GameState;
   private questProgress: QuestProgress;
   private gameStartTime: number;
 
-  constructor(gameState: GameState) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
     this.gameStartTime = Date.now();
 
@@ -197,7 +201,6 @@ export class QuestSystem {
       timestamp: Date.now(),
     };
 
-    // Emitir evento al sistema de eventos
     simulationEvents.emit(GameEventNames.QUEST_STARTED, {
       questId,
       questTitle: quest.title,
@@ -248,7 +251,6 @@ export class QuestSystem {
       timestamp: Date.now(),
     };
 
-    // Emitir evento al sistema de eventos
     simulationEvents.emit(GameEventNames.QUEST_COMPLETED, {
       questId,
       questTitle: quest.title,
@@ -327,7 +329,6 @@ export class QuestSystem {
       timestamp: Date.now(),
     };
 
-    // Emitir evento al sistema de eventos
     simulationEvents.emit(GameEventNames.QUEST_FAILED, {
       questId,
       questTitle: quest.title,

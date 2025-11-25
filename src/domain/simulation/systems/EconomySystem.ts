@@ -65,17 +65,15 @@ export class EconomySystem {
     this.genealogySystem = deps.genealogySystem;
   }
 
-  public update(delta: number): void {
+  public update(_delta: number): void {
     const now = Date.now();
 
-    // Periodic updates
     if (now - this.lastUpdate >= this.UPDATE_INTERVAL_MS) {
       this.cleanupOldResiduals();
       this.updateEconomyStats();
       this.lastUpdate = now;
     }
 
-    // Periodic salary payments
     if (now - this.lastSalaryPayment >= this.SALARY_INTERVAL_MS) {
       this.processSalaryPayments();
       this.lastSalaryPayment = now;
@@ -83,16 +81,12 @@ export class EconomySystem {
   }
 
   private cleanupOldResiduals(): void {
-    // Clean residuals older than 1 hour
-    const maxAge = 3600000;
-    const now = Date.now();
+    const _maxAge = 3600000;
+    const _now = Date.now();
 
-    // Since we don't track timestamps per residual, we'll just limit the map size
     if (this.yieldResiduals.size > 100) {
-      // Keep only the most recent entries (simplified cleanup)
       const entries = Array.from(this.yieldResiduals.entries());
       this.yieldResiduals.clear();
-      // Keep last 50 entries
       entries.slice(-50).forEach(([key, value]) => {
         this.yieldResiduals.set(key, value);
       });
@@ -120,7 +114,6 @@ export class EconomySystem {
       };
     }
 
-    // Count active workers (agents with roles)
     if (this.roleSystem && this.state.agents) {
       const activeWorkers = this.state.agents.filter((agent) => {
         const role = this.roleSystem?.getAgentRole(agent.id);
@@ -129,7 +122,6 @@ export class EconomySystem {
       this.state.economy.activeWorkers = activeWorkers;
     }
 
-    // Emit economy update event
     simulationEvents.emit(GameEventNames.ECONOMY_RESERVATIONS_UPDATE, {
       economy: this.state.economy,
       timestamp: Date.now(),
@@ -163,7 +155,6 @@ export class EconomySystem {
           break;
       }
 
-      // Apply divine favor bonus if available
       if (this.divineFavorSystem && this.genealogySystem) {
         const ancestor = this.genealogySystem.getAncestor(agent.id);
         const lineageId = ancestor?.lineageId || "";
@@ -258,7 +249,6 @@ export class EconomySystem {
       }
     }
 
-    // Divine/Genealogy Bonus
     if (this.divineFavorSystem && this.genealogySystem) {
       const ancestor = this.genealogySystem.getAncestor(agentId);
       const lineageId = ancestor?.lineageId || "";
@@ -303,10 +293,7 @@ export class EconomySystem {
     const workerGroup = this.socialSystem.getGroupForAgent(agentId);
 
     if (workerGroup && zone.bounds) {
-      // Simplified check: count members in same zone (assuming they are working if in zone)
-      // In a real implementation, we would check their activity
       const agentsInZone = this.state.entities.filter((e) => {
-        // Simple bounds check
         if (!e.position) return false;
         return (
           e.position.x >= zone.bounds.x &&

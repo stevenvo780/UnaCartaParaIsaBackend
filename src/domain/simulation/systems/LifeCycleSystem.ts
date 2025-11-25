@@ -304,7 +304,6 @@ export class LifeCycleSystem extends EventEmitter {
       this._movementSystem?.initializeEntityMovement(id, profile.position);
     }
 
-    // Registrar nacimiento en GenealogySystem directamente
     if (this._genealogySystem) {
       this._genealogySystem.registerBirth(
         profile,

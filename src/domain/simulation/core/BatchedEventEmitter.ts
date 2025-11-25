@@ -13,7 +13,6 @@ export class BatchedEventEmitter extends EventEmitter {
    */
   public queueEvent(name: string, payload: unknown): void {
     if (!this.batchingEnabled) {
-      // Si el batching está deshabilitado, emitir inmediatamente
       this.emit(name, payload);
       return;
     }
@@ -29,7 +28,6 @@ export class BatchedEventEmitter extends EventEmitter {
 
     const batch = this.eventQueue.splice(0);
 
-    // Procesar eventos de forma asíncrona para no bloquear el tick
     setImmediate(() => {
       for (const event of batch) {
         this.emit(event.name, event.payload);

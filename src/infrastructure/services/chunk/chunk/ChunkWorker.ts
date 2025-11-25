@@ -24,7 +24,10 @@ interface ChunkWorkerResponse {
   };
 }
 
-const generator = new WorldGenerationService();
+import { VoronoiGenerator } from "../../../../domain/world/generation/VoronoiGenerator";
+
+const voronoiGenerator = new VoronoiGenerator();
+const generator = new WorldGenerationService(voronoiGenerator);
 
 parentPort?.on("message", async (message: ChunkWorkerRequest) => {
   if (message.type !== "generate") return;

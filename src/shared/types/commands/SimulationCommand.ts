@@ -236,3 +236,8 @@ export interface SimulationConfig {
   tickIntervalMs: number;
   maxCommandQueue: number;
 }
+
+export type SimulationRequest =
+  | { type: "REQUEST_FULL_STATE"; requestId: string }
+  | { type: "REQUEST_ENTITY_DETAILS"; requestId: string; entityId: string }
+  | { type: "REQUEST_PLAYER_ID"; requestId: string };

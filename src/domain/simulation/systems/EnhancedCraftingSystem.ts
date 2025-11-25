@@ -50,7 +50,8 @@ export class EnhancedCraftingSystem {
 
   constructor(
     @inject(TYPES.GameState) private readonly state: GameState,
-    @inject(TYPES.InventorySystem) private readonly inventorySystem: InventorySystem,
+    @inject(TYPES.InventorySystem)
+    private readonly inventorySystem: InventorySystem,
   ) {
     this.config = DEFAULT_CONFIG;
     this.now = () => Date.now();
@@ -185,7 +186,6 @@ export class EnhancedCraftingSystem {
   }
 
   private mapToResourceKey(itemId: string): ResourceType | null {
-    // Mapeo directo
     if (
       itemId === "wood" ||
       itemId === "stone" ||
@@ -194,13 +194,9 @@ export class EnhancedCraftingSystem {
     ) {
       return itemId;
     }
-    // Mapeo de recursos procesados a recursos base
     if (itemId === "wood_log") {
       return "wood";
     }
-    // fiber no está en el inventario básico, así que retornamos null
-    // Esto significa que no podemos craftar recetas que requieren fiber
-    // hasta que se extienda el sistema de inventario
     return null;
   }
 

@@ -50,6 +50,10 @@ interface ActiveCardEntry {
   expiresAt: number;
 }
 
+import { injectable, inject, optional } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class CardDialogueSystem {
   private readonly cardTemplates: CardTemplate[] = this.createTemplates();
   private activeCards = new Map<string, ActiveCardEntry>();
@@ -69,9 +73,13 @@ export class CardDialogueSystem {
   private recentEvents: string[] = [];
 
   constructor(
-    private readonly gameState: GameState,
-    private readonly needsSystem: NeedsSystem,
+    @inject(TYPES.GameState) private readonly gameState: GameState,
+    @inject(TYPES.NeedsSystem) private readonly needsSystem: NeedsSystem,
+    @inject(TYPES.SocialSystem)
+    @optional()
     private readonly socialSystem?: SocialSystem,
+    @inject(TYPES.QuestSystem)
+    @optional()
     private readonly questSystem?: QuestSystem,
   ) {
     this.setupEventListeners();

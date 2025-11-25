@@ -2,8 +2,20 @@ import "dotenv/config";
 import { WebSocketServer, WebSocket } from "ws";
 import app from "./app";
 import { CONFIG } from "../config/config";
-import { simulationRunner } from "../domain/simulation/core/index";
-import type { SimulationCommand } from "../shared/types/commands/SimulationCommand";
+import { container } from "../config/container";
+import { TYPES } from "../config/Types";
+import { SimulationRunner } from "../domain/simulation/core/SimulationRunner";
+
+// Resolve SimulationRunner from container
+const simulationRunner = container.get<SimulationRunner>(
+  TYPES.SimulationRunner,
+);
+simulationRunner.initialize();
+simulationRunner.start();
+import type {
+  SimulationCommand,
+  SimulationRequest,
+} from "../shared/types/commands/SimulationCommand";
 import { ChunkStreamServer } from "../infrastructure/services/chunk/chunk/ChunkStreamServer";
 import { logger } from "../infrastructure/utils/logger.js";
 
@@ -99,8 +111,39 @@ simulationWss.on("connection", (ws: WebSocket) => {
         return;
       }
 
-      const command = parsed as SimulationCommand;
-      const accepted = simulationRunner.enqueueCommand(command);
+      const command = parsed as SimulationCommand | SimulationRequest;
+
+      if (command.type.startsWith("REQUEST_")) {
+        const request = command as SimulationRequest;
+        let responsePayload: any = null;
+
+        switch (request.type) {
+          case "REQUEST_FULL_STATE":
+            responsePayload = simulationRunner.getInitialSnapshot();
+            break;
+          case "REQUEST_ENTITY_DETAILS":
+            responsePayload = simulationRunner.getEntityDetails(
+              request.entityId,
+            );
+            break;
+          case "REQUEST_PLAYER_ID":
+            responsePayload = { playerId: simulationRunner.getPlayerId() };
+            break;
+        }
+
+        ws.send(
+          JSON.stringify({
+            type: "RESPONSE",
+            requestId: request.requestId,
+            payload: responsePayload,
+          }),
+        );
+        return;
+      }
+
+      const accepted = simulationRunner.enqueueCommand(
+        command as SimulationCommand,
+      );
       if (!accepted) {
         ws.send(
           JSON.stringify({ type: "ERROR", message: "Command queue full" }),

@@ -43,9 +43,6 @@ export function evaluateCriticalNeeds(
   const now = Date.now();
   const timeOfDay = deps.getCurrentTimeOfDay?.() || "midday";
 
-  // Adjust thresholds based on time of day
-  // At night, energy needs are more critical
-  // During day, hunger/thirst are more critical
   let hungerThreshold = 45;
   const thirstThreshold = 40;
   let energyThreshold = 35;

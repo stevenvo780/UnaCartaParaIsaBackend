@@ -23,12 +23,16 @@ const RESOURCE_MAPPING: Record<NeedType, string> = {
   hygiene: "water",
 };
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class ResourceAttractionSystem {
   private snapshot: ResourceAttractionSnapshot;
 
   constructor(
-    private readonly gameState: GameState,
-    private readonly needsSystem: NeedsSystem,
+    @inject(TYPES.GameState) private readonly gameState: GameState,
+    @inject(TYPES.NeedsSystem) private readonly needsSystem: NeedsSystem,
   ) {
     this.snapshot = {
       updatedAt: Date.now(),

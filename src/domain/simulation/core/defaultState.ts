@@ -73,12 +73,9 @@ export function createInitialGameState(): GameState {
  * Clona el estado completo usando structuredClone (2-3x más rápido que JSON.parse/stringify)
  */
 export function cloneGameState(state: GameState): GameState {
-  // structuredClone es nativo y mucho más rápido que JSON serialization
-  // Soporta Map, Set, Date, etc. que JSON no puede manejar
   try {
     return structuredClone(state);
   } catch (err) {
-    // Fallback a JSON si structuredClone falla (puede pasar con objetos muy complejos)
     // eslint-disable-next-line no-console
     console.warn("structuredClone failed, falling back to JSON:", err);
     return JSON.parse(JSON.stringify(state)) as GameState;
@@ -190,7 +187,6 @@ export function cloneGameStateDelta(
     cloned.market = previousSnapshot.market;
   }
 
-  // Siempre clonar campos que cambian frecuentemente
   cloned.time = state.time;
   cloned.dayTime = state.dayTime;
   cloned.togetherTime = state.togetherTime;

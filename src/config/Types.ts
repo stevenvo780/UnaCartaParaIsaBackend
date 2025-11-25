@@ -1,10 +1,8 @@
 export const TYPES = {
-  // Core
   SimulationRunner: Symbol.for("SimulationRunner"),
   GameState: Symbol.for("GameState"),
   Logger: Symbol.for("Logger"),
 
-  // Systems
   WorldResourceSystem: Symbol.for("WorldResourceSystem"),
   LivingLegendsSystem: Symbol.for("LivingLegendsSystem"),
   LifeCycleSystem: Symbol.for("LifeCycleSystem"),
@@ -47,4 +45,9 @@ export const TYPES = {
   MovementSystem: Symbol.for("MovementSystem"),
   TrailSystem: Symbol.for("TrailSystem"),
   AppearanceGenerationSystem: Symbol.for("AppearanceGenerationSystem"),
+  // Config
+  SimulationConfig: Symbol.for("SimulationConfig"),
+  // World
+  VoronoiGenerator: Symbol.for("VoronoiGenerator"),
+  WorldGenerationService: Symbol.for("WorldGenerationService"),
 };

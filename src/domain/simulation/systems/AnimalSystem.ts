@@ -61,7 +61,9 @@ export class AnimalSystem {
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
-    @inject(TYPES.WorldResourceSystem) @optional() worldResourceSystem?: WorldResourceSystem,
+    @inject(TYPES.WorldResourceSystem)
+    @optional()
+    worldResourceSystem?: WorldResourceSystem,
   ) {
     this.gameState = gameState;
     this.worldResourceSystem = worldResourceSystem;

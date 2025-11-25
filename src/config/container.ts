@@ -1,6 +1,8 @@
 import "reflect-metadata";
 import { Container } from "inversify";
 import { TYPES } from "./Types";
+import { VoronoiGenerator } from "../domain/world/generation/VoronoiGenerator";
+import { WorldGenerationService } from "../infrastructure/services/world/worldGenerationService";
 import { SimulationRunner } from "../domain/simulation/core/SimulationRunner";
 import { GameState } from "../domain/types/game-types";
 import { createInitialGameState } from "../domain/simulation/core/defaultState";
@@ -51,17 +53,15 @@ import { AppearanceGenerationSystem } from "../domain/simulation/systems/Appeara
 
 export const container = new Container();
 
-// Bind GameState
 const initialState = createInitialGameState();
 container.bind<GameState>(TYPES.GameState).toConstantValue(initialState);
+container.bind(TYPES.SimulationConfig).toConstantValue({});
 
-// Bind SimulationRunner
 container
   .bind<SimulationRunner>(TYPES.SimulationRunner)
   .to(SimulationRunner)
   .inSingletonScope();
 
-// Bind Systems
 container
   .bind<WorldResourceSystem>(TYPES.WorldResourceSystem)
   .to(WorldResourceSystem)
@@ -97,6 +97,14 @@ container
 container
   .bind<MarketSystem>(TYPES.MarketSystem)
   .to(MarketSystem)
+  .inSingletonScope();
+container
+  .bind<VoronoiGenerator>(TYPES.VoronoiGenerator)
+  .to(VoronoiGenerator)
+  .inSingletonScope();
+container
+  .bind<WorldGenerationService>(TYPES.WorldGenerationService)
+  .to(WorldGenerationService)
   .inSingletonScope();
 container.bind<RoleSystem>(TYPES.RoleSystem).to(RoleSystem).inSingletonScope();
 container.bind<AISystem>(TYPES.AISystem).to(AISystem).inSingletonScope();

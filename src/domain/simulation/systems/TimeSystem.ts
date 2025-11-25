@@ -154,7 +154,6 @@ export class TimeSystem extends EventEmitter {
         this.gameState.weather.duration = this.currentWeather.duration;
       }
 
-      // Emitir evento de cambio de tiempo
       simulationEvents.emit(GameEventNames.TIME_CHANGED, {
         time: { ...this.currentTime },
         timestamp: Date.now(),
@@ -252,7 +251,6 @@ export class TimeSystem extends EventEmitter {
       this.gameState.weather.duration = this.currentWeather.duration;
     }
 
-    // Emitir evento de cambio de clima
     const effects = this.calculateEnvironmentalEffects();
     simulationEvents.emit(GameEventNames.TIME_WEATHER_CHANGED, {
       weather: { ...this.currentWeather },

@@ -9,17 +9,15 @@ export interface QuestEvaluatorDependencies {
 
 export function evaluateQuestGoals(
   deps: QuestEvaluatorDependencies,
-  aiState: AIState,
+  _aiState: AIState,
 ): AIGoal[] {
   const goals: AIGoal[] = [];
   const now = Date.now();
 
-  // Check active quests first
   const activeQuests = deps.getActiveQuests();
   for (const quest of activeQuests) {
     if (quest.status !== "active") continue;
 
-    // Find incomplete objectives
     for (const objective of quest.objectives) {
       if (objective.isCompleted) continue;
 
@@ -30,20 +28,15 @@ export function evaluateQuestGoals(
       switch (objective.type) {
         case "collect_resource":
           goalType = "gather";
-          // Will be handled by resource finding in main planner
           break;
         case "build_structure":
           goalType = "work";
-          // Find zone with matching building type
-          // This is simplified - in practice would need building system
           break;
         case "reach_location":
           goalType = "explore";
-          // Would need location data from quest
           break;
         case "kill_entity":
           goalType = "combat";
-          // Would need target entity ID
           break;
       }
 
@@ -65,11 +58,9 @@ export function evaluateQuestGoals(
     }
   }
 
-  // Check available quests - start one if none active
   if (activeQuests.length === 0) {
     const availableQuests = deps.getAvailableQuests();
     if (availableQuests.length > 0) {
-      // Start the first available quest
       const quest = availableQuests[0];
       goals.push({
         id: `start_quest_${quest.id}_${now}`,

@@ -381,7 +381,6 @@ export class MovementSystem extends EventEmitter {
         state.estimatedArrivalTime = now + travelTime;
         state.currentActivity = "moving";
 
-        // Emit MOVEMENT_ACTIVITY_STARTED event for TrailSystem
         simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
           entityId,
           activityType: "moving",

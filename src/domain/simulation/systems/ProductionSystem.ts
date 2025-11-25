@@ -42,8 +42,10 @@ export class ProductionSystem {
 
   constructor(
     @inject(TYPES.GameState) private readonly state: GameState,
-    @inject(TYPES.InventorySystem) private readonly inventorySystem: InventorySystem,
-    @inject(TYPES.LifeCycleSystem) private readonly lifeCycleSystem: LifeCycleSystem,
+    @inject(TYPES.InventorySystem)
+    private readonly inventorySystem: InventorySystem,
+    @inject(TYPES.LifeCycleSystem)
+    private readonly lifeCycleSystem: LifeCycleSystem,
   ) {
     this.config = DEFAULT_CONFIG;
   }

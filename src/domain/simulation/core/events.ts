@@ -1,12 +1,11 @@
-import { EventEmitter } from "node:events";
+import { EventEmitter } from "events";
 import { BatchedEventEmitter } from "./BatchedEventEmitter";
 
-// Usar BatchedEventEmitter para mejor rendimiento
 export const simulationEvents = new BatchedEventEmitter();
 
 export const GameEventNames = {
   RESOURCE_GATHERED: "RESOURCE_GATHERED",
-  CHUNK_RENDERED: "CHUNK_RENDERED", // Maybe not needed in backend, or used for chunk loading
+  CHUNK_RENDERED: "CHUNK_RENDERED",
   RESOURCE_STATE_CHANGE: "RESOURCE_STATE_CHANGE",
   LEGEND_UPDATE: "LEGEND_UPDATE",
   REPUTATION_UPDATED: "REPUTATION_UPDATED",

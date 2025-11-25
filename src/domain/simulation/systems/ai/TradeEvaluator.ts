@@ -24,8 +24,7 @@ export function evaluateTradeGoals(
   const myInventory = deps.getAgentInventory(aiState.entityId);
   if (!myInventory) return goals;
 
-  // Check if agent has excess resources to trade
-  const excessThreshold = 20; // More than this is considered excess
+  const excessThreshold = 20;
   const hasExcess =
     (myInventory.wood || 0) > excessThreshold ||
     (myInventory.stone || 0) > excessThreshold ||
@@ -33,7 +32,6 @@ export function evaluateTradeGoals(
 
   if (!hasExcess) return goals;
 
-  // Find market zones
   const marketZones =
     deps.gameState.zones?.filter(
       (z) => z.type === "market" || z.type === "trade",
@@ -44,7 +42,6 @@ export function evaluateTradeGoals(
   const myPos = deps.getEntityPosition(aiState.entityId);
   if (!myPos) return goals;
 
-  // Find nearest market
   let nearestMarket: (typeof marketZones)[0] | null = null;
   let minDist = Infinity;
 

@@ -60,7 +60,8 @@ export class BuildingSystem {
 
   constructor(
     @inject(TYPES.GameState) private readonly state: GameState,
-    @inject(TYPES.ResourceReservationSystem) private readonly reservationSystem: ResourceReservationSystem,
+    @inject(TYPES.ResourceReservationSystem)
+    private readonly reservationSystem: ResourceReservationSystem,
     @inject(TYPES.TaskSystem) @optional() taskSystem?: TaskSystem,
   ) {
     this.config = DEFAULT_CONFIG;
@@ -255,7 +256,6 @@ export class BuildingSystem {
     if (job.taskId && this.taskSystem) {
       const task = this.taskSystem.getTask(job.taskId);
       if (task && !task.completed) {
-        // Force complete the task if building is done
         task.completed = true;
         task.progress = task.requiredWork;
       }

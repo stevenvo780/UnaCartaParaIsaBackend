@@ -64,8 +64,10 @@ export class CombatSystem {
 
   constructor(
     @inject(TYPES.GameState) private readonly state: GameState,
-    @inject(TYPES.InventorySystem) private readonly inventorySystem: InventorySystem,
-    @inject(TYPES.LifeCycleSystem) private readonly lifeCycleSystem: LifeCycleSystem,
+    @inject(TYPES.InventorySystem)
+    private readonly inventorySystem: InventorySystem,
+    @inject(TYPES.LifeCycleSystem)
+    private readonly lifeCycleSystem: LifeCycleSystem,
     @inject(TYPES.SocialSystem) private readonly socialSystem: SocialSystem,
     @inject(TYPES.AnimalSystem) @optional() animalSystem?: AnimalSystem,
     @inject(TYPES.NormsSystem) @optional() normsSystem?: NormsSystem,
@@ -354,7 +356,6 @@ export class CombatSystem {
     weaponId: WeaponId,
     timestamp: number,
   ): void {
-    // Check for norm violations in protected zones before applying damage
     if (this.normsSystem && attacker.position) {
       const zone = this.findZoneAtPosition(attacker.position);
       if (zone) {

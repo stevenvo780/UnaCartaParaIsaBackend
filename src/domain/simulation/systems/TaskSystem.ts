@@ -2,13 +2,17 @@ import { GameState } from "../../types/game-types";
 import { Task, TaskCreationParams } from "../../types/simulation/tasks";
 import { simulationEvents, GameEventNames } from "../core/events";
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class TaskSystem {
   private gameState: GameState;
   private tasks = new Map<string, Task>();
   private seq = 0;
   private lastUpdate = 0;
 
-  constructor(gameState: GameState) {
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
     this.lastUpdate = Date.now();
   }
@@ -89,7 +93,6 @@ export class TaskSystem {
 
     this.tasks.set(task.id, task);
 
-    // Emitir evento de creación de tarea
     simulationEvents.emit(GameEventNames.TASK_CREATED, {
       taskId: task.id,
       taskType: task.type,
@@ -150,7 +153,6 @@ export class TaskSystem {
       task.completed = true;
     }
 
-    // Emitir evento de progreso
     simulationEvents.emit(GameEventNames.TASK_PROGRESS, {
       taskId,
       agentId,
@@ -161,7 +163,6 @@ export class TaskSystem {
       timestamp: Date.now(),
     });
 
-    // Emitir evento de completación si se completó
     if (completed) {
       simulationEvents.emit(GameEventNames.TASK_COMPLETED, {
         taskId,

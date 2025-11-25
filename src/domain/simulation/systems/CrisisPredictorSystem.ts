@@ -31,6 +31,10 @@ const INDICATOR_CONFIG: Record<
   },
 };
 
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+@injectable()
 export class CrisisPredictorSystem {
   private snapshot: CrisisSnapshot;
   private indicatorHistory = new Map<string, number[]>();
@@ -38,8 +42,8 @@ export class CrisisPredictorSystem {
   private previousPredictions = new Map<string, CrisisPrediction>();
 
   constructor(
-    private readonly gameState: GameState,
-    private readonly needsSystem: NeedsSystem,
+    @inject(TYPES.GameState) private readonly gameState: GameState,
+    @inject(TYPES.NeedsSystem) private readonly needsSystem: NeedsSystem,
   ) {
     this.snapshot = {
       indicators: [],
@@ -68,19 +72,16 @@ export class CrisisPredictorSystem {
 
     this.gameState.crisisForecast = this.snapshot;
 
-    // Emit events for new or updated predictions
     this.emitPredictionEvents(predictions);
   }
 
   private emitPredictionEvents(predictions: CrisisPrediction[]): void {
     const currentPredictionIds = new Set(predictions.map((p) => p.id));
 
-    // Emit events for new predictions
     for (const prediction of predictions) {
       const previous = this.previousPredictions.get(prediction.id);
 
       if (!previous) {
-        // New prediction
         if (prediction.probability >= 0.7) {
           simulationEvents.emit(GameEventNames.CRISIS_IMMEDIATE_WARNING, {
             prediction,
@@ -93,7 +94,6 @@ export class CrisisPredictorSystem {
           });
         }
       } else if (prediction.probability > previous.probability + 0.1) {
-        // Prediction worsened significantly
         if (prediction.probability >= 0.7) {
           simulationEvents.emit(GameEventNames.CRISIS_IMMEDIATE_WARNING, {
             prediction,
@@ -106,7 +106,6 @@ export class CrisisPredictorSystem {
       this.previousPredictions.set(prediction.id, prediction);
     }
 
-    // Remove predictions that are no longer active
     for (const [id] of this.previousPredictions.entries()) {
       if (!currentPredictionIds.has(id)) {
         this.previousPredictions.delete(id);

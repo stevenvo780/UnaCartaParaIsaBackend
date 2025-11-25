@@ -76,6 +76,7 @@ export class MovementBatchProcessor {
     if (
       !this.positionBuffer ||
       !this.targetBuffer ||
+      !this.fatigueBuffer ||
       this.entityIdArray.length === 0
     ) {
       return { updated: [], arrived: [] };
