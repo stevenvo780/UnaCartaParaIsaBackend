@@ -166,8 +166,6 @@ export class EnhancedCraftingSystem {
 
     for (const ingredient of recipe.ingredients) {
       const key = this.mapToResourceKey(ingredient.itemId);
-      // Si el ingrediente no está mapeado, no podemos verificar si lo tenemos
-      // Por lo tanto, no podemos craftar
       if (!key) return false;
       if ((inventory[key] ?? 0) < ingredient.quantity) {
         return false;

@@ -45,9 +45,7 @@ export const TYPES = {
   MovementSystem: Symbol.for("MovementSystem"),
   TrailSystem: Symbol.for("TrailSystem"),
   AppearanceGenerationSystem: Symbol.for("AppearanceGenerationSystem"),
-  // Config
   SimulationConfig: Symbol.for("SimulationConfig"),
-  // World
   VoronoiGenerator: Symbol.for("VoronoiGenerator"),
   WorldGenerationService: Symbol.for("WorldGenerationService"),
 };

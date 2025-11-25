@@ -49,7 +49,6 @@ export class SocialSystem {
     const dt = deltaTimeMs / 1000;
     this.lastUpdate += deltaTimeMs;
 
-    // Update spatial grid
     this.spatialGrid.clear();
     const entities = this.gameState.entities || [];
     for (const entity of entities) {

@@ -162,7 +162,6 @@ export function planGoals(
     goals.push(...craftingGoals);
   }
 
-  // Quest goals
   if (deps.getActiveQuests && deps.getAvailableQuests) {
     const questDeps = {
       getActiveQuests: deps.getActiveQuests,
@@ -173,7 +172,6 @@ export function planGoals(
     goals.push(...questGoals);
   }
 
-  // Trade goals
   if (deps.getAgentInventory && deps.getAllActiveAgentIds) {
     const tradeDeps = {
       getAgentInventory: deps.getAgentInventory,
@@ -185,7 +183,6 @@ export function planGoals(
     goals.push(...tradeGoals);
   }
 
-  // Building contribution goals
   if (deps.getAgentInventory && deps.getEntityPosition) {
     const buildingDeps = {
       gameState: deps.gameState,

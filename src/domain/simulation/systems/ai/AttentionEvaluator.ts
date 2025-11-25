@@ -1,4 +1,3 @@
-// import { logger } from "../../../../infrastructure/utils/logger"; // Reserved for future use
 import type { AIState, AIGoal } from "../../../types/simulation/ai";
 import type { GameState } from "../../../types/game-types";
 

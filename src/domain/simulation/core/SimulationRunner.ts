@@ -182,34 +182,12 @@ export class SimulationRunner {
       worldHeight,
       70,
     );
-
-    // Systems are injected via properties
-
-    // Connect TaskSystem to BuildingSystem
-    // Note: In constructor, property injections might not be available yet if using some DI containers,
-    // but Inversify populates them before constructor if using @inject in constructor?
-    // Wait, Inversify property injection happens AFTER constructor.
-    // So we need to move initialization logic to a @postConstruct method or init method.
   }
 
-  @inject(TYPES.SimulationConfig)
-  @optional()
-  private config?: Partial<SimulationConfig>;
-
-  // We need to use @postConstruct to ensure properties are set before we use them
-  // But Inversify's @postConstruct is what we need.
-  // Let's add an initialize method and call it? Or just rely on the fact that we don't use them in constructor except for setup.
-  // Actually, the original code did a lot of setup in constructor (setDependencies).
-  // We should move that to a post-construct init.
-
   public initialize(): void {
-    // Connect TaskSystem to BuildingSystem
     if (this.buildingSystem) {
       this.buildingSystem.setTaskSystem(this.taskSystem);
     }
-
-    // Distribuir intervalos de actualización para evitar picos de procesamiento
-    // this.assignStaggeredPhases(); // TODO: Implement staggered updates if needed
 
     this.lifeCycleSystem.setDependencies({
       needsSystem: this.needsSystem,
@@ -335,7 +313,6 @@ export class SimulationRunner {
       GameEventNames.ANIMAL_HUNTED,
       (data: { animalId: string; hunterId: string; foodValue?: number }) => {
         if (data.hunterId && data.foodValue) {
-          // Give food to the hunter
           const inventory = this.inventorySystem.getAgentInventory(
             data.hunterId,
           );
@@ -347,7 +324,6 @@ export class SimulationRunner {
       },
     );
 
-    // Connect QuestSystem to events
     simulationEvents.on(
       GameEventNames.RESOURCE_GATHERED,
       (data: {
@@ -378,12 +354,10 @@ export class SimulationRunner {
         label: string;
         completedAt: number;
       }) => {
-        // Find the agent who completed the building task
         const job = this.buildingSystem.getConstructionJob(data.jobId);
         if (job?.taskId) {
           const task = this.taskSystem.getTask(job.taskId);
           if (task && task.contributors) {
-            // Notify quest system for all contributors
             task.contributors.forEach((_contribution, agentId) => {
               this.questSystem.handleEvent({
                 type: "structure_built",
@@ -402,7 +376,6 @@ export class SimulationRunner {
     simulationEvents.on(
       GameEventNames.DIALOGUE_CARD_RESPONDED,
       (data: { cardId: string; choiceId: string }) => {
-        // Get the card to find the entity that responded
         const dialogueState = this.state.dialogueState;
         if (dialogueState?.active) {
           const card = dialogueState.active.find((c) => c.id === data.cardId);
@@ -424,7 +397,6 @@ export class SimulationRunner {
       eventName: string,
       payload: unknown,
     ): void => {
-      // Map backend event names to frontend format
       const mappedEventName = mapEventName(eventName);
       this.capturedEvents.push({
         type: mappedEventName,
@@ -810,7 +782,6 @@ export class SimulationRunner {
       "norms",
     );
 
-    // Fase 2: Sistemas que dependen de fase 1 pero son independientes entre sí
     await Promise.all([
       Promise.resolve(this.livingLegendsSystem.update(scaledDelta)),
       Promise.resolve(this.lifeCycleSystem.update(scaledDelta)),
@@ -1424,8 +1395,6 @@ export class SimulationRunner {
   }
 
   public getPlayerId(): string {
-    // Return the ID of the first agent as the player for now
-    // In a real multi-player scenario, this would depend on the session/connection
     return this.state.agents[0]?.id || "";
   }
 }

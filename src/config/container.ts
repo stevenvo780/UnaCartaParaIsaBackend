@@ -7,7 +7,6 @@ import { SimulationRunner } from "../domain/simulation/core/SimulationRunner";
 import { GameState } from "../domain/types/game-types";
 import { createInitialGameState } from "../domain/simulation/core/defaultState";
 
-// Systems
 import { WorldResourceSystem } from "../domain/simulation/systems/WorldResourceSystem";
 import { LivingLegendsSystem } from "../domain/simulation/systems/LivingLegendsSystem";
 import { LifeCycleSystem } from "../domain/simulation/systems/LifeCycleSystem";

@@ -41,7 +41,6 @@ export function evaluateBuildingContributionGoals(
     myInventory &&
     ((myInventory.wood || 0) > 5 || (myInventory.stone || 0) > 5);
 
-  // Rank construction zones by distance and need
   const ranked = constructionZones
     .map((zone) => {
       if (!zone.bounds) return null;

@@ -38,7 +38,6 @@ import { TYPES } from "../../../config/Types";
 export class LifeCycleSystem extends EventEmitter {
   private gameState: GameState;
   private config: LifeCycleConfig;
-  // private lastUpdate: number = 0; // Reserved for future use
   private lastResourceConsumption: number = 0;
 
   private reproductionCooldown = new Map<string, number>();
@@ -365,7 +364,6 @@ export class LifeCycleSystem extends EventEmitter {
     const index = this.gameState.agents.findIndex((a) => a.id === id);
     if (index !== -1) {
       this.gameState.agents.splice(index, 1);
-      // MovementSystem limpia automáticamente cuando la entidad se elimina
       simulationEvents.emit(GameEventNames.ANIMAL_DIED, { entityId: id });
     }
   }

@@ -67,10 +67,12 @@ export class AISystem extends EventEmitter {
   private _movementSystem?: MovementSystem;
   private questSystem?: QuestSystem;
   private timeSystem?: TimeSystem;
-  private buildingSystem?: BuildingSystem;
-  private productionSystem?: ProductionSystem;
-  private tradeSystem?: TradeSystem;
-  private reputationSystem?: ReputationSystem;
+  private _buildingSystem?: BuildingSystem;
+  private _productionSystem?: ProductionSystem;
+  private _tradeSystem?: TradeSystem;
+  private _reputationSystem?: ReputationSystem;
+
+  private agentIndex = 0;
 
   private _lastMemoryCleanupTime = 0;
   private readonly MEMORY_CLEANUP_INTERVAL = 300000;
@@ -148,10 +150,10 @@ export class AISystem extends EventEmitter {
     this._movementSystem = movementSystem;
     this.questSystem = questSystem;
     this.timeSystem = timeSystem;
-    this.buildingSystem = buildingSystem;
-    this.productionSystem = productionSystem;
-    this.tradeSystem = tradeSystem;
-    this.reputationSystem = reputationSystem;
+    this._buildingSystem = buildingSystem;
+    this._productionSystem = productionSystem;
+    this._tradeSystem = tradeSystem;
+    this._reputationSystem = reputationSystem;
 
     simulationEvents.on(
       GameEventNames.AGENT_ACTION_COMPLETE,
@@ -192,12 +194,12 @@ export class AISystem extends EventEmitter {
     if (systems.movementSystem) this._movementSystem = systems.movementSystem;
     if (systems.questSystem) this.questSystem = systems.questSystem;
     if (systems.timeSystem) this.timeSystem = systems.timeSystem;
-    if (systems.buildingSystem) this.buildingSystem = systems.buildingSystem;
+    if (systems.buildingSystem) this._buildingSystem = systems.buildingSystem;
     if (systems.productionSystem)
-      this.productionSystem = systems.productionSystem;
-    if (systems.tradeSystem) this.tradeSystem = systems.tradeSystem;
+      this._productionSystem = systems.productionSystem;
+    if (systems.tradeSystem) this._tradeSystem = systems.tradeSystem;
     if (systems.reputationSystem)
-      this.reputationSystem = systems.reputationSystem;
+      this._reputationSystem = systems.reputationSystem;
   }
 
   public update(_deltaTimeMs: number): void {
@@ -217,7 +219,7 @@ export class AISystem extends EventEmitter {
 
     const BATCH_SIZE = 10;
     const batchSize = Math.min(BATCH_SIZE, agents.length);
-    let processed = 0;
+    let _processed = 0;
 
     for (let i = 0; i < batchSize; i++) {
       const idx = (this.agentIndex + i) % agents.length;
@@ -234,7 +236,7 @@ export class AISystem extends EventEmitter {
       if (aiState.offDuty) continue;
 
       this.processAgent(agent.id, aiState, now);
-      processed++;
+      _processed++;
     }
 
     this.agentIndex = (this.agentIndex + batchSize) % agents.length;

@@ -27,7 +27,6 @@ export function evaluateCombatGoals(
     const goals: AIGoal[] = [];
 
     if (myPos) {
-      // 1. Check for enemies (Social)
       if (enemies.length > 0) {
         const nearest = enemies
           .map((id) => ({ id, pos: ctx.getEntityPosition(id) }))
@@ -111,7 +110,6 @@ export function evaluateCombatGoals(
         }
       }
 
-      // 2. Check for predators (Animals)
       const predators = ctx.getNearbyPredators(myPos, 200);
       for (const predator of predators) {
         const isWarrior = ctx.isWarrior(aiState.entityId);

@@ -2,10 +2,7 @@ import type {
   FoodItem,
   FoodCategory,
 } from "../../domain/types/simulation/food";
-// import { LazyFoodAssetLoader } from "../managers/assets/LazyFoodAssetLoader"; // Removed frontend dependency
-// import { gameRandom } from "../utils/deterministicRandom"; // Removed frontend dependency
 
-// Mock gameRandom for now or use Math.random
 const gameRandom: { random: () => number } = {
   random: () => Math.random(),
 };
@@ -261,6 +258,4 @@ export class FoodCatalog {
       })
       .slice(0, 3);
   }
-
-  // Removed frontend asset loading methods
 }

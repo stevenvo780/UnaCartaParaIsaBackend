@@ -1,4 +1,3 @@
-import { EventEmitter } from "events";
 import { BatchedEventEmitter } from "./BatchedEventEmitter";
 
 export const simulationEvents = new BatchedEventEmitter();

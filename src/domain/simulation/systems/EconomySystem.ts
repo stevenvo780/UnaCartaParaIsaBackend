@@ -137,7 +137,6 @@ export class EconomySystem {
       const role = this.roleSystem.getAgentRole(agent.id);
       if (!role || !role.roleType) continue;
 
-      // Base salary based on role
       let baseSalary = 10;
       switch (role.roleType) {
         case "farmer":
@@ -225,11 +224,9 @@ export class EconomySystem {
     const teamBonus = this.computeTeamBonus(agentId, zone);
     let totalYield = baseYield * teamBonus;
 
-    // Role Bonus
     if (this.roleSystem) {
       const role = this.roleSystem.getAgentRole(agentId);
       if (role?.roleType) {
-        // Simplified role bonus logic
         if (role.roleType === "farmer" && resourceType === "food")
           totalYield *= 1.5;
         if (role.roleType === "quarryman" && resourceType === "stone")

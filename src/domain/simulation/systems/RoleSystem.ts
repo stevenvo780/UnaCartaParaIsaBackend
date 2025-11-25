@@ -200,13 +200,11 @@ export class RoleSystem extends EventEmitter {
       this.currentShift = timePhase as WorkShift;
       this.rebuildSchedule();
 
-      // Emitir evento interno (para compatibilidad)
       this.emit("shiftChanged", {
         previous: previousShift,
         current: this.currentShift,
       });
 
-      // Emitir evento al sistema de simulación
       simulationEvents.emit(GameEventNames.ROLE_SHIFT_CHANGED, {
         previousShift,
         currentShift: this.currentShift,

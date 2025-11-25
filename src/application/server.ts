@@ -6,12 +6,25 @@ import { container } from "../config/container";
 import { TYPES } from "../config/Types";
 import { SimulationRunner } from "../domain/simulation/core/SimulationRunner";
 
-// Resolve SimulationRunner from container
 const simulationRunner = container.get<SimulationRunner>(
   TYPES.SimulationRunner,
 );
 simulationRunner.initialize();
-simulationRunner.start();
+
+simulationRunner
+  .initializeWorldResources({
+    width: 128,
+    height: 128,
+    tileSize: 32,
+    biomeMap: [],
+  })
+  .then(() => {
+    logger.info("World resources initialized");
+    simulationRunner.start();
+  })
+  .catch((err) => {
+    logger.error("Failed to initialize world resources:", err);
+  });
 import type {
   SimulationCommand,
   SimulationRequest,
@@ -115,7 +128,7 @@ simulationWss.on("connection", (ws: WebSocket) => {
 
       if (command.type.startsWith("REQUEST_")) {
         const request = command as SimulationRequest;
-        let responsePayload: any = null;
+        let responsePayload: unknown = null;
 
         switch (request.type) {
           case "REQUEST_FULL_STATE":
@@ -162,7 +175,7 @@ simulationWss.on("connection", (ws: WebSocket) => {
   });
 });
 
-simulationRunner.on("tick", (snapshot) => {
+simulationRunner.on("tick", (snapshot: unknown) => {
   const currentTick = (snapshot as { tick?: number }).tick ?? 0;
   if (currentTick !== cachedTickNumber || !cachedTickMessage) {
     cachedTickMessage = JSON.stringify({

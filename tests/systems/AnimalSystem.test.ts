@@ -58,7 +58,6 @@ describe("AnimalSystem", () => {
 
   describe("Gestión de animales", () => {
     it("debe retornar animal por ID", () => {
-      // Los animales se agregan a través de eventos o spawnAnimalsInWorld
       const found = animalSystem.getAnimal("nonexistent");
       expect(found).toBeUndefined();
     });
@@ -80,7 +79,6 @@ describe("AnimalSystem", () => {
 
   describe("Manejo de eventos", () => {
     it("debe manejar evento de animal cazado", () => {
-      // Primero spawnear un animal
       animalSystem.spawnAnimalsInWorld(100, 100);
       const animals = animalSystem.getAnimals();
       const animalId = Array.from(animals.keys())[0];
@@ -156,7 +154,6 @@ describe("AnimalSystem", () => {
       const animals = animalSystem.getAnimals();
       expect(animals.size).toBeGreaterThanOrEqual(0);
       
-      // Actualizar múltiples veces para cubrir el comportamiento
       animalSystem.update(2000);
       animalSystem.update(2000);
       expect(animalSystem).toBeDefined();
@@ -192,7 +189,6 @@ describe("AnimalSystem", () => {
         const animal = animals.get(animalId);
         if (animal) {
           animal.isDead = true;
-          // Esperar a que pase el intervalo de limpieza
           customSystem.update(200);
           expect(customSystem).toBeDefined();
         }

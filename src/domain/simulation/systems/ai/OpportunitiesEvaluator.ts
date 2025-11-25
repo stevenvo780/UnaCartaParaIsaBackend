@@ -40,7 +40,6 @@ export function evaluateWorkOpportunities(
   const now = Date.now();
   const timeOfDay = deps.getCurrentTimeOfDay?.() || "midday";
 
-  // Reduce work priority at night
   if (timeOfDay === "night" || timeOfDay === "deep_night") {
     return goals; // Don't work at night
   }
