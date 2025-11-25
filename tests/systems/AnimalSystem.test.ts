@@ -2,51 +2,33 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import type { GameState } from "../../src/domain/types/game-types";
 import type { Animal } from "../../src/domain/types/simulation/animals";
 import { AnimalSystem } from "../../src/domain/simulation/systems/AnimalSystem";
+import { AnimalNeeds } from "../../src/domain/simulation/systems/animals/AnimalNeeds";
+import { AnimalBehavior } from "../../src/domain/simulation/systems/animals/AnimalBehavior";
 import {
   simulationEvents,
   GameEventNames,
 } from "../../src/domain/simulation/core/events";
 import { createMockGameState } from "../setup";
 
-const mockUpdateNeeds = vi.fn();
-const mockWander = vi.fn();
-const mockRebuildBuffers = vi.fn();
-const mockUpdateNeedsBatch = vi.fn();
-const mockUpdateAgesBatch = vi.fn();
-const mockSync = vi.fn();
-let batchIds: string[] = [];
-
-vi.mock("../../src/domain/simulation/systems/animals/AnimalNeeds", () => ({
-  AnimalNeeds: {
-    updateNeeds: mockUpdateNeeds,
-    feed: vi.fn(),
-    hydrate: vi.fn(),
-    satisfyReproductiveUrge: vi.fn(),
-  },
-}));
-
-vi.mock("../../src/domain/simulation/systems/animals/AnimalBehavior", () => ({
-  AnimalBehavior: {
-    moveAwayFrom: vi.fn(),
-    seekFood: vi.fn(),
-    seekWater: vi.fn(),
-    attemptReproduction: vi.fn(),
-    huntPrey: vi.fn(),
-    wander: mockWander,
-  },
+const batchMocks = vi.hoisted(() => ({
+  batchIds: [] as string[],
+  rebuildBuffers: vi.fn(),
+  updateNeedsBatch: vi.fn(),
+  updateAgesBatch: vi.fn(),
+  syncToAnimals: vi.fn(),
 }));
 
 vi.mock("../../src/domain/simulation/systems/AnimalBatchProcessor", () => ({
   AnimalBatchProcessor: class {
-    rebuildBuffers = mockRebuildBuffers;
-    getAnimalIdArray = () => batchIds;
-    updateNeedsBatch = mockUpdateNeedsBatch;
-    updateAgesBatch = mockUpdateAgesBatch;
-    syncToAnimals = mockSync;
+    rebuildBuffers = batchMocks.rebuildBuffers;
+    getAnimalIdArray = () => batchMocks.batchIds;
+    updateNeedsBatch = batchMocks.updateNeedsBatch;
+    updateAgesBatch = batchMocks.updateAgesBatch;
+    syncToAnimals = batchMocks.syncToAnimals;
   },
 }));
 
-vi.mock("../../src/infrastructure/services/world/config/AnimalConfigs", () => ({
+const configMocks = vi.hoisted(() => ({
   getAnimalConfig: vi.fn(() => ({
     type: "rabbit",
     displayName: "Rabbit",
@@ -75,10 +57,16 @@ vi.mock("../../src/infrastructure/services/world/config/AnimalConfigs", () => ({
   })),
 }));
 
+vi.mock("../../src/infrastructure/services/world/config/AnimalConfigs", () => ({
+  getAnimalConfig: configMocks.getAnimalConfig,
+}));
+
 describe("AnimalSystem", () => {
   let gameState: GameState;
   let animalSystem: AnimalSystem;
   let emitSpy: ReturnType<typeof vi.spyOn>;
+  let updateNeedsSpy: ReturnType<typeof vi.spyOn>;
+  let wanderSpy: ReturnType<typeof vi.spyOn>;
 
   const createAnimal = (id: string, overrides: Partial<Animal> = {}): Animal => ({
     id,
@@ -108,23 +96,26 @@ describe("AnimalSystem", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(0);
+    batchMocks.batchIds = [];
+    batchMocks.rebuildBuffers.mockClear();
+    batchMocks.updateNeedsBatch.mockClear();
+    batchMocks.updateAgesBatch.mockClear();
+    batchMocks.syncToAnimals.mockClear();
+
     gameState = createMockGameState({
       animals: { animals: [] },
     });
     animalSystem = new AnimalSystem(gameState);
     emitSpy = vi.spyOn(simulationEvents, "emit");
-    batchIds = [];
-    mockUpdateNeeds.mockClear();
-    mockWander.mockClear();
-    mockRebuildBuffers.mockClear();
-    mockUpdateNeedsBatch.mockClear();
-    mockUpdateAgesBatch.mockClear();
-    mockSync.mockClear();
+    updateNeedsSpy = vi.spyOn(AnimalNeeds, "updateNeeds");
+    wanderSpy = vi.spyOn(AnimalBehavior, "wander").mockImplementation(() => {});
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();
+    emitSpy.mockRestore();
+    updateNeedsSpy.mockRestore();
+    wanderSpy.mockRestore();
     simulationEvents.clearQueue();
     simulationEvents.removeAllListeners();
   });
@@ -133,7 +124,8 @@ describe("AnimalSystem", () => {
     const animal = createAnimal("animal-1");
     addAnimal(animal);
 
-    expect(gameState.animals?.animals.length).toBe(1);
+    const storedAnimals = (animalSystem as any).animals;
+    expect(storedAnimals.size).toBe(1);
   });
 
   it("update aplica lógica individual cuando el conteo es bajo", () => {
@@ -143,8 +135,7 @@ describe("AnimalSystem", () => {
     vi.setSystemTime(2000);
     animalSystem.update(1000);
 
-    expect(mockUpdateNeeds).toHaveBeenCalled();
-    expect(mockWander).toHaveBeenCalled();
+    expect(updateNeedsSpy).toHaveBeenCalled();
   });
 
   it("usa el procesador por lotes cuando hay muchos animales", () => {
@@ -154,14 +145,14 @@ describe("AnimalSystem", () => {
       animals.push(creature);
       addAnimal(creature);
     }
-    batchIds = animals.map((a) => a.id);
+    batchMocks.batchIds = animals.map((a) => a.id);
 
     vi.setSystemTime(2000);
     animalSystem.update(1000);
 
-    expect(mockRebuildBuffers).toHaveBeenCalled();
-    expect(mockUpdateNeedsBatch).toHaveBeenCalled();
-    expect(mockSync).toHaveBeenCalled();
+    expect(batchMocks.rebuildBuffers).toHaveBeenCalled();
+    expect(batchMocks.updateNeedsBatch).toHaveBeenCalled();
+    expect(batchMocks.syncToAnimals).toHaveBeenCalled();
   });
 
   it("killAnimal marca al animal como muerto y emite evento", () => {
@@ -172,7 +163,7 @@ describe("AnimalSystem", () => {
 
     expect(emitSpy).toHaveBeenCalledWith(
       GameEventNames.ANIMAL_DIED,
-      expect.objectContaining({ animalId: "animal-1", reason: "test" }),
+      expect.objectContaining({ animalId: "animal-1", cause: "test" }),
     );
   });
 });

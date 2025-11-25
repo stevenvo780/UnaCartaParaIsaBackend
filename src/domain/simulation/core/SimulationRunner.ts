@@ -329,6 +329,33 @@ export class SimulationRunner {
         if (simulationEvents instanceof BatchedEventEmitter) {
           simulationEvents.flushEvents();
         }
+        
+        // Mark all sections as dirty since scheduler updates multiple systems
+        this.stateCache.markDirtyMultiple([
+          "agents",
+          "entities",
+          "animals",
+          "inventory",
+          "zones",
+          "worldResources",
+          "socialGraph",
+          "market",
+          "trade",
+          "marriage",
+          "quests",
+          "conflicts",
+          "research",
+          "recipes",
+          "reputation",
+          "norms",
+          "knowledgeGraph",
+          "tasks",
+        ]);
+        
+        // Emit tick snapshot to WebSocket clients
+        this.tickCounter += 1;
+        const snapshot = this.getTickSnapshot();
+        this.emitter.emit("tick", snapshot);
       },
       getEntityCount: () => {
         return (

@@ -64,6 +64,7 @@ export class TerrainSystem {
         if (modified) {
           simulationEvents.emit(GameEventNames.TERRAIN_MODIFIED, {
             x,
+            y,
             updates,
             timestamp: Date.now(),
           });
