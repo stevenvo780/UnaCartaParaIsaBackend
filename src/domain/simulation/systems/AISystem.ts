@@ -1260,21 +1260,48 @@ export class AISystem extends EventEmitter {
             action.agentId,
           );
 
-          // After harvesting, apply need satisfaction based on resource type
-          if (result.success && this.needsSystem) {
+          // After harvesting, apply need satisfaction and add to inventory
+          if (result.success) {
             const resource = this.gameState.worldResources?.[action.targetId];
             if (resource) {
-              // water_source satisfies thirst
+              // Map world resource type to inventory resource type
+              let inventoryResourceType: ResourceType | null = null;
+              
+              // water_source -> water
               if (resource.type === "water_source") {
-                this.needsSystem.satisfyNeed(action.agentId, "thirst", 30);
+                inventoryResourceType = "water";
+                if (this.needsSystem) {
+                  this.needsSystem.satisfyNeed(action.agentId, "thirst", 30);
+                }
               }
-              // Food resources satisfy hunger
-              if (
-                ["berry_bush", "mushroom_patch", "wheat_crop"].includes(
-                  resource.type,
-                )
-              ) {
-                this.needsSystem.satisfyNeed(action.agentId, "hunger", 25);
+              // Food resources -> food
+              else if (["berry_bush", "mushroom_patch", "wheat_crop"].includes(resource.type)) {
+                inventoryResourceType = "food";
+                if (this.needsSystem) {
+                  this.needsSystem.satisfyNeed(action.agentId, "hunger", 25);
+                }
+              }
+              // Wood resources -> wood
+              else if (["tree", "oak_tree", "pine_tree", "fallen_log"].includes(resource.type)) {
+                inventoryResourceType = "wood";
+              }
+              // Stone resources -> stone
+              else if (["stone_deposit", "rock", "iron_ore", "gold_ore"].includes(resource.type)) {
+                inventoryResourceType = "stone";
+              }
+
+              // Add harvested resource to agent's inventory
+              if (inventoryResourceType && this.inventorySystem) {
+                const added = this.inventorySystem.addResource(
+                  action.agentId,
+                  inventoryResourceType,
+                  result.amount,
+                );
+                if (added) {
+                  logger.debug(
+                    `🎒 [AI] Agent ${action.agentId} added ${result.amount} ${inventoryResourceType} to inventory`,
+                  );
+                }
               }
             }
           }

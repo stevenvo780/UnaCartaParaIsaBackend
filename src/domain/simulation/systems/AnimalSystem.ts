@@ -572,6 +572,14 @@ export class AnimalSystem {
     }
 
     this.addAnimal(animal);
+
+    simulationEvents.emit(GameEventNames.ANIMAL_SPAWNED, {
+      animalId: animal.id,
+      type: animal.type,
+      position: animal.position,
+      biome: resolvedBiome,
+    });
+
     this.updateGameStateSnapshot();
     return animal;
   }

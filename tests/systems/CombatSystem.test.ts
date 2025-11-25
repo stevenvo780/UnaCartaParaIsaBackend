@@ -74,26 +74,26 @@ describe("CombatSystem", () => {
   let combatSystem: CombatSystem;
   let emitSpy: ReturnType<typeof vi.spyOn>;
 
-  const attackerEntity = {
-    id: "attacker",
-    type: "agent",
-    position: { x: 0, y: 0 },
-    isDead: false,
-    stats: { health: 100 },
-  };
-
-  const targetEntity = {
-    id: "target",
-    type: "agent",
-    position: { x: 10, y: 0 },
-    isDead: false,
-    stats: { health: 5 },
-  };
-
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(0);
     emitSpy = vi.spyOn(simulationEvents, "emit");
+
+    const attackerEntity = {
+      id: "attacker",
+      type: "agent",
+      position: { x: 0, y: 0 },
+      isDead: false,
+      stats: { health: 100 },
+    };
+
+    const targetEntity = {
+      id: "target",
+      type: "agent",
+      position: { x: 10, y: 0 },
+      isDead: false,
+      stats: { health: 5 },
+    };
 
     gameState = createMockGameState({
       worldSize: { width: 200, height: 200 },
@@ -126,13 +126,13 @@ describe("CombatSystem", () => {
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();
+    emitSpy.mockRestore();
     simulationEvents.clearQueue();
     simulationEvents.removeAllListeners();
   });
 
   it("getNearbyEnemies detecta hostiles cercanos", () => {
-    const enemies = combatSystem.getNearbyEnemies("attacker");
+    const enemies = combatSystem.getNearbyEnemies("attacker", 0.1);
     expect(enemies).toContain("target");
   });
 
