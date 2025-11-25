@@ -259,14 +259,6 @@ export class RoleSystem extends EventEmitter {
   }
 
   public assignBestRole(agent: AgentProfile): RoleAssignment {
-    if (agent.immortal) {
-      return {
-        success: false,
-        agentId: agent.id,
-        reason: "Agente inmortal (dios) no recibe rol",
-      };
-    }
-
     let bestRole: RoleConfig | null = null;
     let bestScore = -1;
 
@@ -407,12 +399,6 @@ export class RoleSystem extends EventEmitter {
     const agent = agents.find((a) => a.id === agentId);
     if (!agent)
       return { success: false, agentId, reason: "Agente no encontrado" };
-    if (agent.immortal)
-      return {
-        success: false,
-        agentId,
-        reason: "Agente inmortal no reasignable",
-      };
 
     const roleDef = ROLE_DEFINITIONS.find((r) => r.type === newRole);
     if (!roleDef) return { success: false, agentId, reason: "Rol no válido" };

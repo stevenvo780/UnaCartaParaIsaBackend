@@ -19,7 +19,7 @@ import { getFrameTime } from "../../../shared/FrameTime";
 const DEFAULT_CONFIG: AnimalSystemConfig = {
   maxAnimals: 500,
   spawnRadius: 300,
-  updateInterval: 1000,
+  updateInterval: 250, // Match MEDIUM tier (4Hz) - life cycles don't need 20Hz
   cleanupInterval: 30000,
 };
 
@@ -110,15 +110,11 @@ export class AnimalSystem {
     );
   }
 
-  public update(_deltaMs: number): void {
+  public update(deltaMs: number): void {
     const now = getFrameTime();
-
-    if (now - this.lastUpdate < this.config.updateInterval) {
-      return;
-    }
-
-    const deltaSeconds = (now - this.lastUpdate) / 1000;
-    const deltaMinutes = (now - this.lastUpdate) / 60000;
+    // No internal throttle - scheduler controls tick rate (MEDIUM = 250ms)
+    const deltaSeconds = deltaMs / 1000;
+    const deltaMinutes = deltaMs / 60000;
     this.lastUpdate = now;
 
     let liveCount = 0;
@@ -552,12 +548,22 @@ export class AnimalSystem {
       byType[animal.type] = (byType[animal.type] || 0) + 1;
     }
 
+    // DEBUG: Log animal counts every 5 seconds
+    const now = Date.now();
+    if (!this._lastAnimalCountLog || now - this._lastAnimalCountLog > 5000) {
+      logger.info(
+        `🐾 [AnimalSystem] Map size: ${this.animals.size}, Live: ${liveAnimals.length}, Dead: ${this.animals.size - liveAnimals.length}`,
+      );
+      this._lastAnimalCountLog = now;
+    }
+
     this.gameState.animals.animals = liveAnimals;
     this.gameState.animals.stats = {
       total: liveAnimals.length,
       byType,
     };
   }
+  private _lastAnimalCountLog?: number;
 
   public spawnAnimal(
     type: string,

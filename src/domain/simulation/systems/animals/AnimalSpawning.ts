@@ -152,18 +152,15 @@ export class AnimalSpawning {
             if (!isWalkable) continue;
           }
 
-          const chunkSpawnProb = config.spawnProbability * 0.5;
+          // Much lower spawn rate for chunks to prevent overpopulation
+          const chunkSpawnProb = config.spawnProbability * 0.1;
 
           if (Math.random() < chunkSpawnProb) {
-            const groupSize = Math.max(
+            // Spawn smaller groups in chunks (1-2 instead of full group)
+            const groupSize = Math.min(2, Math.max(
               1,
-              config.groupSize.min +
-                Math.floor(
-                  Math.random() *
-                    (config.groupSize.max - config.groupSize.min + 1),
-                ) -
-                1,
-            );
+              Math.floor(Math.random() * 2) + 1,
+            ));
 
             for (let i = 0; i < groupSize; i++) {
               const offsetX = (Math.random() - 0.5) * 80;

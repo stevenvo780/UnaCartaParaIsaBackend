@@ -558,6 +558,93 @@ export class GPUComputeService {
   }
 
   /**
+   * Aplica un decaimiento lineal a un array de valores en batch
+   * @param values Array de valores a decaer
+   * @param decayRate Tasa de decaimiento por segundo
+   * @param deltaSeconds Tiempo transcurrido en segundos
+   * @param threshold Umbral mínimo (valores menores se vuelven 0)
+   */
+  computeGeneralDecay(
+    values: Float32Array,
+    decayRate: number,
+    deltaSeconds: number,
+    threshold: number = 0.001,
+  ): Float32Array {
+    const startTime = performance.now();
+    const count = values.length;
+
+    if (!this.gpuAvailable || count < 100) {
+      return this.computeGeneralDecayCPU(
+        values,
+        decayRate,
+        deltaSeconds,
+        threshold,
+      );
+    }
+
+    try {
+      return tf.tidy(() => {
+        const valuesT = tf.tensor1d(values);
+        const decayAmount = tf.scalar(decayRate * deltaSeconds);
+
+        // values - decayAmount
+        const decayed = valuesT.sub(decayAmount);
+
+        // max(0, decayed) -> para no tener negativos
+        // Si es menor que threshold, deberíamos hacerlo 0.
+        // Una forma eficiente: tf.where(decayed < threshold, 0, decayed)
+
+        const resultT = decayed.maximum(0);
+
+        // Aplicar threshold: si es < threshold, poner a 0
+        const finalT = tf.where(resultT.less(threshold), tf.scalar(0), resultT);
+
+        const result = finalT.dataSync() as Float32Array;
+
+        const elapsed = performance.now() - startTime;
+        this.performanceStats.gpuOperations++;
+        this.performanceStats.totalGpuTime += elapsed;
+
+        return result;
+      });
+    } catch (error) {
+      logger.warn(
+        `⚠️ Error en GPU computeGeneralDecay, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      this.performanceStats.cpuFallbacks++;
+      return this.computeGeneralDecayCPU(
+        values,
+        decayRate,
+        deltaSeconds,
+        threshold,
+      );
+    }
+  }
+
+  private computeGeneralDecayCPU(
+    values: Float32Array,
+    decayRate: number,
+    deltaSeconds: number,
+    threshold: number,
+  ): Float32Array {
+    const startTime = performance.now();
+    const count = values.length;
+    const newValues = new Float32Array(values);
+    const decayAmount = decayRate * deltaSeconds;
+
+    for (let i = 0; i < count; i++) {
+      let val = newValues[i] - decayAmount;
+      if (val < threshold) val = 0;
+      newValues[i] = val;
+    }
+
+    const elapsed = performance.now() - startTime;
+    this.performanceStats.totalCpuTime += elapsed;
+
+    return newValues;
+  }
+
+  /**
    * Limpia memoria de TensorFlow (llamar periódicamente)
    */
   dispose(): void {

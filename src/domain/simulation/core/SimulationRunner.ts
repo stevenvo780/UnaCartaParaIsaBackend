@@ -183,8 +183,8 @@ export class SimulationRunner {
     this.deltaEncoder = new DeltaEncoder();
 
     this.scheduler = new MultiRateScheduler({
-      FAST: 100, // 10 Hz - movement, combat, trails
-      MEDIUM: 500, // 2 Hz - AI, needs, social
+      FAST: 50, // 20 Hz - movement, combat, trails, animals (smooth)
+      MEDIUM: 250, // 4 Hz - AI, needs, social
       SLOW: 1000, // 1 Hz - economy, research, etc.
     });
   }
@@ -498,7 +498,7 @@ export class SimulationRunner {
 
     this.scheduler.registerSystem({
       name: "AnimalSystem",
-      rate: "FAST", // Changed from SLOW for smoother animal movement
+      rate: "MEDIUM", // Life cycles work fine at 4Hz, movement interpolated on frontend
       update: (delta: number) => this.animalSystem.update(delta),
       enabled: true,
     });

@@ -142,15 +142,8 @@ export class LifeCycleSystem extends EventEmitter {
     const agents = this.gameState.agents || [];
 
     for (const agent of agents) {
-      if (agent.immortal) {
-        if (agent.lifeStage === "adult") {
-          this.queueHousingAssignment(agent.id);
-        }
-        continue;
-      }
-
-      agent.ageYears += yearInc;
       const previousStage = agent.lifeStage;
+      agent.ageYears += yearInc;
       agent.lifeStage = this.getLifeStage(agent.ageYears);
 
       if (previousStage !== agent.lifeStage) {
@@ -162,8 +155,9 @@ export class LifeCycleSystem extends EventEmitter {
         });
       }
 
-      if (agent.ageYears > this.config.maxAge) {
+      if (!agent.immortal && agent.ageYears > this.config.maxAge) {
         this.removeAgent(agent.id);
+        continue;
       }
 
       if (agent.lifeStage === "adult") {

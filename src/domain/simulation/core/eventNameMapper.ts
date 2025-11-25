@@ -37,6 +37,9 @@ export const eventNameMapper: Record<string, string> = {
   SOCIAL_TRUCE_EXPIRED: "social:truce:expired",
   SOCIAL_RALLY: "social:rally",
   SOCIAL_GROUPS_UPDATE: "social:groups:update",
+  SOCIAL_INTERACTION: "social:interaction",
+  FRIENDSHIP_FORMED: "social:friendship:formed",
+  RELATIONSHIP_ENDED: "social:relationship:ended",
 
   MOVEMENT_ARRIVED_AT_ZONE: "movement:arrived:zone",
   MOVEMENT_ACTIVITY_COMPLETED: "movement:activity:completed",

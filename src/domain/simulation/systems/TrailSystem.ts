@@ -8,6 +8,9 @@ import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
 
+import { TrailBatchProcessor } from "./TrailBatchProcessor";
+import { GPUComputeService } from "../core/GPUComputeService";
+
 @injectable()
 export class TrailSystem {
   private gameState: GameState;
@@ -33,13 +36,17 @@ export class TrailSystem {
     averageIntensity: 0,
   };
   private entityIndex?: EntityIndex;
+  private batchProcessor: TrailBatchProcessor;
+  private readonly BATCH_THRESHOLD = 100; // Solo usar GPU si hay muchos rastros
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
     @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
+    @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
   ) {
     this.gameState = gameState;
     this.entityIndex = entityIndex;
+    this.batchProcessor = new TrailBatchProcessor(gpuService);
     this.setupEventListeners();
     logger.info("🛤️ TrailSystem initialized");
   }
@@ -207,39 +214,70 @@ export class TrailSystem {
     const deltaSeconds = deltaMs / 1000;
     const now = Date.now();
 
+    // Check if we should use GPU Batch Processing
+    if (this.trails.size > this.BATCH_THRESHOLD) {
+      this.batchProcessor.rebuildBuffers(this.trails, this.heatMap);
+
+      // Decay parameters
+      // Note: Trail decay depends on timeSinceUse in CPU version, which is hard to vectorise exactly without extra buffers.
+      // For GPU version, we use a simplified global decay which is standard for pheromones.
+      // To approximate "timeSinceUse" factor, we can just use a slightly higher base decay.
+      const effectiveTrailDecay = this.config.decayRate;
+      const effectiveHeatDecay = 0.5;
+
+      this.batchProcessor.updateDecayBatch(
+        effectiveTrailDecay,
+        effectiveHeatDecay,
+        deltaSeconds,
+        this.config.minVisibleIntensity,
+      );
+
+      this.batchProcessor.syncToState(this.trails, this.heatMap);
+    } else {
+      // CPU Fallback (Original Logic)
+      this.trails.forEach((trail, id) => {
+        const timeSinceUse = (now - trail.lastUsed) / 1000;
+        const decayAmount =
+          this.config.decayRate * deltaSeconds * (1 + timeSinceUse / 60);
+
+        trail.intensity = Math.max(0, trail.intensity - decayAmount);
+
+        if (
+          trail.intensity <= this.config.minVisibleIntensity &&
+          trail.intensity > 0
+        ) {
+          // Keep it but it's fading
+        } else if (trail.intensity <= 0) {
+          this.trails.delete(id);
+        }
+      });
+
+      this.heatMap.forEach((cell, id) => {
+        const timeSinceUpdate = (now - cell.lastUpdate) / 1000;
+        const decayAmount = 0.5 * deltaSeconds * (1 + timeSinceUpdate / 30);
+
+        cell.heat = Math.max(0, cell.heat - decayAmount);
+
+        if (cell.heat <= 0) {
+          this.heatMap.delete(id);
+        }
+      });
+    }
+
+    // Stats update
     let activeCount = 0;
     let totalIntensity = 0;
     let hottestIntensity = 0;
     let hottestId = "";
 
     this.trails.forEach((trail, id) => {
-      const timeSinceUse = (now - trail.lastUsed) / 1000;
-      const decayAmount =
-        this.config.decayRate * deltaSeconds * (1 + timeSinceUse / 60);
-
-      trail.intensity = Math.max(0, trail.intensity - decayAmount);
-
       if (trail.intensity > this.config.minVisibleIntensity) {
         activeCount++;
         totalIntensity += trail.intensity;
-
         if (trail.intensity > hottestIntensity) {
           hottestIntensity = trail.intensity;
           hottestId = id;
         }
-      } else if (trail.intensity === 0) {
-        this.trails.delete(id);
-      }
-    });
-
-    this.heatMap.forEach((cell, id) => {
-      const timeSinceUpdate = (now - cell.lastUpdate) / 1000;
-      const decayAmount = 0.5 * deltaSeconds * (1 + timeSinceUpdate / 30);
-
-      cell.heat = Math.max(0, cell.heat - decayAmount);
-
-      if (cell.heat === 0) {
-        this.heatMap.delete(id);
       }
     });
 

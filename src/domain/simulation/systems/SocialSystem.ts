@@ -202,10 +202,22 @@ export class SocialSystem {
     if (!this.edges.has(b)) this.edges.set(b, new Map());
 
     const currentA = this.edges.get(a)!.get(b) || 0;
-    this.edges.get(a)!.set(b, Math.max(-1, Math.min(1, currentA + delta)));
+    const newAffinityA = Math.max(-1, Math.min(1, currentA + delta));
+    this.edges.get(a)!.set(b, newAffinityA);
 
     const currentB = this.edges.get(b)!.get(a) || 0;
-    this.edges.get(b)!.set(a, Math.max(-1, Math.min(1, currentB + delta)));
+    const newAffinityB = Math.max(-1, Math.min(1, currentB + delta));
+    this.edges.get(b)!.set(a, newAffinityB);
+
+    if (newAffinityA !== currentA || newAffinityB !== currentB) {
+      simulationEvents.emit(GameEventNames.SOCIAL_RELATION_CHANGED, {
+        agentA: a,
+        agentB: b,
+        oldAffinity: currentA,
+        newAffinity: newAffinityA,
+        timestamp: Date.now(),
+      });
+    }
   }
 
   public getAffinityBetween(a: string, b: string): number {
@@ -284,6 +296,12 @@ export class SocialSystem {
 
   public registerFriendlyInteraction(aId: string, bId: string): void {
     this.addEdge(aId, bId, 0.15);
+    simulationEvents.emit(GameEventNames.SOCIAL_INTERACTION, {
+      agentA: aId,
+      agentB: bId,
+      type: "friendly",
+      timestamp: Date.now(),
+    });
   }
 
   public imposeLocalTruces(
@@ -325,6 +343,13 @@ export class SocialSystem {
     logger.debug(
       `💕 [SOCIAL] Permanent bond: ${type} between ${aId} and ${bId}`,
     );
+
+    simulationEvents.emit(GameEventNames.FRIENDSHIP_FORMED, {
+      agentA: aId,
+      agentB: bId,
+      bondType: type,
+      timestamp: Date.now(),
+    });
   }
 
   public addInfamy(agentId: string, amount: number): void {
