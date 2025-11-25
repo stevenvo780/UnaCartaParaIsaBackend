@@ -181,7 +181,6 @@ export class GovernanceSystem {
       },
     );
 
-    // Handler para producción generada - actualizar estadísticas de asentamiento
     simulationEvents.on(
       GameEventNames.PRODUCTION_OUTPUT_GENERATED,
       (data: {
@@ -191,7 +190,6 @@ export class GovernanceSystem {
         workers: string[];
         timestamp?: number;
       }) => {
-        // Registrar producción para estadísticas y decisiones de gobierno
         this.recordEvent({
           timestamp: Date.now(),
           type: "production_generated",
@@ -202,9 +200,7 @@ export class GovernanceSystem {
             workerCount: data.workers.length,
           },
         });
-        // Si la producción es alta, podría resolver demandas de recursos
         if (data.resource === "food" && data.amount > 20) {
-          // Revisar si hay demandas de comida que puedan resolverse
           for (const [_demandId, demand] of Array.from(
             this.demands.entries(),
           )) {
@@ -213,7 +209,6 @@ export class GovernanceSystem {
               !demand.resolvedAt &&
               demand.priority < 8
             ) {
-              // Reducir prioridad de demanda de comida si hay producción activa
               demand.priority = Math.max(5, demand.priority - 1);
             }
           }
@@ -221,7 +216,6 @@ export class GovernanceSystem {
       },
     );
 
-    // Handler para trabajador removido de producción - ajustar políticas si es necesario
     simulationEvents.on(
       GameEventNames.PRODUCTION_WORKER_REMOVED,
       (data: {
@@ -230,7 +224,6 @@ export class GovernanceSystem {
         reason: string;
         timestamp?: number;
       }) => {
-        // Registrar pérdida de trabajador para estadísticas
         this.recordEvent({
           timestamp: Date.now(),
           type: "production_worker_lost",
@@ -244,10 +237,9 @@ export class GovernanceSystem {
         const recentLosses = this.history.filter(
           (e) =>
             e.type === "production_worker_lost" &&
-            Date.now() - e.timestamp < 60000, // Último minuto
+            Date.now() - e.timestamp < 60000,
         );
         if (recentLosses.length >= 3) {
-          // Crear demanda de trabajadores si hay muchas pérdidas recientes
           this.createDemand(
             "housing_full", // Usar tipo existente, podría ser "worker_shortage" en el futuro
             7,

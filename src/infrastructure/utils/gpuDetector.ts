@@ -61,7 +61,6 @@ export function detectGPUAvailability(): GPUInfo {
     libraries: {},
   };
 
-  // Intentar cargar TensorFlow (preferencia GPU)
   const tf = getTensorFlow() as {
     getBackend?: () => string;
     backend?: () => {
@@ -112,7 +111,6 @@ export function detectGPUAvailability(): GPUInfo {
     info.libraries!.tensorflowGpu = false;
   }
 
-  // Verificar variables de entorno relacionadas con CUDA/GPU
   const cudaVisible = process.env.CUDA_VISIBLE_DEVICES;
   const cudaHome = process.env.CUDA_HOME;
   const cudaPath = process.env.CUDA_PATH;

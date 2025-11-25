@@ -28,7 +28,6 @@ class VectorPoolImpl {
 
   constructor(initialSize = 100, maxSize = 1000) {
     this.maxSize = maxSize;
-    // Pre-allocar objetos
     for (let i = 0; i < initialSize; i++) {
       this.pool.push({ x: 0, y: 0, _pooled: true });
     }
@@ -65,7 +64,6 @@ class VectorPoolImpl {
       vec.y = 0;
       this.pool.push(vec);
     }
-    // Si el pool está lleno, simplemente dejamos que el GC lo recoja
   }
 
   /**

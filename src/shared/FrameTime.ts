@@ -20,8 +20,6 @@ let _frameTimestamp = 0; // Inicializar en 0 para forzar actualización
  */
 export function getFrameTime(): number {
   const realNow = Date.now();
-  // Si el timestamp está desactualizado (>100ms), actualizarlo
-  // El scheduler lo actualiza cada tick, pero esto es un fallback seguro
   if (realNow - _frameTimestamp > 100) {
     _frameTimestamp = realNow;
   }

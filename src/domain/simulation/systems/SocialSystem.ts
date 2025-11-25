@@ -71,7 +71,6 @@ export class SocialSystem {
         remainingMembers: string[];
         timestamp: number;
       }) => {
-        // Reducir afinidad con los miembros restantes pero no eliminar completamente
         for (const memberId of data.remainingMembers) {
           if (memberId !== data.agentId) {
             this.modifyAffinity(data.agentId, memberId, -0.3);
@@ -118,7 +117,6 @@ export class SocialSystem {
       const cachedPos = this.positionCache.get(entity.id);
 
       if (!cachedPos) {
-        // Nueva entidad
         this.spatialGrid.insert(entity.id, entity.position);
         this.positionCache.set(entity.id, {
           x: entity.position.x,
@@ -130,7 +128,6 @@ export class SocialSystem {
         const dy = Math.abs(entity.position.y - cachedPos.y);
 
         if (dx > this.POSITION_THRESHOLD || dy > this.POSITION_THRESHOLD) {
-          // insert() ya hace remove() internamente
           this.spatialGrid.insert(entity.id, entity.position);
           cachedPos.x = entity.position.x;
           cachedPos.y = entity.position.y;
@@ -138,7 +135,6 @@ export class SocialSystem {
       }
     }
 
-    // Eliminar entidades que ya no existen
     for (const id of this.knownEntities) {
       if (!currentIds.has(id)) {
         this.spatialGrid.remove(id);
@@ -154,11 +150,10 @@ export class SocialSystem {
   private decayEdgesOptimized(dt: number): void {
     const decayAmount = this.config.decayPerSecond * dt;
     const bondDecayAmount = decayAmount * 0.05;
-    const minAffinity = 0.001; // Umbral mínimo para considerar valor
+    const minAffinity = 0.001;
 
     for (const [aId, neighbors] of this.edges) {
       for (const [bId, affinity] of neighbors) {
-        // Skip si ya es efectivamente 0
         if (Math.abs(affinity) < minAffinity) {
           if (affinity !== 0) neighbors.set(bId, 0);
           continue;

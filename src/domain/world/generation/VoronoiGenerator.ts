@@ -180,7 +180,6 @@ export class VoronoiGenerator {
   }
 
   private computeVoronoi(sites: Point[]): VoronoiCell[] {
-    // Delaunator works with flat arrays of coordinates
     const delaunay = Delaunator.from(sites.map((site) => [site.x, site.y]));
 
     const cells: VoronoiCell[] = [];

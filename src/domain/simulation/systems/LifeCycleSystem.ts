@@ -234,7 +234,6 @@ export class LifeCycleSystem extends EventEmitter {
 
     if (males.length === 0 || females.length === 0) return;
 
-    // Reduced probability since we check less often, but still want it to be an event
     if (Math.random() < 0.3) {
       const father = males[Math.floor(Math.random() * males.length)];
       const mother = females[Math.floor(Math.random() * females.length)];
@@ -316,7 +315,6 @@ export class LifeCycleSystem extends EventEmitter {
     if (!profile.position) {
       profile.position = this.findValidSpawnPosition(world);
     } else {
-      // Validar posición proporcionada
       if (!this.isPositionValid(profile.position, world)) {
         profile.position = this.findValidSpawnPosition(world);
       }
@@ -532,7 +530,6 @@ export class LifeCycleSystem extends EventEmitter {
       }
     }
 
-    // Fallback: posición central si no se encuentra una válida
     return {
       x: Math.floor(world.width / 2),
       y: Math.floor(world.height / 2),

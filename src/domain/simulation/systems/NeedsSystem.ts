@@ -384,7 +384,6 @@ export class NeedsSystem extends EventEmitter {
     needs.fun = 70;
     needs.mentalHealth = 80;
 
-    // Marcar entidad como no muerta si existe
     if (this.gameState.entities) {
       const entity =
         this.entityIndex?.getEntity(entityId) ??

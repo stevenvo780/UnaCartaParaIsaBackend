@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^7.7.0",
+    "@msgpack/msgpack": "^3.1.2",
     "@tensorflow/tfjs-node-gpu": "^4.22.0",
     "@types/ws": "^8.18.1",
     "cors": "^2.8.5",

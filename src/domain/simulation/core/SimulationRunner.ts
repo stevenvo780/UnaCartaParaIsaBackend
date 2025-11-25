@@ -276,7 +276,6 @@ export class SimulationRunner {
         },
       });
 
-      // Registrar a Isa y Stev como fundadores en el árbol genealógico (sin padres)
       this._genealogySystem.registerBirth(isa, undefined, undefined);
       this._genealogySystem.registerBirth(stev, undefined, undefined);
 
@@ -300,7 +299,6 @@ export class SimulationRunner {
           },
         });
 
-        // Registrar nacimiento en el árbol genealógico
         this._genealogySystem.registerBirth(child, stev.id, isa.id);
       }
 

@@ -163,7 +163,6 @@ export class BuildingSystem {
       y: Math.floor(Math.random() * worldSize.height),
     };
 
-    // Validar posición antes de crear la zona
     const validatedPosition = this.validateAndAdjustPosition(
       boundsPosition,
       worldSize,
@@ -342,7 +341,6 @@ export class BuildingSystem {
           ? position.y
           : Math.floor(Math.random() * (worldSize.height - BUILDING_HEIGHT));
 
-      // Verificar límites del mundo
       if (
         testX < 0 ||
         testY < 0 ||
