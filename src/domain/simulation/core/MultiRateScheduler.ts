@@ -1,4 +1,5 @@
 import { logger } from "../../../infrastructure/utils/logger";
+import { updateFrameTime } from "../../../shared/FrameTime";
 
 /**
  * Multi-Rate Scheduler para optimizar rendimiento de simulación
@@ -162,7 +163,7 @@ export class MultiRateScheduler {
   }
 
   private async tickFast(): Promise<void> {
-    const now = Date.now();
+    const now = updateFrameTime(); // Actualiza timestamp compartido
     const delta = now - this.lastFastTick;
     this.lastFastTick = now;
 
@@ -188,7 +189,7 @@ export class MultiRateScheduler {
   }
 
   private async tickMedium(): Promise<void> {
-    const now = Date.now();
+    const now = updateFrameTime(); // Actualiza timestamp compartido
     const delta = now - this.lastMediumTick;
     this.lastMediumTick = now;
 
@@ -215,7 +216,7 @@ export class MultiRateScheduler {
   }
 
   private async tickSlow(): Promise<void> {
-    const now = Date.now();
+    const now = updateFrameTime(); // Actualiza timestamp compartido
     const delta = now - this.lastSlowTick;
     this.lastSlowTick = now;
 

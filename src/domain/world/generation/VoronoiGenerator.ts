@@ -26,8 +26,6 @@ import { injectable } from "inversify";
 
 @injectable()
 export class VoronoiGenerator {
-  constructor() {}
-
   generateRegions(
     width: number,
     height: number,

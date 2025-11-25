@@ -45,8 +45,12 @@ export class StorageService {
         });
         this.bucket = storage.bucket(CONFIG.BUCKET_NAME);
         this.useGCS = true;
-      } catch (_error) {
-        logger.warn("GCS not available, using local storage");
+      } catch (error) {
+        logger.warn("GCS not available, using local storage", {
+          error: error instanceof Error ? error.message : String(error),
+          projectId: CONFIG.PROJECT_ID,
+          bucketName: CONFIG.BUCKET_NAME,
+        });
       }
     }
   }
@@ -158,7 +162,11 @@ export class StorageService {
           return null;
         }
         return parsed;
-      } catch (_error) {
+      } catch (error) {
+        logger.warn("Error reading save file from local storage", {
+          id,
+          error: error instanceof Error ? error.message : String(error),
+        });
         return null;
       }
     }
@@ -210,7 +218,11 @@ export class StorageService {
       try {
         await fs.unlink(filepath);
         return true;
-      } catch (_error) {
+      } catch (error) {
+        logger.warn("Error deleting save file from local storage", {
+          id,
+          error: error instanceof Error ? error.message : String(error),
+        });
         return false;
       }
     }

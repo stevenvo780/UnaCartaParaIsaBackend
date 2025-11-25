@@ -42,8 +42,10 @@ export function getTensorFlow(): unknown {
     cachedTf = require("@tensorflow/tfjs-node");
     logger.info("✅ TensorFlow.js CPU cargado (fallback)");
     return cachedTf;
-  } catch (_cpuErr) {
-    logger.debug("TensorFlow CPU tampoco disponible");
+  } catch (cpuErr) {
+    logger.debug("TensorFlow CPU tampoco disponible", {
+      error: cpuErr instanceof Error ? cpuErr.message : String(cpuErr),
+    });
   }
 
   return null;
@@ -94,7 +96,11 @@ export function detectGPUAvailability(): GPUInfo {
         } else {
           logger.info("🎮 GPU en uso (TensorFlow.js)", { backend });
         }
-      } catch (_err) {
+      } catch (err) {
+        logger.debug("Error getting GPU device info, assuming GPU available", {
+          error: err instanceof Error ? err.message : String(err),
+          backend,
+        });
         logger.info("🎮 GPU en uso (TensorFlow.js)", { backend });
       }
     } else {
@@ -142,13 +148,15 @@ export function detectGPUAvailability(): GPUInfo {
           deviceName: nvidiaSmi.trim(),
         });
       }
-    } catch (_err) {
-      // nvidia-smi no disponible o error
-      void _err;
+    } catch (err) {
+      logger.debug("nvidia-smi no disponible o error ejecutando comando", {
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
-  } catch (_err2) {
-    // execSync no disponible
-    void _err2;
+  } catch (err2) {
+    logger.debug("Error checking for NVIDIA GPU via child_process", {
+      error: err2 instanceof Error ? err2.message : String(err2),
+    });
   }
 
   if (info.usingGPU) {

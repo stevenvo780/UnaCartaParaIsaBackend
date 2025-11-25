@@ -58,7 +58,12 @@ server.on("upgrade", (request, socket, head) => {
   let pathname: string;
   try {
     pathname = new URL(url, `http://${host}`).pathname;
-  } catch {
+  } catch (error) {
+    logger.debug("Invalid URL in WebSocket upgrade request", {
+      url,
+      host,
+      error: error instanceof Error ? error.message : String(error),
+    });
     socket.destroy();
     return;
   }
