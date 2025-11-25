@@ -5,6 +5,7 @@ import {
   BUILDING_COSTS,
   BuildingLabel,
 } from "../../types/simulation/buildings";
+import type { TaskType } from "../../types/simulation/tasks";
 
 import { TaskSystem } from "./TaskSystem";
 
@@ -162,7 +163,7 @@ export class BuildingSystem {
     let taskId: string | undefined;
     if (this.taskSystem) {
       const task = this.taskSystem.createTask({
-        type: `build_${label}`,
+        type: `build_${label}` as TaskType,
         requiredWork: cost.time / 1000,
         zoneId: mutableZone.id,
         bounds: mutableZone.bounds,

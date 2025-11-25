@@ -212,12 +212,9 @@ describe("QuestSystem", () => {
       const tutorialQuest = available.find((q) => q.id === "tutorial_survival");
       if (tutorialQuest) {
         questSystem.startQuest(tutorialQuest.id);
-        // Completar todos los objetivos manualmente
         // updateObjectiveProgress llama automáticamente a checkQuestCompletion
-        // que completa el quest, así que el quest ya debería estar completado
         const quest = questSystem.getQuest(tutorialQuest.id);
         if (quest) {
-          // Completar todos los objetivos excepto el último
           for (let i = 0; i < quest.objectives.length - 1; i++) {
             const obj = quest.objectives[i];
             questSystem.updateObjectiveProgress(tutorialQuest.id, obj.id, obj.requiredAmount || 0);
@@ -244,7 +241,6 @@ describe("QuestSystem", () => {
       const tutorialQuest = available.find((q) => q.id === "tutorial_survival");
       if (tutorialQuest) {
         questSystem.startQuest(tutorialQuest.id);
-        // No completar todos los objetivos
         const result = questSystem.completeQuest(tutorialQuest.id);
         expect(result.success).toBe(false);
       }
@@ -392,7 +388,6 @@ describe("QuestSystem", () => {
       const tutorialQuest = available.find((q) => q.id === "tutorial_survival");
       if (tutorialQuest) {
         questSystem.startQuest(tutorialQuest.id);
-        // Completar todos los objetivos
         const quest = questSystem.getQuest(tutorialQuest.id);
         if (quest) {
           quest.objectives.forEach((obj) => {

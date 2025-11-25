@@ -715,7 +715,6 @@ describe("AISystem", () => {
         });
       }
 
-      // Actualizar múltiples veces para procesar todos los lotes
       for (let i = 0; i < 20; i++) {
         aiSystem.update(1000);
       }

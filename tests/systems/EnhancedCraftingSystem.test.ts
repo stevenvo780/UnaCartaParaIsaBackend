@@ -123,7 +123,6 @@ describe('EnhancedCraftingSystem', () => {
       inventorySystem.initializeAgentInventory('agent-1');
       // Las recetas requieren wood_log (mapeado a wood) y fiber
       // Como fiber no está en el inventario básico, no se puede craftar
-      // Este test verifica que el sistema retorna null cuando faltan ingredientes
       inventorySystem.addResource('agent-1', 'wood', 10);
       inventorySystem.addResource('agent-1', 'stone', 10);
       
@@ -180,7 +179,6 @@ describe('EnhancedCraftingSystem', () => {
       
       // Sin estación de crafting, no debería poder craftar
       const canCraft = system.canCraftWeapon('agent-1', 'stone_dagger');
-      // El sistema actual no verifica estaciones, pero el test valida la configuración
       expect(system).toBeDefined();
     });
   });

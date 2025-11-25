@@ -8,7 +8,6 @@ describe('App', () => {
   });
 
   it('debe tener las rutas configuradas', () => {
-    // Verificar que app tiene los métodos de Express
     expect(app).toBeDefined();
   });
 });

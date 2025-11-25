@@ -229,7 +229,6 @@ describe("AnimalSystem", () => {
     it("debe spawnear un animal individual", () => {
       const animal = animalSystem.spawnAnimal("deer", { x: 200, y: 200 });
       if (!animal) {
-        // Si no se puede spawnear, saltar el test
         return;
       }
       expect(animal).toBeDefined();
@@ -285,7 +284,6 @@ describe("AnimalSystem", () => {
       const animals = animalSystem.getAnimals();
       
       if (animals.size === 0) {
-        // Si no hay animales, el test no es aplicable
         return;
       }
       

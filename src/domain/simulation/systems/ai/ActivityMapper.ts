@@ -15,9 +15,6 @@ export type ActivityType =
   | "fleeing"
   | "attacking";
 
-/**
- * Maps an AIGoal to a corresponding activity type
- */
 export function mapGoalToActivity(goal: AIGoal): ActivityType {
   if (goal.type === "satisfy_need") {
     const needToActivity: Record<string, ActivityType> = {
@@ -49,9 +46,6 @@ export function mapGoalToActivity(goal: AIGoal): ActivityType {
   return goalToActivity[goal.type] || "idle";
 }
 
-/**
- * Returns the expected duration for an activity in milliseconds
- */
 export function getActivityDuration(activity: ActivityType): number {
   const durations: Record<ActivityType, number> = {
     idle: 0,
@@ -71,9 +65,6 @@ export function getActivityDuration(activity: ActivityType): number {
   return durations[activity];
 }
 
-/**
- * Determines if an activity requires a specific zone to be performed
- */
 export function activityRequiresZone(activity: ActivityType): boolean {
   const requiresZone = new Set<ActivityType>([
     "eating",
