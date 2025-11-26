@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import * as tf from "@tensorflow/tfjs-node-gpu";
 import { logger } from "../../../infrastructure/utils/logger";
 import { injectable } from "inversify";

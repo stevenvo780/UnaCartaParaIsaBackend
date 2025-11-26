@@ -183,6 +183,11 @@ export function getGoalTier(goal: AIGoal, _aiState: AIState): number {
     return PRIORITY_TIERS.LOGISTICS;
   }
 
+  // Deposit goals get LOGISTICS tier
+  if (goal.type === "deposit") {
+    return PRIORITY_TIERS.LOGISTICS;
+  }
+
   if (
     goal.type === "work" ||
     goal.type === "social" ||

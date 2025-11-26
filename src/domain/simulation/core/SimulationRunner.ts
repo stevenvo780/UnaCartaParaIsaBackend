@@ -867,6 +867,8 @@ export class SimulationRunner {
       logger.info("👨 Created missing parent: Stev");
     }
 
+    logger.info(`👨‍👩‍👧‍👦 Ensuring initial family...`);
+
     // 2. Ensure Children
     const childNames = [
       { name: "Luna", sex: "female" as const },
@@ -890,6 +892,7 @@ export class SimulationRunner {
       );
 
       if (!existingChild) {
+        logger.info(`👶 Child ${childData.name} not found. Attempting to spawn...`);
         try {
           const child = this.lifeCycleSystem.spawnAgent({
             name: childData.name,
@@ -905,9 +908,12 @@ export class SimulationRunner {
 
           this._genealogySystem.registerBirth(child, stev.id, isa.id);
           childrenCreated++;
+          logger.info(`✅ Spawned child: ${child.name} (${child.id})`);
         } catch (error) {
-          logger.error(`Failed to spawn child ${childData.name}:`, error);
+          logger.error(`❌ Failed to spawn child ${childData.name}:`, error);
         }
+      } else {
+        logger.debug(`👶 Child ${childData.name} already exists (${existingChild.id})`);
       }
     }
 
@@ -915,6 +921,8 @@ export class SimulationRunner {
       logger.info(
         `👶 Created ${childrenCreated} missing children for Isa & Stev`,
       );
+    } else {
+      logger.info(`👶 No new children created (all exist or failed).`);
     }
 
     // 3. Ensure Infrastructure
@@ -944,8 +952,7 @@ export class SimulationRunner {
         }
       } catch (err) {
         logger.warn(
-          `Failed to initialize movement state for agent ${agent.id}: ${
-            err instanceof Error ? err.message : String(err)
+          `Failed to initialize movement state for agent ${agent.id}: ${err instanceof Error ? err.message : String(err)
           }`,
         );
       }
@@ -2729,14 +2736,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                  resources?: {
-                    wood?: number;
-                    stone?: number;
-                    food?: number;
-                    water?: number;
-                  };
-                  minWorkers?: number;
-                }
+                resources?: {
+                  wood?: number;
+                  stone?: number;
+                  food?: number;
+                  water?: number;
+                };
+                minWorkers?: number;
+              }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,
@@ -2778,12 +2785,12 @@ export class SimulationRunner {
       ) {
         this.timeSystem.setWeather(
           weatherType as
-            | "clear"
-            | "cloudy"
-            | "rainy"
-            | "stormy"
-            | "foggy"
-            | "snowy",
+          | "clear"
+          | "cloudy"
+          | "rainy"
+          | "stormy"
+          | "foggy"
+          | "snowy",
         );
         logger.info(`Weather set to ${weatherType} via TIME_COMMAND`);
       } else {
@@ -2889,12 +2896,12 @@ export class SimulationRunner {
       social,
       ai: aiState
         ? {
-            currentGoal: aiState.currentGoal,
-            goalQueue: aiState.goalQueue,
-            currentAction: aiState.currentAction,
-            offDuty: aiState.offDuty,
-            lastDecisionTime: aiState.lastDecisionTime,
-          }
+          currentGoal: aiState.currentGoal,
+          goalQueue: aiState.goalQueue,
+          currentAction: aiState.currentAction,
+          offDuty: aiState.offDuty,
+          lastDecisionTime: aiState.lastDecisionTime,
+        }
         : null,
     };
   }

@@ -118,6 +118,14 @@ export class AISystem extends EventEmitter {
 
   private readonly MAX_DECISION_TIME_MS = 5;
 
+  // Bound handler reference for cleanup
+  private readonly boundHandleActionComplete: (payload: {
+    agentId: string;
+    success: boolean;
+    actionType?: string;
+    data?: Record<string, unknown>;
+  }) => void;
+
   private agentStrategies = new Map<
     string,
     "peaceful" | "tit_for_tat" | "bully"
@@ -211,9 +219,11 @@ export class AISystem extends EventEmitter {
     this.questSystem = questSystem;
     this.timeSystem = timeSystem;
 
+    // Store bound handler reference for cleanup
+    this.boundHandleActionComplete = this.handleActionComplete.bind(this);
     simulationEvents.on(
       GameEventNames.AGENT_ACTION_COMPLETE,
-      this.handleActionComplete.bind(this),
+      this.boundHandleActionComplete,
     );
   }
 
@@ -558,6 +568,7 @@ export class AISystem extends EventEmitter {
     // URGENT: Override with survival goals if needs are critical
     const needs = this.needsSystem?.getNeeds(agentId);
     if (needs) {
+      // Survival needs take highest priority
       if (needs.hunger < 20) {
         const foodGoal = this.createUrgentFoodGoal(agentId, now);
         if (foodGoal) return foodGoal;
@@ -569,6 +580,15 @@ export class AISystem extends EventEmitter {
       if (needs.energy < 15) {
         const restGoal = this.createUrgentRestGoal(agentId, now);
         if (restGoal) return restGoal;
+      }
+      // Social and fun needs are less critical but still important
+      if (needs.social < 20) {
+        const socialGoal = this.createUrgentSocialGoal(agentId, now);
+        if (socialGoal) return socialGoal;
+      }
+      if (needs.fun < 15) {
+        const funGoal = this.createUrgentFunGoal(agentId, now);
+        if (funGoal) return funGoal;
       }
     }
 
@@ -595,6 +615,7 @@ export class AISystem extends EventEmitter {
         }
         const zone = this.gameState.zones.find((z) => {
           return (
+            z.bounds &&
             agent.position &&
             agent.position.x >= z.bounds.x &&
             agent.position.x <= z.bounds.x + z.bounds.width &&
@@ -876,6 +897,58 @@ export class AISystem extends EventEmitter {
   }
 
   /**
+   * Create urgent social goal when social need is critical
+   */
+  private createUrgentSocialGoal(agentId: string, now: number): AIGoal | null {
+    const socialZone = this.gameState.zones?.find(
+      (z) =>
+        z.type === "social" ||
+        z.type === "gathering" ||
+        z.type === "market" ||
+        z.type === "tavern",
+    );
+
+    if (socialZone?.bounds) {
+      return {
+        id: `urgent-social-${agentId}-${now}`,
+        type: "satisfy_social",
+        priority: 9,
+        targetZoneId: socialZone.id,
+        createdAt: now,
+        data: { need: "social" },
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * Create urgent fun goal when fun need is critical
+   */
+  private createUrgentFunGoal(agentId: string, now: number): AIGoal | null {
+    const funZone = this.gameState.zones?.find(
+      (z) =>
+        z.type === "entertainment" ||
+        z.type === "tavern" ||
+        z.type === "market" ||
+        z.type === "gathering",
+    );
+
+    if (funZone?.bounds) {
+      return {
+        id: `urgent-fun-${agentId}-${now}`,
+        type: "satisfy_fun",
+        priority: 8,
+        targetZoneId: funZone.id,
+        createdAt: now,
+        data: { need: "fun" },
+      };
+    }
+
+    return null;
+  }
+
+  /**
    * Notifies the AI system that an entity has arrived at a zone.
    * Handles goal completion for zone-based goals and executes zone-specific actions.
    *
@@ -956,6 +1029,7 @@ export class AISystem extends EventEmitter {
         }
       }
       aiState.currentGoal = null;
+      aiState.currentAction = null;
       return;
     }
 
@@ -970,6 +1044,7 @@ export class AISystem extends EventEmitter {
         }
       }
       aiState.currentGoal = null;
+      aiState.currentAction = null;
       return;
     }
 
@@ -979,6 +1054,69 @@ export class AISystem extends EventEmitter {
     ) {
       this.tryDepositResources(entityId, zoneId);
       aiState.currentGoal = null;
+      aiState.currentAction = null;
+      return;
+    }
+
+    // Handle trade action from TradeEvaluator
+    if (goal.data?.action === "trade" && zoneId) {
+      // Trade is handled by the market zone - just log the arrival
+      // Actual trading would be done by TradeSystem if implemented
+      simulationEvents.emit(GameEventNames.AGENT_ACTIVITY_STARTED, {
+        agentId: entityId,
+        zoneId,
+        activity: "working",
+        duration: 5000,
+      });
+      aiState.currentGoal = null;
+      aiState.currentAction = null;
+      return;
+    }
+
+    // Handle building contribution from BuildingContributionEvaluator
+    if (goal.data?.action === "contribute_resources" && zoneId) {
+      if (this.inventorySystem) {
+        const inv = this.inventorySystem.getAgentInventory(entityId);
+        if (inv) {
+          // Contribute resources to construction zone
+          const transferred = {
+            wood: Math.min(inv.wood || 0, 10),
+            stone: Math.min(inv.stone || 0, 10),
+          };
+          if (transferred.wood > 0) {
+            this.inventorySystem.removeFromAgent(
+              entityId,
+              "wood" as ResourceType,
+              transferred.wood,
+            );
+          }
+          if (transferred.stone > 0) {
+            this.inventorySystem.removeFromAgent(
+              entityId,
+              "stone" as ResourceType,
+              transferred.stone,
+            );
+          }
+          simulationEvents.emit(GameEventNames.RESOURCES_DEPOSITED, {
+            agentId: entityId,
+            zoneId,
+            resources: transferred,
+          });
+        }
+      }
+      aiState.currentGoal = null;
+      aiState.currentAction = null;
+      return;
+    }
+
+    // Handle quest start from QuestEvaluator
+    if (goal.data?.action === "start_quest" && goal.data?.questId) {
+      if (this.questSystem) {
+        const questId = goal.data.questId as string;
+        this.questSystem.startQuest(questId);
+      }
+      aiState.currentGoal = null;
+      aiState.currentAction = null;
       return;
     }
 
@@ -1010,6 +1148,7 @@ export class AISystem extends EventEmitter {
     }
 
     aiState.currentGoal = null;
+    aiState.currentAction = null;
     this._goalsCompleted++;
   }
 
@@ -1113,12 +1252,17 @@ export class AISystem extends EventEmitter {
   }
 
   private cleanupAgentMemory(now: number): void {
+    const THREAT_MAX_AGE_MS = 30000; // Forget threats older than 30s
+    const INTERACTION_MAX_AGE_MS = 60000; // Forget interactions older than 60s
+
     for (const [_agentId, aiState] of this.aiStates) {
+      // Limit visitedZones to 100 entries
       if (aiState.memory.visitedZones.size > 100) {
         const zones = [...aiState.memory.visitedZones];
         aiState.memory.visitedZones = new Set(zones.slice(-100));
       }
 
+      // Limit successfulActivities to top 50
       if (
         aiState.memory.successfulActivities &&
         aiState.memory.successfulActivities.size > 50
@@ -1127,6 +1271,40 @@ export class AISystem extends EventEmitter {
           .sort((a, b) => b[1] - a[1])
           .slice(0, 50) as Array<[string, number]>;
         aiState.memory.successfulActivities = new Map(sorted);
+      }
+
+      // Clean up stale threats
+      if (aiState.memory.lastSeenThreats?.length > 0) {
+        aiState.memory.lastSeenThreats = aiState.memory.lastSeenThreats.filter(
+          (threat) => now - threat.timestamp < THREAT_MAX_AGE_MS,
+        );
+      }
+
+      // Clean up stale interactions (keep last 20 recent ones)
+      if (aiState.memory.recentInteractions?.length > 20) {
+        aiState.memory.recentInteractions = aiState.memory.recentInteractions
+          .filter((i) => now - i.timestamp < INTERACTION_MAX_AGE_MS)
+          .slice(-20);
+      }
+
+      // Limit knownResourceLocations to 100 entries
+      if (
+        aiState.memory.knownResourceLocations &&
+        aiState.memory.knownResourceLocations.size > 100
+      ) {
+        const locations = [...aiState.memory.knownResourceLocations.entries()];
+        aiState.memory.knownResourceLocations = new Map(locations.slice(-100));
+      }
+
+      // Limit failedAttempts to 50 entries (keep those with highest counts)
+      if (
+        aiState.memory.failedAttempts &&
+        aiState.memory.failedAttempts.size > 50
+      ) {
+        const sorted = [...aiState.memory.failedAttempts.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 50) as Array<[string, number]>;
+        aiState.memory.failedAttempts = new Map(sorted);
       }
 
       aiState.memory.lastMemoryCleanup = now;
@@ -1229,6 +1407,7 @@ export class AISystem extends EventEmitter {
     this.playerControlledAgents.delete(entityId);
     this.agentPriorities.delete(entityId);
     this.agentStrategies.delete(entityId);
+    this.activeAgentIdsCache = null; // Invalidate cache
   }
 
   /**
@@ -1236,6 +1415,18 @@ export class AISystem extends EventEmitter {
    */
   public cleanup(): void {
     this.aiStates.clear();
+    this.agentPriorities.clear();
+    this.agentStrategies.clear();
+    this.playerControlledAgents.clear();
+    this.activeAgentIdsCache = null;
+    this.zoneCache.clear();
+    this.craftingZoneCache = null;
+    this.nearestResourceCache.clear();
+    // Remove listener from simulationEvents
+    simulationEvents.off(
+      GameEventNames.AGENT_ACTION_COMPLETE,
+      this.boundHandleActionComplete,
+    );
     this.removeAllListeners();
   }
 
@@ -1289,7 +1480,7 @@ export class AISystem extends EventEmitter {
       const zone = this.gameState.zones?.find(
         (z) => z.id === goal.targetZoneId,
       );
-      if (!zone) return false;
+      if (!zone || !zone.bounds) return false;
 
       const inZone =
         agentPos.x >= zone.bounds.x &&
@@ -1298,15 +1489,6 @@ export class AISystem extends EventEmitter {
         agentPos.y <= zone.bounds.y + zone.bounds.height;
 
       if (!inZone) {
-        return false;
-      }
-    }
-
-    if (goal.targetZoneId) {
-      const zone = this.gameState.zones?.find(
-        (z) => z.id === goal.targetZoneId,
-      );
-      if (!zone) {
         return false;
       }
     }
@@ -1349,8 +1531,17 @@ export class AISystem extends EventEmitter {
           return true;
         }
       }
+      // assist goal requires additional completion logic, don't auto-complete
+      return false;
     }
 
+    // If we passed all validations and goal has a target (position or zone),
+    // the goal is considered complete when the agent arrives
+    if (goal.targetPosition || goal.targetZoneId) {
+      return true;
+    }
+
+    // Goals without targets (like idle) are not automatically completed here
     return false;
   }
 
@@ -1504,18 +1695,147 @@ export class AISystem extends EventEmitter {
         }
         return null;
 
-      case "satisfy_hunger":
-      case "satisfy_thirst":
-      case "satisfy_energy":
-      case "satisfy_social":
-      case "satisfy_fun":
+      case "satisfy_hunger": {
+        if (goal.targetZoneId || goal.targetPosition) {
+          return {
+            actionType: "move",
+            agentId,
+            targetZoneId: goal.targetZoneId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+          };
+        }
+        // Fallback: find food zone
+        const foodZone = this.gameState.zones?.find(
+          (z) => z.type === "food" || z.type === "kitchen",
+        );
+        if (foodZone) {
+          return {
+            actionType: "move",
+            agentId,
+            targetZoneId: foodZone.id,
+            timestamp,
+          };
+        }
+        return null;
+      }
+
+      case "satisfy_thirst": {
+        if (goal.targetZoneId || goal.targetPosition) {
+          return {
+            actionType: "move",
+            agentId,
+            targetZoneId: goal.targetZoneId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+          };
+        }
+        // Fallback: find water zone
+        const waterZone = this.gameState.zones?.find(
+          (z) => z.type === "water" || z.type === "well",
+        );
+        if (waterZone) {
+          return {
+            actionType: "move",
+            agentId,
+            targetZoneId: waterZone.id,
+            timestamp,
+          };
+        }
+        return null;
+      }
+
+      case "satisfy_energy": {
+        if (goal.targetZoneId || goal.targetPosition) {
+          return {
+            actionType: "move",
+            agentId,
+            targetZoneId: goal.targetZoneId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+          };
+        }
+        // Fallback: find rest zone or idle in place
+        const restZone = this.gameState.zones?.find(
+          (z) =>
+            z.type === "rest" ||
+            z.type === "bed" ||
+            z.type === "shelter" ||
+            z.type === "house",
+        );
+        if (restZone) {
+          return {
+            actionType: "move",
+            agentId,
+            targetZoneId: restZone.id,
+            timestamp,
+          };
+        }
+        // No rest zone - idle in place to rest
         return {
-          actionType: "move",
+          actionType: "idle",
           agentId,
-          targetZoneId: goal.targetZoneId,
-          targetPosition: goal.targetPosition,
           timestamp,
         };
+      }
+
+      case "satisfy_social": {
+        if (goal.targetZoneId || goal.targetPosition) {
+          return {
+            actionType: "move",
+            agentId,
+            targetZoneId: goal.targetZoneId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+          };
+        }
+        // Fallback: find social zone
+        const socialZone = this.gameState.zones?.find(
+          (z) =>
+            z.type === "social" ||
+            z.type === "gathering" ||
+            z.type === "market" ||
+            z.type === "tavern",
+        );
+        if (socialZone) {
+          return {
+            actionType: "move",
+            agentId,
+            targetZoneId: socialZone.id,
+            timestamp,
+          };
+        }
+        return null;
+      }
+
+      case "satisfy_fun": {
+        if (goal.targetZoneId || goal.targetPosition) {
+          return {
+            actionType: "move",
+            agentId,
+            targetZoneId: goal.targetZoneId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+          };
+        }
+        // Fallback: find entertainment zone
+        const funZone = this.gameState.zones?.find(
+          (z) =>
+            z.type === "entertainment" ||
+            z.type === "tavern" ||
+            z.type === "market" ||
+            z.type === "gathering",
+        );
+        if (funZone) {
+          return {
+            actionType: "move",
+            agentId,
+            targetZoneId: funZone.id,
+            timestamp,
+          };
+        }
+        return null;
+      }
 
       case "gather":
         if (goal.targetId && goal.targetPosition) {
@@ -1709,6 +2029,60 @@ export class AISystem extends EventEmitter {
         }
         return null;
       }
+
+      case "construction":
+        // Construction goals use work action with construction workType
+        return {
+          actionType: "work",
+          agentId,
+          targetZoneId: goal.targetZoneId,
+          data: { ...goal.data, workType: "construction" },
+          timestamp,
+        };
+
+      case "idle":
+        // Idle goal - agent does nothing for a while
+        return {
+          actionType: "idle",
+          agentId,
+          timestamp,
+        };
+
+      case "rest":
+        // Rest goal - move to rest zone or rest in place
+        if (goal.targetZoneId) {
+          return {
+            actionType: "move",
+            agentId,
+            targetZoneId: goal.targetZoneId,
+            timestamp,
+          };
+        }
+        return {
+          actionType: "idle",
+          agentId,
+          timestamp,
+        };
+
+      case "inspect":
+        // Inspect goal - move to target position/zone to inspect
+        if (goal.targetPosition) {
+          return {
+            actionType: "move",
+            agentId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+          };
+        }
+        if (goal.targetZoneId) {
+          return {
+            actionType: "move",
+            agentId,
+            targetZoneId: goal.targetZoneId,
+            timestamp,
+          };
+        }
+        return null;
 
       default:
         return null;
@@ -2114,11 +2488,148 @@ export class AISystem extends EventEmitter {
         break;
       case "socialize":
         // Social interactions handled via notifyEntityArrived when reaching target zone
-        // For immediate interaction, mark as pending and let arrival trigger completion
         if (action.targetZoneId) {
           this._movementSystem?.moveToZone(action.agentId, action.targetZoneId);
+        } else if (action.targetId && this.socialSystem) {
+          // Direct social interaction with a specific target
+          this.socialSystem.registerFriendlyInteraction(
+            action.agentId,
+            action.targetId,
+          );
+          if (this.needsSystem) {
+            this.needsSystem.satisfyNeed(action.agentId, "social", 15);
+          }
+          simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+            agentId: action.agentId,
+            actionType: "socialize",
+            success: true,
+            data: { targetId: action.targetId },
+          });
+        } else {
+          // No target, just satisfy need slightly and complete
+          if (this.needsSystem) {
+            this.needsSystem.satisfyNeed(action.agentId, "social", 5);
+          }
+          simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+            agentId: action.agentId,
+            actionType: "socialize",
+            success: true,
+          });
         }
         break;
+
+      case "eat":
+        // Satisfy hunger need
+        if (this.needsSystem) {
+          this.needsSystem.satisfyNeed(action.agentId, "hunger", 30);
+        }
+        simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+          agentId: action.agentId,
+          actionType: "eat",
+          success: true,
+        });
+        break;
+
+      case "drink":
+        // Satisfy thirst need
+        if (this.needsSystem) {
+          this.needsSystem.satisfyNeed(action.agentId, "thirst", 30);
+        }
+        simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+          agentId: action.agentId,
+          actionType: "drink",
+          success: true,
+        });
+        break;
+
+      case "sleep":
+        // Satisfy energy need significantly
+        if (this.needsSystem) {
+          this.needsSystem.satisfyNeed(action.agentId, "energy", 50);
+        }
+        simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+          agentId: action.agentId,
+          actionType: "sleep",
+          success: true,
+        });
+        break;
+
+      case "craft":
+        // Crafting is primarily handled in notifyEntityArrived for zone-based crafting
+        // Direct craft action for immediate crafting
+        if (this.craftingSystem && action.data?.itemType === "weapon") {
+          const weaponId = this.craftingSystem.craftBestWeapon(action.agentId);
+          simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+            agentId: action.agentId,
+            actionType: "craft",
+            success: !!weaponId,
+            data: { weaponId },
+          });
+        } else {
+          // No crafting system or not a weapon, complete with failure
+          simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+            agentId: action.agentId,
+            actionType: "craft",
+            success: false,
+          });
+        }
+        break;
+
+      case "deposit":
+        // Deposit is primarily handled in notifyEntityArrived for zone-based deposits
+        // Direct deposit action
+        if (action.targetZoneId) {
+          this.tryDepositResources(action.agentId, action.targetZoneId);
+        }
+        simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+          agentId: action.agentId,
+          actionType: "deposit",
+          success: true,
+        });
+        break;
+
+      case "build":
+        // Build action contributes to construction tasks
+        if (action.targetZoneId && this.taskSystem) {
+          // Find construction task for this zone
+          const tasks = this.taskSystem.getTasksInZone(action.targetZoneId);
+          const constructionTask = tasks.find(
+            (t: { type: string }) =>
+              t.type === "build" || t.type === "construction",
+          );
+          if (constructionTask) {
+            const result = this.taskSystem.contributeToTask(
+              constructionTask.id,
+              action.agentId,
+              10, // Base contribution
+              1.0, // Synergy
+            );
+            simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+              agentId: action.agentId,
+              actionType: "build",
+              success: true,
+              data: {
+                taskId: constructionTask.id,
+                progressMade: result.progressMade,
+                completed: result.completed,
+              },
+            });
+          } else {
+            simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+              agentId: action.agentId,
+              actionType: "build",
+              success: false,
+            });
+          }
+        } else {
+          simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+            agentId: action.agentId,
+            actionType: "build",
+            success: false,
+          });
+        }
+        break;
+
       default:
         break;
     }
@@ -2228,6 +2739,7 @@ export class AISystem extends EventEmitter {
     const aiState = this.aiStates.get(agentId);
     if (aiState) {
       aiState.currentGoal = null;
+      aiState.currentAction = null;
       aiState.goalQueue = [];
     }
   }
@@ -2243,9 +2755,7 @@ export class AISystem extends EventEmitter {
    * @param agentId - Agent identifier
    */
   public removeAgentState(agentId: string): void {
-    this.aiStates.delete(agentId);
-    this.agentStrategies.delete(agentId);
-    this.playerControlledAgents.delete(agentId);
-    this.activeAgentIdsCache = null; // Invalidate cache
+    // Delegate to removeEntityAI to avoid code duplication
+    this.removeEntityAI(agentId);
   }
 }

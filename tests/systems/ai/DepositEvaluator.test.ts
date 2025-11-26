@@ -113,7 +113,7 @@ describe("DepositEvaluator", () => {
       });
       const goals = evaluateDepositGoals(context, aiState);
       if (goals.length > 0) {
-        expect(goals[0].type).toBe("work");
+        expect(goals[0].type).toBe("deposit");
         expect(goals[0].targetZoneId).toBeDefined();
         expect(goals[0].data?.workType).toBe("deposit");
       }

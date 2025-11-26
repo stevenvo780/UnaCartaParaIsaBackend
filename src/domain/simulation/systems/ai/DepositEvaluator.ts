@@ -80,7 +80,7 @@ export function evaluateDepositGoals(
     return [
       {
         id: `deposit_${now}`,
-        type: "work", // Using 'work' as generic type, could be 'deposit' if supported
+        type: "deposit",
         priority: 0.65 + priorityBoost,
         targetZoneId: bestZone,
         data: {
