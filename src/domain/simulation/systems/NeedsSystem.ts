@@ -187,6 +187,7 @@ export class NeedsSystem extends EventEmitter {
   private updateTraditional(dtSeconds: number, _now: number): void {
     const startTime = performance.now();
     for (const [entityId, needs] of this.entityNeeds.entries()) {
+      const entityStartTime = performance.now();
       const action = this.entityActions.get(entityId) || "idle";
       this.applyNeedDecay(needs, dtSeconds, entityId, action);
       this.handleZoneBenefits(entityId, needs, dtSeconds);
@@ -202,6 +203,14 @@ export class NeedsSystem extends EventEmitter {
 
       this.checkEmergencyNeeds(entityId, needs);
       this.emitNeedEvents(entityId, needs);
+
+      const entityDuration = performance.now() - entityStartTime;
+      performanceMonitor.recordSubsystemExecution(
+        "NeedsSystem",
+        "updateEntity",
+        entityDuration,
+        entityId,
+      );
     }
     const duration = performance.now() - startTime;
     performanceMonitor.recordSubsystemExecution(

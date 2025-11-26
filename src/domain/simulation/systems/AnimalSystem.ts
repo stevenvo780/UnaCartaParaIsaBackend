@@ -159,6 +159,7 @@ export class AnimalSystem {
       for (const animal of this.animals.values()) {
         if (animal.isDead) continue;
 
+        const animalStartTime = performance.now();
         const oldPosition = { ...animal.position };
 
         animal.age += this.config.updateInterval;
@@ -167,6 +168,14 @@ export class AnimalSystem {
         this.updateAnimalBehavior(animal, deltaSeconds);
         this.updateSpatialGrid(animal, oldPosition);
         this.checkAnimalDeath(animal);
+
+        const animalDuration = performance.now() - animalStartTime;
+        performanceMonitor.recordSubsystemExecution(
+          "AnimalSystem",
+          "updateAnimal",
+          animalDuration,
+          animal.id,
+        );
       }
     }
 
@@ -246,7 +255,7 @@ export class AnimalSystem {
       if (
         isIdleState &&
         i % this.IDLE_UPDATE_DIVISOR !==
-          this.updateFrame % this.IDLE_UPDATE_DIVISOR
+        this.updateFrame % this.IDLE_UPDATE_DIVISOR
       ) {
         continue;
       }

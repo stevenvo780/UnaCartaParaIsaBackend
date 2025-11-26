@@ -1,0 +1,324 @@
+{
+  "id": null,
+  "uid": "entity-analysis",
+  "title": "9. Entity Analysis - Rendimiento por Entidad",
+  "tags": [
+    "simulation",
+    "performance",
+    "entities",
+    "granular"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "P1809F7CD0C75ACF3"
+        },
+        "definition": "label_values(backend_subsystem_duration_ms, entity_id)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "entity_id",
+        "options": [],
+        "query": {
+          "query": "label_values(backend_subsystem_duration_ms, entity_id)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "P1809F7CD0C75ACF3"
+        },
+        "definition": "label_values(backend_subsystem_duration_ms, system)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "system",
+        "options": [],
+        "query": {
+          "query": "label_values(backend_subsystem_duration_ms, system)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "🚨 Top Culprits (Entidades más costosas)",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "collapsed": false
+    },
+    {
+      "type": "bargauge",
+      "title": "Top 10 Entidades por Tiempo de Ejecución (Avg)",
+      "description": "Entidades que consumen más tiempo promedio por operación",
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "targets": [
+        {
+          "expr": "topk(10, avg by (entity_id, system) (backend_subsystem_duration_ms{entity_id!=\"\"}))",
+          "legendFormat": "{{entity_id}} ({{system}})",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "green"
+              },
+              {
+                "value": 0.5,
+                "color": "yellow"
+              },
+              {
+                "value": 1.0,
+                "color": "orange"
+              },
+              {
+                "value": 2.0,
+                "color": "red"
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "valueMode": "color"
+      }
+    },
+    {
+      "type": "bargauge",
+      "title": "Top 10 Entidades por Tiempo Total (Sum)",
+      "description": "Entidades que consumen más tiempo total acumulado",
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "targets": [
+        {
+          "expr": "topk(10, sum by (entity_id, system) (rate(backend_subsystem_total_duration_ms{entity_id!=\"\"}[1m])))",
+          "legendFormat": "{{entity_id}} ({{system}})",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "green"
+              },
+              {
+                "value": 10,
+                "color": "yellow"
+              },
+              {
+                "value": 50,
+                "color": "orange"
+              },
+              {
+                "value": 100,
+                "color": "red"
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "valueMode": "color"
+      }
+    },
+    {
+      "type": "row",
+      "title": "📈 Análisis Detallado",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Rendimiento por Entidad (Seleccionada)",
+      "description": "Tiempo de ejecución de las entidades seleccionadas en el filtro",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "targets": [
+        {
+          "expr": "backend_subsystem_duration_ms{entity_id=~\"$entity_id\", system=~\"$system\"}",
+          "legendFormat": "{{system}} - {{entity_id}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "📊 Distribución por Sistema",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "collapsed": false
+    },
+    {
+      "type": "piechart",
+      "title": "Carga por Sistema (Entidades)",
+      "description": "Distribución del tiempo total de procesamiento de entidades por sistema",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "targets": [
+        {
+          "expr": "sum by (system) (rate(backend_subsystem_total_duration_ms{entity_id!=\"\"}[1m]))",
+          "legendFormat": "{{system}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "options": {
+        "pieType": "donut",
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "type": "heatmap",
+      "title": "Mapa de Calor de Latencia",
+      "description": "Distribución de tiempos de ejecución para detectar outliers",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 23
+      },
+      "targets": [
+        {
+          "expr": "backend_subsystem_duration_ms{entity_id!=\"\"}",
+          "legendFormat": "{{le}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "calculate": false,
+        "color": {
+          "fill": "dark-orange",
+          "mode": "spectrum",
+          "scale": "exponential",
+          "steps": 128
+        },
+        "yAxis": {
+          "axisPlacement": "left",
+          "unit": "ms"
+        }
+      }
+    }
+  ]
+}

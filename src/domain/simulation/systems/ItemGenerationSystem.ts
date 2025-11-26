@@ -14,7 +14,7 @@ const DEFAULT_CONFIG: ItemGenerationConfig = {
   maxItemsPerZone: 10,
 };
 
-import { injectable, inject } from "inversify";
+import { injectable, inject, unmanaged } from "inversify";
 import { TYPES } from "../../../config/Types";
 
 /**
@@ -88,7 +88,7 @@ export class ItemGenerationSystem {
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
-    config?: Partial<ItemGenerationConfig>,
+    @unmanaged() config?: Partial<ItemGenerationConfig>,
   ) {
     this.gameState = gameState;
     this.config = { ...DEFAULT_CONFIG, ...config };

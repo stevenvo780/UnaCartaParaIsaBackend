@@ -8,7 +8,7 @@ import path from "path";
  * Features:
  * - Console output: Only WARN and ERROR levels
  * - Memory buffer: Stores DEBUG and INFO logs
- * - File evacuation: Periodically writes logs to JSON files
+ * - File evacuation: Periodically appends logs to a single JSON file
  * - Throttling: Prevents log spam from repetitive messages
  */
 
@@ -53,12 +53,16 @@ class Logger {
   private lastEvacuation = Date.now();
   private evacuationInterval?: NodeJS.Timeout;
   private evacuationPromise: Promise<void> = Promise.resolve();
+  private logFilePath: string;
 
   constructor(config: Partial<LoggerConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.ensureLogDir();
+    this.logFilePath = path.join(this.config.logDir, "logs.json");
 
-    this.evacuationInterval = setInterval(() => this.checkEvacuation(), 30000);
+    // Escribir periódicamente cada 10 segundos para poder observar con watch
+    const writeIntervalMs = Number(process.env.LOG_WRITE_INTERVAL_MS ?? 10000);
+    this.evacuationInterval = setInterval(() => this.checkEvacuation(), writeIntervalMs);
 
     const flushAndExit = async (): Promise<void> => {
       try {
@@ -136,26 +140,48 @@ class Logger {
   }
 
   private async doEvacuate(): Promise<void> {
-    if (this.isEvacuating || this.memoryBuffer.length === 0) return;
+    if (this.isEvacuating) return;
+
+    // Si no hay logs, no escribir nada (pero no retornar si hay logs pendientes)
+    if (this.memoryBuffer.length === 0) return;
 
     this.isEvacuating = true;
     const logsToWrite = [...this.memoryBuffer];
     this.memoryBuffer = [];
 
     try {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const filename = `logs_${timestamp}.json`;
-      const filepath = path.join(this.config.logDir, filename);
+      // Leer logs existentes si el archivo existe
+      let existingLogs: LogEntry[] = [];
+      try {
+        if (fs.existsSync(this.logFilePath)) {
+          const fileContent = await fs.promises.readFile(this.logFilePath, "utf-8");
+          if (fileContent.trim()) {
+            existingLogs = JSON.parse(fileContent) as LogEntry[];
+          }
+        }
+      } catch (parseError) {
+        // Si el archivo está corrupto, empezar de nuevo
+        console.warn("Log file corrupted, starting fresh:", parseError);
+        existingLogs = [];
+      }
 
+      // Combinar logs existentes con los nuevos
+      const allLogs = [...existingLogs, ...logsToWrite];
+
+      // Limitar el tamaño total del archivo (mantener solo los últimos N logs)
+      const maxLogsInFile = this.config.maxMemoryLogs * 2;
+      const logsToKeep = allLogs.slice(-maxLogsInFile);
+
+      // Escribir todos los logs al archivo
       await fs.promises.writeFile(
-        filepath,
-        JSON.stringify(logsToWrite, null, 2),
+        this.logFilePath,
+        JSON.stringify(logsToKeep, null, 2),
         "utf-8",
       );
 
       this.lastEvacuation = Date.now();
-      this.cleanOldLogs();
     } catch (error) {
+      // Si falla, restaurar los logs al buffer
       this.memoryBuffer = [...logsToWrite, ...this.memoryBuffer].slice(
         0,
         this.config.maxMemoryLogs,
@@ -169,12 +195,15 @@ class Logger {
   private checkEvacuation(): void {
     const timeSinceLastEvacuation = Date.now() - this.lastEvacuation;
     const forceIntervalMs = Number(process.env.LOG_FORCE_INTERVAL_MS ?? 60000);
+    
+    // Escribir si hay logs en el buffer y:
+    // 1. Se alcanzó el umbral
+    // 2. Han pasado más de 10 segundos desde la última escritura (para watch)
+    // 3. Hay logs y ha pasado el intervalo forzado
     if (
       this.memoryBuffer.length >= this.config.evacuationThreshold ||
-      this.memoryBuffer.length > this.config.evacuationThreshold / 2 ||
-      (this.memoryBuffer.length > 100 && timeSinceLastEvacuation > 300000) ||
-      (this.memoryBuffer.length > 0 &&
-        timeSinceLastEvacuation > forceIntervalMs)
+      (this.memoryBuffer.length > 0 && timeSinceLastEvacuation > 10000) ||
+      (this.memoryBuffer.length > 0 && timeSinceLastEvacuation > forceIntervalMs)
     ) {
       void this.evacuateToFile();
     }
@@ -184,26 +213,6 @@ class Logger {
       if (now - entry.lastTime > this.config.throttleWindowMs * 2) {
         this.throttleMap.delete(key);
       }
-    }
-  }
-
-  private cleanOldLogs(): void {
-    try {
-      const files = fs.readdirSync(this.config.logDir);
-      const logFiles = files
-        .filter((f) => f.startsWith("logs_") && f.endsWith(".json"))
-        .sort()
-        .reverse();
-
-      const filesToDelete = logFiles.slice(20);
-      for (const file of filesToDelete) {
-        fs.unlinkSync(path.join(this.config.logDir, file));
-      }
-    } catch (error) {
-      console.warn(
-        `Failed to clean old log files:`,
-        error instanceof Error ? error.message : String(error),
-      );
     }
   }
 
