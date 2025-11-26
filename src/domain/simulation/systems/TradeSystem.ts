@@ -26,6 +26,36 @@ export class TradeSystem {
   ) {
     this.gameState = gameState;
     this.inventorySystem = inventorySystem;
+    this.setupDeathListener();
+  }
+
+  /**
+   * BUG FIX: Listen to AGENT_DEATH to remove offers from dead agents.
+   * Prevents ghost trade offers from deceased agents.
+   */
+  private setupDeathListener(): void {
+    simulationEvents.on(
+      GameEventNames.AGENT_DEATH,
+      (data: { agentId?: string; entityId?: string }) => {
+        const agentId = data.agentId || data.entityId;
+        if (!agentId) return;
+        this.removeAgentOffers(agentId);
+      },
+    );
+  }
+
+  /**
+   * Removes all trade offers associated with a dead agent.
+   */
+  public removeAgentOffers(agentId: string): void {
+    // Remove offers where the agent is the seller
+    for (const [offerId, offer] of this.activeOffers) {
+      if (offer.sellerId === agentId) {
+        this.activeOffers.delete(offerId);
+      }
+    }
+    // Clean up merchant reputation
+    this.merchantReputation.delete(agentId);
   }
 
   public setInventorySystem(inventorySystem: InventorySystem): void {

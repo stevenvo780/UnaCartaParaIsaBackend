@@ -307,13 +307,15 @@ export class SocialSystem {
   /**
    * Updates proximity-based social reinforcement.
    * Uses GPU pairwise distance calculation when entity count is high.
+   * BUG FIX: Now filters out dead entities to prevent ghost relationships.
    */
   private updateProximity(dt: number): void {
     const entities = this.gameState.entities || [];
     const reinforcement = this.config.reinforcementPerSecond * dt;
+    // BUG FIX: Filter out dead entities to prevent creating relationships with dead agents
     const entitiesWithPos = entities.filter(
       (e): e is typeof e & { position: { x: number; y: number } } =>
-        !!e.position,
+        !!e.position && !e.isDead,
     );
 
     if (this.gpuService?.isGPUAvailable() && entitiesWithPos.length >= 20) {
@@ -321,8 +323,7 @@ export class SocialSystem {
       return;
     }
 
-    for (const entity of entities) {
-      if (!entity.position) continue;
+    for (const entity of entitiesWithPos) {
 
       const nearby = this.spatialGrid.queryRadius(
         entity.position,
