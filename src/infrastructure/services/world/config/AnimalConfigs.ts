@@ -14,9 +14,9 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     fleeSpeed: 150,
     detectionRange: 200,
 
-    hungerDecayRate: 0.4,
-    thirstDecayRate: 0.6,
-    reproductionCooldown: 60000,
+    hungerDecayRate: 4.0,
+    thirstDecayRate: 6.0,
+    reproductionCooldown: 10000,
     lifespan: 300000,
 
     foodValue: 15,
@@ -48,9 +48,9 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     fleeSpeed: 180,
     detectionRange: 250,
 
-    hungerDecayRate: 0.3,
-    thirstDecayRate: 0.5,
-    reproductionCooldown: 120000,
+    hungerDecayRate: 3.0,
+    thirstDecayRate: 5.0,
+    reproductionCooldown: 60000,
     lifespan: 600000,
 
     foodValue: 30,
@@ -82,9 +82,9 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     fleeSpeed: 120,
     detectionRange: 180,
 
-    hungerDecayRate: 0.5,
-    thirstDecayRate: 0.4,
-    reproductionCooldown: 150000,
+    hungerDecayRate: 5.0,
+    thirstDecayRate: 4.0,
+    reproductionCooldown: 75000,
     lifespan: 480000,
 
     foodValue: 25,
@@ -116,9 +116,9 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     fleeSpeed: 200,
     detectionRange: 300,
 
-    hungerDecayRate: 0.6,
-    thirstDecayRate: 0.7,
-    reproductionCooldown: 90000,
+    hungerDecayRate: 6.0,
+    thirstDecayRate: 7.0,
+    reproductionCooldown: 15000,
     lifespan: 240000,
 
     foodValue: 8,
@@ -150,9 +150,9 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     fleeSpeed: 100,
     detectionRange: 150,
 
-    hungerDecayRate: 0.3,
+    hungerDecayRate: 3.0,
     thirstDecayRate: 0,
-    reproductionCooldown: 100000,
+    reproductionCooldown: 50000,
     lifespan: 360000,
 
     foodValue: 12,
@@ -186,9 +186,9 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     fleeSpeed: 140,
     detectionRange: 300,
 
-    hungerDecayRate: 0.5,
-    thirstDecayRate: 0.4,
-    reproductionCooldown: 180000,
+    hungerDecayRate: 5.0,
+    thirstDecayRate: 4.0,
+    reproductionCooldown: 90000,
     lifespan: 720000,
 
     foodValue: 35,

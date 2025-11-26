@@ -466,6 +466,7 @@ export class SimulationRunner {
         }
 
         this.syncAnimalsToState();
+        this.syncGenealogyToState();
 
         const baseDirtySections = [
           "agents",
@@ -956,8 +957,7 @@ export class SimulationRunner {
         }
       } catch (err) {
         logger.warn(
-          `Failed to initialize movement state for agent ${agent.id}: ${
-            err instanceof Error ? err.message : String(err)
+          `Failed to initialize movement state for agent ${agent.id}: ${err instanceof Error ? err.message : String(err)
           }`,
         );
       }
@@ -2291,24 +2291,24 @@ export class SimulationRunner {
    * This ensures the state sent to clients includes updated animal positions.
    */
   private syncAnimalsToState(): void {
-    const animalsMap = this.animalSystem.getAnimals();
-    const animalsArray: import("../../types/simulation/animals").Animal[] = [];
-    const byType: Record<string, number> = {};
+    if (this.animalSystem) {
+      const animals = Array.from(this.animalSystem.getAnimals().values());
+      const stats = this.animalSystem.getStats();
 
-    for (const animal of animalsMap.values()) {
-      if (!animal.isDead) {
-        animalsArray.push(animal);
-        byType[animal.type] = (byType[animal.type] || 0) + 1;
-      }
+      this.state.animals = {
+        animals,
+        stats: {
+          total: stats.totalAnimals,
+          byType: stats.byType,
+        },
+      };
     }
+  }
 
-    this.state.animals = {
-      animals: animalsArray,
-      stats: {
-        total: animalsArray.length,
-        byType,
-      },
-    };
+  private syncGenealogyToState(): void {
+    if (this._genealogySystem) {
+      this.state.genealogy = this._genealogySystem.getSnapshot();
+    }
   }
 
   private processCommands(): void {
@@ -2779,14 +2779,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                  resources?: {
-                    wood?: number;
-                    stone?: number;
-                    food?: number;
-                    water?: number;
-                  };
-                  minWorkers?: number;
-                }
+                resources?: {
+                  wood?: number;
+                  stone?: number;
+                  food?: number;
+                  water?: number;
+                };
+                minWorkers?: number;
+              }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,
@@ -2828,12 +2828,12 @@ export class SimulationRunner {
       ) {
         this.timeSystem.setWeather(
           weatherType as
-            | "clear"
-            | "cloudy"
-            | "rainy"
-            | "stormy"
-            | "foggy"
-            | "snowy",
+          | "clear"
+          | "cloudy"
+          | "rainy"
+          | "stormy"
+          | "foggy"
+          | "snowy",
         );
         logger.info(`Weather set to ${weatherType} via TIME_COMMAND`);
       } else {
@@ -2939,12 +2939,12 @@ export class SimulationRunner {
       social,
       ai: aiState
         ? {
-            currentGoal: aiState.currentGoal,
-            goalQueue: aiState.goalQueue,
-            currentAction: aiState.currentAction,
-            offDuty: aiState.offDuty,
-            lastDecisionTime: aiState.lastDecisionTime,
-          }
+          currentGoal: aiState.currentGoal,
+          goalQueue: aiState.goalQueue,
+          currentAction: aiState.currentAction,
+          offDuty: aiState.offDuty,
+          lastDecisionTime: aiState.lastDecisionTime,
+        }
         : null,
     };
   }

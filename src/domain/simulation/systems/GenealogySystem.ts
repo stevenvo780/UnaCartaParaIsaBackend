@@ -157,6 +157,35 @@ export class GenealogySystem {
     };
   }
 
+  public getSnapshot(): SerializedFamilyTree & { history: GenealogyEvent[] } {
+    const lineagesObj: SerializedFamilyTree["lineages"] = {};
+    this.familyTree.lineages.forEach((v, k) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { researchProgress: _, ...rest } = v;
+      lineagesObj[k] = {
+        ...rest,
+        researchProgress: {}, // Stub or convert if needed
+      };
+    });
+
+    const ancestorsObj: Record<string, Ancestor> = {};
+    this.familyTree.ancestors.forEach((v, k) => {
+      ancestorsObj[k] = v;
+    });
+
+    const relationshipsObj: Record<string, string[]> = {};
+    this.familyTree.relationships.forEach((v, k) => {
+      relationshipsObj[k] = v;
+    });
+
+    return {
+      lineages: lineagesObj,
+      ancestors: ancestorsObj,
+      relationships: relationshipsObj,
+      history: this.history,
+    };
+  }
+
   public recordDeath(agentId: string): void {
     const ancestor = this.familyTree.ancestors.get(agentId);
     if (!ancestor) return;
