@@ -317,7 +317,7 @@ export class AISystem extends EventEmitter {
         this.completeGoal(aiState, agentId);
       } else if (this.isGoalInvalid(aiState.currentGoal, agentId)) {
         this.failGoal(aiState, agentId);
-      } else {
+      } else if (aiState.currentAction) {
         return;
       }
     }
@@ -1336,6 +1336,43 @@ export class AISystem extends EventEmitter {
           targetZoneId: goal.targetZoneId,
           timestamp,
         };
+
+      case "flee":
+        if (goal.targetPosition) {
+          return {
+            actionType: "move",
+            agentId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+          };
+        }
+        return null;
+
+      case "attack":
+        if (goal.targetId && goal.targetPosition) {
+          const agentPos = this.getAgentPosition(agentId);
+          if (agentPos) {
+            const dist = Math.hypot(
+              agentPos.x - goal.targetPosition.x,
+              agentPos.y - goal.targetPosition.y,
+            );
+            if (dist < 40) {
+              return {
+                actionType: "attack",
+                agentId,
+                targetId: goal.targetId,
+                timestamp,
+              };
+            }
+            return {
+              actionType: "move",
+              agentId,
+              targetPosition: goal.targetPosition,
+              timestamp,
+            };
+          }
+        }
+        return null;
 
       default:
         return null;
