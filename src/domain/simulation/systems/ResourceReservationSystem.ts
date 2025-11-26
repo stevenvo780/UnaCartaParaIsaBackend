@@ -2,6 +2,7 @@ import type { GameState } from "../../types/game-types";
 import type { ResourceCost } from "../../types/simulation/economy";
 import { InventorySystem } from "./InventorySystem";
 import { GameEventNames, simulationEvents } from "../core/events";
+import { logger } from "../../../infrastructure/utils/logger";
 
 interface Reservation {
   taskId: string;
@@ -39,6 +40,13 @@ export class ResourceReservationSystem {
     );
   }
 
+  /**
+   * Reserves resources for a task.
+   *
+   * @param taskId - Task identifier
+   * @param cost - Resource cost to reserve
+   * @returns True if reservation was successful, false if task already reserved or insufficient resources
+   */
   public reserve(taskId: string, cost: ResourceCost): boolean {
     if (this.reservations.has(taskId)) return false;
     if (!this.hasSufficientResources(cost)) return false;
@@ -48,6 +56,12 @@ export class ResourceReservationSystem {
     return true;
   }
 
+  /**
+   * Consumes reserved resources for a completed task.
+   *
+   * @param taskId - Task identifier
+   * @returns True if resources were consumed successfully, false if reservation not found or payment failed
+   */
   public consume(taskId: string): boolean {
     const reservation = this.reservations.get(taskId);
     if (!reservation) return false;
@@ -58,15 +72,21 @@ export class ResourceReservationSystem {
       this.broadcastUpdate();
       return true;
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn("ResourceReservationSystem.consume failed", {
+      logger.warn("ResourceReservationSystem.consume failed", {
         taskId,
-        error,
+        error: error instanceof Error ? error.message : String(error),
       });
       return false;
     }
   }
 
+  /**
+   * Releases a reservation without consuming resources.
+   * Used when a task is cancelled or fails before completion.
+   *
+   * @param taskId - Task identifier
+   * @returns True if reservation was released, false if not found
+   */
   public release(taskId: string): boolean {
     const removed = this.reservations.delete(taskId);
     if (removed) {
@@ -75,6 +95,20 @@ export class ResourceReservationSystem {
     return removed;
   }
 
+  /**
+   * Gets available resources, optionally including or excluding reserved resources.
+   * Combines global resources with stockpiled resources from InventorySystem.
+   *
+   * @param includeReserved - If true, includes reserved resources in the count
+   * @returns Available resource amounts (wood, stone), floored to integers
+   */
+  /**
+   * Gets available resources, optionally including or excluding reserved resources.
+   * Combines global resources with stockpiled resources from InventorySystem.
+   *
+   * @param includeReserved - If true, includes reserved resources in the count
+   * @returns Available resource amounts (wood, stone), floored to integers
+   */
   public getAvailableResources(includeReserved = false): ResourceCost {
     const res = this.state.resources;
     const stats = this.inventorySystem.getSystemStats();
@@ -95,6 +129,11 @@ export class ResourceReservationSystem {
     };
   }
 
+  /**
+   * Gets the total amount of currently reserved resources.
+   *
+   * @returns Total reserved resources (wood, stone)
+   */
   public getTotalReserved(): ResourceCost {
     let wood = 0;
     let stone = 0;
@@ -105,6 +144,13 @@ export class ResourceReservationSystem {
     return { wood, stone };
   }
 
+  /**
+   * Removes reservations older than the specified age.
+   * Used to clean up abandoned or failed tasks.
+   *
+   * @param maxAgeMs - Maximum age in milliseconds (default: 5 minutes)
+   * @returns Number of reservations cleaned up
+   */
   public cleanupStaleReservations(maxAgeMs = 5 * 60 * 1000): number {
     const now = this.now();
     let cleaned = 0;
@@ -128,6 +174,10 @@ export class ResourceReservationSystem {
     return cleaned;
   }
 
+  /**
+   * Periodic update to clean up stale reservations.
+   * Called by the simulation scheduler.
+   */
   public update(): void {
     const now = this.now();
     if (now - this.lastCleanup < this.cleanupIntervalMs) return;

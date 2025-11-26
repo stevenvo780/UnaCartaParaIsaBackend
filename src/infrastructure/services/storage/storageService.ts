@@ -289,8 +289,11 @@ export class StorageService {
   private async ensureLocalDir(): Promise<void> {
     try {
       await fs.mkdir(CONFIG.LOCAL_SAVES_PATH, { recursive: true });
-    } catch {
-      /* ignore */
+    } catch (error) {
+      logger.debug(
+        `Failed to create local saves directory ${CONFIG.LOCAL_SAVES_PATH}:`,
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 

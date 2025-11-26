@@ -83,8 +83,11 @@ class Logger {
       if (!fs.existsSync(this.config.logDir)) {
         fs.mkdirSync(this.config.logDir, { recursive: true });
       }
-    } catch {
-      /* ignore */
+    } catch (error) {
+      console.warn(
+        `Failed to create log directory ${this.config.logDir}:`,
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 
@@ -189,8 +192,11 @@ class Logger {
       for (const file of filesToDelete) {
         fs.unlinkSync(path.join(this.config.logDir, file));
       }
-    } catch {
-      /* ignore */
+    } catch (error) {
+      console.warn(
+        `Failed to clean old log files:`,
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 
