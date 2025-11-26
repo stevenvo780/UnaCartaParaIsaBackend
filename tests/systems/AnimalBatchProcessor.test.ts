@@ -43,14 +43,16 @@ describe("AnimalBatchProcessor", () => {
     const ids = processor.getAnimalIdArray();
 
     expect(positions).toBeInstanceOf(Float32Array);
-    expect(positions).toEqual(new Float32Array([10, 20, 30, 40]));
-    expect(needs).toEqual(
+    // Buffers now have 10% extra capacity, so we check first N elements
+    expect(positions!.slice(0, 4)).toEqual(new Float32Array([10, 20, 30, 40]));
+    expect(needs!.slice(0, 8)).toEqual(
       new Float32Array([
         80, 70, 10, 5,
         90, 50, 20, 15,
       ]),
     );
-    expect(ids).toEqual(["a1", "a2"]);
+    // animalIdArray may have extra capacity, check first 2 elements
+    expect(ids.slice(0, 2)).toEqual(["a1", "a2"]);
     expect(processor.isDirty()).toBe(false);
   });
 
@@ -117,7 +119,8 @@ describe("AnimalBatchProcessor", () => {
     processor.updateAgesBatch(2);
 
     const ageBuffer = (processor as any).ageBuffer as Float32Array;
-    expect(Array.from(ageBuffer)).toEqual([3, 7]);
+    // Buffer may have extra capacity, check first 2 elements
+    expect(Array.from(ageBuffer.slice(0, 2))).toEqual([3, 7]);
     expect(processor.isDirty()).toBe(true);
   });
 

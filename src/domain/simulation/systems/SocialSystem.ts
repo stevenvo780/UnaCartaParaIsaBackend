@@ -46,6 +46,8 @@ export class SocialSystem {
   private positionCache = new Map<string, { x: number; y: number }>();
   /** Only update position if entity moved more than this threshold */
   private readonly POSITION_THRESHOLD = 2;
+  /** Dirty flag to skip recomputeGroups when no edges changed */
+  private edgesModified = false;
 
   constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
@@ -112,9 +114,13 @@ export class SocialSystem {
     this.updateProximity(dt);
     this.decayEdgesOptimized(dt);
 
-    if (this.lastUpdate > 1000) {
+    // Only recompute groups if edges were modified (dirty flag optimization)
+    if (this.lastUpdate > 1000 && this.edgesModified) {
       this.recomputeGroups();
+      this.edgesModified = false;
       this.lastUpdate = 0;
+    } else if (this.lastUpdate > 1000) {
+      this.lastUpdate = 0; // Reset timer even if no recomputation needed
     }
 
     const now = getFrameTime();
@@ -235,6 +241,7 @@ export class SocialSystem {
     this.edges.get(b)!.set(a, newAffinityB);
 
     if (newAffinityA !== currentA || newAffinityB !== currentB) {
+      this.edgesModified = true; // Mark dirty for recomputeGroups optimization
       simulationEvents.emit(GameEventNames.SOCIAL_RELATION_CHANGED, {
         agentA: a,
         agentB: b,

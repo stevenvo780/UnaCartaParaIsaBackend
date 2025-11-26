@@ -772,19 +772,47 @@ export class AnimalSystem {
   }
 
   /**
-   * Clean caches
+   * Maximum cache size to prevent memory leaks.
+   * Evicts oldest entries when exceeded.
+   */
+  private readonly MAX_CACHE_SIZE = 500;
+
+  /**
+   * Clean caches - removes expired entries AND limits cache size
    */
   private cleanCaches(): void {
     const now = Date.now();
 
+    // Clean expired entries from resourceSearchCache
     for (const [key, cache] of this.resourceSearchCache.entries()) {
       if (now - cache.timestamp > this.CACHE_DURATION) {
         this.resourceSearchCache.delete(key);
       }
     }
 
+    // Limit cache size - evict oldest entries if over MAX_CACHE_SIZE
+    if (this.resourceSearchCache.size > this.MAX_CACHE_SIZE) {
+      const entries = Array.from(this.resourceSearchCache.entries())
+        .sort((a, b) => a[1].timestamp - b[1].timestamp);
+      const toRemove = entries.slice(0, entries.length - this.MAX_CACHE_SIZE);
+      for (const [key] of toRemove) {
+        this.resourceSearchCache.delete(key);
+      }
+    }
+
+    // Clean expired entries from threatSearchCache
     for (const [key, cache] of this.threatSearchCache.entries()) {
       if (now - cache.timestamp > this.CACHE_DURATION) {
+        this.threatSearchCache.delete(key);
+      }
+    }
+
+    // Limit threatSearchCache size
+    if (this.threatSearchCache.size > this.MAX_CACHE_SIZE) {
+      const entries = Array.from(this.threatSearchCache.entries())
+        .sort((a, b) => a[1].timestamp - b[1].timestamp);
+      const toRemove = entries.slice(0, entries.length - this.MAX_CACHE_SIZE);
+      for (const [key] of toRemove) {
         this.threatSearchCache.delete(key);
       }
     }

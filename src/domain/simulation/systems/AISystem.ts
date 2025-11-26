@@ -93,7 +93,11 @@ export class AISystem extends EventEmitter {
   private _lastMemoryCleanupTime = 0;
   private readonly MEMORY_CLEANUP_INTERVAL = 300000;
 
-  private readonly BATCH_SIZE = 10;
+  /**
+   * Batch size for agent processing per update.
+   * Reduced from 10 to 5 to lower latency per frame (each decision ~0.35ms).
+   */
+  private readonly BATCH_SIZE = 5;
 
   private zoneCache = new Map<string, string | undefined>();
   private craftingZoneCache: string | undefined | null = null;

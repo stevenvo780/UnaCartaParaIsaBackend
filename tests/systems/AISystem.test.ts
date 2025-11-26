@@ -510,11 +510,19 @@ describe("AISystem", () => {
   describe("removeEntityAI", () => {
     it("debe remover AI de una entidad", () => {
       aiSystem.update(1000);
+      // Verify state exists before removal
+      const stateBefore = aiSystem.getAIState("agent-1");
+      expect(stateBefore).toBeDefined();
+      
       expect(() => {
         aiSystem.removeEntityAI("agent-1");
       }).not.toThrow();
-      const state = aiSystem.getAIState("agent-1");
-      expect(state).toBeUndefined();
+      
+      // After removal, the aiStates map should not contain the agent
+      // But getAIState has lazy initialization, so we need to check the internal map
+      const allStates = aiSystem.getAllAIStates();
+      const hasAgent1 = allStates.some(s => s.entityId === "agent-1");
+      expect(hasAgent1).toBe(false);
     });
   });
 

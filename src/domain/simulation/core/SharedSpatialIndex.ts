@@ -33,6 +33,10 @@ export class SharedSpatialIndex {
   private positionPool: Array<{ x: number; y: number }> = [];
   private readonly POSITION_POOL_SIZE = 200;
 
+  // Result pooling to reduce GC pressure from queryRadius
+  private resultPool: Array<Array<{ entity: string; distance: number; type: EntityType }>> = [];
+  private readonly RESULT_POOL_SIZE = 50;
+
   constructor(
     worldWidth: number = 3200,
     worldHeight: number = 3200,
@@ -166,10 +170,11 @@ export class SharedSpatialIndex {
 
     /**
      * Performance optimization: sample animals instead of checking all.
-     * For 1000+ animals, only check a subset per frame (max 200).
+     * For 1000+ animals, only check a subset per frame (max 100).
+     * Reduced from 200 to lower CPU overhead while maintaining position accuracy.
      */
     const animalArray = Array.from(animals.entries());
-    const checkLimit = Math.min(animalArray.length, 200);
+    const checkLimit = Math.min(animalArray.length, 100);
     const startIdx = (Date.now() % 100) * Math.floor(animalArray.length / 100);
 
     for (let i = 0; i < checkLimit; i++) {
@@ -230,7 +235,29 @@ export class SharedSpatialIndex {
   }
 
   /**
+   * Acquires a result array from pool or creates new one.
+   * Call releaseResults() when done to return to pool.
+   */
+  private acquireResultArray(): Array<{ entity: string; distance: number; type: EntityType }> {
+    return this.resultPool.pop() || [];
+  }
+
+  /**
+   * Returns a result array to the pool for reuse.
+   * Call this after processing queryRadius results to reduce GC pressure.
+   * 
+   * @param results - Array to return to pool
+   */
+  public releaseResults(results: Array<{ entity: string; distance: number; type: EntityType }>): void {
+    if (this.resultPool.length < this.RESULT_POOL_SIZE) {
+      results.length = 0; // Clear array for reuse
+      this.resultPool.push(results);
+    }
+  }
+
+  /**
    * Queries entities within a radius of a position.
+   * IMPORTANT: Call releaseResults() when done processing to reduce memory allocations.
    *
    * @param position - Center position for the query
    * @param radius - Query radius in world units
@@ -251,24 +278,21 @@ export class SharedSpatialIndex {
       duration,
     );
 
-    if (!filter || filter === "all") {
-      return results.map((r) => ({
-        entity: r.entity,
-        distance: r.distance,
-        type: this.entityTypes.get(r.entity) || "agent",
-      }));
+    // Use pooled array to reduce allocations
+    const output = this.acquireResultArray();
+
+    for (const r of results) {
+      const type = this.entityTypes.get(r.entity) || "agent";
+      if (!filter || filter === "all" || type === filter) {
+        output.push({
+          entity: r.entity,
+          distance: r.distance,
+          type,
+        });
+      }
     }
 
-    return results
-      .filter((r) => {
-        const type = this.entityTypes.get(r.entity);
-        return type === filter;
-      })
-      .map((r) => ({
-        entity: r.entity,
-        distance: r.distance,
-        type: this.entityTypes.get(r.entity) || "agent",
-      }));
+    return output;
   }
 
   /**

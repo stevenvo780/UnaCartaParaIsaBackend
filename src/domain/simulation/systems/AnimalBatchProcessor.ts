@@ -26,6 +26,13 @@ export class AnimalBatchProcessor {
     this.gpuService = gpuService;
   }
 
+  /**
+   * Threshold for buffer reallocation (20% size change).
+   * Avoids recreating buffers every frame when animal count fluctuates slightly.
+   */
+  private readonly REALLOC_THRESHOLD = 0.2;
+  private lastBufferSize = 0;
+
   public rebuildBuffers(animals: Map<string, Animal>): void {
     const animalCount = animals.size;
     if (animalCount === 0) {
@@ -34,31 +41,56 @@ export class AnimalBatchProcessor {
       this.ageBuffer = null;
       this.healthBuffer = null;
       this.animalIdArray = [];
+      this.lastBufferSize = 0;
       this.bufferDirty = false;
       return;
     }
 
-    this.positionBuffer = new Float32Array(animalCount * 2);
-    this.needsBuffer = new Float32Array(animalCount * this.NEED_COUNT);
-    this.ageBuffer = new Float32Array(animalCount);
-    this.healthBuffer = new Float32Array(animalCount);
-    this.animalIdArray = new Array<string>(animalCount);
+    // Only reallocate if size changed significantly (>20%) or buffers don't exist
+    const sizeDiff = Math.abs(animalCount - this.lastBufferSize);
+    const needsRealloc = !this.positionBuffer || 
+                         !this.needsBuffer || 
+                         !this.ageBuffer || 
+                         !this.healthBuffer ||
+                         sizeDiff > this.lastBufferSize * this.REALLOC_THRESHOLD;
+
+    if (needsRealloc) {
+      // Allocate with 10% extra capacity to reduce future reallocations
+      const capacity = Math.ceil(animalCount * 1.1);
+      this.positionBuffer = new Float32Array(capacity * 2);
+      this.needsBuffer = new Float32Array(capacity * this.NEED_COUNT);
+      this.ageBuffer = new Float32Array(capacity);
+      this.healthBuffer = new Float32Array(capacity);
+      this.animalIdArray = new Array<string>(capacity);
+      this.lastBufferSize = animalCount;
+    }
+    
+    // Resize animalIdArray if needed (reuse existing array when possible)
+    if (this.animalIdArray.length < animalCount) {
+      this.animalIdArray = new Array<string>(Math.ceil(animalCount * 1.1));
+    }
+
+    // At this point buffers are guaranteed to exist (allocated above or reused)
+    const positionBuffer = this.positionBuffer!;
+    const needsBuffer = this.needsBuffer!;
+    const ageBuffer = this.ageBuffer!;
+    const healthBuffer = this.healthBuffer!;
 
     let index = 0;
     for (const [animalId, animal] of animals.entries()) {
       const posOffset = index * 2;
       const needsOffset = index * this.NEED_COUNT;
 
-      this.positionBuffer[posOffset] = animal.position.x;
-      this.positionBuffer[posOffset + 1] = animal.position.y;
+      positionBuffer[posOffset] = animal.position.x;
+      positionBuffer[posOffset + 1] = animal.position.y;
 
-      this.needsBuffer[needsOffset + 0] = animal.needs.hunger;
-      this.needsBuffer[needsOffset + 1] = animal.needs.thirst;
-      this.needsBuffer[needsOffset + 2] = animal.needs.fear;
-      this.needsBuffer[needsOffset + 3] = animal.needs.reproductiveUrge;
+      needsBuffer[needsOffset + 0] = animal.needs.hunger;
+      needsBuffer[needsOffset + 1] = animal.needs.thirst;
+      needsBuffer[needsOffset + 2] = animal.needs.fear;
+      needsBuffer[needsOffset + 3] = animal.needs.reproductiveUrge;
 
-      this.ageBuffer[index] = animal.age;
-      this.healthBuffer[index] = animal.health;
+      ageBuffer[index] = animal.age;
+      healthBuffer[index] = animal.health;
 
       this.animalIdArray[index] = animalId;
       index++;
@@ -67,6 +99,9 @@ export class AnimalBatchProcessor {
     this.bufferDirty = false;
   }
 
+  // Reusable work buffer for CPU fallback to avoid allocations
+  private workBuffer: Float32Array | null = null;
+
   public updateNeedsBatch(
     hungerDecayRates: Float32Array,
     thirstDecayRates: Float32Array,
@@ -74,8 +109,14 @@ export class AnimalBatchProcessor {
   ): void {
     if (!this.needsBuffer || this.animalIdArray.length === 0) return;
 
-    // Double buffering: create work copy
-    const workBuffer = new Float32Array(this.needsBuffer);
+    // Reuse work buffer if same size, otherwise reallocate
+    const requiredSize = this.needsBuffer.length;
+    if (!this.workBuffer || this.workBuffer.length !== requiredSize) {
+      this.workBuffer = new Float32Array(requiredSize);
+    }
+    // Copy current values to work buffer
+    this.workBuffer.set(this.needsBuffer);
+    const workBuffer = this.workBuffer;
 
     if (this.gpuService?.isGPUAvailable()) {
       try {
