@@ -685,5 +685,5 @@ export class SocialSystem {
       timestamp: number;
       [key: string]: unknown;
     },
-  ): void { }
+  ): void {}
 }

@@ -27,7 +27,6 @@ export class AIStateManager {
     "peaceful" | "tit_for_tat" | "bully"
   >;
 
-  // Cache for active agent IDs (invalidated on state changes)
   private _activeAgentIdsCache: string[] | null = null;
 
   constructor(
@@ -250,13 +249,11 @@ export class AIStateManager {
     const INTERACTION_MAX_AGE_MS = 60000; // Forget interactions older than 60s
 
     for (const [_agentId, aiState] of this.aiStates) {
-      // Limit visitedZones to 100 entries
       if (aiState.memory.visitedZones.size > 100) {
         const zones = [...aiState.memory.visitedZones];
         aiState.memory.visitedZones = new Set(zones.slice(-100));
       }
 
-      // Limit successfulActivities to top 50 (keep highest counts)
       if (
         aiState.memory.successfulActivities &&
         aiState.memory.successfulActivities.size > 50
@@ -267,21 +264,18 @@ export class AIStateManager {
         aiState.memory.successfulActivities = new Map(sorted);
       }
 
-      // Clean up stale threats (older than 30s)
       if (aiState.memory.lastSeenThreats?.length > 0) {
         aiState.memory.lastSeenThreats = aiState.memory.lastSeenThreats.filter(
           (threat) => now - threat.timestamp < THREAT_MAX_AGE_MS,
         );
       }
 
-      // Clean up stale interactions (keep last 20 recent ones within 60s)
       if (aiState.memory.recentInteractions?.length > 20) {
         aiState.memory.recentInteractions = aiState.memory.recentInteractions
           .filter((i) => now - i.timestamp < INTERACTION_MAX_AGE_MS)
           .slice(-20);
       }
 
-      // Limit knownResourceLocations to 100 entries
       if (
         aiState.memory.knownResourceLocations &&
         aiState.memory.knownResourceLocations.size > 100
@@ -290,7 +284,6 @@ export class AIStateManager {
         aiState.memory.knownResourceLocations = new Map(locations.slice(-100));
       }
 
-      // Limit failedAttempts to 50 entries (keep those with highest counts)
       if (
         aiState.memory.failedAttempts &&
         aiState.memory.failedAttempts.size > 50

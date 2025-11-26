@@ -122,7 +122,6 @@ export class AnimalSystem {
         this.handleAnimalHunted(data.animalId, data.hunterId);
       },
     );
-
   }
 
   public update(deltaMs: number): void {
@@ -246,7 +245,7 @@ export class AnimalSystem {
       if (
         isIdleState &&
         i % this.IDLE_UPDATE_DIVISOR !==
-        this.updateFrame % this.IDLE_UPDATE_DIVISOR
+          this.updateFrame % this.IDLE_UPDATE_DIVISOR
       ) {
         continue;
       }

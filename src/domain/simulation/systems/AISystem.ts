@@ -493,7 +493,6 @@ export class AISystem extends EventEmitter {
       const idx = (this.agentIndex + i) % agents.length;
       const agent = agents[idx];
 
-      // Skip dead agents - they shouldn't be processed by AI
       if (agent.isDead) continue;
 
       if (this.playerControlledAgents.has(agent.id)) continue;
@@ -524,7 +523,6 @@ export class AISystem extends EventEmitter {
     this.zoneCache.clear();
     this.craftingZoneCache = null;
     this.activeAgentIdsCache = null;
-    // Clear old resource cache entries (keep recent ones)
     const now = Date.now();
     for (const [key, value] of this.nearestResourceCache.entries()) {
       if (now - value.timestamp > this.RESOURCE_CACHE_TTL) {
@@ -579,7 +577,6 @@ export class AISystem extends EventEmitter {
           timestamp: now,
         });
       } else {
-        // Fallback: if no goal was selected, trigger exploratory movement
         this.maybeFallbackExplore(agentId, aiState);
       }
     }
@@ -708,7 +705,6 @@ export class AISystem extends EventEmitter {
     const pos = this.getAgentPosition(agentId);
     if (!pos) return null;
 
-    // Calculate target with bounds checking
     const mapWidth = this.gameState.worldSize?.width || 2000;
     const mapHeight = this.gameState.worldSize?.height || 2000;
     let targetX = pos.x + (Math.random() - 0.5) * this.EXPLORE_RANGE;
@@ -716,7 +712,6 @@ export class AISystem extends EventEmitter {
     targetX = Math.max(50, Math.min(mapWidth - 50, targetX));
     targetY = Math.max(50, Math.min(mapHeight - 50, targetY));
 
-    // Return a simple exploration goal
     return {
       id: `explore-${agentId}-${Date.now()}`,
       type: "explore",
@@ -734,10 +729,8 @@ export class AISystem extends EventEmitter {
     aiState: AIState,
     now: number,
   ): AIGoal | null {
-    // URGENT: Override with survival goals if needs are critical
     const needs = this.needsSystem?.getNeeds(agentId);
     if (needs) {
-      // Survival needs take highest priority
       if (needs.hunger < 20) {
         const foodGoal = this.createUrgentFoodGoal(agentId, now);
         if (foodGoal) return foodGoal;
@@ -750,7 +743,6 @@ export class AISystem extends EventEmitter {
         const restGoal = this.createUrgentRestGoal(agentId, now);
         if (restGoal) return restGoal;
       }
-      // Social and fun needs are less critical but still important
       if (needs.social < 20) {
         const socialGoal = this.createUrgentSocialGoal(agentId, now);
         if (socialGoal) return socialGoal;
@@ -958,7 +950,6 @@ export class AISystem extends EventEmitter {
         aiState.currentGoal = null;
         aiState.currentAction = null;
       }
-      // Stop any ongoing AI-controlled movement when player takes over
       if (
         this._movementSystem &&
         typeof this._movementSystem.stopMovement === "function"
@@ -1075,12 +1066,10 @@ export class AISystem extends EventEmitter {
 
   private completeGoal(aiState: AIState, _agentId: string): void {
     this.goalValidator.completeGoal(aiState);
-    // Counter is automatically updated in goalValidator
   }
 
   private failGoal(aiState: AIState, _agentId: string): void {
     this.goalValidator.failGoal(aiState);
-    // Counter is automatically updated in goalValidator
   }
 
   private planAction(agentId: string, goal: AIGoal): AgentAction | null {
@@ -1106,7 +1095,6 @@ export class AISystem extends EventEmitter {
   public getAIState(agentId: string): AIState | undefined {
     let state = this.aiStates.get(agentId);
     if (!state) {
-      // Lazy initialization fallback
       const agent = this.gameState.agents?.find((a) => a.id === agentId);
       if (agent) {
         state = this.createAIState(agentId);
@@ -1225,7 +1213,6 @@ export class AISystem extends EventEmitter {
         const dy = resource.position.y - agent.position.y;
         const dist = dx * dx + dy * dy;
 
-        // Early exit if we find something close enough
         if (dist < 10000) {
           nearest = {
             id: resource.id,
@@ -1246,7 +1233,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Cache result
     this.nearestResourceCache.set(cacheKey, {
       resource: nearest,
       timestamp: now,
@@ -1294,14 +1280,12 @@ export class AISystem extends EventEmitter {
         positions[i * 2 + 1] = agent.position!.y;
       }
 
-      // Compute distances using GPU batch operation
       const distancesSq = this.gpuService.computeDistancesBatch(
         myAgent.position.x,
         myAgent.position.y,
         positions,
       );
 
-      // Filter and collect nearby agents
       const nearby: Array<{ id: string; distance: number }> = [];
       for (let i = 0; i < activeAgents.length; i++) {
         const distSq = distancesSq[i];
@@ -1313,12 +1297,10 @@ export class AISystem extends EventEmitter {
         }
       }
 
-      // Sort by distance
       nearby.sort((a, b) => a.distance - b.distance);
       return nearby;
     }
 
-    // CPU fallback for small agent counts
     const nearby: Array<{ id: string; distance: number }> = [];
 
     for (const agent of activeAgents) {
@@ -1348,7 +1330,6 @@ export class AISystem extends EventEmitter {
     if (aiState) {
       aiState.currentAction = null;
       if (payload.success) {
-        // If action was work, check if task is actually completed
         if (
           payload.actionType === "work" &&
           payload.data &&
@@ -1356,7 +1337,6 @@ export class AISystem extends EventEmitter {
         ) {
           const task = this.taskSystem?.getTask(payload.data.taskId);
           if (task && !task.completed) {
-            // Task not done, don't complete goal yet
             return;
           }
         }
@@ -1406,7 +1386,7 @@ export class AISystem extends EventEmitter {
         targetZoneId: goal.targetZoneId,
         data: goalData,
         createdAt: Date.now(),
-        expiresAt: Date.now() + 60000, // Default 1 min expiry for external goals
+        expiresAt: Date.now() + 60000,
       };
       aiState.currentGoal = newGoal;
       simulationEvents.emit(GameEventNames.AGENT_GOAL_CHANGED, {
@@ -1437,7 +1417,6 @@ export class AISystem extends EventEmitter {
    * @param agentId - Agent identifier
    */
   public removeAgentState(agentId: string): void {
-    // Delegate to removeEntityAI to avoid code duplication
     this.removeEntityAI(agentId);
   }
 }
