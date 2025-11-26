@@ -293,8 +293,6 @@ export class AISystem extends EventEmitter {
     this.agentIndex = (this.agentIndex + batchSize) % agents.length;
   }
 
-
-
   /**
    * Invalidates cached evaluation results.
    * Called periodically to ensure cache doesn't become stale.
@@ -359,6 +357,15 @@ export class AISystem extends EventEmitter {
       const action = this.planAction(agentId, aiState.currentGoal);
       if (action) {
         aiState.currentAction = action;
+
+        // Recover energy if idle (field rest)
+        if (action.actionType === "idle" && this.needsSystem) {
+          // Recover small amount of energy while resting in field
+          // This prevents agents from getting stuck in low energy state when no beds are available
+          // Reduced to 0.5 to make field rest significantly less effective than beds (50)
+          this.needsSystem.recoverEnergy(agentId, 0.5);
+        }
+
         logger.debug(
           `🏃 [AI] Agent ${agentId} action: ${action.actionType} -> ${action.targetId || JSON.stringify(action.targetPosition) || action.targetZoneId || "none"}`,
         );
@@ -389,10 +396,10 @@ export class AISystem extends EventEmitter {
 
     const inventoryEmpty = inventory
       ? (inventory.food || 0) +
-          (inventory.water || 0) +
-          (inventory.wood || 0) +
-          (inventory.stone || 0) ===
-        0
+      (inventory.water || 0) +
+      (inventory.wood || 0) +
+      (inventory.stone || 0) ===
+      0
       : true;
     const needsSatisfied = needs
       ? needs.hunger > 70 && needs.thirst > 70 && needs.energy > 70
@@ -616,25 +623,25 @@ export class AISystem extends EventEmitter {
         : undefined,
       getCurrentTimeOfDay: this.timeSystem
         ? ():
+          | "dawn"
+          | "morning"
+          | "midday"
+          | "afternoon"
+          | "dusk"
+          | "night"
+          | "deep_night" => {
+          const time = this.timeSystem!.getCurrentTimeOfDay();
+          if (time === "evening") return "dusk";
+          if (time === "rest") return "deep_night";
+          return time as
             | "dawn"
             | "morning"
             | "midday"
             | "afternoon"
             | "dusk"
             | "night"
-            | "deep_night" => {
-            const time = this.timeSystem!.getCurrentTimeOfDay();
-            if (time === "evening") return "dusk";
-            if (time === "rest") return "deep_night";
-            return time as
-              | "dawn"
-              | "morning"
-              | "midday"
-              | "afternoon"
-              | "dusk"
-              | "night"
-              | "deep_night";
-          }
+            | "deep_night";
+        }
         : undefined,
       getEntityPosition: (id: string) => {
         const agent =
@@ -691,10 +698,10 @@ export class AISystem extends EventEmitter {
       socialPreference: isChild
         ? "extroverted"
         : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 >
-            0.6
+          0.6
           ? "extroverted"
           : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 <
-              0.4
+            0.4
             ? "introverted"
             : "balanced",
       workEthic: isChild
@@ -702,7 +709,7 @@ export class AISystem extends EventEmitter {
         : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 > 0.7
           ? "workaholic"
           : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 <
-              0.3
+            0.3
             ? "lazy"
             : "balanced",
       explorationType:
@@ -1681,13 +1688,13 @@ export class AISystem extends EventEmitter {
       // Convert goal.data to AIGoalData format
       const goalData: AIGoalData | undefined = goal.data
         ? {
-            ...Object.fromEntries(
-              Object.entries(goal.data).map(([k, v]) => [
-                k,
-                typeof v === "string" || typeof v === "number" ? v : undefined,
-              ]),
-            ),
-          }
+          ...Object.fromEntries(
+            Object.entries(goal.data).map(([k, v]) => [
+              k,
+              typeof v === "string" || typeof v === "number" ? v : undefined,
+            ]),
+          ),
+        }
         : undefined;
 
       const newGoal: AIGoal = {

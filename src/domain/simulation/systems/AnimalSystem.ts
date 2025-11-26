@@ -721,21 +721,17 @@ export class AnimalSystem {
   /**
    * Handle animal hunted by agent
    */
-  private handleAnimalHunted(animalId: string, hunterId: string): void {
+  private handleAnimalHunted(animalId: string, _hunterId: string): void {
     const animal = this.animals.get(animalId);
     if (!animal) return;
 
     const config = getAnimalConfig(animal.type);
     if (!config) return;
 
-    simulationEvents.emit(GameEventNames.ANIMAL_HUNTED, {
-      animalId,
-      hunterId,
-      type: animal.type,
-      position: animal.position,
-      foodValue: config.foodValue,
-      genes: animal.genes,
-    });
+    // Do NOT re-emit ANIMAL_HUNTED here to avoid recursive event loops.
+    // Downstream systems should react to ANIMAL_DIED with cause "hunted".
+    // If additional payload is needed, consider emitting a distinct event
+    // like ANIMAL_HUNT_RESOLVED consumed by non-AnimalSystem listeners.
 
     this.killAnimal(animalId, "hunted");
   }

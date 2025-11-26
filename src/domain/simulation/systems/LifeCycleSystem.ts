@@ -329,15 +329,15 @@ export class LifeCycleSystem extends EventEmitter {
     spec:
       | Partial<AgentProfile>
       | {
-          id?: string;
-          name?: string;
-          sex: "male" | "female";
-          ageYears: number;
-          lifeStage: LifeStage;
-          generation: number;
-          immortal?: boolean;
-          traits?: Partial<AgentTraits>;
-        } = {},
+        id?: string;
+        name?: string;
+        sex: "male" | "female";
+        ageYears: number;
+        lifeStage: LifeStage;
+        generation: number;
+        immortal?: boolean;
+        traits?: Partial<AgentTraits>;
+      } = {},
   ): AgentProfile {
     // Convert spec to Partial<AgentProfile> for internal processing
     const partial = spec as Partial<AgentProfile>;
@@ -402,7 +402,16 @@ export class LifeCycleSystem extends EventEmitter {
           },
         };
         this.gameState.entities.push(entity);
+
+        // Update EntityIndex immediately so listeners can find the new agent/entity
+        if (this.entityIndex) {
+          this.entityIndex.setAgent(profile);
+          this.entityIndex.setEntity(entity);
+        }
       }
+    } else if (this.entityIndex) {
+      // Even if no position (unlikely), register agent
+      this.entityIndex.setAgent(profile);
     }
 
     if (this.needsSystem) {

@@ -1,6 +1,5 @@
 import { EventEmitter } from "node:events";
 import { Worker } from "node:worker_threads";
-import { join } from "node:path";
 import type { GameResources, GameState, Zone } from "../../types/game-types";
 import { cloneGameState } from "./defaultState";
 import { StateCache } from "./StateCache";
@@ -221,25 +220,40 @@ export class SimulationRunner {
    */
   private initializeSnapshotWorker(): void {
     try {
-      // Use __dirname which is available in CommonJS (compiled TypeScript)
-      const workerPath = join(__dirname, "SnapshotWorker.js");
+      const workerCode = `
+        const { parentPort } = require('worker_threads');
+        if (!parentPort) throw new Error('SnapshotWorker inline requires parentPort');
+        parentPort.postMessage({ type: 'ready' });
+        parentPort.on('message', (msg) => {
+          try {
+            if (msg && msg.type === 'snapshot' && msg.data) {
+              const serialized = JSON.stringify(msg.data);
+              parentPort.postMessage({ type: 'snapshot-ready', data: serialized, size: serialized.length });
+            } else if (msg && msg.type === 'shutdown') {
+              process.exit(0);
+            }
+          } catch (err) {
+            parentPort.postMessage({ type: 'error', error: (err && err.message) || String(err) });
+          }
+        });
+      `;
 
-      this.snapshotWorker = new Worker(workerPath);
+      this.snapshotWorker = new Worker(workerCode, { eval: true });
 
       this.snapshotWorker.on(
         "message",
-        (message: {
-          type: string;
-          data?: string;
-          size?: number;
-          error?: string;
-        }) => {
+        (rawMessage: unknown) => {
+          const message = rawMessage as { type: string; data?: string; error?: string };
           if (message.type === "ready") {
             this.snapshotWorkerReady = true;
             logger.info("🧵 Snapshot worker thread ready");
           } else if (message.type === "snapshot-ready" && message.data) {
-            // Emit the serialized snapshot to connected clients
-            this.emitter.emit("tick", JSON.parse(message.data));
+            try {
+              const parsed: unknown = JSON.parse(message.data as string);
+              this.emitter.emit("tick", parsed);
+            } catch (err) {
+              logger.error("Failed to parse snapshot from worker:", err);
+            }
           } else if (message.type === "error") {
             logger.error("Snapshot worker error:", message.error);
           }

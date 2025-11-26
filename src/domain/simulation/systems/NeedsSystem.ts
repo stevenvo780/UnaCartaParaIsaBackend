@@ -300,7 +300,8 @@ export class NeedsSystem extends EventEmitter {
         case "bed":
         case "shelter":
         case "house": {
-          const energyBonus = 12 * deltaSeconds * multiplier;
+          // Much faster recovery in proper shelter (approx 4x faster than base)
+          const energyBonus = 50 * deltaSeconds * multiplier;
           needs.energy = Math.min(100, needs.energy + energyBonus);
           break;
         }
@@ -799,6 +800,20 @@ export class NeedsSystem extends EventEmitter {
   public updateConfig(partial: Partial<NeedsConfig>): void {
     this.config = { ...this.config, ...partial };
     this.emit("configUpdated", this.config);
+  }
+
+  /**
+   * Manually recovers energy for an entity.
+   * Used by AISystem when agent is resting outside of a zone (e.g. idle/field rest).
+   *
+   * @param entityId - Entity identifier
+   * @param amount - Amount of energy to recover
+   */
+  public recoverEnergy(entityId: string, amount: number): void {
+    const needs = this.entityNeeds.get(entityId);
+    if (needs) {
+      needs.energy = Math.min(100, needs.energy + amount);
+    }
   }
 
   /**
