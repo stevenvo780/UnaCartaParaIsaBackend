@@ -53,6 +53,7 @@ export class NeedsSystem extends EventEmitter {
   private zoneCache = new Map<string, { zones: Zone[]; timestamp: number }>();
   private readonly ZONE_CACHE_TTL = 15000;
   private _tickCounter = 0;
+  private gpuService?: GPUComputeService;
 
   private batchProcessor: NeedsBatchProcessor;
   /**
@@ -88,6 +89,7 @@ export class NeedsSystem extends EventEmitter {
     this.gameState = gameState;
     this.entityIndex = entityIndex;
     this.spatialIndex = spatialIndex;
+    this.gpuService = gpuService;
     this.config = {
       decayRates: {
         hunger: 1.0,
@@ -115,7 +117,9 @@ export class NeedsSystem extends EventEmitter {
     this.entityNeeds = new Map();
     this.batchProcessor = new NeedsBatchProcessor(gpuService);
     if (gpuService?.isGPUAvailable()) {
-      logger.info("🧠 NeedsSystem: GPU acceleration enabled for batch processing");
+      logger.info(
+        "🧠 NeedsSystem: GPU acceleration enabled for batch processing",
+      );
     }
 
     if (systems) {
@@ -254,9 +258,11 @@ export class NeedsSystem extends EventEmitter {
 
     this.batchProcessor.syncToMap(this.entityNeeds);
 
+    // Batch social morale boost using GPU when available (O(N²) operation)
+    this.applySocialMoraleBoostBatch(entityIdArray);
+
     for (const [entityId, needs] of this.entityNeeds.entries()) {
       this.handleZoneBenefits(entityId, needs, dtSeconds);
-      this.applySocialMoraleBoost(entityId, needs);
 
       // Check death BEFORE emergency needs (consistent with updateTraditional)
       if (this.checkForDeath(entityId, needs)) {
@@ -651,6 +657,136 @@ export class NeedsSystem extends EventEmitter {
       if (affinityCount >= 3 && avgAffinity > 0.3) {
         needs.social = Math.min(100, needs.social + 2);
         needs.fun = Math.min(100, needs.fun + 1);
+      }
+    }
+  }
+
+  /**
+   * Batch version of applySocialMoraleBoost using GPU for distance calculations.
+   * Uses pairwise distance computation on GPU when entity count exceeds threshold.
+   *
+   * @param entityIds - Array of entity IDs to process
+   * @returns void - Modifies entityNeeds map in place
+   */
+  private applySocialMoraleBoostBatch(entityIds: string[]): void {
+    if (!this.socialSystem || !this.gameState.entities) return;
+
+    const GPU_BATCH_THRESHOLD = 20; // Use GPU when we have ≥20 entities (O(N²) operation)
+
+    // Collect positions for all entities
+    const entityPositions: Array<{ id: string; x: number; y: number }> = [];
+    for (const entityId of entityIds) {
+      const entity =
+        this.entityIndex?.getEntity(entityId) ??
+        this.gameState.entities.find((e) => e.id === entityId);
+      if (entity?.position) {
+        entityPositions.push({
+          id: entityId,
+          x: entity.position.x,
+          y: entity.position.y,
+        });
+      }
+    }
+
+    if (entityPositions.length < 2) return;
+
+    const RADIUS = 100;
+    const RADIUS_SQ = RADIUS * RADIUS;
+
+    // Use GPU if available and entity count is high enough
+    if (
+      this.gpuService?.isGPUAvailable() &&
+      entityPositions.length >= GPU_BATCH_THRESHOLD
+    ) {
+      const startTime = performance.now();
+      const n = entityPositions.length;
+
+      // Prepare data for GPU pairwise computation
+      const positions = new Float32Array(n * 2);
+      for (let i = 0; i < n; i++) {
+        positions[i * 2] = entityPositions[i].x;
+        positions[i * 2 + 1] = entityPositions[i].y;
+      }
+
+      // Compute upper triangle pairwise distances on GPU
+      // Returns { distances: Float32Array, pairCount: number } where distances[k] = dist²(i,j) for upper triangle
+      const result = this.gpuService.computePairwiseDistances(positions, n);
+      const distancesSq = result.distances;
+
+      // Build lookup for upper triangle index: for i < j, index = sum(n-1..n-i) + (j-i-1)
+      // Or simpler: accumulate index sequentially
+      const getTriangleIndex = (i: number, j: number): number => {
+        // Upper triangle only: i < j
+        if (i > j) [i, j] = [j, i]; // swap if needed
+        // Index = sum of (n-1) + (n-2) + ... + (n-i) + (j-i-1)
+        // = i*(n-1) - i*(i-1)/2 + (j-i-1)
+        // = i*n - i - i*(i-1)/2 + j - i - 1
+        // = i*n - i*(i+1)/2 + j - i - 1
+        return i * n - (i * (i + 1)) / 2 + j - i - 1;
+      };
+
+      // Process results: for each entity, find nearby friends and apply boost
+      for (let i = 0; i < n; i++) {
+        const entityId = entityPositions[i].id;
+        const needs = this.entityNeeds.get(entityId);
+        if (!needs) continue;
+
+        let totalAffinity = 0;
+        let affinityCount = 0;
+
+        // Check distances to all other entities
+        for (let j = 0; j < n; j++) {
+          if (i === j) continue;
+
+          const idx = getTriangleIndex(i, j);
+          const distSq = distancesSq[idx];
+          if (distSq <= RADIUS_SQ) {
+            const nearbyId = entityPositions[j].id;
+            const affinity = this.socialSystem.getAffinityBetween(
+              entityId,
+              nearbyId,
+            );
+            if (affinity > 0) {
+              totalAffinity += affinity;
+              affinityCount++;
+            }
+          }
+        }
+
+        // Apply boost based on average affinity (same logic as original)
+        if (affinityCount > 0) {
+          const avgAffinity = totalAffinity / affinityCount;
+
+          if (avgAffinity > 0.5) {
+            const boost = Math.min(0.5, avgAffinity * 0.3);
+            needs.social = Math.min(100, needs.social + boost);
+            needs.fun = Math.min(100, needs.fun + boost * 0.8);
+          } else if (avgAffinity > 0.2) {
+            const boost = avgAffinity * 0.15;
+            needs.social = Math.min(100, needs.social + boost);
+            needs.fun = Math.min(100, needs.fun + boost * 0.6);
+          }
+
+          if (affinityCount >= 3 && avgAffinity > 0.3) {
+            needs.social = Math.min(100, needs.social + 2);
+            needs.fun = Math.min(100, needs.fun + 1);
+          }
+        }
+      }
+
+      const duration = performance.now() - startTime;
+      performanceMonitor.recordSubsystemExecution(
+        "NeedsSystem",
+        "applySocialMoraleBoostBatch_GPU",
+        duration,
+      );
+    } else {
+      // Fallback to original per-entity method (CPU)
+      for (const entityId of entityIds) {
+        const needs = this.entityNeeds.get(entityId);
+        if (needs) {
+          this.applySocialMoraleBoost(entityId, needs);
+        }
       }
     }
   }

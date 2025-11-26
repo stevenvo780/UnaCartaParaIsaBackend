@@ -22,9 +22,13 @@ export class AnimalBatchProcessor {
   constructor(gpuService?: GPUComputeService) {
     this.gpuService = gpuService;
     if (gpuService?.isGPUAvailable()) {
-      logger.info("🐾 AnimalBatchProcessor: GPU service connected and available");
+      logger.info(
+        "🐾 AnimalBatchProcessor: GPU service connected and available",
+      );
     } else {
-      logger.info("🐾 AnimalBatchProcessor: Using CPU fallback (no GPU service)");
+      logger.info(
+        "🐾 AnimalBatchProcessor: Using CPU fallback (no GPU service)",
+      );
     }
   }
 
@@ -50,11 +54,12 @@ export class AnimalBatchProcessor {
 
     // Only reallocate if size changed significantly (>20%) or buffers don't exist
     const sizeDiff = Math.abs(animalCount - this.lastBufferSize);
-    const needsRealloc = !this.positionBuffer || 
-                         !this.needsBuffer || 
-                         !this.ageBuffer || 
-                         !this.healthBuffer ||
-                         sizeDiff > this.lastBufferSize * this.REALLOC_THRESHOLD;
+    const needsRealloc =
+      !this.positionBuffer ||
+      !this.needsBuffer ||
+      !this.ageBuffer ||
+      !this.healthBuffer ||
+      sizeDiff > this.lastBufferSize * this.REALLOC_THRESHOLD;
 
     if (needsRealloc) {
       // Allocate with 10% extra capacity to reduce future reallocations
@@ -66,7 +71,7 @@ export class AnimalBatchProcessor {
       this.animalIdArray = new Array<string>(capacity);
       this.lastBufferSize = animalCount;
     }
-    
+
     // Resize animalIdArray if needed (reuse existing array when possible)
     if (this.animalIdArray.length < animalCount) {
       this.animalIdArray = new Array<string>(Math.ceil(animalCount * 1.1));
@@ -122,7 +127,7 @@ export class AnimalBatchProcessor {
 
     // Debug: Check GPU availability
     const gpuAvailable = this.gpuService?.isGPUAvailable() ?? false;
-    
+
     if (gpuAvailable && this.gpuService) {
       try {
         const deltaSeconds = deltaMinutes * 60;

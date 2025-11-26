@@ -26,21 +26,21 @@ interface PendingQuery {
 
 /**
  * GPU-accelerated batch query service for spatial queries.
- * 
+ *
  * Instead of processing 5000+ individual queryRadius calls per frame,
  * this service accumulates queries and processes them in batches on GPU.
- * 
+ *
  * Strategy:
  * 1. Systems call queueQuery() instead of direct queryRadius
  * 2. Queries accumulate in a buffer
  * 3. Every flushInterval ms OR when buffer is full, process all queries on GPU
  * 4. Results are returned via Promises
- * 
+ *
  * This approach minimizes CPU↔GPU transfer overhead by:
  * - Sending entity positions to GPU once per flush
  * - Processing all queries in parallel on GPU
  * - Returning all results in a single transfer
- * 
+ *
  * @see SharedSpatialIndex for the traditional CPU-based spatial queries
  * @see GPUComputeService for low-level GPU operations
  */
@@ -51,7 +51,7 @@ export class GPUBatchQueryService {
   private entityPositions: Float32Array = new Float32Array(0);
   private entityIds: string[] = [];
   private flushTimer: NodeJS.Timeout | null = null;
-  
+
   /** Flush queries every N ms (0 = immediate) */
   private readonly FLUSH_INTERVAL_MS = 0;
   /** Max queries before forcing a flush */
@@ -90,9 +90,9 @@ export class GPUBatchQueryService {
   /**
    * Queues a spatial query for batch processing.
    * Returns a Promise that resolves when the batch is processed.
-   * 
+   *
    * For immediate results (synchronous), use querySyncImmediate() instead.
-   * 
+   *
    * @param queryId - Unique identifier for this query
    * @param centerX - Center X coordinate
    * @param centerY - Center Y coordinate
@@ -121,7 +121,10 @@ export class GPUBatchQueryService {
         this.flush();
       } else if (this.FLUSH_INTERVAL_MS > 0 && !this.flushTimer) {
         // Schedule flush if interval mode
-        this.flushTimer = setTimeout(() => this.flush(), this.FLUSH_INTERVAL_MS);
+        this.flushTimer = setTimeout(
+          () => this.flush(),
+          this.FLUSH_INTERVAL_MS,
+        );
       } else if (this.FLUSH_INTERVAL_MS === 0) {
         // Immediate mode - flush on next tick to batch same-frame queries
         setImmediate(() => this.flush());
@@ -132,7 +135,7 @@ export class GPUBatchQueryService {
   /**
    * Synchronous query for cases where async isn't practical.
    * Uses CPU for small entity counts, GPU for large counts.
-   * 
+   *
    * @param centerX - Center X coordinate
    * @param centerY - Center Y coordinate
    * @param radius - Query radius
@@ -181,7 +184,7 @@ export class GPUBatchQueryService {
     const queryCount = queries.length;
 
     // Decide GPU vs CPU
-    const useGpu = 
+    const useGpu =
       this.gpuService?.isGPUAvailable() &&
       entityCount >= this.GPU_ENTITY_THRESHOLD &&
       queryCount >= this.GPU_QUERY_THRESHOLD;
@@ -193,8 +196,10 @@ export class GPUBatchQueryService {
     }
 
     // Update stats
-    this.stats.avgBatchSize = 
-      (this.stats.avgBatchSize * (this.stats.gpuBatches + this.stats.cpuFallbacks - 1) + queryCount) /
+    this.stats.avgBatchSize =
+      (this.stats.avgBatchSize *
+        (this.stats.gpuBatches + this.stats.cpuFallbacks - 1) +
+        queryCount) /
       (this.stats.gpuBatches + this.stats.cpuFallbacks);
   }
 
@@ -216,13 +221,13 @@ export class GPUBatchQueryService {
       const distancesSq = tf.tidy(() => {
         const entities = tf.tensor2d(this.entityPositions, [entityCount, 2]);
         const centers = tf.tensor2d(queryCenters, [queries.length, 2]);
-        
+
         // Expand for broadcasting: [Q, 1, 2] - [1, E, 2] = [Q, E, 2]
         const centersExp = centers.expandDims(1);
         const entitiesExp = entities.expandDims(0);
         const diff = centersExp.sub(entitiesExp);
         const distSq = diff.square().sum(2); // [Q, E]
-        
+
         return distSq.arraySync() as number[][];
       });
 
@@ -250,7 +255,6 @@ export class GPUBatchQueryService {
 
       this.stats.gpuBatches++;
       this.stats.totalGpuTime += performance.now() - startTime;
-
     } catch (error) {
       logger.warn(`⚠️ GPU batch query failed, falling back to CPU: ${error}`);
       this.processCPU(queries, entityCount);
@@ -271,7 +275,7 @@ export class GPUBatchQueryService {
         const dx = this.entityPositions[i * 2] - query.centerX;
         const dy = this.entityPositions[i * 2 + 1] - query.centerY;
         const distSq = dx * dx + dy * dy;
-        
+
         if (distSq <= query.radiusSq) {
           indices.push(i);
           distances.push(Math.sqrt(distSq));

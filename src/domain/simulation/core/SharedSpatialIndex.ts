@@ -34,7 +34,9 @@ export class SharedSpatialIndex {
   private readonly POSITION_POOL_SIZE = 200;
 
   // Result pooling to reduce GC pressure from queryRadius
-  private resultPool: Array<Array<{ entity: string; distance: number; type: EntityType }>> = [];
+  private resultPool: Array<
+    Array<{ entity: string; distance: number; type: EntityType }>
+  > = [];
   private readonly RESULT_POOL_SIZE = 50;
 
   constructor(
@@ -238,17 +240,23 @@ export class SharedSpatialIndex {
    * Acquires a result array from pool or creates new one.
    * Call releaseResults() when done to return to pool.
    */
-  private acquireResultArray(): Array<{ entity: string; distance: number; type: EntityType }> {
+  private acquireResultArray(): Array<{
+    entity: string;
+    distance: number;
+    type: EntityType;
+  }> {
     return this.resultPool.pop() || [];
   }
 
   /**
    * Returns a result array to the pool for reuse.
    * Call this after processing queryRadius results to reduce GC pressure.
-   * 
+   *
    * @param results - Array to return to pool
    */
-  public releaseResults(results: Array<{ entity: string; distance: number; type: EntityType }>): void {
+  public releaseResults(
+    results: Array<{ entity: string; distance: number; type: EntityType }>,
+  ): void {
     if (this.resultPool.length < this.RESULT_POOL_SIZE) {
       results.length = 0; // Clear array for reuse
       this.resultPool.push(results);

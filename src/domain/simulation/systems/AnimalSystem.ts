@@ -21,7 +21,7 @@ import { performanceMonitor } from "../core/PerformanceMonitor";
 const DEFAULT_CONFIG: AnimalSystemConfig = {
   maxAnimals: 500,
   spawnRadius: 300,
-  updateInterval: 250, // Match MEDIUM tier (4Hz) - life cycles don't need 20Hz
+  updateInterval: 100, // 10Hz for smoother movement (was 250ms/4Hz)
   cleanupInterval: 30000,
 };
 
@@ -482,14 +482,27 @@ export class AnimalSystem {
         animal,
         config.detectionRange,
       );
-      AnimalBehavior.seekWater(
-        animal,
-        waterResources,
-        deltaSeconds,
-        (resourceId) => {
-          this.consumeResource(resourceId, animal.id);
-        },
-      );
+      
+      if (waterResources.length > 0) {
+        AnimalBehavior.seekWater(
+          animal,
+          waterResources,
+          deltaSeconds,
+          (resourceId) => {
+            this.consumeResource(resourceId, animal.id);
+          },
+        );
+      } else if (this.terrainSystem) {
+        // Try to drink from water terrain tiles
+        const waterTile = this.findNearbyWaterTile(animal, config.detectionRange);
+        if (waterTile) {
+          this.drinkFromTerrain(animal, waterTile, config, deltaSeconds);
+        } else {
+          AnimalBehavior.wander(animal, 0.5, deltaSeconds);
+        }
+      } else {
+        AnimalBehavior.wander(animal, 0.5, deltaSeconds);
+      }
       return;
     }
 
@@ -650,6 +663,93 @@ export class AnimalSystem {
         ?.map((r) => ({ id: r.id, position: r.position })) || [];
 
     return resources;
+  }
+
+  /**
+   * Find nearby water terrain tiles (ocean, river, lake)
+   */
+  private findNearbyWaterTile(
+    animal: Animal,
+    range: number,
+  ): { x: number; y: number; tileX: number; tileY: number } | null {
+    if (!this.terrainSystem) return null;
+
+    const TILE_SIZE = 64;
+    const searchRadius = Math.ceil(range / TILE_SIZE);
+    const centerTileX = Math.floor(animal.position.x / TILE_SIZE);
+    const centerTileY = Math.floor(animal.position.y / TILE_SIZE);
+
+    // Spiral search for nearest water tile
+    for (let r = 1; r <= searchRadius; r++) {
+      for (let dx = -r; dx <= r; dx++) {
+        for (let dy = -r; dy <= r; dy++) {
+          if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue; // Only check perimeter
+          
+          const tileX = centerTileX + dx;
+          const tileY = centerTileY + dy;
+          const tile = this.terrainSystem.getTile(tileX, tileY);
+          
+          if (tile && this.isWaterTerrain(tile.assets?.terrain)) {
+            return {
+              x: (tileX + 0.5) * TILE_SIZE,
+              y: (tileY + 0.5) * TILE_SIZE,
+              tileX,
+              tileY,
+            };
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Check if terrain type is water
+   */
+  private isWaterTerrain(terrainAsset: string | undefined): boolean {
+    if (!terrainAsset) return false;
+    return terrainAsset.includes("water") || 
+           terrainAsset.includes("ocean") || 
+           terrainAsset.includes("river") ||
+           terrainAsset.includes("lake");
+  }
+
+  /**
+   * Make animal drink from water terrain
+   */
+  private drinkFromTerrain(
+    animal: Animal,
+    waterTile: { x: number; y: number; tileX: number; tileY: number },
+    config: ReturnType<typeof getAnimalConfig>,
+    deltaSeconds: number,
+  ): void {
+    if (!config) return;
+
+    const dx = waterTile.x - animal.position.x;
+    const dy = waterTile.y - animal.position.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < 40) {
+      // Close enough to drink
+      animal.state = "drinking";
+      if (!animal.stateEndTime) {
+        animal.stateEndTime = Date.now() + 2000;
+      } else if (Date.now() > animal.stateEndTime) {
+        AnimalNeeds.hydrate(animal, config.waterConsumptionRate * 20);
+        animal.state = "idle";
+        animal.stateEndTime = undefined;
+        animal.targetPosition = null;
+      }
+    } else {
+      // Move toward water
+      animal.targetPosition = { x: waterTile.x, y: waterTile.y };
+      AnimalBehavior.moveToward(
+        animal,
+        waterTile,
+        config.speed * animal.genes.speed * 0.6,
+        deltaSeconds,
+      );
+    }
   }
 
   /**

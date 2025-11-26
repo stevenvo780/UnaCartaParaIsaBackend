@@ -415,10 +415,10 @@ export class AISystem extends EventEmitter {
 
     const inventoryEmpty = inventory
       ? (inventory.food || 0) +
-      (inventory.water || 0) +
-      (inventory.wood || 0) +
-      (inventory.stone || 0) ===
-      0
+          (inventory.water || 0) +
+          (inventory.wood || 0) +
+          (inventory.stone || 0) ===
+        0
       : true;
     const needsSatisfied = needs
       ? needs.hunger > 70 && needs.thirst > 70 && needs.energy > 70
@@ -588,11 +588,11 @@ export class AISystem extends EventEmitter {
         const entity = this.gameState.entities?.find((e) => e.id === id);
         return entity?.stats
           ? {
-            health: entity.stats.health ?? 100,
-            stamina: entity.stats.stamina ?? 100,
-            attack: entity.stats.attack ?? 10,
-            defense: entity.stats.defense ?? 0,
-          }
+              health: entity.stats.health ?? 100,
+              stamina: entity.stats.stamina ?? 100,
+              attack: entity.stats.attack ?? 10,
+              defense: entity.stats.defense ?? 0,
+            }
           : null;
       },
       getPreferredResourceForRole: (role: string) =>
@@ -653,10 +653,10 @@ export class AISystem extends EventEmitter {
       socialPreference: isChild
         ? "extroverted"
         : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 >
-          0.6
+            0.6
           ? "extroverted"
           : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 <
-            0.4
+              0.4
             ? "introverted"
             : "balanced",
       workEthic: isChild
@@ -664,7 +664,7 @@ export class AISystem extends EventEmitter {
         : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 > 0.7
           ? "workaholic"
           : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 <
-            0.3
+              0.3
             ? "lazy"
             : "balanced",
       explorationType:
@@ -1803,13 +1803,13 @@ export class AISystem extends EventEmitter {
       // Convert goal.data to AIGoalData format
       const goalData: AIGoalData | undefined = goal.data
         ? {
-          ...Object.fromEntries(
-            Object.entries(goal.data).map(([k, v]) => [
-              k,
-              typeof v === "string" || typeof v === "number" ? v : undefined,
-            ]),
-          ),
-        }
+            ...Object.fromEntries(
+              Object.entries(goal.data).map(([k, v]) => [
+                k,
+                typeof v === "string" || typeof v === "number" ? v : undefined,
+              ]),
+            ),
+          }
         : undefined;
 
       const newGoal: AIGoal = {

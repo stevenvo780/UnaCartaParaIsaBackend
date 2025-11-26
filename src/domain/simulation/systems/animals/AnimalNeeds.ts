@@ -6,14 +6,15 @@ export class AnimalNeeds {
     const config = getAnimalConfig(animal.type);
     if (!config) return;
 
+    // Decay rates are per minute, no additional multiplier needed
     animal.needs.hunger = Math.max(
       0,
-      animal.needs.hunger - config.hungerDecayRate * deltaMinutes * 1.5,
+      animal.needs.hunger - config.hungerDecayRate * deltaMinutes,
     );
 
     animal.needs.thirst = Math.max(
       0,
-      animal.needs.thirst - config.thirstDecayRate * deltaMinutes * 1.5,
+      animal.needs.thirst - config.thirstDecayRate * deltaMinutes,
     );
 
     if (Date.now() - animal.lastReproduction > config.reproductionCooldown) {

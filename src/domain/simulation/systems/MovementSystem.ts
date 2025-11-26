@@ -169,7 +169,9 @@ export class MovementSystem extends EventEmitter {
     this.initializeObstacles();
     this.batchProcessor = new MovementBatchProcessor(gpuService);
     if (gpuService?.isGPUAvailable()) {
-      logger.info("🚶 MovementSystem: GPU acceleration enabled for batch processing");
+      logger.info(
+        "🚶 MovementSystem: GPU acceleration enabled for batch processing",
+      );
     }
 
     logger.info("🚶 MovementSystem initialized", {

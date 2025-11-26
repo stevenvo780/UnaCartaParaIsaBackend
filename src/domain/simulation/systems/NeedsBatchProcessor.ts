@@ -18,9 +18,13 @@ export class NeedsBatchProcessor {
   constructor(gpuService?: GPUComputeService) {
     this.gpuService = gpuService;
     if (gpuService?.isGPUAvailable()) {
-      logger.info("🧠 NeedsBatchProcessor: GPU service connected and available");
+      logger.info(
+        "🧠 NeedsBatchProcessor: GPU service connected and available",
+      );
     } else {
-      logger.info("🧠 NeedsBatchProcessor: Using CPU fallback (no GPU service)");
+      logger.info(
+        "🧠 NeedsBatchProcessor: Using CPU fallback (no GPU service)",
+      );
     }
   }
 

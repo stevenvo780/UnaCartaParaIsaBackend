@@ -23,9 +23,13 @@ export class MovementBatchProcessor {
   constructor(gpuService?: GPUComputeService) {
     this.gpuService = gpuService;
     if (gpuService?.isGPUAvailable()) {
-      logger.info("🚶 MovementBatchProcessor: GPU service connected and available");
+      logger.info(
+        "🚶 MovementBatchProcessor: GPU service connected and available",
+      );
     } else {
-      logger.info("🚶 MovementBatchProcessor: Using CPU fallback (no GPU service)");
+      logger.info(
+        "🚶 MovementBatchProcessor: Using CPU fallback (no GPU service)",
+      );
     }
   }
 

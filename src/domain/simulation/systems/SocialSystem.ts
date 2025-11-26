@@ -232,45 +232,71 @@ export class SocialSystem {
    * GPU-accelerated edge decay for large social networks
    */
   private decayEdgesGPU(dt: number, minAffinity: number): void {
-    
     // Collect non-bond edges for GPU processing
-    const edgeList: Array<{ aId: string; bId: string; affinity: number; hasBond: boolean }> = [];
-    
+    const edgeList: Array<{
+      aId: string;
+      bId: string;
+      affinity: number;
+      hasBond: boolean;
+    }> = [];
+
     for (const [aId, neighbors] of this.edges) {
       for (const [bId, affinity] of neighbors) {
-        if (aId < bId) { // Avoid duplicates
-          const hasBond = !!(this.permanentBonds.get(aId)?.get(bId) || this.permanentBonds.get(bId)?.get(aId));
+        if (aId < bId) {
+          // Avoid duplicates
+          const hasBond = !!(
+            this.permanentBonds.get(aId)?.get(bId) ||
+            this.permanentBonds.get(bId)?.get(aId)
+          );
           edgeList.push({ aId, bId, affinity, hasBond });
         }
       }
     }
-    
+
     if (edgeList.length === 0) return;
-    
+
     // Separate bonded and non-bonded edges
-    const nonBondedAffinities = new Float32Array(edgeList.filter(e => !e.hasBond).map(e => e.affinity));
-    const bondedAffinities = new Float32Array(edgeList.filter(e => e.hasBond).map(e => e.affinity));
-    
+    const nonBondedAffinities = new Float32Array(
+      edgeList.filter((e) => !e.hasBond).map((e) => e.affinity),
+    );
+    const bondedAffinities = new Float32Array(
+      edgeList.filter((e) => e.hasBond).map((e) => e.affinity),
+    );
+
     // GPU batch decay
     let newNonBonded: Float32Array | null = null;
     let newBonded: Float32Array | null = null;
-    
+
     if (nonBondedAffinities.length > 0) {
-      newNonBonded = this.gpuService!.decayAffinitiesBatch(nonBondedAffinities, this.config.decayPerSecond, dt, minAffinity);
+      newNonBonded = this.gpuService!.decayAffinitiesBatch(
+        nonBondedAffinities,
+        this.config.decayPerSecond,
+        dt,
+        minAffinity,
+      );
     }
     if (bondedAffinities.length > 0) {
-      newBonded = this.gpuService!.decayAffinitiesBatch(bondedAffinities, this.config.decayPerSecond * 0.05, dt, minAffinity);
+      newBonded = this.gpuService!.decayAffinitiesBatch(
+        bondedAffinities,
+        this.config.decayPerSecond * 0.05,
+        dt,
+        minAffinity,
+      );
     }
-    
+
     // Apply results back
     let nonBondedIdx = 0;
     let bondedIdx = 0;
-    
+
     for (const edge of edgeList) {
-      const newAffinity = edge.hasBond 
-        ? (newBonded ? newBonded[bondedIdx++] : edge.affinity)
-        : (newNonBonded ? newNonBonded[nonBondedIdx++] : edge.affinity);
-      
+      const newAffinity = edge.hasBond
+        ? newBonded
+          ? newBonded[bondedIdx++]
+          : edge.affinity
+        : newNonBonded
+          ? newNonBonded[nonBondedIdx++]
+          : edge.affinity;
+
       this.edges.get(edge.aId)?.set(edge.bId, newAffinity);
       this.edges.get(edge.bId)?.set(edge.aId, newAffinity);
     }
@@ -284,9 +310,10 @@ export class SocialSystem {
     const entities = this.gameState.entities || [];
     const reinforcement = this.config.reinforcementPerSecond * dt;
     const entitiesWithPos = entities.filter(
-      (e): e is typeof e & { position: { x: number; y: number } } => !!e.position
+      (e): e is typeof e & { position: { x: number; y: number } } =>
+        !!e.position,
     );
-    
+
     // Use GPU pairwise distances for large entity counts (O(N²) operation)
     if (this.gpuService?.isGPUAvailable() && entitiesWithPos.length >= 20) {
       this.updateProximityGPU(entitiesWithPos, reinforcement);
@@ -319,19 +346,20 @@ export class SocialSystem {
   ): void {
     const count = entities.length;
     const positions = new Float32Array(count * 2);
-    
+
     for (let i = 0; i < count; i++) {
       positions[i * 2] = entities[i].position.x;
       positions[i * 2 + 1] = entities[i].position.y;
     }
-    
+
     const { distances } = this.gpuService!.computePairwiseDistances(
       positions,
       count,
     );
-    
-    const proximityRadiusSq = this.config.proximityRadius * this.config.proximityRadius;
-    
+
+    const proximityRadiusSq =
+      this.config.proximityRadius * this.config.proximityRadius;
+
     // Apply reinforcement for nearby pairs
     let idx = 0;
     for (let i = 0; i < count; i++) {

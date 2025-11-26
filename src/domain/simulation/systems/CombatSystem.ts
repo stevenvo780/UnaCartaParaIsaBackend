@@ -242,13 +242,13 @@ export class CombatSystem {
     now: number,
   ): void {
     const startTime = performance.now();
-    
+
     // Use GPU pairwise distances for large attacker counts
     if (this.gpuService?.isGPUAvailable() && attackers.length >= 30) {
       this.updateBatchGPU(attackers, entitiesById, now);
       return;
     }
-    
+
     const queries = attackers
       .map((attacker) => {
         if (!attacker.position) return null;
@@ -316,25 +316,27 @@ export class CombatSystem {
     entitiesById: Map<string, SimulationEntity>,
     now: number,
   ): void {
-    const attackersWithPos = attackers.filter(a => a.position);
-    const allEntities = Array.from(entitiesById.values()).filter(e => e.position && !e.isDead);
-    
+    const attackersWithPos = attackers.filter((a) => a.position);
+    const allEntities = Array.from(entitiesById.values()).filter(
+      (e) => e.position && !e.isDead,
+    );
+
     if (attackersWithPos.length === 0 || allEntities.length === 0) return;
-    
+
     // Build position arrays
     const attackerPositions = new Float32Array(attackersWithPos.length * 2);
     const targetPositions = new Float32Array(allEntities.length * 2);
-    
+
     for (let i = 0; i < attackersWithPos.length; i++) {
       attackerPositions[i * 2] = attackersWithPos[i].position!.x;
       attackerPositions[i * 2 + 1] = attackersWithPos[i].position!.y;
     }
-    
+
     for (let i = 0; i < allEntities.length; i++) {
       targetPositions[i * 2] = allEntities[i].position!.x;
       targetPositions[i * 2 + 1] = allEntities[i].position!.y;
     }
-    
+
     // For each attacker, compute distances to all targets
     for (let a = 0; a < attackersWithPos.length; a++) {
       const attacker = attackersWithPos[a];
@@ -342,29 +344,29 @@ export class CombatSystem {
       const weapon = getWeapon(weaponId);
       const radius = Math.max(this.config.engagementRadius, weapon.range);
       const radiusSq = radius * radius;
-      
+
       // Compute distances from this attacker to all targets
       const distances = this.gpuService!.computeDistancesBatch(
         attacker.position!.x,
         attacker.position!.y,
         targetPositions,
       );
-      
+
       // Find valid targets within range
       for (let t = 0; t < allEntities.length; t++) {
         if (distances[t] > radiusSq) continue;
-        
+
         const target = allEntities[t];
         if (target.id === attacker.id) continue;
         if (!this.shouldAttack(attacker, target)) continue;
         if (!this.isOffCooldown(attacker.id, weaponId, now)) continue;
-        
+
         this.resolveAttack(attacker, target, weaponId, now);
         this.lastAttackAt.set(attacker.id, now);
         break;
       }
     }
-    
+
     const duration = performance.now() - performance.now();
     performanceMonitor.recordSubsystemExecution(
       "CombatSystem",
