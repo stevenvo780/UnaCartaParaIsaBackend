@@ -37,7 +37,6 @@ export class AnimalSpawning {
       return 0;
     }
 
-    // Larger sample step for sparse initial population
     const sampleStep = 128;
 
     for (let x = 0; x < worldWidth; x += sampleStep) {
@@ -56,7 +55,6 @@ export class AnimalSpawning {
 
           for (const config of animalConfigs) {
             if (Math.random() < config.spawnProbability) {
-              // Smaller group sizes for balanced population
               const groupSize = Math.min(
                 config.groupSize.max,
                 config.groupSize.min + Math.floor(Math.random() * 2),
@@ -114,10 +112,8 @@ export class AnimalSpawning {
     const { x: chunkX, y: chunkY, width, height } = chunkBounds;
     let spawned = 0;
 
-    // Sample step determines spawn density - larger = fewer animals
     const sampleStep = 128;
 
-    // Pre-compute tile size if tiles available
     const tileSize =
       tiles && tiles[0]?.length > 0 ? width / tiles[0].length : 64;
 
@@ -145,16 +141,12 @@ export class AnimalSpawning {
         const animalConfigs = getAnimalsForBiome(biome);
 
         for (const config of animalConfigs) {
-          // Skip aquatic animals on walkable non-wetland tiles
           if (config.isAquatic && isWalkable && biome !== "wetland") continue;
-          // Skip land animals on non-walkable tiles
           if (!config.isAquatic && !isWalkable) continue;
 
-          // Reduced spawn probability for chunk-based spawning
           const chunkSpawnProb = config.spawnProbability * 0.1;
 
           if (Math.random() < chunkSpawnProb) {
-            // Smaller groups for chunk spawning (1-2 animals)
             const groupSize = Math.random() < 0.3 ? 2 : 1;
 
             for (let i = 0; i < groupSize; i++) {

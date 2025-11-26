@@ -104,7 +104,6 @@ export class AIZoneHandler {
     zoneId: string | undefined,
     aiState: AIState,
   ): void {
-    // Handle move action completion
     if (aiState.currentAction?.actionType === "move") {
       simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
         agentId: entityId,
@@ -122,27 +121,22 @@ export class AIZoneHandler {
       this.updateHomeZoneIfNeeded(entityId, zoneId, aiState);
     }
 
-    // Handle assist goals
     if (this.handleAssistGoal(entityId, goal, aiState)) {
       return;
     }
 
-    // Handle craft goals
     if (this.handleCraftGoal(entityId, goal, aiState)) {
       return;
     }
 
-    // Handle deposit goals
     if (zoneId && this.handleDepositGoal(entityId, zoneId, goal, aiState)) {
       return;
     }
 
-    // Handle trade action
     if (zoneId && this.handleTradeAction(entityId, zoneId, goal, aiState)) {
       return;
     }
 
-    // Handle building contribution
     if (
       zoneId &&
       this.handleBuildingContribution(entityId, zoneId, goal, aiState)
@@ -150,20 +144,16 @@ export class AIZoneHandler {
       return;
     }
 
-    // Handle quest start
     if (this.handleQuestStart(goal, aiState)) {
       return;
     }
 
-    // Handle guard role truces
     this.handleGuardTruces(entityId, goal);
 
-    // Emit activity started event and track success
     if (zoneId) {
       this.emitActivityStarted(entityId, zoneId, goal, aiState);
     }
 
-    // Clear goal and mark as completed
     aiState.currentGoal = null;
     aiState.currentAction = null;
     this.deps.goalsCompletedRef.value++;
@@ -312,7 +302,6 @@ export class AIZoneHandler {
 
     const targetId = goal.data.targetAgentId as string;
 
-    // Verify target is still alive
     const targetAgent = this.deps.gameState.agents?.find(
       (a) => a.id === targetId,
     );

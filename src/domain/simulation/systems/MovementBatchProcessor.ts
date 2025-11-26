@@ -4,8 +4,11 @@ import type { GPUComputeService } from "../core/GPUComputeService";
 import { injectable } from "inversify";
 
 /**
- * Procesador batch optimizado para movimiento de entidades
- * Usa GPU cuando está disponible, fallback a CPU
+ * Batch processor for entity movement calculations.
+ * Uses GPU when available, falls back to CPU for compatibility.
+ *
+ * Processes position updates, velocity calculations, and fatigue in vectorized batches
+ * for improved performance with large entity counts.
  */
 @injectable()
 export class MovementBatchProcessor {
@@ -97,7 +100,6 @@ export class MovementBatchProcessor {
     const entityCount = this.entityIdArray.length;
     const updated = new Array<boolean>(entityCount).fill(true);
 
-    // Double buffering: create work copies
     const workPositions = new Float32Array(this.positionBuffer);
     const workVelocities = this.velocityBuffer
       ? new Float32Array(this.velocityBuffer)
@@ -116,10 +118,8 @@ export class MovementBatchProcessor {
           deltaMs,
         );
 
-        // Atomic swap: update buffers only after GPU success
         this.positionBuffer = result.newPositions;
 
-        // Update velocities based on new positions
         for (let i = 0; i < entityCount; i++) {
           const posOffset = i * 2;
           const velOffset = i * 2;
@@ -148,13 +148,11 @@ export class MovementBatchProcessor {
         return { updated, arrived: result.arrived };
       } catch (error) {
         logger.warn(
-          `⚠️ Error en GPU updatePositionsBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+          `⚠️ Error in GPU updatePositionsBatch, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
         );
-        // workPositions and workVelocities are intact for CPU fallback
       }
     }
 
-    // CPU fallback: work on copies, then swap
     const arrived = new Array<boolean>(entityCount).fill(false);
 
     for (let i = 0; i < entityCount; i++) {
@@ -199,7 +197,6 @@ export class MovementBatchProcessor {
       workVelocities[velOffset + 1] = (deltaY / deltaMs) * 1000;
     }
 
-    // Atomic swap after CPU processing completes
     this.positionBuffer = workPositions;
     this.velocityBuffer = workVelocities;
     this.bufferDirty = true;
@@ -213,7 +210,6 @@ export class MovementBatchProcessor {
   ): void {
     if (!this.fatigueBuffer || this.entityIdArray.length === 0) return;
 
-    // Double buffering for fatigue
     const workFatigue = new Float32Array(this.fatigueBuffer);
 
     if (this.gpuService?.isGPUAvailable()) {
@@ -224,19 +220,16 @@ export class MovementBatchProcessor {
           isResting,
           deltaMs,
         );
-        // Atomic swap on GPU success
         this.fatigueBuffer = result;
         this.bufferDirty = true;
         return;
       } catch (error) {
         logger.warn(
-          `⚠️ Error en GPU updateFatigueBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+          `⚠️ Error in GPU updateFatigueBatch, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
         );
-        // workFatigue is intact for CPU fallback
       }
     }
 
-    // CPU fallback: work on copy
     const entityCount = this.entityIdArray.length;
     const fatigueDecayRate = 0.1 * (deltaMs / 1000);
     const fatigueRestRate = 0.5 * (deltaMs / 1000);
@@ -251,7 +244,6 @@ export class MovementBatchProcessor {
       }
     }
 
-    // Atomic swap after CPU processing
     this.fatigueBuffer = workFatigue;
     this.bufferDirty = true;
   }

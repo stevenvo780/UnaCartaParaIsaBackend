@@ -20,7 +20,7 @@ export interface AIGoalValidatorDeps {
  */
 export class AIGoalValidator {
   private readonly deps: AIGoalValidatorDeps;
-  private readonly GOAL_TIMEOUT_MS = 60000; // 60 seconds max for any goal
+  private readonly GOAL_TIMEOUT_MS = 60000;
   private readonly ARRIVAL_THRESHOLD = 50;
 
   // Metrics
@@ -63,7 +63,6 @@ export class AIGoalValidator {
       return false;
     }
 
-    // Check satisfy_* goals FIRST - if need is already satisfied, goal is complete
     if (goal.type.startsWith("satisfy_")) {
       const needType = goal.data?.need as string;
       if (needType && this.deps.needsSystem) {
@@ -77,7 +76,6 @@ export class AIGoalValidator {
       }
     }
 
-    // Validate position before marking goal complete
     if (goal.targetPosition) {
       const agentPos = this.deps.getAgentPosition(agentId);
       if (!agentPos) return false;
@@ -91,7 +89,6 @@ export class AIGoalValidator {
       }
     }
 
-    // Validate zone arrival
     if (goal.targetZoneId) {
       const agentPos = this.deps.getAgentPosition(agentId);
       if (!agentPos) return false;
@@ -112,7 +109,6 @@ export class AIGoalValidator {
       }
     }
 
-    // Validate resource target if applicable
     const resourceValid = this.isResourceTargetValid(goal);
     if (resourceValid === false) {
       return false;
@@ -140,7 +136,6 @@ export class AIGoalValidator {
       return false;
     }
 
-    // Goal is complete if agent reached target
     if (goal.targetPosition || goal.targetZoneId) {
       return true;
     }
@@ -154,17 +149,14 @@ export class AIGoalValidator {
   public isGoalInvalid(goal: AIGoal, agentId: string): boolean {
     const now = Date.now();
 
-    // Goal expired explicitly
     if (goal.expiresAt && now > goal.expiresAt) {
       return true;
     }
 
-    // Goal timed out
     if (now - goal.createdAt > this.GOAL_TIMEOUT_MS) {
       return true;
     }
 
-    // Zone doesn't exist
     if (goal.targetZoneId) {
       const zone = this.deps.gameState.zones?.find(
         (z) => z.id === goal.targetZoneId,
@@ -174,19 +166,16 @@ export class AIGoalValidator {
       }
     }
 
-    // Resource invalid
     const resourceValid = this.isResourceTargetValid(goal);
     if (resourceValid === false) {
       return true;
     }
 
-    // Combat target invalid
     const combatTargetValid = this.isCombatTargetValid(goal);
     if (combatTargetValid === false) {
       return true;
     }
 
-    // Assist target invalid
     if (
       (goal.type === "assist" || goal.type.startsWith("assist_")) &&
       goal.data?.targetAgentId
@@ -200,7 +189,6 @@ export class AIGoalValidator {
       }
     }
 
-    // Agent is dead
     const agent = this.deps.gameState.agents?.find((a) => a.id === agentId);
     if (!agent || agent.isDead) {
       return true;

@@ -4,8 +4,11 @@ import type { GPUComputeService } from "../core/GPUComputeService";
 import { injectable } from "inversify";
 
 /**
- * Procesador batch optimizado para necesidades de entidades
- * Usa GPU cuando está disponible, fallback a CPU
+ * Batch processor for entity needs calculations.
+ * Uses GPU when available, falls back to CPU for compatibility.
+ *
+ * Processes needs decay, cross-effects, and updates in vectorized batches
+ * for improved performance with large entity counts.
  */
 @injectable()
 export class NeedsBatchProcessor {
@@ -66,7 +69,6 @@ export class NeedsBatchProcessor {
   ): void {
     if (!this.needsBuffer || this.entityIdArray.length === 0) return;
 
-    // Create work buffer (double buffering to avoid race conditions)
     const workBuffer = new Float32Array(this.needsBuffer);
 
     if (this.gpuService?.isGPUAvailable()) {
@@ -79,19 +81,16 @@ export class NeedsBatchProcessor {
           this.NEED_COUNT,
           deltaSeconds,
         );
-        // Atomic swap: only update if GPU succeeded
         this.needsBuffer = result;
         this.bufferDirty = true;
         return;
       } catch (error) {
         logger.warn(
-          `⚠️ Error en GPU applyDecayBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+          `⚠️ Error in GPU applyDecayBatch, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
         );
-        // workBuffer is intact for CPU path
       }
     }
 
-    // CPU fallback: work on copy, then swap
     const entityCount = this.entityIdArray.length;
 
     for (let i = 0; i < entityCount; i++) {
@@ -110,7 +109,6 @@ export class NeedsBatchProcessor {
       }
     }
 
-    // Atomic swap after CPU processing completes
     this.needsBuffer = workBuffer;
     this.bufferDirty = true;
   }
@@ -129,7 +127,7 @@ export class NeedsBatchProcessor {
         return;
       } catch (error) {
         logger.warn(
-          `⚠️ Error en GPU applyCrossEffectsBatch, usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+          `⚠️ Error in GPU applyCrossEffectsBatch, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }

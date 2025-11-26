@@ -245,8 +245,10 @@ export class AppearanceGenerationSystem {
       };
     }
 
-    // Generate a unique variant key based on genetic data
-    // The actual rendering is done by frontend's GeneticSpriteSystem
+    /**
+     * Generate a unique variant key based on genetic data.
+     * The actual rendering is done by frontend's GeneticSpriteSystem.
+     */
     const variantKey = this.generateVariantKey(
       generation,
       sex,

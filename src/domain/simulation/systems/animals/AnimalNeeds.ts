@@ -6,7 +6,6 @@ export class AnimalNeeds {
     const config = getAnimalConfig(animal.type);
     if (!config) return;
 
-    // Decay rates are per minute, no additional multiplier needed
     animal.needs.hunger = Math.max(
       0,
       animal.needs.hunger - config.hungerDecayRate * deltaMinutes,

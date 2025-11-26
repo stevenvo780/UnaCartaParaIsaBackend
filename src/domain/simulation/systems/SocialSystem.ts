@@ -324,7 +324,6 @@ export class SocialSystem {
     }
 
     for (const entity of entitiesWithPos) {
-
       const nearby = this.spatialGrid.queryRadius(
         entity.position,
         this.config.proximityRadius,

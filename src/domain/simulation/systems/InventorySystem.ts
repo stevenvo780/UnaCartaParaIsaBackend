@@ -285,7 +285,6 @@ export class InventorySystem {
       rare_materials: 0,
     };
 
-    // Phase 1: Validate source has sufficient resources
     for (const [resource, amount] of Object.entries(resources)) {
       if (!amount || amount <= 0) continue;
       const resourceType = resource as ResourceType;
@@ -297,7 +296,6 @@ export class InventorySystem {
       }
     }
 
-    // Phase 2: Validate target has capacity
     const toCurrentLoad =
       toInv.wood +
       toInv.stone +
@@ -317,7 +315,6 @@ export class InventorySystem {
       );
     }
 
-    // Phase 3: Execute atomic transfer
     for (const [resource, amount] of Object.entries(resources)) {
       if (!amount || amount <= 0) continue;
       const resourceType = resource as ResourceType;

@@ -76,11 +76,10 @@ export function evaluateCriticalNeeds(
         expiresAt: now + 15000,
       });
     } else {
-      // Desperate search for water
       goals.push({
         id: `desperate_water_${aiState.entityId}_${now}`,
         type: "explore",
-        priority: calculateNeedPriority(needs.thirst, 140), // Higher priority than normal search
+        priority: calculateNeedPriority(needs.thirst, 140),
         data: {
           explorationType: "desperate_search",
           need: "thirst",
@@ -94,11 +93,10 @@ export function evaluateCriticalNeeds(
   if (needs.hunger < hungerThreshold) {
     let foodTarget = null;
     if (deps.findNearestResource) {
-      // Try food types in priority order, stop at first found
       const foodTypes = ["wheat_crop", "berry_bush", "mushroom_patch"];
       for (const foodType of foodTypes) {
         foodTarget = deps.findNearestResource(aiState.entityId, foodType);
-        if (foodTarget) break; // Early exit when food found
+        if (foodTarget) break;
       }
     }
 
@@ -117,7 +115,6 @@ export function evaluateCriticalNeeds(
         expiresAt: now + 15000,
       });
     } else {
-      // Desperate search for food
       goals.push({
         id: `desperate_food_${aiState.entityId}_${now}`,
         type: "explore",

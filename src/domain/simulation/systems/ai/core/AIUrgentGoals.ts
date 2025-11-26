@@ -88,7 +88,6 @@ export class AIUrgentGoals {
       };
     }
 
-    // Fallback: look for nearest water resource
     const nearestWater = this.deps.findNearestResourceForEntity(
       agentId,
       "water_source",
@@ -133,7 +132,6 @@ export class AIUrgentGoals {
       };
     }
 
-    // Fallback: rest in place
     return {
       id: `urgent-rest-idle-${agentId}-${now}`,
       type: "satisfy_energy",

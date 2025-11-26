@@ -195,7 +195,6 @@ export class NeedsSystem extends EventEmitter {
         this.applyCrossEffects(needs);
       }
 
-      // Check death BEFORE emergency needs to prevent zombi states
       if (this.checkForDeath(entityId, needs)) {
         continue;
       }
@@ -258,13 +257,11 @@ export class NeedsSystem extends EventEmitter {
 
     this.batchProcessor.syncToMap(this.entityNeeds);
 
-    // Batch social morale boost using GPU when available (O(N²) operation)
     this.applySocialMoraleBoostBatch(entityIdArray);
 
     for (const [entityId, needs] of this.entityNeeds.entries()) {
       this.handleZoneBenefits(entityId, needs, dtSeconds);
 
-      // Check death BEFORE emergency needs (consistent with updateTraditional)
       if (this.checkForDeath(entityId, needs)) {
         continue;
       }
@@ -321,15 +318,14 @@ export class NeedsSystem extends EventEmitter {
         case "bed":
         case "shelter":
         case "house": {
-          // Much faster recovery in proper shelter (approx 4x faster than base)
-          const energyBonus = 150 * deltaSeconds * multiplier; // Increased from 50
+          const energyBonus = 150 * deltaSeconds * multiplier;
           needs.energy = Math.min(100, needs.energy + energyBonus);
           break;
         }
 
         case "hygiene":
         case "bath": {
-          const hygieneBonus = 75 * deltaSeconds * multiplier; // Increased from 25
+          const hygieneBonus = 75 * deltaSeconds * multiplier;
           needs.hygiene = Math.min(100, needs.hygiene + hygieneBonus);
           break;
         }
@@ -405,7 +401,6 @@ export class NeedsSystem extends EventEmitter {
   ): void {
     logger.info(`💀 Entity ${entityId} died from ${cause}`);
 
-    // BUG FIX #3: Mark isDead on entity AND agent to ensure consistent state
     let entityMarked = false;
     if (this.gameState.entities) {
       const entity =
@@ -417,7 +412,6 @@ export class NeedsSystem extends EventEmitter {
       }
     }
 
-    // Also check agents array for agent deaths
     if (this.gameState.agents) {
       const agent = this.gameState.agents.find((a) => a.id === entityId);
       if (agent) {
@@ -427,7 +421,9 @@ export class NeedsSystem extends EventEmitter {
     }
 
     if (!entityMarked) {
-      logger.warn(`⚠️ [NEEDS] Could not mark entity ${entityId} as dead - not found in state`);
+      logger.warn(
+        `⚠️ [NEEDS] Could not mark entity ${entityId} as dead - not found in state`,
+      );
     }
 
     simulationEvents.emit(GameEventNames.AGENT_DEATH, {
@@ -495,13 +491,11 @@ export class NeedsSystem extends EventEmitter {
 
     if (needs.hunger < CRITICAL) {
       if (!this.tryEmergencyFood(entityId, needs)) {
-        // Fallback: passive recovery when no inventory
         needs.hunger = Math.min(100, needs.hunger + 0.5);
       }
     }
     if (needs.thirst < CRITICAL) {
       if (!this.tryEmergencyWater(entityId, needs)) {
-        // Fallback: passive recovery when no inventory
         needs.thirst = Math.min(100, needs.thirst + 0.5);
       }
     }
@@ -699,7 +693,6 @@ export class NeedsSystem extends EventEmitter {
 
     const GPU_BATCH_THRESHOLD = 20; // Use GPU when we have ≥20 entities (O(N²) operation)
 
-    // Collect positions for all entities
     const entityPositions: Array<{ id: string; x: number; y: number }> = [];
     for (const entityId of entityIds) {
       const entity =
@@ -719,7 +712,6 @@ export class NeedsSystem extends EventEmitter {
     const RADIUS = 100;
     const RADIUS_SQ = RADIUS * RADIUS;
 
-    // Use GPU if available and entity count is high enough
     if (
       this.gpuService?.isGPUAvailable() &&
       entityPositions.length >= GPU_BATCH_THRESHOLD
@@ -727,31 +719,20 @@ export class NeedsSystem extends EventEmitter {
       const startTime = performance.now();
       const n = entityPositions.length;
 
-      // Prepare data for GPU pairwise computation
       const positions = new Float32Array(n * 2);
       for (let i = 0; i < n; i++) {
         positions[i * 2] = entityPositions[i].x;
         positions[i * 2 + 1] = entityPositions[i].y;
       }
 
-      // Compute upper triangle pairwise distances on GPU
-      // Returns { distances: Float32Array, pairCount: number } where distances[k] = dist²(i,j) for upper triangle
       const result = this.gpuService.computePairwiseDistances(positions, n);
       const distancesSq = result.distances;
 
-      // Build lookup for upper triangle index: for i < j, index = sum(n-1..n-i) + (j-i-1)
-      // Or simpler: accumulate index sequentially
       const getTriangleIndex = (i: number, j: number): number => {
-        // Upper triangle only: i < j
-        if (i > j) [i, j] = [j, i]; // swap if needed
-        // Index = sum of (n-1) + (n-2) + ... + (n-i) + (j-i-1)
-        // = i*(n-1) - i*(i-1)/2 + (j-i-1)
-        // = i*n - i - i*(i-1)/2 + j - i - 1
-        // = i*n - i*(i+1)/2 + j - i - 1
+        if (i > j) [i, j] = [j, i];
         return i * n - (i * (i + 1)) / 2 + j - i - 1;
       };
 
-      // Process results: for each entity, find nearby friends and apply boost
       for (let i = 0; i < n; i++) {
         const entityId = entityPositions[i].id;
         const needs = this.entityNeeds.get(entityId);
@@ -760,7 +741,6 @@ export class NeedsSystem extends EventEmitter {
         let totalAffinity = 0;
         let affinityCount = 0;
 
-        // Check distances to all other entities
         for (let j = 0; j < n; j++) {
           if (i === j) continue;
 
@@ -779,7 +759,6 @@ export class NeedsSystem extends EventEmitter {
           }
         }
 
-        // Apply boost based on average affinity (same logic as original)
         if (affinityCount > 0) {
           const avgAffinity = totalAffinity / affinityCount;
 
@@ -807,7 +786,6 @@ export class NeedsSystem extends EventEmitter {
         duration,
       );
     } else {
-      // Fallback to original per-entity method (CPU)
       for (const entityId of entityIds) {
         const needs = this.entityNeeds.get(entityId);
         if (needs) {

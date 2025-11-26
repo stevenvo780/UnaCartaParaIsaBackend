@@ -251,7 +251,12 @@ export class AnimalSystem {
       }
 
       const oldPosition = { ...animal.position };
-      this.updateAnimalBehavior(animal, deltaSeconds);
+      // Fix: Multiply deltaSeconds by IDLE_UPDATE_DIVISOR because this animal was skipped for (DIVISOR-1) frames
+      // This ensures it moves the full distance it would have moved in those frames
+      this.updateAnimalBehavior(
+        animal,
+        deltaSeconds * this.IDLE_UPDATE_DIVISOR,
+      );
       this.updateSpatialGrid(animal, oldPosition);
       this.checkAnimalDeath(animal);
     }

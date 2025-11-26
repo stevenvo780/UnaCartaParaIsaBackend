@@ -32,8 +32,6 @@ export function evaluateAttention(
     .filter(({ d }) => d > 50 && d < ATTENTION_RADIUS)
     .sort((a, b) => a.d - b.d);
 
-  // ...
-
   if (nearby.length === 0) return [];
 
   const curiosityBoost = 0.7 + aiState.personality.openness * 0.6;
@@ -44,7 +42,7 @@ export function evaluateAttention(
   return [
     {
       id: `inspect_${now}`,
-      type: "explore", // 'inspect' might not be a valid type in backend yet, using explore
+      type: "explore",
       priority: 0.5 * curiosityBoost,
       targetId: pick.res.id,
       targetPosition: pick.res.position,

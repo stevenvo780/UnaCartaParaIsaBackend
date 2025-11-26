@@ -268,7 +268,6 @@ class PerformanceMonitor {
       );
     }
 
-    // Game Logic Metrics
     lines.push(
       "# HELP backend_active_agents_total Total number of active agents",
     );

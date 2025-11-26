@@ -243,7 +243,6 @@ export class CombatSystem {
   ): void {
     const startTime = performance.now();
 
-    // Use GPU pairwise distances for large attacker counts
     if (this.gpuService?.isGPUAvailable() && attackers.length >= 30) {
       this.updateBatchGPU(attackers, entitiesById, now);
       return;
@@ -324,7 +323,6 @@ export class CombatSystem {
 
     if (attackersWithPos.length === 0 || allEntities.length === 0) return;
 
-    // Build position arrays
     const attackerPositions = new Float32Array(attackersWithPos.length * 2);
     const targetPositions = new Float32Array(allEntities.length * 2);
 
@@ -338,7 +336,6 @@ export class CombatSystem {
       targetPositions[i * 2 + 1] = allEntities[i].position!.y;
     }
 
-    // For each attacker, compute distances to all targets
     for (let a = 0; a < attackersWithPos.length; a++) {
       const attacker = attackersWithPos[a];
       const weaponId = this.getEquipped(attacker.id);
@@ -346,14 +343,12 @@ export class CombatSystem {
       const radius = Math.max(this.config.engagementRadius, weapon.range);
       const radiusSq = radius * radius;
 
-      // Compute distances from this attacker to all targets
       const distances = this.gpuService!.computeDistancesBatch(
         attacker.position!.x,
         attacker.position!.y,
         targetPositions,
       );
 
-      // Find valid targets within range
       for (let t = 0; t < allEntities.length; t++) {
         if (distances[t] > radiusSq) continue;
 
@@ -525,8 +520,10 @@ export class CombatSystem {
     weaponId: WeaponId,
     timestamp: number,
   ): void {
-    // TOCTOU fix: Re-check target state before applying damage
-    // Target may have died between shouldAttack check and now
+    /**
+     * TOCTOU fix: Re-check target state before applying damage.
+     * Target may have died between shouldAttack check and now.
+     */
     if (target.isDead) {
       return;
     }

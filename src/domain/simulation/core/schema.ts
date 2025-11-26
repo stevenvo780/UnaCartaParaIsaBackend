@@ -79,12 +79,10 @@ export interface ConnectionAnimationState {
  * Supports dynamic properties via index signature.
  */
 export interface EntityStats {
-  // Core stats
   health?: number;
   stamina?: number;
   wounds?: number;
 
-  // Needs (synchronized with NeedsSystem)
   hunger?: number;
   thirst?: number;
   energy?: number;
@@ -93,14 +91,11 @@ export interface EntityStats {
   fun?: number;
   mentalHealth?: number;
 
-  // Social/emotional stats
   morale?: number;
   stress?: number;
 
-  // Economy
   money?: number;
 
-  // Dynamic properties for extensibility
   [key: string]: number | undefined;
 }
 

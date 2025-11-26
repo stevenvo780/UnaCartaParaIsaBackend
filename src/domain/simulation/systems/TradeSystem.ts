@@ -48,13 +48,11 @@ export class TradeSystem {
    * Removes all trade offers associated with a dead agent.
    */
   public removeAgentOffers(agentId: string): void {
-    // Remove offers where the agent is the seller
     for (const [offerId, offer] of this.activeOffers) {
       if (offer.sellerId === agentId) {
         this.activeOffers.delete(offerId);
       }
     }
-    // Clean up merchant reputation
     this.merchantReputation.delete(agentId);
   }
 

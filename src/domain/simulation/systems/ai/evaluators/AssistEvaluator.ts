@@ -13,7 +13,6 @@ export interface AssistContext {
     zoneType: string,
   ) => string | null;
   getZoneIdsByType: (types: string[]) => string[];
-  // Optional: pre-computed nearby agents with distances (GPU-accelerated)
   getNearbyAgentsWithDistances?: (
     entityId: string,
     radius: number,
@@ -34,7 +33,6 @@ export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
       need: "water" | "food" | "medical" | "rest" | "social";
     } | null = null;
 
-    // Use GPU-accelerated nearby search if available
     if (ctx.getNearbyAgentsWithDistances) {
       const nearbyAgents = ctx.getNearbyAgentsWithDistances(
         aiState.entityId,
@@ -68,7 +66,6 @@ export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
         }
       }
     } else {
-      // Fallback: manual distance calculation
       const ids = ctx.getAllActiveAgentIds();
       const myPos = ctx.getEntityPosition(aiState.entityId);
       if (!myPos) return [];

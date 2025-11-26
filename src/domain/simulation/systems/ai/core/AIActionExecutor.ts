@@ -151,7 +151,6 @@ export class AIActionExecutor {
       return;
     }
 
-    // Agent is in zone - contribute to task
     if (
       this.deps.taskSystem &&
       action.data &&
@@ -160,8 +159,8 @@ export class AIActionExecutor {
       const result = this.deps.taskSystem.contributeToTask(
         action.data.taskId,
         action.agentId,
-        10, // Base contribution
-        1.0, // Synergy multiplier
+        10,
+        1.0,
       );
 
       simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
@@ -193,7 +192,6 @@ export class AIActionExecutor {
       if (resource) {
         const inventoryResourceType = toInventoryResource(resource.type);
 
-        // Satisfy needs based on resource type
         if (resource.type === "water_source" && this.deps.needsSystem) {
           this.deps.needsSystem.satisfyNeed(action.agentId, "thirst", 30);
         } else if (
@@ -205,7 +203,6 @@ export class AIActionExecutor {
           this.deps.needsSystem.satisfyNeed(action.agentId, "hunger", 25);
         }
 
-        // Add to inventory
         if (inventoryResourceType && this.deps.inventorySystem) {
           const added = this.deps.inventorySystem.addResource(
             action.agentId,

@@ -153,13 +153,11 @@ export class EnhancedCraftingSystem {
   private applyOutput(agentId: string, recipe: CraftingRecipe): void {
     const output = recipe.output.itemId;
 
-    // Check if it's a weapon first
     if (BASE_WEAPONS.includes(output as WeaponId)) {
       this.equippedWeapons.set(agentId, output as WeaponId);
       return;
     }
 
-    // Map the output to a resource type and add to inventory
     const resourceKey = this.mapToResourceKey(output);
     if (resourceKey) {
       this.inventorySystem.addResource(
@@ -215,7 +213,6 @@ export class EnhancedCraftingSystem {
       return itemId;
     }
 
-    // Wood-based materials
     const woodItems = [
       "wood_log",
       "plank",
@@ -229,7 +226,6 @@ export class EnhancedCraftingSystem {
       return "wood";
     }
 
-    // Stone/mineral-based materials
     const stoneItems = [
       "iron_ore",
       "copper_ore",
@@ -245,7 +241,6 @@ export class EnhancedCraftingSystem {
       return "stone";
     }
 
-    // Food items (raw and cooked)
     const foodItems = [
       "wheat",
       "flour",
@@ -265,7 +260,6 @@ export class EnhancedCraftingSystem {
       return "food";
     }
 
-    // Rare materials (gems, crystals, special items)
     const rareItems = [
       "crystal",
       "gem",

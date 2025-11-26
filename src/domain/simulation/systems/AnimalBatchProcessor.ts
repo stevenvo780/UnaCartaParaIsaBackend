@@ -125,8 +125,8 @@ export class AnimalBatchProcessor {
     this.workBuffer.set(this.needsBuffer);
     const workBuffer = this.workBuffer;
 
-    const gpuAvailable = this.gpuService?.isGPUAvailable() ?? false;
-
+    // GPU path disabled for now as it assumes uniform decay rates which is incorrect for mixed animal types
+    /*
     if (gpuAvailable && this.gpuService) {
       try {
         const deltaSeconds = deltaMinutes * 60;
@@ -161,16 +161,19 @@ export class AnimalBatchProcessor {
         // workBuffer is intact for CPU fallback
       }
     }
+    */
 
     // CPU fallback: work on copy
-    const hungerRate = hungerDecayRates[0] || 1.0 / 60;
-    const thirstRate = thirstDecayRates[0] || 1.5 / 60;
     const fearDecayRate = 0.5 / 60;
 
     const animalCount = this.animalIdArray.length;
 
     for (let i = 0; i < animalCount; i++) {
       const offset = i * this.NEED_COUNT;
+
+      // Use individual decay rates for each animal
+      const hungerRate = hungerDecayRates[i];
+      const thirstRate = thirstDecayRates[i];
 
       workBuffer[offset + 0] = Math.max(
         0,
