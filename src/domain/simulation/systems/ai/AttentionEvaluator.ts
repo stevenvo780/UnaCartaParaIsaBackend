@@ -71,7 +71,6 @@ export function evaluateDefaultExploration(
   const candidates = restZones.length > 0 ? restZones : allZones;
 
   if (candidates.length === 0) {
-    // No zones found, wander randomly
     return [
       {
         id: `wander_${now}`,
@@ -93,7 +92,6 @@ export function evaluateDefaultExploration(
   );
 
   if (!best) {
-    // Fallback if selectBestZone fails
     return [
       {
         id: `wander_fallback_${now}`,

@@ -14,18 +14,22 @@ export class TerrainSystem {
     logger.info("🌍 TerrainSystem initialized");
   }
 
+  /**
+   * Gets a terrain tile at the specified coordinates.
+   *
+   * Terrain is stored as a 2D array [y][x] based on WorldGenerationService.
+   * The structure matches WorldGenerationService: { x, y, biome, assets, ... }
+   *
+   * @param x - X coordinate
+   * @param y - Y coordinate
+   * @returns Terrain tile or null if out of bounds
+   */
   public getTile(x: number, y: number): SimulationTerrainTile | null {
     if (!this.gameState.world?.terrain) return null;
 
-    // Assuming terrain is a 2D array [y][x] based on WorldGenerationService
     if (y >= 0 && y < this.gameState.world.terrain.length) {
       const row = this.gameState.world.terrain[y];
       if (x >= 0 && x < row.length) {
-        // The structure in GameState.world.terrain is slightly different from TerrainTile interface
-        // It matches the structure in WorldGenerationService: { x, y, biome, assets, ... }
-        // We cast it to TerrainTile for convenience if it matches, or map it.
-        // Looking at GameState definition:
-        // world?: { terrain: Array<Array<{ x, y, biome, assets: { terrain, ... }, ... }>> }
         return this.gameState.world.terrain[y][x];
       }
     }

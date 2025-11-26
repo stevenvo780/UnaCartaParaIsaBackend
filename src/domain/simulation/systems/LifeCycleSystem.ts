@@ -246,9 +246,7 @@ export class LifeCycleSystem extends EventEmitter {
     if (this.inventorySystem) {
       const agents = this.gameState.agents || [];
       for (const agent of agents) {
-        // Calculate consumption
-        const needs = { food: 1, water: 1 }; // Example consumption
-        // Remove from inventory
+        const needs = { food: 1, water: 1 };
         this.inventorySystem.consumeFromAgent(agent.id, needs);
       }
     }

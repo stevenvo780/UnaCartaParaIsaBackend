@@ -22,16 +22,15 @@ export function evaluateExpansionGoals(
   const goals: AIGoal[] = [];
   const inv = ctx.getAgentInventory(aiState.entityId);
 
-  // 1. Resource Gathering Drive
-  // If inventory is not full, try to gather resources even if not strictly needed immediately
-  // This simulates "stockpiling" behavior
+  /**
+   * Resource Gathering Drive: If inventory is not full, try to gather resources
+   * even if not strictly needed immediately. This simulates "stockpiling" behavior.
+   */
   if (inv) {
     const totalItems = (inv.wood || 0) + (inv.stone || 0) + (inv.food || 0);
     const capacity = DEFAULT_INVENTORY_CAPACITY;
 
     if (totalItems < capacity * GATHER_TRIGGER_THRESHOLD) {
-      // 80% capacity trigger
-      // Encourages gathering wood and stone for future building
       goals.push({
         id: `gather_expansion_${now}`,
         type: "explore",
@@ -46,18 +45,15 @@ export function evaluateExpansionGoals(
     }
   }
 
-  // 2. Expansion Scouting
-  // If population is high but housing is low (heuristic), scout for new areas
-  // For now, we just add a low-priority "scout" goal that encourages moving to edges
+  /**
+   * Expansion Scouting: If population is high but housing is low (heuristic),
+   * scout for new areas. Adds a low-priority "scout" goal that encourages moving to edges.
+   */
   const mapWidth = ctx.gameState.worldSize?.width || 2000;
   const mapHeight = ctx.gameState.worldSize?.height || 2000;
   const pos = ctx.getEntityPosition(aiState.entityId);
 
-  // ...
-
   if (pos) {
-    // Encourage moving away from center if crowded?
-    // Or just random expansion
     goals.push({
       id: `expand_territory_${now}`,
       type: "explore",

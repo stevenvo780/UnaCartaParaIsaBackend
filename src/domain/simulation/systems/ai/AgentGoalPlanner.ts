@@ -258,10 +258,6 @@ export function planGoals(
     goals.push(...opportunityGoals);
   }
 
-  // ... (imports)
-
-  // Inside planGoals function, before default exploration:
-
   if (deps.getAgentInventory && deps.getEntityPosition) {
     const expansionDeps = {
       gameState: deps.gameState,

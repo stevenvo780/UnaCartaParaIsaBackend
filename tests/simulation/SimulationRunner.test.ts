@@ -92,7 +92,7 @@ describe('SimulationRunner', () => {
       expect(accepted).toBe(true);
     });
 
-    it('debe rechazar comandos cuando la cola está llena', () => {
+    it('debe aceptar comandos cuando la cola está llena (FIFO: elimina el más antiguo)', () => {
       const command: SimulationCommand = {
         type: 'PAUSE',
       };
@@ -104,7 +104,7 @@ describe('SimulationRunner', () => {
       
       const accepted = runner.enqueueCommand(command);
       
-      expect(accepted).toBe(false);
+      expect(accepted).toBe(true);
     });
   });
 
@@ -181,14 +181,14 @@ describe('SimulationRunner', () => {
         runner.enqueueCommand(command);
       }
       
-      let rejectedCommand: SimulationCommand | undefined;
-      runner.on('commandRejected', (cmd) => {
-        rejectedCommand = cmd;
+      let droppedCommand: SimulationCommand | undefined;
+      runner.on('commandDropped', (cmd) => {
+        droppedCommand = cmd;
       });
       
       runner.enqueueCommand(command);
       
-      expect(rejectedCommand).toBeDefined();
+      expect(droppedCommand).toBeDefined();
     });
   });
 

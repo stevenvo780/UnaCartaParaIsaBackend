@@ -517,7 +517,6 @@ export class NeedsSystem extends EventEmitter {
     for (const [need, rate] of Object.entries(divineModifiers)) {
       let finalRate = rate * ageMultiplier;
 
-      // Action-based modifiers
       if (need === "energy") {
         if (action === "sleep")
           finalRate = -5.0; // Recover energy fast
