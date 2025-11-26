@@ -103,6 +103,7 @@ export class SimulationRunner {
   private tickHandle?: NodeJS.Timeout;
   private tickCounter = 0;
   private scheduler: MultiRateScheduler;
+  private metricsCollector: MetricsCollector;
   private indexRebuildInProgress = false;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -212,6 +213,8 @@ export class SimulationRunner {
       MEDIUM: 250,
       SLOW: 1000,
     });
+
+    this.metricsCollector = new MetricsCollector();
 
     this.initializeSnapshotWorker();
 

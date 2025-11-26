@@ -17,11 +17,12 @@ export class AnimalBatchProcessor {
   private bufferDirty = true;
 
   private readonly NEED_COUNT = 4;
-  private gpuService?: GPUComputeService;
+  // @ts-expect-error - Reserved for future GPU acceleration
+  private _gpuService?: GPUComputeService;
 
-  constructor(gpuService?: GPUComputeService) {
-    this.gpuService = gpuService;
-    if (gpuService?.isGPUAvailable()) {
+  constructor(_gpuService?: GPUComputeService) {
+    this._gpuService = _gpuService;
+    if (_gpuService?.isGPUAvailable()) {
       logger.info(
         "🐾 AnimalBatchProcessor: GPU service connected and available",
       );
@@ -127,7 +128,7 @@ export class AnimalBatchProcessor {
 
     // GPU path disabled for now as it assumes uniform decay rates which is incorrect for mixed animal types
     /*
-    if (gpuAvailable && this.gpuService) {
+    if (gpuAvailable && this._gpuService) {
       try {
         const deltaSeconds = deltaMinutes * 60;
 
@@ -141,7 +142,7 @@ export class AnimalBatchProcessor {
         const ageMultipliers = new Float32Array(animalCount).fill(1.0);
         const divineModifiers = new Float32Array(animalCount).fill(1.0);
 
-        const result = this.gpuService.applyNeedsDecayBatch(
+        const result = this._gpuService.applyNeedsDecayBatch(
           workBuffer,
           decayRates,
           ageMultipliers,
