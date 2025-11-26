@@ -15,6 +15,7 @@ import {
   assessRouteDifficultyByDistance,
   calculateZoneDistance,
   worldToGrid,
+  findAccessibleDestination,
   Difficulty,
 } from "./movement/helpers";
 import { MovementBatchProcessor } from "./MovementBatchProcessor";
@@ -727,6 +728,75 @@ export class MovementSystem extends EventEmitter {
             this.pathCache.set(pathKey, { result, timestamp: now });
             resolve(result);
           } else {
+            // Intentar encontrar una posición accesible cercana al destino
+            const grid = this.getOptimizedGrid();
+            const accessiblePos = findAccessibleDestination(
+              grid,
+              endGrid.x,
+              endGrid.y,
+              this.gridWidth,
+              this.gridHeight,
+              5, // radio máximo de búsqueda
+            );
+
+            // Si encontramos una posición alternativa, recalcular
+            if (
+              accessiblePos.x !== endGrid.x ||
+              accessiblePos.y !== endGrid.y
+            ) {
+              // Intentar pathfinding hacia la posición alternativa
+              this.pathfinder.findPath(
+                startGrid.x,
+                startGrid.y,
+                accessiblePos.x,
+                accessiblePos.y,
+                (altPath) => {
+                  if (altPath && altPath.length > 0) {
+                    const worldPath = altPath.map((p) => ({
+                      x: p.x * this.gridSize + this.gridSize / 2,
+                      y: p.y * this.gridSize + this.gridSize / 2,
+                    }));
+
+                    let distance = 0;
+                    for (let i = 0; i < worldPath.length - 1; i++) {
+                      distance += Math.hypot(
+                        worldPath[i + 1].x - worldPath[i].x,
+                        worldPath[i + 1].y - worldPath[i].y,
+                      );
+                    }
+
+                    resolve({
+                      success: true,
+                      path: worldPath,
+                      estimatedTime: estimateTravelTime(
+                        distance,
+                        0,
+                        MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
+                        MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+                      ),
+                      distance,
+                    });
+                    return;
+                  }
+
+                  // Si aún falla, devolver resultado fallido
+                  const distance = Math.hypot(to.x - from.x, to.y - from.y);
+                  resolve({
+                    success: false,
+                    path: [],
+                    estimatedTime: estimateTravelTime(
+                      distance,
+                      0,
+                      MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
+                      MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+                    ),
+                    distance,
+                  });
+                },
+              );
+              return;
+            }
+
             const distance = Math.hypot(to.x - from.x, to.y - from.y);
             resolve({
               success: false,

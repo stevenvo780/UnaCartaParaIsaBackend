@@ -405,36 +405,62 @@ export class RecipesCatalog {
     },
   ];
 
+  // Recetas dinámicas registradas en runtime (ej. de biomas)
+  private static dynamicRecipes: CraftingRecipe[] = [];
+
   static getAllRecipes(): CraftingRecipe[] {
-    return [...this.recipes];
+    return [...this.recipes, ...this.dynamicRecipes];
   }
 
   static getRecipeById(id: string): CraftingRecipe | null {
-    return this.recipes.find((r) => r.id === id) || null;
+    return (
+      this.recipes.find((r) => r.id === id) ||
+      this.dynamicRecipes.find((r) => r.id === id) ||
+      null
+    );
+  }
+
+  /**
+   * Registra una receta de bioma para que esté disponible globalmente.
+   * Evita duplicados.
+   */
+  static registerBiomeRecipe(recipe: CraftingRecipe): boolean {
+    if (this.getRecipeById(recipe.id)) {
+      return false; // Ya existe
+    }
+    this.dynamicRecipes.push(recipe);
+    return true;
+  }
+
+  /**
+   * Obtiene recetas dinámicas registradas (de biomas, etc.)
+   */
+  static getDynamicRecipes(): CraftingRecipe[] {
+    return [...this.dynamicRecipes];
   }
 
   static getRecipesByOutput(itemId: string): CraftingRecipe[] {
-    return this.recipes.filter((r) => r.output.itemId === itemId);
+    return this.getAllRecipes().filter((r) => r.output.itemId === itemId);
   }
 
   static getRecipesByDifficulty(
     minDiff: number,
     maxDiff: number,
   ): CraftingRecipe[] {
-    return this.recipes.filter((r) => {
+    return this.getAllRecipes().filter((r) => {
       const difficulty = r.difficulty ?? 1;
       return difficulty >= minDiff && difficulty <= maxDiff;
     });
   }
 
   static getRecipesRequiringWorkstation(workstation: string): CraftingRecipe[] {
-    return this.recipes.filter(
+    return this.getAllRecipes().filter(
       (r) => r.requirements?.workstation === workstation,
     );
   }
 
   static canCraftWith(availableItems: Map<string, number>): CraftingRecipe[] {
-    return this.recipes.filter((recipe) => {
+    return this.getAllRecipes().filter((recipe) => {
       return recipe.ingredients.every((ingredient) => {
         const available = availableItems.get(ingredient.itemId) || 0;
         return available >= ingredient.quantity;

@@ -335,6 +335,10 @@ export class BiomeRecipesCatalog {
     return counts;
   }
 
+  static getAvailableBiomes(): string[] {
+    return Object.keys(this.biomeRecipes);
+  }
+
   static getDiscoverableRecipes(
     biome: string,
     alreadyKnown: string[],

@@ -6,6 +6,7 @@ import type {
   ItemGenerationConfig,
 } from "../../types/simulation/itemGeneration";
 import { simulationEvents, GameEventNames } from "../core/events";
+import { BaseMaterialsCatalog } from "../../../simulation/data/BaseMaterialsCatalog";
 
 const DEFAULT_CONFIG: ItemGenerationConfig = {
   enableAutoGeneration: true,
@@ -16,6 +17,66 @@ const DEFAULT_CONFIG: ItemGenerationConfig = {
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 
+/**
+ * Genera reglas de spawn basadas en el catálogo de materiales base.
+ * Los materiales con metadata.biome se generan en zonas específicas.
+ */
+function generateDefaultRulesFromCatalog(): GenerationRule[] {
+  const rules: GenerationRule[] = [];
+  const materials = BaseMaterialsCatalog.getAllMaterials();
+
+  // Mapeo de biomas a tipos de zona
+  const biomeToZoneType: Record<string, string> = {
+    mystical: "mystical",
+    wetland: "water",
+    mountainous: "work",
+    forest: "food",
+    grassland: "food",
+    village: "storage",
+  };
+
+  // Generar reglas para materiales con bioma específico
+  for (const material of materials) {
+    const biome = material.metadata?.biome as string | undefined;
+    if (biome && biomeToZoneType[biome]) {
+      const value = material.properties?.value || 1;
+      const rarity = Math.max(0.1, 1 - value / 100); // Mayor valor = menor chance
+
+      rules.push({
+        zoneType: biomeToZoneType[biome],
+        itemId: material.id,
+        spawnChance: Math.min(0.8, rarity),
+        minQuantity: 1,
+        maxQuantity: Math.max(1, Math.floor(10 / value)),
+        respawnTime: 30000 + value * 5000, // Mayor valor = más tiempo de respawn
+      });
+    }
+  }
+
+  // Materiales básicos universales (sin bioma específico)
+  const basicMaterials = ["wood_log", "stone", "fiber", "water"];
+  for (const itemId of basicMaterials) {
+    rules.push({
+      zoneType: "food",
+      itemId,
+      spawnChance: 0.6,
+      minQuantity: 2,
+      maxQuantity: 8,
+      respawnTime: 45000,
+    });
+    rules.push({
+      zoneType: "work",
+      itemId,
+      spawnChance: 0.7,
+      minQuantity: 3,
+      maxQuantity: 10,
+      respawnTime: 30000,
+    });
+  }
+
+  return rules;
+}
+
 @injectable()
 export class ItemGenerationSystem {
   private gameState: GameState;
@@ -25,10 +86,17 @@ export class ItemGenerationSystem {
   private lastGeneration = new Map<string, number>();
   private nextItemId = 1;
 
-  constructor(@inject(TYPES.GameState) gameState: GameState) {
+  constructor(
+    @inject(TYPES.GameState) gameState: GameState,
+    config?: Partial<ItemGenerationConfig>,
+  ) {
     this.gameState = gameState;
-    this.config = DEFAULT_CONFIG;
-    logger.info("🎁 ItemGenerationSystem (Backend) initialized");
+    this.config = { ...DEFAULT_CONFIG, ...config };
+    // Inicializar con reglas del catálogo
+    this.generationRules = generateDefaultRulesFromCatalog();
+    logger.info(
+      `🎁 ItemGenerationSystem initialized with ${this.generationRules.length} rules from BaseMaterialsCatalog`,
+    );
   }
 
   public update(_deltaMs: number): void {
@@ -234,5 +302,26 @@ export class ItemGenerationSystem {
     if (!zoneMap) return [];
 
     return Array.from(zoneMap.values()).filter((item) => !item.collectedBy);
+  }
+
+  /**
+   * Get material info from catalog
+   */
+  public getMaterialInfo(itemId: string) {
+    return BaseMaterialsCatalog.getMaterialById(itemId);
+  }
+
+  /**
+   * Get all materials by category
+   */
+  public getMaterialsByCategory(category: string) {
+    return BaseMaterialsCatalog.getMaterialsByCategory(category);
+  }
+
+  /**
+   * Get current generation rules count
+   */
+  public getRulesCount(): number {
+    return this.generationRules.length;
   }
 }

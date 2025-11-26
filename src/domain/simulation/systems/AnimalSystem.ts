@@ -17,12 +17,13 @@ import { AnimalBatchProcessor } from "./AnimalBatchProcessor";
 import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "node:perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
+import { SIM_CONSTANTS } from "../core/SimulationConstants";
 
 const DEFAULT_CONFIG: AnimalSystemConfig = {
-  maxAnimals: 500,
-  spawnRadius: 300,
+  maxAnimals: SIM_CONSTANTS.MAX_ANIMALS,
+  spawnRadius: SIM_CONSTANTS.SPAWN_RADIUS,
   updateInterval: 50, // 20Hz to match FAST scheduler rate for smooth movement
-  cleanupInterval: 30000,
+  cleanupInterval: SIM_CONSTANTS.ANIMAL_CLEANUP_INTERVAL,
 };
 
 import { injectable, inject, optional } from "inversify";
@@ -40,7 +41,7 @@ export class AnimalSystem {
   private lastCleanup = Date.now();
 
   private spatialGrid = new Map<string, Set<string>>();
-  private readonly GRID_CELL_SIZE = 256;
+  private readonly GRID_CELL_SIZE = SIM_CONSTANTS.SPATIAL_CELL_SIZE;
 
   private resourceSearchCache = new Map<
     string,

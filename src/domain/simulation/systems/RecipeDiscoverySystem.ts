@@ -5,6 +5,7 @@ import {
 } from "../../types/simulation/recipes";
 import { CraftingRecipe } from "../../types/simulation/crafting";
 import { RecipesCatalog } from "../../../simulation/data/RecipesCatalog";
+import { BiomeRecipesCatalog } from "../../../simulation/data/BiomeRecipesCatalog";
 
 const BASIC_RECIPES = [
   "wood_to_plank",
@@ -22,6 +23,7 @@ export class RecipeDiscoverySystem {
   private gameState: GameState;
   private agentRecipes = new Map<string, Map<string, AgentKnownRecipe>>();
   private discoveredRecipes = new Set<string>();
+  private biomeDiscoveries = new Map<string, Set<string>>(); // agentId -> discovered biome recipes
   private random: () => number;
 
   constructor(@inject(TYPES.GameState) gameState: GameState) {
@@ -34,6 +36,62 @@ export class RecipeDiscoverySystem {
     BASIC_RECIPES.forEach((recipeId) => {
       this.discoveredRecipes.add(recipeId);
     });
+  }
+
+  /**
+   * Intenta descubrir una receta específica de bioma cuando un agente explora.
+   * Las recetas de bioma tienen chance de descubrimiento basada en el tiempo en el bioma.
+   */
+  public attemptBiomeDiscovery(
+    agentId: string,
+    biomeType: string,
+  ): RecipeDiscoveryEvent | null {
+    const biomeRecipes = BiomeRecipesCatalog.getRecipesForBiome(biomeType);
+    if (biomeRecipes.length === 0) return null;
+
+    // Verificar qué recetas del bioma el agente aún no conoce
+    const unknownRecipes = biomeRecipes.filter(
+      (recipe) => !this.agentKnowsRecipe(agentId, recipe.id),
+    );
+    if (unknownRecipes.length === 0) return null;
+
+    // Chance de descubrimiento (10% por intento)
+    if (this.random() > 0.1) return null;
+
+    // Seleccionar receta aleatoria de las desconocidas
+    const recipe =
+      unknownRecipes[Math.floor(this.random() * unknownRecipes.length)];
+
+    // Registrar en RecipesCatalog para que esté disponible globalmente
+    RecipesCatalog.registerBiomeRecipe(recipe);
+
+    // Enseñar la receta al agente
+    const event = this.teachRecipe(agentId, recipe.id);
+    if (event) {
+      event.method = "exploration";
+
+      // Registrar descubrimiento de bioma
+      if (!this.biomeDiscoveries.has(agentId)) {
+        this.biomeDiscoveries.set(agentId, new Set());
+      }
+      this.biomeDiscoveries.get(agentId)!.add(recipe.id);
+    }
+
+    return event;
+  }
+
+  /**
+   * Obtiene recetas disponibles para un bioma específico
+   */
+  public getBiomeRecipes(biomeType: string): CraftingRecipe[] {
+    return BiomeRecipesCatalog.getRecipesForBiome(biomeType);
+  }
+
+  /**
+   * Obtiene todos los biomas que tienen recetas especiales
+   */
+  public getAvailableBiomes(): string[] {
+    return BiomeRecipesCatalog.getAvailableBiomes();
   }
 
   public teachRecipe(

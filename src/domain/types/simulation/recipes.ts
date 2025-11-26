@@ -28,7 +28,7 @@ export interface AgentKnownRecipe {
 export interface RecipeDiscoveryEvent {
   agentId: string;
   recipeId: string;
-  method: "learning" | "experimentation" | "trade";
+  method: "learning" | "experimentation" | "trade" | "exploration";
   ingredients?: string[];
   discoveredAt: number;
 }

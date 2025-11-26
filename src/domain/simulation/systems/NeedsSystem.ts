@@ -17,6 +17,7 @@ import type { GPUComputeService } from "../core/GPUComputeService";
 import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
+import { FoodCatalog } from "../../../simulation/data/FoodCatalog";
 
 /**
  * System for managing entity needs (hunger, thirst, energy, hygiene, social, fun, mental health).
@@ -1037,5 +1038,82 @@ export class NeedsSystem extends EventEmitter {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Aplica los efectos de una comida del catálogo a una entidad.
+   * Usa FoodCatalog para obtener los efectos específicos de cada tipo de comida.
+   *
+   * @param entityId - ID de la entidad
+   * @param foodId - ID de la comida en el catálogo
+   * @returns Objeto con los cambios aplicados, o null si no se encontró la comida/entidad
+   */
+  public applyFoodEffects(
+    entityId: string,
+    foodId: string,
+  ): {
+    hunger: number;
+    happiness: number;
+    energy: number;
+    health: number;
+  } | null {
+    const food = FoodCatalog.getFoodById(foodId);
+    if (!food) return null;
+
+    const data = this.entityNeeds.get(entityId);
+    if (!data) return null;
+
+    // Aplicar efectos de la comida
+    const changes = {
+      hunger: food.hungerRestore,
+      happiness: food.happinessBonus,
+      energy: food.energyEffect,
+      health: food.healthEffect,
+    };
+
+    data.hunger = Math.min(100, data.hunger + changes.hunger);
+    data.fun = Math.min(100, data.fun + changes.happiness); // happiness -> fun
+    data.energy = Math.min(100, data.energy + changes.energy);
+    // health effect no está en EntityNeedsData, pero podemos emitir evento
+
+    // Si hay efecto de salud, lo procesamos via el logger (el sistema de salud escuchará)
+    if (changes.health !== 0) {
+      logger.debug(
+        `🏥 Food health effect for ${entityId}: ${changes.health > 0 ? "+" : ""}${changes.health}`,
+      );
+    }
+
+    logger.debug(
+      `🍖 ${entityId} consumed ${food.name}: hunger+${changes.hunger}, energy+${changes.energy}`,
+    );
+
+    return changes;
+  }
+
+  /**
+   * Obtiene la comida recomendada para una entidad según sus necesidades.
+   * Usa FoodCatalog.getRecommendedFood().
+   */
+  public getRecommendedFoodForEntity(
+    entityId: string,
+    availableMoney: number = 100,
+  ) {
+    const data = this.entityNeeds.get(entityId);
+    if (!data) return [];
+
+    return FoodCatalog.getRecommendedFood(
+      data.hunger,
+      data.fun,
+      availableMoney,
+    );
+  }
+
+  /**
+   * Obtiene todas las comidas disponibles por categoría
+   */
+  public getFoodsByCategory(
+    category: "healthy" | "junk" | "dessert" | "drink" | "snack",
+  ) {
+    return FoodCatalog.getFoodsByCategory(category);
   }
 }
