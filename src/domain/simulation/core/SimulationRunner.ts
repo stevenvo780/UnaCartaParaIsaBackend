@@ -1,12 +1,11 @@
 import { EventEmitter } from "node:events";
 import { Worker } from "node:worker_threads";
-import type { GameResources, GameState, Zone } from "../../types/game-types";
+import type { GameResources, GameState } from "../../types/game-types";
 import { cloneGameState } from "./defaultState";
 import { StateCache } from "./StateCache";
 import { EntityIndex } from "./EntityIndex";
 import { SharedSpatialIndex } from "./SharedSpatialIndex";
 import { WorldGenerationService } from "../../../infrastructure/services/world/worldGenerationService";
-import { BiomeType } from "../../world/generation/types";
 import { logger } from "../../../infrastructure/utils/logger";
 import { WorldResourceSystem } from "../systems/WorldResourceSystem";
 import { LivingLegendsSystem } from "../systems/LivingLegendsSystem";
@@ -53,7 +52,6 @@ import { MovementSystem } from "../systems/MovementSystem";
 import type { BuildingLabel } from "../../types/simulation/buildings";
 import { AppearanceGenerationSystem } from "../systems/AppearanceGenerationSystem";
 import { GPUComputeService } from "./GPUComputeService";
-import { mapEventName } from "./eventNameMapper";
 import { MultiRateScheduler } from "./MultiRateScheduler";
 import { performanceMonitor } from "./PerformanceMonitor";
 import { DeltaEncoder, type DeltaSnapshot } from "./DeltaEncoder";
@@ -64,7 +62,6 @@ import type {
   SimulationConfig,
   SimulationSnapshot,
   SimulationEvent,
-  SimulationEventPayload,
   NeedsCommandPayload,
   RecipeCommandPayload,
   SocialCommandPayload,
@@ -81,6 +78,9 @@ import type { TaskType, TaskMetadata } from "../../types/simulation/tasks";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
+
+import { EventRegistry } from "./runner/EventRegistry";
+import { WorldLoader } from "./runner/WorldLoader";
 
 /**
  * Main simulation orchestrator and coordinator.
@@ -105,7 +105,9 @@ export class SimulationRunner {
   private scheduler: MultiRateScheduler;
   private metricsCollector: MetricsCollector;
   private indexRebuildInProgress = false;
-  private eventCleanups: (() => void)[] = [];
+
+  private eventRegistry: EventRegistry;
+  private worldLoader: WorldLoader;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public on(event: string, listener: (...args: any[]) => void): void {
@@ -124,33 +126,41 @@ export class SimulationRunner {
   public readonly worldResourceSystem!: WorldResourceSystem;
   @inject(TYPES.LivingLegendsSystem)
   public readonly livingLegendsSystem!: LivingLegendsSystem;
-  @inject(TYPES.LifeCycleSystem) public readonly lifeCycleSystem!: LifeCycleSystem;
+  @inject(TYPES.LifeCycleSystem)
+  public readonly lifeCycleSystem!: LifeCycleSystem;
   @inject(TYPES.NeedsSystem) public readonly needsSystem!: NeedsSystem;
-  @inject(TYPES.GenealogySystem) public readonly _genealogySystem!: GenealogySystem;
+  @inject(TYPES.GenealogySystem)
+  public readonly _genealogySystem!: GenealogySystem;
   @inject(TYPES.SocialSystem) public readonly socialSystem!: SocialSystem;
-  @inject(TYPES.InventorySystem) public readonly inventorySystem!: InventorySystem;
+  @inject(TYPES.InventorySystem)
+  public readonly inventorySystem!: InventorySystem;
   @inject(TYPES.EconomySystem) public readonly economySystem!: EconomySystem;
   @inject(TYPES.MarketSystem) public readonly marketSystem!: MarketSystem;
   @inject(TYPES.RoleSystem) public readonly roleSystem!: RoleSystem;
   @inject(TYPES.AISystem) public readonly aiSystem!: AISystem;
   @inject(TYPES.ResourceReservationSystem)
   public readonly resourceReservationSystem!: ResourceReservationSystem;
-  @inject(TYPES.GovernanceSystem) public readonly governanceSystem!: GovernanceSystem;
+  @inject(TYPES.GovernanceSystem)
+  public readonly governanceSystem!: GovernanceSystem;
   @inject(TYPES.DivineFavorSystem)
   public readonly divineFavorSystem!: DivineFavorSystem;
-  @inject(TYPES.HouseholdSystem) public readonly householdSystem!: HouseholdSystem;
+  @inject(TYPES.HouseholdSystem)
+  public readonly householdSystem!: HouseholdSystem;
   @inject(TYPES.BuildingSystem) public readonly buildingSystem!: BuildingSystem;
   @inject(TYPES.BuildingMaintenanceSystem)
   public readonly buildingMaintenanceSystem!: BuildingMaintenanceSystem;
-  @inject(TYPES.ProductionSystem) public readonly productionSystem!: ProductionSystem;
+  @inject(TYPES.ProductionSystem)
+  public readonly productionSystem!: ProductionSystem;
   @inject(TYPES.EnhancedCraftingSystem)
   public readonly enhancedCraftingSystem!: EnhancedCraftingSystem;
   @inject(TYPES.AnimalSystem) public readonly animalSystem!: AnimalSystem;
   @inject(TYPES.ItemGenerationSystem)
   public readonly itemGenerationSystem!: ItemGenerationSystem;
   @inject(TYPES.CombatSystem) public readonly combatSystem!: CombatSystem;
-  @inject(TYPES.ReputationSystem) public readonly reputationSystem!: ReputationSystem;
-  @inject(TYPES.ResearchSystem) public readonly _researchSystem!: ResearchSystem;
+  @inject(TYPES.ReputationSystem)
+  public readonly reputationSystem!: ReputationSystem;
+  @inject(TYPES.ResearchSystem)
+  public readonly _researchSystem!: ResearchSystem;
   @inject(TYPES.RecipeDiscoverySystem)
   public readonly _recipeDiscoverySystem!: RecipeDiscoverySystem;
   @inject(TYPES.QuestSystem) public readonly questSystem!: QuestSystem;
@@ -170,7 +180,8 @@ export class SimulationRunner {
   public readonly ambientAwarenessSystem!: AmbientAwarenessSystem;
   @inject(TYPES.CardDialogueSystem)
   public readonly cardDialogueSystem!: CardDialogueSystem;
-  @inject(TYPES.EmergenceSystem) public readonly emergenceSystem!: EmergenceSystem;
+  @inject(TYPES.EmergenceSystem)
+  public readonly emergenceSystem!: EmergenceSystem;
   @inject(TYPES.TimeSystem) public readonly timeSystem!: TimeSystem;
   @inject(TYPES.InteractionGameSystem)
   public readonly interactionGameSystem!: InteractionGameSystem;
@@ -183,7 +194,6 @@ export class SimulationRunner {
   public readonly gpuComputeService!: GPUComputeService;
 
   public capturedEvents: SimulationEvent[] = [];
-  private eventCaptureListener?: (eventName: string, payload: unknown) => void;
   private stateCache: StateCache;
   private deltaEncoder: DeltaEncoder;
   @inject(TYPES.EntityIndex) public readonly entityIndex!: EntityIndex;
@@ -216,6 +226,8 @@ export class SimulationRunner {
     });
 
     this.metricsCollector = new MetricsCollector();
+    this.eventRegistry = new EventRegistry(this);
+    this.worldLoader = new WorldLoader(this);
 
     this.initializeSnapshotWorker();
 
@@ -414,7 +426,7 @@ export class SimulationRunner {
 
     logger.info("🔗 SimulationRunner: System dependencies configured");
 
-    this.setupEventListeners();
+    this.eventRegistry.setupEventListeners();
 
     await this.ensureInitialFamily();
 
@@ -836,863 +848,7 @@ export class SimulationRunner {
    * This method is idempotent: it checks for the existence of each agent before spawning.
    */
   public async ensureInitialFamily(): Promise<void> {
-    let isa = this.state.agents.find((a) => a.id === "isa");
-    if (!isa) {
-      isa = this.lifeCycleSystem.spawnAgent({
-        id: "isa",
-        name: "Isa",
-        sex: "female",
-        ageYears: 25,
-        lifeStage: "adult",
-        generation: 0,
-        immortal: true,
-        traits: {
-          cooperation: 0.8,
-          aggression: 0.2,
-          diligence: 0.7,
-          curiosity: 0.9,
-        },
-      });
-      this._genealogySystem.registerBirth(isa, undefined, undefined);
-      logger.info("👩 Created missing parent: Isa");
-    }
-
-    let stev = this.state.agents.find((a) => a.id === "stev");
-    if (!stev) {
-      stev = this.lifeCycleSystem.spawnAgent({
-        id: "stev",
-        name: "Stev",
-        sex: "male",
-        ageYears: 27,
-        lifeStage: "adult",
-        generation: 0,
-        immortal: true,
-        traits: {
-          cooperation: 0.7,
-          aggression: 0.3,
-          diligence: 0.8,
-          curiosity: 0.8,
-        },
-      });
-      this._genealogySystem.registerBirth(stev, undefined, undefined);
-      logger.info("👨 Created missing parent: Stev");
-    }
-
-    logger.info(`👨‍👩‍👧‍👦 Ensuring initial family...`);
-
-    const childNames = [
-      { name: "Luna", sex: "female" as const },
-      { name: "Sol", sex: "male" as const },
-      { name: "Estrella", sex: "female" as const },
-      { name: "Cielo", sex: "male" as const },
-      { name: "Mar", sex: "female" as const },
-      { name: "Rio", sex: "male" as const },
-    ];
-
-    let childrenCreated = 0;
-    for (const childData of childNames) {
-      /**
-       * Check if a child with this name already exists.
-       * This is a heuristic - ideally we'd have fixed IDs for children too,
-       * but for now checking by name/parentage is safer than duplicating.
-       */
-      const existingChild = this.state.agents.find(
-        (a) =>
-          a.name === childData.name &&
-          a.generation === 1 &&
-          (a.parents?.father === "stev" || a.parents?.mother === "isa"),
-      );
-
-      if (!existingChild) {
-        logger.info(
-          `👶 Child ${childData.name} not found. Attempting to spawn...`,
-        );
-        try {
-          const child = this.lifeCycleSystem.spawnAgent({
-            name: childData.name,
-            sex: childData.sex,
-            ageYears: 5,
-            lifeStage: "child",
-            generation: 1,
-            parents: {
-              father: stev.id,
-              mother: isa.id,
-            },
-          });
-
-          this._genealogySystem.registerBirth(child, stev.id, isa.id);
-          childrenCreated++;
-          logger.info(`✅ Spawned child: ${child.name} (${child.id})`);
-        } catch (error) {
-          logger.error(`❌ Failed to spawn child ${childData.name}:`, error);
-        }
-      } else {
-        logger.debug(
-          `👶 Child ${childData.name} already exists (${existingChild.id})`,
-        );
-      }
-    }
-
-    if (childrenCreated > 0) {
-      logger.info(
-        `👶 Created ${childrenCreated} missing children for Isa & Stev`,
-      );
-    } else {
-      logger.info(`👶 No new children created (all exist or failed).`);
-    }
-
-    /**
-     * Ensure Infrastructure.
-     * We call this if we created any parent, OR if it's a fresh world (no zones).
-     */
-    if (
-      !this.state.zones ||
-      this.state.zones.length === 0 ||
-      childrenCreated > 0
-    ) {
-      this.createInitialInfrastructure();
-    }
-
-    for (const agent of this.state.agents) {
-      try {
-        if (!agent.position) {
-          agent.position = {
-            x: (this.state.worldSize?.width ?? 128) * 16,
-            y: (this.state.worldSize?.height ?? 128) * 16,
-          };
-        }
-        if (!this.movementSystem.hasMovementState(agent.id)) {
-          this.movementSystem.initializeEntityMovement(
-            agent.id,
-            agent.position,
-          );
-        }
-      } catch (err) {
-        logger.warn(
-          `Failed to initialize movement state for agent ${agent.id}: ${err instanceof Error ? err.message : String(err)
-          }`,
-        );
-      }
-    }
-  }
-
-  private createInitialInfrastructure(): void {
-    const baseX = 100;
-    const baseY = 100;
-
-    const houseZone: Zone = {
-      id: `zone_house_initial_${Date.now()}`,
-      type: "shelter",
-      bounds: {
-        x: baseX,
-        y: baseY,
-        width: 80,
-        height: 60,
-      },
-      props: {
-        capacity: 8,
-        comfort: 0.7,
-      },
-      metadata: {
-        building: "house" as BuildingLabel,
-        underConstruction: false,
-        buildingId: `building_house_initial_${Date.now()}`,
-        builtAt: Date.now(),
-      },
-    };
-
-    const workbenchZone: Zone = {
-      id: `zone_workbench_initial_${Date.now()}`,
-      type: "work",
-      bounds: {
-        x: baseX + 100,
-        y: baseY,
-        width: 40,
-        height: 40,
-      },
-      props: {
-        craftingSpeed: 1.2,
-        toolQuality: 0.8,
-      },
-      metadata: {
-        building: "workbench" as BuildingLabel,
-        underConstruction: false,
-        craftingStation: true,
-        buildingId: `building_workbench_initial_${Date.now()}`,
-        builtAt: Date.now(),
-      },
-    };
-
-    const storageZone: Zone = {
-      id: `zone_storage_initial_${Date.now()}`,
-      type: "storage",
-      bounds: {
-        x: baseX + 100,
-        y: baseY + 50,
-        width: 40,
-        height: 30,
-      },
-      props: {
-        capacity: 200,
-      },
-      metadata: {
-        buildingId: `building_storage_initial_${Date.now()}`,
-        builtAt: Date.now(),
-      },
-    };
-
-    const restZone: Zone = {
-      id: `zone_rest_initial_${Date.now()}`,
-      type: "rest",
-      bounds: {
-        x: baseX + 10,
-        y: baseY + 10,
-        width: 30,
-        height: 40,
-      },
-      props: {
-        restQuality: 0.8,
-        beds: 6,
-      },
-      metadata: {
-        parentZoneId: houseZone.id,
-      },
-    };
-
-    const kitchenZone: Zone = {
-      id: `zone_kitchen_initial_${Date.now()}`,
-      type: "kitchen",
-      bounds: {
-        x: baseX + 45,
-        y: baseY + 10,
-        width: 25,
-        height: 25,
-      },
-      props: {
-        cookingSpeed: 1.0,
-        foodCapacity: 50,
-      },
-      metadata: {
-        parentZoneId: houseZone.id,
-      },
-    };
-
-    this.state.zones.push(
-      houseZone,
-      workbenchZone,
-      storageZone,
-      restZone,
-      kitchenZone,
-    );
-
-    logger.info(`🏠 Initial infrastructure created:`);
-    logger.info(`   - Family house (shelter) at (${baseX}, ${baseY})`);
-    logger.info(`   - Workbench at (${baseX + 100}, ${baseY})`);
-    logger.info(`   - Storage zone`);
-    logger.info(`   - Rest zone (inside house)`);
-    logger.info(`   - Kitchen zone (inside house)`);
-    logger.info(`📦 Starting resources: wood=50, stone=30, food=40, water=40`);
-  }
-
-  private registerEvent(
-    eventName: string,
-    handler: (...args: any[]) => void,
-  ): void {
-    simulationEvents.on(eventName, handler);
-    this.eventCleanups.push(() => simulationEvents.off(eventName, handler));
-  }
-
-  private setupEventListeners(): void {
-    this.registerEvent(
-      GameEventNames.AGENT_ACTION_COMPLETE,
-      (data: { agentId: string; action: string }) => {
-        if (data.action === "birth") {
-          const agent = this.entityIndex.getAgent(data.agentId);
-          if (agent) {
-            this._genealogySystem.registerBirth(
-              agent,
-              agent.parents?.father,
-              agent.parents?.mother,
-            );
-          }
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.AGENT_BIRTH,
-      (data: { entityId: string; parentIds: [string, string] | null }) => {
-        const agent = this.entityIndex.getAgent(data.entityId);
-        if (agent) {
-          const fatherId = data.parentIds ? data.parentIds[0] : undefined;
-          const motherId = data.parentIds ? data.parentIds[1] : undefined;
-          this.appearanceGenerationSystem.generateAppearance(
-            agent.id,
-            agent,
-            fatherId,
-            motherId,
-          );
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.COMBAT_KILL,
-      (data: { targetId: string }) => {
-        this._genealogySystem.recordDeath(data.targetId);
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.AGENT_DEATH,
-      (data: { entityId: string; reason?: string }) => {
-        this.entityIndex.markEntityDead(data.entityId);
-        this._genealogySystem.recordDeath(data.entityId);
-        this.entityIndex.removeEntity(data.entityId);
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.INVENTORY_DROPPED,
-      (data: {
-        agentId: string;
-        position?: { x: number; y: number };
-        inventory: { wood: number; stone: number; food: number; water: number };
-        timestamp: number;
-      }) => {
-        const household = this.householdSystem.getHouseFor(data.agentId);
-        if (household) {
-          const deposited = this.householdSystem.depositToHousehold(
-            household.id,
-            data.inventory,
-          );
-          if (deposited) {
-            logger.info(
-              `📦 Inventory from deceased agent ${data.agentId} deposited to household ${household.id}`,
-            );
-          }
-        } else {
-          const freeHouse = this.householdSystem.findFreeHouse();
-          if (freeHouse) {
-            this.householdSystem.depositToHousehold(
-              freeHouse.zoneId,
-              data.inventory,
-            );
-            logger.info(
-              `📦 Inventory from deceased agent ${data.agentId} deposited to community storage ${freeHouse.zoneId}`,
-            );
-          } else {
-            logger.warn(
-              `⚠️ No household found for dropped inventory from agent ${data.agentId} - resources lost`,
-            );
-          }
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.AGENT_RESPAWNED,
-      (data: { agentId: string; timestamp: number }) => {
-        this.aiSystem.setAgentOffDuty(data.agentId, false);
-
-        const agent = this.entityIndex.getAgent(data.agentId);
-        if (
-          agent?.position &&
-          !this.movementSystem.hasMovementState(data.agentId)
-        ) {
-          this.movementSystem.initializeEntityMovement(
-            data.agentId,
-            agent.position,
-          );
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.ANIMAL_HUNTED,
-      (data: { animalId: string; hunterId: string; foodValue?: number }) => {
-        if (data.hunterId && data.foodValue) {
-          const inventory = this.inventorySystem.getAgentInventory(
-            data.hunterId,
-          );
-          if (inventory) {
-            const foodToAdd = Math.floor(data.foodValue || 5);
-            this.inventorySystem.addResource(data.hunterId, "food", foodToAdd);
-          }
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.RESOURCE_GATHERED,
-      (data: {
-        resourceId: string;
-        resourceType: string;
-        harvesterId?: string;
-        position?: { x: number; y: number };
-      }) => {
-        if (data.harvesterId) {
-          this.questSystem.handleEvent({
-            type: "resource_collected",
-            entityId: data.harvesterId,
-            timestamp: Date.now(),
-            data: {
-              resourceType: data.resourceType,
-              amount: 1,
-            },
-          });
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.BUILDING_CONSTRUCTED,
-      (data: {
-        jobId: string;
-        zoneId: string;
-        label: string;
-        completedAt: number;
-      }) => {
-        const job = this.buildingSystem.getConstructionJob(data.jobId);
-        if (job?.taskId) {
-          const task = this.taskSystem.getTask(job.taskId);
-          if (task && task.contributors) {
-            task.contributors.forEach((_contribution, agentId) => {
-              this.questSystem.handleEvent({
-                type: "structure_built",
-                entityId: agentId,
-                timestamp: Date.now(),
-                data: {
-                  structureType: data.label,
-                },
-              });
-            });
-          }
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.DIALOGUE_CARD_RESPONDED,
-      (data: { cardId: string; choiceId: string }) => {
-        const dialogueState = this.state.dialogueState;
-        if (dialogueState?.active) {
-          const card = dialogueState.active.find((c) => c.id === data.cardId);
-          if (card && card.participants && card.participants.length > 0) {
-            this.questSystem.handleEvent({
-              type: "dialogue_completed",
-              entityId: card.participants[0],
-              timestamp: Date.now(),
-              data: {
-                cardId: data.cardId,
-              },
-            });
-          }
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.NEED_CRITICAL,
-      (data: { agentId: string; need: string; value: number }) => {
-        const aiState = this.aiSystem.getAIState(data.agentId);
-        if (aiState && !aiState.currentGoal) {
-          this.aiSystem.forceGoalReevaluation(data.agentId);
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.PATHFINDING_FAILED,
-      (data: {
-        entityId: string;
-        targetZoneId: string;
-        reason: string;
-        timestamp: number;
-      }) => {
-        const aiState = this.aiSystem.getAIState(data.entityId);
-        if (aiState?.currentGoal?.targetZoneId === data.targetZoneId) {
-          this.aiSystem.failCurrentGoal(data.entityId);
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.TASK_STALLED,
-      (data: {
-        taskId: string;
-        taskType: string;
-        zoneId?: string;
-        stalledDuration: number;
-        timestamp: number;
-      }) => {
-        const task = this.taskSystem.getTask(data.taskId);
-        if (task?.contributors) {
-          for (const agentId of task.contributors.keys()) {
-            const aiState = this.aiSystem.getAIState(agentId);
-            if (aiState?.currentGoal?.data?.taskId === data.taskId) {
-              this.aiSystem.failCurrentGoal(agentId);
-            }
-          }
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.MOVEMENT_ARRIVED_AT_ZONE,
-      (data: { entityId: string; zoneId: string }) => {
-        this.aiSystem.notifyEntityArrived(data.entityId, data.zoneId);
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.CRISIS_IMMEDIATE_WARNING,
-      (_data: {
-        prediction: {
-          type: string;
-          probability: number;
-          severity: number;
-          recommendedActions: string[];
-        };
-        timestamp: number;
-      }) => {
-        for (const agent of this.state.agents) {
-          this.aiSystem.forceGoalReevaluation(agent.id);
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.CRISIS_PREDICTION,
-      (data: {
-        prediction: {
-          type: string;
-          probability: number;
-          severity: number;
-          recommendedActions: string[];
-        };
-        timestamp: number;
-      }) => {
-        if (data.prediction.probability >= 0.6) {
-          const relevantAgents = this.state.agents.filter((agent) => {
-            const role = this.roleSystem.getAgentRole(agent.id);
-            if (!role) return false;
-            return ["guard", "builder", "farmer", "gatherer"].includes(
-              role.roleType,
-            );
-          });
-
-          for (const agent of relevantAgents.slice(0, 3)) {
-            this.aiSystem.forceGoalReevaluation(agent.id);
-          }
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.BUILDING_CONSTRUCTION_STARTED,
-      (data: {
-        jobId: string;
-        zoneId: string;
-        label: string;
-        completesAt: number;
-      }) => {
-        const job = this.buildingSystem.getConstructionJob(data.jobId);
-        if (job?.taskId) {
-          const task = this.taskSystem.getTask(job.taskId);
-          if (task && task.contributors) {
-            task.contributors.forEach((_contribution, agentId) => {
-              this.questSystem.handleEvent({
-                type: "structure_construction_started",
-                entityId: agentId,
-                timestamp: Date.now(),
-                data: {
-                  structureType: data.label,
-                  jobId: data.jobId,
-                },
-              });
-            });
-          }
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.AGENT_AGED,
-      (data: {
-        entityId: string;
-        newAge: number;
-        previousStage: string;
-        currentStage: string;
-      }) => {
-        const agent = this.entityIndex.getAgent(data.entityId);
-        if (!agent) return;
-
-        if (data.currentStage === "adult" && data.previousStage === "child") {
-          const role = this.roleSystem.getAgentRole(data.entityId);
-          if (!role) {
-            this.roleSystem.assignBestRole(agent);
-          }
-          const house = this.householdSystem.getHouseFor(data.entityId);
-          if (!house) {
-            this.householdSystem.assignToHouse(data.entityId, "other");
-          }
-        }
-        if (data.currentStage === "elder") {
-          const role = this.roleSystem.getAgentRole(data.entityId);
-          if (role) {
-            const physicalRoles = ["logger", "quarryman", "builder", "guard"];
-            if (physicalRoles.includes(role.roleType)) {
-              const agent = this.entityIndex.getAgent(data.entityId);
-              if (agent) {
-                this.roleSystem.reassignRole(data.entityId, "gatherer");
-              }
-            }
-          }
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.TIME_CHANGED,
-      (data: {
-        time: {
-          phase: string;
-          hour: number;
-          temperature: number;
-        };
-        timestamp: number;
-      }) => {
-        const period = data.time?.phase || "";
-        if (period === "night" || period === "deep_night") {
-          for (const agent of this.state.agents) {
-            const aiState = this.aiSystem.getAIState(agent.id);
-            if (aiState && !aiState.currentGoal && !aiState.offDuty) {
-              const needs = this.needsSystem.getNeeds(agent.id);
-              if (needs && needs.energy < 70) {
-                this.aiSystem.forceGoalReevaluation(agent.id);
-              }
-            }
-          }
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.TASK_COMPLETED,
-      (data: {
-        taskId: string;
-        completedBy: string[];
-        completedAt: number;
-        timestamp: number;
-        cancelled?: boolean;
-        reason?: string;
-      }) => {
-        if (data.cancelled) return;
-
-        for (const agentId of data.completedBy) {
-          this.reputationSystem.updateReputation(
-            agentId,
-            0.05,
-            "task_completed",
-          );
-        }
-
-        for (const agentId of data.completedBy) {
-          this.questSystem.handleEvent({
-            type: "task_completed",
-            entityId: agentId,
-            timestamp: data.timestamp,
-            data: { taskId: data.taskId },
-          });
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.KNOWLEDGE_LEARNED,
-      (data: {
-        agentId: string;
-        knowledgeId: string;
-        knowledgeType: string;
-        timestamp: number;
-      }) => {
-        const aiState = this.aiSystem.getAIState(data.agentId);
-        if (aiState) {
-          if (!aiState.memory.knownResourceLocations) {
-            aiState.memory.knownResourceLocations = new Map();
-          }
-          aiState.memory.lastMemoryCleanup = Date.now();
-        }
-        this.aiSystem.forceGoalReevaluation(data.agentId);
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.ROLE_ASSIGNED,
-      (data: {
-        agentId: string;
-        roleType: string;
-        roleId?: string;
-        timestamp: number;
-      }) => {
-        if (data.roleType === "leader" || data.roleType === "guard") {
-          this.reputationSystem.updateReputation(
-            data.agentId,
-            0.1,
-            `role_assigned_${data.roleType}`,
-          );
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.NORM_SANCTION_APPLIED,
-      (data: {
-        agentId: string;
-        violationType: string;
-        reputationPenalty: number;
-        trustPenalty?: number;
-        truceDuration?: number;
-        timestamp: number;
-      }) => {
-        this.reputationSystem.updateReputation(
-          data.agentId,
-          data.reputationPenalty,
-          `norm_violation_${data.violationType}`,
-        );
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.CONFLICT_TRUCE_ACCEPTED,
-      (data: {
-        cardId: string;
-        attackerId: string;
-        targetId: string;
-        truceBonus?: number;
-        timestamp: number;
-      }) => {
-        this.socialSystem.modifyAffinity(
-          data.attackerId,
-          data.targetId,
-          data.truceBonus || 0.1,
-        );
-        this.reputationSystem.updateReputation(
-          data.targetId,
-          0.02,
-          "truce_accepted",
-        );
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.CONFLICT_TRUCE_REJECTED,
-      (data: {
-        cardId: string;
-        attackerId: string;
-        targetId: string;
-        timestamp: number;
-      }) => {
-        this.socialSystem.modifyAffinity(data.attackerId, data.targetId, -0.15);
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.COMBAT_HIT,
-      (data: {
-        attackerId: string;
-        targetId: string;
-        damage: number;
-        weaponId?: string;
-        timestamp: number;
-      }) => {
-        this.needsSystem.modifyNeed(data.targetId, "energy", -5);
-        this.socialSystem.modifyAffinity(data.attackerId, data.targetId, -0.2);
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.TASK_CREATED,
-      (data: {
-        taskId: string;
-        taskType: string;
-        zoneId?: string;
-        createdBy?: string;
-        timestamp: number;
-      }) => {
-        if (data.taskType === "build" || data.taskType === "repair") {
-          this.questSystem.handleEvent({
-            type: "task_created",
-            entityId: data.createdBy || "system",
-            timestamp: data.timestamp,
-            data: { taskId: data.taskId, taskType: data.taskType },
-          });
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.TASK_PROGRESS,
-      (data: {
-        taskId: string;
-        agentId: string;
-        contribution: number;
-        progress: number;
-        timestamp: number;
-      }) => {
-        const task = this.taskSystem.getTask(data.taskId);
-        if (task && task.contributors) {
-          const contributorCount = task.contributors.size;
-          if (contributorCount > 1 && data.contribution > 10) {
-            this.reputationSystem.updateReputation(
-              data.agentId,
-              0.01,
-              "collaborative_work",
-            );
-          }
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventNames.BUILDING_REPAIRED,
-      (data: {
-        zoneId: string;
-        buildingType: string;
-        repairedBy: string;
-        health: number;
-        maxHealth: number;
-        timestamp: number;
-      }) => {
-        this.reputationSystem.updateReputation(
-          data.repairedBy,
-          0.03,
-          "building_repaired",
-        );
-      },
-    );
-
-    const eventCaptureListener = (
-      eventName: string,
-      payload: unknown,
-    ): void => {
-      const mappedEventName = mapEventName(eventName);
-      this.capturedEvents.push({
-        type: mappedEventName,
-        payload: payload as SimulationEventPayload | undefined,
-        timestamp: Date.now(),
-      });
-    };
-    this.eventCaptureListener = eventCaptureListener;
-
-    Object.values(GameEventNames).forEach((eventName) => {
-      this.registerEvent(eventName, (payload: unknown) => {
-        if (this.eventCaptureListener) {
-          this.eventCaptureListener(eventName, payload);
-        }
-      });
-    });
+    await this.worldLoader.ensureInitialFamily();
   }
 
   /**
@@ -1708,209 +864,7 @@ export class SimulationRunner {
     tileSize: number;
     biomeMap: string[][];
   }): Promise<void> {
-    logger.info(
-      `Generating initial world ${worldConfig.width}x${worldConfig.height}...`,
-    );
-
-    const CHUNK_SIZE = 16;
-    const chunksX = Math.ceil(worldConfig.width / CHUNK_SIZE);
-    const chunksY = Math.ceil(worldConfig.height / CHUNK_SIZE);
-    const allTiles: Array<{
-      x: number;
-      y: number;
-      assetId: string;
-      type: "grass" | "stone" | "water" | "path";
-      biome: string;
-      isWalkable: boolean;
-    }> = [];
-
-    const biomeMap: string[][] = Array(worldConfig.height)
-      .fill(null)
-      .map((): string[] => {
-        return Array(worldConfig.width).fill("") as string[];
-      });
-
-    for (let cy = 0; cy < chunksY; cy++) {
-      for (let cx = 0; cx < chunksX; cx++) {
-        const chunkTiles = await this.worldGenerationService.generateChunk(
-          cx,
-          cy,
-          {
-            width: worldConfig.width,
-            height: worldConfig.height,
-            tileSize: worldConfig.tileSize,
-            seed: 12345,
-            noise: {
-              temperature: {
-                scale: 0.0005,
-                octaves: 4,
-                persistence: 0.5,
-                lacunarity: 2.0,
-              },
-              moisture: {
-                scale: 0.0005,
-                octaves: 3,
-                persistence: 0.6,
-                lacunarity: 2.0,
-              },
-              elevation: {
-                scale: 0.0005,
-                octaves: 5,
-                persistence: 0.4,
-                lacunarity: 2.0,
-              },
-            },
-          },
-        );
-
-        for (const row of chunkTiles) {
-          for (const tile of row) {
-            if (tile.x < worldConfig.width && tile.y < worldConfig.height) {
-              const tileType: "grass" | "stone" | "water" | "path" =
-                tile.biome === BiomeType.OCEAN ? "water" : "grass";
-              allTiles.push({
-                x: tile.x,
-                y: tile.y,
-                assetId: tile.assets.terrain,
-                type: tileType,
-                biome: String(tile.biome),
-                isWalkable: tile.isWalkable ?? true,
-              });
-              biomeMap[tile.y][tile.x] = String(tile.biome);
-            }
-          }
-        }
-      }
-    }
-
-    this.state.terrainTiles = allTiles;
-    this.state.worldSize = {
-      width: worldConfig.width,
-      height: worldConfig.height,
-    };
-    logger.info(`Generated ${allTiles.length} terrain tiles.`);
-
-    this.worldResourceSystem.spawnResourcesInWorld({
-      ...worldConfig,
-      biomeMap,
-    });
-
-    this.animalSystem.spawnAnimalsInWorld(
-      worldConfig.width,
-      worldConfig.height,
-      worldConfig.tileSize,
-      biomeMap,
-    );
-
-    this.generateFunctionalZones(worldConfig, biomeMap);
-  }
-
-  private generateFunctionalZones(
-    worldConfig: {
-      width: number;
-      height: number;
-      tileSize: number;
-    },
-    biomeMap: string[][],
-  ): void {
-    if (!this.state.zones) {
-      this.state.zones = [];
-    }
-
-    const ZONE_SPACING = 300;
-    const ZONE_SIZE = 120;
-    const zones: Zone[] = [];
-
-    for (let x = ZONE_SPACING; x < worldConfig.width; x += ZONE_SPACING) {
-      for (let y = ZONE_SPACING; y < worldConfig.height; y += ZONE_SPACING) {
-        const tileX = Math.floor(x / worldConfig.tileSize);
-        const tileY = Math.floor(y / worldConfig.tileSize);
-
-        if (
-          tileY >= 0 &&
-          tileY < biomeMap.length &&
-          tileX >= 0 &&
-          tileX < biomeMap[0].length
-        ) {
-          const biome = biomeMap[tileY][tileX];
-
-          if (biome === "ocean" || biome === "lake") continue;
-
-          const zoneType = this.determineZoneType(biome, x, y, worldConfig);
-          if (!zoneType) continue;
-
-          const zoneId = `zone_${zoneType}_${x}_${y}`;
-          const zone: Zone = {
-            id: zoneId,
-            type: zoneType,
-            bounds: {
-              x: Math.max(0, x - ZONE_SIZE / 2),
-              y: Math.max(0, y - ZONE_SIZE / 2),
-              width: ZONE_SIZE,
-              height: ZONE_SIZE,
-            },
-            props: {
-              color: this.getZoneColor(zoneType),
-              status: "ready",
-            },
-          };
-
-          zones.push(zone);
-        }
-      }
-    }
-
-    this.state.zones.push(...zones);
-    logger.info(`Generated ${zones.length} functional zones`);
-  }
-
-  private determineZoneType(
-    biome: string,
-    x: number,
-    y: number,
-    worldConfig: { width: number; height: number },
-  ): string | null {
-    const seed = x * 1000 + y;
-    const rng = (): number => {
-      const x = Math.sin(seed) * 10000;
-      return x - Math.floor(x);
-    };
-
-    const centerX = worldConfig.width / 2;
-    const centerY = worldConfig.height / 2;
-    const distFromCenter = Math.hypot(x - centerX, y - centerY);
-    const isNearCenter = distFromCenter < worldConfig.width * 0.3;
-
-    if (isNearCenter && rng() < 0.3) {
-      return "social";
-    }
-
-    if (biome === "forest" && rng() < 0.4) {
-      return "rest";
-    }
-
-    if (biome === "grassland" && rng() < 0.3) {
-      return "work";
-    }
-
-    const rand = rng();
-    if (rand < 0.25) return "rest";
-    if (rand < 0.5) return "work";
-    if (rand < 0.7) return "food";
-    if (rand < 0.85) return "water";
-    return "social";
-  }
-
-  private getZoneColor(zoneType: string): string {
-    const colors: Record<string, string> = {
-      rest: "#8B7355",
-      work: "#6B8E23",
-      food: "#FF6347",
-      water: "#4682B4",
-      social: "#9370DB",
-      crafting: "#CD853F",
-    };
-    return colors[zoneType] || "#C4B998";
+    await this.worldLoader.initializeWorldResources(worldConfig);
   }
 
   private gpuStatsInterval?: NodeJS.Timeout;
@@ -1965,8 +919,7 @@ export class SimulationRunner {
       this.snapshotWorkerReady = false;
     }
 
-    this.eventCleanups.forEach((cleanup) => cleanup());
-    this.eventCleanups = [];
+    this.eventRegistry.cleanup();
   }
 
   /**
@@ -2802,14 +1755,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                resources?: {
-                  wood?: number;
-                  stone?: number;
-                  food?: number;
-                  water?: number;
-                };
-                minWorkers?: number;
-              }
+                  resources?: {
+                    wood?: number;
+                    stone?: number;
+                    food?: number;
+                    water?: number;
+                  };
+                  minWorkers?: number;
+                }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,
@@ -2851,12 +1804,12 @@ export class SimulationRunner {
       ) {
         this.timeSystem.setWeather(
           weatherType as
-          | "clear"
-          | "cloudy"
-          | "rainy"
-          | "stormy"
-          | "foggy"
-          | "snowy",
+            | "clear"
+            | "cloudy"
+            | "rainy"
+            | "stormy"
+            | "foggy"
+            | "snowy",
         );
         logger.info(`Weather set to ${weatherType} via TIME_COMMAND`);
       } else {
@@ -2962,12 +1915,12 @@ export class SimulationRunner {
       social,
       ai: aiState
         ? {
-          currentGoal: aiState.currentGoal,
-          goalQueue: aiState.goalQueue,
-          currentAction: aiState.currentAction,
-          offDuty: aiState.offDuty,
-          lastDecisionTime: aiState.lastDecisionTime,
-        }
+            currentGoal: aiState.currentGoal,
+            goalQueue: aiState.goalQueue,
+            currentAction: aiState.currentAction,
+            offDuty: aiState.offDuty,
+            lastDecisionTime: aiState.lastDecisionTime,
+          }
         : null,
     };
   }

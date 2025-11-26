@@ -1,5 +1,6 @@
 import type { Animal } from "../../types/simulation/animals";
 import { logger } from "../../../infrastructure/utils/logger";
+import { getAnimalConfig } from "../../../infrastructure/services/world/config/AnimalConfigs";
 import type { GPUComputeService } from "../core/GPUComputeService";
 import { injectable } from "inversify";
 
@@ -13,6 +14,7 @@ export class AnimalBatchProcessor {
   private needsBuffer: Float32Array | null = null;
   private ageBuffer: Float32Array | null = null;
   private healthBuffer: Float32Array | null = null;
+  private maxHealthBuffer: Float32Array | null = null;
   private animalIdArray: string[] = [];
   private bufferDirty = true;
 
@@ -47,6 +49,7 @@ export class AnimalBatchProcessor {
       this.needsBuffer = null;
       this.ageBuffer = null;
       this.healthBuffer = null;
+      this.maxHealthBuffer = null;
       this.animalIdArray = [];
       this.lastBufferSize = 0;
       this.bufferDirty = false;
@@ -60,6 +63,7 @@ export class AnimalBatchProcessor {
       !this.needsBuffer ||
       !this.ageBuffer ||
       !this.healthBuffer ||
+      !this.maxHealthBuffer ||
       sizeDiff > this.lastBufferSize * this.REALLOC_THRESHOLD;
 
     if (needsRealloc) {
@@ -69,6 +73,7 @@ export class AnimalBatchProcessor {
       this.needsBuffer = new Float32Array(capacity * this.NEED_COUNT);
       this.ageBuffer = new Float32Array(capacity);
       this.healthBuffer = new Float32Array(capacity);
+      this.maxHealthBuffer = new Float32Array(capacity);
       this.animalIdArray = new Array<string>(capacity);
       this.lastBufferSize = animalCount;
     }
@@ -83,6 +88,7 @@ export class AnimalBatchProcessor {
     const needsBuffer = this.needsBuffer!;
     const ageBuffer = this.ageBuffer!;
     const healthBuffer = this.healthBuffer!;
+    const maxHealthBuffer = this.maxHealthBuffer!;
 
     let index = 0;
     for (const [animalId, animal] of animals.entries()) {
@@ -100,6 +106,11 @@ export class AnimalBatchProcessor {
       ageBuffer[index] = animal.age;
       healthBuffer[index] = animal.health;
 
+      const config = getAnimalConfig(animal.type);
+      maxHealthBuffer[index] = config
+        ? config.maxHealth * animal.genes.health
+        : animal.health;
+
       this.animalIdArray[index] = animalId;
       index++;
     }
@@ -115,7 +126,13 @@ export class AnimalBatchProcessor {
     thirstDecayRates: Float32Array,
     deltaMinutes: number,
   ): void {
-    if (!this.needsBuffer || this.animalIdArray.length === 0) return;
+    if (
+      !this.needsBuffer ||
+      !this.healthBuffer ||
+      !this.maxHealthBuffer ||
+      this.animalIdArray.length === 0
+    )
+      return;
 
     // Reuse work buffer if same size, otherwise reallocate
     const requiredSize = this.needsBuffer.length;
@@ -188,6 +205,23 @@ export class AnimalBatchProcessor {
         0,
         workBuffer[offset + 2] - fearDecayRate * deltaMinutes,
       );
+
+      // Health recovery logic
+      const currentHunger = workBuffer[offset + 0];
+      const currentThirst = workBuffer[offset + 1];
+
+      if (currentHunger > 80 && currentThirst > 80) {
+        const maxHealth = this.maxHealthBuffer![i];
+        const currentHealth = this.healthBuffer![i];
+
+        if (currentHealth < maxHealth) {
+          const recoveryRate = maxHealth * 0.05;
+          this.healthBuffer![i] = Math.min(
+            maxHealth,
+            currentHealth + recoveryRate * deltaMinutes,
+          );
+        }
+      }
     }
 
     // Atomic swap after CPU processing

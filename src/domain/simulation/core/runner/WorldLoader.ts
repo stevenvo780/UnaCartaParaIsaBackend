@@ -1,7 +1,7 @@
-import { logger } from "../../../infrastructure/utils/logger";
-import { Zone } from "../../types/game-types";
-import { BiomeType } from "../../world/generation/types";
-import type { BuildingLabel } from "../../types/simulation/buildings";
+import { logger } from "../../../../infrastructure/utils/logger";
+import { Zone } from "../../../types/game-types";
+import { BiomeType } from "../../../world/generation/types";
+import type { BuildingLabel } from "../../../types/simulation/buildings";
 import type { SimulationRunner } from "../SimulationRunner";
 
 export class WorldLoader {

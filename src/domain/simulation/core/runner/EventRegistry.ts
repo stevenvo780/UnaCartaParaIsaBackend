@@ -1,7 +1,7 @@
 import { GameEventNames, simulationEvents } from "../events";
-import type { SimulationEvent, SimulationEventPayload } from "../../../shared/types/commands/SimulationCommand";
+import type { SimulationEventPayload } from "../../../../shared/types/commands/SimulationCommand";
 import { mapEventName } from "../eventNameMapper";
-import { logger } from "../../../infrastructure/utils/logger";
+import { logger } from "../../../../infrastructure/utils/logger";
 import type { SimulationRunner } from "../SimulationRunner";
 
 export class EventRegistry {
@@ -10,7 +10,10 @@ export class EventRegistry {
 
   constructor(private runner: SimulationRunner) {}
 
-  private registerEvent(eventName: string, handler: (...args: any[]) => void): void {
+  private registerEvent(
+    eventName: string,
+    handler: (...args: any[]) => void,
+  ): void {
     simulationEvents.on(eventName, handler);
     this.eventCleanups.push(() => simulationEvents.off(eventName, handler));
   }
@@ -130,7 +133,11 @@ export class EventRegistry {
           );
           if (inventory) {
             const foodToAdd = Math.floor(data.foodValue || 5);
-            this.runner.inventorySystem.addResource(data.hunterId, "food", foodToAdd);
+            this.runner.inventorySystem.addResource(
+              data.hunterId,
+              "food",
+              foodToAdd,
+            );
           }
         }
       },
@@ -507,7 +514,11 @@ export class EventRegistry {
         targetId: string;
         timestamp: number;
       }) => {
-        this.runner.socialSystem.modifyAffinity(data.attackerId, data.targetId, -0.15);
+        this.runner.socialSystem.modifyAffinity(
+          data.attackerId,
+          data.targetId,
+          -0.15,
+        );
       },
     );
 
@@ -521,7 +532,11 @@ export class EventRegistry {
         timestamp: number;
       }) => {
         this.runner.needsSystem.modifyNeed(data.targetId, "energy", -5);
-        this.runner.socialSystem.modifyAffinity(data.attackerId, data.targetId, -0.2);
+        this.runner.socialSystem.modifyAffinity(
+          data.attackerId,
+          data.targetId,
+          -0.2,
+        );
       },
     );
 
