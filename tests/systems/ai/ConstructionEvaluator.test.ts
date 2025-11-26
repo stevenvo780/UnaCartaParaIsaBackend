@@ -88,7 +88,7 @@ describe("ConstructionEvaluator", () => {
     it("debe generar goal de construcción para tarea cercana", () => {
       const goals = evaluateConstructionGoals(context, aiState);
       if (goals.length > 0) {
-        expect(goals[0].type).toBe("work");
+        expect(goals[0].type).toBe("construction");
         expect(goals[0].targetZoneId).toBe("build-zone-1");
         expect(goals[0].data?.workType).toBe("construction");
         expect(goals[0].data?.taskId).toBe("task-1");

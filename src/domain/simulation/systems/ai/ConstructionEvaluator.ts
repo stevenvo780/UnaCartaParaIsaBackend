@@ -82,7 +82,7 @@ export function evaluateConstructionGoals(
     return [
       {
         id: `assist_build_${best.t.id}_${now}`,
-        type: "work",
+        type: "construction",
         priority,
         targetZoneId: best.zoneId,
         data: {
