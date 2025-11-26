@@ -823,7 +823,6 @@ export class SimulationRunner {
    * This method is idempotent: it checks for the existence of each agent before spawning.
    */
   public async ensureInitialFamily(): Promise<void> {
-    // 1. Ensure Parents (Isa & Stev)
     let isa = this.state.agents.find((a) => a.id === "isa");
     if (!isa) {
       isa = this.lifeCycleSystem.spawnAgent({
@@ -868,7 +867,6 @@ export class SimulationRunner {
 
     logger.info(`👨‍👩‍👧‍👦 Ensuring initial family...`);
 
-    // 2. Ensure Children
     const childNames = [
       { name: "Luna", sex: "female" as const },
       { name: "Sol", sex: "male" as const },
@@ -942,7 +940,6 @@ export class SimulationRunner {
       this.createInitialInfrastructure();
     }
 
-    // 4. Ensure Movement/Position for all agents
     for (const agent of this.state.agents) {
       try {
         if (!agent.position) {
@@ -1135,7 +1132,6 @@ export class SimulationRunner {
       },
     );
 
-    // Handle dropped inventory when agent dies - deposit to their household
     simulationEvents.on(
       GameEventNames.INVENTORY_DROPPED,
       (data: {
@@ -1144,7 +1140,6 @@ export class SimulationRunner {
         inventory: { wood: number; stone: number; food: number; water: number };
         timestamp: number;
       }) => {
-        // Try to find the agent's household and deposit resources there
         const household = this.householdSystem.getHouseFor(data.agentId);
         if (household) {
           const deposited = this.householdSystem.depositToHousehold(
@@ -1157,7 +1152,6 @@ export class SimulationRunner {
             );
           }
         } else {
-          // If no household, try to find any household with space
           const freeHouse = this.householdSystem.findFreeHouse();
           if (freeHouse) {
             this.householdSystem.depositToHousehold(

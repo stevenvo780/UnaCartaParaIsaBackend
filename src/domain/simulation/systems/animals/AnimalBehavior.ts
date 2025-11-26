@@ -28,11 +28,8 @@ export class AnimalBehavior {
         BASE_ANIMAL_SPEED * animal.genes.speed * speedMultiplier;
       const moveDistance = effectiveSpeed * deltaSeconds;
 
-      const moveRatio = Math.min(moveDistance / distance, 1.0);
-      const smoothing = 1.0 - Math.pow(1.0 - moveRatio, 3);
-
-      animal.position.x += normalizedX * moveDistance * smoothing;
-      animal.position.y += normalizedY * moveDistance * smoothing;
+      animal.position.x += normalizedX * moveDistance;
+      animal.position.y += normalizedY * moveDistance;
     }
   }
 
@@ -59,11 +56,9 @@ export class AnimalBehavior {
       }
 
       const moveDistance = effectiveSpeed * deltaSeconds;
-      const moveRatio = Math.min(moveDistance / distance, 1.0);
-      const smoothing = 1.0 - Math.pow(1.0 - moveRatio, 3);
-
-      animal.position.x += normalizedX * moveDistance * smoothing;
-      animal.position.y += normalizedY * moveDistance * smoothing;
+      const step = Math.min(distance, moveDistance);
+      animal.position.x += normalizedX * step;
+      animal.position.y += normalizedY * step;
     }
   }
 
@@ -94,11 +89,8 @@ export class AnimalBehavior {
     const dx = Math.cos(wanderAngle);
     const dy = Math.sin(wanderAngle);
 
-    const moveRatio = Math.min(moveDistance / 100, 1.0);
-    const smoothing = 1.0 - Math.pow(1.0 - moveRatio, 3);
-
-    animal.position.x += dx * moveDistance * smoothing;
-    animal.position.y += dy * moveDistance * smoothing;
+    animal.position.x += dx * moveDistance;
+    animal.position.y += dy * moveDistance;
   }
 
   public static seekFood(

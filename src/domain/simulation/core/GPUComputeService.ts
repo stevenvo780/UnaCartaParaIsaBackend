@@ -49,7 +49,6 @@ export class GPUComputeService {
       const backend = tf.getBackend();
       console.log(`🔍 [GPUComputeService] TensorFlow backend: ${backend}`);
 
-      // Obtener info de memoria GPU si está disponible
       try {
         const memInfo = tf.memory();
         console.log(
@@ -62,7 +61,6 @@ export class GPUComputeService {
         );
       }
 
-      // Intentar una operación simple para verificar GPU real
       try {
         console.log(
           "🔍 [GPUComputeService] Testing GPU with simple tensor operation...",
@@ -81,7 +79,6 @@ export class GPUComputeService {
         console.warn(`⚠️ [GPUComputeService] GPU test failed: ${testErr}`);
       }
 
-      // Listar backends disponibles
       console.log(
         `🔍 [GPUComputeService] Registered backends:`,
         tf.engine().registryFactory,
@@ -778,8 +775,6 @@ export class GPUComputeService {
     };
   }
 
-  // ==================== SPATIAL QUERY OPTIMIZATIONS ====================
-
   /**
    * Computes squared distances from a center point to all entity positions in batch.
    * Much faster than individual distance calculations for large entity counts.
@@ -865,8 +860,6 @@ export class GPUComputeService {
     return indices;
   }
 
-  // ==================== SOCIAL SYSTEM OPTIMIZATIONS ====================
-
   /**
    * Applies decay to social affinity edges in batch.
    * Positive values decay towards 0, negative values also decay towards 0.
@@ -900,8 +893,6 @@ export class GPUComputeService {
         const affT = tf.tensor1d(affinities);
         const decayAmount = decayRate * deltaSeconds;
 
-        // For positive values: subtract decay, clamp to 0
-        // For negative values: add decay, clamp to 0
         const sign = affT.sign();
         const absAff = affT.abs();
         const decayed = absAff.sub(decayAmount).maximum(0);
@@ -985,13 +976,11 @@ export class GPUComputeService {
           2,
         ]);
 
-        // Expand dims for broadcasting: [n, 1, 2] - [1, n, 2] = [n, n, 2]
         const pos1 = posT.expandDims(1);
         const pos2 = posT.expandDims(0);
         const diff = pos1.sub(pos2);
         const distSq = diff.square().sum(2);
 
-        // Extract upper triangle (excluding diagonal)
         const distMatrix = distSq.arraySync() as number[][];
         const distances = new Float32Array(pairCount);
         let idx = 0;
@@ -1040,8 +1029,6 @@ export class GPUComputeService {
     this.performanceStats.totalCpuTime += elapsed;
     return { distances, pairCount };
   }
-
-  // ==================== ANIMAL BEHAVIOR OPTIMIZATIONS ====================
 
   /**
    * Computes flee vectors for multiple animals in batch.
@@ -1147,10 +1134,9 @@ export class GPUComputeService {
         if (distSq < nearestDistSq) {
           nearestDistSq = distSq;
           nearestThreatIdx = j;
+          }
         }
-      }
 
-      // Move away from nearest threat
       const dx = ax - threatPositions[nearestThreatIdx * 2];
       const dy = ay - threatPositions[nearestThreatIdx * 2 + 1];
       const dist = Math.sqrt(dx * dx + dy * dy);

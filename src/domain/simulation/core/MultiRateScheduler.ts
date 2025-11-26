@@ -336,7 +336,6 @@ export class MultiRateScheduler {
 
       const elapsedInTick = performance.now() - tickStartTime;
       if (elapsedInTick > this.MAX_TICK_TIME_MS) {
-        // Yield to event loop and continue in next cycle
         await new Promise<void>((resolve) => setImmediate(resolve));
       }
 
@@ -344,7 +343,6 @@ export class MultiRateScheduler {
         const start = performance.now();
         const result = system.update(deltaMs);
         if (result instanceof Promise) {
-          // For async systems, check time budget before awaiting
           const systemStartTime = performance.now();
           await result;
           const systemDuration = performance.now() - systemStartTime;

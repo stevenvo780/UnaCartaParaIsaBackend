@@ -116,17 +116,14 @@ export class GPUBatchQueryService {
 
       this.stats.totalQueries++;
 
-      // Flush immediately if buffer is full
       if (this.pendingQueries.length >= this.MAX_PENDING_QUERIES) {
         this.flush();
       } else if (this.FLUSH_INTERVAL_MS > 0 && !this.flushTimer) {
-        // Schedule flush if interval mode
         this.flushTimer = setTimeout(
           () => this.flush(),
           this.FLUSH_INTERVAL_MS,
         );
       } else if (this.FLUSH_INTERVAL_MS === 0) {
-        // Immediate mode - flush on next tick to batch same-frame queries
         setImmediate(() => this.flush());
       }
     });
@@ -182,7 +179,6 @@ export class GPUBatchQueryService {
     const entityCount = this.entityPositions.length / 2;
     const queryCount = queries.length;
 
-    // Decide GPU vs CPU
     const useGpu =
       this.gpuService?.isGPUAvailable() &&
       entityCount >= this.GPU_ENTITY_THRESHOLD &&

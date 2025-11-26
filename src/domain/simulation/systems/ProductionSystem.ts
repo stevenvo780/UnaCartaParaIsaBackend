@@ -38,16 +38,19 @@ import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 
 /**
- * Sistema responsable de gestionar la producción de recursos en las zonas designadas.
+ * System for managing resource production in designated zones.
  *
- * Flujo principal:
- * 1. `update()`: Se ejecuta periódicamente según `updateIntervalMs`.
- * 2. Itera sobre todas las zonas de producción (comida, agua, o recursos específicos).
- * 3. `ensureAssignments()`: Asigna trabajadores disponibles a las zonas si hay vacantes.
- * 4. `processProduction()`: Genera recursos si ha pasado el tiempo de producción (`productionIntervalMs`).
- * 5. Los recursos generados se depositan en el inventario de la zona (`depositToZoneStockpile`).
- * 6. Emite eventos de producción (`PRODUCTION_OUTPUT_GENERATED`).
- * 7. Puede modificar el terreno (ej. agricultura) visualmente.
+ * Main flow:
+ * 1. `update()`: Runs periodically according to `updateIntervalMs`.
+ * 2. Iterates over all production zones (food, water, or specific resources).
+ * 3. `ensureAssignments()`: Assigns available workers to zones if there are vacancies.
+ * 4. `processProduction()`: Generates resources if production interval has elapsed.
+ * 5. Generated resources are deposited to zone inventory (`depositToZoneStockpile`).
+ * 6. Emits production events (`PRODUCTION_OUTPUT_GENERATED`).
+ * 7. May modify terrain visually (e.g., agriculture).
+ *
+ * @see InventorySystem for resource storage
+ * @see LifeCycleSystem for worker availability
  */
 @injectable()
 export class ProductionSystem {
@@ -81,8 +84,9 @@ export class ProductionSystem {
   }
 
   /**
-   * Maneja la muerte de un agente, removiéndolo de cualquier asignación de trabajo.
-   * @param data Datos del evento de muerte.
+   * Handles agent death, removing them from any work assignments.
+   *
+   * @param data - Death event data
    */
   private handleAgentDeath(data: { entityId: string }): void {
     const { entityId } = data;
@@ -99,9 +103,10 @@ export class ProductionSystem {
   }
 
   /**
-   * Ciclo principal de actualización del sistema.
-   * Verifica si es momento de procesar la producción y actualiza cada zona.
-   * @param _deltaMs Tiempo transcurrido desde la última actualización (no usado actualmente, se usa intervalo fijo).
+   * Main update cycle.
+   * Checks if it's time to process production and updates each zone.
+   *
+   * @param _deltaMs - Elapsed time since last update (not used, fixed interval is used instead)
    */
   public update(_deltaMs: number): void {
     const now = Date.now();
@@ -118,8 +123,10 @@ export class ProductionSystem {
   }
 
   /**
-   * Determina si una zona es capaz de producir recursos.
-   * @param zone Zona a evaluar.
+   * Determines if a zone is capable of producing resources.
+   *
+   * @param zone - Zone to evaluate
+   * @returns True if zone can produce resources
    */
   private isProductionZone(zone: MutableZone): boolean {
     if (zone.type === "food" || zone.type === "water") return true;
@@ -128,9 +135,10 @@ export class ProductionSystem {
   }
 
   /**
-   * Obtiene el tipo de recurso que produce una zona.
-   * @param zone Zona a consultar.
-   * @returns El tipo de recurso o null si no produce nada.
+   * Gets the resource type produced by a zone.
+   *
+   * @param zone - Zone to query
+   * @returns Resource type or null if zone doesn't produce anything
    */
   private getProductionResource(zone: MutableZone): ResourceType | null {
     if (zone.type === "food" || zone.metadata?.productionResource === "food") {
@@ -146,9 +154,10 @@ export class ProductionSystem {
   }
 
   /**
-   * Asegura que la zona tenga trabajadores asignados hasta su capacidad máxima.
-   * Busca agentes ociosos a través del `LifeCycleSystem`.
-   * @param zone Zona a gestionar.
+   * Ensures zone has workers assigned up to maximum capacity.
+   * Searches for idle agents through `LifeCycleSystem`.
+   *
+   * @param zone - Zone to manage
    */
   private ensureAssignments(zone: MutableZone): void {
     const assigned = this.assignments.get(zone.id) ?? new Set<string>();
@@ -164,15 +173,17 @@ export class ProductionSystem {
     const agents = this.lifeCycleSystem.getAgents();
     for (const agent of agents) {
       if (assigned.size >= required) break;
-      if (agent.isDead) continue; // Skip dead agents
+      if (agent.isDead) continue;
       if (this.isAgentBusy(agent.id)) continue;
       assigned.add(agent.id);
     }
   }
 
   /**
-   * Verifica si un agente ya está trabajando en alguna zona.
-   * @param agentId ID del agente.
+   * Checks if an agent is already working in any zone.
+   *
+   * @param agentId - Agent identifier
+   * @returns True if agent is busy
    */
   private isAgentBusy(agentId: string): boolean {
     for (const workers of this.assignments.values()) {
@@ -182,11 +193,12 @@ export class ProductionSystem {
   }
 
   /**
-   * Ejecuta la lógica de producción para una zona específica.
-   * Calcula la cantidad producida basada en trabajadores y rendimiento base.
-   * Puede modificar el terreno visualmente (ej. convertir pasto en tierra de cultivo).
-   * @param zone Zona de producción.
-   * @param now Timestamp actual.
+   * Executes production logic for a specific zone.
+   * Calculates produced amount based on workers and base yield.
+   * May modify terrain visually (e.g., convert grass to farmland).
+   *
+   * @param zone - Production zone
+   * @param now - Current timestamp
    */
   private processProduction(zone: MutableZone, now: number): void {
     const startTime = performance.now();
@@ -261,11 +273,12 @@ export class ProductionSystem {
   }
 
   /**
-   * Deposita los recursos producidos en el almacenamiento de la zona.
-   * Si no existe un almacenamiento, crea uno nuevo.
-   * @param zoneId ID de la zona.
-   * @param resource Tipo de recurso.
-   * @param amount Cantidad a depositar.
+   * Deposits produced resources to zone storage.
+   * Creates new storage if none exists.
+   *
+   * @param zoneId - Zone identifier
+   * @param resource - Resource type
+   * @param amount - Amount to deposit
    */
   private depositToZoneStockpile(
     zoneId: string,

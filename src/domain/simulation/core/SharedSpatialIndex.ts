@@ -33,7 +33,6 @@ export class SharedSpatialIndex {
   private positionPool: Array<{ x: number; y: number }> = [];
   private readonly POSITION_POOL_SIZE = 200;
 
-  // Result pooling to reduce GC pressure from queryRadius
   private resultPool: Array<
     Array<{ entity: string; distance: number; type: EntityType }>
   > = [];
