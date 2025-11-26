@@ -52,7 +52,7 @@ export function evaluateConstructionGoals(
           zone.bounds.height === 0
         ) {
           logger.debug(
-            `🚧 Construcción ${t.zoneId} sin geometría válida, omitiendo`,
+            `🚧 Construction ${t.zoneId} has invalid geometry, skipping`,
             { entityId: aiState.entityId },
           );
           return null;

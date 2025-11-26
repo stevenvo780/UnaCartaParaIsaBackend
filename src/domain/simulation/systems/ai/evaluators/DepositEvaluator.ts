@@ -43,7 +43,7 @@ export function evaluateDepositGoals(
       const currentZoneId = ctx.getCurrentZone(aiState.entityId);
       if (currentZoneId) {
         logger.debug(
-          `🔄 Auto-depósito sugerido (${(loadRatio * 100).toFixed(0)}% capacidad)`,
+          `🔄 Auto-deposit suggested (${(loadRatio * 100).toFixed(0)}% capacity)`,
           {
             entityId: aiState.entityId,
             load,

@@ -1135,6 +1135,47 @@ export class SimulationRunner {
       },
     );
 
+    // Handle dropped inventory when agent dies - deposit to their household
+    simulationEvents.on(
+      GameEventNames.INVENTORY_DROPPED,
+      (data: {
+        agentId: string;
+        position?: { x: number; y: number };
+        inventory: { wood: number; stone: number; food: number; water: number };
+        timestamp: number;
+      }) => {
+        // Try to find the agent's household and deposit resources there
+        const household = this.householdSystem.getHouseFor(data.agentId);
+        if (household) {
+          const deposited = this.householdSystem.depositToHousehold(
+            household.id,
+            data.inventory,
+          );
+          if (deposited) {
+            logger.info(
+              `📦 Inventory from deceased agent ${data.agentId} deposited to household ${household.id}`,
+            );
+          }
+        } else {
+          // If no household, try to find any household with space
+          const freeHouse = this.householdSystem.findFreeHouse();
+          if (freeHouse) {
+            this.householdSystem.depositToHousehold(
+              freeHouse.zoneId,
+              data.inventory,
+            );
+            logger.info(
+              `📦 Inventory from deceased agent ${data.agentId} deposited to community storage ${freeHouse.zoneId}`,
+            );
+          } else {
+            logger.warn(
+              `⚠️ No household found for dropped inventory from agent ${data.agentId} - resources lost`,
+            );
+          }
+        }
+      },
+    );
+
     simulationEvents.on(
       GameEventNames.AGENT_RESPAWNED,
       (data: { agentId: string; timestamp: number }) => {
