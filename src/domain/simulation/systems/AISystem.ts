@@ -456,8 +456,15 @@ export class AISystem extends EventEmitter {
 
     const radius = 400 + Math.random() * 600; // encourage broader exploration
     const angle = Math.random() * Math.PI * 2;
-    const targetX = pos.x + Math.cos(angle) * radius;
-    const targetY = pos.y + Math.sin(angle) * radius;
+    let targetX = pos.x + Math.cos(angle) * radius;
+    let targetY = pos.y + Math.sin(angle) * radius;
+
+    // Clamp to world bounds
+    const mapWidth = this.gameState.worldSize?.width || 2000;
+    const mapHeight = this.gameState.worldSize?.height || 2000;
+    targetX = Math.max(50, Math.min(mapWidth - 50, targetX));
+    targetY = Math.max(50, Math.min(mapHeight - 50, targetY));
+
     this._movementSystem.moveToPoint(agentId, targetX, targetY);
     logger.debug(`🚶 [AI] Fallback explore triggered for ${agentId}`);
   }
@@ -522,14 +529,22 @@ export class AISystem extends EventEmitter {
     const pos = this.getAgentPosition(agentId);
     if (!pos) return null;
 
+    // Calculate target with bounds checking
+    const mapWidth = this.gameState.worldSize?.width || 2000;
+    const mapHeight = this.gameState.worldSize?.height || 2000;
+    let targetX = pos.x + (Math.random() - 0.5) * 200;
+    let targetY = pos.y + (Math.random() - 0.5) * 200;
+    targetX = Math.max(50, Math.min(mapWidth - 50, targetX));
+    targetY = Math.max(50, Math.min(mapHeight - 50, targetY));
+
     // Return a simple exploration goal
     return {
       id: `explore-${agentId}-${Date.now()}`,
       type: "explore",
       priority: 0.5,
       targetPosition: {
-        x: pos.x + (Math.random() - 0.5) * 200,
-        y: pos.y + (Math.random() - 0.5) * 200,
+        x: targetX,
+        y: targetY,
       },
       createdAt: getFrameTime(),
     };
@@ -787,6 +802,7 @@ export class AISystem extends EventEmitter {
         priority: 10,
         targetZoneId: foodZone.id,
         createdAt: now,
+        data: { need: "hunger" },
       };
     }
 
@@ -826,6 +842,7 @@ export class AISystem extends EventEmitter {
         priority: 10,
         targetZoneId: waterZone.id,
         createdAt: now,
+        data: { need: "thirst" },
       };
     }
 
@@ -851,6 +868,7 @@ export class AISystem extends EventEmitter {
         priority: 10,
         targetZoneId: restZone.id,
         createdAt: now,
+        data: { need: "energy" },
       };
     }
 
@@ -955,7 +973,10 @@ export class AISystem extends EventEmitter {
       return;
     }
 
-    if (goal.type === "deposit" && zoneId) {
+    if (
+      (goal.type === "deposit" || goal.data?.workType === "deposit") &&
+      zoneId
+    ) {
       this.tryDepositResources(entityId, zoneId);
       aiState.currentGoal = null;
       return;
@@ -1127,6 +1148,13 @@ export class AISystem extends EventEmitter {
         aiState.currentGoal = null;
         aiState.currentAction = null;
       }
+      // Stop any ongoing AI-controlled movement when player takes over
+      if (
+        this._movementSystem &&
+        typeof this._movementSystem.stopMovement === "function"
+      ) {
+        this._movementSystem.stopMovement(entityId);
+      }
     } else {
       this.playerControlledAgents.delete(entityId);
     }
@@ -1222,6 +1250,22 @@ export class AISystem extends EventEmitter {
       return false;
     }
 
+    // Check satisfy_* goals FIRST - if need is already satisfied, goal is complete
+    // regardless of whether agent has reached target zone/position
+    if (goal.type.startsWith("satisfy_")) {
+      const needType = goal.data?.need as string;
+      if (needType && this.needsSystem) {
+        const needs = this.needsSystem.getNeeds(agentId);
+        if (needs) {
+          const needValue = needs[needType as keyof typeof needs] as number;
+          // If need is well-satisfied (>70), goal is complete
+          if (needValue > 70) {
+            return true;
+          }
+        }
+      }
+    }
+
     // C10: Validate position/zone before marking goal complete
     const ARRIVAL_THRESHOLD = 50;
 
@@ -1258,19 +1302,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    if (goal.type.startsWith("satisfy_")) {
-      const needType = goal.data?.need as string;
-      if (needType && this.needsSystem) {
-        const needs = this.needsSystem.getNeeds(agentId);
-        if (needs) {
-          const needValue = needs[needType as keyof typeof needs] as number;
-          if (needValue > 70) {
-            return true;
-          }
-        }
-      }
-    }
-
     if (goal.targetZoneId) {
       const zone = this.gameState.zones?.find(
         (z) => z.id === goal.targetZoneId,
@@ -1301,7 +1332,10 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    if (goal.type.startsWith("assist_") && goal.data?.targetAgentId) {
+    if (
+      (goal.type === "assist" || goal.type.startsWith("assist_")) &&
+      goal.data?.targetAgentId
+    ) {
       const targetId = goal.data.targetAgentId as string;
       const targetAgent = this.gameState.agents?.find((a) => a.id === targetId);
       if (!targetAgent) {
@@ -1364,8 +1398,8 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Attack goals: verify target (agent or animal) is still alive
-    if (goal.type === "attack" && goal.targetId) {
+    // Attack/combat goals: verify target (agent or animal) is still alive
+    if ((goal.type === "attack" || goal.type === "combat") && goal.targetId) {
       // Check if target is an agent
       const targetAgent = this.gameState.agents?.find(
         (a) => a.id === goal.targetId,
@@ -1383,7 +1417,10 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    if (goal.type.startsWith("assist_") && goal.data?.targetAgentId) {
+    if (
+      (goal.type === "assist" || goal.type.startsWith("assist_")) &&
+      goal.data?.targetAgentId
+    ) {
       const targetId = goal.data.targetAgentId as string;
       const targetAgent = this.gameState.agents?.find((a) => a.id === targetId);
       if (!targetAgent || targetAgent.isDead) {
@@ -1396,18 +1433,8 @@ export class AISystem extends EventEmitter {
       return true;
     }
 
-    if (goal.type.startsWith("satisfy_")) {
-      const needType = goal.data?.need as string;
-      if (needType && this.needsSystem) {
-        const needs = this.needsSystem.getNeeds(agentId);
-        if (needs) {
-          const needValue = needs[needType as keyof typeof needs] as number;
-          if (needValue > 85) {
-            return true;
-          }
-        }
-      }
-    }
+    // Note: satisfy_* goals with high need values (>85) are NOT invalid - they are COMPLETED
+    // The completion check is handled in isGoalCompleted, not here
 
     return false;
   }
@@ -1527,6 +1554,17 @@ export class AISystem extends EventEmitter {
           actionType: "work",
           agentId,
           targetZoneId: goal.targetZoneId,
+          data: goal.data,
+          timestamp,
+        };
+
+      case "craft":
+        // Craft goals require moving to crafting zone first
+        // The actual crafting happens in notifyEntityArrived when agent reaches the zone
+        return {
+          actionType: "move",
+          agentId,
+          targetZoneId: goal.targetZoneId,
           timestamp,
         };
 
@@ -1550,6 +1588,8 @@ export class AISystem extends EventEmitter {
         return null;
 
       case "attack":
+      case "combat":
+        // Both attack and combat goals use the same logic
         if (goal.targetId && goal.targetPosition) {
           const agentPos = this.getAgentPosition(agentId);
           if (agentPos) {
@@ -1587,6 +1627,43 @@ export class AISystem extends EventEmitter {
         }
         return null;
 
+      case "social":
+        // Social goals (like starting a quest) - move to social zone or target
+        if (goal.targetZoneId) {
+          return {
+            actionType: "move",
+            agentId,
+            targetZoneId: goal.targetZoneId,
+            timestamp,
+          };
+        }
+        if (goal.targetPosition) {
+          return {
+            actionType: "move",
+            agentId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+          };
+        }
+        // If no target specified, find nearest social/gathering zone
+        {
+          const socialZone = this.gameState.zones?.find(
+            (z) =>
+              z.type === "social" ||
+              z.type === "gathering" ||
+              z.type === "market",
+          );
+          if (socialZone) {
+            return {
+              actionType: "move",
+              agentId,
+              targetZoneId: socialZone.id,
+              timestamp,
+            };
+          }
+        }
+        return null;
+
       case "explore": {
         if (
           goal.data?.targetRegionX !== undefined &&
@@ -1612,12 +1689,20 @@ export class AISystem extends EventEmitter {
         }
         const currentPos = this.getAgentPosition(agentId);
         if (currentPos) {
+          // Calculate target with bounds checking
+          const mapWidth = this.gameState.worldSize?.width || 2000;
+          const mapHeight = this.gameState.worldSize?.height || 2000;
+          let targetX = currentPos.x + (Math.random() - 0.5) * 200;
+          let targetY = currentPos.y + (Math.random() - 0.5) * 200;
+          targetX = Math.max(50, Math.min(mapWidth - 50, targetX));
+          targetY = Math.max(50, Math.min(mapHeight - 50, targetY));
+
           return {
             actionType: "move",
             agentId,
             targetPosition: {
-              x: currentPos.x + (Math.random() - 0.5) * 200,
-              y: currentPos.y + (Math.random() - 0.5) * 200,
+              x: targetX,
+              y: targetY,
             },
             timestamp,
           };
@@ -1680,6 +1765,14 @@ export class AISystem extends EventEmitter {
       aiState.offDuty = offDuty;
       if (offDuty) {
         aiState.currentGoal = null;
+        aiState.currentAction = null;
+        // Stop any ongoing movement when going off-duty
+        if (
+          this._movementSystem &&
+          typeof this._movementSystem.stopMovement === "function"
+        ) {
+          this._movementSystem.stopMovement(agentId);
+        }
       }
     }
   }
@@ -2007,6 +2100,24 @@ export class AISystem extends EventEmitter {
           actionType: "idle",
           success: true,
         });
+        break;
+      case "attack":
+        // Attack execution is handled by CombatSystem based on proximity
+        // The AI goal just ensures the agent moves toward the target
+        // Mark as complete since the intent to attack is registered
+        simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+          agentId: action.agentId,
+          actionType: "attack",
+          success: true,
+          data: { targetId: action.targetId },
+        });
+        break;
+      case "socialize":
+        // Social interactions handled via notifyEntityArrived when reaching target zone
+        // For immediate interaction, mark as pending and let arrival trigger completion
+        if (action.targetZoneId) {
+          this._movementSystem?.moveToZone(action.agentId, action.targetZoneId);
+        }
         break;
       default:
         break;

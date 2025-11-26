@@ -411,100 +411,8 @@ export class SimulationRunner {
 
     this.setupEventListeners();
 
-    if (this.state.agents.length === 0) {
-      const isa = this.lifeCycleSystem.spawnAgent({
-        id: "isa",
-        name: "Isa",
-        sex: "female",
-        ageYears: 25,
-        lifeStage: "adult",
-        generation: 0,
-        immortal: true,
-        traits: {
-          cooperation: 0.8,
-          aggression: 0.2,
-          diligence: 0.7,
-          curiosity: 0.9,
-        },
-      });
-
-      const stev = this.lifeCycleSystem.spawnAgent({
-        id: "stev",
-        name: "Stev",
-        sex: "male",
-        ageYears: 27,
-        lifeStage: "adult",
-        generation: 0,
-        immortal: true,
-        traits: {
-          cooperation: 0.7,
-          aggression: 0.3,
-          diligence: 0.8,
-          curiosity: 0.8,
-        },
-      });
-
-      this._genealogySystem.registerBirth(isa, undefined, undefined);
-      this._genealogySystem.registerBirth(stev, undefined, undefined);
-
-      const childNames = [
-        { name: "Luna", sex: "female" as const },
-        { name: "Sol", sex: "male" as const },
-        { name: "Estrella", sex: "female" as const },
-        { name: "Cielo", sex: "male" as const },
-        { name: "Mar", sex: "female" as const },
-        { name: "Rio", sex: "male" as const },
-      ];
-
-      for (const childData of childNames) {
-        try {
-          const child = this.lifeCycleSystem.spawnAgent({
-            name: childData.name,
-            sex: childData.sex,
-            ageYears: 5,
-            lifeStage: "child",
-            generation: 1,
-            parents: {
-              father: stev.id,
-              mother: isa.id,
-            },
-          });
-
-          this._genealogySystem.registerBirth(child, stev.id, isa.id);
-        } catch (error) {
-          logger.error(`Failed to spawn child ${childData.name}:`, error);
-        }
-      }
-
-      logger.info(
-        `👨‍👩‍👧‍👦 Family initialized: Isa & Stev with ${childNames.length} children`,
-      );
-
-      this.createInitialInfrastructure();
-
-      for (const agent of this.state.agents) {
-        try {
-          if (!agent.position) {
-            agent.position = {
-              x: (this.state.worldSize?.width ?? 128) * 16,
-              y: (this.state.worldSize?.height ?? 128) * 16,
-            };
-          }
-          if (!this.movementSystem.hasMovementState(agent.id)) {
-            this.movementSystem.initializeEntityMovement(
-              agent.id,
-              agent.position,
-            );
-          }
-        } catch (err) {
-          logger.warn(
-            `Failed to initialize movement state for agent ${agent.id}: ${
-              err instanceof Error ? err.message : String(err)
-            }`,
-          );
-        }
-      }
-    }
+    // Ensure initial family exists (idempotent check)
+    await this.ensureInitialFamily();
 
     logger.info("📅 SimulationRunner: Registering systems in scheduler...");
     this.registerSystemsInScheduler();
@@ -911,6 +819,139 @@ export class SimulationRunner {
    * Creates initial basic infrastructure for the family to begin.
    * Includes family house, workbench, storage zone, rest zone, and kitchen.
    */
+  /**
+   * Ensures that the initial family (Isa, Stev, and children) exists in the simulation.
+   * This method is idempotent: it checks for the existence of each agent before spawning.
+   */
+  private async ensureInitialFamily(): Promise<void> {
+    // 1. Ensure Parents (Isa & Stev)
+    let isa = this.state.agents.find((a) => a.id === "isa");
+    if (!isa) {
+      isa = this.lifeCycleSystem.spawnAgent({
+        id: "isa",
+        name: "Isa",
+        sex: "female",
+        ageYears: 25,
+        lifeStage: "adult",
+        generation: 0,
+        immortal: true,
+        traits: {
+          cooperation: 0.8,
+          aggression: 0.2,
+          diligence: 0.7,
+          curiosity: 0.9,
+        },
+      });
+      this._genealogySystem.registerBirth(isa, undefined, undefined);
+      logger.info("👩 Created missing parent: Isa");
+    }
+
+    let stev = this.state.agents.find((a) => a.id === "stev");
+    if (!stev) {
+      stev = this.lifeCycleSystem.spawnAgent({
+        id: "stev",
+        name: "Stev",
+        sex: "male",
+        ageYears: 27,
+        lifeStage: "adult",
+        generation: 0,
+        immortal: true,
+        traits: {
+          cooperation: 0.7,
+          aggression: 0.3,
+          diligence: 0.8,
+          curiosity: 0.8,
+        },
+      });
+      this._genealogySystem.registerBirth(stev, undefined, undefined);
+      logger.info("👨 Created missing parent: Stev");
+    }
+
+    // 2. Ensure Children
+    const childNames = [
+      { name: "Luna", sex: "female" as const },
+      { name: "Sol", sex: "male" as const },
+      { name: "Estrella", sex: "female" as const },
+      { name: "Cielo", sex: "male" as const },
+      { name: "Mar", sex: "female" as const },
+      { name: "Rio", sex: "male" as const },
+    ];
+
+    let childrenCreated = 0;
+    for (const childData of childNames) {
+      // Check if a child with this name already exists
+      // Note: This is a heuristic. Ideally we'd have fixed IDs for children too,
+      // but for now checking by name/parentage is safer than duplicating.
+      const existingChild = this.state.agents.find(
+        (a) =>
+          a.name === childData.name &&
+          a.generation === 1 &&
+          (a.parents?.father === "stev" || a.parents?.mother === "isa"),
+      );
+
+      if (!existingChild) {
+        try {
+          const child = this.lifeCycleSystem.spawnAgent({
+            name: childData.name,
+            sex: childData.sex,
+            ageYears: 5,
+            lifeStage: "child",
+            generation: 1,
+            parents: {
+              father: stev.id,
+              mother: isa.id,
+            },
+          });
+
+          this._genealogySystem.registerBirth(child, stev.id, isa.id);
+          childrenCreated++;
+        } catch (error) {
+          logger.error(`Failed to spawn child ${childData.name}:`, error);
+        }
+      }
+    }
+
+    if (childrenCreated > 0) {
+      logger.info(
+        `👶 Created ${childrenCreated} missing children for Isa & Stev`,
+      );
+    }
+
+    // 3. Ensure Infrastructure
+    // We call this if we created any parent, OR if it's a fresh world (no zones)
+    if (
+      !this.state.zones ||
+      this.state.zones.length === 0 ||
+      childrenCreated > 0
+    ) {
+      this.createInitialInfrastructure();
+    }
+
+    // 4. Ensure Movement/Position for all agents
+    for (const agent of this.state.agents) {
+      try {
+        if (!agent.position) {
+          agent.position = {
+            x: (this.state.worldSize?.width ?? 128) * 16,
+            y: (this.state.worldSize?.height ?? 128) * 16,
+          };
+        }
+        if (!this.movementSystem.hasMovementState(agent.id)) {
+          this.movementSystem.initializeEntityMovement(
+            agent.id,
+            agent.position,
+          );
+        }
+      } catch (err) {
+        logger.warn(
+          `Failed to initialize movement state for agent ${agent.id}: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
+      }
+    }
+  }
+
   private createInitialInfrastructure(): void {
     const baseX = 100;
     const baseY = 100;
