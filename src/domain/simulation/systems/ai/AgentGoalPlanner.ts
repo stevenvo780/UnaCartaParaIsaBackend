@@ -72,6 +72,11 @@ export interface AgentGoalPlannerDeps {
     | "night"
     | "deep_night";
   getEntityPosition?: (id: string) => { x: number; y: number } | null;
+  // GPU-accelerated nearby agent search
+  getNearbyAgentsWithDistances?: (
+    entityId: string,
+    radius: number,
+  ) => Array<{ id: string; distance: number }>;
 }
 
 /**
@@ -154,6 +159,7 @@ export function planGoals(
       getEntityStats: deps.getEntityStats,
       selectBestZone: selectZone,
       getZoneIdsByType: zoneIdsByType,
+      getNearbyAgentsWithDistances: deps.getNearbyAgentsWithDistances,
     };
     const assistGoals = evaluateAssist(assistDeps, aiState);
     goals.push(...assistGoals);

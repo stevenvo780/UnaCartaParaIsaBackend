@@ -13,6 +13,11 @@ export interface AssistContext {
     zoneType: string,
   ) => string | null;
   getZoneIdsByType: (types: string[]) => string[];
+  // Optional: pre-computed nearby agents with distances (GPU-accelerated)
+  getNearbyAgentsWithDistances?: (
+    entityId: string,
+    radius: number,
+  ) => Array<{ id: string; distance: number }>;
 }
 
 export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
@@ -23,45 +28,85 @@ export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
     const helpRadius = 220 + personality.extraversion * 100;
     const empathyFactor = personality.agreeableness;
 
-    const ids = ctx.getAllActiveAgentIds();
-    const myPos = ctx.getEntityPosition(aiState.entityId);
-    if (!myPos) return [];
-
     let best: {
       id: string;
       d: number;
       need: "water" | "food" | "medical" | "rest" | "social";
     } | null = null;
 
-    for (const id of ids) {
-      if (id === aiState.entityId) continue;
-      const pos = ctx.getEntityPosition(id);
-      if (!pos) continue;
-      const d = Math.hypot(pos.x - myPos.x, pos.y - myPos.y);
-      if (d > helpRadius) continue;
+    // Use GPU-accelerated nearby search if available
+    if (ctx.getNearbyAgentsWithDistances) {
+      const nearbyAgents = ctx.getNearbyAgentsWithDistances(aiState.entityId, helpRadius);
+      
+      for (const { id, distance } of nearbyAgents) {
+        const needs = ctx.getNeeds(id);
+        const stats = ctx.getEntityStats(id) || {};
+        let need: "water" | "food" | "medical" | "rest" | "social" | null = null;
 
-      const needs = ctx.getNeeds(id);
-      const stats = ctx.getEntityStats(id) || {};
-      let need: "water" | "food" | "medical" | "rest" | "social" | null = null;
+        const sensitivity = 1.0 - empathyFactor * 0.3;
 
-      const sensitivity = 1.0 - empathyFactor * 0.3;
+        if ((stats.wounds ?? 0) > 20 * sensitivity) need = "medical";
+        else if ((needs?.thirst ?? 100) < 25 / sensitivity) need = "water";
+        else if ((needs?.hunger ?? 100) < 25 / sensitivity) need = "food";
+        else if (
+          (needs?.energy ?? 100) < 25 / sensitivity ||
+          (stats.morale ?? 100) < 35 / sensitivity
+        )
+          need = "rest";
+        else if (
+          (needs?.social ?? 100) < 30 / sensitivity ||
+          (needs?.fun ?? 100) < 30 / sensitivity
+        )
+          need = "social";
 
-      if ((stats.wounds ?? 0) > 20 * sensitivity) need = "medical";
-      else if ((needs?.thirst ?? 100) < 25 / sensitivity) need = "water";
-      else if ((needs?.hunger ?? 100) < 25 / sensitivity) need = "food";
-      else if (
-        (needs?.energy ?? 100) < 25 / sensitivity ||
-        (stats.morale ?? 100) < 35 / sensitivity
-      )
-        need = "rest";
-      else if (
-        (needs?.social ?? 100) < 30 / sensitivity ||
-        (needs?.fun ?? 100) < 30 / sensitivity
-      )
-        need = "social";
+        if (need && (!best || distance < best.d)) {
+          best = { id, d: distance, need };
+        }
+      }
+    } else {
+      // Fallback: manual distance calculation
+      const ids = ctx.getAllActiveAgentIds();
+      const myPos = ctx.getEntityPosition(aiState.entityId);
+      if (!myPos) return [];
 
-      if (need && (!best || d < best.d)) best = { id, d, need } as const;
+      const helpRadiusSq = helpRadius * helpRadius;
+
+      for (const id of ids) {
+        if (id === aiState.entityId) continue;
+        
+        const pos = ctx.getEntityPosition(id);
+        if (!pos) continue;
+        
+        const dx = pos.x - myPos.x;
+        const dy = pos.y - myPos.y;
+        const dSq = dx * dx + dy * dy;
+        if (dSq > helpRadiusSq) continue;
+
+        const d = Math.sqrt(dSq);
+        const needs = ctx.getNeeds(id);
+        const stats = ctx.getEntityStats(id) || {};
+        let need: "water" | "food" | "medical" | "rest" | "social" | null = null;
+
+        const sensitivity = 1.0 - empathyFactor * 0.3;
+
+        if ((stats.wounds ?? 0) > 20 * sensitivity) need = "medical";
+        else if ((needs?.thirst ?? 100) < 25 / sensitivity) need = "water";
+        else if ((needs?.hunger ?? 100) < 25 / sensitivity) need = "food";
+        else if (
+          (needs?.energy ?? 100) < 25 / sensitivity ||
+          (stats.morale ?? 100) < 35 / sensitivity
+        )
+          need = "rest";
+        else if (
+          (needs?.social ?? 100) < 30 / sensitivity ||
+          (needs?.fun ?? 100) < 30 / sensitivity
+        )
+          need = "social";
+
+        if (need && (!best || d < best.d)) best = { id, d, need } as const;
+      }
     }
+
     if (!best) return [];
 
     let targetZone: string | null = null;

@@ -36,6 +36,7 @@ import type { MovementSystem } from "./MovementSystem";
 import type { QuestSystem } from "./QuestSystem";
 import type { TimeSystem, TimeOfDay } from "./TimeSystem";
 import type { EntityIndex } from "../core/EntityIndex";
+import type { GPUComputeService } from "../core/GPUComputeService";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
 import { getFrameTime } from "../../../shared/FrameTime";
@@ -87,6 +88,7 @@ export class AISystem extends EventEmitter {
   private questSystem?: QuestSystem;
   private timeSystem?: TimeSystem;
   private entityIndex?: EntityIndex;
+  private gpuService?: GPUComputeService;
 
   private agentIndex = 0;
 
@@ -104,6 +106,11 @@ export class AISystem extends EventEmitter {
   private activeAgentIdsCache: string[] | null = null;
   private lastCacheInvalidation = 0;
   private readonly CACHE_INVALIDATION_INTERVAL = 1000;
+
+  // Resource search optimization: cache nearest resources by type
+  private nearestResourceCache = new Map<string, { resource: { id: string; x: number; y: number } | null; timestamp: number }>();
+  private readonly RESOURCE_CACHE_TTL = 2000; // 2s cache for resource searches
+  private readonly MAX_RESOURCE_SEARCH_RADIUS = 500; // Limit search radius for performance
 
   private readonly MAX_DECISION_TIME_MS = 5;
 
@@ -164,10 +171,14 @@ export class AISystem extends EventEmitter {
     @inject(TYPES.EntityIndex)
     @optional()
     entityIndex?: EntityIndex,
+    @inject(TYPES.GPUComputeService)
+    @optional()
+    gpuService?: GPUComputeService,
   ) {
     super();
     this.gameState = gameState;
     this.entityIndex = entityIndex;
+    this.gpuService = gpuService;
     this.config = {
       updateIntervalMs: 1000,
       enablePersonality: true,
@@ -327,6 +338,13 @@ export class AISystem extends EventEmitter {
     this.zoneCache.clear();
     this.craftingZoneCache = null;
     this.activeAgentIdsCache = null;
+    // Clear old resource cache entries (keep recent ones)
+    const now = Date.now();
+    for (const [key, value] of this.nearestResourceCache.entries()) {
+      if (now - value.timestamp > this.RESOURCE_CACHE_TTL) {
+        this.nearestResourceCache.delete(key);
+      }
+    }
   }
 
   /**
@@ -618,6 +636,8 @@ export class AISystem extends EventEmitter {
           "morning") as TimeOfDay["phase"];
       },
       getEntityPosition: (id: string) => this.getAgentPosition(id) || null,
+      getNearbyAgentsWithDistances: (entityId: string, radius: number) =>
+        this.getNearbyAgentsWithDistancesGPU(entityId, radius),
     };
 
     const goals = planGoals(deps, aiState, now);
@@ -1542,17 +1562,27 @@ export class AISystem extends EventEmitter {
     entityId: string,
     resourceType: string,
   ): { id: string; x: number; y: number } | null {
+    // Check cache first
+    const cacheKey = `${entityId}_${resourceType}`;
+    const cached = this.nearestResourceCache.get(cacheKey);
+    const now = Date.now();
+    if (cached && now - cached.timestamp < this.RESOURCE_CACHE_TTL) {
+      return cached.resource;
+    }
+
+    const agent =
+      this.entityIndex?.getAgent(entityId) ??
+      this.gameState.agents?.find((a) => a.id === entityId);
+    if (!agent?.position) return null;
+
+    const maxRadiusSq = this.MAX_RESOURCE_SEARCH_RADIUS * this.MAX_RESOURCE_SEARCH_RADIUS;
+    let nearest: { id: string; x: number; y: number } | null = null;
+    let minDistance = maxRadiusSq; // Start with max radius as threshold
+
     if (this.worldResourceSystem) {
       const resources = this.worldResourceSystem.getResourcesByType(
         resourceType as WorldResourceType,
       );
-      if (resources.length === 0) return null;
-
-      const agent = this.gameState.agents?.find((a) => a.id === entityId);
-      if (!agent?.position) return null;
-
-      let nearest: { id: string; x: number; y: number } | null = null;
-      let minDistance = Infinity;
 
       for (const resource of resources) {
         if (resource.state !== "pristine") continue;
@@ -1561,6 +1591,16 @@ export class AISystem extends EventEmitter {
         const dy = resource.position.y - agent.position.y;
         const dist = dx * dx + dy * dy;
 
+        // Early exit if we find something close enough (within 100 units)
+        if (dist < 10000) {
+          nearest = {
+            id: resource.id,
+            x: resource.position.x,
+            y: resource.position.y,
+          };
+          break;
+        }
+
         if (dist < minDistance) {
           minDistance = dist;
           nearest = {
@@ -1570,24 +1610,24 @@ export class AISystem extends EventEmitter {
           };
         }
       }
+    } else if (this.gameState.worldResources) {
+      for (const resource of Object.values(this.gameState.worldResources)) {
+        if (resource.type !== resourceType || resource.state !== "pristine") continue;
 
-      return nearest;
-    }
-
-    if (!this.gameState.worldResources) return null;
-
-    const agent = this.gameState.agents?.find((a) => a.id === entityId);
-    if (!agent?.position) return null;
-
-    let nearest: { id: string; x: number; y: number } | null = null;
-    let minDistance = Infinity;
-
-    for (const resource of Object.values(this.gameState.worldResources)) {
-      if (resource.type === resourceType && resource.state === "pristine") {
         const dx = resource.position.x - agent.position.x;
         const dy = resource.position.y - agent.position.y;
         const dist = dx * dx + dy * dy;
 
+        // Early exit if we find something close enough
+        if (dist < 10000) {
+          nearest = {
+            id: resource.id,
+            x: resource.position.x,
+            y: resource.position.y,
+          };
+          break;
+        }
+
         if (dist < minDistance) {
           minDistance = dist;
           nearest = {
@@ -1599,7 +1639,90 @@ export class AISystem extends EventEmitter {
       }
     }
 
+    // Cache result
+    this.nearestResourceCache.set(cacheKey, { resource: nearest, timestamp: now });
     return nearest;
+  }
+
+  /**
+   * GPU-accelerated search for nearby agents within a radius.
+   * Uses pairwise distance computation on GPU when there are many agents.
+   * 
+   * @param entityId - The entity to search from
+   * @param radius - Search radius
+   * @returns Array of nearby agents with their distances, sorted by distance
+   */
+  private getNearbyAgentsWithDistancesGPU(
+    entityId: string,
+    radius: number,
+  ): Array<{ id: string; distance: number }> {
+    const myAgent =
+      this.entityIndex?.getAgent(entityId) ??
+      this.gameState.agents?.find((a) => a.id === entityId);
+    if (!myAgent?.position) return [];
+
+    const activeAgents = this.gameState.agents.filter(
+      (a) => !a.isDead && a.id !== entityId && a.position,
+    );
+
+    if (activeAgents.length === 0) return [];
+
+    const GPU_THRESHOLD = 30; // Use GPU when checking 30+ agents
+    const radiusSq = radius * radius;
+
+    // Use GPU for large agent counts
+    if (this.gpuService?.isGPUAvailable() && activeAgents.length >= GPU_THRESHOLD) {
+      // Prepare position data for GPU
+      const positions = new Float32Array(activeAgents.length * 2);
+      
+      for (let i = 0; i < activeAgents.length; i++) {
+        const agent = activeAgents[i];
+        positions[i * 2] = agent.position!.x;
+        positions[i * 2 + 1] = agent.position!.y;
+      }
+
+      // Compute distances using GPU batch operation
+      const distancesSq = this.gpuService.computeDistancesBatch(
+        myAgent.position.x,
+        myAgent.position.y,
+        positions,
+      );
+
+      // Filter and collect nearby agents
+      const nearby: Array<{ id: string; distance: number }> = [];
+      for (let i = 0; i < activeAgents.length; i++) {
+        const distSq = distancesSq[i];
+        if (distSq <= radiusSq) {
+          nearby.push({
+            id: activeAgents[i].id,
+            distance: Math.sqrt(distSq),
+          });
+        }
+      }
+
+      // Sort by distance
+      nearby.sort((a, b) => a.distance - b.distance);
+      return nearby;
+    }
+
+    // CPU fallback for small agent counts
+    const nearby: Array<{ id: string; distance: number }> = [];
+    
+    for (const agent of activeAgents) {
+      const dx = agent.position!.x - myAgent.position.x;
+      const dy = agent.position!.y - myAgent.position.y;
+      const distSq = dx * dx + dy * dy;
+      
+      if (distSq <= radiusSq) {
+        nearby.push({
+          id: agent.id,
+          distance: Math.sqrt(distSq),
+        });
+      }
+    }
+
+    nearby.sort((a, b) => a.distance - b.distance);
+    return nearby;
   }
 
   private handleActionComplete(payload: {

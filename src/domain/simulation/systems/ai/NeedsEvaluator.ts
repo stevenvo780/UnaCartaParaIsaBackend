@@ -94,17 +94,11 @@ export function evaluateCriticalNeeds(
   if (needs.hunger < hungerThreshold) {
     let foodTarget = null;
     if (deps.findNearestResource) {
-      foodTarget = deps.findNearestResource(aiState.entityId, "wheat_crop");
-
-      if (!foodTarget) {
-        foodTarget = deps.findNearestResource(aiState.entityId, "berry_bush");
-      }
-
-      if (!foodTarget) {
-        foodTarget = deps.findNearestResource(
-          aiState.entityId,
-          "mushroom_patch",
-        );
+      // Try food types in priority order, stop at first found
+      const foodTypes = ["wheat_crop", "berry_bush", "mushroom_patch"];
+      for (const foodType of foodTypes) {
+        foodTarget = deps.findNearestResource(aiState.entityId, foodType);
+        if (foodTarget) break; // Early exit when food found
       }
     }
 
