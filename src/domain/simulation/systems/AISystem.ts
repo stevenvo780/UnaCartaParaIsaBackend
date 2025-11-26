@@ -356,12 +356,6 @@ export class AISystem extends EventEmitter {
       if (action) {
         aiState.currentAction = action;
 
-        if (action.actionType === "idle" && this.needsSystem) {
-          this.needsSystem.setEntityAction(agentId, "idle");
-        } else if (this.needsSystem) {
-          this.needsSystem.setEntityAction(agentId, action.actionType);
-        }
-
         logger.debug(
           `🏃 [AI] Agent ${agentId} action: ${action.actionType} -> ${action.targetId || JSON.stringify(action.targetPosition) || action.targetZoneId || "none"}`,
         );

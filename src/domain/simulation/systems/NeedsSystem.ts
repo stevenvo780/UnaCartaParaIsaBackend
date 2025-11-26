@@ -63,6 +63,8 @@ export class NeedsSystem extends EventEmitter {
   private entityIndex?: EntityIndex;
   private spatialIndex?: SharedSpatialIndex;
 
+  private entityActions = new Map<string, string>();
+
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
     @unmanaged() config?: Partial<NeedsConfig>,
@@ -135,6 +137,10 @@ export class NeedsSystem extends EventEmitter {
     if (systems.socialSystem) this.socialSystem = systems.socialSystem;
   }
 
+  public setEntityAction(entityId: string, actionType: string): void {
+    this.entityActions.set(entityId, actionType);
+  }
+
   /**
    * Updates the needs system, processing all entity needs.
    * Uses batch processing if entity count >= BATCH_THRESHOLD.
@@ -169,70 +175,8 @@ export class NeedsSystem extends EventEmitter {
   private updateTraditional(dtSeconds: number, _now: number): void {
     const startTime = performance.now();
     for (const [entityId, needs] of this.entityNeeds.entries()) {
-      this.applyNeedDecay(needs, dtSeconds, entityId);
-      this.handleZoneBenefits(entityId, needs, dtSeconds);
-      this.applySocialMoraleBoost(entityId, needs);
-
-      if (this.config.crossEffectsEnabled) {
-        this.applyCrossEffects(needs);
-      }
-
-      this.checkEmergencyNeeds(entityId, needs);
-
-      if (this.checkForDeath(entityId, needs)) {
-        continue;
-      }
-
-      this.emitNeedEvents(entityId, needs);
-    }
-    const duration = performance.now() - startTime;
-    performanceMonitor.recordSubsystemExecution(
-      "NeedsSystem",
-      "updateTraditional",
-      duration,
-    );
-  }
-      const divineMult = this.divineFavorSystem
-        ? (() => {
-            const favorObj = this.divineFavorSystem!.getFavor(entityId);
-            return favorObj ? 1 - favorObj.favor * 0.3 : 1.0;
-          })()
-        : 1.0;
-      const finalMultiplier = ageMult * divineMult;
-
-      needs.hunger = Math.max(
-        0,
-        needs.hunger - this.config.decayRates.hunger * finalMultiplier * dtSeconds,
-      );
-      needs.thirst = Math.max(
-        0,
-        needs.thirst - this.config.decayRates.thirst * finalMultiplier * dtSeconds,
-      );
-      needs.energy = Math.max(
-        0,
-        needs.energy - this.config.decayRates.energy * finalMultiplier * dtSeconds,
-      );
-      needs.hygiene = Math.max(
-        0,
-        needs.hygiene - this.config.decayRates.hygiene * finalMultiplier * dtSeconds,
-      );
-      needs.social = Math.max(
-        0,
-        needs.social - this.config.decayRates.social * finalMultiplier * dtSeconds,
-      );
-      needs.fun = Math.max(
-        0,
-        needs.fun - this.config.decayRates.fun * finalMultiplier * dtSeconds,
-      );
-      needs.mentalHealth = Math.max(
-        0,
-        needs.mentalHealth - this.config.decayRates.mentalHealth * finalMultiplier * dtSeconds,
-      );
-
-      if (this.config.crossEffectsEnabled) {
-        this.applyCrossEffects(needs);
-      }
-
+      const action = this.entityActions.get(entityId) || "idle";
+      this.applyNeedDecay(needs, dtSeconds, entityId, action);
       this.handleZoneBenefits(entityId, needs, dtSeconds);
       this.applySocialMoraleBoost(entityId, needs);
       this.checkEmergencyNeeds(entityId, needs);
@@ -358,6 +302,7 @@ export class NeedsSystem extends EventEmitter {
         case "bed":
         case "shelter":
         case "house": {
+          // Much faster recovery in proper shelter (approx 4x faster than base)
           const energyBonus = 50 * deltaSeconds * multiplier;
           needs.energy = Math.min(100, needs.energy + energyBonus);
           break;
@@ -555,6 +500,7 @@ export class NeedsSystem extends EventEmitter {
     needs: EntityNeedsData,
     deltaSeconds: number,
     entityId: string,
+    action: string = "idle",
   ): void {
     const ageMultiplier = this.getAgeDecayMultiplier(entityId);
     const divineModifiers = this.applyDivineFavorModifiers(
@@ -563,12 +509,22 @@ export class NeedsSystem extends EventEmitter {
     );
 
     for (const [need, rate] of Object.entries(divineModifiers)) {
-      const finalRate = rate * ageMultiplier;
+      let finalRate = rate * ageMultiplier;
+
+      // Action-based modifiers
+      if (need === "energy") {
+        if (action === "sleep") finalRate = -5.0; // Recover energy fast
+        else if (action === "rest") finalRate = -2.0; // Recover energy
+        else if (action === "idle") finalRate = -0.5; // Recover energy slowly
+        else if (action === "work") finalRate *= 1.5; // Work consumes more energy
+        else if (action === "run") finalRate *= 2.0;
+      }
+
       const key = need as keyof EntityNeedsData;
       if (typeof needs[key] === "number") {
         needs[key] = Math.max(
           0,
-          (needs[key] as number) - finalRate * deltaSeconds,
+          Math.min(100, (needs[key] as number) - finalRate * deltaSeconds),
         );
       }
     }

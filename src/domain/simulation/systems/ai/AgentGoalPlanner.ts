@@ -99,6 +99,7 @@ export interface AgentGoalPlannerDeps {
 export function planGoals(
   deps: AgentGoalPlannerDeps,
   aiState: AIState,
+  now: number,
   minPriority: number = 0.3,
 ): AIGoal[] {
   const goals: AIGoal[] = [];
@@ -267,7 +268,7 @@ export function planGoals(
       getAgentInventory: deps.getAgentInventory,
       getEntityPosition: positionFor,
     };
-    const expansionGoals = evaluateExpansionGoals(expansionDeps, aiState);
+    const expansionGoals = evaluateExpansionGoals(expansionDeps, aiState, now);
     goals.push(...expansionGoals);
   }
 

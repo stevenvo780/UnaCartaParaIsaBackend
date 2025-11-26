@@ -9,11 +9,16 @@ export interface ExpansionContext {
   getEntityPosition: (id: string) => { x: number; y: number } | null;
 }
 
+const DEFAULT_INVENTORY_CAPACITY = 50;
+const GATHER_TRIGGER_THRESHOLD = 0.8;
+const GATHER_GOAL_DURATION_MS = 10000;
+const EXPANSION_GOAL_DURATION_MS = 15000;
+
 export function evaluateExpansionGoals(
   ctx: ExpansionContext,
   aiState: AIState,
+  now: number,
 ): AIGoal[] {
-  const now = Date.now();
   const goals: AIGoal[] = [];
   const inv = ctx.getAgentInventory(aiState.entityId);
 
@@ -22,9 +27,9 @@ export function evaluateExpansionGoals(
   // This simulates "stockpiling" behavior
   if (inv) {
     const totalItems = (inv.wood || 0) + (inv.stone || 0) + (inv.food || 0);
-    const capacity = 50; // Default capacity assumption
+    const capacity = DEFAULT_INVENTORY_CAPACITY;
 
-    if (totalItems < capacity * 0.8) {
+    if (totalItems < capacity * GATHER_TRIGGER_THRESHOLD) {
       // 80% capacity trigger
       // Encourages gathering wood and stone for future building
       goals.push({
@@ -36,7 +41,7 @@ export function evaluateExpansionGoals(
           targetResource: "wood", // Default to wood as it's primary building material
         },
         createdAt: now,
-        expiresAt: now + 10000,
+        expiresAt: now + GATHER_GOAL_DURATION_MS,
       });
     }
   }
@@ -63,7 +68,7 @@ export function evaluateExpansionGoals(
         targetRegionY: RandomUtils.floatRange(0, mapHeight),
       },
       createdAt: now,
-      expiresAt: now + 15000,
+      expiresAt: now + EXPANSION_GOAL_DURATION_MS,
     });
   }
 
