@@ -152,6 +152,8 @@ export class EconomySystem {
     let totalSalaries = 0;
 
     for (const agent of this.state.agents) {
+      if (agent.isDead) continue; // Skip dead agents
+
       const role = this.roleSystem.getAgentRole(agent.id);
       if (!role || !role.roleType) continue;
 

@@ -255,7 +255,7 @@ export class RoleSystem extends EventEmitter {
   }
 
   private getAdultAgents(): AgentProfile[] {
-    return this.gameState.agents || [];
+    return (this.gameState.agents || []).filter((a) => !a.isDead);
   }
 
   public assignBestRole(agent: AgentProfile): RoleAssignment {

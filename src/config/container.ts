@@ -67,7 +67,6 @@ import { SharedSpatialIndex } from "../domain/simulation/core/SharedSpatialIndex
 import { TerrainSystem } from "../domain/simulation/systems/TerrainSystem";
 import { GPUComputeService } from "../domain/simulation/core/GPUComputeService";
 import { GPUBatchQueryService } from "../domain/simulation/core/GPUBatchQueryService";
-import { StorageService } from "../infrastructure/services/storage/storageService";
 
 export const container = new Container();
 
@@ -269,9 +268,4 @@ container
     const worldHeight = gameState.worldSize?.height ?? 2000;
     return new SharedSpatialIndex(worldWidth, worldHeight, 70);
   })
-  .inSingletonScope();
-
-container
-  .bind<StorageService>(TYPES.StorageService)
-  .to(StorageService)
   .inSingletonScope();

@@ -243,8 +243,7 @@ export type SimulationCommand =
     command: "SET_WEATHER";
     payload?: { weatherType: string };
   }
-  | { type: "FORCE_EMERGENCE_EVALUATION"; timestamp?: number }
-  | { type: "SAVE_GAME"; payload?: { type: "auto" | "manual" } };
+  | { type: "FORCE_EMERGENCE_EVALUATION"; timestamp?: number };
 
 export interface SimulationConfig {
   tickIntervalMs: number;

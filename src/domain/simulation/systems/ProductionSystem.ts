@@ -164,6 +164,7 @@ export class ProductionSystem {
     const agents = this.lifeCycleSystem.getAgents();
     for (const agent of agents) {
       if (assigned.size >= required) break;
+      if (agent.isDead) continue; // Skip dead agents
       if (this.isAgentBusy(agent.id)) continue;
       assigned.add(agent.id);
     }
