@@ -1754,7 +1754,6 @@ export class SimulationRunner {
       this.tickHandle = undefined;
     }
 
-    // Shutdown worker thread
     if (this.snapshotWorker) {
       this.snapshotWorker.postMessage({ type: "shutdown" });
       this.snapshotWorker.terminate();
@@ -1771,8 +1770,11 @@ export class SimulationRunner {
    */
   enqueueCommand(command: SimulationCommand): boolean {
     if (this.commands.length >= this.maxCommandQueue) {
-      this.emitter.emit("commandRejected", command);
-      return false;
+      const dropped = this.commands.shift();
+      logger.warn(
+        `Command queue full (${this.maxCommandQueue}), dropping oldest command: ${dropped?.type}`,
+      );
+      this.emitter.emit("commandDropped", dropped);
     }
     this.commands.push(command);
     return true;

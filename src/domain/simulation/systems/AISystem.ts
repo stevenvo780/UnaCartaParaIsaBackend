@@ -245,7 +245,6 @@ export class AISystem extends EventEmitter {
   public update(_deltaTimeMs: number): void {
     const now = getFrameTime();
 
-    // Only update if enough time has passed according to config
     if (now - this.lastUpdate < this.config.updateIntervalMs) {
       return;
     }
@@ -327,6 +326,7 @@ export class AISystem extends EventEmitter {
     if (!aiState.currentGoal) {
       const startTime = performance.now();
       const newGoal = this.makeDecision(agentId, aiState, now);
+      aiState.lastDecisionTime = now; // C2: Update decision time
       const duration = performance.now() - startTime;
 
       this._decisionTimeTotalMs += duration;
@@ -351,7 +351,6 @@ export class AISystem extends EventEmitter {
           timestamp: now,
         });
       } else {
-        // Fallback: if no goal was selected, trigger exploratory movement
         this.maybeFallbackExplore(agentId, aiState);
       }
     }
@@ -391,10 +390,10 @@ export class AISystem extends EventEmitter {
 
     const inventoryEmpty = inventory
       ? (inventory.food || 0) +
-          (inventory.water || 0) +
-          (inventory.wood || 0) +
-          (inventory.stone || 0) ===
-        0
+      (inventory.water || 0) +
+      (inventory.wood || 0) +
+      (inventory.stone || 0) ===
+      0
       : true;
     const needsSatisfied = needs
       ? needs.hunger > 70 && needs.thirst > 70 && needs.energy > 70
@@ -444,7 +443,6 @@ export class AISystem extends EventEmitter {
       agentId,
     );
 
-    // Warn if decision took too long
     if (d0 > this.MAX_DECISION_TIME_MS) {
       logger.debug(
         `⚠️ [AI] Decision for agent ${agentId} took ${d0.toFixed(2)}ms (>${this.MAX_DECISION_TIME_MS}ms threshold)`,
@@ -473,7 +471,6 @@ export class AISystem extends EventEmitter {
     const pos = this.getAgentPosition(agentId);
     if (!pos) return null;
 
-    // Return a simple exploration goal
     return {
       id: `explore-${agentId}-${Date.now()}`,
       type: "explore",
@@ -564,11 +561,11 @@ export class AISystem extends EventEmitter {
         const entity = this.gameState.entities?.find((e) => e.id === id);
         return entity?.stats
           ? {
-              health: entity.stats.health ?? 100,
-              stamina: entity.stats.stamina ?? 100,
-              attack: entity.stats.attack ?? 10,
-              defense: entity.stats.defense ?? 0,
-            }
+            health: entity.stats.health ?? 100,
+            stamina: entity.stats.stamina ?? 100,
+            attack: entity.stats.attack ?? 10,
+            defense: entity.stats.defense ?? 0,
+          }
           : null;
       },
       getPreferredResourceForRole: (role: string) =>
@@ -629,10 +626,10 @@ export class AISystem extends EventEmitter {
       socialPreference: isChild
         ? "extroverted"
         : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 >
-            0.6
+          0.6
           ? "extroverted"
           : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 <
-              0.4
+            0.4
             ? "introverted"
             : "balanced",
       workEthic: isChild
@@ -640,7 +637,7 @@ export class AISystem extends EventEmitter {
         : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 > 0.7
           ? "workaholic"
           : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 <
-              0.3
+            0.3
             ? "lazy"
             : "balanced",
       explorationType:
@@ -726,7 +723,6 @@ export class AISystem extends EventEmitter {
     if (zoneId) {
       aiState.memory.visitedZones.add(zoneId);
 
-      // Update home zone if this is a rest/shelter zone and agent doesn't have a home
       if (!aiState.memory.homeZoneId && this.householdSystem) {
         const zone = this.gameState.zones?.find((z) => z.id === zoneId);
         if (
@@ -1054,360 +1050,337 @@ export class AISystem extends EventEmitter {
 
     const GOAL_TIMEOUT_MS = 60000;
     if (now - goal.createdAt > GOAL_TIMEOUT_MS) {
-      return false;
-    }
-
-    if (goal.type.startsWith("satisfy_")) {
-      const needType = goal.data?.need as string;
-      if (needType && this.needsSystem) {
-        const needs = this.needsSystem.getNeeds(agentId);
-        if (needs) {
-          const needValue = needs[needType as keyof typeof needs] as number;
-          if (needValue > 70) {
-            return true;
-          }
-        }
-      }
-    }
-
-    if (goal.targetZoneId) {
-      const zone = this.gameState.zones?.find(
-        (z) => z.id === goal.targetZoneId,
-      );
-      if (!zone) {
+    } else if (this.gameState.worldResources) {
+      const resource = this.gameState.worldResources[goal.targetId];
+      if (!resource || resource.state !== "pristine") {
         return false;
       }
     }
+  }
 
-    if (goal.targetId && goal.data?.resourceType) {
-      const resourceTypeStr = goal.data.resourceType as string;
-      if (this.worldResourceSystem) {
-        if (isWorldResourceType(resourceTypeStr)) {
-          const resources =
-            this.worldResourceSystem.getResourcesByType(resourceTypeStr);
-          const targetResource = resources.find((r) => r.id === goal.targetId);
-          if (!targetResource || targetResource.state !== "pristine") {
-            return false;
-          }
-        } else {
-          return false;
-        }
-      } else if (this.gameState.worldResources) {
-        const resource = this.gameState.worldResources[goal.targetId];
-        if (!resource || resource.state !== "pristine") {
-          return false;
-        }
-      }
-    }
-
-    if (goal.type.startsWith("assist_") && goal.data?.targetAgentId) {
-      const targetId = goal.data.targetAgentId as string;
-      const targetAgent = this.gameState.agents?.find((a) => a.id === targetId);
-      if (!targetAgent) {
-        return false;
-      }
-
-      // If it's a social assist, check if needs are satisfied
-      if (goal.data.resourceType === "social" && this.needsSystem) {
-        const needs = this.needsSystem.getNeeds(targetId);
-        if (needs && (needs.social > 70 || needs.fun > 70)) {
-          return true;
-        }
-      }
-    }
-
+  if(goal.type.startsWith("assist_") && goal.data?.targetAgentId) {
+  const targetId = goal.data.targetAgentId as string;
+  const targetAgent = this.gameState.agents?.find((a) => a.id === targetId);
+  if (!targetAgent) {
     return false;
+  }
+
+  if (goal.data.resourceType === "social" && this.needsSystem) {
+    const needs = this.needsSystem.getNeeds(targetId);
+    if (needs && (needs.social > 70 || needs.fun > 70)) {
+      return true;
+    }
+  }
+}
+
+return false;
   }
 
   private isGoalInvalid(goal: AIGoal, agentId: string): boolean {
-    if (goal.expiresAt && Date.now() > goal.expiresAt) {
-      return true;
-    }
-
-    if (goal.targetZoneId) {
-      const zone = this.gameState.zones?.find(
-        (z) => z.id === goal.targetZoneId,
-      );
-      if (!zone) {
-        return true;
-      }
-    }
-
-    if (goal.targetId && goal.data?.resourceType) {
-      const resourceTypeStr = goal.data.resourceType as string;
-      if (this.worldResourceSystem) {
-        if (isWorldResourceType(resourceTypeStr)) {
-          const resources =
-            this.worldResourceSystem.getResourcesByType(resourceTypeStr);
-          const targetResource = resources.find((r) => r.id === goal.targetId);
-          if (!targetResource || targetResource.state !== "pristine") {
-            return true;
-          }
-        } else {
-          return true;
-        }
-      } else if (this.gameState.worldResources) {
-        const resource = this.gameState.worldResources[goal.targetId];
-        if (!resource || resource.state !== "pristine") {
-          return true;
-        }
-      }
-    }
-
-    if (goal.type.startsWith("assist_") && goal.data?.targetAgentId) {
-      const targetId = goal.data.targetAgentId as string;
-      const targetAgent = this.gameState.agents?.find((a) => a.id === targetId);
-      if (!targetAgent) {
-        return true;
-      }
-    }
-
-    const agent = this.gameState.agents?.find((a) => a.id === agentId);
-    if (!agent) {
-      return true;
-    }
-
-    if (goal.type.startsWith("satisfy_")) {
-      const needType = goal.data?.need as string;
-      if (needType && this.needsSystem) {
-        const needs = this.needsSystem.getNeeds(agentId);
-        if (needs) {
-          const needValue = needs[needType as keyof typeof needs] as number;
-          if (needValue > 85) {
-            return true;
-          }
-        }
-      }
-    }
-
-    return false;
+  if (goal.expiresAt && Date.now() > goal.expiresAt) {
+    return true;
   }
+
+  if (goal.targetZoneId) {
+    const zone = this.gameState.zones?.find(
+      (z) => z.id === goal.targetZoneId,
+    );
+    if (!zone) {
+      return true;
+    }
+  }
+
+  if (goal.targetId && goal.data?.resourceType) {
+    const resourceTypeStr = goal.data.resourceType as string;
+    if (this.worldResourceSystem) {
+      if (isWorldResourceType(resourceTypeStr)) {
+        const resources =
+          this.worldResourceSystem.getResourcesByType(resourceTypeStr);
+        const targetResource = resources.find((r) => r.id === goal.targetId);
+        if (!targetResource || targetResource.state !== "pristine") {
+          return true;
+        }
+      } else {
+        return true;
+      }
+    } else if (this.gameState.worldResources) {
+      const resource = this.gameState.worldResources[goal.targetId];
+      if (!resource || resource.state !== "pristine") {
+        return true;
+      }
+    }
+  }
+
+  if (goal.type.startsWith("assist_") && goal.data?.targetAgentId) {
+    const targetId = goal.data.targetAgentId as string;
+    const targetAgent = this.gameState.agents?.find((a) => a.id === targetId);
+    if (!targetAgent) {
+      return true;
+    }
+  }
+
+  const agent = this.gameState.agents?.find((a) => a.id === agentId);
+  if (!agent) {
+    return true;
+  }
+
+  if (goal.type.startsWith("satisfy_")) {
+    const needType = goal.data?.need as string;
+    if (needType && this.needsSystem) {
+      const needs = this.needsSystem.getNeeds(agentId);
+      if (needs) {
+        const needValue = needs[needType as keyof typeof needs] as number;
+        if (needValue > 85) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+  // C10 Helper: Get current zone for agent
+  private getCurrentZoneForAgent(agentId: string): string | undefined {
+  const agent = this.gameState.agents.find(a => a.id === agentId);
+  if (!agent?.position) return undefined;
+
+  const zone = this.gameState.zones.find(z =>
+    agent.position &&
+    agent.position.x >= z.bounds.x &&
+    agent.position.x <= z.bounds.x + z.bounds.width &&
+    agent.position.y >= z.bounds.y &&
+    agent.position.y <= z.bounds.y + z.bounds.height
+  );
+
+  return zone?.id;
+}
 
   private completeGoal(aiState: AIState, _agentId: string): void {
-    aiState.currentGoal = null;
-    aiState.lastDecisionTime = getFrameTime();
-    this._goalsCompleted++;
-  }
+  aiState.currentGoal = null;
+  aiState.lastDecisionTime = getFrameTime();
+  this._goalsCompleted++;
+}
 
   private failGoal(aiState: AIState, _agentId: string): void {
-    if (aiState.currentGoal?.targetZoneId) {
-      const zoneId = aiState.currentGoal.targetZoneId;
-      const fails = aiState.memory.failedAttempts?.get(zoneId) || 0;
-      aiState.memory.failedAttempts?.set(zoneId, fails + 1);
-    }
-    aiState.currentGoal = null;
-    aiState.lastDecisionTime = getFrameTime();
-    this._goalsFailed++;
+  if(aiState.currentGoal?.targetZoneId) {
+  const zoneId = aiState.currentGoal.targetZoneId;
+  const fails = aiState.memory.failedAttempts?.get(zoneId) || 0;
+  aiState.memory.failedAttempts?.set(zoneId, fails + 1);
+}
+aiState.currentGoal = null;
+aiState.lastDecisionTime = getFrameTime();
+this._goalsFailed++;
   }
 
   private planAction(agentId: string, goal: AIGoal): AgentAction | null {
-    const timestamp = Date.now();
+  const timestamp = Date.now();
 
-    switch (goal.type) {
-      case "satisfy_need":
-        if (goal.targetId && goal.targetPosition) {
-          const agentPos = this.getAgentPosition(agentId);
-          if (agentPos) {
-            const dist = Math.hypot(
-              agentPos.x - goal.targetPosition.x,
-              agentPos.y - goal.targetPosition.y,
-            );
-            if (dist < 60) {
-              return {
-                actionType: "harvest",
-                agentId,
-                targetId: goal.targetId,
-                targetPosition: goal.targetPosition,
-                timestamp,
-              };
-            }
+  switch (goal.type) {
+    case "satisfy_need":
+      if (goal.targetId && goal.targetPosition) {
+        const agentPos = this.getAgentPosition(agentId);
+        if (agentPos) {
+          const dist = Math.hypot(
+            agentPos.x - goal.targetPosition.x,
+            agentPos.y - goal.targetPosition.y,
+          );
+          if (dist < 60) {
             return {
-              actionType: "move",
+              actionType: "harvest",
               agentId,
+              targetId: goal.targetId,
               targetPosition: goal.targetPosition,
               timestamp,
             };
           }
-        }
-        if (goal.targetZoneId) {
           return {
             actionType: "move",
             agentId,
-            targetZoneId: goal.targetZoneId,
+            targetPosition: goal.targetPosition,
             timestamp,
           };
         }
-        if (goal.data?.need === "energy") {
-          return {
-            actionType: "idle",
-            agentId,
-            timestamp,
-          };
-        }
-        return null;
-
-      case "satisfy_hunger":
-      case "satisfy_thirst":
-      case "satisfy_energy":
-      case "satisfy_social":
-      case "satisfy_fun":
+      }
+      if (goal.targetZoneId) {
         return {
           actionType: "move",
           agentId,
           targetZoneId: goal.targetZoneId,
+          timestamp,
+        };
+      }
+      if (goal.data?.need === "energy") {
+        return {
+          actionType: "idle",
+          agentId,
+          timestamp,
+        };
+      }
+      return null;
+
+    case "satisfy_hunger":
+    case "satisfy_thirst":
+    case "satisfy_energy":
+    case "satisfy_social":
+    case "satisfy_fun":
+      return {
+        actionType: "move",
+        agentId,
+        targetZoneId: goal.targetZoneId,
+        targetPosition: goal.targetPosition,
+        timestamp,
+      };
+
+    case "gather":
+      if (goal.targetId && goal.targetPosition) {
+        const agentPos = this.getAgentPosition(agentId);
+        if (agentPos) {
+          const dist = Math.hypot(
+            agentPos.x - goal.targetPosition.x,
+            agentPos.y - goal.targetPosition.y,
+          );
+          if (dist < 60) {
+            return {
+              actionType: "harvest",
+              agentId,
+              targetId: goal.targetId,
+              targetPosition: goal.targetPosition,
+              timestamp,
+            };
+          }
+          return {
+            actionType: "move",
+            agentId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+          };
+        }
+      }
+      return {
+        actionType: "work",
+        agentId,
+        targetZoneId: goal.targetZoneId,
+        timestamp,
+      };
+
+    case "work":
+      return {
+        actionType: "work",
+        agentId,
+        targetZoneId: goal.targetZoneId,
+        timestamp,
+      };
+
+    case "deposit":
+      return {
+        actionType: "move",
+        agentId,
+        targetZoneId: goal.targetZoneId,
+        timestamp,
+      };
+
+    case "flee":
+      if (goal.targetPosition) {
+        return {
+          actionType: "move",
+          agentId,
           targetPosition: goal.targetPosition,
           timestamp,
         };
+      }
+      return null;
 
-      case "gather":
-        if (goal.targetId && goal.targetPosition) {
-          const agentPos = this.getAgentPosition(agentId);
-          if (agentPos) {
-            const dist = Math.hypot(
-              agentPos.x - goal.targetPosition.x,
-              agentPos.y - goal.targetPosition.y,
-            );
-            if (dist < 60) {
-              return {
-                actionType: "harvest",
-                agentId,
-                targetId: goal.targetId,
-                targetPosition: goal.targetPosition,
-                timestamp,
-              };
-            }
+    case "attack":
+      if (goal.targetId && goal.targetPosition) {
+        const agentPos = this.getAgentPosition(agentId);
+        if (agentPos) {
+          const dist = Math.hypot(
+            agentPos.x - goal.targetPosition.x,
+            agentPos.y - goal.targetPosition.y,
+          );
+          if (dist < 40) {
             return {
-              actionType: "move",
+              actionType: "attack",
               agentId,
-              targetPosition: goal.targetPosition,
+              targetId: goal.targetId,
               timestamp,
             };
           }
+          return {
+            actionType: "move",
+            agentId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+          };
         }
+      }
+      return null;
+
+    case "assist":
+      if (goal.targetZoneId) {
         return {
-          actionType: "work",
+          actionType: "socialize",
           agentId,
           targetZoneId: goal.targetZoneId,
+          targetId: goal.data?.targetAgentId as string | undefined,
           timestamp,
         };
+      }
+      return null;
 
-      case "work":
-        return {
-          actionType: "work",
-          agentId,
-          targetZoneId: goal.targetZoneId,
-          timestamp,
-        };
-
-      case "deposit":
+    case "explore": {
+      if (
+        goal.data?.targetRegionX !== undefined &&
+        goal.data?.targetRegionY !== undefined
+      ) {
         return {
           actionType: "move",
           agentId,
-          targetZoneId: goal.targetZoneId,
+          targetPosition: {
+            x: goal.data.targetRegionX as number,
+            y: goal.data.targetRegionY as number,
+          },
           timestamp,
         };
-
-      case "flee":
-        if (goal.targetPosition) {
-          return {
-            actionType: "move",
-            agentId,
-            targetPosition: goal.targetPosition,
-            timestamp,
-          };
-        }
-        return null;
-
-      case "attack":
-        if (goal.targetId && goal.targetPosition) {
-          const agentPos = this.getAgentPosition(agentId);
-          if (agentPos) {
-            const dist = Math.hypot(
-              agentPos.x - goal.targetPosition.x,
-              agentPos.y - goal.targetPosition.y,
-            );
-            if (dist < 40) {
-              return {
-                actionType: "attack",
-                agentId,
-                targetId: goal.targetId,
-                timestamp,
-              };
-            }
-            return {
-              actionType: "move",
-              agentId,
-              targetPosition: goal.targetPosition,
-              timestamp,
-            };
-          }
-        }
-        return null;
-
-      case "assist":
-        if (goal.targetZoneId) {
-          return {
-            actionType: "socialize",
-            agentId,
-            targetZoneId: goal.targetZoneId,
-            targetId: goal.data?.targetAgentId as string | undefined,
-            timestamp,
-          };
-        }
-        return null;
-
-      case "explore": {
-        if (
-          goal.data?.targetRegionX !== undefined &&
-          goal.data?.targetRegionY !== undefined
-        ) {
-          return {
-            actionType: "move",
-            agentId,
-            targetPosition: {
-              x: goal.data.targetRegionX as number,
-              y: goal.data.targetRegionY as number,
-            },
-            timestamp,
-          };
-        }
-        if (goal.targetPosition) {
-          return {
-            actionType: "move",
-            agentId,
-            targetPosition: goal.targetPosition,
-            timestamp,
-          };
-        }
-        const currentPos = this.getAgentPosition(agentId);
-        if (currentPos) {
-          return {
-            actionType: "move",
-            agentId,
-            targetPosition: {
-              x: currentPos.x + (Math.random() - 0.5) * 200,
-              y: currentPos.y + (Math.random() - 0.5) * 200,
-            },
-            timestamp,
-          };
-        }
-        return null;
       }
-
-      default:
-        return null;
+      if (goal.targetPosition) {
+        return {
+          actionType: "move",
+          agentId,
+          targetPosition: goal.targetPosition,
+          timestamp,
+        };
+      }
+      const currentPos = this.getAgentPosition(agentId);
+      if (currentPos) {
+        return {
+          actionType: "move",
+          agentId,
+          targetPosition: {
+            x: currentPos.x + (Math.random() - 0.5) * 200,
+            y: currentPos.y + (Math.random() - 0.5) * 200,
+          },
+          timestamp,
+        };
+      }
+      return null;
     }
+
+    default:
+      return null;
   }
+}
 
   private getAgentPosition(agentId: string): { x: number; y: number } | null {
-    const agent =
-      this.entityIndex?.getAgent(agentId) ??
-      this.gameState.agents.find((a) => a.id === agentId);
-    if (agent?.position) {
-      return { x: agent.position.x, y: agent.position.y };
-    }
-    return null;
+  const agent =
+    this.entityIndex?.getAgent(agentId) ??
+    this.gameState.agents.find((a) => a.id === agentId);
+  if (agent?.position) {
+    return { x: agent.position.x, y: agent.position.y };
   }
+  return null;
+}
 
   /**
    * Gets the AI state for an agent.
@@ -1416,8 +1389,8 @@ export class AISystem extends EventEmitter {
    * @returns AI state or undefined if not found
    */
   public getAIState(agentId: string): AIState | undefined {
-    return this.aiStates.get(agentId);
-  }
+  return this.aiStates.get(agentId);
+}
 
   /**
    * Gets all AI states.
@@ -1425,8 +1398,8 @@ export class AISystem extends EventEmitter {
    * @returns Array of all AI states
    */
   public getAllAIStates(): AIState[] {
-    return Array.from(this.aiStates.values());
-  }
+  return Array.from(this.aiStates.values());
+}
 
   /**
    * Sets whether an agent is off-duty (skips AI processing).
@@ -1435,14 +1408,14 @@ export class AISystem extends EventEmitter {
    * @param offDuty - Whether the agent is off-duty
    */
   public setAgentOffDuty(agentId: string, offDuty: boolean): void {
-    const aiState = this.aiStates.get(agentId);
-    if (aiState) {
-      aiState.offDuty = offDuty;
-      if (offDuty) {
-        aiState.currentGoal = null;
-      }
+  const aiState = this.aiStates.get(agentId);
+  if(aiState) {
+    aiState.offDuty = offDuty;
+    if (offDuty) {
+      aiState.currentGoal = null;
     }
   }
+}
 
   /**
    * Forces goal reevaluation for an agent on the next update.
@@ -1450,12 +1423,12 @@ export class AISystem extends EventEmitter {
    * @param agentId - Agent identifier
    */
   public forceGoalReevaluation(agentId: string): void {
-    const aiState = this.aiStates.get(agentId);
-    if (aiState) {
-      aiState.currentGoal = null;
-      aiState.currentAction = null;
-    }
+  const aiState = this.aiStates.get(agentId);
+  if(aiState) {
+    aiState.currentGoal = null;
+    aiState.currentAction = null;
   }
+}
 
   /**
    * Fails the current goal for an agent.
@@ -1463,49 +1436,21 @@ export class AISystem extends EventEmitter {
    * @param agentId - Agent identifier
    */
   public failCurrentGoal(agentId: string): void {
-    const aiState = this.aiStates.get(agentId);
-    if (aiState) {
-      this.failGoal(aiState, agentId);
-    }
+  const aiState = this.aiStates.get(agentId);
+  if(aiState) {
+    this.failGoal(aiState, agentId);
   }
+}
 
   private findNearestResourceForEntity(
-    entityId: string,
-    resourceType: string,
-  ): { id: string; x: number; y: number } | null {
-    if (this.worldResourceSystem) {
-      const resources = this.worldResourceSystem.getResourcesByType(
-        resourceType as WorldResourceType,
-      );
-      if (resources.length === 0) return null;
-
-      const agent = this.gameState.agents?.find((a) => a.id === entityId);
-      if (!agent?.position) return null;
-
-      let nearest: { id: string; x: number; y: number } | null = null;
-      let minDistance = Infinity;
-
-      for (const resource of resources) {
-        if (resource.state !== "pristine") continue;
-
-        const dx = resource.position.x - agent.position.x;
-        const dy = resource.position.y - agent.position.y;
-        const dist = dx * dx + dy * dy;
-
-        if (dist < minDistance) {
-          minDistance = dist;
-          nearest = {
-            id: resource.id,
-            x: resource.position.x,
-            y: resource.position.y,
-          };
-        }
-      }
-
-      return nearest;
-    }
-
-    if (!this.gameState.worldResources) return null;
+  entityId: string,
+  resourceType: string,
+): { id: string; x: number; y: number } | null {
+  if (this.worldResourceSystem) {
+    const resources = this.worldResourceSystem.getResourcesByType(
+      resourceType as WorldResourceType,
+    );
+    if (resources.length === 0) return null;
 
     const agent = this.gameState.agents?.find((a) => a.id === entityId);
     if (!agent?.position) return null;
@@ -1513,153 +1458,181 @@ export class AISystem extends EventEmitter {
     let nearest: { id: string; x: number; y: number } | null = null;
     let minDistance = Infinity;
 
-    for (const resource of Object.values(this.gameState.worldResources)) {
-      if (resource.type === resourceType && resource.state === "pristine") {
-        const dx = resource.position.x - agent.position.x;
-        const dy = resource.position.y - agent.position.y;
-        const dist = dx * dx + dy * dy;
+    for (const resource of resources) {
+      if (resource.state !== "pristine") continue;
 
-        if (dist < minDistance) {
-          minDistance = dist;
-          nearest = {
-            id: resource.id,
-            x: resource.position.x,
-            y: resource.position.y,
-          };
-        }
+      const dx = resource.position.x - agent.position.x;
+      const dy = resource.position.y - agent.position.y;
+      const dist = dx * dx + dy * dy;
+
+      if (dist < minDistance) {
+        minDistance = dist;
+        nearest = {
+          id: resource.id,
+          x: resource.position.x,
+          y: resource.position.y,
+        };
       }
     }
 
     return nearest;
   }
 
-  private handleActionComplete(payload: {
-    agentId: string;
-    success: boolean;
-    actionType?: string;
-    data?: Record<string, unknown>;
-  }): void {
-    const aiState = this.aiStates.get(payload.agentId);
-    if (aiState) {
-      aiState.currentAction = null;
-      if (payload.success) {
-        // If action was work, check if task is actually completed
-        if (
-          payload.actionType === "work" &&
-          payload.data &&
-          typeof payload.data.taskId === "string"
-        ) {
-          const task = this.taskSystem?.getTask(payload.data.taskId);
-          if (task && !task.completed) {
-            // Task not done, don't complete goal yet
-            return;
-          }
-        }
-        this.completeGoal(aiState, payload.agentId);
-      } else {
-        this.failGoal(aiState, payload.agentId);
+  if (!this.gameState.worldResources) return null;
+
+  const agent = this.gameState.agents?.find((a) => a.id === entityId);
+  if (!agent?.position) return null;
+
+  let nearest: { id: string; x: number; y: number } | null = null;
+  let minDistance = Infinity;
+
+  for (const resource of Object.values(this.gameState.worldResources)) {
+    if (resource.type === resourceType && resource.state === "pristine") {
+      const dx = resource.position.x - agent.position.x;
+      const dy = resource.position.y - agent.position.y;
+      const dist = dx * dx + dy * dy;
+
+      if (dist < minDistance) {
+        minDistance = dist;
+        nearest = {
+          id: resource.id,
+          x: resource.position.x,
+          y: resource.position.y,
+        };
       }
     }
   }
 
-  private executeAction(action: AgentAction): void {
-    if (!this._movementSystem) return;
+  return nearest;
+}
 
-    switch (action.actionType) {
-      case "move":
-        if (action.targetZoneId) {
-          if (
-            this._movementSystem.isMovingToZone(
-              action.agentId,
-              action.targetZoneId,
-            )
-          ) {
-            return;
-          }
-          this._movementSystem.moveToZone(action.agentId, action.targetZoneId);
-        } else if (action.targetPosition) {
-          if (
-            this._movementSystem.isMovingToPosition(
-              action.agentId,
-              action.targetPosition.x,
-              action.targetPosition.y,
-            )
-          ) {
-            return;
-          }
-          this._movementSystem.moveToPoint(
-            action.agentId,
-            action.targetPosition.x,
-            action.targetPosition.y,
-          );
+  private handleActionComplete(payload: {
+  agentId: string;
+  success: boolean;
+  actionType?: string;
+  data?: Record<string, unknown>;
+}): void {
+  const aiState = this.aiStates.get(payload.agentId);
+  if(aiState) {
+    aiState.currentAction = null;
+    if (payload.success) {
+      // If action was work, check if task is actually completed
+      if (
+        payload.actionType === "work" &&
+        payload.data &&
+        typeof payload.data.taskId === "string"
+      ) {
+        const task = this.taskSystem?.getTask(payload.data.taskId);
+        if (task && !task.completed) {
+          // Task not done, don't complete goal yet
+          return;
         }
-        break;
+      }
+      this.completeGoal(aiState, payload.agentId);
+    } else {
+      this.failGoal(aiState, payload.agentId);
+    }
+  }
+}
+
+  private executeAction(action: AgentAction): void {
+  if(!this._movementSystem) return;
+
+  switch(action.actionType) {
+      case "move":
+  if (action.targetZoneId) {
+    if (
+      this._movementSystem.isMovingToZone(
+        action.agentId,
+        action.targetZoneId,
+      )
+    ) {
+      return;
+    }
+    this._movementSystem.moveToZone(action.agentId, action.targetZoneId);
+  } else if (action.targetPosition) {
+    if (
+      this._movementSystem.isMovingToPosition(
+        action.agentId,
+        action.targetPosition.x,
+        action.targetPosition.y,
+      )
+    ) {
+      return;
+    }
+    this._movementSystem.moveToPoint(
+      action.agentId,
+      action.targetPosition.x,
+      action.targetPosition.y,
+    );
+  }
+  break;
       case "work":
-        this.executeWorkAction(action);
-        break;
+  this.executeWorkAction(action);
+  break;
 
       case "harvest":
-        if (action.targetId && this.worldResourceSystem) {
-          const result = this.worldResourceSystem.harvestResource(
-            action.targetId,
+  if (action.targetId && this.worldResourceSystem) {
+    const result = this.worldResourceSystem.harvestResource(
+      action.targetId,
+      action.agentId,
+    );
+
+    if (result.success) {
+      const resource = this.gameState.worldResources?.[action.targetId];
+      if (resource) {
+        // Use type-safe resource mapping
+        const inventoryResourceType = toInventoryResource(resource.type);
+
+        // Satisfy immediate needs based on resource type
+        if (resource.type === "water_source" && this.needsSystem) {
+          this.needsSystem.satisfyNeed(action.agentId, "thirst", 30);
+        } else if (
+          ["berry_bush", "mushroom_patch", "wheat_crop"].includes(
+            resource.type,
+          ) &&
+          this.needsSystem
+        ) {
+          this.needsSystem.satisfyNeed(action.agentId, "hunger", 25);
+        }
+
+        // Add to inventory if mapping exists
+        if (inventoryResourceType && this.inventorySystem) {
+          const added = this.inventorySystem.addResource(
             action.agentId,
+            inventoryResourceType,
+            result.amount,
           );
-
-          if (result.success) {
-            const resource = this.gameState.worldResources?.[action.targetId];
-            if (resource) {
-              // Use type-safe resource mapping
-              const inventoryResourceType = toInventoryResource(resource.type);
-
-              // Satisfy immediate needs based on resource type
-              if (resource.type === "water_source" && this.needsSystem) {
-                this.needsSystem.satisfyNeed(action.agentId, "thirst", 30);
-              } else if (
-                ["berry_bush", "mushroom_patch", "wheat_crop"].includes(
-                  resource.type,
-                ) &&
-                this.needsSystem
-              ) {
-                this.needsSystem.satisfyNeed(action.agentId, "hunger", 25);
-              }
-
-              // Add to inventory if mapping exists
-              if (inventoryResourceType && this.inventorySystem) {
-                const added = this.inventorySystem.addResource(
-                  action.agentId,
-                  inventoryResourceType,
-                  result.amount,
-                );
-                if (added) {
-                  logger.debug(
-                    `🎒 [AI] Agent ${action.agentId} added ${result.amount} ${inventoryResourceType} to inventory`,
-                  );
-                }
-              }
-            }
+          if (added) {
+            logger.debug(
+              `🎒[AI] Agent ${action.agentId} added ${result.amount} ${inventoryResourceType} to inventory`,
+            );
           }
-
-          simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
-            agentId: action.agentId,
-            actionType: "harvest",
-            success: result.success,
-            data: { amount: result.amount },
-          });
         }
-        break;
-      case "idle":
-        if (this.needsSystem) {
-          this.needsSystem.satisfyNeed(action.agentId, "energy", 5);
-        }
-        simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
-          agentId: action.agentId,
-          actionType: "idle",
-          success: true,
-        });
-        break;
-      default:
-        break;
+      }
     }
+
+    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      agentId: action.agentId,
+      actionType: "harvest",
+      success: result.success,
+      data: { amount: result.amount },
+    });
+  }
+  break;
+      case "idle":
+  if (this.needsSystem) {
+    this.needsSystem.satisfyNeed(action.agentId, "energy", 5);
+  }
+  simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+    agentId: action.agentId,
+    actionType: "idle",
+    success: true,
+  });
+  break;
+      default:
+  break;
+}
   }
 
   /**
@@ -1670,108 +1643,108 @@ export class AISystem extends EventEmitter {
    * @param action - The action to execute.
    */
   private executeWorkAction(action: AgentAction): void {
-    if (!action.targetZoneId) return;
+  if(!action.targetZoneId) return;
 
-    if (
-      this._movementSystem?.isMovingToZone(action.agentId, action.targetZoneId)
+  if(
+    this._movementSystem?.isMovingToZone(action.agentId, action.targetZoneId)
     ) {
+  return;
+}
+
+const agentPos = this.getAgentPosition(action.agentId);
+const zone = this.gameState.zones?.find(
+  (z) => z.id === action.targetZoneId,
+);
+
+if (agentPos && zone && zone.bounds) {
+  const inZone =
+    agentPos.x >= zone.bounds.x &&
+    agentPos.x <= zone.bounds.x + zone.bounds.width &&
+    agentPos.y >= zone.bounds.y &&
+    agentPos.y <= zone.bounds.y + zone.bounds.height;
+
+  if (inZone) {
+    if (this.taskSystem && action.data?.taskId) {
+      const result = this.taskSystem.contributeToTask(
+        action.data.taskId as string,
+        action.agentId,
+        10, // Base contribution
+        1.0, // Synergy
+      );
+
+      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+        agentId: action.agentId,
+        actionType: "work",
+        success: true,
+        data: {
+          taskId: action.data.taskId,
+          progressMade: result.progressMade,
+          completed: result.completed,
+        },
+      });
       return;
     }
+  }
+}
 
-    const agentPos = this.getAgentPosition(action.agentId);
-    const zone = this.gameState.zones?.find(
-      (z) => z.id === action.targetZoneId,
-    );
-
-    if (agentPos && zone && zone.bounds) {
-      const inZone =
-        agentPos.x >= zone.bounds.x &&
-        agentPos.x <= zone.bounds.x + zone.bounds.width &&
-        agentPos.y >= zone.bounds.y &&
-        agentPos.y <= zone.bounds.y + zone.bounds.height;
-
-      if (inZone) {
-        if (this.taskSystem && action.data?.taskId) {
-          const result = this.taskSystem.contributeToTask(
-            action.data.taskId as string,
-            action.agentId,
-            10, // Base contribution
-            1.0, // Synergy
-          );
-
-          simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
-            agentId: action.agentId,
-            actionType: "work",
-            success: true,
-            data: {
-              taskId: action.data.taskId,
-              progressMade: result.progressMade,
-              completed: result.completed,
-            },
-          });
-          return;
-        }
-      }
-    }
-
-    this._movementSystem?.moveToZone(action.agentId, action.targetZoneId);
+this._movementSystem?.moveToZone(action.agentId, action.targetZoneId);
   }
   // IAIPort implementation
   public setGoal(
-    agentId: string,
-    goal: {
-      type: string;
-      priority: number;
-      targetId?: string;
-      targetZoneId?: string;
-      data?: Record<string, unknown>;
-    },
-  ): void {
-    const aiState = this.aiStates.get(agentId);
-    if (aiState) {
-      // Convert goal.type to GoalType and validate
-      const goalType = goal.type as GoalType;
-      // Convert goal.data to AIGoalData format
-      const goalData: AIGoalData | undefined = goal.data
-        ? {
-            ...Object.fromEntries(
-              Object.entries(goal.data).map(([k, v]) => [
-                k,
-                typeof v === "string" || typeof v === "number" ? v : undefined,
-              ]),
-            ),
-          }
-        : undefined;
+  agentId: string,
+  goal: {
+  type: string;
+  priority: number;
+  targetId?: string;
+  targetZoneId?: string;
+  data?: Record<string, unknown>;
+},
+): void {
+  const aiState = this.aiStates.get(agentId);
+  if(aiState) {
+    // Convert goal.type to GoalType and validate
+    const goalType = goal.type as GoalType;
+    // Convert goal.data to AIGoalData format
+    const goalData: AIGoalData | undefined = goal.data
+      ? {
+        ...Object.fromEntries(
+          Object.entries(goal.data).map(([k, v]) => [
+            k,
+            typeof v === "string" || typeof v === "number" ? v : undefined,
+          ]),
+        ),
+      }
+      : undefined;
 
-      const newGoal: AIGoal = {
-        id: `external_${Date.now()}`,
-        type: goalType,
-        priority: goal.priority,
-        targetId: goal.targetId,
-        targetZoneId: goal.targetZoneId,
-        data: goalData,
-        createdAt: Date.now(),
-        expiresAt: Date.now() + 60000, // Default 1 min expiry for external goals
-      };
-      aiState.currentGoal = newGoal;
-      simulationEvents.emit(GameEventNames.AGENT_GOAL_CHANGED, {
-        agentId,
-        newGoal,
-        timestamp: Date.now(),
-      });
-    }
+    const newGoal: AIGoal = {
+      id: `external_${Date.now()} `,
+      type: goalType,
+      priority: goal.priority,
+      targetId: goal.targetId,
+      targetZoneId: goal.targetZoneId,
+      data: goalData,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 60000, // Default 1 min expiry for external goals
+    };
+    aiState.currentGoal = newGoal;
+    simulationEvents.emit(GameEventNames.AGENT_GOAL_CHANGED, {
+      agentId,
+      newGoal,
+      timestamp: Date.now(),
+    });
   }
+}
 
   public clearGoals(agentId: string): void {
-    const aiState = this.aiStates.get(agentId);
-    if (aiState) {
-      aiState.currentGoal = null;
-      aiState.goalQueue = [];
-    }
+  const aiState = this.aiStates.get(agentId);
+  if(aiState) {
+    aiState.currentGoal = null;
+    aiState.goalQueue = [];
   }
+}
 
   public getCurrentGoal(agentId: string): unknown {
-    const aiState = this.aiStates.get(agentId);
-    return aiState?.currentGoal;
-  }
+  const aiState = this.aiStates.get(agentId);
+  return aiState?.currentGoal;
+}
 }

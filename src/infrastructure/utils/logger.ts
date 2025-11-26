@@ -57,10 +57,8 @@ class Logger {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.ensureLogDir();
 
-    // Periodic evacuation check (every 30 seconds)
     this.evacuationInterval = setInterval(() => this.checkEvacuation(), 30000);
 
-    // Flush on common exit signals to avoid losing buffered logs
     const flushAndExit = async (): Promise<void> => {
       try {
         await this.flush();
@@ -86,7 +84,7 @@ class Logger {
         fs.mkdirSync(this.config.logDir, { recursive: true });
       }
     } catch {
-      // Silently fail if we can't create log dir
+      // Ignore directory creation errors
     }
   }
 
@@ -148,7 +146,6 @@ class Logger {
       this.lastEvacuation = Date.now();
       this.cleanOldLogs();
     } catch (error) {
-      // Re-add logs to buffer if write failed
       this.memoryBuffer = [...logsToWrite, ...this.memoryBuffer].slice(
         0,
         this.config.maxMemoryLogs,
@@ -188,13 +185,12 @@ class Logger {
         .sort()
         .reverse();
 
-      // Keep only last 20 log files
       const filesToDelete = logFiles.slice(20);
       for (const file of filesToDelete) {
         fs.unlinkSync(path.join(this.config.logDir, file));
       }
     } catch {
-      // Silently fail
+      // Ignore cleanup errors
     }
   }
 
