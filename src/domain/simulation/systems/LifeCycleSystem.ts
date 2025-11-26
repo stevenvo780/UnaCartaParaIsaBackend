@@ -649,6 +649,10 @@ export class LifeCycleSystem extends EventEmitter {
     if (this._roleSystem) {
       this._roleSystem.removeAgentRole(agentId);
     }
+
+    if (this.householdSystem) {
+      this.householdSystem.removeAgentFromHousehold(agentId);
+    }
   }
 
   public killAgent(id: string): boolean {

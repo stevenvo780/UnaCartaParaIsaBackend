@@ -86,7 +86,7 @@ export class AnimalSystem {
    * Idle/wandering animals update less frequently to reduce CPU load.
    */
   private updateFrame = 0;
-  private readonly IDLE_UPDATE_DIVISOR = 1; // Update all animals every frame
+  private readonly IDLE_UPDATE_DIVISOR = 5; // Update idle animals every 5th frame
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
@@ -123,8 +123,6 @@ export class AnimalSystem {
       },
     );
 
-    // Note: CHUNK_RENDERED is only emitted in the frontend (client)
-    // Animals are spawned via spawnAnimalsInWorld() during world generation
   }
 
   public update(deltaMs: number): void {
@@ -150,7 +148,6 @@ export class AnimalSystem {
       );
       this.lastStateLog = now;
     } else {
-      // Quick count without state tracking
       for (const animal of this.animals.values()) {
         if (!animal.isDead) liveCount++;
       }
@@ -226,7 +223,6 @@ export class AnimalSystem {
 
     this.batchProcessor.syncToAnimals(this.animals);
 
-    // GPU batch flee processing for fleeing animals (O(A×T) operation)
     this.processFleeingAnimalsBatch(animalIdArray, deltaSeconds);
 
     /**
@@ -238,7 +234,6 @@ export class AnimalSystem {
       const animal = this.animals.get(animalId);
       if (!animal || animal.isDead) continue;
 
-      // Skip fleeing animals - already processed in batch
       if (animal.state === "fleeing") {
         const oldPosition = { ...animal.position };
         this.updateSpatialGrid(animal, oldPosition);
@@ -251,7 +246,7 @@ export class AnimalSystem {
       if (
         isIdleState &&
         i % this.IDLE_UPDATE_DIVISOR !==
-          this.updateFrame % this.IDLE_UPDATE_DIVISOR
+        this.updateFrame % this.IDLE_UPDATE_DIVISOR
       ) {
         continue;
       }
@@ -278,7 +273,6 @@ export class AnimalSystem {
     animalIds: string[],
     deltaSeconds: number,
   ): void {
-    // Collect fleeing animals and their threats
     const fleeingAnimals: Array<{
       animal: Animal;
       threatPos: { x: number; y: number };
@@ -291,7 +285,6 @@ export class AnimalSystem {
       const config = getAnimalConfig(animal.type);
       if (!config) continue;
 
-      // Check for predators
       const nearbyPredator = this.findNearbyPredator(
         animal,
         config.detectionRange,
@@ -306,7 +299,6 @@ export class AnimalSystem {
         continue;
       }
 
-      // Check for humans if configured
       if (config.fleeFromHumans) {
         const nearbyHuman = this.findNearbyHuman(animal, config.detectionRange);
         if (nearbyHuman) {
@@ -320,11 +312,9 @@ export class AnimalSystem {
       }
     }
 
-    // Use GPU batch if enough fleeing animals (>50 for GPU threshold)
     if (this.gpuService?.isGPUAvailable() && fleeingAnimals.length >= 50) {
       this.computeFleeMovementsGPU(fleeingAnimals, deltaSeconds);
     } else {
-      // CPU fallback - apply flee movement directly
       for (const { animal, threatPos } of fleeingAnimals) {
         AnimalBehavior.moveAwayFrom(animal, threatPos, 1.2, deltaSeconds);
       }
@@ -359,7 +349,6 @@ export class AnimalSystem {
       deltaSeconds,
     );
 
-    // Apply new positions
     for (let i = 0; i < count; i++) {
       fleeingAnimals[i].animal.position.x = newPositions[i * 2];
       fleeingAnimals[i].animal.position.y = newPositions[i * 2 + 1];
@@ -480,7 +469,6 @@ export class AnimalSystem {
           },
         );
       } else if (this.terrainSystem) {
-        // Try to drink from water terrain tiles
         const waterTile = this.findNearbyWaterTile(
           animal,
           config.detectionRange,
@@ -722,7 +710,6 @@ export class AnimalSystem {
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     if (distance < 40) {
-      // Close enough to drink
       animal.state = "drinking";
       if (!animal.stateEndTime) {
         animal.stateEndTime = Date.now() + 2000;
@@ -733,7 +720,6 @@ export class AnimalSystem {
         animal.targetPosition = null;
       }
     } else {
-      // Move toward water
       animal.targetPosition = { x: waterTile.x, y: waterTile.y };
       AnimalBehavior.moveToward(
         animal,
@@ -940,11 +926,12 @@ export class AnimalSystem {
     const config = getAnimalConfig(animal.type);
     if (!config) return;
 
-    // Do NOT re-emit ANIMAL_HUNTED here to avoid recursive event loops.
-    // Downstream systems should react to ANIMAL_DIED with cause "hunted".
-    // If additional payload is needed, consider emitting a distinct event
-    // like ANIMAL_HUNT_RESOLVED consumed by non-AnimalSystem listeners.
-
+    /**
+     * Kills the animal without re-emitting ANIMAL_HUNTED to avoid recursive event loops.
+     * Downstream systems should react to ANIMAL_DIED with cause "hunted".
+     * If additional payload is needed, consider emitting a distinct event
+     * like ANIMAL_HUNT_RESOLVED consumed by non-AnimalSystem listeners.
+     */
     this.killAnimal(animalId, "hunted");
   }
 
@@ -1002,7 +989,6 @@ export class AnimalSystem {
       }
     }
 
-    // Limit cache size - evict oldest entries if over MAX_CACHE_SIZE
     if (this.resourceSearchCache.size > this.MAX_CACHE_SIZE) {
       const entries = Array.from(this.resourceSearchCache.entries()).sort(
         (a, b) => a[1].timestamp - b[1].timestamp,
@@ -1013,14 +999,12 @@ export class AnimalSystem {
       }
     }
 
-    // Clean expired entries from threatSearchCache
     for (const [key, cache] of this.threatSearchCache.entries()) {
       if (now - cache.timestamp > this.CACHE_DURATION) {
         this.threatSearchCache.delete(key);
       }
     }
 
-    // Limit threatSearchCache size
     if (this.threatSearchCache.size > this.MAX_CACHE_SIZE) {
       const entries = Array.from(this.threatSearchCache.entries()).sort(
         (a, b) => a[1].timestamp - b[1].timestamp,

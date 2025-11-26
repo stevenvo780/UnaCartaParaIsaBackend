@@ -42,7 +42,6 @@ simulationRunner
   .then(async () => {
     logger.info("✅ Backend: SimulationRunner initialized successfully");
 
-    // Check for existing saves
     const saves = await storageService.listSaves();
     if (saves.length > 0) {
       const latestSaveId = saves[0].id;
@@ -51,11 +50,8 @@ simulationRunner
 
       if (saveData && saveData.state) {
         const gameState = container.get<GameState>(TYPES.GameState);
-        // We need to be careful to preserve references if possible, or just update properties
-        // Since GameState is a plain object in container, Object.assign works well
         Object.assign(gameState, saveData.state);
 
-        // Repair/Ensure family exists in the loaded state
         await simulationRunner.ensureInitialFamily();
 
         logger.info("✅ Backend: State loaded and family verified");
@@ -65,7 +61,6 @@ simulationRunner
       }
     }
 
-    // If no save or load failed, initialize fresh world
     logger.info("🆕 No valid save found. Initializing fresh world...");
     return simulationRunner
       .initializeWorldResources({

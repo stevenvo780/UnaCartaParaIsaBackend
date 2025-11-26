@@ -131,6 +131,13 @@ export function planGoals(
     };
     const criticalGoals = evaluateCriticalNeeds(needsDeps, aiState);
     goals.push(...criticalGoals);
+
+    // OPTIMIZATION: Early exit for critical survival goals
+    // If we have a critical survival goal (priority > 0.8), don't bother planning anything else
+    const criticalSurvivalGoal = criticalGoals.find((g) => g.priority > 0.8);
+    if (criticalSurvivalGoal) {
+      return [criticalSurvivalGoal];
+    }
   }
 
   if (
@@ -149,6 +156,13 @@ export function planGoals(
     };
     const combatGoals = evaluateCombatGoals(combatDeps, aiState);
     goals.push(...combatGoals);
+
+    // OPTIMIZATION: Early exit for combat
+    // If we are in danger (combat goal > 0.7), prioritize that above work/social
+    const combatGoal = combatGoals.find((g) => g.priority > 0.7);
+    if (combatGoal) {
+      return [combatGoal];
+    }
   }
 
   if (deps.getAllActiveAgentIds && deps.getEntityStats) {

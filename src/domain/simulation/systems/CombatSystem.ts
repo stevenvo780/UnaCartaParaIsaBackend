@@ -316,6 +316,7 @@ export class CombatSystem {
     entitiesById: Map<string, SimulationEntity>,
     now: number,
   ): void {
+    const startTime = performance.now();
     const attackersWithPos = attackers.filter((a) => a.position);
     const allEntities = Array.from(entitiesById.values()).filter(
       (e) => e.position && !e.isDead,
@@ -367,7 +368,7 @@ export class CombatSystem {
       }
     }
 
-    const duration = performance.now() - performance.now();
+    const duration = performance.now() - startTime;
     performanceMonitor.recordSubsystemExecution(
       "CombatSystem",
       "updateBatchGPU",
@@ -524,6 +525,12 @@ export class CombatSystem {
     weaponId: WeaponId,
     timestamp: number,
   ): void {
+    // TOCTOU fix: Re-check target state before applying damage
+    // Target may have died between shouldAttack check and now
+    if (target.isDead) {
+      return;
+    }
+
     if (this.normsSystem && attacker.position) {
       const zone = this.findZoneAtPosition(attacker.position);
       if (zone) {

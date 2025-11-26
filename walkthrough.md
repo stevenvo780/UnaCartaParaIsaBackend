@@ -67,3 +67,30 @@ A comprehensive review of the application was conducted to determine production 
 - The application is technically sound and builds correctly.
 - Performance warning: Some frontend chunks are larger than 500kB. Consider code-splitting optimization for future updates, but this is not a blocker for release.
 
+
+## Performance Optimization Audit (2025-11-26)
+
+### Status: OPTIMIZED
+
+Addressed the top 4 performance hotspots identified in the simulation loop.
+
+### Optimizations Implemented
+
+#### 1. SocialSystem.ts
+- **Throttling**:
+    - `updateProximity`: Now runs every 200ms (5Hz) instead of every frame.
+    - `decayEdgesOptimized`: Now runs every 1000ms (1Hz) instead of every frame.
+- **Impact**: Significantly reduces O(N²) proximity checks and edge iteration overhead.
+
+#### 2. AnimalSystem.ts
+- **Idle Update Staggering**:
+    - Increased `IDLE_UPDATE_DIVISOR` from 1 to 5.
+    - Idle and wandering animals now only update their behavior logic every 5th frame.
+- **Impact**: Reduces CPU load for the majority of animals that are not in critical states (fleeing/hunting).
+
+#### 3. AgentGoalPlanner.ts
+- **Early Exit Strategy**:
+    - Implemented logic to return immediately if a **Critical Survival Goal** (Priority > 0.8) is found (Hunger/Thirst/Energy).
+    - Implemented logic to return immediately if a **High Priority Combat Goal** (Priority > 0.7) is found.
+- **Impact**: Prevents wasteful evaluation of low-priority goals (Construction, Trade, Exploration) when agents are in survival or combat modes.
+

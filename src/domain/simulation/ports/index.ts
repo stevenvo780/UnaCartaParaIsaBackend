@@ -279,4 +279,9 @@ export interface IHouseholdPort {
     householdId: string,
     resources: Partial<Record<ResourceType, number>>,
   ): boolean;
+
+  /**
+   * Removes agent from their household (cleanup on death)
+   */
+  removeAgentFromHousehold(agentId: string): void;
 }

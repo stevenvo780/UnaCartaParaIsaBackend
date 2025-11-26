@@ -42,6 +42,8 @@ export class SocialSystem {
   private infamy = new Map<string, number>();
   private zoneHeat = new Map<string, number>();
   private lastUpdate = 0;
+  private lastProximityUpdate = 0;
+  private lastDecayUpdate = 0;
 
   private knownEntities = new Set<string>();
   private positionCache = new Map<string, { x: number; y: number }>();
@@ -114,22 +116,28 @@ export class SocialSystem {
     const startTime = performance.now();
     const dt = deltaTimeMs / 1000;
     this.lastUpdate += deltaTimeMs;
+    const now = getFrameTime();
 
     this.updateSpatialGridIncremental();
 
-    this.updateProximity(dt);
-    this.decayEdgesOptimized(dt);
+    if (now - this.lastProximityUpdate > 200) {
+      this.updateProximity(dt);
+      this.lastProximityUpdate = now;
+    }
 
-    // Only recompute groups if edges were modified (dirty flag optimization)
+    if (now - this.lastDecayUpdate > 1000) {
+      this.decayEdgesOptimized(dt);
+      this.lastDecayUpdate = now;
+    }
+
     if (this.lastUpdate > 1000 && this.edgesModified) {
       this.recomputeGroups();
       this.edgesModified = false;
       this.lastUpdate = 0;
     } else if (this.lastUpdate > 1000) {
-      this.lastUpdate = 0; // Reset timer even if no recomputation needed
+      this.lastUpdate = 0;
     }
 
-    const now = getFrameTime();
     this.updateTruces(now);
     const duration = performance.now() - startTime;
     performanceMonitor.recordSubsystemExecution(
@@ -140,8 +148,8 @@ export class SocialSystem {
   }
 
   /**
-   * Actualización incremental del spatial grid
-   * Solo actualiza entidades que se movieron significativamente o son nuevas/eliminadas
+   * Incremental spatial grid update.
+   * Only updates entities that moved significantly or are new/removed.
    */
   private updateSpatialGridIncremental(): void {
     const entities = this.gameState.entities || [];
@@ -182,27 +190,26 @@ export class SocialSystem {
   }
 
   /**
-   * 🔧 FIX: Decay optimizado que solo procesa edges con valores no-cero significativos
-   * Uses GPU for batch decay when available and edge count is high
+   * Optimized edge decay that only processes edges with significant non-zero values.
+   * Uses GPU for batch decay when available and edge count is high.
+   *
+   * @param dt - Delta time in seconds
    */
   private decayEdgesOptimized(dt: number): void {
     const decayAmount = this.config.decayPerSecond * dt;
     const bondDecayAmount = decayAmount * 0.05;
     const minAffinity = 0.001;
 
-    // Collect all edges for potential GPU batch processing
     let totalEdges = 0;
     for (const neighbors of this.edges.values()) {
       totalEdges += neighbors.size;
     }
 
-    // Use GPU batch processing for large edge counts
     if (this.gpuService?.isGPUAvailable() && totalEdges > 200) {
       this.decayEdgesGPU(dt, minAffinity);
       return;
     }
 
-    // CPU fallback for small edge counts
     for (const [aId, neighbors] of this.edges) {
       for (const [bId, affinity] of neighbors) {
         if (Math.abs(affinity) < minAffinity) {
@@ -232,7 +239,6 @@ export class SocialSystem {
    * GPU-accelerated edge decay for large social networks
    */
   private decayEdgesGPU(dt: number, minAffinity: number): void {
-    // Collect non-bond edges for GPU processing
     const edgeList: Array<{
       aId: string;
       bId: string;
@@ -243,7 +249,6 @@ export class SocialSystem {
     for (const [aId, neighbors] of this.edges) {
       for (const [bId, affinity] of neighbors) {
         if (aId < bId) {
-          // Avoid duplicates
           const hasBond = !!(
             this.permanentBonds.get(aId)?.get(bId) ||
             this.permanentBonds.get(bId)?.get(aId)
@@ -255,7 +260,6 @@ export class SocialSystem {
 
     if (edgeList.length === 0) return;
 
-    // Separate bonded and non-bonded edges
     const nonBondedAffinities = new Float32Array(
       edgeList.filter((e) => !e.hasBond).map((e) => e.affinity),
     );
@@ -263,7 +267,6 @@ export class SocialSystem {
       edgeList.filter((e) => e.hasBond).map((e) => e.affinity),
     );
 
-    // GPU batch decay
     let newNonBonded: Float32Array | null = null;
     let newBonded: Float32Array | null = null;
 
@@ -284,7 +287,6 @@ export class SocialSystem {
       );
     }
 
-    // Apply results back
     let nonBondedIdx = 0;
     let bondedIdx = 0;
 
@@ -314,13 +316,11 @@ export class SocialSystem {
         !!e.position,
     );
 
-    // Use GPU pairwise distances for large entity counts (O(N²) operation)
     if (this.gpuService?.isGPUAvailable() && entitiesWithPos.length >= 20) {
       this.updateProximityGPU(entitiesWithPos, reinforcement);
       return;
     }
 
-    // CPU fallback: use spatial grid for small counts
     for (const entity of entities) {
       if (!entity.position) continue;
 
@@ -330,7 +330,7 @@ export class SocialSystem {
       );
 
       for (const { entity: otherId } of nearby) {
-        if (entity.id >= otherId) continue; // Avoid duplicates and self
+        if (entity.id >= otherId) continue;
         this.addEdge(entity.id, otherId, reinforcement);
       }
     }
@@ -360,7 +360,6 @@ export class SocialSystem {
     const proximityRadiusSq =
       this.config.proximityRadius * this.config.proximityRadius;
 
-    // Apply reinforcement for nearby pairs
     let idx = 0;
     for (let i = 0; i < count; i++) {
       for (let j = i + 1; j < count; j++) {
@@ -469,6 +468,10 @@ export class SocialSystem {
         this.truces.delete(key);
       }
     }
+
+    // Clean up spatial tracking to prevent stale references
+    this.spatialGrid.remove(agentId);
+    this.positionCache.delete(agentId);
   }
 
   public registerFriendlyInteraction(aId: string, bId: string): void {
@@ -682,5 +685,5 @@ export class SocialSystem {
       timestamp: number;
       [key: string]: unknown;
     },
-  ): void {}
+  ): void { }
 }

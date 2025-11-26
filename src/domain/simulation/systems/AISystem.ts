@@ -77,7 +77,6 @@ export class AISystem extends EventEmitter {
   private lastUpdate: number = Date.now();
   private priorityManager: PriorityManager;
 
-  // Subsystems - delegated logic
   private stateManager!: AIStateManager;
   private goalValidator!: AIGoalValidator;
   private actionPlanner!: AIActionPlanner;
@@ -119,7 +118,6 @@ export class AISystem extends EventEmitter {
   private lastCacheInvalidation = 0;
   private readonly CACHE_INVALIDATION_INTERVAL = 1000;
 
-  // Resource search optimization: cache nearest resources by type
   private nearestResourceCache = new Map<
     string,
     { resource: { id: string; x: number; y: number } | null; timestamp: number }
@@ -129,10 +127,8 @@ export class AISystem extends EventEmitter {
 
   private readonly MAX_DECISION_TIME_MS = 5;
 
-  // Distance threshold for exploration
   private readonly EXPLORE_RANGE = 200;
 
-  // Bound handler reference for cleanup
   private readonly boundHandleActionComplete: (payload: {
     agentId: string;
     success: boolean;
@@ -149,9 +145,7 @@ export class AISystem extends EventEmitter {
 
   private _decisionTimeTotalMs = 0;
   private _decisionCount = 0;
-  // Shared reference for goal counters to sync with subsystems
   private _goalsCompletedRef = { value: 0 };
-  private _goalsFailed = 0;
 
   /**
    * Creates a new AI system.
@@ -234,10 +228,8 @@ export class AISystem extends EventEmitter {
     this.questSystem = questSystem;
     this.timeSystem = timeSystem;
 
-    // Initialize subsystems
     this.initializeSubsystems();
 
-    // Store bound handler reference for cleanup
     this.boundHandleActionComplete = this.handleActionComplete.bind(this);
     simulationEvents.on(
       GameEventNames.AGENT_ACTION_COMPLETE,
@@ -250,7 +242,6 @@ export class AISystem extends EventEmitter {
    * Called after constructor and when dependencies change.
    */
   private initializeSubsystems(): void {
-    // State Manager
     this.stateManager = new AIStateManager(
       this.gameState,
       this.aiStates,
@@ -259,7 +250,6 @@ export class AISystem extends EventEmitter {
       this.agentStrategies,
     );
 
-    // Goal Validator
     this.goalValidator = new AIGoalValidator({
       gameState: this.gameState,
       worldResourceSystem: this.worldResourceSystem,
@@ -268,13 +258,11 @@ export class AISystem extends EventEmitter {
       getAgentPosition: (agentId: string) => this.getAgentPosition(agentId),
     });
 
-    // Action Planner
     this.actionPlanner = new AIActionPlanner({
       gameState: this.gameState,
       getAgentPosition: (agentId: string) => this.getAgentPosition(agentId),
     });
 
-    // Action Executor
     this.actionExecutor = new AIActionExecutor({
       gameState: this.gameState,
       needsSystem: this.needsSystem,
@@ -288,7 +276,6 @@ export class AISystem extends EventEmitter {
         this.tryDepositResources(entityId, zoneId),
     });
 
-    // Urgent Goals
     this.urgentGoals = new AIUrgentGoals({
       gameState: this.gameState,
       getAgentPosition: (agentId: string) => this.getAgentPosition(agentId),
@@ -296,7 +283,6 @@ export class AISystem extends EventEmitter {
         this.findNearestResourceForEntity(entityId, resourceType),
     });
 
-    // Zone Handler - create adapters for type compatibility
     this.zoneHandler = new AIZoneHandler({
       gameState: this.gameState,
       inventorySystem: this.inventorySystem
@@ -1038,8 +1024,8 @@ export class AISystem extends EventEmitter {
         this._decisionCount > 0
           ? this._decisionTimeTotalMs / this._decisionCount
           : 0,
-      goalsCompleted: this._goalsCompletedRef.value,
-      goalsFailed: this._goalsFailed,
+      goalsCompleted: this.goalValidator.goalsCompleted,
+      goalsFailed: this.goalValidator.goalsFailed,
     };
   }
 
@@ -1068,7 +1054,7 @@ export class AISystem extends EventEmitter {
     this.nearestResourceCache.clear();
     // Reset counters
     this._goalsCompletedRef.value = 0;
-    this._goalsFailed = 0;
+    this.goalValidator.resetMetrics();
     this._decisionCount = 0;
     this._decisionTimeTotalMs = 0;
     // Remove listener from simulationEvents
@@ -1089,12 +1075,12 @@ export class AISystem extends EventEmitter {
 
   private completeGoal(aiState: AIState, _agentId: string): void {
     this.goalValidator.completeGoal(aiState);
-    this._goalsCompletedRef.value++;
+    // Counter is automatically updated in goalValidator
   }
 
   private failGoal(aiState: AIState, _agentId: string): void {
     this.goalValidator.failGoal(aiState);
-    this._goalsFailed++;
+    // Counter is automatically updated in goalValidator
   }
 
   private planAction(agentId: string, goal: AIGoal): AgentAction | null {

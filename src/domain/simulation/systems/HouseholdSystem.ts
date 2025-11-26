@@ -173,6 +173,33 @@ export class HouseholdSystem {
     return free.zoneId;
   }
 
+  /**
+   * Removes an agent from their household when they die or are removed.
+   * Called by LifeCycleSystem during agent cleanup.
+   *
+   * @param agentId - The ID of the agent to remove from their household
+   */
+  public removeAgentFromHousehold(agentId: string): void {
+    for (const household of this.households.values()) {
+      const memberIndex = household.members.findIndex(
+        (m) => m.agentId === agentId,
+      );
+      if (memberIndex !== -1) {
+        household.members.splice(memberIndex, 1);
+        logger.debug(
+          `🏠 Agent ${agentId} removed from household ${household.zoneId}`,
+        );
+
+        simulationEvents.emit(GameEventNames.HOUSEHOLD_AGENT_LEFT, {
+          agentId,
+          zoneId: household.zoneId,
+          occupancy: household.members.length / household.capacity,
+        });
+        return;
+      }
+    }
+  }
+
   public getHousehold(zoneId: string): Household | undefined {
     return this.households.get(zoneId);
   }
