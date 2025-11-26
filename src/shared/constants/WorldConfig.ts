@@ -17,30 +17,10 @@ export const ZONE_CONFIG = {
   LARGE: { width: 400, height: 320 },
   MIN_SPACING: 150,
 } as const;
-export const CAMERA_CONFIG = {
-  MIN_ZOOM: 0.4,
-  MAX_ZOOM: 2.0,
-  DEFAULT_ZOOM: 0.8,
-  PAN_SPEED: 25,
-  ZOOM_STEP: 0.1,
-  SMOOTH_FACTOR: 1.2,
 
-  MAX_DISTANCE_FROM_CENTER: 6000,
-  SAFE_ZONE_RADIUS: 5500,
-} as const;
-export const UI_CONFIG = {
-  STATS_MODAL: {
-    TOTAL_WIDTH: 520,
-    SECTION_WIDTH: 240,
-    SECTION_HEIGHT: 320,
-    STATS_PER_SECTION: 18,
-    FONT_SIZE: "11px",
-    LINE_HEIGHT: 15,
-  },
-  TOP_BAR_HEIGHT: 70,
-  BOTTOM_BAR_HEIGHT: 80,
-  SIDE_PANEL_WIDTH: 220,
-} as const;
+// NOTA: CAMERA_CONFIG y UI_CONFIG eliminados - son constantes de frontend
+// Ver frontend: src/constants/WorldConfig.ts
+
 export const WorldUtils = {
   clampToWorld(
     x: number,
