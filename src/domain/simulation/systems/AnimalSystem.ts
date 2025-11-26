@@ -258,13 +258,6 @@ export class AnimalSystem {
 
       const oldPosition = { ...animal.position };
       this.updateAnimalBehavior(animal, deltaSeconds);
-      
-      // Debug: Check if position actually changed
-      const moved = oldPosition.x !== animal.position.x || oldPosition.y !== animal.position.y;
-      if (moved && Math.random() < 0.01) { // Log 1% of moves
-        logger.debug(`🔄 Animal ${animal.id.slice(0,8)} moved from (${oldPosition.x.toFixed(1)}, ${oldPosition.y.toFixed(1)}) to (${animal.position.x.toFixed(1)}, ${animal.position.y.toFixed(1)})`);
-      }
-      
       this.updateSpatialGrid(animal, oldPosition);
       this.checkAnimalDeath(animal);
     }
