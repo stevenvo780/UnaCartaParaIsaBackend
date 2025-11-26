@@ -434,4 +434,27 @@ export class RoleSystem extends EventEmitter {
 
     return { success: true, agentId, roleType: newRole };
   }
+
+  /**
+   * Removes an agent's role when they die or are removed.
+   * Cleans up role data and schedule entries.
+   *
+   * @param agentId - The ID of the agent to remove
+   */
+  public removeAgentRole(agentId: string): void {
+    const role = this.roles.get(agentId);
+    if (!role) return;
+
+    this.roles.delete(agentId);
+    
+    // Clean from all shift schedules
+    for (const shift of Object.keys(this.schedule) as WorkShift[]) {
+      const idx = this.schedule[shift].indexOf(agentId);
+      if (idx !== -1) {
+        this.schedule[shift].splice(idx, 1);
+      }
+    }
+
+    logger.debug(`👷 Role removed for dead agent: ${agentId}`);
+  }
 }

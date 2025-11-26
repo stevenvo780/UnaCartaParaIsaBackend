@@ -84,7 +84,6 @@ class Logger {
         fs.mkdirSync(this.config.logDir, { recursive: true });
       }
     } catch {
-      // Ignore directory creation errors
     }
   }
 
@@ -158,7 +157,7 @@ class Logger {
 
   private checkEvacuation(): void {
     const timeSinceLastEvacuation = Date.now() - this.lastEvacuation;
-    const forceIntervalMs = Number(process.env.LOG_FORCE_INTERVAL_MS ?? 60000); // 1 min default
+    const forceIntervalMs = Number(process.env.LOG_FORCE_INTERVAL_MS ?? 60000);
     if (
       this.memoryBuffer.length >= this.config.evacuationThreshold ||
       this.memoryBuffer.length > this.config.evacuationThreshold / 2 ||
@@ -190,7 +189,6 @@ class Logger {
         fs.unlinkSync(path.join(this.config.logDir, file));
       }
     } catch {
-      // Ignore cleanup errors
     }
   }
 

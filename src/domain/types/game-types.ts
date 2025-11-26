@@ -391,6 +391,22 @@ export interface TaskState {
     completed: boolean;
     zoneId?: string;
     bounds?: { x: number; y: number; width: number; height: number };
+    requirements?: {
+      resources?: {
+        wood?: number;
+        stone?: number;
+        food?: number;
+        water?: number;
+      };
+      minWorkers?: number;
+    };
+    metadata?: Record<string, string | number | undefined>;
+    contributors?: Array<{ agentId: string; contribution: number }>;
+    cancelled?: boolean;
+    cancellationReason?: string;
+    lastContribution?: number;
+    createdAt?: number;
+    targetAnimalId?: string;
   }>;
   stats: {
     total: number;

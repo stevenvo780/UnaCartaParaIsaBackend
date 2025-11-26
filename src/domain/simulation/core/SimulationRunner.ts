@@ -495,7 +495,7 @@ export class SimulationRunner {
         // Sync animals to state before marking dirty
         this.syncAnimalsToState();
 
-        this.stateCache.markDirtyMultiple([
+        const baseDirtySections = [
           "agents",
           "entities",
           "animals",
@@ -513,8 +513,14 @@ export class SimulationRunner {
           "reputation",
           "norms",
           "knowledgeGraph",
-          "tasks",
-        ]);
+        ] as const;
+
+        const tasksChanged = this.taskSystem.syncTasksState();
+        if (tasksChanged) {
+          this.stateCache.markDirty("tasks");
+        }
+
+        this.stateCache.markDirtyMultiple([...baseDirtySections]);
 
         this.tickCounter += 1;
 

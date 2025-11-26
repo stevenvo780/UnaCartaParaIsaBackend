@@ -1,4 +1,4 @@
-import { GameState } from "../../types/game-types";
+import { GameState, type TaskState } from "../../types/game-types";
 import { Task, TaskCreationParams } from "../../types/simulation/tasks";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { getFrameTime } from "../../../shared/FrameTime";
@@ -25,6 +25,15 @@ export class TaskSystem {
   private tasks = new Map<string, Task>();
   private seq = 0;
   private lastUpdate = 0;
+  private tasksDirty = true;
+  private statsDirty = true;
+  private cachedStats: TaskState["stats"] = {
+    total: 0,
+    active: 0,
+    completed: 0,
+    stalled: 0,
+    avgProgress: 0,
+  };
 
   constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
@@ -74,7 +83,10 @@ export class TaskSystem {
     }
 
     const stats = this.getTaskStats();
-    this.gameState.tasks.stats = stats;
+    if (this.hasStatsChanged(stats)) {
+      this.cachedStats = stats;
+      this.statsDirty = true;
+    }
   }
 
   public getTasks(): Task[] {
@@ -122,6 +134,9 @@ export class TaskSystem {
       requiredWork: task.requiredWork,
       timestamp: Date.now(),
     });
+
+    this.tasksDirty = true;
+    this.statsDirty = true;
 
     return task;
   }
@@ -174,6 +189,8 @@ export class TaskSystem {
     if (completed) {
       task.completed = true;
     }
+
+    this.tasksDirty = true;
 
     simulationEvents.emit(GameEventNames.TASK_PROGRESS, {
       taskId,
@@ -236,7 +253,12 @@ export class TaskSystem {
   }
 
   public removeTask(id: string): boolean {
-    return this.tasks.delete(id);
+    const removed = this.tasks.delete(id);
+    if (removed) {
+      this.tasksDirty = true;
+      this.statsDirty = true;
+    }
+    return removed;
   }
 
   public getTaskContributors(taskId: string): Array<{
@@ -270,6 +292,7 @@ export class TaskSystem {
     const task = this.tasks.get(taskId);
     if (task && task.contributors) {
       task.contributors.delete(agentId);
+      this.tasksDirty = true;
     }
   }
 
@@ -345,5 +368,85 @@ export class TaskSystem {
   public cleanup(): void {
     this.tasks.clear();
     this.seq = 0;
+    this.tasksDirty = true;
+    this.statsDirty = true;
+  }
+
+  public syncTasksState(): boolean {
+    const state = this.ensureTaskState();
+    let changed = false;
+
+    if (this.tasksDirty) {
+      state.tasks = this.serializeTasks();
+      this.tasksDirty = false;
+      changed = true;
+    }
+
+    if (this.statsDirty) {
+      state.stats = { ...this.cachedStats };
+      this.statsDirty = false;
+      changed = true;
+    }
+
+    return changed;
+  }
+
+  private ensureTaskState(): TaskState {
+    if (!this.gameState.tasks) {
+      this.gameState.tasks = {
+        tasks: [],
+        stats: { ...this.cachedStats },
+      };
+    }
+    return this.gameState.tasks;
+  }
+
+  private serializeTasks(): TaskState["tasks"] {
+    return Array.from(this.tasks.values()).map((task) => ({
+      id: task.id,
+      type: task.type,
+      progress: task.progress,
+      requiredWork: task.requiredWork,
+      completed: task.completed,
+      cancelled: task.cancelled,
+      cancellationReason: task.cancellationReason,
+      zoneId: task.zoneId,
+      bounds: task.bounds
+        ? {
+          x: task.bounds.x,
+          y: task.bounds.y,
+          width: task.bounds.width,
+          height: task.bounds.height,
+        }
+        : undefined,
+      requirements: task.requirements
+        ? {
+          resources: { ...task.requirements.resources },
+          minWorkers: task.requirements.minWorkers,
+        }
+        : undefined,
+      metadata: task.metadata ? { ...task.metadata } : undefined,
+      contributors: task.contributors
+        ? Array.from(task.contributors.entries()).map(
+          ([agentId, contribution]) => ({
+            agentId,
+            contribution,
+          }),
+        )
+        : undefined,
+      lastContribution: task.lastContribution,
+      createdAt: task.createdAt,
+      targetAnimalId: task.targetAnimalId,
+    }));
+  }
+
+  private hasStatsChanged(next: TaskState["stats"]): boolean {
+    return (
+      next.total !== this.cachedStats.total ||
+      next.active !== this.cachedStats.active ||
+      next.completed !== this.cachedStats.completed ||
+      next.stalled !== this.cachedStats.stalled ||
+      Math.abs(next.avgProgress - this.cachedStats.avgProgress) > 0.0001
+    );
   }
 }

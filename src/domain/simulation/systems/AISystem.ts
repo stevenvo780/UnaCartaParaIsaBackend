@@ -314,6 +314,9 @@ export class AISystem extends EventEmitter {
       const idx = (this.agentIndex + i) % agents.length;
       const agent = agents[idx];
 
+      // Skip dead agents - they shouldn't be processed by AI
+      if (agent.isDead) continue;
+
       if (this.playerControlledAgents.has(agent.id)) continue;
 
       let aiState = this.aiStates.get(agent.id);
@@ -2083,5 +2086,17 @@ export class AISystem extends EventEmitter {
   public getCurrentGoal(agentId: string): unknown {
     const aiState = this.aiStates.get(agentId);
     return aiState?.currentGoal;
+  }
+
+  /**
+   * Removes all AI state for an agent (on death).
+   * This completely removes the agent from AI processing.
+   * @param agentId - Agent identifier
+   */
+  public removeAgentState(agentId: string): void {
+    this.aiStates.delete(agentId);
+    this.agentStrategies.delete(agentId);
+    this.playerControlledAgents.delete(agentId);
+    this.activeAgentIdsCache = null; // Invalidate cache
   }
 }

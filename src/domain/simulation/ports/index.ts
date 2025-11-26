@@ -233,6 +233,11 @@ export interface IAIPort {
    * Gets current goal for agent
    */
   getCurrentGoal(agentId: string): unknown;
+
+  /**
+   * Removes all AI state for an agent (on death)
+   */
+  removeAgentState(agentId: string): void;
 }
 
 /**

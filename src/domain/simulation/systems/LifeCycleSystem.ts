@@ -99,6 +99,37 @@ export class LifeCycleSystem extends EventEmitter {
       godInterbirthSec: 600,
       mortalInterbirthSec: 240,
     };
+
+    // Listen for deaths from NeedsSystem to ensure proper cleanup
+    this.setupDeathListener();
+  }
+
+  /**
+   * Sets up a listener for AGENT_DEATH events from NeedsSystem.
+   * Ensures that when an agent dies from starvation/dehydration/exhaustion,
+   * they are properly removed and cleaned up.
+   */
+  private setupDeathListener(): void {
+    simulationEvents.on(
+      GameEventNames.AGENT_DEATH,
+      (data: { agentId?: string; entityId?: string; cause?: string }) => {
+        const agentId = data.agentId || data.entityId;
+        if (!agentId) return;
+
+        // Check if this is a needs-based death (starvation, dehydration, exhaustion)
+        // that hasn't been cleaned up yet
+        const agentStillExists = this.gameState.agents?.find(
+          (a) => a.id === agentId,
+        );
+        if (agentStillExists) {
+          // Agent died from needs but wasn't removed - do cleanup now
+          logger.debug(
+            `🔄 LifeCycleSystem: Processing deferred death for ${agentId} (${data.cause || "unknown"})`,
+          );
+          this.removeAgent(agentId);
+        }
+      },
+    );
   }
 
   public setDependencies(systems: {
@@ -595,7 +626,7 @@ export class LifeCycleSystem extends EventEmitter {
     }
 
     if (this._aiSystem) {
-      this._aiSystem.clearGoals(agentId);
+      this._aiSystem.removeAgentState(agentId);
     }
 
     if (this.needsSystem) {
@@ -612,6 +643,10 @@ export class LifeCycleSystem extends EventEmitter {
 
     if (this._taskSystem) {
       this._taskSystem.removeAgentFromAllTasks(agentId);
+    }
+
+    if (this._roleSystem) {
+      this._roleSystem.removeAgentRole(agentId);
     }
   }
 
