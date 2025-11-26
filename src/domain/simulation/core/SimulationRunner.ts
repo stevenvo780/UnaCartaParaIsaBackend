@@ -185,16 +185,13 @@ export class SimulationRunner {
   @inject(TYPES.SharedSpatialIndex)
   private sharedSpatialIndex!: SharedSpatialIndex;
 
-  // Snapshot throttling state
   private lastSnapshotTime = 0;
-  private readonly SNAPSHOT_INTERVAL_MS = 250; // Generate snapshot every 250ms (4 Hz)
+  private readonly SNAPSHOT_INTERVAL_MS = 250;
 
-  // Worker thread for snapshot processing
   private snapshotWorker?: Worker;
   private snapshotWorkerReady = false;
 
-  // Index rebuild optimization state
-  private readonly INDEX_REBUILD_INTERVAL_FAST = 5; // Rebuild every 5 FAST ticks (250ms)
+  private readonly INDEX_REBUILD_INTERVAL_FAST = 5;
 
   constructor(
     @inject(TYPES.GameState) state: GameState,
@@ -211,12 +208,15 @@ export class SimulationRunner {
       SLOW: 1000,
     });
 
-    // Initialize snapshot worker thread
     this.initializeSnapshotWorker();
   }
 
   /**
-   * Initializes the snapshot worker thread for off-main-thread processing.
+   * Initializes a worker thread for off-main-thread snapshot serialization.
+   * Reduces event loop blocking when generating snapshots for WebSocket clients.
+   *
+   * The worker handles JSON serialization of snapshot data, allowing the main
+   * thread to continue processing simulation ticks without interruption.
    */
   private initializeSnapshotWorker(): void {
     try {
@@ -240,25 +240,26 @@ export class SimulationRunner {
 
       this.snapshotWorker = new Worker(workerCode, { eval: true });
 
-      this.snapshotWorker.on(
-        "message",
-        (rawMessage: unknown) => {
-          const message = rawMessage as { type: string; data?: string; error?: string };
-          if (message.type === "ready") {
-            this.snapshotWorkerReady = true;
-            logger.info("🧵 Snapshot worker thread ready");
-          } else if (message.type === "snapshot-ready" && message.data) {
-            try {
-              const parsed: unknown = JSON.parse(message.data as string);
-              this.emitter.emit("tick", parsed);
-            } catch (err) {
-              logger.error("Failed to parse snapshot from worker:", err);
-            }
-          } else if (message.type === "error") {
-            logger.error("Snapshot worker error:", message.error);
+      this.snapshotWorker.on("message", (rawMessage: unknown) => {
+        const message = rawMessage as {
+          type: string;
+          data?: string;
+          error?: string;
+        };
+        if (message.type === "ready") {
+          this.snapshotWorkerReady = true;
+          logger.info("🧵 Snapshot worker thread ready");
+        } else if (message.type === "snapshot-ready" && message.data) {
+          try {
+            const parsed: unknown = JSON.parse(message.data as string);
+            this.emitter.emit("tick", parsed);
+          } catch (err) {
+            logger.error("Failed to parse snapshot from worker:", err);
           }
-        },
-      );
+        } else if (message.type === "error") {
+          logger.error("Snapshot worker error:", message.error);
+        }
+      });
 
       this.snapshotWorker.on("error", (error) => {
         logger.error("Snapshot worker thread error:", error);
@@ -278,15 +279,25 @@ export class SimulationRunner {
   }
 
   /**
-   * Initializes the simulation runner.
-   * Sets up GPU compute service, rebuilds indices, configures system dependencies,
-   * and creates initial agents and infrastructure if needed.
+   * Initializes the simulation runner and all dependent systems.
+   *
+   * Performs the following setup operations:
+   * - Initializes GPU compute service (with CPU fallback)
+   * - Rebuilds entity and spatial indices
+   * - Configures inter-system dependencies (lifecycle, needs, AI, economy, etc.)
+   * - Sets up event listeners for cross-system communication
+   * - Creates initial family (Isa, Stev, and 4 children) if no agents exist
+   * - Creates initial infrastructure (house, workbench, storage, rest, kitchen)
+   * - Initializes movement states for all agents
+   * - Registers all systems in the multi-rate scheduler
+   *
+   * @throws {Error} If GPU initialization fails (falls back to CPU)
    */
   public async initialize(): Promise<void> {
     await this.gpuComputeService.initialize();
     const gpuStats = this.gpuComputeService.getPerformanceStats();
     logger.info(
-      `🚀 GPU Compute Service: ${gpuStats.gpuAvailable ? "GPU activo" : "CPU fallback"}`,
+      `🚀 GPU Compute Service: ${gpuStats.gpuAvailable ? "GPU active" : "CPU fallback"}`,
     );
 
     this.entityIndex.rebuild(this.state);
@@ -338,9 +349,7 @@ export class SimulationRunner {
       genealogySystem: this._genealogySystem,
     });
 
-    logger.info(
-      "\ud83d\udd17 SimulationRunner: Dependencias entre sistemas configuradas",
-    );
+    logger.info("🔗 SimulationRunner: System dependencies configured");
 
     this.setupEventListeners();
 
@@ -406,8 +415,7 @@ export class SimulationRunner {
       logger.info(`👨‍👩‍👧‍👦 Family initialized: Isa & Stev with 4 children`);
 
       this.createInitialInfrastructure();
-      // Initialize movement states for all initially spawned agents so that
-      // idle wandering and movement logic can run before any explicit MOVE_TO commands.
+
       for (const agent of this.state.agents) {
         try {
           if (!agent.position) {
@@ -432,11 +440,11 @@ export class SimulationRunner {
       }
     }
 
-    logger.info("📅 SimulationRunner: Registrando sistemas en el scheduler...");
+    logger.info("📅 SimulationRunner: Registering systems in scheduler...");
     this.registerSystemsInScheduler();
     this.configureSchedulerHooks();
 
-    logger.info("✅ SimulationRunner: Inicialización completada exitosamente", {
+    logger.info("✅ SimulationRunner: Initialization completed successfully", {
       agentsCount: this.state.agents.length,
       zonesCount: this.state.zones?.length ?? 0,
       entitiesCount: this.state.entities?.length ?? 0,
@@ -445,18 +453,21 @@ export class SimulationRunner {
   }
 
   /**
-   * Configures global synchronization hooks for the scheduler.
-   * These execute before/after each tick to maintain updated indices.
+   * Configures global synchronization hooks for the multi-rate scheduler.
+   *
+   * These hooks execute before and after each tick to maintain system consistency:
+   * - Pre-tick: Processes commands, conditionally rebuilds indices (every N ticks or when dirty)
+   * - Post-tick: Flushes batched events, marks state cache dirty, generates throttled snapshots,
+   *   and updates performance metrics
+   *
+   * Index rebuilding is expensive, so it's done periodically (every 5 FAST ticks) or when
+   * indices report themselves as dirty. This balances performance with data consistency.
    */
   private configureSchedulerHooks(): void {
     this.scheduler.setHooks({
       preTick: () => {
-        // Always process commands (lightweight operation)
         this.processCommands();
 
-        // Only rebuild indices periodically to reduce event loop load
-        // Rebuilds are expensive, so we skip them on most FAST ticks
-        // Rebuild every N ticks OR if indices are dirty
         const shouldRebuildIndices =
           this.tickCounter % this.INDEX_REBUILD_INTERVAL_FAST === 0 ||
           this.entityIndex.isDirty() ||
@@ -467,8 +478,6 @@ export class SimulationRunner {
           this.entityIndex.syncAgentsToEntities(this.state);
         }
 
-        // Spatial index rebuild is already optimized internally (only rebuilds if dirty)
-        // Always call it, but it will be fast if not dirty (just updates moved positions)
         this.sharedSpatialIndex.rebuildIfNeeded(
           this.state.entities || [],
           this.animalSystem.getAnimals(),
@@ -502,10 +511,8 @@ export class SimulationRunner {
 
         this.tickCounter += 1;
 
-        // Generate snapshot with throttling (only if listeners and time elapsed)
         this.generateSnapshotThrottled();
 
-        // Update performance stats synchronously (lightweight operations)
         performanceMonitor.setSchedulerStats(this.scheduler.getStats());
 
         performanceMonitor.setGameLogicStats({
@@ -526,12 +533,15 @@ export class SimulationRunner {
   }
 
   /**
-   * Registers all systems in the multi-rate scheduler.
-   * - FAST (50ms): Movement, combat, trails, animals
-   * - MEDIUM (250ms): AI, needs, social, household
-   * - SLOW (1000ms): Economy, research, market, etc.
+   * Registers all simulation systems in the multi-rate scheduler.
    *
-   * Systems can specify minEntities to be skipped when entity count is low.
+   * Systems are distributed across three update rates:
+   * - FAST (50ms): Movement, combat, animals - requires high-frequency updates
+   * - MEDIUM (250ms): AI, needs, social, household, lifecycle - moderate update frequency
+   * - SLOW (1000ms): Economy, research, market, governance - infrequent updates sufficient
+   *
+   * Some systems specify `minEntities` to skip execution when entity count is too low,
+   * reducing unnecessary computation in early game stages.
    */
   private registerSystemsInScheduler(): void {
     this.scheduler.registerSystem({
@@ -1719,7 +1729,7 @@ export class SimulationRunner {
       return;
     }
 
-    logger.info("🔄 SimulationRunner: Iniciando scheduler de simulación...");
+    logger.info("🔄 SimulationRunner: Starting simulation scheduler...");
     this.scheduler.start();
     logger.info("🚀 Multi-rate simulation started", {
       rates: { FAST: "50ms", MEDIUM: "250ms", SLOW: "1000ms" },
@@ -1784,7 +1794,6 @@ export class SimulationRunner {
       activeLegends,
     };
 
-    // Enriquecer agentes con datos de AI
     if (snapshotState.agents) {
       snapshotState.agents = snapshotState.agents.map((agent) => {
         const aiState = this.aiSystem.getAIState(agent.id);
@@ -1818,23 +1827,22 @@ export class SimulationRunner {
   }
 
   /**
-   * Generates snapshot with throttling and worker thread processing.
-   * Only generates snapshot if:
-   * 1. There are listeners (clients connected)
-   * 2. Enough time has elapsed since last snapshot (SNAPSHOT_INTERVAL_MS)
-   * 3. Worker thread is ready
+   * Generates a snapshot with throttling and optional worker thread processing.
    *
-   * The snapshot is processed in a worker thread to avoid blocking the main event loop.
+   * Snapshot generation is conditional:
+   * 1. Only if there are listeners (clients connected via WebSocket)
+   * 2. Only if enough time has elapsed since last snapshot (SNAPSHOT_INTERVAL_MS = 250ms)
+   * 3. Uses worker thread if available, otherwise falls back to main thread
+   *
+   * This throttling prevents excessive snapshot generation when no clients are connected
+   * and reduces event loop blocking by offloading serialization to a worker thread.
    */
   private generateSnapshotThrottled(): void {
-    // Skip if no listeners (no clients connected)
     if (this.emitter.listenerCount("tick") === 0) {
       return;
     }
 
-    // Skip if worker not ready
     if (!this.snapshotWorkerReady || !this.snapshotWorker) {
-      // Fallback to synchronous emission if worker not available
       try {
         const snapshot = this.getTickSnapshot();
         this.emitter.emit("tick", snapshot);
@@ -1847,7 +1855,6 @@ export class SimulationRunner {
     const now = Date.now();
     const elapsed = now - this.lastSnapshotTime;
 
-    // Throttle: only generate snapshot every SNAPSHOT_INTERVAL_MS
     if (elapsed < this.SNAPSHOT_INTERVAL_MS) {
       return;
     }
@@ -1855,10 +1862,7 @@ export class SimulationRunner {
     this.lastSnapshotTime = now;
 
     try {
-      // Generate snapshot data (lightweight, no serialization)
       const snapshot = this.getTickSnapshot();
-
-      // Send to worker thread for serialization and processing
       this.snapshotWorker.postMessage({
         type: "snapshot",
         data: snapshot,
@@ -1869,10 +1873,17 @@ export class SimulationRunner {
   }
 
   /**
-   * Gets an optimized snapshot for ticks (without static data).
-   * Uses StateCache to only clone what changed.
+   * Generates an optimized snapshot for regular ticks (excludes static terrain data).
    *
-   * @returns Optimized simulation snapshot
+   * Uses StateCache to minimize cloning overhead by only copying state sections
+   * that have been marked as dirty since the last snapshot. Static data like
+   * terrain tiles, roads, and object layers are excluded to reduce payload size.
+   *
+   * Includes dynamic state: agents, entities, zones, resources, social graph,
+   * market, quests, research, etc. Also includes AI state (goals, actions) and
+   * genealogy/legends data.
+   *
+   * @returns Optimized simulation snapshot with only changed state sections
    */
   getTickSnapshot(): SimulationSnapshot {
     const events =
@@ -1893,7 +1904,6 @@ export class SimulationRunner {
       activeLegends,
     };
 
-    // Enriquecer agentes con datos de AI
     if (snapshotState.agents) {
       snapshotState.agents = snapshotState.agents.map((agent) => {
         const aiState = this.aiSystem.getAIState(agent.id);
@@ -1942,11 +1952,14 @@ export class SimulationRunner {
   }
 
   /**
-   * Gets a delta snapshot (only changes since last snapshot).
-   * Significantly reduces payload size for WebSocket transmission.
+   * Generates a delta snapshot containing only changes since the last snapshot.
    *
-   * @param forceFull - Force a full snapshot regardless of interval
-   * @returns Delta snapshot with only changes
+   * Uses DeltaEncoder to compute differences between current and previous state,
+   * significantly reducing payload size for WebSocket transmission. This is more
+   * efficient than full snapshots when state changes are incremental.
+   *
+   * @param forceFull - If true, generates a full snapshot regardless of delta interval
+   * @returns Delta snapshot with only changed state sections
    */
   getDeltaSnapshot(forceFull = false): DeltaSnapshot {
     const tickSnapshot = this.getTickSnapshot();
@@ -1956,11 +1969,7 @@ export class SimulationRunner {
   private isStepping = false;
 
   /**
-   * @deprecated Use scheduler instead
-   * @internal
-   */
-  /**
-   * @deprecated Use scheduler instead
+   * @deprecated Use MultiRateScheduler instead. This method is kept for compatibility only.
    * @internal
    */
   // @ts-expect-error - Deprecated method kept for compatibility
@@ -2639,11 +2648,14 @@ export class SimulationRunner {
   }
 
   /**
-   * Ensures an agent has a movement state initialized.
-   * If not, attempts to initialize it from the agent's current position.
+   * Ensures an agent has a movement state initialized in the MovementSystem.
    *
-   * @param agentId - The agent ID to check
-   * @returns true if movement state exists or was successfully created
+   * If the agent doesn't have a movement state, attempts to initialize it from
+   * the agent's current position. If the agent has no position, assigns a default
+   * position based on world size before initializing movement.
+   *
+   * @param agentId - The agent ID to check and initialize
+   * @returns True if movement state exists or was successfully created, false otherwise
    */
   private ensureMovementState(agentId: string): boolean {
     if (this.movementSystem.hasMovementState(agentId)) {

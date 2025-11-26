@@ -171,7 +171,7 @@ export class CombatSystem {
       }
     }
 
-    const potentialAttackers = validEntities; // Ya están filtrados (!isDead && position)
+    const potentialAttackers = validEntities;
 
     /**
      * Umbral para activar procesamiento por lotes en combate.

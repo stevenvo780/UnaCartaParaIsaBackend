@@ -89,9 +89,8 @@ export class MultiRateScheduler {
   private lastEntityCountUpdate = 0;
   private readonly ENTITY_COUNT_CACHE_MS = 500;
 
-  // Time budget for system execution to avoid blocking event loop
-  private readonly MAX_SYSTEM_TIME_MS = 10; // Maximum time per system before yielding
-  private readonly MAX_TICK_TIME_MS = 40; // Maximum time per tick before yielding (for FAST)
+  private readonly MAX_SYSTEM_TIME_MS = 10;
+  private readonly MAX_TICK_TIME_MS = 40;
 
   private stats = {
     fast: { count: 0, totalMs: 0, avgMs: 0, skipped: 0 },
@@ -350,7 +349,7 @@ export class MultiRateScheduler {
           const systemStartTime = performance.now();
           await result;
           const systemDuration = performance.now() - systemStartTime;
-          
+
           // If system took too long, warn but continue
           if (systemDuration > this.MAX_SYSTEM_TIME_MS) {
             logger.debug(

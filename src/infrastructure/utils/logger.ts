@@ -172,7 +172,6 @@ class Logger {
       void this.evacuateToFile();
     }
 
-    // Clean throttle map
     const now = Date.now();
     for (const [key, entry] of this.throttleMap) {
       if (now - entry.lastTime > this.config.throttleWindowMs * 2) {

@@ -211,8 +211,6 @@ export class LifeCycleSystem extends EventEmitter {
 
     const householdId = this.householdSystem?.getHouseFor(agent.id)?.id;
     if (householdId) {
-      // If they have a household, ensure they are assigned to it in the system
-      // This is a safety check/sync
       const currentHouse = this.householdSystem?.getHouseFor(agent.id);
       if (!currentHouse) {
         this.householdSystem?.assignToHouse(agent.id, householdId);
@@ -329,17 +327,16 @@ export class LifeCycleSystem extends EventEmitter {
     spec:
       | Partial<AgentProfile>
       | {
-        id?: string;
-        name?: string;
-        sex: "male" | "female";
-        ageYears: number;
-        lifeStage: LifeStage;
-        generation: number;
-        immortal?: boolean;
-        traits?: Partial<AgentTraits>;
-      } = {},
+          id?: string;
+          name?: string;
+          sex: "male" | "female";
+          ageYears: number;
+          lifeStage: LifeStage;
+          generation: number;
+          immortal?: boolean;
+          traits?: Partial<AgentTraits>;
+        } = {},
   ): AgentProfile {
-    // Convert spec to Partial<AgentProfile> for internal processing
     const partial = spec as Partial<AgentProfile>;
     const id = partial.id ?? `agent_${++this.spawnCounter}`;
     logger.info(`🧑 Spawning agent ${id} (${partial.name || "unnamed"})`);
@@ -663,7 +660,7 @@ export class LifeCycleSystem extends EventEmitter {
       const nearbyTile = this.gameState.terrainTiles.find((tile) => {
         const dx = Math.abs(tile.x - position.x);
         const dy = Math.abs(tile.y - position.y);
-        return dx < 16 && dy < 16; // Dentro del tile
+        return dx < 16 && dy < 16;
       });
 
       if (nearbyTile && nearbyTile.isWalkable === false) {

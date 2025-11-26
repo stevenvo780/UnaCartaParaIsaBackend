@@ -7,6 +7,8 @@ import type {
 } from "../../types/simulation/household";
 import type { ResourceType } from "../../types/simulation/economy";
 import { simulationEvents, GameEventNames } from "../core/events";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
 
 const DEFAULT_CONFIG: HouseholdSystemConfig = {
   updateIntervalMs: 5000,
@@ -14,9 +16,20 @@ const DEFAULT_CONFIG: HouseholdSystemConfig = {
   defaultInventoryCapacity: 100,
 };
 
-import { injectable, inject } from "inversify";
-import { TYPES } from "../../../config/Types";
-
+/**
+ * System for managing household assignments and shared inventories.
+ *
+ * Tracks agent-to-household assignments, manages shared resource storage,
+ * and monitors occupancy levels. Households are created from "rest" type zones.
+ *
+ * Features:
+ * - Automatic household creation from rest zones
+ * - Shared inventory management (wood, stone, food, water)
+ * - Occupancy tracking and high-occupancy warnings
+ * - Homeless agent detection
+ *
+ * @module domain/simulation/systems
+ */
 @injectable()
 export class HouseholdSystem {
   private gameState: GameState;
@@ -222,6 +235,14 @@ export class HouseholdSystem {
     };
   }
 
+  /**
+   * Deposits resources into a household's shared inventory.
+   * Only processes basic resources (wood, stone, food, water) that the household can store.
+   *
+   * @param householdId - Household identifier
+   * @param resources - Resources to deposit
+   * @returns True if all resources were successfully deposited
+   */
   public depositToHousehold(
     householdId: string,
     resources: Partial<Record<ResourceType, number>>,
@@ -232,7 +253,6 @@ export class HouseholdSystem {
     let success = true;
     for (const [res, amount] of Object.entries(resources)) {
       const resource = res as ResourceType;
-      // Solo procesamos los recursos básicos que el inventario del hogar puede almacenar
       if (
         resource !== "wood" &&
         resource !== "stone" &&
@@ -268,6 +288,15 @@ export class HouseholdSystem {
     return success;
   }
 
+  /**
+   * Withdraws resources from a household's shared inventory.
+   * Only processes basic resources (wood, stone, food, water) that the household stores.
+   * Simplified implementation for port compatibility - does not check agent permissions.
+   *
+   * @param householdId - Household identifier
+   * @param resources - Resources to withdraw
+   * @returns True if withdrawal was successful
+   */
   public withdrawFromHousehold(
     householdId: string,
     resources: Partial<Record<ResourceType, number>>,
@@ -275,13 +304,8 @@ export class HouseholdSystem {
     const household = this.households.get(householdId);
     if (!household) return false;
 
-    // Simplified withdrawal for port compatibility
-    // In a real scenario we might want to check agent permissions here if agentId was passed
-    // But the port signature is (householdId, resources)
-
     for (const [res, amount] of Object.entries(resources)) {
       const resource = res as ResourceType;
-      // Solo procesamos los recursos básicos que el inventario del hogar puede almacenar
       if (
         resource !== "wood" &&
         resource !== "stone" &&
@@ -296,7 +320,7 @@ export class HouseholdSystem {
       if (household.sharedInventory[resource] >= amount) {
         household.sharedInventory[resource] -= amount;
         simulationEvents.emit(GameEventNames.HOUSEHOLD_RESOURCE_WITHDRAWN, {
-          agentId: "system", // Unknown agent context in this overload
+          agentId: "system",
           householdId,
           resource,
           amount,

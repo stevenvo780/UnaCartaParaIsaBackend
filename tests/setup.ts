@@ -28,21 +28,30 @@ vi.mock("@tensorflow/tfjs-node-gpu", () => {
     };
   };
 
+  const mockTf = {
+    ready: vi.fn().mockResolvedValue(undefined),
+    getBackend: vi.fn().mockReturnValue("cpu"),
+    tensor1d: vi.fn((data) => createMockTensor(data)),
+    tensor2d: vi.fn((data, shape) => createMockTensor(data, shape)),
+    scalar: vi.fn((value) => createMockTensor(value)),
+    tidy: vi.fn((fn) => {
+      try {
+        return fn();
+      } finally {
+      }
+    }),
+    disposeVariables: vi.fn(),
+  };
+
   return {
-    default: {
-      ready: vi.fn().mockResolvedValue(undefined),
-      getBackend: vi.fn().mockReturnValue("cpu"),
-      tensor1d: vi.fn((data) => createMockTensor(data)),
-      tensor2d: vi.fn((data, shape) => createMockTensor(data, shape)),
-      scalar: vi.fn((value) => createMockTensor(value)),
-      tidy: vi.fn((fn) => {
-        try {
-          return fn();
-        } finally {
-        }
-      }),
-      disposeVariables: vi.fn(),
-    },
+    default: mockTf,
+    ready: mockTf.ready, // Exportar ready directamente también
+    getBackend: mockTf.getBackend,
+    tensor1d: mockTf.tensor1d,
+    tensor2d: mockTf.tensor2d,
+    scalar: mockTf.scalar,
+    tidy: mockTf.tidy,
+    disposeVariables: mockTf.disposeVariables,
   };
 });
 
@@ -129,9 +138,15 @@ export function createMockAISystemDependencies() {
     } as unknown as WorldResourceSystem,
     inventorySystem: {
       getInventory: vi.fn(() => ({ capacity: 100, items: {} })),
+      getAgentInventory: vi.fn(() => ({})),
       addItem: vi.fn(),
+      addResource: vi.fn(),
       removeItem: vi.fn(),
+      removeFromAgent: vi.fn(),
       hasItem: vi.fn(() => false),
+      getStockpilesInZone: vi.fn(() => []),
+      createStockpile: vi.fn(),
+      transferToStockpile: vi.fn(),
     } as unknown as InventorySystem,
     socialSystem: {
       getAffinity: vi.fn(() => 0),
@@ -150,11 +165,15 @@ export function createMockAISystemDependencies() {
     taskSystem: {
       createTask: vi.fn(),
       getTask: vi.fn(() => null),
+      getActiveTasks: vi.fn(() => []),
       completeTask: vi.fn(),
+      contributeToTask: vi.fn(),
     } as unknown as TaskSystem,
     combatSystem: {
       attack: vi.fn(),
       getCombatStats: vi.fn(() => ({ health: 100, stamina: 100 })),
+      getNearbyEnemies: vi.fn(() => []),
+      getEquipped: vi.fn(() => "unarmed"),
     } as unknown as CombatSystem,
     animalSystem: {
       getAnimals: vi.fn(() => new Map()),
@@ -164,9 +183,13 @@ export function createMockAISystemDependencies() {
     movementSystem: {
       moveTo: vi.fn(),
       stop: vi.fn(),
+      isMoving: vi.fn(() => false),
+      isMovingToPosition: vi.fn(() => false),
+      isMovingToZone: vi.fn(() => false),
     } as unknown as MovementSystem,
     questSystem: {
       getActiveQuests: vi.fn(() => []),
+      getAvailableQuests: vi.fn(() => []),
       startQuest: vi.fn(),
       completeQuest: vi.fn(),
     } as unknown as QuestSystem,

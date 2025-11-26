@@ -143,10 +143,13 @@ describe("AttentionEvaluator", () => {
   });
 
   describe("evaluateDefaultExploration", () => {
-    it("debe retornar array vacío si no hay zonas", () => {
+    it("debe retornar goal de wander si no hay zonas", () => {
       gameState.zones = [];
       const goals = evaluateDefaultExploration(context, aiState);
-      expect(goals).toEqual([]);
+      // La implementación retorna un goal de "wander" cuando no hay zonas
+      expect(goals.length).toBe(1);
+      expect(goals[0].type).toBe("explore");
+      expect(goals[0].data?.explorationType).toBe("wander");
     });
 
     it("debe retornar goal de descanso si hay zonas de descanso", () => {
@@ -173,10 +176,13 @@ describe("AttentionEvaluator", () => {
       }
     });
 
-    it("debe retornar array vacío si selectBestZone retorna null", () => {
+    it("debe retornar goal de wander fallback si selectBestZone retorna null", () => {
       context.selectBestZone = () => null;
       const goals = evaluateDefaultExploration(context, aiState);
-      expect(goals).toEqual([]);
+      // La implementación retorna un goal de "wander_fallback" cuando selectBestZone retorna null
+      expect(goals.length).toBe(1);
+      expect(goals[0].type).toBe("explore");
+      expect(goals[0].data?.explorationType).toBe("wander");
     });
 
     it("debe incluir prioridad y timestamps en el goal", () => {

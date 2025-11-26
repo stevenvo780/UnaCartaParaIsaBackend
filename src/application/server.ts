@@ -32,14 +32,12 @@ const simulationRunner = container.get<SimulationRunner>(
   TYPES.SimulationRunner,
 );
 
-logger.info(
-  "\ud83d\ude80 Backend: Iniciando proceso de inicializaci\u00f3n de simulaci\u00f3n...",
-);
+logger.info("🚀 Backend: Starting simulation initialization process...");
 
 simulationRunner
   .initialize()
   .then(() => {
-    logger.info("\u2705 Backend: SimulationRunner inicializado correctamente");
+    logger.info("✅ Backend: SimulationRunner initialized successfully");
     return simulationRunner.initializeWorldResources({
       width: 128,
       height: 128,
@@ -48,12 +46,12 @@ simulationRunner
     });
   })
   .then(() => {
-    logger.info("\ud83c\udf0d Backend: World resources inicializados");
+    logger.info("🌍 Backend: World resources initialized");
     simulationRunner.start();
-    logger.info("\u2705 Backend: Simulaci\u00f3n iniciada y corriendo");
+    logger.info("✅ Backend: Simulation started and running");
   })
   .catch((err) => {
-    logger.error("\u274c Backend: Fallo al inicializar simulaci\u00f3n:", err);
+    logger.error("❌ Backend: Failed to initialize simulation:", err);
   });
 
 detectGPUAvailability();

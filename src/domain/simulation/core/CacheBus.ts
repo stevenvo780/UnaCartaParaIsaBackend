@@ -1,8 +1,8 @@
 /**
- * Cache Bus - Sistema centralizado de invalidación de cachés
+ * Centralized cache invalidation system.
  *
- * Proporciona versionado global y eventos de invalidación para coordinar
- * la limpieza de cachés entre múltiples sistemas de simulación.
+ * Provides global versioning and invalidation events to coordinate
+ * cache clearing across multiple simulation systems.
  *
  * @module domain/simulation/core/CacheBus
  */
@@ -10,8 +10,14 @@
 import { EventEmitter } from "events";
 import { logger } from "../../../infrastructure/utils/logger";
 
+/**
+ * Cache scope for invalidation targeting.
+ */
 export type CacheScope = "world" | "agents" | "resources" | "zones" | "all";
 
+/**
+ * Cache invalidation event payload.
+ */
 export interface CacheInvalidationEvent {
   scope: CacheScope;
   version: number;
@@ -20,15 +26,16 @@ export interface CacheInvalidationEvent {
 }
 
 /**
- * Singleton para gestión centralizada de cachés
+ * Centralized cache management singleton.
  *
- * Proporciona:
- * - Versionado global (se incrementa en cada invalidación)
- * - Eventos de invalidación por scope
- * - Tracking de suscriptores
+ * Provides:
+ * - Global versioning (increments on each invalidation)
+ * - Scope-specific invalidation events
+ * - Subscriber tracking
  *
  * @example
- * // En un sistema con caché
+ * ```typescript
+ * // In a system with cache
  * private cacheVersion = 0;
  *
  * update() {
@@ -38,8 +45,9 @@ export interface CacheInvalidationEvent {
  *   }
  * }
  *
- * // Invalidar cuando cambia el estado
+ * // Invalidate when state changes
  * cacheBus.invalidate("resources", "Resource harvested");
+ * ```
  */
 export class CacheBus extends EventEmitter {
   private version = 0;
@@ -56,18 +64,16 @@ export class CacheBus extends EventEmitter {
   }
 
   /**
-   * Invalida cachés en un scope específico
+   * Invalidates caches in a specific scope.
    *
-   * @param scope - Alcance de la invalidación
-   * @param reason - Razón opcional para logging
+   * @param scope - Invalidation scope
+   * @param reason - Optional reason for logging
    */
   public invalidate(scope: CacheScope, reason?: string): void {
     this.version++;
 
-    // Actualizar versión del scope específico
     this.scopeVersions.set(scope, this.version);
 
-    // Si es "all", actualizar todos los scopes
     if (scope === "all") {
       for (const s of this.scopeVersions.keys()) {
         this.scopeVersions.set(s, this.version);
@@ -90,21 +96,28 @@ export class CacheBus extends EventEmitter {
   }
 
   /**
-   * Obtiene la versión global actual
+   * Gets the current global version.
+   *
+   * @returns Current global cache version
    */
   public getVersion(): number {
     return this.version;
   }
 
   /**
-   * Obtiene la versión de un scope específico
+   * Gets the version for a specific scope.
+   *
+   * @param scope - Cache scope to query
+   * @returns Scope-specific version number
    */
   public getScopeVersion(scope: CacheScope): number {
     return this.scopeVersions.get(scope) || 0;
   }
 
   /**
-   * Registra un sistema como suscriptor
+   * Registers a system as a cache subscriber.
+   *
+   * @param systemName - Name of the subscribing system
    */
   public registerSubscriber(systemName: string): void {
     this.subscribers.add(systemName);
@@ -112,21 +125,25 @@ export class CacheBus extends EventEmitter {
   }
 
   /**
-   * Desregistra un sistema
+   * Unregisters a system from cache invalidation.
+   *
+   * @param systemName - Name of the system to unregister
    */
   public unregisterSubscriber(systemName: string): void {
     this.subscribers.delete(systemName);
   }
 
   /**
-   * Obtiene lista de suscriptores activos
+   * Gets list of active subscribers.
+   *
+   * @returns Array of subscriber system names
    */
   public getSubscribers(): string[] {
     return Array.from(this.subscribers);
   }
 
   /**
-   * Resetea versiones (útil para tests)
+   * Resets all versions (useful for tests).
    */
   public reset(): void {
     this.version = 0;
@@ -137,7 +154,9 @@ export class CacheBus extends EventEmitter {
   }
 
   /**
-   * Estadísticas de invalidación
+   * Gets cache invalidation statistics.
+   *
+   * @returns Statistics including version, scope versions, and subscriber count
    */
   public getStats(): {
     version: number;
@@ -156,6 +175,6 @@ export class CacheBus extends EventEmitter {
 }
 
 /**
- * Instancia singleton del CacheBus
+ * Singleton instance of CacheBus.
  */
 export const cacheBus = new CacheBus();

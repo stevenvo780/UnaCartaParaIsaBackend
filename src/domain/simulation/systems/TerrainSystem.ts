@@ -44,8 +44,6 @@ export class TerrainSystem {
     if (y >= 0 && y < this.gameState.world.terrain.length) {
       const row = this.gameState.world.terrain[y];
       if (x >= 0 && x < row.length) {
-        // We cast to unknown then to TerrainTile because GameState definition is slightly different
-        // but compatible in structure for our needs here.
         const tile = row[x] as unknown as TerrainTile;
 
         let modified = false;

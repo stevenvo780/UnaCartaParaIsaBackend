@@ -192,6 +192,64 @@ export class NeedsSystem extends EventEmitter {
       duration,
     );
   }
+      const divineMult = this.divineFavorSystem
+        ? (() => {
+            const favorObj = this.divineFavorSystem!.getFavor(entityId);
+            return favorObj ? 1 - favorObj.favor * 0.3 : 1.0;
+          })()
+        : 1.0;
+      const finalMultiplier = ageMult * divineMult;
+
+      needs.hunger = Math.max(
+        0,
+        needs.hunger - this.config.decayRates.hunger * finalMultiplier * dtSeconds,
+      );
+      needs.thirst = Math.max(
+        0,
+        needs.thirst - this.config.decayRates.thirst * finalMultiplier * dtSeconds,
+      );
+      needs.energy = Math.max(
+        0,
+        needs.energy - this.config.decayRates.energy * finalMultiplier * dtSeconds,
+      );
+      needs.hygiene = Math.max(
+        0,
+        needs.hygiene - this.config.decayRates.hygiene * finalMultiplier * dtSeconds,
+      );
+      needs.social = Math.max(
+        0,
+        needs.social - this.config.decayRates.social * finalMultiplier * dtSeconds,
+      );
+      needs.fun = Math.max(
+        0,
+        needs.fun - this.config.decayRates.fun * finalMultiplier * dtSeconds,
+      );
+      needs.mentalHealth = Math.max(
+        0,
+        needs.mentalHealth - this.config.decayRates.mentalHealth * finalMultiplier * dtSeconds,
+      );
+
+      if (this.config.crossEffectsEnabled) {
+        this.applyCrossEffects(needs);
+      }
+
+      this.handleZoneBenefits(entityId, needs, dtSeconds);
+      this.applySocialMoraleBoost(entityId, needs);
+      this.checkEmergencyNeeds(entityId, needs);
+
+      if (this.checkForDeath(entityId, needs)) {
+        continue;
+      }
+
+      this.emitNeedEvents(entityId, needs);
+    }
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordSubsystemExecution(
+      "NeedsSystem",
+      "updateTraditional",
+      duration,
+    );
+  }
 
   private updateBatch(dtSeconds: number, _now: number): void {
     const startTime = performance.now();
@@ -300,7 +358,6 @@ export class NeedsSystem extends EventEmitter {
         case "bed":
         case "shelter":
         case "house": {
-          // Much faster recovery in proper shelter (approx 4x faster than base)
           const energyBonus = 50 * deltaSeconds * multiplier;
           needs.energy = Math.min(100, needs.energy + energyBonus);
           break;

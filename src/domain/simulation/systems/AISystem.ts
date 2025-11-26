@@ -94,18 +94,15 @@ export class AISystem extends EventEmitter {
   private _lastMemoryCleanupTime = 0;
   private readonly MEMORY_CLEANUP_INTERVAL = 300000;
 
-  // Process more agents per tick now that we're using synchronous batching
   private readonly BATCH_SIZE = 10;
 
-  // Cache for expensive evaluations
-  private zoneCache = new Map<string, string | undefined>(); // agentId -> zoneId
-  private craftingZoneCache: string | undefined | null = null; // null = not cached
+  private zoneCache = new Map<string, string | undefined>();
+  private craftingZoneCache: string | undefined | null = null;
   private activeAgentIdsCache: string[] | null = null;
   private lastCacheInvalidation = 0;
-  private readonly CACHE_INVALIDATION_INTERVAL = 1000; // Invalidate cache every 1 second
+  private readonly CACHE_INVALIDATION_INTERVAL = 1000;
 
-  // Time limit for decision making to avoid blocking event loop
-  private readonly MAX_DECISION_TIME_MS = 5; // Maximum time allowed for a single decision
+  private readonly MAX_DECISION_TIME_MS = 5;
 
   private agentStrategies = new Map<
     string,
@@ -257,17 +254,13 @@ export class AISystem extends EventEmitter {
     this.lastUpdate = now;
     const agents = this.gameState.agents || [];
 
-    // Invalidate cache periodically or if significant time has passed
     if (now - this.lastCacheInvalidation > this.CACHE_INVALIDATION_INTERVAL) {
       this.invalidateCache();
       this.lastCacheInvalidation = now;
     }
 
-    // Process batch of agents synchronously
     const batchSize = Math.min(this.BATCH_SIZE, agents.length);
-    let processed = 0;
 
-    // Log occasionally to confirm AI is running
     if (Math.random() < 0.01) {
       logger.debug(
         `🧠 AISystem update: processing ${batchSize} agents (total: ${agents.length})`,
@@ -288,13 +281,11 @@ export class AISystem extends EventEmitter {
 
       if (aiState.offDuty) continue;
 
-      // Process agent synchronously
       try {
         this.processAgent(agent.id, aiState, now);
       } catch (error) {
         logger.error(`Error processing agent ${agent.id}`, { error });
       }
-      processed++;
     }
 
     this.agentIndex = (this.agentIndex + batchSize) % agents.length;
@@ -365,12 +356,10 @@ export class AISystem extends EventEmitter {
       if (action) {
         aiState.currentAction = action;
 
-        // Recover energy if idle (field rest)
         if (action.actionType === "idle" && this.needsSystem) {
-          // Recover small amount of energy while resting in field
-          // This prevents agents from getting stuck in low energy state when no beds are available
-          // Reduced to 0.5 to make field rest significantly less effective than beds (50)
-          this.needsSystem.recoverEnergy(agentId, 0.5);
+          this.needsSystem.setEntityAction(agentId, "idle");
+        } else if (this.needsSystem) {
+          this.needsSystem.setEntityAction(agentId, action.actionType);
         }
 
         logger.debug(
@@ -403,10 +392,10 @@ export class AISystem extends EventEmitter {
 
     const inventoryEmpty = inventory
       ? (inventory.food || 0) +
-      (inventory.water || 0) +
-      (inventory.wood || 0) +
-      (inventory.stone || 0) ===
-      0
+          (inventory.water || 0) +
+          (inventory.wood || 0) +
+          (inventory.stone || 0) ===
+        0
       : true;
     const needsSatisfied = needs
       ? needs.hunger > 70 && needs.thirst > 70 && needs.energy > 70
@@ -459,9 +448,7 @@ export class AISystem extends EventEmitter {
       );
     }
 
-    // If decision took too long, return a simplified fallback goal
     if (d0 > this.MAX_DECISION_TIME_MS * 2 && !goal) {
-      // Use a simple exploration goal as fallback
       return this.getFallbackExplorationGoal(agentId, aiState);
     }
 
@@ -630,25 +617,25 @@ export class AISystem extends EventEmitter {
         : undefined,
       getCurrentTimeOfDay: this.timeSystem
         ? ():
-          | "dawn"
-          | "morning"
-          | "midday"
-          | "afternoon"
-          | "dusk"
-          | "night"
-          | "deep_night" => {
-          const time = this.timeSystem!.getCurrentTimeOfDay();
-          if (time === "evening") return "dusk";
-          if (time === "rest") return "deep_night";
-          return time as
             | "dawn"
             | "morning"
             | "midday"
             | "afternoon"
             | "dusk"
             | "night"
-            | "deep_night";
-        }
+            | "deep_night" => {
+            const time = this.timeSystem!.getCurrentTimeOfDay();
+            if (time === "evening") return "dusk";
+            if (time === "rest") return "deep_night";
+            return time as
+              | "dawn"
+              | "morning"
+              | "midday"
+              | "afternoon"
+              | "dusk"
+              | "night"
+              | "deep_night";
+          }
         : undefined,
       getEntityPosition: (id: string) => {
         const agent =
@@ -705,10 +692,10 @@ export class AISystem extends EventEmitter {
       socialPreference: isChild
         ? "extroverted"
         : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 >
-          0.6
+            0.6
           ? "extroverted"
           : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 <
-            0.4
+              0.4
             ? "introverted"
             : "balanced",
       workEthic: isChild
@@ -716,7 +703,7 @@ export class AISystem extends EventEmitter {
         : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 > 0.7
           ? "workaholic"
           : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 <
-            0.3
+              0.3
             ? "lazy"
             : "balanced",
       explorationType:
@@ -1153,6 +1140,14 @@ export class AISystem extends EventEmitter {
       if (!targetAgent) {
         return false;
       }
+
+      // If it's a social assist, check if needs are satisfied
+      if (goal.data.resourceType === "social" && this.needsSystem) {
+        const needs = this.needsSystem.getNeeds(targetId);
+        if (needs && (needs.social > 70 || needs.fun > 70)) {
+          return true;
+        }
+      }
     }
 
     return false;
@@ -1381,6 +1376,56 @@ export class AISystem extends EventEmitter {
         }
         return null;
 
+      case "assist":
+        if (goal.targetZoneId) {
+          return {
+            actionType: "socialize",
+            agentId,
+            targetZoneId: goal.targetZoneId,
+            targetId: goal.data?.targetAgentId as string | undefined,
+            timestamp,
+          };
+        }
+        return null;
+
+      case "explore": {
+        if (
+          goal.data?.targetRegionX !== undefined &&
+          goal.data?.targetRegionY !== undefined
+        ) {
+          return {
+            actionType: "move",
+            agentId,
+            targetPosition: {
+              x: goal.data.targetRegionX as number,
+              y: goal.data.targetRegionY as number,
+            },
+            timestamp,
+          };
+        }
+        if (goal.targetPosition) {
+          return {
+            actionType: "move",
+            agentId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+          };
+        }
+        const currentPos = this.getAgentPosition(agentId);
+        if (currentPos) {
+          return {
+            actionType: "move",
+            agentId,
+            targetPosition: {
+              x: currentPos.x + (Math.random() - 0.5) * 200,
+              y: currentPos.y + (Math.random() - 0.5) * 200,
+            },
+            timestamp,
+          };
+        }
+        return null;
+      }
+
       default:
         return null;
     }
@@ -1596,6 +1641,7 @@ export class AISystem extends EventEmitter {
       case "work":
         this.executeWorkAction(action);
         break;
+
       case "harvest":
         if (action.targetId && this.worldResourceSystem) {
           const result = this.worldResourceSystem.harvestResource(
@@ -1732,13 +1778,13 @@ export class AISystem extends EventEmitter {
       // Convert goal.data to AIGoalData format
       const goalData: AIGoalData | undefined = goal.data
         ? {
-          ...Object.fromEntries(
-            Object.entries(goal.data).map(([k, v]) => [
-              k,
-              typeof v === "string" || typeof v === "number" ? v : undefined,
-            ]),
-          ),
-        }
+            ...Object.fromEntries(
+              Object.entries(goal.data).map(([k, v]) => [
+                k,
+                typeof v === "string" || typeof v === "number" ? v : undefined,
+              ]),
+            ),
+          }
         : undefined;
 
       const newGoal: AIGoal = {

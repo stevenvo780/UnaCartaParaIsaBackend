@@ -530,8 +530,5 @@ export class SocialSystem {
       timestamp: number;
       [key: string]: unknown;
     },
-  ): void {
-    // TODO: Implement social memory logic
-    // For now, we just log it or ignore it as it wasn't present before
-  }
+  ): void {}
 }

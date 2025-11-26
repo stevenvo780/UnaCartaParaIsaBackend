@@ -59,7 +59,7 @@ export class ResourceAttractionSystem {
     const emergencies: ResourceEmergencyRequest[] = [];
 
     for (const [entityId, data] of needs) {
-      const zoneId = "global"; // Simplified as currentZone was removed from needs data
+      const zoneId = "global";
       (Object.keys(DESIRE_THRESHOLDS) as NeedType[]).forEach((needType) => {
         const thresholds = DESIRE_THRESHOLDS[needType];
         const value = data[needType] as number;

@@ -213,7 +213,7 @@ describe("NeedsEvaluator", () => {
       expect(goals[0].targetPosition).toEqual({ x: 400, y: 400 });
     });
 
-    it("no debe generar goal de hambre si no hay recursos de comida disponibles", () => {
+    it("debe generar goal de exploración desesperada si no hay recursos de comida disponibles", () => {
       deps.getEntityNeeds = () => ({
         hunger: 30,
         thirst: 50,
@@ -225,7 +225,11 @@ describe("NeedsEvaluator", () => {
       });
       deps.findNearestResource = () => null;
       const goals = evaluateCriticalNeeds(deps, aiState);
-      expect(goals.length).toBe(0);
+      // La implementación genera un goal de "desperate_search" cuando no hay recursos
+      expect(goals.length).toBe(1);
+      expect(goals[0].type).toBe("explore");
+      expect(goals[0].data?.explorationType).toBe("desperate_search");
+      expect(goals[0].data?.need).toBe("hunger");
     });
 
     it("debe generar goal de energía cuando energy < 35", () => {
@@ -350,11 +354,15 @@ describe("NeedsEvaluator", () => {
       });
       deps.findNearestResource = undefined;
       const goals = evaluateCriticalNeeds(deps, aiState);
-      // Solo debería generar goals para energía y salud mental (no requieren recursos)
-      expect(goals.length).toBe(2);
+      // La implementación genera goals de "desperate_search" para hambre y sed cuando no hay findNearestResource
+      // Además de goals para energía y salud mental
+      expect(goals.length).toBe(4);
       const goalTypes = goals.map((g) => g.data?.need);
       expect(goalTypes).toContain("energy");
       expect(goalTypes).toContain("mentalHealth");
+      // También genera goals de exploración desesperada para hambre y sed
+      const exploreGoals = goals.filter((g) => g.type === "explore");
+      expect(exploreGoals.length).toBeGreaterThan(0);
     });
 
     it("debe incluir timestamps y expiración en los goals", () => {

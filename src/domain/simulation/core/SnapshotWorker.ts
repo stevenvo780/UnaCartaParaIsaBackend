@@ -31,13 +31,9 @@ if (!parentPort) {
 
 parentPort.on("message", (message: WorkerMessage) => {
   if (message.type === "snapshot") {
-    // Process snapshot in worker thread (serialization happens here)
-    // The main thread just sends the raw data
     try {
       const serialized = JSON.stringify(message.data);
-      
-      // Send back to main thread for emission
-      // This keeps the heavy serialization work off the main event loop
+
       parentPort!.postMessage({
         type: "snapshot-ready",
         data: serialized,
@@ -50,10 +46,8 @@ parentPort.on("message", (message: WorkerMessage) => {
       });
     }
   } else if (message.type === "shutdown") {
-    // Clean shutdown
     process.exit(0);
   }
 });
 
-// Signal that worker is ready
 parentPort.postMessage({ type: "ready" });

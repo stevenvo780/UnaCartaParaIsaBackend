@@ -30,7 +30,7 @@ export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
     let best: {
       id: string;
       d: number;
-      need: "water" | "food" | "medical" | "rest";
+      need: "water" | "food" | "medical" | "rest" | "social";
     } | null = null;
 
     for (const id of ids) {
@@ -42,7 +42,7 @@ export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
 
       const needs = ctx.getNeeds(id);
       const stats = ctx.getEntityStats(id) || {};
-      let need: "water" | "food" | "medical" | "rest" | null = null;
+      let need: "water" | "food" | "medical" | "rest" | "social" | null = null;
 
       const sensitivity = 1.0 - empathyFactor * 0.3;
 
@@ -54,6 +54,11 @@ export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
         (stats.morale ?? 100) < 35 / sensitivity
       )
         need = "rest";
+      else if (
+        (needs?.social ?? 100) < 30 / sensitivity ||
+        (needs?.fun ?? 100) < 30 / sensitivity
+      )
+        need = "social";
 
       if (need && (!best || d < best.d)) best = { id, d, need } as const;
     }
@@ -83,6 +88,12 @@ export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
         aiState,
         ctx.getZoneIdsByType(["water"]),
         "water",
+      );
+    else if (best.need === "social")
+      targetZone = ctx.selectBestZone(
+        aiState,
+        ctx.getZoneIdsByType(["social", "gathering", "market"]),
+        "social",
       );
 
     if (!targetZone) return [];
