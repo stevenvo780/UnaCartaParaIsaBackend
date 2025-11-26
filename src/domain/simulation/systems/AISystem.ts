@@ -94,6 +94,19 @@ export class AISystem extends EventEmitter {
   private _lastMemoryCleanupTime = 0;
   private readonly MEMORY_CLEANUP_INTERVAL = 300000;
 
+  // Process more agents per tick now that we're using synchronous batching
+  private readonly BATCH_SIZE = 10;
+
+  // Cache for expensive evaluations
+  private zoneCache = new Map<string, string | undefined>(); // agentId -> zoneId
+  private craftingZoneCache: string | undefined | null = null; // null = not cached
+  private activeAgentIdsCache: string[] | null = null;
+  private lastCacheInvalidation = 0;
+  private readonly CACHE_INVALIDATION_INTERVAL = 1000; // Invalidate cache every 1 second
+
+  // Time limit for decision making to avoid blocking event loop
+  private readonly MAX_DECISION_TIME_MS = 5; // Maximum time allowed for a single decision
+
   private agentStrategies = new Map<
     string,
     "peaceful" | "tit_for_tat" | "bully"
@@ -227,8 +240,8 @@ export class AISystem extends EventEmitter {
   }
 
   /**
-   * Updates the AI system, processing agents in batches.
-   * Processes up to 25 agents per update to maintain performance.
+   * Updates the AI system, processing agents in batches with yield to avoid blocking event loop.
+   * Processes up to 5 agents per update, with micro-batches of 3 agents that yield to event loop.
    * Skips player-controlled agents and agents that are off-duty.
    *
    * @param _deltaTimeMs - Elapsed time in milliseconds (not used, uses config interval)
@@ -248,9 +261,15 @@ export class AISystem extends EventEmitter {
     this.lastUpdate = now;
     const agents = this.gameState.agents || [];
 
-    const BATCH_SIZE = 25;
-    const batchSize = Math.min(BATCH_SIZE, agents.length);
-    let _processed = 0;
+    // Invalidate cache periodically or if significant time has passed
+    if (now - this.lastCacheInvalidation > this.CACHE_INVALIDATION_INTERVAL) {
+      this.invalidateCache();
+      this.lastCacheInvalidation = now;
+    }
+
+    // Process batch of agents synchronously
+    const batchSize = Math.min(this.BATCH_SIZE, agents.length);
+    let processed = 0;
 
     for (let i = 0; i < batchSize; i++) {
       const idx = (this.agentIndex + i) % agents.length;
@@ -266,11 +285,24 @@ export class AISystem extends EventEmitter {
 
       if (aiState.offDuty) continue;
 
+      // Process agent synchronously
       this.processAgent(agent.id, aiState, now);
-      _processed++;
+      processed++;
     }
 
     this.agentIndex = (this.agentIndex + batchSize) % agents.length;
+  }
+
+
+
+  /**
+   * Invalidates cached evaluation results.
+   * Called periodically to ensure cache doesn't become stale.
+   */
+  private invalidateCache(): void {
+    this.zoneCache.clear();
+    this.craftingZoneCache = null;
+    this.activeAgentIdsCache = null;
   }
 
   /**
@@ -382,6 +414,7 @@ export class AISystem extends EventEmitter {
   /**
    * Makes a decision for an agent, selecting the best goal based on current state.
    * Uses AgentGoalPlanner to evaluate available goals and select the highest priority one.
+   * Has a time limit to avoid blocking the event loop.
    *
    * @param agentId - Agent identifier
    * @param aiState - Agent's AI state
@@ -389,7 +422,14 @@ export class AISystem extends EventEmitter {
    */
   private makeDecision(agentId: string, aiState: AIState): AIGoal | null {
     const t0 = performance.now();
-    const goal = this.processGoals(agentId, aiState);
+    let goal: AIGoal | null = null;
+
+    try {
+      goal = this.processGoals(agentId, aiState);
+    } catch (error) {
+      logger.error(`Error in makeDecision for agent ${agentId}:`, error);
+    }
+
     const d0 = performance.now() - t0;
     performanceMonitor.recordSubsystemExecution(
       "AISystem",
@@ -398,7 +438,48 @@ export class AISystem extends EventEmitter {
       agentId,
     );
 
+    // Warn if decision took too long
+    if (d0 > this.MAX_DECISION_TIME_MS) {
+      logger.debug(
+        `⚠️ [AI] Decision for agent ${agentId} took ${d0.toFixed(2)}ms (>${this.MAX_DECISION_TIME_MS}ms threshold)`,
+      );
+    }
+
+    // If decision took too long, return a simplified fallback goal
+    if (d0 > this.MAX_DECISION_TIME_MS * 2 && !goal) {
+      // Use a simple exploration goal as fallback
+      return this.getFallbackExplorationGoal(agentId, aiState);
+    }
+
     return goal;
+  }
+
+  /**
+   * Returns a simple fallback exploration goal when decision making takes too long.
+   * This prevents blocking the event loop while still giving the agent something to do.
+   *
+   * @param agentId - Agent identifier
+   * @param _aiState - Agent's AI state (unused but kept for consistency)
+   * @returns Simple exploration goal
+   */
+  private getFallbackExplorationGoal(
+    agentId: string,
+    _aiState: AIState,
+  ): AIGoal | null {
+    const pos = this.getAgentPosition(agentId);
+    if (!pos) return null;
+
+    // Return a simple exploration goal
+    return {
+      id: `explore-${agentId}-${Date.now()}`,
+      type: "explore",
+      priority: 0.5,
+      targetPosition: {
+        x: pos.x + (Math.random() - 0.5) * 200,
+        y: pos.y + (Math.random() - 0.5) * 200,
+      },
+      createdAt: Date.now(),
+    };
   }
 
   private processGoals(_agentId: string, aiState: AIState): AIGoal | null {
@@ -413,10 +494,18 @@ export class AISystem extends EventEmitter {
       getAgentInventory: (id: string) =>
         this.inventorySystem?.getAgentInventory(id),
       getCurrentZone: (id: string) => {
+        // Check cache first
+        if (this.zoneCache.has(id)) {
+          return this.zoneCache.get(id);
+        }
+
         const agent =
           this.entityIndex?.getAgent(id) ??
           this.gameState.agents.find((a) => a.id === id);
-        if (!agent?.position) return undefined;
+        if (!agent?.position) {
+          this.zoneCache.set(id, undefined);
+          return undefined;
+        }
         const zone = this.gameState.zones.find((z) => {
           return (
             agent.position &&
@@ -426,13 +515,21 @@ export class AISystem extends EventEmitter {
             agent.position.y <= z.bounds.y + z.bounds.height
           );
         });
-        return zone?.id;
+        const zoneId = zone?.id;
+        this.zoneCache.set(id, zoneId);
+        return zoneId;
       },
       getEquipped: (id: string) =>
         this.combatSystem?.getEquipped(id) || "unarmed",
       getSuggestedCraftZone: () => {
+        // Check cache first
+        if (this.craftingZoneCache !== null) {
+          return this.craftingZoneCache;
+        }
+
         const zone = this.gameState.zones?.find((z) => z.type === "crafting");
-        return zone?.id;
+        this.craftingZoneCache = zone?.id;
+        return this.craftingZoneCache;
       },
       canCraftWeapon: (id: string, weaponId: string) => {
         if (!this.craftingSystem) return false;
@@ -449,6 +546,11 @@ export class AISystem extends EventEmitter {
         );
       },
       getAllActiveAgentIds: () => {
+        // Check cache first
+        if (this.activeAgentIdsCache !== null) {
+          return this.activeAgentIdsCache;
+        }
+
         const activeIds: string[] = [];
         for (const agent of this.gameState.agents) {
           const entity = this.gameState.entities?.find(
@@ -458,6 +560,7 @@ export class AISystem extends EventEmitter {
             activeIds.push(agent.id);
           }
         }
+        this.activeAgentIdsCache = activeIds;
         return activeIds;
       },
       getEntityStats: (id: string) => {

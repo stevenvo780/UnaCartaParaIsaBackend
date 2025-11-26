@@ -226,6 +226,21 @@ export class EntityIndex {
   }
 
   /**
+   * Checks if the index is dirty and needs rebuilding.
+   *
+   * @returns True if dirty
+   */
+  public isDirty(): boolean {
+    return (
+      this.dirty ||
+      this.pendingAgentAdds.size > 0 ||
+      this.pendingAgentRemoves.size > 0 ||
+      this.pendingEntityAdds.size > 0 ||
+      this.pendingEntityRemoves.size > 0
+    );
+  }
+
+  /**
    * Gets an agent by ID.
    *
    * @param agentId - Agent identifier

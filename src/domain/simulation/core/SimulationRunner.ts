@@ -1,4 +1,6 @@
 import { EventEmitter } from "node:events";
+import { Worker } from "node:worker_threads";
+import { join } from "node:path";
 import type { GameResources, GameState, Zone } from "../../types/game-types";
 import { cloneGameState } from "./defaultState";
 import { StateCache } from "./StateCache";
@@ -184,6 +186,17 @@ export class SimulationRunner {
   @inject(TYPES.SharedSpatialIndex)
   private sharedSpatialIndex!: SharedSpatialIndex;
 
+  // Snapshot throttling state
+  private lastSnapshotTime = 0;
+  private readonly SNAPSHOT_INTERVAL_MS = 250; // Generate snapshot every 250ms (4 Hz)
+
+  // Worker thread for snapshot processing
+  private snapshotWorker?: Worker;
+  private snapshotWorkerReady = false;
+
+  // Index rebuild optimization state
+  private readonly INDEX_REBUILD_INTERVAL_FAST = 5; // Rebuild every 5 FAST ticks (250ms)
+
   constructor(
     @inject(TYPES.GameState) state: GameState,
     @inject(TYPES.SimulationConfig) _config?: SimulationConfig,
@@ -198,6 +211,56 @@ export class SimulationRunner {
       MEDIUM: 250,
       SLOW: 1000,
     });
+
+    // Initialize snapshot worker thread
+    this.initializeSnapshotWorker();
+  }
+
+  /**
+   * Initializes the snapshot worker thread for off-main-thread processing.
+   */
+  private initializeSnapshotWorker(): void {
+    try {
+      // Use __dirname which is available in CommonJS (compiled TypeScript)
+      const workerPath = join(__dirname, "SnapshotWorker.js");
+
+      this.snapshotWorker = new Worker(workerPath);
+
+      this.snapshotWorker.on(
+        "message",
+        (message: {
+          type: string;
+          data?: string;
+          size?: number;
+          error?: string;
+        }) => {
+          if (message.type === "ready") {
+            this.snapshotWorkerReady = true;
+            logger.info("🧵 Snapshot worker thread ready");
+          } else if (message.type === "snapshot-ready" && message.data) {
+            // Emit the serialized snapshot to connected clients
+            this.emitter.emit("tick", JSON.parse(message.data));
+          } else if (message.type === "error") {
+            logger.error("Snapshot worker error:", message.error);
+          }
+        },
+      );
+
+      this.snapshotWorker.on("error", (error) => {
+        logger.error("Snapshot worker thread error:", error);
+        this.snapshotWorkerReady = false;
+      });
+
+      this.snapshotWorker.on("exit", (code) => {
+        if (code !== 0) {
+          logger.warn(`Snapshot worker stopped with exit code ${code}`);
+        }
+        this.snapshotWorkerReady = false;
+      });
+    } catch (error) {
+      logger.error("Failed to initialize snapshot worker:", error);
+      this.snapshotWorkerReady = false;
+    }
   }
 
   /**
@@ -229,6 +292,7 @@ export class SimulationRunner {
       divineFavorSystem: this.divineFavorSystem,
       aiSystem: this.aiSystem,
       roleSystem: this.roleSystem,
+      taskSystem: this.taskSystem,
     });
 
     this.needsSystem.setDependencies({
@@ -373,9 +437,24 @@ export class SimulationRunner {
   private configureSchedulerHooks(): void {
     this.scheduler.setHooks({
       preTick: () => {
+        // Always process commands (lightweight operation)
         this.processCommands();
-        this.entityIndex.rebuild(this.state);
-        this.entityIndex.syncAgentsToEntities(this.state);
+
+        // Only rebuild indices periodically to reduce event loop load
+        // Rebuilds are expensive, so we skip them on most FAST ticks
+        // Rebuild every N ticks OR if indices are dirty
+        const shouldRebuildIndices =
+          this.tickCounter % this.INDEX_REBUILD_INTERVAL_FAST === 0 ||
+          this.entityIndex.isDirty() ||
+          this.sharedSpatialIndex.isDirty();
+
+        if (shouldRebuildIndices) {
+          this.entityIndex.rebuild(this.state);
+          this.entityIndex.syncAgentsToEntities(this.state);
+        }
+
+        // Spatial index rebuild is already optimized internally (only rebuilds if dirty)
+        // Always call it, but it will be fast if not dirty (just updates moved positions)
         this.sharedSpatialIndex.rebuildIfNeeded(
           this.state.entities || [],
           this.animalSystem.getAnimals(),
@@ -408,9 +487,11 @@ export class SimulationRunner {
         ]);
 
         this.tickCounter += 1;
-        const snapshot = this.getTickSnapshot();
-        this.emitter.emit("tick", snapshot);
 
+        // Generate snapshot with throttling (only if listeners and time elapsed)
+        this.generateSnapshotThrottled();
+
+        // Update performance stats synchronously (lightweight operations)
         performanceMonitor.setSchedulerStats(this.scheduler.getStats());
 
         performanceMonitor.setGameLogicStats({
@@ -1644,6 +1725,14 @@ export class SimulationRunner {
       clearInterval(this.tickHandle);
       this.tickHandle = undefined;
     }
+
+    // Shutdown worker thread
+    if (this.snapshotWorker) {
+      this.snapshotWorker.postMessage({ type: "shutdown" });
+      this.snapshotWorker.terminate();
+      this.snapshotWorker = undefined;
+      this.snapshotWorkerReady = false;
+    }
   }
 
   /**
@@ -1712,6 +1801,57 @@ export class SimulationRunner {
       updatedAt: this.lastUpdate,
       events,
     };
+  }
+
+  /**
+   * Generates snapshot with throttling and worker thread processing.
+   * Only generates snapshot if:
+   * 1. There are listeners (clients connected)
+   * 2. Enough time has elapsed since last snapshot (SNAPSHOT_INTERVAL_MS)
+   * 3. Worker thread is ready
+   *
+   * The snapshot is processed in a worker thread to avoid blocking the main event loop.
+   */
+  private generateSnapshotThrottled(): void {
+    // Skip if no listeners (no clients connected)
+    if (this.emitter.listenerCount("tick") === 0) {
+      return;
+    }
+
+    // Skip if worker not ready
+    if (!this.snapshotWorkerReady || !this.snapshotWorker) {
+      // Fallback to synchronous emission if worker not available
+      try {
+        const snapshot = this.getTickSnapshot();
+        this.emitter.emit("tick", snapshot);
+      } catch (error) {
+        logger.error("Error generating snapshot (fallback):", error);
+      }
+      return;
+    }
+
+    const now = Date.now();
+    const elapsed = now - this.lastSnapshotTime;
+
+    // Throttle: only generate snapshot every SNAPSHOT_INTERVAL_MS
+    if (elapsed < this.SNAPSHOT_INTERVAL_MS) {
+      return;
+    }
+
+    this.lastSnapshotTime = now;
+
+    try {
+      // Generate snapshot data (lightweight, no serialization)
+      const snapshot = this.getTickSnapshot();
+
+      // Send to worker thread for serialization and processing
+      this.snapshotWorker.postMessage({
+        type: "snapshot",
+        data: snapshot,
+      });
+    } catch (error) {
+      logger.error("Error sending snapshot to worker:", error);
+    }
   }
 
   /**
