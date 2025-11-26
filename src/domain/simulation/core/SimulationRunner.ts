@@ -823,7 +823,7 @@ export class SimulationRunner {
    * Ensures that the initial family (Isa, Stev, and children) exists in the simulation.
    * This method is idempotent: it checks for the existence of each agent before spawning.
    */
-  private async ensureInitialFamily(): Promise<void> {
+  public async ensureInitialFamily(): Promise<void> {
     // 1. Ensure Parents (Isa & Stev)
     let isa = this.state.agents.find((a) => a.id === "isa");
     if (!isa) {

@@ -34,21 +34,49 @@ const simulationRunner = container.get<SimulationRunner>(
 
 logger.info("🚀 Backend: Starting simulation initialization process...");
 
+import { storageService } from "../infrastructure/services/storage/storageService";
+import { GameState } from "../domain/types/game-types";
+
 simulationRunner
   .initialize()
-  .then(() => {
+  .then(async () => {
     logger.info("✅ Backend: SimulationRunner initialized successfully");
+
+    // Check for existing saves
+    const saves = await storageService.listSaves();
+    if (saves.length > 0) {
+      const latestSaveId = saves[0].id;
+      logger.info(`💾 Found existing save: ${latestSaveId}. Loading...`);
+      const saveData = await storageService.getSave(latestSaveId);
+
+      if (saveData && saveData.state) {
+        const gameState = container.get<GameState>(TYPES.GameState);
+        // We need to be careful to preserve references if possible, or just update properties
+        // Since GameState is a plain object in container, Object.assign works well
+        Object.assign(gameState, saveData.state);
+
+        // Repair/Ensure family exists in the loaded state
+        await simulationRunner.ensureInitialFamily();
+
+        logger.info("✅ Backend: State loaded and family verified");
+        simulationRunner.start();
+        logger.info("✅ Backend: Simulation started from save");
+        return;
+      }
+    }
+
+    // If no save or load failed, initialize fresh world
+    logger.info("🆕 No valid save found. Initializing fresh world...");
     return simulationRunner.initializeWorldResources({
       width: 128,
       height: 128,
       tileSize: 32,
       biomeMap: [],
+    }).then(() => {
+      logger.info("🌍 Backend: World resources initialized");
+      simulationRunner.start();
+      logger.info("✅ Backend: Simulation started and running");
     });
-  })
-  .then(() => {
-    logger.info("🌍 Backend: World resources initialized");
-    simulationRunner.start();
-    logger.info("✅ Backend: Simulation started and running");
   })
   .catch((err) => {
     logger.error("❌ Backend: Failed to initialize simulation:", err);

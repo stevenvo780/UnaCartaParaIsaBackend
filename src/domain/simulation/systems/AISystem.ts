@@ -118,6 +118,14 @@ export class AISystem extends EventEmitter {
 
   private readonly MAX_DECISION_TIME_MS = 5;
 
+  // Goal validation constants
+  private readonly GOAL_TIMEOUT_MS = 60000; // 60 seconds max for any goal
+
+  // Distance thresholds for actions
+  private readonly HARVEST_RANGE = 60; // Distance to start harvesting
+  private readonly ATTACK_RANGE = 40; // Distance to start attacking
+  private readonly EXPLORE_RANGE = 200; // Random exploration distance
+
   // Bound handler reference for cleanup
   private readonly boundHandleActionComplete: (payload: {
     agentId: string;
@@ -542,8 +550,8 @@ export class AISystem extends EventEmitter {
     // Calculate target with bounds checking
     const mapWidth = this.gameState.worldSize?.width || 2000;
     const mapHeight = this.gameState.worldSize?.height || 2000;
-    let targetX = pos.x + (Math.random() - 0.5) * 200;
-    let targetY = pos.y + (Math.random() - 0.5) * 200;
+    let targetX = pos.x + (Math.random() - 0.5) * this.EXPLORE_RANGE;
+    let targetY = pos.y + (Math.random() - 0.5) * this.EXPLORE_RANGE;
     targetX = Math.max(50, Math.min(mapWidth - 50, targetX));
     targetY = Math.max(50, Math.min(mapHeight - 50, targetY));
 
@@ -827,19 +835,23 @@ export class AISystem extends EventEmitter {
       };
     }
 
-    // Fallback: look for nearest food resource
-    const nearestFood = this.findNearestResourceForEntity(
-      agentId,
-      "berry_bush",
-    );
-    if (nearestFood) {
-      return {
-        id: `urgent-gather-${agentId}-${now}`,
-        type: "gather",
-        priority: 10,
-        targetPosition: nearestFood,
-        createdAt: now,
-      };
+    // Fallback: look for nearest food resource (try multiple types)
+    const foodResourceTypes = ["berry_bush", "mushroom_patch", "wheat_crop"];
+    for (const resourceType of foodResourceTypes) {
+      const nearestFood = this.findNearestResourceForEntity(
+        agentId,
+        resourceType,
+      );
+      if (nearestFood) {
+        return {
+          id: `urgent-gather-${agentId}-${now}`,
+          type: "gather",
+          priority: 10,
+          targetPosition: nearestFood,
+          createdAt: now,
+          data: { resourceType },
+        };
+      }
     }
 
     return null;
@@ -867,13 +879,34 @@ export class AISystem extends EventEmitter {
       };
     }
 
+    // Fallback: look for nearest water resource
+    const nearestWater = this.findNearestResourceForEntity(
+      agentId,
+      "water_source",
+    );
+    if (nearestWater) {
+      return {
+        id: `urgent-gather-water-${agentId}-${now}`,
+        type: "gather",
+        priority: 10,
+        targetPosition: nearestWater,
+        createdAt: now,
+        data: { resourceType: "water_source", need: "thirst" },
+      };
+    }
+
     return null;
   }
 
   /**
    * Create urgent rest goal when energy is critical
+   * Note: Rest has slightly lower effective priority than hunger/thirst since
+   * agents can idle in place to rest if no zone is available
    */
   private createUrgentRestGoal(agentId: string, now: number): AIGoal | null {
+    const position = this.getAgentPosition(agentId);
+    if (!position) return null;
+
     const restZone = this.gameState.zones?.find(
       (z) =>
         z.type === "rest" ||
@@ -893,13 +926,24 @@ export class AISystem extends EventEmitter {
       };
     }
 
-    return null;
+    // Fallback: rest in place (idle)
+    return {
+      id: `urgent-rest-idle-${agentId}-${now}`,
+      type: "satisfy_energy",
+      priority: 9, // Slightly lower since not in proper rest zone
+      createdAt: now,
+      data: { need: "energy" },
+    };
   }
 
   /**
    * Create urgent social goal when social need is critical
+   * Note: Social needs are less critical than survival needs, priority 9
    */
   private createUrgentSocialGoal(agentId: string, now: number): AIGoal | null {
+    const position = this.getAgentPosition(agentId);
+    if (!position) return null;
+
     const socialZone = this.gameState.zones?.find(
       (z) =>
         z.type === "social" ||
@@ -912,7 +956,7 @@ export class AISystem extends EventEmitter {
       return {
         id: `urgent-social-${agentId}-${now}`,
         type: "satisfy_social",
-        priority: 9,
+        priority: 9, // Lower than survival needs (hunger/thirst/energy)
         targetZoneId: socialZone.id,
         createdAt: now,
         data: { need: "social" },
@@ -924,8 +968,12 @@ export class AISystem extends EventEmitter {
 
   /**
    * Create urgent fun goal when fun need is critical
+   * Note: Fun needs are least critical, priority 8
    */
   private createUrgentFunGoal(agentId: string, now: number): AIGoal | null {
+    const position = this.getAgentPosition(agentId);
+    if (!position) return null;
+
     const funZone = this.gameState.zones?.find(
       (z) =>
         z.type === "entertainment" ||
@@ -938,7 +986,7 @@ export class AISystem extends EventEmitter {
       return {
         id: `urgent-fun-${agentId}-${now}`,
         type: "satisfy_fun",
-        priority: 8,
+        priority: 8, // Lowest urgent priority - fun is nice but not survival
         targetZoneId: funZone.id,
         createdAt: now,
         data: { need: "fun" },
@@ -1430,14 +1478,73 @@ export class AISystem extends EventEmitter {
     this.removeAllListeners();
   }
 
+  /**
+   * Validates if a resource target is still valid (exists and pristine).
+   * Returns: true if valid, false if invalid/not found, null if no resource to validate
+   */
+  private isResourceTargetValid(goal: AIGoal): boolean | null {
+    if (!goal.targetId || !goal.data?.resourceType) {
+      return null; // No resource to validate
+    }
+
+    const resourceTypeStr = goal.data.resourceType as string;
+
+    if (this.worldResourceSystem) {
+      if (isWorldResourceType(resourceTypeStr)) {
+        const resources =
+          this.worldResourceSystem.getResourcesByType(resourceTypeStr);
+        const targetResource = resources.find((r) => r.id === goal.targetId);
+        return !!(targetResource && targetResource.state === "pristine");
+      }
+      return false; // Invalid resource type
+    }
+
+    if (this.gameState.worldResources) {
+      const resource = this.gameState.worldResources[goal.targetId];
+      return !!(resource && resource.state === "pristine");
+    }
+
+    return null; // No resource system available
+  }
+
+  /**
+   * Validates if a combat target is still valid (exists and alive).
+   * Returns: true if valid, false if invalid/dead, null if no target to validate
+   */
+  private isCombatTargetValid(goal: AIGoal): boolean | null {
+    if (goal.type !== "attack" && goal.type !== "combat") {
+      return null; // Not a combat goal
+    }
+
+    if (!goal.targetId) {
+      return null; // No target to validate
+    }
+
+    // Check if target is an agent
+    const targetAgent = this.gameState.agents?.find(
+      (a) => a.id === goal.targetId,
+    );
+    if (targetAgent) {
+      return !targetAgent.isDead;
+    }
+
+    // Check if target is an animal
+    const targetAnimal = this.animalSystem?.getAnimal(goal.targetId);
+    if (targetAnimal) {
+      return !targetAnimal.isDead;
+    }
+
+    // Target not found (neither agent nor animal)
+    return false;
+  }
+
   private isGoalCompleted(goal: AIGoal, agentId: string): boolean {
     const now = Date.now();
 
     // Note: Expired goals are handled by isGoalInvalid, not here
     // A goal can only be "completed" if the objective was achieved
 
-    const GOAL_TIMEOUT_MS = 60000;
-    if (now - goal.createdAt > GOAL_TIMEOUT_MS) {
+    if (now - goal.createdAt > this.GOAL_TIMEOUT_MS) {
       return false;
     }
 
@@ -1493,25 +1600,10 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    if (goal.targetId && goal.data?.resourceType) {
-      const resourceTypeStr = goal.data.resourceType as string;
-      if (this.worldResourceSystem) {
-        if (isWorldResourceType(resourceTypeStr)) {
-          const resources =
-            this.worldResourceSystem.getResourcesByType(resourceTypeStr);
-          const targetResource = resources.find((r) => r.id === goal.targetId);
-          if (!targetResource || targetResource.state !== "pristine") {
-            return false;
-          }
-        } else {
-          return false;
-        }
-      } else if (this.gameState.worldResources) {
-        const resource = this.gameState.worldResources[goal.targetId];
-        if (!resource || resource.state !== "pristine") {
-          return false;
-        }
-      }
+    // Validate resource target if applicable
+    const resourceValid = this.isResourceTargetValid(goal);
+    if (resourceValid === false) {
+      return false; // Resource doesn't exist or isn't pristine
     }
 
     if (
@@ -1554,8 +1646,7 @@ export class AISystem extends EventEmitter {
     }
 
     // Goal timed out (stuck for too long)
-    const GOAL_TIMEOUT_MS = 60000;
-    if (now - goal.createdAt > GOAL_TIMEOUT_MS) {
+    if (now - goal.createdAt > this.GOAL_TIMEOUT_MS) {
       return true;
     }
 
@@ -1568,44 +1659,16 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    if (goal.targetId && goal.data?.resourceType) {
-      const resourceTypeStr = goal.data.resourceType as string;
-      if (this.worldResourceSystem) {
-        if (isWorldResourceType(resourceTypeStr)) {
-          const resources =
-            this.worldResourceSystem.getResourcesByType(resourceTypeStr);
-          const targetResource = resources.find((r) => r.id === goal.targetId);
-          if (!targetResource || targetResource.state !== "pristine") {
-            return true;
-          }
-        } else {
-          return true;
-        }
-      } else if (this.gameState.worldResources) {
-        const resource = this.gameState.worldResources[goal.targetId];
-        if (!resource || resource.state !== "pristine") {
-          return true;
-        }
-      }
+    // Validate resource target if applicable
+    const resourceValid = this.isResourceTargetValid(goal);
+    if (resourceValid === false) {
+      return true; // Resource doesn't exist or isn't pristine
     }
 
-    // Attack/combat goals: verify target (agent or animal) is still alive
-    if ((goal.type === "attack" || goal.type === "combat") && goal.targetId) {
-      // Check if target is an agent
-      const targetAgent = this.gameState.agents?.find(
-        (a) => a.id === goal.targetId,
-      );
-      if (targetAgent) {
-        if (targetAgent.isDead) {
-          return true;
-        }
-      } else {
-        // Check if target is an animal
-        const targetAnimal = this.animalSystem?.getAnimal(goal.targetId);
-        if (!targetAnimal || targetAnimal.isDead) {
-          return true;
-        }
-      }
+    // Validate combat target if applicable
+    const combatTargetValid = this.isCombatTargetValid(goal);
+    if (combatTargetValid === false) {
+      return true; // Combat target is dead or doesn't exist
     }
 
     if (
@@ -1661,7 +1724,7 @@ export class AISystem extends EventEmitter {
               agentPos.x - goal.targetPosition.x,
               agentPos.y - goal.targetPosition.y,
             );
-            if (dist < 60) {
+            if (dist < this.HARVEST_RANGE) {
               return {
                 actionType: "harvest",
                 agentId,
@@ -1845,7 +1908,7 @@ export class AISystem extends EventEmitter {
               agentPos.x - goal.targetPosition.x,
               agentPos.y - goal.targetPosition.y,
             );
-            if (dist < 60) {
+            if (dist < this.HARVEST_RANGE) {
               return {
                 actionType: "harvest",
                 agentId,
@@ -1862,14 +1925,22 @@ export class AISystem extends EventEmitter {
             };
           }
         }
-        return {
-          actionType: "work",
-          agentId,
-          targetZoneId: goal.targetZoneId,
-          timestamp,
-        };
+        // Fallback: if we have a target zone, go there to gather
+        if (goal.targetZoneId) {
+          return {
+            actionType: "work",
+            agentId,
+            targetZoneId: goal.targetZoneId,
+            timestamp,
+          };
+        }
+        // No valid target - can't plan gather action
+        return null;
 
       case "work":
+        if (!goal.targetZoneId) {
+          return null; // Can't work without a target zone
+        }
         return {
           actionType: "work",
           agentId,
@@ -1881,6 +1952,9 @@ export class AISystem extends EventEmitter {
       case "craft":
         // Craft goals require moving to crafting zone first
         // The actual crafting happens in notifyEntityArrived when agent reaches the zone
+        if (!goal.targetZoneId) {
+          return null; // Can't craft without a target zone
+        }
         return {
           actionType: "move",
           agentId,
@@ -1889,6 +1963,9 @@ export class AISystem extends EventEmitter {
         };
 
       case "deposit":
+        if (!goal.targetZoneId) {
+          return null; // Can't deposit without a target zone
+        }
         return {
           actionType: "move",
           agentId,
@@ -1917,7 +1994,7 @@ export class AISystem extends EventEmitter {
               agentPos.x - goal.targetPosition.x,
               agentPos.y - goal.targetPosition.y,
             );
-            if (dist < 40) {
+            if (dist < this.ATTACK_RANGE) {
               return {
                 actionType: "attack",
                 agentId,
@@ -2012,8 +2089,10 @@ export class AISystem extends EventEmitter {
           // Calculate target with bounds checking
           const mapWidth = this.gameState.worldSize?.width || 2000;
           const mapHeight = this.gameState.worldSize?.height || 2000;
-          let targetX = currentPos.x + (Math.random() - 0.5) * 200;
-          let targetY = currentPos.y + (Math.random() - 0.5) * 200;
+          let targetX =
+            currentPos.x + (Math.random() - 0.5) * this.EXPLORE_RANGE;
+          let targetY =
+            currentPos.y + (Math.random() - 0.5) * this.EXPLORE_RANGE;
           targetX = Math.max(50, Math.min(mapWidth - 50, targetX));
           targetY = Math.max(50, Math.min(mapHeight - 50, targetY));
 
