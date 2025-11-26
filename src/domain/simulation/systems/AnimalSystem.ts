@@ -245,7 +245,7 @@ export class AnimalSystem {
       if (
         isIdleState &&
         i % this.IDLE_UPDATE_DIVISOR !==
-          this.updateFrame % this.IDLE_UPDATE_DIVISOR
+        this.updateFrame % this.IDLE_UPDATE_DIVISOR
       ) {
         continue;
       }
@@ -790,6 +790,29 @@ export class AnimalSystem {
   private addAnimal(animal: Animal): void {
     this.animals.set(animal.id, animal);
     this.addToSpatialGrid(animal);
+  }
+
+  /**
+   * Get animal statistics for game state
+   */
+  public getStats(): {
+    totalAnimals: number;
+    byType: Record<string, number>;
+  } {
+    const byType: Record<string, number> = {};
+    let totalAnimals = 0;
+
+    for (const animal of this.animals.values()) {
+      if (!animal.isDead) {
+        totalAnimals++;
+        byType[animal.type] = (byType[animal.type] || 0) + 1;
+      }
+    }
+
+    return {
+      totalAnimals,
+      byType,
+    };
   }
 
   /**

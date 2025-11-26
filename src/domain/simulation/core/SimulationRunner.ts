@@ -2307,6 +2307,15 @@ export class SimulationRunner {
 
   private syncGenealogyToState(): void {
     if (this._genealogySystem) {
+      // Cast to any to bypass strict type check if needed, or ensure getSnapshot returns exact match
+      // The issue is that GameState.genealogy expects FamilyTree | SerializedFamilyTree
+      // but getSnapshot returns SerializedFamilyTree & { history: GenealogyEvent[] }
+      // which should be compatible with SerializedFamilyTree if it has all props.
+      // It seems I missed 'relationships' in the previous fix or TS is being strict about excess properties?
+      // Actually, GameState.genealogy is FamilyTree | SerializedFamilyTree.
+      // SerializedFamilyTree has { ancestors, lineages, relationships }.
+      // My getSnapshot returns that PLUS history.
+      // Let's just assign it.
       this.state.genealogy = this._genealogySystem.getSnapshot();
     }
   }

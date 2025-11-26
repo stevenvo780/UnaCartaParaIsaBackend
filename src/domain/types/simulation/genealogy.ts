@@ -80,9 +80,8 @@ export interface LineageStats {
 }
 
 export interface SerializedFamilyTree {
-  ancestors: Record<string, Ancestor>;
-  lineages: Record<
-    string,
+  ancestors: Ancestor[];
+  lineages: Array<
     Omit<Lineage, "researchProgress"> & {
       researchProgress: Record<string, number>;
     }

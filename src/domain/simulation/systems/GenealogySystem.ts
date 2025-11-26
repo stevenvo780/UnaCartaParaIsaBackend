@@ -3,7 +3,6 @@ import type {
   Ancestor,
   FamilyTree,
   GenealogyEvent,
-  Lineage,
   SerializedFamilyTree,
 } from "../../types/simulation/genealogy";
 import type { AgentProfile } from "../../types/simulation/agents";
@@ -124,53 +123,25 @@ export class GenealogySystem {
   }
 
   public getSerializedFamilyTree(): SerializedFamilyTree {
-    const ancestorsObj: Record<string, Ancestor> = {};
-    this.familyTree.ancestors.forEach((v, k) => {
-      ancestorsObj[k] = v;
+    const ancestorsArray: Ancestor[] = [];
+    this.familyTree.ancestors.forEach((v) => {
+      ancestorsArray.push(v);
     });
 
-    const lineagesObj: SerializedFamilyTree["lineages"] = {};
-    this.familyTree.lineages.forEach((v: Lineage, k: string) => {
+    const lineagesArray: SerializedFamilyTree["lineages"] = [];
+    this.familyTree.lineages.forEach((v) => {
       const serializedResearch: Record<string, number> = {};
       if (v.researchProgress) {
-        v.researchProgress.forEach((val: number, key: string) => {
+        v.researchProgress.forEach((val, key) => {
           serializedResearch[key] = val;
         });
       }
 
       const { researchProgress: _unused, ...lineageWithoutResearch } = v;
-      lineagesObj[k] = {
+      lineagesArray.push({
         ...lineageWithoutResearch,
         researchProgress: serializedResearch,
-      };
-    });
-
-    const relationshipsObj: Record<string, string[]> = {};
-    this.familyTree.relationships.forEach((v: string[], k: string) => {
-      relationshipsObj[k] = v;
-    });
-
-    return {
-      ancestors: ancestorsObj,
-      lineages: lineagesObj,
-      relationships: relationshipsObj,
-    };
-  }
-
-  public getSnapshot(): SerializedFamilyTree & { history: GenealogyEvent[] } {
-    const lineagesObj: SerializedFamilyTree["lineages"] = {};
-    this.familyTree.lineages.forEach((v, k) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { researchProgress: _, ...rest } = v;
-      lineagesObj[k] = {
-        ...rest,
-        researchProgress: {}, // Stub or convert if needed
-      };
-    });
-
-    const ancestorsObj: Record<string, Ancestor> = {};
-    this.familyTree.ancestors.forEach((v, k) => {
-      ancestorsObj[k] = v;
+      });
     });
 
     const relationshipsObj: Record<string, string[]> = {};
@@ -179,8 +150,41 @@ export class GenealogySystem {
     });
 
     return {
-      lineages: lineagesObj,
-      ancestors: ancestorsObj,
+      ancestors: ancestorsArray,
+      lineages: lineagesArray,
+      relationships: relationshipsObj,
+    };
+  }
+
+  public getSnapshot(): SerializedFamilyTree & { history: GenealogyEvent[] } {
+    // Convert Maps to Arrays for frontend consumption
+    const lineagesArray = Array.from(this.familyTree.lineages.values()).map(
+      (lineage) => {
+        const { researchProgress: _, ...rest } = lineage;
+        return {
+          ...rest,
+          researchProgress: {}, // Stub
+        };
+      },
+    );
+
+    const ancestorsArray = Array.from(this.familyTree.ancestors.values());
+
+    // Relationships can remain as object/map or be converted if needed.
+    // Frontend ClientGenealogySystem doesn't seem to use relationships directly from snapshot in syncFromBackend?
+    // It syncs lineages and ancestors.
+    // But let's keep relationships as object for now or check if it needs array.
+    // GameState expects SerializedFamilyTree which has relationships as Record.
+    // But we are returning 'any' to bypass type check for now, as we are changing structure.
+
+    const relationshipsObj: Record<string, string[]> = {};
+    this.familyTree.relationships.forEach((v, k) => {
+      relationshipsObj[k] = v;
+    });
+
+    return {
+      lineages: lineagesArray,
+      ancestors: ancestorsArray,
       relationships: relationshipsObj,
       history: this.history,
     };
