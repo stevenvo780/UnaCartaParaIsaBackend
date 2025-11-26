@@ -246,8 +246,27 @@ export class LifeCycleSystem extends EventEmitter {
     if (this.inventorySystem) {
       const agents = this.gameState.agents || [];
       for (const agent of agents) {
-        const needs = { food: 1, water: 1 };
-        this.inventorySystem.consumeFromAgent(agent.id, needs);
+        const foodConsumed = this.inventorySystem.consumeFromAgent(agent.id, {
+          food: 1,
+        });
+        const waterConsumed = this.inventorySystem.consumeFromAgent(agent.id, {
+          water: 1,
+        });
+
+        // Connect consumption to needs satisfaction
+        if (foodConsumed && this.needsSystem) {
+          const needs = this.needsSystem.getNeeds(agent.id);
+          if (needs) {
+            needs.hunger = Math.min(100, needs.hunger + 10);
+          }
+        }
+
+        if (waterConsumed && this.needsSystem) {
+          const needs = this.needsSystem.getNeeds(agent.id);
+          if (needs) {
+            needs.thirst = Math.min(100, needs.thirst + 10);
+          }
+        }
       }
     }
   }
@@ -296,6 +315,24 @@ export class LifeCycleSystem extends EventEmitter {
       this.gameState.agents?.find((a) => a.id === motherId);
 
     if (!father || !mother) return;
+
+    // Verify needs before reproduction
+    if (this.needsSystem) {
+      const motherNeeds = this.needsSystem.getNeeds(motherId);
+      const fatherNeeds = this.needsSystem.getNeeds(fatherId);
+
+      // Require healthy needs to reproduce
+      if (
+        !motherNeeds ||
+        !fatherNeeds ||
+        motherNeeds.hunger < 60 ||
+        fatherNeeds.hunger < 60 ||
+        motherNeeds.energy < 50 ||
+        fatherNeeds.energy < 50
+      ) {
+        return; // Don't reproduce if needs are low
+      }
+    }
 
     simulationEvents.emit(GameEventNames.REPRODUCTION_ATTEMPT, {
       parent1: fatherId,

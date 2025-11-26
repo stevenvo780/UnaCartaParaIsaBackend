@@ -305,14 +305,14 @@ export class NeedsSystem extends EventEmitter {
       switch (zone.type) {
         case "food":
         case "kitchen": {
-          const hungerBonus = 15 * deltaSeconds * multiplier;
+          const hungerBonus = 50 * deltaSeconds * multiplier; // Increased from 15
           needs.hunger = Math.min(100, needs.hunger + hungerBonus);
           break;
         }
 
         case "water":
         case "well": {
-          const thirstBonus = 20 * deltaSeconds * multiplier;
+          const thirstBonus = 60 * deltaSeconds * multiplier; // Increased from 20
           needs.thirst = Math.min(100, needs.thirst + thirstBonus);
           break;
         }
@@ -322,14 +322,14 @@ export class NeedsSystem extends EventEmitter {
         case "shelter":
         case "house": {
           // Much faster recovery in proper shelter (approx 4x faster than base)
-          const energyBonus = 50 * deltaSeconds * multiplier;
+          const energyBonus = 150 * deltaSeconds * multiplier; // Increased from 50
           needs.energy = Math.min(100, needs.energy + energyBonus);
           break;
         }
 
         case "hygiene":
         case "bath": {
-          const hygieneBonus = 25 * deltaSeconds * multiplier;
+          const hygieneBonus = 75 * deltaSeconds * multiplier; // Increased from 25
           needs.hygiene = Math.min(100, needs.hygiene + hygieneBonus);
           break;
         }
@@ -337,8 +337,8 @@ export class NeedsSystem extends EventEmitter {
         case "social":
         case "market":
         case "gathering": {
-          const socialBonus = 8 * deltaSeconds * multiplier;
-          const funBonus = 10 * deltaSeconds * multiplier;
+          const socialBonus = 20 * deltaSeconds * multiplier; // Increased from 8
+          const funBonus = 25 * deltaSeconds * multiplier; // Increased from 10
           needs.social = Math.min(100, needs.social + socialBonus);
           needs.fun = Math.min(100, needs.fun + funBonus);
           break;
@@ -346,7 +346,7 @@ export class NeedsSystem extends EventEmitter {
 
         case "entertainment":
         case "festival": {
-          const entertainmentBonus = 20 * deltaSeconds * multiplier;
+          const entertainmentBonus = 60 * deltaSeconds * multiplier; // Increased from 20
           needs.fun = Math.min(100, needs.fun + entertainmentBonus);
           needs.mentalHealth = Math.min(
             100,
@@ -357,7 +357,7 @@ export class NeedsSystem extends EventEmitter {
 
         case "temple":
         case "sanctuary": {
-          const mentalBonus = 15 * deltaSeconds * multiplier;
+          const mentalBonus = 40 * deltaSeconds * multiplier; // Increased from 15
           needs.mentalHealth = Math.min(100, needs.mentalHealth + mentalBonus);
           needs.social = Math.min(100, needs.social + mentalBonus * 0.3);
           break;
@@ -475,43 +475,53 @@ export class NeedsSystem extends EventEmitter {
   }
 
   private checkEmergencyNeeds(entityId: string, needs: EntityNeedsData): void {
-    const CRITICAL = this.config.emergencyThreshold || 10;
+    const CRITICAL = 20; // Increased from 10
 
     if (needs.hunger < CRITICAL) {
-      this.tryEmergencyFood(entityId, needs);
+      if (!this.tryEmergencyFood(entityId, needs)) {
+        // Fallback: passive recovery when no inventory
+        needs.hunger = Math.min(100, needs.hunger + 0.5);
+      }
     }
     if (needs.thirst < CRITICAL) {
-      this.tryEmergencyWater(entityId, needs);
+      if (!this.tryEmergencyWater(entityId, needs)) {
+        // Fallback: passive recovery when no inventory
+        needs.thirst = Math.min(100, needs.thirst + 0.5);
+      }
     }
     if (needs.energy < CRITICAL) {
       this.applyEmergencyRest(entityId, needs);
     }
   }
 
-  private tryEmergencyFood(entityId: string, needs: EntityNeedsData): void {
+  private tryEmergencyFood(entityId: string, needs: EntityNeedsData): boolean {
     if (this.inventorySystem) {
       const inv = this.inventorySystem.getAgentInventory(entityId);
       if (inv && inv.food > 0) {
         const consumed = Math.min(5, inv.food);
         this.inventorySystem.removeFromAgent(entityId, "food", consumed);
         needs.hunger = Math.min(100, needs.hunger + consumed * 10);
+        return true;
       }
     }
+    return false;
   }
 
-  private tryEmergencyWater(entityId: string, needs: EntityNeedsData): void {
+  private tryEmergencyWater(entityId: string, needs: EntityNeedsData): boolean {
     if (this.inventorySystem) {
       const inv = this.inventorySystem.getAgentInventory(entityId);
       if (inv && inv.water > 0) {
         const consumed = Math.min(5, inv.water);
         this.inventorySystem.removeFromAgent(entityId, "water", consumed);
         needs.thirst = Math.min(100, needs.thirst + consumed * 10);
+        return true;
       }
     }
+    return false;
   }
 
   private applyEmergencyRest(_entityId: string, needs: EntityNeedsData): void {
-    const emergencyRest = 2;
+    const emergencyRest = 5; // Increased from 2
     needs.energy = Math.min(100, needs.energy + emergencyRest);
   }
 

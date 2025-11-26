@@ -665,7 +665,7 @@ export class SimulationRunner {
 
     this.scheduler.registerSystem({
       name: "AnimalSystem",
-      rate: "FAST",
+      rate: "MEDIUM",
       update: (delta: number) => this.animalSystem.update(delta),
       enabled: true,
     });
