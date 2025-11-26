@@ -152,7 +152,6 @@ export class GPUBatchQueryService {
     const radiusSq = radius * radius;
     const results: Array<{ entityIndex: number; distance: number }> = [];
 
-    // Always use CPU for sync queries (GPU requires async)
     for (let i = 0; i < entityCount; i++) {
       const dx = this.entityPositions[i * 2] - centerX;
       const dy = this.entityPositions[i * 2 + 1] - centerY;
@@ -195,7 +194,6 @@ export class GPUBatchQueryService {
       this.processCPU(queries, entityCount);
     }
 
-    // Update stats
     this.stats.avgBatchSize =
       (this.stats.avgBatchSize *
         (this.stats.gpuBatches + this.stats.cpuFallbacks - 1) +
@@ -210,19 +208,16 @@ export class GPUBatchQueryService {
     const startTime = performance.now();
 
     try {
-      // Build query centers tensor
       const queryCenters = new Float32Array(queries.length * 2);
       for (let i = 0; i < queries.length; i++) {
         queryCenters[i * 2] = queries[i].centerX;
         queryCenters[i * 2 + 1] = queries[i].centerY;
       }
 
-      // Compute all pairwise distances: [queries, entities]
       const distancesSq = tf.tidy(() => {
         const entities = tf.tensor2d(this.entityPositions, [entityCount, 2]);
         const centers = tf.tensor2d(queryCenters, [queries.length, 2]);
 
-        // Expand for broadcasting: [Q, 1, 2] - [1, E, 2] = [Q, E, 2]
         const centersExp = centers.expandDims(1);
         const entitiesExp = entities.expandDims(0);
         const diff = centersExp.sub(entitiesExp);
@@ -231,7 +226,6 @@ export class GPUBatchQueryService {
         return distSq.arraySync() as number[][];
       });
 
-      // Filter results per query
       for (let q = 0; q < queries.length; q++) {
         const query = queries[q];
         const indices: number[] = [];

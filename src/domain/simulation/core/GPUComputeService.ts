@@ -309,8 +309,6 @@ export class GPUComputeService {
         const needsT = tf.tensor2d(needs, [entityCount, needCount]);
         const decayRatesT = tf.tensor1d(decayRates);
 
-        // Ensure ageMultipliers and divineModifiers have correct size
-        // If sizes don't match, create default arrays of 1.0
         let ageMultArray = ageMultipliers;
         let divineMultArray = divineModifiers;
 
@@ -909,7 +907,6 @@ export class GPUComputeService {
         const decayed = absAff.sub(decayAmount).maximum(0);
         const result = decayed.mul(sign);
 
-        // Apply minimum threshold
         const thresholdMask = result.abs().greater(minAffinity);
         const finalResult = result.mul(thresholdMask.cast("float32"));
 
@@ -1080,17 +1077,14 @@ export class GPUComputeService {
         const animalsT = tf.tensor2d(animalPositions, [animalCount, 2]);
         const threatsT = tf.tensor2d(threatPositions, [threatCount, 2]);
 
-        // Compute distances from each animal to each threat
-        const animalExp = animalsT.expandDims(1); // [animals, 1, 2]
-        const threatExp = threatsT.expandDims(0); // [1, threats, 2]
-        const diff = animalExp.sub(threatExp); // [animals, threats, 2]
-        const distSq = diff.square().sum(2); // [animals, threats]
+        const animalExp = animalsT.expandDims(1);
+        const threatExp = threatsT.expandDims(0);
+        const diff = animalExp.sub(threatExp);
+        const distSq = diff.square().sum(2);
 
-        // Find nearest threat for each animal
-        const nearestIdx = distSq.argMin(1); // [animals]
+        const nearestIdx = distSq.argMin(1);
         const nearestIdxArray = nearestIdx.arraySync() as number[];
 
-        // Compute flee direction (away from nearest threat)
         const newPositions = new Float32Array(animalPositions);
         const moveAmount = fleeSpeed * deltaSeconds;
 
@@ -1143,7 +1137,6 @@ export class GPUComputeService {
       const ax = animalPositions[i * 2];
       const ay = animalPositions[i * 2 + 1];
 
-      // Find nearest threat
       let nearestDistSq = Infinity;
       let nearestThreatIdx = 0;
 

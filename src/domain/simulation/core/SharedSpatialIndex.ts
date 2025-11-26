@@ -286,7 +286,6 @@ export class SharedSpatialIndex {
       duration,
     );
 
-    // Use pooled array to reduce allocations
     const output = this.acquireResultArray();
 
     for (const r of results) {

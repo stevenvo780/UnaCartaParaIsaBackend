@@ -125,7 +125,6 @@ export class AnimalBatchProcessor {
     this.workBuffer.set(this.needsBuffer);
     const workBuffer = this.workBuffer;
 
-    // Debug: Check GPU availability
     const gpuAvailable = this.gpuService?.isGPUAvailable() ?? false;
 
     if (gpuAvailable && this.gpuService) {

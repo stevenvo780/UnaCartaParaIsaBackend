@@ -265,7 +265,6 @@ export class WorldResourceSystem {
         resource.regenerationStartTime = Date.now();
         this.regenerationTimers.set(resourceId, Date.now());
       } else {
-        // Remove permanently if it cannot regenerate
         delete this.state.worldResources![resourceId];
         simulationEvents.emit(GameEventNames.RESOURCE_DEPLETED, {
           resourceId,

@@ -334,7 +334,6 @@ export class MultiRateScheduler {
         continue;
       }
 
-      // Check if we've exceeded the time budget for this tick
       const elapsedInTick = performance.now() - tickStartTime;
       if (elapsedInTick > this.MAX_TICK_TIME_MS) {
         // Yield to event loop and continue in next cycle
@@ -350,7 +349,6 @@ export class MultiRateScheduler {
           await result;
           const systemDuration = performance.now() - systemStartTime;
 
-          // If system took too long, warn but continue
           if (systemDuration > this.MAX_SYSTEM_TIME_MS) {
             logger.debug(
               `System "${system.name}" took ${systemDuration.toFixed(2)}ms (>${this.MAX_SYSTEM_TIME_MS}ms threshold)`,

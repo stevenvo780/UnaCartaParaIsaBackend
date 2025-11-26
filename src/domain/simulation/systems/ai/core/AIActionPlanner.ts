@@ -13,7 +13,6 @@ export interface AIActionPlannerDeps {
 export class AIActionPlanner {
   private readonly deps: AIActionPlannerDeps;
 
-  // Distance thresholds for actions
   private readonly HARVEST_RANGE = 60;
   private readonly ATTACK_RANGE = 40;
   private readonly EXPLORE_RANGE = 200;

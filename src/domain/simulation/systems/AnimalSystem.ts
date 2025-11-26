@@ -523,7 +523,18 @@ export class AnimalSystem {
     const cacheKey = `predator_${animal.id}`;
     const cached = this.threatSearchCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
-      return cached.threat;
+      // BUG FIX #5: Validate cached threat is still alive before returning
+      if (cached.threat) {
+        const cachedAnimal = this.animals.get(cached.threat.id);
+        if (!cachedAnimal || cachedAnimal.isDead) {
+          // Cached threat is dead, invalidate cache and search fresh
+          this.threatSearchCache.delete(cacheKey);
+        } else {
+          return cached.threat;
+        }
+      } else {
+        return cached.threat;
+      }
     }
 
     const nearbyAnimals = this.getAnimalsInRadius(animal.position, range);

@@ -121,7 +121,6 @@ export class LifeCycleSystem extends EventEmitter {
           (a) => a.id === agentId,
         );
         if (agentStillExists) {
-          // Agent died from needs but wasn't removed - do cleanup now
           logger.debug(
             `🔄 LifeCycleSystem: Processing deferred death for ${agentId} (${data.cause || "unknown"})`,
           );
@@ -622,7 +621,6 @@ export class LifeCycleSystem extends EventEmitter {
           timestamp: Date.now(),
         });
       }
-      // Remove inventory from memory after emitting drop event
       this.inventorySystem.removeAgentInventory(agentId);
     }
 
@@ -652,6 +650,11 @@ export class LifeCycleSystem extends EventEmitter {
 
     if (this.householdSystem) {
       this.householdSystem.removeAgentFromHousehold(agentId);
+    }
+
+    // BUG FIX #1: Record death in genealogy system to update lineage stats
+    if (this._genealogySystem) {
+      this._genealogySystem.recordDeath(agentId);
     }
   }
 

@@ -405,13 +405,29 @@ export class NeedsSystem extends EventEmitter {
   ): void {
     logger.info(`💀 Entity ${entityId} died from ${cause}`);
 
+    // BUG FIX #3: Mark isDead on entity AND agent to ensure consistent state
+    let entityMarked = false;
     if (this.gameState.entities) {
       const entity =
         this.entityIndex?.getEntity(entityId) ??
         this.gameState.entities.find((e) => e.id === entityId);
       if (entity) {
         entity.isDead = true;
+        entityMarked = true;
       }
+    }
+
+    // Also check agents array for agent deaths
+    if (this.gameState.agents) {
+      const agent = this.gameState.agents.find((a) => a.id === entityId);
+      if (agent) {
+        agent.isDead = true;
+        entityMarked = true;
+      }
+    }
+
+    if (!entityMarked) {
+      logger.warn(`⚠️ [NEEDS] Could not mark entity ${entityId} as dead - not found in state`);
     }
 
     simulationEvents.emit(GameEventNames.AGENT_DEATH, {

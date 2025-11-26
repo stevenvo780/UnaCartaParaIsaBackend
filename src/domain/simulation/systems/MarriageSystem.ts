@@ -32,6 +32,58 @@ export class MarriageSystem {
       divorceChanceBase: 0.001,
       cohesionDecayPerMember: 0.08,
     };
+
+    // BUG FIX #2: Listen to AGENT_DEATH to remove dead members from marriage groups
+    this.setupDeathListener();
+  }
+
+  /**
+   * Removes a deceased agent from their marriage group.
+   * This prevents ghost references to dead agents in marriage structures.
+   */
+  private setupDeathListener(): void {
+    simulationEvents.on(
+      GameEventNames.AGENT_DEATH,
+      (data: { agentId?: string; entityId?: string }) => {
+        const agentId = data.agentId || data.entityId;
+        if (!agentId) return;
+        this.removeAgentFromMarriage(agentId);
+      },
+    );
+  }
+
+  /**
+   * Removes an agent from their marriage group (death, divorce, etc.)
+   */
+  public removeAgentFromMarriage(agentId: string): void {
+    // Remove from any marriage group
+    for (const [groupId, group] of this.marriageGroups) {
+      const memberIndex = group.members.indexOf(agentId);
+      if (memberIndex !== -1) {
+        group.members.splice(memberIndex, 1);
+        
+        // If group has less than 2 members, dissolve it
+        if (group.members.length < 2) {
+          this.marriageGroups.delete(groupId);
+          logger.debug(`💔 [MARRIAGE] Group ${groupId} dissolved after member ${agentId} removed`);
+        } else {
+          // Recalculate cohesion
+          group.cohesion = Math.max(
+            0.3,
+            1.0 - group.members.length * this.config.cohesionDecayPerMember,
+          );
+        }
+        break;
+      }
+    }
+    
+    // Remove any pending proposals involving this agent
+    this.pendingProposals.delete(agentId);
+    for (const [targetId, proposal] of this.pendingProposals) {
+      if (proposal.proposerId === agentId) {
+        this.pendingProposals.delete(targetId);
+      }
+    }
   }
 
   public proposeMarriage(

@@ -582,8 +582,40 @@ export class AISystem extends EventEmitter {
     }
 
     if (aiState.currentGoal) {
+      // BUG FIX #6: Revalidate goal before executing action to prevent race conditions
+      // Goal may have become invalid between validation and execution
+      if (this.goalValidator.isGoalInvalid(aiState.currentGoal, agentId)) {
+        logger.debug(
+          `⚠️ [AI] Agent ${agentId} goal invalidated before action execution`,
+        );
+        aiState.currentGoal = null;
+        aiState.currentAction = null;
+        return;
+      }
+
       const action = this.planAction(agentId, aiState.currentGoal);
       if (action) {
+        // Additional validation: if action has a target entity, verify it's alive
+        if (action.targetId) {
+          const targetEntity = this.gameState.entities?.find(
+            (e) => e.id === action.targetId,
+          );
+          const targetAgent = this.gameState.agents?.find(
+            (a) => a.id === action.targetId,
+          );
+          if (
+            (targetEntity && targetEntity.isDead) ||
+            (targetAgent && targetAgent.isDead)
+          ) {
+            logger.debug(
+              `⚠️ [AI] Agent ${agentId} action target ${action.targetId} is dead, abandoning`,
+            );
+            aiState.currentGoal = null;
+            aiState.currentAction = null;
+            return;
+          }
+        }
+
         aiState.currentAction = action;
 
         logger.debug(
@@ -1048,7 +1080,6 @@ export class AISystem extends EventEmitter {
     this.goalValidator.resetMetrics();
     this._decisionCount = 0;
     this._decisionTimeTotalMs = 0;
-    // Remove listener from simulationEvents
     simulationEvents.off(
       GameEventNames.AGENT_ACTION_COMPLETE,
       this.boundHandleActionComplete,

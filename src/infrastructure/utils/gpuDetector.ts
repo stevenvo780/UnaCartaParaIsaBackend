@@ -39,7 +39,7 @@ export function getTensorFlow(): unknown {
     logger.info("✅ TensorFlow.js GPU loaded successfully");
     return cachedTf;
   } catch (gpuErr) {
-    logger.debug("TensorFlow GPU no disponible", {
+    logger.debug("TensorFlow GPU not available", {
       error: gpuErr instanceof Error ? gpuErr.message : String(gpuErr),
     });
   }

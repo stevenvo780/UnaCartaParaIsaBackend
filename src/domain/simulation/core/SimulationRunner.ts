@@ -411,7 +411,6 @@ export class SimulationRunner {
 
     this.setupEventListeners();
 
-    // Ensure initial family exists (idempotent check)
     await this.ensureInitialFamily();
 
     logger.info("📅 SimulationRunner: Registering systems in scheduler...");
@@ -881,9 +880,11 @@ export class SimulationRunner {
 
     let childrenCreated = 0;
     for (const childData of childNames) {
-      // Check if a child with this name already exists
-      // Note: This is a heuristic. Ideally we'd have fixed IDs for children too,
-      // but for now checking by name/parentage is safer than duplicating.
+      /**
+       * Check if a child with this name already exists.
+       * This is a heuristic - ideally we'd have fixed IDs for children too,
+       * but for now checking by name/parentage is safer than duplicating.
+       */
       const existingChild = this.state.agents.find(
         (a) =>
           a.name === childData.name &&
@@ -929,8 +930,10 @@ export class SimulationRunner {
       logger.info(`👶 No new children created (all exist or failed).`);
     }
 
-    // 3. Ensure Infrastructure
-    // We call this if we created any parent, OR if it's a fresh world (no zones)
+    /**
+     * Ensure Infrastructure.
+     * We call this if we created any parent, OR if it's a fresh world (no zones).
+     */
     if (
       !this.state.zones ||
       this.state.zones.length === 0 ||
