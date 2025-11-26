@@ -1762,6 +1762,7 @@ export class SimulationRunner {
     }
 
     logger.info("🔄 SimulationRunner: Starting simulation scheduler...");
+    this.aiSystem.initialize();
     this.scheduler.start();
     logger.info("🚀 Multi-rate simulation started", {
       rates: { FAST: "50ms", MEDIUM: "250ms", SLOW: "1000ms" },

@@ -236,6 +236,26 @@ export class AISystem extends EventEmitter {
   }
 
   /**
+   * Initializes the AI system.
+   * Creates AI states for all existing agents in the game state.
+   */
+  public initialize(): void {
+    logger.info("🧠 Initializing AISystem...");
+    const agents = this.gameState.agents || [];
+    let count = 0;
+    for (const agent of agents) {
+      if (!this.aiStates.has(agent.id)) {
+        const aiState = this.createAIState(agent.id);
+        this.aiStates.set(agent.id, aiState);
+        count++;
+      }
+    }
+    logger.info(
+      `🧠 AISystem initialized with ${count} new agent states (total: ${this.aiStates.size})`,
+    );
+  }
+
+  /**
    * Updates the AI system, processing agents in batches with yield to avoid blocking event loop.
    * Processes up to 5 agents per update, with micro-batches of 3 agents that yield to event loop.
    * Skips player-controlled agents and agents that are off-duty.
@@ -391,10 +411,10 @@ export class AISystem extends EventEmitter {
 
     const inventoryEmpty = inventory
       ? (inventory.food || 0) +
-          (inventory.water || 0) +
-          (inventory.wood || 0) +
-          (inventory.stone || 0) ===
-        0
+      (inventory.water || 0) +
+      (inventory.wood || 0) +
+      (inventory.stone || 0) ===
+      0
       : true;
     const needsSatisfied = needs
       ? needs.hunger > 70 && needs.thirst > 70 && needs.energy > 70
@@ -564,11 +584,11 @@ export class AISystem extends EventEmitter {
         const entity = this.gameState.entities?.find((e) => e.id === id);
         return entity?.stats
           ? {
-              health: entity.stats.health ?? 100,
-              stamina: entity.stats.stamina ?? 100,
-              attack: entity.stats.attack ?? 10,
-              defense: entity.stats.defense ?? 0,
-            }
+            health: entity.stats.health ?? 100,
+            stamina: entity.stats.stamina ?? 100,
+            attack: entity.stats.attack ?? 10,
+            defense: entity.stats.defense ?? 0,
+          }
           : null;
       },
       getPreferredResourceForRole: (role: string) =>
@@ -629,10 +649,10 @@ export class AISystem extends EventEmitter {
       socialPreference: isChild
         ? "extroverted"
         : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 >
-            0.6
+          0.6
           ? "extroverted"
           : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 <
-              0.4
+            0.4
             ? "introverted"
             : "balanced",
       workEthic: isChild
@@ -640,7 +660,7 @@ export class AISystem extends EventEmitter {
         : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 > 0.7
           ? "workaholic"
           : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 <
-              0.3
+            0.3
             ? "lazy"
             : "balanced",
       explorationType:
@@ -1452,7 +1472,16 @@ export class AISystem extends EventEmitter {
    * @returns AI state or undefined if not found
    */
   public getAIState(agentId: string): AIState | undefined {
-    return this.aiStates.get(agentId);
+    let state = this.aiStates.get(agentId);
+    if (!state) {
+      // Lazy initialization fallback
+      const agent = this.gameState.agents?.find((a) => a.id === agentId);
+      if (agent) {
+        state = this.createAIState(agentId);
+        this.aiStates.set(agentId, state);
+      }
+    }
+    return state;
   }
 
   /**
@@ -1770,13 +1799,13 @@ export class AISystem extends EventEmitter {
       // Convert goal.data to AIGoalData format
       const goalData: AIGoalData | undefined = goal.data
         ? {
-            ...Object.fromEntries(
-              Object.entries(goal.data).map(([k, v]) => [
-                k,
-                typeof v === "string" || typeof v === "number" ? v : undefined,
-              ]),
-            ),
-          }
+          ...Object.fromEntries(
+            Object.entries(goal.data).map(([k, v]) => [
+              k,
+              typeof v === "string" || typeof v === "number" ? v : undefined,
+            ]),
+          ),
+        }
         : undefined;
 
       const newGoal: AIGoal = {
