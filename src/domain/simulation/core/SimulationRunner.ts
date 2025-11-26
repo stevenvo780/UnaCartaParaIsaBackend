@@ -1634,12 +1634,13 @@ export class SimulationRunner {
       biomeMap,
     });
 
-    this.animalSystem.spawnAnimalsInWorld(
-      worldConfig.width,
-      worldConfig.height,
-      worldConfig.tileSize,
-      biomeMap,
-    );
+    // Animals will be spawned dynamically as chunks are rendered
+    // this.animalSystem.spawnAnimalsInWorld(
+    //   worldConfig.width,
+    //   worldConfig.height,
+    //   worldConfig.tileSize,
+    //   biomeMap,
+    // );
 
     this.generateFunctionalZones(worldConfig, biomeMap);
   }

@@ -114,10 +114,14 @@ export class GPUComputeService {
 
   /**
    * Checks if GPU is available for computation.
+   * Returns false if service hasn't been initialized yet.
    *
-   * @returns True if GPU backend is available
+   * @returns True if GPU backend is available and initialized
    */
   isGPUAvailable(): boolean {
+    if (!this.initialized) {
+      return false;
+    }
     return this.gpuAvailable;
   }
 
@@ -142,7 +146,7 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = positions.length / 2;
 
-    if (!this.gpuAvailable || entityCount < 10) {
+    if (!this.gpuAvailable || entityCount < 50) {
       return this.updatePositionsBatchCPU(
         positions,
         targets,
@@ -288,7 +292,7 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = needs.length / needCount;
 
-    if (!this.gpuAvailable || entityCount < 10) {
+    if (!this.gpuAvailable || entityCount < 50) {
       return this.applyNeedsDecayBatchCPU(
         needs,
         decayRates,
@@ -405,7 +409,7 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = needs.length / needCount;
 
-    if (!this.gpuAvailable || entityCount < 10) {
+    if (!this.gpuAvailable || entityCount < 50) {
       return this.applyNeedsCrossEffectsBatchCPU(needs, needCount);
     }
 
@@ -553,7 +557,7 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = fatigue.length;
 
-    if (!this.gpuAvailable || entityCount < 10) {
+    if (!this.gpuAvailable || entityCount < 50) {
       return this.updateFatigueBatchCPU(fatigue, isMoving, isResting, deltaMs);
     }
 
@@ -794,7 +798,7 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = positions.length / 2;
 
-    if (!this.gpuAvailable || entityCount < 50) {
+    if (!this.gpuAvailable || entityCount < 100) {
       return this.computeDistancesBatchCPU(centerX, centerY, positions);
     }
 
@@ -972,7 +976,7 @@ export class GPUComputeService {
     const entityCount = Math.min(positions.length / 2, maxEntities);
     const pairCount = (entityCount * (entityCount - 1)) / 2;
 
-    if (!this.gpuAvailable || entityCount < 20) {
+    if (!this.gpuAvailable || entityCount < 50) {
       return this.computePairwiseDistancesCPU(positions, maxEntities);
     }
 
@@ -1061,7 +1065,7 @@ export class GPUComputeService {
     const animalCount = animalPositions.length / 2;
     const threatCount = threatPositions.length / 2;
 
-    if (!this.gpuAvailable || animalCount < 20 || threatCount === 0) {
+    if (!this.gpuAvailable || animalCount < 50 || threatCount === 0) {
       return this.computeFleeVectorsBatchCPU(
         animalPositions,
         threatPositions,

@@ -66,6 +66,7 @@ import { EntityIndex } from "../domain/simulation/core/EntityIndex";
 import { SharedSpatialIndex } from "../domain/simulation/core/SharedSpatialIndex";
 import { TerrainSystem } from "../domain/simulation/systems/TerrainSystem";
 import { GPUComputeService } from "../domain/simulation/core/GPUComputeService";
+import { GPUBatchQueryService } from "../domain/simulation/core/GPUBatchQueryService";
 
 export const container = new Container();
 
@@ -242,6 +243,11 @@ container
 container
   .bind<GPUComputeService>(TYPES.GPUComputeService)
   .to(GPUComputeService)
+  .inSingletonScope();
+
+container
+  .bind<GPUBatchQueryService>(TYPES.GPUBatchQueryService)
+  .to(GPUBatchQueryService)
   .inSingletonScope();
 
 container

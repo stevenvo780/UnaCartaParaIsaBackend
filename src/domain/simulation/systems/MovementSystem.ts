@@ -128,10 +128,9 @@ export class MovementSystem extends EventEmitter {
   private batchProcessor: MovementBatchProcessor;
   /**
    * Threshold for activating batch processing.
-   * 15 entities: MovementSystem has pathfinding overhead and fatigue calculations,
-   * so batch processing activates earlier to amortize the cost.
+   * 5 entities: GPU batch processing is efficient for position updates.
    */
-  private readonly BATCH_THRESHOLD = 15;
+  private readonly BATCH_THRESHOLD = 5;
 
   private pathfindingQueue: Array<{
     entityId: string;

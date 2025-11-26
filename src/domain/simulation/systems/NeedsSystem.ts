@@ -57,10 +57,10 @@ export class NeedsSystem extends EventEmitter {
   private batchProcessor: NeedsBatchProcessor;
   /**
    * Threshold for activating batch processing.
-   * 20 entities: balance between batch setup overhead and vectorized processing benefits.
-   * NeedsSystem processes 7 needs per entity, so 20 entities = 140 operations.
+   * 5 entities: GPU batch is efficient even with small counts due to vectorization.
+   * NeedsSystem processes 7 needs per entity, so 5 entities = 35 operations.
    */
-  private readonly BATCH_THRESHOLD = 20;
+  private readonly BATCH_THRESHOLD = 5;
   private entityIndex?: EntityIndex;
   private spatialIndex?: SharedSpatialIndex;
 

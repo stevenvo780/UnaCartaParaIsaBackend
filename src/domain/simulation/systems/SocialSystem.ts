@@ -276,10 +276,24 @@ export class SocialSystem {
     }
   }
 
+  /**
+   * Updates proximity-based social reinforcement.
+   * Uses GPU pairwise distance calculation when entity count is high.
+   */
   private updateProximity(dt: number): void {
     const entities = this.gameState.entities || [];
     const reinforcement = this.config.reinforcementPerSecond * dt;
+    const entitiesWithPos = entities.filter(
+      (e): e is typeof e & { position: { x: number; y: number } } => !!e.position
+    );
+    
+    // Use GPU pairwise distances for large entity counts (O(N²) operation)
+    if (this.gpuService?.isGPUAvailable() && entitiesWithPos.length >= 20) {
+      this.updateProximityGPU(entitiesWithPos, reinforcement);
+      return;
+    }
 
+    // CPU fallback: use spatial grid for small counts
     for (const entity of entities) {
       if (!entity.position) continue;
 
@@ -291,6 +305,41 @@ export class SocialSystem {
       for (const { entity: otherId } of nearby) {
         if (entity.id >= otherId) continue; // Avoid duplicates and self
         this.addEdge(entity.id, otherId, reinforcement);
+      }
+    }
+  }
+
+  /**
+   * GPU-accelerated proximity detection using pairwise distance matrix.
+   * Computes all N×N distances in parallel on GPU.
+   */
+  private updateProximityGPU(
+    entities: Array<{ id: string; position: { x: number; y: number } }>,
+    reinforcement: number,
+  ): void {
+    const count = entities.length;
+    const positions = new Float32Array(count * 2);
+    
+    for (let i = 0; i < count; i++) {
+      positions[i * 2] = entities[i].position.x;
+      positions[i * 2 + 1] = entities[i].position.y;
+    }
+    
+    const { distances } = this.gpuService!.computePairwiseDistances(
+      positions,
+      count,
+    );
+    
+    const proximityRadiusSq = this.config.proximityRadius * this.config.proximityRadius;
+    
+    // Apply reinforcement for nearby pairs
+    let idx = 0;
+    for (let i = 0; i < count; i++) {
+      for (let j = i + 1; j < count; j++) {
+        if (distances[idx] <= proximityRadiusSq) {
+          this.addEdge(entities[i].id, entities[j].id, reinforcement);
+        }
+        idx++;
       }
     }
   }

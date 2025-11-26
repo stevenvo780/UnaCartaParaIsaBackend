@@ -22,6 +22,7 @@ import type { NormsSystem } from "./NormsSystem";
 import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "node:perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
+import type { GPUComputeService } from "../core/GPUComputeService";
 
 interface CombatConfig {
   decisionIntervalMs: number;
@@ -80,6 +81,7 @@ export class CombatSystem {
   private animalSystem?: AnimalSystem;
   private normsSystem?: NormsSystem;
   private sharedSpatialIndex?: SharedSpatialIndex;
+  private gpuService?: GPUComputeService;
 
   constructor(
     @inject(TYPES.GameState) private readonly state: GameState,
@@ -93,10 +95,14 @@ export class CombatSystem {
     @inject(TYPES.SharedSpatialIndex)
     @optional()
     sharedSpatialIndex?: SharedSpatialIndex,
+    @inject(TYPES.GPUComputeService)
+    @optional()
+    gpuService?: GPUComputeService,
   ) {
     this.animalSystem = animalSystem;
     this.normsSystem = normsSystem;
     this.sharedSpatialIndex = sharedSpatialIndex;
+    this.gpuService = gpuService;
     this.config = DEFAULT_COMBAT_CONFIG;
     const worldWidth = state.worldSize?.width ?? 2000;
     const worldHeight = state.worldSize?.height ?? 2000;
@@ -236,6 +242,13 @@ export class CombatSystem {
     now: number,
   ): void {
     const startTime = performance.now();
+    
+    // Use GPU pairwise distances for large attacker counts
+    if (this.gpuService?.isGPUAvailable() && attackers.length >= 30) {
+      this.updateBatchGPU(attackers, entitiesById, now);
+      return;
+    }
+    
     const queries = attackers
       .map((attacker) => {
         if (!attacker.position) return null;
@@ -290,6 +303,72 @@ export class CombatSystem {
     performanceMonitor.recordSubsystemExecution(
       "CombatSystem",
       "updateBatch",
+      duration,
+    );
+  }
+
+  /**
+   * GPU-accelerated combat batch processing.
+   * Uses pairwise distance matrix for efficient enemy detection.
+   */
+  private updateBatchGPU(
+    attackers: SimulationEntity[],
+    entitiesById: Map<string, SimulationEntity>,
+    now: number,
+  ): void {
+    const attackersWithPos = attackers.filter(a => a.position);
+    const allEntities = Array.from(entitiesById.values()).filter(e => e.position && !e.isDead);
+    
+    if (attackersWithPos.length === 0 || allEntities.length === 0) return;
+    
+    // Build position arrays
+    const attackerPositions = new Float32Array(attackersWithPos.length * 2);
+    const targetPositions = new Float32Array(allEntities.length * 2);
+    
+    for (let i = 0; i < attackersWithPos.length; i++) {
+      attackerPositions[i * 2] = attackersWithPos[i].position!.x;
+      attackerPositions[i * 2 + 1] = attackersWithPos[i].position!.y;
+    }
+    
+    for (let i = 0; i < allEntities.length; i++) {
+      targetPositions[i * 2] = allEntities[i].position!.x;
+      targetPositions[i * 2 + 1] = allEntities[i].position!.y;
+    }
+    
+    // For each attacker, compute distances to all targets
+    for (let a = 0; a < attackersWithPos.length; a++) {
+      const attacker = attackersWithPos[a];
+      const weaponId = this.getEquipped(attacker.id);
+      const weapon = getWeapon(weaponId);
+      const radius = Math.max(this.config.engagementRadius, weapon.range);
+      const radiusSq = radius * radius;
+      
+      // Compute distances from this attacker to all targets
+      const distances = this.gpuService!.computeDistancesBatch(
+        attacker.position!.x,
+        attacker.position!.y,
+        targetPositions,
+      );
+      
+      // Find valid targets within range
+      for (let t = 0; t < allEntities.length; t++) {
+        if (distances[t] > radiusSq) continue;
+        
+        const target = allEntities[t];
+        if (target.id === attacker.id) continue;
+        if (!this.shouldAttack(attacker, target)) continue;
+        if (!this.isOffCooldown(attacker.id, weaponId, now)) continue;
+        
+        this.resolveAttack(attacker, target, weaponId, now);
+        this.lastAttackAt.set(attacker.id, now);
+        break;
+      }
+    }
+    
+    const duration = performance.now() - performance.now();
+    performanceMonitor.recordSubsystemExecution(
+      "CombatSystem",
+      "updateBatchGPU",
       duration,
     );
   }

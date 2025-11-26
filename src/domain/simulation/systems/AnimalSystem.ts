@@ -35,6 +35,7 @@ export class AnimalSystem {
   private config: AnimalSystemConfig;
   private animals = new Map<string, Animal>();
   private worldResourceSystem?: WorldResourceSystem;
+  private gpuService?: GPUComputeService;
 
   private lastCleanup = Date.now();
 
@@ -68,10 +69,10 @@ export class AnimalSystem {
   private batchProcessor: AnimalBatchProcessor;
   /**
    * Threshold for activating batch processing.
-   * 50 animals: AnimalSystem processes more complex behaviors (genetics, needs, reproduction),
-   * so it requires more animals to justify the batch processing overhead.
+   * 10 animals: GPU batch processing is efficient even with small counts.
+   * AnimalSystem processes 4 needs per animal, so 10 animals = 40 operations.
    */
-  private readonly BATCH_THRESHOLD = 50;
+  private readonly BATCH_THRESHOLD = 10;
 
   /**
    * State logging optimization: log every 2s instead of 5% random chance.
@@ -85,7 +86,7 @@ export class AnimalSystem {
    * Idle/wandering animals update less frequently to reduce CPU load.
    */
   private updateFrame = 0;
-  private readonly IDLE_UPDATE_DIVISOR = 3; // Update idle/wandering animals every 3rd frame
+  private readonly IDLE_UPDATE_DIVISOR = 1; // Update all animals every frame
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
@@ -101,10 +102,13 @@ export class AnimalSystem {
   ) {
     this.gameState = gameState;
     this.worldResourceSystem = worldResourceSystem;
+    this.gpuService = gpuService;
     this.config = DEFAULT_CONFIG;
     this.batchProcessor = new AnimalBatchProcessor(gpuService);
     if (gpuService?.isGPUAvailable()) {
-      logger.info("🐾 AnimalSystem: GPU acceleration enabled for batch processing");
+      logger.info(
+        "🐾 AnimalSystem: GPU acceleration enabled for batch processing",
+      );
     }
 
     this.setupEventListeners();
@@ -235,6 +239,9 @@ export class AnimalSystem {
 
     this.batchProcessor.syncToAnimals(this.animals);
 
+    // GPU batch flee processing for fleeing animals (O(A×T) operation)
+    this.processFleeingAnimalsBatch(animalIdArray, deltaSeconds);
+
     /**
      * Staggered behavior updates: critical states (fleeing, hunting, etc.) update
      * every frame, while idle/wandering animals update less frequently.
@@ -243,6 +250,15 @@ export class AnimalSystem {
       const animalId = animalIdArray[i];
       const animal = this.animals.get(animalId);
       if (!animal || animal.isDead) continue;
+
+      // Skip fleeing animals - already processed in batch
+      if (animal.state === "fleeing") {
+        const oldPosition = { ...animal.position };
+        this.updateSpatialGrid(animal, oldPosition);
+        this.checkAnimalDeath(animal);
+        continue;
+      }
+
       const isIdleState =
         animal.state === "idle" || animal.state === "wandering";
       if (
@@ -264,6 +280,103 @@ export class AnimalSystem {
       "updateBatch",
       duration,
     );
+  }
+
+  /**
+   * GPU batch processing for fleeing animals.
+   * Computes flee vectors for all animals that are fleeing in parallel.
+   * This is an O(A × T) operation where A = fleeing animals, T = threats.
+   */
+  private processFleeingAnimalsBatch(
+    animalIds: string[],
+    deltaSeconds: number,
+  ): void {
+    // Collect fleeing animals and their threats
+    const fleeingAnimals: Array<{
+      animal: Animal;
+      threatPos: { x: number; y: number };
+    }> = [];
+
+    for (const animalId of animalIds) {
+      const animal = this.animals.get(animalId);
+      if (!animal || animal.isDead) continue;
+
+      const config = getAnimalConfig(animal.type);
+      if (!config) continue;
+
+      // Check for predators
+      const nearbyPredator = this.findNearbyPredator(
+        animal,
+        config.detectionRange,
+      );
+      if (nearbyPredator) {
+        animal.state = "fleeing";
+        animal.fleeTarget = nearbyPredator.id;
+        animal.needs.fear = 100;
+        animal.currentTarget = null;
+        animal.targetPosition = null;
+        fleeingAnimals.push({ animal, threatPos: nearbyPredator.position });
+        continue;
+      }
+
+      // Check for humans if configured
+      if (config.fleeFromHumans) {
+        const nearbyHuman = this.findNearbyHuman(animal, config.detectionRange);
+        if (nearbyHuman) {
+          animal.state = "fleeing";
+          animal.fleeTarget = nearbyHuman.id;
+          animal.needs.fear = 100;
+          animal.currentTarget = null;
+          animal.targetPosition = null;
+          fleeingAnimals.push({ animal, threatPos: nearbyHuman.position });
+        }
+      }
+    }
+
+    // Use GPU batch if enough fleeing animals (>50 for GPU threshold)
+    if (this.gpuService?.isGPUAvailable() && fleeingAnimals.length >= 50) {
+      this.computeFleeMovementsGPU(fleeingAnimals, deltaSeconds);
+    } else {
+      // CPU fallback - apply flee movement directly
+      for (const { animal, threatPos } of fleeingAnimals) {
+        AnimalBehavior.moveAwayFrom(animal, threatPos, 1.2, deltaSeconds);
+      }
+    }
+  }
+
+  /**
+   * GPU-accelerated flee vector computation for multiple animals.
+   */
+  private computeFleeMovementsGPU(
+    fleeingAnimals: Array<{
+      animal: Animal;
+      threatPos: { x: number; y: number };
+    }>,
+    deltaSeconds: number,
+  ): void {
+    const count = fleeingAnimals.length;
+    const animalPositions = new Float32Array(count * 2);
+    const threatPositions = new Float32Array(count * 2);
+
+    for (let i = 0; i < count; i++) {
+      animalPositions[i * 2] = fleeingAnimals[i].animal.position.x;
+      animalPositions[i * 2 + 1] = fleeingAnimals[i].animal.position.y;
+      threatPositions[i * 2] = fleeingAnimals[i].threatPos.x;
+      threatPositions[i * 2 + 1] = fleeingAnimals[i].threatPos.y;
+    }
+
+    const newPositions = this.gpuService!.computeFleeVectorsBatch(
+      animalPositions,
+      threatPositions,
+      1.2 * 50, // fleeSpeed * baseSpeed
+      deltaSeconds,
+    );
+
+    // Apply new positions
+    for (let i = 0; i < count; i++) {
+      fleeingAnimals[i].animal.position.x = newPositions[i * 2];
+      fleeingAnimals[i].animal.position.y = newPositions[i * 2 + 1];
+    }
   }
 
   private updateAnimalBehavior(animal: Animal, deltaSeconds: number): void {
@@ -799,8 +912,9 @@ export class AnimalSystem {
 
     // Limit cache size - evict oldest entries if over MAX_CACHE_SIZE
     if (this.resourceSearchCache.size > this.MAX_CACHE_SIZE) {
-      const entries = Array.from(this.resourceSearchCache.entries())
-        .sort((a, b) => a[1].timestamp - b[1].timestamp);
+      const entries = Array.from(this.resourceSearchCache.entries()).sort(
+        (a, b) => a[1].timestamp - b[1].timestamp,
+      );
       const toRemove = entries.slice(0, entries.length - this.MAX_CACHE_SIZE);
       for (const [key] of toRemove) {
         this.resourceSearchCache.delete(key);
@@ -816,8 +930,9 @@ export class AnimalSystem {
 
     // Limit threatSearchCache size
     if (this.threatSearchCache.size > this.MAX_CACHE_SIZE) {
-      const entries = Array.from(this.threatSearchCache.entries())
-        .sort((a, b) => a[1].timestamp - b[1].timestamp);
+      const entries = Array.from(this.threatSearchCache.entries()).sort(
+        (a, b) => a[1].timestamp - b[1].timestamp,
+      );
       const toRemove = entries.slice(0, entries.length - this.MAX_CACHE_SIZE);
       for (const [key] of toRemove) {
         this.threatSearchCache.delete(key);

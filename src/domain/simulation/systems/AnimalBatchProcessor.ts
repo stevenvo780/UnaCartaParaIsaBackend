@@ -120,7 +120,10 @@ export class AnimalBatchProcessor {
     this.workBuffer.set(this.needsBuffer);
     const workBuffer = this.workBuffer;
 
-    if (this.gpuService?.isGPUAvailable()) {
+    // Debug: Check GPU availability
+    const gpuAvailable = this.gpuService?.isGPUAvailable() ?? false;
+    
+    if (gpuAvailable && this.gpuService) {
       try {
         const deltaSeconds = deltaMinutes * 60;
 

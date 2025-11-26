@@ -53,7 +53,7 @@ export class AnimalSpawning {
                 config.groupSize.min +
                 Math.floor(
                   Math.random() *
-                    (config.groupSize.max - config.groupSize.min + 1),
+                  (config.groupSize.max - config.groupSize.min + 1),
                 );
 
               for (let i = 0; i < groupSize; i++) {
@@ -80,16 +80,7 @@ export class AnimalSpawning {
     const duration = performance.now() - startTime;
     logger.info(`🐰 Spawned ${spawned} animals in ${duration.toFixed(2)}ms`);
 
-    const CHUNK_PIXEL_SIZE = 16 * tileSize;
-    const chunksX = Math.ceil(worldWidth / CHUNK_PIXEL_SIZE);
-    const chunksY = Math.ceil(worldHeight / CHUNK_PIXEL_SIZE);
-
-    for (let cx = 0; cx < chunksX; cx++) {
-      for (let cy = 0; cy < chunksY; cy++) {
-        this.spawnedChunks.add(`${cx},${cy}`);
-      }
-    }
-
+    // Chunk marking removed - chunks are marked individually in spawnAnimalsInChunk
     return spawned;
   }
 
