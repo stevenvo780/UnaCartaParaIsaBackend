@@ -21,7 +21,7 @@ import { performanceMonitor } from "../core/PerformanceMonitor";
 const DEFAULT_CONFIG: AnimalSystemConfig = {
   maxAnimals: 500,
   spawnRadius: 300,
-  updateInterval: 100, // 10Hz for smoother movement (was 250ms/4Hz)
+  updateInterval: 50, // 20Hz to match FAST scheduler rate for smooth movement
   cleanupInterval: 30000,
 };
 
@@ -123,21 +123,8 @@ export class AnimalSystem {
       },
     );
 
-    simulationEvents.on(
-      GameEventNames.CHUNK_RENDERED,
-      (data: {
-        coords: { x: number; y: number };
-        bounds: { x: number; y: number; width: number; height: number };
-      }) => {
-        AnimalSpawning.spawnAnimalsInChunk(
-          data.coords,
-          data.bounds,
-          (animal) => {
-            this.addAnimal(animal);
-          },
-        );
-      },
-    );
+    // Note: CHUNK_RENDERED is only emitted in the frontend (client)
+    // Animals are spawned via spawnAnimalsInWorld() during world generation
   }
 
   public update(deltaMs: number): void {
@@ -746,7 +733,7 @@ export class AnimalSystem {
       AnimalBehavior.moveToward(
         animal,
         waterTile,
-        config.speed * animal.genes.speed * 0.6,
+        config.speed * 0.6, // Note: genes.speed is applied inside moveToward
         deltaSeconds,
       );
     }
@@ -1064,6 +1051,13 @@ export class AnimalSystem {
       this.spatialGrid.get(cellKey)?.delete(id);
       this.animals.delete(id);
     }
+  }
+
+  /**
+   * Clear spawned chunks cache (for world reset)
+   */
+  public clearSpawnedChunks(): void {
+    AnimalSpawning.clearSpawnedChunks();
   }
 
   /**

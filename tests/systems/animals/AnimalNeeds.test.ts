@@ -89,8 +89,8 @@ describe("AnimalNeeds", () => {
 
       expect(mockAnimal.needs.hunger).toBeLessThan(initialHunger);
       expect(mockAnimal.needs.hunger).toBeGreaterThanOrEqual(0);
-      // hungerDecayRate * deltaMinutes * 1.5 = 0.5 * 10 * 1.5 = 7.5
-      expect(mockAnimal.needs.hunger).toBeCloseTo(100 - 7.5, 1);
+      // hungerDecayRate * deltaMinutes = 0.5 * 10 = 5
+      expect(mockAnimal.needs.hunger).toBeCloseTo(100 - 5, 1);
     });
 
     it("debe aplicar decay de thirst basado en config", () => {
@@ -101,8 +101,8 @@ describe("AnimalNeeds", () => {
 
       expect(mockAnimal.needs.thirst).toBeLessThan(initialThirst);
       expect(mockAnimal.needs.thirst).toBeGreaterThanOrEqual(0);
-      // thirstDecayRate * deltaMinutes * 1.5 = 0.3 * 10 * 1.5 = 4.5
-      expect(mockAnimal.needs.thirst).toBeCloseTo(100 - 4.5, 1);
+      // thirstDecayRate * deltaMinutes = 0.3 * 10 = 3
+      expect(mockAnimal.needs.thirst).toBeCloseTo(100 - 3, 1);
     });
 
     it("debe incrementar reproductiveUrge después de cooldown", () => {

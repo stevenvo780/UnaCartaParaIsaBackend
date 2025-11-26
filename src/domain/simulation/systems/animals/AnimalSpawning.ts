@@ -16,6 +16,12 @@ export class AnimalSpawning {
   private static nextAnimalId = 1;
   private static spawnedChunks = new Set<string>();
 
+  /**
+   * Spawn animals across the entire world during initialization.
+   * This is called once when the world is generated.
+   * 
+   * Optimized with larger sample step to reduce initial spawn count.
+   */
   public static spawnAnimalsInWorld(
     worldWidth: number,
     worldHeight: number,
@@ -31,7 +37,8 @@ export class AnimalSpawning {
       return 0;
     }
 
-    const sampleStep = 96;
+    // Larger sample step for sparse initial population
+    const sampleStep = 128;
 
     for (let x = 0; x < worldWidth; x += sampleStep) {
       for (let y = 0; y < worldHeight; y += sampleStep) {
@@ -49,16 +56,15 @@ export class AnimalSpawning {
 
           for (const config of animalConfigs) {
             if (Math.random() < config.spawnProbability) {
-              const groupSize =
-                config.groupSize.min +
-                Math.floor(
-                  Math.random() *
-                    (config.groupSize.max - config.groupSize.min + 1),
-                );
+              // Smaller group sizes for balanced population
+              const groupSize = Math.min(
+                config.groupSize.max,
+                config.groupSize.min + Math.floor(Math.random() * 2),
+              );
 
               for (let i = 0; i < groupSize; i++) {
-                const offsetX = (Math.random() - 0.5) * 100;
-                const offsetY = (Math.random() - 0.5) * 100;
+                const offsetX = (Math.random() - 0.5) * 80;
+                const offsetY = (Math.random() - 0.5) * 80;
 
                 const animal = this.createAnimal(
                   config.type,
@@ -80,19 +86,19 @@ export class AnimalSpawning {
     const duration = performance.now() - startTime;
     logger.info(`🐰 Spawned ${spawned} animals in ${duration.toFixed(2)}ms`);
 
-    const CHUNK_PIXEL_SIZE = 16 * tileSize;
-    const chunksX = Math.ceil(worldWidth / CHUNK_PIXEL_SIZE);
-    const chunksY = Math.ceil(worldHeight / CHUNK_PIXEL_SIZE);
-
-    for (let cx = 0; cx < chunksX; cx++) {
-      for (let cy = 0; cy < chunksY; cy++) {
-        this.spawnedChunks.add(`${cx},${cy}`);
-      }
-    }
-
     return spawned;
   }
 
+  /**
+   * Spawn animals for a specific chunk (lazy loading).
+   * This is the primary spawn method - animals are only created when chunks become visible.
+   * 
+   * Optimizations:
+   * - Deduplication via spawnedChunks Set
+   * - Larger sample step for fewer spawn checks
+   * - Cached biome configs lookup
+   * - Reduced group sizes for balanced population
+   */
   public static spawnAnimalsInChunk(
     chunkCoords: { x: number; y: number },
     chunkBounds: { x: number; y: number; width: number; height: number },
@@ -108,7 +114,11 @@ export class AnimalSpawning {
     const { x: chunkX, y: chunkY, width, height } = chunkBounds;
     let spawned = 0;
 
+    // Sample step determines spawn density - larger = fewer animals
     const sampleStep = 128;
+
+    // Pre-compute tile size if tiles available
+    const tileSize = tiles && tiles[0]?.length > 0 ? width / tiles[0].length : 64;
 
     for (let x = chunkX; x < chunkX + width; x += sampleStep) {
       for (let y = chunkY; y < chunkY + height; y += sampleStep) {
@@ -116,7 +126,6 @@ export class AnimalSpawning {
         let isWalkable = true;
 
         if (tiles) {
-          const tileSize = width / tiles[0].length;
           const localX = Math.floor((x - chunkX) / tileSize);
           const localY = Math.floor((y - chunkY) / tileSize);
 
@@ -130,30 +139,22 @@ export class AnimalSpawning {
             biome = tile.biome;
             isWalkable = tile.isWalkable;
           }
-        } else {
-          const biomeNoise = Math.sin(x * 0.02) + Math.cos(y * 0.02);
-          if (biomeNoise > 0.6) biome = "mystical";
-          else if (biomeNoise > 0.3) biome = "forest";
-          else if (biomeNoise < -0.3) biome = "wetland";
-          else if (biomeNoise < -0.6) biome = "mountainous";
         }
 
         const animalConfigs = getAnimalsForBiome(biome);
 
         for (const config of animalConfigs) {
-          if (config.isAquatic) {
-            if (isWalkable && biome !== "wetland") continue;
-          } else {
-            if (!isWalkable) continue;
-          }
+          // Skip aquatic animals on walkable non-wetland tiles
+          if (config.isAquatic && isWalkable && biome !== "wetland") continue;
+          // Skip land animals on non-walkable tiles
+          if (!config.isAquatic && !isWalkable) continue;
 
+          // Reduced spawn probability for chunk-based spawning
           const chunkSpawnProb = config.spawnProbability * 0.1;
 
           if (Math.random() < chunkSpawnProb) {
-            const groupSize = Math.min(
-              2,
-              Math.max(1, Math.floor(Math.random() * 2) + 1),
-            );
+            // Smaller groups for chunk spawning (1-2 animals)
+            const groupSize = Math.random() < 0.3 ? 2 : 1;
 
             for (let i = 0; i < groupSize; i++) {
               const offsetX = (Math.random() - 0.5) * 80;
@@ -175,12 +176,29 @@ export class AnimalSpawning {
       }
     }
 
-    if (spawned > 0) {
-      logger.info(
-        `🐰 Spawned ${spawned} animals in chunk (${chunkX}, ${chunkY})`,
-      );
-    }
     return spawned;
+  }
+
+  /**
+   * Clear spawned chunks cache (for world reset)
+   */
+  public static clearSpawnedChunks(): void {
+    this.spawnedChunks.clear();
+  }
+
+  /**
+   * Check if a chunk has been processed for animal spawning
+   */
+  public static isChunkSpawned(x: number, y: number): boolean {
+    return this.spawnedChunks.has(`${x},${y}`);
+  }
+
+  /**
+   * Mark a chunk as spawned without actually spawning animals
+   * Useful when loading saved game state
+   */
+  public static markChunkAsSpawned(x: number, y: number): void {
+    this.spawnedChunks.add(`${x},${y}`);
   }
 
   /**

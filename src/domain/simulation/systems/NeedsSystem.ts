@@ -92,13 +92,13 @@ export class NeedsSystem extends EventEmitter {
     this.gpuService = gpuService;
     this.config = {
       decayRates: {
-        hunger: 1.0,
-        thirst: 1.5,
-        energy: 0.5,
-        hygiene: 0.3,
-        social: 0.4,
-        fun: 0.4,
-        mentalHealth: 0.2,
+        hunger: 0.2,
+        thirst: 0.3,
+        energy: 0.15,
+        hygiene: 0.1,
+        social: 0.15,
+        fun: 0.15,
+        mentalHealth: 0.08,
       },
       criticalThreshold: 20,
       emergencyThreshold: 10,

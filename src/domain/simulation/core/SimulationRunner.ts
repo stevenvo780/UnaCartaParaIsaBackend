@@ -665,7 +665,7 @@ export class SimulationRunner {
 
     this.scheduler.registerSystem({
       name: "AnimalSystem",
-      rate: "MEDIUM",
+      rate: "FAST",
       update: (delta: number) => this.animalSystem.update(delta),
       enabled: true,
     });
@@ -1635,6 +1635,7 @@ export class SimulationRunner {
       biomeMap,
     });
 
+    // Spawn animals across the world during initialization
     this.animalSystem.spawnAnimalsInWorld(
       worldConfig.width,
       worldConfig.height,

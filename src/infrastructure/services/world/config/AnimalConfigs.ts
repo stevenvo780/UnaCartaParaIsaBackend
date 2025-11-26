@@ -14,8 +14,8 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     fleeSpeed: 150,
     detectionRange: 200,
 
-    hungerDecayRate: 2,
-    thirstDecayRate: 3,
+    hungerDecayRate: 0.4,
+    thirstDecayRate: 0.6,
     reproductionCooldown: 60000,
     lifespan: 300000,
 
@@ -48,8 +48,8 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     fleeSpeed: 180,
     detectionRange: 250,
 
-    hungerDecayRate: 1.5,
-    thirstDecayRate: 2.5,
+    hungerDecayRate: 0.3,
+    thirstDecayRate: 0.5,
     reproductionCooldown: 120000,
     lifespan: 600000,
 
@@ -82,8 +82,8 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     fleeSpeed: 120,
     detectionRange: 180,
 
-    hungerDecayRate: 2.5,
-    thirstDecayRate: 2,
+    hungerDecayRate: 0.5,
+    thirstDecayRate: 0.4,
     reproductionCooldown: 150000,
     lifespan: 480000,
 
@@ -116,8 +116,8 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     fleeSpeed: 200,
     detectionRange: 300,
 
-    hungerDecayRate: 3,
-    thirstDecayRate: 3.5,
+    hungerDecayRate: 0.6,
+    thirstDecayRate: 0.7,
     reproductionCooldown: 90000,
     lifespan: 240000,
 
@@ -150,7 +150,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     fleeSpeed: 100,
     detectionRange: 150,
 
-    hungerDecayRate: 1.5,
+    hungerDecayRate: 0.3,
     thirstDecayRate: 0,
     reproductionCooldown: 100000,
     lifespan: 360000,
@@ -186,8 +186,8 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     fleeSpeed: 140,
     detectionRange: 300,
 
-    hungerDecayRate: 2.5,
-    thirstDecayRate: 2,
+    hungerDecayRate: 0.5,
+    thirstDecayRate: 0.4,
     reproductionCooldown: 180000,
     lifespan: 720000,
 

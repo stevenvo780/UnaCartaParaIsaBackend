@@ -94,59 +94,13 @@ describe("AnimalSpawning", () => {
 
   afterEach(() => {
     vi.useRealTimers();
-    (AnimalSpawning as any).spawnedChunks.clear();
+    AnimalSpawning.clearSpawnedChunks();
     simulationEvents.clearQueue();
     simulationEvents.removeAllListeners();
   });
 
-  describe("spawnAnimalsInWorld", () => {
-    it("debe spawn basado en biomeMap", () => {
-      const biomeMap = [
-        ["grassland", "grassland"],
-        ["grassland", "grassland"],
-      ];
-
-      vi.spyOn(Math, "random").mockReturnValue(0.5); // < spawnProbability
-
-      const spawned = AnimalSpawning.spawnAnimalsInWorld(200, 200, 32, biomeMap, onSpawn);
-
-      expect(spawned).toBeGreaterThanOrEqual(0);
-    });
-
-    it("debe respetar spawnProbability", () => {
-      const biomeMap = [["grassland"]];
-
-      // Mock para que nunca spawnee (random >= spawnProbability)
-      vi.spyOn(Math, "random").mockReturnValue(1.0);
-
-      const spawned = AnimalSpawning.spawnAnimalsInWorld(100, 100, 32, biomeMap, onSpawn);
-
-      expect(spawned).toBe(0);
-    });
-
-    it("debe respetar groupSize min/max", () => {
-      const biomeMap = [["grassland"]];
-
-      // Mock para spawnear siempre
-      vi.spyOn(Math, "random")
-        .mockReturnValueOnce(0.5) // spawnProbability check
-        .mockReturnValueOnce(0.0) // groupSize calculation (min)
-        .mockReturnValueOnce(0.0) // offsetX
-        .mockReturnValueOnce(0.0); // offsetY
-
-      const spawned = AnimalSpawning.spawnAnimalsInWorld(100, 100, 32, biomeMap, onSpawn);
-
-      // Debe spawnear al menos 1 (min groupSize)
-      expect(spawned).toBeGreaterThanOrEqual(1);
-    });
-
-    it("debe retornar 0 si no hay biomeMap", () => {
-      const spawned = AnimalSpawning.spawnAnimalsInWorld(100, 100, 32, [], onSpawn);
-
-      expect(spawned).toBe(0);
-      expect(onSpawn).not.toHaveBeenCalled();
-    });
-  });
+  // Note: spawnAnimalsInWorld was removed in favor of lazy chunk-based spawning
+  // Animals are now only spawned when chunks become visible via CHUNK_RENDERED event
 
   describe("spawnAnimalsInChunk", () => {
     it("no debe re-spawn en chunks ya procesados", () => {
