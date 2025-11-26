@@ -902,11 +902,20 @@ export class AISystem extends EventEmitter {
     }
 
     if (
-      goal.type.startsWith("assist_") &&
+      (goal.type === "assist" || goal.type.startsWith("assist_")) &&
       goal.data &&
       goal.data.targetAgentId
     ) {
       const targetId = goal.data.targetAgentId as string;
+
+      // Verify target is still alive before executing assist action
+      const targetAgent = this.gameState.agents?.find((a) => a.id === targetId);
+      if (!targetAgent || targetAgent.isDead) {
+        aiState.currentGoal = null;
+        aiState.currentAction = null;
+        return;
+      }
+
       const resourceType = goal.data.resourceType as string;
       const amount = (goal.data.amount as number) || 10;
 
@@ -1350,6 +1359,25 @@ export class AISystem extends EventEmitter {
       } else if (this.gameState.worldResources) {
         const resource = this.gameState.worldResources[goal.targetId];
         if (!resource || resource.state !== "pristine") {
+          return true;
+        }
+      }
+    }
+
+    // Attack goals: verify target (agent or animal) is still alive
+    if (goal.type === "attack" && goal.targetId) {
+      // Check if target is an agent
+      const targetAgent = this.gameState.agents?.find(
+        (a) => a.id === goal.targetId,
+      );
+      if (targetAgent) {
+        if (targetAgent.isDead) {
+          return true;
+        }
+      } else {
+        // Check if target is an animal
+        const targetAnimal = this.animalSystem?.getAnimal(goal.targetId);
+        if (!targetAnimal || targetAnimal.isDead) {
           return true;
         }
       }

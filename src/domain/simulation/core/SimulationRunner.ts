@@ -57,6 +57,7 @@ import { mapEventName } from "./eventNameMapper";
 import { MultiRateScheduler } from "./MultiRateScheduler";
 import { performanceMonitor } from "./PerformanceMonitor";
 import { DeltaEncoder, type DeltaSnapshot } from "./DeltaEncoder";
+import { storageService } from "../../../infrastructure/services/storage/storageService";
 import type {
   SimulationCommand,
   SimulationConfig,
@@ -193,6 +194,8 @@ export class SimulationRunner {
   private snapshotWorkerReady = false;
 
   private readonly INDEX_REBUILD_INTERVAL_FAST = 5;
+  private readonly AUTO_SAVE_INTERVAL_MS = 60000;
+  private autoSaveInterval?: NodeJS.Timeout;
 
   constructor(
     @inject(TYPES.GameState) state: GameState,
@@ -210,6 +213,8 @@ export class SimulationRunner {
     });
 
     this.initializeSnapshotWorker();
+
+    this.scheduleAutoSaves();
   }
 
   /**
@@ -276,6 +281,58 @@ export class SimulationRunner {
     } catch (error) {
       logger.error("Failed to initialize snapshot worker:", error);
       this.snapshotWorkerReady = false;
+    }
+  }
+
+  /**
+   * Configures the recurring auto-save interval used during long sessions.
+   * Saves are dispatched asynchronously so the tick loop never blocks.
+   */
+  private scheduleAutoSaves(): void {
+    this.autoSaveInterval = setInterval(() => {
+      this.saveSimulation().catch((err) => {
+        logger.error("Auto-save failed:", err);
+      });
+    }, this.AUTO_SAVE_INTERVAL_MS);
+  }
+
+  /**
+   * Saves the current simulation state to storage.
+   *
+   * @remarks
+   * Clones the authoritative state before persisting it asynchronously via the
+   * storage service. Callers may await the returned promise for logging
+   * purposes, but the simulation loop can safely fire-and-forget without race
+   * conditions because mutation occurs on the cloned snapshot.
+   *
+   * @returns {Promise<void>}
+   */
+  public async saveSimulation(): Promise<void> {
+    const startTime = performance.now();
+    try {
+      const stateClone = cloneGameState(this.state);
+
+      const saveData = {
+        timestamp: Date.now(),
+        gameTime: this.timeSystem.getCurrentTime().timestamp,
+        stats: {
+          population: this.state.agents.length,
+          resourceCount: this.state.worldResources
+            ? Object.keys(this.state.worldResources).length
+            : 0,
+          cycles: this.tickCounter,
+        },
+        state: stateClone,
+      };
+
+      const { saveId, size } = await storageService.saveGame(saveData);
+
+      const duration = performance.now() - startTime;
+      logger.info(
+        `💾 Game saved: ${saveId} (${(size / 1024).toFixed(2)} KB) in ${duration.toFixed(2)}ms`,
+      );
+    } catch (error) {
+      logger.error("Failed to save simulation:", error);
     }
   }
 
@@ -395,25 +452,33 @@ export class SimulationRunner {
         { name: "Sol", sex: "male" as const },
         { name: "Estrella", sex: "female" as const },
         { name: "Cielo", sex: "male" as const },
+        { name: "Mar", sex: "female" as const },
+        { name: "Rio", sex: "male" as const },
       ];
 
       for (const childData of childNames) {
-        const child = this.lifeCycleSystem.spawnAgent({
-          name: childData.name,
-          sex: childData.sex,
-          ageYears: 5,
-          lifeStage: "child",
-          generation: 1,
-          parents: {
-            father: stev.id,
-            mother: isa.id,
-          },
-        });
+        try {
+          const child = this.lifeCycleSystem.spawnAgent({
+            name: childData.name,
+            sex: childData.sex,
+            ageYears: 5,
+            lifeStage: "child",
+            generation: 1,
+            parents: {
+              father: stev.id,
+              mother: isa.id,
+            },
+          });
 
-        this._genealogySystem.registerBirth(child, stev.id, isa.id);
+          this._genealogySystem.registerBirth(child, stev.id, isa.id);
+        } catch (error) {
+          logger.error(`Failed to spawn child ${childData.name}:`, error);
+        }
       }
 
-      logger.info(`👨‍👩‍👧‍👦 Family initialized: Isa & Stev with 4 children`);
+      logger.info(
+        `👨‍👩‍👧‍👦 Family initialized: Isa & Stev with ${childNames.length} children`,
+      );
 
       this.createInitialInfrastructure();
 
@@ -433,7 +498,8 @@ export class SimulationRunner {
           }
         } catch (err) {
           logger.warn(
-            `Failed to initialize movement state for agent ${agent.id}: ${err instanceof Error ? err.message : String(err)
+            `Failed to initialize movement state for agent ${agent.id}: ${
+              err instanceof Error ? err.message : String(err)
             }`,
           );
         }
@@ -492,7 +558,6 @@ export class SimulationRunner {
           simulationEvents.flushEvents();
         }
 
-        // Sync animals to state before marking dirty
         this.syncAnimalsToState();
 
         const baseDirtySections = [
@@ -834,8 +899,6 @@ export class SimulationRunner {
       update: (delta: number) => this.knowledgeNetworkSystem.update(delta),
       enabled: true,
     });
-
-
 
     logger.info("📋 All systems registered in multi-rate scheduler", {
       fast: 3,
@@ -1521,6 +1584,13 @@ export class SimulationRunner {
     });
   }
 
+  /**
+   * Generates the initial world terrain, seeds resource nodes, spawns animals,
+   * and constructs functional zones that downstream systems rely on.
+   *
+   * @param worldConfig - World dimensions, tile size, and optional biome map.
+   * @returns Promise that resolves after world assets are generated.
+   */
   public async initializeWorldResources(worldConfig: {
     width: number;
     height: number;
@@ -1614,7 +1684,6 @@ export class SimulationRunner {
       biomeMap,
     });
 
-    // Spawn animals across the world during initialization
     this.animalSystem.spawnAnimalsInWorld(
       worldConfig.width,
       worldConfig.height,
@@ -1752,10 +1821,7 @@ export class SimulationRunner {
       agentsCount: this.state.agents.length,
     });
 
-    // Log GPU stats every 30 seconds
-    this.gpuStatsInterval = setInterval(() => {
-      this.gpuComputeService.logPerformanceStats();
-    }, 30000);
+    this.startGpuStatsLogging();
   }
 
   /**
@@ -1769,6 +1835,11 @@ export class SimulationRunner {
     if (this.tickHandle) {
       clearInterval(this.tickHandle);
       this.tickHandle = undefined;
+    }
+
+    if (this.autoSaveInterval) {
+      clearInterval(this.autoSaveInterval);
+      this.autoSaveInterval = undefined;
     }
 
     if (this.gpuStatsInterval) {
@@ -2105,7 +2176,6 @@ export class SimulationRunner {
       this.movementSystem.update(scaledDelta);
       dirtySections.push("entities");
 
-      // Sync animals from AnimalSystem to GameState
       this.syncAnimalsToState();
 
       this.stateCache.markDirtyMultiple(dirtySections);
@@ -2249,6 +2319,11 @@ export class SimulationRunner {
           break;
         case "FORCE_EMERGENCE_EVALUATION":
           this.emergenceSystem.forcePatternEvaluation();
+          break;
+        case "SAVE_GAME":
+          this.saveSimulation().catch((err) => {
+            logger.error("Manual save failed:", err);
+          });
           break;
         case "PING":
         default:
@@ -2613,14 +2688,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                resources?: {
-                  wood?: number;
-                  stone?: number;
-                  food?: number;
-                  water?: number;
-                };
-                minWorkers?: number;
-              }
+                  resources?: {
+                    wood?: number;
+                    stone?: number;
+                    food?: number;
+                    water?: number;
+                  };
+                  minWorkers?: number;
+                }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,
@@ -2662,12 +2737,12 @@ export class SimulationRunner {
       ) {
         this.timeSystem.setWeather(
           weatherType as
-          | "clear"
-          | "cloudy"
-          | "rainy"
-          | "stormy"
-          | "foggy"
-          | "snowy",
+            | "clear"
+            | "cloudy"
+            | "rainy"
+            | "stormy"
+            | "foggy"
+            | "snowy",
         );
         logger.info(`Weather set to ${weatherType} via TIME_COMMAND`);
       } else {
@@ -2773,12 +2848,12 @@ export class SimulationRunner {
       social,
       ai: aiState
         ? {
-          currentGoal: aiState.currentGoal,
-          goalQueue: aiState.goalQueue,
-          currentAction: aiState.currentAction,
-          offDuty: aiState.offDuty,
-          lastDecisionTime: aiState.lastDecisionTime,
-        }
+            currentGoal: aiState.currentGoal,
+            goalQueue: aiState.goalQueue,
+            currentAction: aiState.currentAction,
+            offDuty: aiState.offDuty,
+            lastDecisionTime: aiState.lastDecisionTime,
+          }
         : null,
     };
   }
@@ -2790,5 +2865,14 @@ export class SimulationRunner {
    */
   public getPlayerId(): string {
     return this.state.agents[0]?.id || "";
+  }
+
+  private startGpuStatsLogging(): void {
+    setInterval(() => {
+      const stats = this.gpuComputeService.getPerformanceStats();
+      if (stats.gpuAvailable) {
+        logger.debug("GPU Compute Stats:", stats);
+      }
+    }, 60000);
   }
 }

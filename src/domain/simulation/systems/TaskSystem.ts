@@ -413,26 +413,26 @@ export class TaskSystem {
       zoneId: task.zoneId,
       bounds: task.bounds
         ? {
-          x: task.bounds.x,
-          y: task.bounds.y,
-          width: task.bounds.width,
-          height: task.bounds.height,
-        }
+            x: task.bounds.x,
+            y: task.bounds.y,
+            width: task.bounds.width,
+            height: task.bounds.height,
+          }
         : undefined,
       requirements: task.requirements
         ? {
-          resources: { ...task.requirements.resources },
-          minWorkers: task.requirements.minWorkers,
-        }
+            resources: { ...task.requirements.resources },
+            minWorkers: task.requirements.minWorkers,
+          }
         : undefined,
       metadata: task.metadata ? { ...task.metadata } : undefined,
       contributors: task.contributors
         ? Array.from(task.contributors.entries()).map(
-          ([agentId, contribution]) => ({
-            agentId,
-            contribution,
-          }),
-        )
+            ([agentId, contribution]) => ({
+              agentId,
+              contribution,
+            }),
+          )
         : undefined,
       lastContribution: task.lastContribution,
       createdAt: task.createdAt,

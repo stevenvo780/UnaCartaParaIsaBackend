@@ -7,22 +7,22 @@ import type { AgentTraits } from "../simulation/agents";
 export type ResourcesState = NonNullable<GameState["resources"]>;
 
 export type SimulationEventPayload =
-  | { type: string;[key: string]: string | number | boolean | undefined }
+  | { type: string; [key: string]: string | number | boolean | undefined }
   | {
-    type: string;
-    agentId: string;
-    [key: string]: string | number | boolean | undefined;
-  }
+      type: string;
+      agentId: string;
+      [key: string]: string | number | boolean | undefined;
+    }
   | {
-    type: string;
-    zoneId: string;
-    [key: string]: string | number | boolean | undefined;
-  }
+      type: string;
+      zoneId: string;
+      [key: string]: string | number | boolean | undefined;
+    }
   | {
-    type: string;
-    resourceId: string;
-    [key: string]: string | number | boolean | undefined;
-  }
+      type: string;
+      resourceId: string;
+      [key: string]: string | number | boolean | undefined;
+    }
   | Record<string, string | number | boolean | undefined>;
 
 export interface SimulationEvent {
@@ -127,10 +127,10 @@ export interface TaskCommandPayload {
   requiredWork?: number;
   bounds?: { x: number; y: number; width: number; height: number };
   [key: string]:
-  | string
-  | number
-  | { x: number; y: number; width: number; height: number }
-  | undefined;
+    | string
+    | number
+    | { x: number; y: number; width: number; height: number }
+    | undefined;
 }
 
 export interface PingPayload {
@@ -164,86 +164,92 @@ export interface GiveResourceCommandPayload {
 export type SimulationCommand =
   | { type: "SET_TIME_SCALE"; multiplier: number }
   | {
-    type: "APPLY_RESOURCE_DELTA";
-    delta: Partial<GameResources["materials"]>;
-  }
+      type: "APPLY_RESOURCE_DELTA";
+      delta: Partial<GameResources["materials"]>;
+    }
   | { type: "GATHER_RESOURCE"; resourceId: string; amount: number }
   | { type: "GIVE_RESOURCE"; payload: GiveResourceCommandPayload }
   | { type: "SPAWN_AGENT"; payload?: SpawnAgentCommandPayload }
   | { type: "KILL_AGENT"; agentId: string }
   | { type: "PING"; payload?: PingPayload }
   | {
-    type: "AGENT_COMMAND";
-    agentId: string;
-    command: string;
-    payload?: AgentCommandPayload;
-  }
+      type: "AGENT_COMMAND";
+      agentId: string;
+      command: string;
+      payload?: AgentCommandPayload;
+    }
   | {
-    type: "ANIMAL_COMMAND";
-    command: string;
-    payload?: AnimalCommandPayload;
-  }
+      type: "ANIMAL_COMMAND";
+      command: string;
+      payload?: AnimalCommandPayload;
+    }
   | {
-    type: "NEEDS_COMMAND";
-    command: "SATISFY_NEED" | "MODIFY_NEED" | "UPDATE_CONFIG";
-    payload?: NeedsCommandPayload;
-  }
+      type: "NEEDS_COMMAND";
+      command: "SATISFY_NEED" | "MODIFY_NEED" | "UPDATE_CONFIG";
+      payload?: NeedsCommandPayload;
+    }
   | {
-    type: "RECIPE_COMMAND";
-    command: "TEACH_RECIPE" | "SHARE_RECIPE";
-    payload?: RecipeCommandPayload;
-  }
+      type: "RECIPE_COMMAND";
+      command: "TEACH_RECIPE" | "SHARE_RECIPE";
+      payload?: RecipeCommandPayload;
+    }
   | {
-    type: "SOCIAL_COMMAND";
-    command:
-    | "IMPOSE_TRUCE"
-    | "SET_AFFINITY"
-    | "MODIFY_AFFINITY"
-    | "FRIENDLY_INTERACTION"
-    | "HOSTILE_ENCOUNTER"
-    | "REMOVE_RELATIONSHIPS";
-    payload?: SocialCommandPayload;
-  }
+      type: "SOCIAL_COMMAND";
+      command:
+        | "IMPOSE_TRUCE"
+        | "SET_AFFINITY"
+        | "MODIFY_AFFINITY"
+        | "FRIENDLY_INTERACTION"
+        | "HOSTILE_ENCOUNTER"
+        | "REMOVE_RELATIONSHIPS";
+      payload?: SocialCommandPayload;
+    }
   | {
-    type: "RESEARCH_COMMAND";
-    command: "INITIALIZE_LINEAGE" | "RECIPE_DISCOVERED";
-    payload?: ResearchCommandPayload;
-  }
+      type: "RESEARCH_COMMAND";
+      command: "INITIALIZE_LINEAGE" | "RECIPE_DISCOVERED";
+      payload?: ResearchCommandPayload;
+    }
   | {
-    type: "WORLD_RESOURCE_COMMAND";
-    command: "SPAWN_RESOURCE" | "HARVEST_RESOURCE";
-    payload?: WorldResourceCommandPayload;
-  }
+      type: "WORLD_RESOURCE_COMMAND";
+      command: "SPAWN_RESOURCE" | "HARVEST_RESOURCE";
+      payload?: WorldResourceCommandPayload;
+    }
   | {
-    type: "DIALOGUE_COMMAND";
-    command: "RESPOND_TO_CARD";
-    payload?: DialogueCommandPayload;
-  }
+      type: "DIALOGUE_COMMAND";
+      command: "RESPOND_TO_CARD";
+      payload?: DialogueCommandPayload;
+    }
   | {
-    type: "BUILDING_COMMAND";
-    command:
-    | "START_UPGRADE"
-    | "CANCEL_UPGRADE"
-    | "ENQUEUE_CONSTRUCTION"
-    | "CONSTRUCT_BUILDING";
-    payload?: BuildingCommandPayload;
-  }
+      type: "BUILDING_COMMAND";
+      command:
+        | "START_UPGRADE"
+        | "CANCEL_UPGRADE"
+        | "ENQUEUE_CONSTRUCTION"
+        | "CONSTRUCT_BUILDING";
+      payload?: BuildingCommandPayload;
+    }
   | {
-    type: "REPUTATION_COMMAND";
-    command: "UPDATE_TRUST";
-    payload?: ReputationCommandPayload;
-  }
+      type: "REPUTATION_COMMAND";
+      command: "UPDATE_TRUST";
+      payload?: ReputationCommandPayload;
+    }
   | {
-    type: "TASK_COMMAND";
-    command: "CREATE_TASK" | "CONTRIBUTE_TO_TASK" | "REMOVE_TASK";
-    payload?: TaskCommandPayload;
-  }
+      type: "TASK_COMMAND";
+      command: "CREATE_TASK" | "CONTRIBUTE_TO_TASK" | "REMOVE_TASK";
+      payload?: TaskCommandPayload;
+    }
   | {
-    type: "TIME_COMMAND";
-    command: "SET_WEATHER";
-    payload?: { weatherType: string };
-  }
-  | { type: "FORCE_EMERGENCE_EVALUATION"; timestamp?: number };
+      type: "TIME_COMMAND";
+      command: "SET_WEATHER";
+      payload?: { weatherType: string };
+    }
+  | {
+      type: "TIME_COMMAND";
+      command: "SET_WEATHER";
+      payload?: { weatherType: string };
+    }
+  | { type: "FORCE_EMERGENCE_EVALUATION"; timestamp?: number }
+  | { type: "SAVE_GAME"; timestamp?: number };
 
 export interface SimulationConfig {
   tickIntervalMs: number;

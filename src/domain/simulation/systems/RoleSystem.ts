@@ -446,7 +446,7 @@ export class RoleSystem extends EventEmitter {
     if (!role) return;
 
     this.roles.delete(agentId);
-    
+
     // Clean from all shift schedules
     for (const shift of Object.keys(this.schedule) as WorkShift[]) {
       const idx = this.schedule[shift].indexOf(agentId);

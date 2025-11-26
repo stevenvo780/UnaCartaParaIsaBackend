@@ -84,6 +84,7 @@ class Logger {
         fs.mkdirSync(this.config.logDir, { recursive: true });
       }
     } catch {
+      // Ignore errors during directory creation
     }
   }
 
@@ -189,6 +190,7 @@ class Logger {
         fs.unlinkSync(path.join(this.config.logDir, file));
       }
     } catch {
+      // Ignore errors during log rotation
     }
   }
 

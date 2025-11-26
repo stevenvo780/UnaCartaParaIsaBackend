@@ -135,6 +135,11 @@ export interface IInventoryPort {
    * Initializes inventory for a new agent
    */
   initializeAgentInventory(agentId: string, capacity?: number): Inventory;
+
+  /**
+   * Removes agent's inventory (on death)
+   */
+  removeAgentInventory(agentId: string): void;
 }
 
 /**

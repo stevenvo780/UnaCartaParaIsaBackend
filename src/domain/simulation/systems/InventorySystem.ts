@@ -90,6 +90,10 @@ export class InventorySystem {
     return this.agentInventories.get(agentId);
   }
 
+  public removeAgentInventory(agentId: string): void {
+    this.agentInventories.delete(agentId);
+  }
+
   public getStockpile(stockpileId: string): Stockpile | undefined {
     return this.stockpiles.get(stockpileId);
   }

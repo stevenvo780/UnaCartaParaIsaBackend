@@ -100,7 +100,6 @@ export class LifeCycleSystem extends EventEmitter {
       mortalInterbirthSec: 240,
     };
 
-    // Listen for deaths from NeedsSystem to ensure proper cleanup
     this.setupDeathListener();
   }
 
@@ -623,6 +622,8 @@ export class LifeCycleSystem extends EventEmitter {
           timestamp: Date.now(),
         });
       }
+      // Remove inventory from memory after emitting drop event
+      this.inventorySystem.removeAgentInventory(agentId);
     }
 
     if (this._aiSystem) {

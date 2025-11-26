@@ -238,8 +238,8 @@ export class ReputationSystem {
       data.aId,
       data.bId,
       REPUTATION_CONFIG.impacts.socialRelation.trust *
-      sign *
-      Math.abs(data.delta),
+        sign *
+        Math.abs(data.delta),
     );
     this.updateReputation(
       data.aId,
