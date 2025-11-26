@@ -25,6 +25,7 @@ export class SharedSpatialIndex {
   private entityPositions = new Map<string, { x: number; y: number }>();
   private entityTypes = new Map<string, EntityType>();
   private dirty = true;
+  private updateTick = 0;
 
   private lastEntityIds = new Set<string>();
   private lastAnimalIds = new Set<string>();
@@ -176,7 +177,8 @@ export class SharedSpatialIndex {
      */
     const animalArray = Array.from(animals.entries());
     const checkLimit = Math.min(animalArray.length, 100);
-    const startIdx = (Date.now() % 100) * Math.floor(animalArray.length / 100);
+    this.updateTick++;
+    const startIdx = (this.updateTick % 100) * Math.floor(animalArray.length / 100);
 
     for (let i = 0; i < checkLimit; i++) {
       const idx = (startIdx + i) % animalArray.length;

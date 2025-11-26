@@ -40,7 +40,11 @@ export class WorldGenerationService {
   }
 
   private initializeGenerators(config: WorldGenConfig): void {
-    this.currentSeed = config.seed ?? "default";
+    const seed = config.seed ?? "default";
+    if (this.currentSeed === seed && this.noiseGen) {
+      return;
+    }
+    this.currentSeed = seed;
     this.noiseGen = new NoiseUtils(this.currentSeed);
     if (config.width <= 0 || config.height <= 0) {
       throw new Error("World generation config dimensions must be positive");

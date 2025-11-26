@@ -37,6 +37,13 @@ logger.info("🚀 Backend: Starting simulation initialization process...");
 import { storageService } from "../infrastructure/services/storage/storageService";
 import { GameState } from "../domain/types/game-types";
 
+// Define server variable in outer scope so it's accessible for upgrade handling
+let server: ReturnType<typeof app.listen>;
+const simulationWss = new WebSocketServer({ noServer: true });
+const chunkStreamServer = new ChunkStreamServer({ maxInflight: 128 });
+let cachedTickBuffer: Buffer | null = null;
+let cachedTickNumber = -1;
+
 simulationRunner
   .initialize()
   .then(async () => {
@@ -57,75 +64,82 @@ simulationRunner
         logger.info("✅ Backend: State loaded and family verified");
         simulationRunner.start();
         logger.info("✅ Backend: Simulation started from save");
-        return;
+      } else {
+        // Fallback if save is corrupted
+        logger.warn("⚠️ Saved state invalid. Falling back to fresh world.");
+        await initializeFreshWorld();
       }
+    } else {
+      logger.info("🆕 No valid save found. Initializing fresh world...");
+      await initializeFreshWorld();
     }
 
-    logger.info("🆕 No valid save found. Initializing fresh world...");
-    return simulationRunner
-      .initializeWorldResources({
-        width: 128,
-        height: 128,
-        tileSize: 32,
-        biomeMap: [],
-      })
-      .then(() => {
-        logger.info("🌍 Backend: World resources initialized");
-        simulationRunner.start();
-        logger.info("✅ Backend: Simulation started and running");
-      });
+    // Initialize hardware and start server ONLY after simulation is ready
+    detectGPUAvailability();
+    
+    server = app.listen(CONFIG.PORT, () => {
+      logger.info(`Save server running on http://localhost:${CONFIG.PORT}`);
+      if (!CONFIG.USE_LOCAL_STORAGE) {
+        logger.info(`Using GCS bucket: ${CONFIG.BUCKET_NAME}`);
+      } else {
+        logger.info(`Using local storage: ${CONFIG.LOCAL_SAVES_PATH}`);
+      }
+    });
+
+    setupServerUpgrades();
   })
   .catch((err) => {
     logger.error("❌ Backend: Failed to initialize simulation:", err);
+    process.exit(1); // Exit if critical initialization fails
   });
 
-detectGPUAvailability();
-
-const server = app.listen(CONFIG.PORT, () => {
-  logger.info(`Save server running on http://localhost:${CONFIG.PORT}`);
-  if (!CONFIG.USE_LOCAL_STORAGE) {
-    logger.info(`Using GCS bucket: ${CONFIG.BUCKET_NAME}`);
-  } else {
-    logger.info(`Using local storage: ${CONFIG.LOCAL_SAVES_PATH}`);
-  }
-});
-
-const simulationWss = new WebSocketServer({ noServer: true });
-const chunkStreamServer = new ChunkStreamServer({ maxInflight: 128 });
-
-let cachedTickBuffer: Buffer | null = null;
-let cachedTickNumber = -1;
-
-server.on("upgrade", (request, socket, head) => {
-  const host = request.headers.host ?? "localhost";
-  const url = request.url ?? "/";
-  let pathname: string;
-  try {
-    pathname = new URL(url, `http://${host}`).pathname;
-  } catch (error) {
-    logger.debug("Invalid URL in WebSocket upgrade request", {
-      url,
-      host,
-      error: error instanceof Error ? error.message : String(error),
+async function initializeFreshWorld() {
+  return simulationRunner
+    .initializeWorldResources({
+      width: 128,
+      height: 128,
+      tileSize: 32,
+      biomeMap: [],
+    })
+    .then(() => {
+      logger.info("🌍 Backend: World resources initialized");
+      simulationRunner.start();
+      logger.info("✅ Backend: Simulation started and running");
     });
+}
+
+function setupServerUpgrades() {
+  server.on("upgrade", (request, socket, head) => {
+    const host = request.headers.host ?? "localhost";
+    const url = request.url ?? "/";
+    let pathname: string;
+    try {
+      pathname = new URL(url, `http://${host}`).pathname;
+    } catch (error) {
+      logger.debug("Invalid URL in WebSocket upgrade request", {
+        url,
+        host,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      socket.destroy();
+      return;
+    }
+
+    if (pathname === "/ws/sim") {
+      simulationWss.handleUpgrade(request, socket, head, (ws) => {
+        simulationWss.emit("connection", ws, request);
+      });
+      return;
+    }
+
+    if (pathname === "/ws/chunks") {
+      chunkStreamServer.handleUpgrade(request, socket, head);
+      return;
+    }
+
     socket.destroy();
-    return;
-  }
-
-  if (pathname === "/ws/sim") {
-    simulationWss.handleUpgrade(request, socket, head, (ws) => {
-      simulationWss.emit("connection", ws, request);
-    });
-    return;
-  }
-
-  if (pathname === "/ws/chunks") {
-    chunkStreamServer.handleUpgrade(request, socket, head);
-    return;
-  }
-
-  socket.destroy();
-});
+  });
+}
 
 simulationWss.on("connection", (ws: WebSocket) => {
   logger.info("Client connected to simulation");

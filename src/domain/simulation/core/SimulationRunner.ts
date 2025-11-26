@@ -95,7 +95,7 @@ import { TYPES } from "../../../config/Types";
  */
 @injectable()
 export class SimulationRunner {
-  private state: GameState;
+  public readonly state: GameState;
   private readonly emitter = new EventEmitter();
   private readonly commands: SimulationCommand[] = [];
   private readonly maxCommandQueue: number;
@@ -105,6 +105,7 @@ export class SimulationRunner {
   private scheduler: MultiRateScheduler;
   private metricsCollector: MetricsCollector;
   private indexRebuildInProgress = false;
+  private eventCleanups: (() => void)[] = [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public on(event: string, listener: (...args: any[]) => void): void {
@@ -120,74 +121,74 @@ export class SimulationRunner {
   private timeScale = 1;
 
   @inject(TYPES.WorldResourceSystem)
-  private worldResourceSystem!: WorldResourceSystem;
+  public readonly worldResourceSystem!: WorldResourceSystem;
   @inject(TYPES.LivingLegendsSystem)
-  private livingLegendsSystem!: LivingLegendsSystem;
-  @inject(TYPES.LifeCycleSystem) private lifeCycleSystem!: LifeCycleSystem;
-  @inject(TYPES.NeedsSystem) private needsSystem!: NeedsSystem;
-  @inject(TYPES.GenealogySystem) private _genealogySystem!: GenealogySystem;
-  @inject(TYPES.SocialSystem) private socialSystem!: SocialSystem;
-  @inject(TYPES.InventorySystem) private inventorySystem!: InventorySystem;
-  @inject(TYPES.EconomySystem) private economySystem!: EconomySystem;
-  @inject(TYPES.MarketSystem) private marketSystem!: MarketSystem;
-  @inject(TYPES.RoleSystem) private roleSystem!: RoleSystem;
-  @inject(TYPES.AISystem) private aiSystem!: AISystem;
+  public readonly livingLegendsSystem!: LivingLegendsSystem;
+  @inject(TYPES.LifeCycleSystem) public readonly lifeCycleSystem!: LifeCycleSystem;
+  @inject(TYPES.NeedsSystem) public readonly needsSystem!: NeedsSystem;
+  @inject(TYPES.GenealogySystem) public readonly _genealogySystem!: GenealogySystem;
+  @inject(TYPES.SocialSystem) public readonly socialSystem!: SocialSystem;
+  @inject(TYPES.InventorySystem) public readonly inventorySystem!: InventorySystem;
+  @inject(TYPES.EconomySystem) public readonly economySystem!: EconomySystem;
+  @inject(TYPES.MarketSystem) public readonly marketSystem!: MarketSystem;
+  @inject(TYPES.RoleSystem) public readonly roleSystem!: RoleSystem;
+  @inject(TYPES.AISystem) public readonly aiSystem!: AISystem;
   @inject(TYPES.ResourceReservationSystem)
-  private resourceReservationSystem!: ResourceReservationSystem;
-  @inject(TYPES.GovernanceSystem) private governanceSystem!: GovernanceSystem;
+  public readonly resourceReservationSystem!: ResourceReservationSystem;
+  @inject(TYPES.GovernanceSystem) public readonly governanceSystem!: GovernanceSystem;
   @inject(TYPES.DivineFavorSystem)
-  private divineFavorSystem!: DivineFavorSystem;
-  @inject(TYPES.HouseholdSystem) private householdSystem!: HouseholdSystem;
-  @inject(TYPES.BuildingSystem) private buildingSystem!: BuildingSystem;
+  public readonly divineFavorSystem!: DivineFavorSystem;
+  @inject(TYPES.HouseholdSystem) public readonly householdSystem!: HouseholdSystem;
+  @inject(TYPES.BuildingSystem) public readonly buildingSystem!: BuildingSystem;
   @inject(TYPES.BuildingMaintenanceSystem)
-  private buildingMaintenanceSystem!: BuildingMaintenanceSystem;
-  @inject(TYPES.ProductionSystem) private productionSystem!: ProductionSystem;
+  public readonly buildingMaintenanceSystem!: BuildingMaintenanceSystem;
+  @inject(TYPES.ProductionSystem) public readonly productionSystem!: ProductionSystem;
   @inject(TYPES.EnhancedCraftingSystem)
-  private enhancedCraftingSystem!: EnhancedCraftingSystem;
-  @inject(TYPES.AnimalSystem) private animalSystem!: AnimalSystem;
+  public readonly enhancedCraftingSystem!: EnhancedCraftingSystem;
+  @inject(TYPES.AnimalSystem) public readonly animalSystem!: AnimalSystem;
   @inject(TYPES.ItemGenerationSystem)
-  private itemGenerationSystem!: ItemGenerationSystem;
-  @inject(TYPES.CombatSystem) private combatSystem!: CombatSystem;
-  @inject(TYPES.ReputationSystem) private reputationSystem!: ReputationSystem;
-  @inject(TYPES.ResearchSystem) private _researchSystem!: ResearchSystem;
+  public readonly itemGenerationSystem!: ItemGenerationSystem;
+  @inject(TYPES.CombatSystem) public readonly combatSystem!: CombatSystem;
+  @inject(TYPES.ReputationSystem) public readonly reputationSystem!: ReputationSystem;
+  @inject(TYPES.ResearchSystem) public readonly _researchSystem!: ResearchSystem;
   @inject(TYPES.RecipeDiscoverySystem)
-  private _recipeDiscoverySystem!: RecipeDiscoverySystem;
-  @inject(TYPES.QuestSystem) private questSystem!: QuestSystem;
-  @inject(TYPES.TaskSystem) private taskSystem!: TaskSystem;
-  @inject(TYPES.TradeSystem) private tradeSystem!: TradeSystem;
-  @inject(TYPES.MarriageSystem) private marriageSystem!: MarriageSystem;
+  public readonly _recipeDiscoverySystem!: RecipeDiscoverySystem;
+  @inject(TYPES.QuestSystem) public readonly questSystem!: QuestSystem;
+  @inject(TYPES.TaskSystem) public readonly taskSystem!: TaskSystem;
+  @inject(TYPES.TradeSystem) public readonly tradeSystem!: TradeSystem;
+  @inject(TYPES.MarriageSystem) public readonly marriageSystem!: MarriageSystem;
   @inject(TYPES.ConflictResolutionSystem)
-  private conflictResolutionSystem!: ConflictResolutionSystem;
-  @inject(TYPES.NormsSystem) private _normsSystem!: NormsSystem;
+  public readonly conflictResolutionSystem!: ConflictResolutionSystem;
+  @inject(TYPES.NormsSystem) public readonly _normsSystem!: NormsSystem;
   @inject(TYPES.ResourceAttractionSystem)
-  private resourceAttractionSystem!: ResourceAttractionSystem;
+  public readonly resourceAttractionSystem!: ResourceAttractionSystem;
   @inject(TYPES.CrisisPredictorSystem)
-  private crisisPredictorSystem!: CrisisPredictorSystem;
+  public readonly crisisPredictorSystem!: CrisisPredictorSystem;
   @inject(TYPES.WorldGenerationService)
-  private worldGenerationService!: WorldGenerationService;
+  public readonly worldGenerationService!: WorldGenerationService;
   @inject(TYPES.AmbientAwarenessSystem)
-  private ambientAwarenessSystem!: AmbientAwarenessSystem;
+  public readonly ambientAwarenessSystem!: AmbientAwarenessSystem;
   @inject(TYPES.CardDialogueSystem)
-  private cardDialogueSystem!: CardDialogueSystem;
-  @inject(TYPES.EmergenceSystem) private emergenceSystem!: EmergenceSystem;
-  @inject(TYPES.TimeSystem) private timeSystem!: TimeSystem;
+  public readonly cardDialogueSystem!: CardDialogueSystem;
+  @inject(TYPES.EmergenceSystem) public readonly emergenceSystem!: EmergenceSystem;
+  @inject(TYPES.TimeSystem) public readonly timeSystem!: TimeSystem;
   @inject(TYPES.InteractionGameSystem)
-  private interactionGameSystem!: InteractionGameSystem;
+  public readonly interactionGameSystem!: InteractionGameSystem;
   @inject(TYPES.KnowledgeNetworkSystem)
-  private knowledgeNetworkSystem!: KnowledgeNetworkSystem;
-  @inject(TYPES.MovementSystem) private movementSystem!: MovementSystem;
+  public readonly knowledgeNetworkSystem!: KnowledgeNetworkSystem;
+  @inject(TYPES.MovementSystem) public readonly movementSystem!: MovementSystem;
   @inject(TYPES.AppearanceGenerationSystem)
-  private appearanceGenerationSystem!: AppearanceGenerationSystem;
+  public readonly appearanceGenerationSystem!: AppearanceGenerationSystem;
   @inject(TYPES.GPUComputeService)
-  private gpuComputeService!: GPUComputeService;
+  public readonly gpuComputeService!: GPUComputeService;
 
-  private capturedEvents: SimulationEvent[] = [];
+  public capturedEvents: SimulationEvent[] = [];
   private eventCaptureListener?: (eventName: string, payload: unknown) => void;
   private stateCache: StateCache;
   private deltaEncoder: DeltaEncoder;
-  @inject(TYPES.EntityIndex) private entityIndex!: EntityIndex;
+  @inject(TYPES.EntityIndex) public readonly entityIndex!: EntityIndex;
   @inject(TYPES.SharedSpatialIndex)
-  private sharedSpatialIndex!: SharedSpatialIndex;
+  public readonly sharedSpatialIndex!: SharedSpatialIndex;
 
   private lastSnapshotTime = 0;
   private readonly SNAPSHOT_INTERVAL_MS = 250;
@@ -968,8 +969,7 @@ export class SimulationRunner {
         }
       } catch (err) {
         logger.warn(
-          `Failed to initialize movement state for agent ${agent.id}: ${
-            err instanceof Error ? err.message : String(err)
+          `Failed to initialize movement state for agent ${agent.id}: ${err instanceof Error ? err.message : String(err)
           }`,
         );
       }
@@ -1094,8 +1094,16 @@ export class SimulationRunner {
     logger.info(`📦 Starting resources: wood=50, stone=30, food=40, water=40`);
   }
 
+  private registerEvent(
+    eventName: string,
+    handler: (...args: any[]) => void,
+  ): void {
+    simulationEvents.on(eventName, handler);
+    this.eventCleanups.push(() => simulationEvents.off(eventName, handler));
+  }
+
   private setupEventListeners(): void {
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.AGENT_ACTION_COMPLETE,
       (data: { agentId: string; action: string }) => {
         if (data.action === "birth") {
@@ -1111,7 +1119,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.AGENT_BIRTH,
       (data: { entityId: string; parentIds: [string, string] | null }) => {
         const agent = this.entityIndex.getAgent(data.entityId);
@@ -1128,14 +1136,14 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.COMBAT_KILL,
       (data: { targetId: string }) => {
         this._genealogySystem.recordDeath(data.targetId);
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.AGENT_DEATH,
       (data: { entityId: string; reason?: string }) => {
         this.entityIndex.markEntityDead(data.entityId);
@@ -1144,7 +1152,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.INVENTORY_DROPPED,
       (data: {
         agentId: string;
@@ -1182,7 +1190,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.AGENT_RESPAWNED,
       (data: { agentId: string; timestamp: number }) => {
         this.aiSystem.setAgentOffDuty(data.agentId, false);
@@ -1200,7 +1208,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.ANIMAL_HUNTED,
       (data: { animalId: string; hunterId: string; foodValue?: number }) => {
         if (data.hunterId && data.foodValue) {
@@ -1215,7 +1223,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.RESOURCE_GATHERED,
       (data: {
         resourceId: string;
@@ -1237,7 +1245,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.BUILDING_CONSTRUCTED,
       (data: {
         jobId: string;
@@ -1264,7 +1272,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.DIALOGUE_CARD_RESPONDED,
       (data: { cardId: string; choiceId: string }) => {
         const dialogueState = this.state.dialogueState;
@@ -1284,7 +1292,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.NEED_CRITICAL,
       (data: { agentId: string; need: string; value: number }) => {
         const aiState = this.aiSystem.getAIState(data.agentId);
@@ -1294,7 +1302,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.PATHFINDING_FAILED,
       (data: {
         entityId: string;
@@ -1309,7 +1317,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.TASK_STALLED,
       (data: {
         taskId: string;
@@ -1330,14 +1338,14 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.MOVEMENT_ARRIVED_AT_ZONE,
       (data: { entityId: string; zoneId: string }) => {
         this.aiSystem.notifyEntityArrived(data.entityId, data.zoneId);
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.CRISIS_IMMEDIATE_WARNING,
       (_data: {
         prediction: {
@@ -1354,7 +1362,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.CRISIS_PREDICTION,
       (data: {
         prediction: {
@@ -1381,7 +1389,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.BUILDING_CONSTRUCTION_STARTED,
       (data: {
         jobId: string;
@@ -1409,7 +1417,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.AGENT_AGED,
       (data: {
         entityId: string;
@@ -1445,7 +1453,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.TIME_CHANGED,
       (data: {
         time: {
@@ -1470,7 +1478,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.TASK_COMPLETED,
       (data: {
         taskId: string;
@@ -1501,7 +1509,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.KNOWLEDGE_LEARNED,
       (data: {
         agentId: string;
@@ -1520,7 +1528,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.ROLE_ASSIGNED,
       (data: {
         agentId: string;
@@ -1538,7 +1546,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.NORM_SANCTION_APPLIED,
       (data: {
         agentId: string;
@@ -1556,7 +1564,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.CONFLICT_TRUCE_ACCEPTED,
       (data: {
         cardId: string;
@@ -1578,7 +1586,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.CONFLICT_TRUCE_REJECTED,
       (data: {
         cardId: string;
@@ -1590,7 +1598,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.COMBAT_HIT,
       (data: {
         attackerId: string;
@@ -1604,7 +1612,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.TASK_CREATED,
       (data: {
         taskId: string;
@@ -1624,7 +1632,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.TASK_PROGRESS,
       (data: {
         taskId: string;
@@ -1647,7 +1655,7 @@ export class SimulationRunner {
       },
     );
 
-    simulationEvents.on(
+    this.registerEvent(
       GameEventNames.BUILDING_REPAIRED,
       (data: {
         zoneId: string;
@@ -1679,7 +1687,7 @@ export class SimulationRunner {
     this.eventCaptureListener = eventCaptureListener;
 
     Object.values(GameEventNames).forEach((eventName) => {
-      simulationEvents.on(eventName, (payload: unknown) => {
+      this.registerEvent(eventName, (payload: unknown) => {
         if (this.eventCaptureListener) {
           this.eventCaptureListener(eventName, payload);
         }
@@ -1956,6 +1964,9 @@ export class SimulationRunner {
       this.snapshotWorker = undefined;
       this.snapshotWorkerReady = false;
     }
+
+    this.eventCleanups.forEach((cleanup) => cleanup());
+    this.eventCleanups = [];
   }
 
   /**
@@ -2791,14 +2802,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                  resources?: {
-                    wood?: number;
-                    stone?: number;
-                    food?: number;
-                    water?: number;
-                  };
-                  minWorkers?: number;
-                }
+                resources?: {
+                  wood?: number;
+                  stone?: number;
+                  food?: number;
+                  water?: number;
+                };
+                minWorkers?: number;
+              }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,
@@ -2840,12 +2851,12 @@ export class SimulationRunner {
       ) {
         this.timeSystem.setWeather(
           weatherType as
-            | "clear"
-            | "cloudy"
-            | "rainy"
-            | "stormy"
-            | "foggy"
-            | "snowy",
+          | "clear"
+          | "cloudy"
+          | "rainy"
+          | "stormy"
+          | "foggy"
+          | "snowy",
         );
         logger.info(`Weather set to ${weatherType} via TIME_COMMAND`);
       } else {
@@ -2951,12 +2962,12 @@ export class SimulationRunner {
       social,
       ai: aiState
         ? {
-            currentGoal: aiState.currentGoal,
-            goalQueue: aiState.goalQueue,
-            currentAction: aiState.currentAction,
-            offDuty: aiState.offDuty,
-            lastDecisionTime: aiState.lastDecisionTime,
-          }
+          currentGoal: aiState.currentGoal,
+          goalQueue: aiState.goalQueue,
+          currentAction: aiState.currentAction,
+          offDuty: aiState.offDuty,
+          lastDecisionTime: aiState.lastDecisionTime,
+        }
         : null,
     };
   }
@@ -2978,5 +2989,4 @@ export class SimulationRunner {
       }
     }, 60000);
   }
-
 }

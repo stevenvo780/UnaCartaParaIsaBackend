@@ -6,6 +6,37 @@ interface SimpleStats {
   totalMs: number;
   maxMs: number;
   lastMs: number;
+  minMs?: number;
+}
+
+interface OperationStats {
+  count: number;
+  skipped: number; // Optimizations that avoided work
+  entitiesProcessed: number;
+  totalMs: number;
+  maxMs: number;
+  minMs: number;
+  lastMs: number;
+}
+
+interface BatchProcessingStats {
+  batchCount: number;
+  totalEntities: number;
+  gpuExecutions: number;
+  cpuFallbacks: number;
+  avgBatchSize: number;
+  totalMs: number;
+  avgMs: number;
+}
+
+interface SpatialIndexStats {
+  queryCount: number;
+  totalQueryMs: number;
+  avgQueryMs: number;
+  maxQueryMs: number;
+  rebuildCount: number;
+  totalRebuildMs: number;
+  avgResultsPerQuery: number;
 }
 
 interface SystemStats extends SimpleStats {
@@ -84,6 +115,15 @@ class PerformanceMonitor {
 
   private subsystemStats = new Map<string, SimpleStats>();
 
+  // ==================== MÉTRICAS AVANZADAS DE RENDIMIENTO ====================
+  private operationStats = new Map<string, OperationStats>();
+  private batchProcessingStats = new Map<string, BatchProcessingStats>();
+  private spatialIndexStats = new Map<string, SpatialIndexStats>();
+
+  // Métricas de throughput (rolling window de 10 segundos)
+  private throughputWindow = new Map<string, { timestamp: number; count: number }[]>();
+  private readonly THROUGHPUT_WINDOW_MS = 10000;
+
   public recordSubsystemExecution(
     systemName: string,
     subOperation: string,
@@ -156,6 +196,163 @@ class PerformanceMonitor {
     gpuUtilization: number;
   }): void {
     this.batchStats = stats;
+  }
+
+  // ==================== MÉTODOS PARA MÉTRICAS AVANZADAS ====================
+
+  /**
+   * Records an operation execution with detailed stats
+   */
+  public recordOperation(
+    name: string,
+    durationMs: number,
+    entitiesProcessed: number,
+    skipped = 0,
+  ): void {
+    let stats = this.operationStats.get(name);
+    if (!stats) {
+      stats = {
+        count: 0,
+        skipped: 0,
+        entitiesProcessed: 0,
+        totalMs: 0,
+        maxMs: 0,
+        minMs: Infinity,
+        lastMs: 0,
+      };
+      this.operationStats.set(name, stats);
+    }
+
+    stats.count += 1;
+    stats.skipped += skipped;
+    stats.entitiesProcessed += entitiesProcessed;
+    stats.totalMs += durationMs;
+    stats.lastMs = durationMs;
+    if (durationMs > stats.maxMs) stats.maxMs = durationMs;
+    if (durationMs < stats.minMs) stats.minMs = durationMs;
+
+    // Record throughput
+    this.recordThroughput(name, entitiesProcessed);
+  }
+
+  /**
+   * Records batch processing execution
+   */
+  public recordBatchProcessing(
+    processor: string,
+    batchSize: number,
+    durationMs: number,
+    usedGPU: boolean,
+  ): void {
+    let stats = this.batchProcessingStats.get(processor);
+    if (!stats) {
+      stats = {
+        batchCount: 0,
+        totalEntities: 0,
+        gpuExecutions: 0,
+        cpuFallbacks: 0,
+        avgBatchSize: 0,
+        totalMs: 0,
+        avgMs: 0,
+      };
+      this.batchProcessingStats.set(processor, stats);
+    }
+
+    stats.batchCount += 1;
+    stats.totalEntities += batchSize;
+    stats.totalMs += durationMs;
+    if (usedGPU) {
+      stats.gpuExecutions += 1;
+    } else {
+      stats.cpuFallbacks += 1;
+    }
+    stats.avgBatchSize = stats.totalEntities / stats.batchCount;
+    stats.avgMs = stats.totalMs / stats.batchCount;
+  }
+
+  /**
+   * Records spatial index query
+   */
+  public recordSpatialQuery(
+    indexName: string,
+    durationMs: number,
+    resultCount: number,
+  ): void {
+    let stats = this.spatialIndexStats.get(indexName);
+    if (!stats) {
+      stats = {
+        queryCount: 0,
+        totalQueryMs: 0,
+        avgQueryMs: 0,
+        maxQueryMs: 0,
+        rebuildCount: 0,
+        totalRebuildMs: 0,
+        avgResultsPerQuery: 0,
+      };
+      this.spatialIndexStats.set(indexName, stats);
+    }
+
+    stats.queryCount += 1;
+    stats.totalQueryMs += durationMs;
+    stats.avgQueryMs = stats.totalQueryMs / stats.queryCount;
+    if (durationMs > stats.maxQueryMs) stats.maxQueryMs = durationMs;
+    stats.avgResultsPerQuery =
+      (stats.avgResultsPerQuery * (stats.queryCount - 1) + resultCount) /
+      stats.queryCount;
+  }
+
+  /**
+   * Records spatial index rebuild
+   */
+  public recordSpatialRebuild(indexName: string, durationMs: number): void {
+    let stats = this.spatialIndexStats.get(indexName);
+    if (!stats) {
+      stats = {
+        queryCount: 0,
+        totalQueryMs: 0,
+        avgQueryMs: 0,
+        maxQueryMs: 0,
+        rebuildCount: 0,
+        totalRebuildMs: 0,
+        avgResultsPerQuery: 0,
+      };
+      this.spatialIndexStats.set(indexName, stats);
+    }
+
+    stats.rebuildCount += 1;
+    stats.totalRebuildMs += durationMs;
+  }
+
+  /**
+   * Records throughput in a rolling window
+   */
+  private recordThroughput(operation: string, count: number): void {
+    const now = Date.now();
+    let window = this.throughputWindow.get(operation);
+    if (!window) {
+      window = [];
+      this.throughputWindow.set(operation, window);
+    }
+
+    window.push({ timestamp: now, count });
+
+    // Clean old entries
+    const cutoff = now - this.THROUGHPUT_WINDOW_MS;
+    while (window.length > 0 && window[0].timestamp < cutoff) {
+      window.shift();
+    }
+  }
+
+  /**
+   * Gets current throughput (operations per second)
+   */
+  public getThroughput(operation: string): number {
+    const window = this.throughputWindow.get(operation);
+    if (!window || window.length === 0) return 0;
+
+    const totalCount = window.reduce((sum, entry) => sum + entry.count, 0);
+    const windowDuration = (Date.now() - window[0].timestamp) / 1000;
+    return windowDuration > 0 ? totalCount / windowDuration : 0;
   }
 
   /**
@@ -397,6 +594,138 @@ class PerformanceMonitor {
     lines.push(
       `backend_gpu_utilization ${this.batchStats.gpuUtilization.toFixed(4)}`,
     );
+
+    // ==================== MÉTRICAS AVANZADAS DE OPERACIONES ====================
+    lines.push(
+      "# HELP backend_operation_executions_total Total executions per operation",
+    );
+    lines.push("# TYPE backend_operation_executions_total counter");
+    for (const [name, stats] of this.operationStats.entries()) {
+      lines.push(`backend_operation_executions_total{operation="${name}"} ${stats.count}`);
+    }
+
+    lines.push(
+      "# HELP backend_operation_skipped_total Skipped operations due to optimizations",
+    );
+    lines.push("# TYPE backend_operation_skipped_total counter");
+    for (const [name, stats] of this.operationStats.entries()) {
+      lines.push(`backend_operation_skipped_total{operation="${name}"} ${stats.skipped}`);
+    }
+
+    lines.push(
+      "# HELP backend_operation_entities_processed_total Total entities processed",
+    );
+    lines.push("# TYPE backend_operation_entities_processed_total counter");
+    for (const [name, stats] of this.operationStats.entries()) {
+      lines.push(`backend_operation_entities_processed_total{operation="${name}"} ${stats.entitiesProcessed}`);
+    }
+
+    lines.push(
+      "# HELP backend_operation_duration_ms Operation execution time statistics",
+    );
+    lines.push("# TYPE backend_operation_duration_ms gauge");
+    for (const [name, stats] of this.operationStats.entries()) {
+      const avgMs = stats.count > 0 ? stats.totalMs / stats.count : 0;
+      lines.push(`backend_operation_duration_ms{operation="${name}",stat="avg"} ${avgMs.toFixed(6)}`);
+      lines.push(`backend_operation_duration_ms{operation="${name}",stat="max"} ${stats.maxMs.toFixed(6)}`);
+      lines.push(`backend_operation_duration_ms{operation="${name}",stat="min"} ${stats.minMs === Infinity ? 0 : stats.minMs.toFixed(6)}`);
+      lines.push(`backend_operation_duration_ms{operation="${name}",stat="last"} ${stats.lastMs.toFixed(6)}`);
+    }
+
+    lines.push(
+      "# HELP backend_operation_throughput_per_sec Entities processed per second",
+    );
+    lines.push("# TYPE backend_operation_throughput_per_sec gauge");
+    for (const operation of this.operationStats.keys()) {
+      const throughput = this.getThroughput(operation);
+      lines.push(`backend_operation_throughput_per_sec{operation="${operation}"} ${throughput.toFixed(2)}`);
+    }
+
+    // ==================== MÉTRICAS DE BATCH PROCESSING ====================
+    lines.push(
+      "# HELP backend_batch_executions_total Total batch executions by type",
+    );
+    lines.push("# TYPE backend_batch_executions_total counter");
+    for (const [processor, stats] of this.batchProcessingStats.entries()) {
+      lines.push(`backend_batch_executions_total{processor="${processor}",type="gpu"} ${stats.gpuExecutions}`);
+      lines.push(`backend_batch_executions_total{processor="${processor}",type="cpu"} ${stats.cpuFallbacks}`);
+    }
+
+    lines.push(
+      "# HELP backend_batch_avg_size Average batch size per processor",
+    );
+    lines.push("# TYPE backend_batch_avg_size gauge");
+    for (const [processor, stats] of this.batchProcessingStats.entries()) {
+      lines.push(`backend_batch_avg_size{processor="${processor}"} ${stats.avgBatchSize.toFixed(2)}`);
+    }
+
+    lines.push(
+      "# HELP backend_batch_avg_duration_ms Average batch processing time",
+    );
+    lines.push("# TYPE backend_batch_avg_duration_ms gauge");
+    for (const [processor, stats] of this.batchProcessingStats.entries()) {
+      lines.push(`backend_batch_avg_duration_ms{processor="${processor}"} ${stats.avgMs.toFixed(6)}`);
+    }
+
+    lines.push(
+      "# HELP backend_batch_entities_total Total entities processed in batches",
+    );
+    lines.push("# TYPE backend_batch_entities_total counter");
+    for (const [processor, stats] of this.batchProcessingStats.entries()) {
+      lines.push(`backend_batch_entities_total{processor="${processor}"} ${stats.totalEntities}`);
+    }
+
+    lines.push(
+      "# HELP backend_batch_gpu_utilization_ratio GPU vs CPU execution ratio",
+    );
+    lines.push("# TYPE backend_batch_gpu_utilization_ratio gauge");
+    for (const [processor, stats] of this.batchProcessingStats.entries()) {
+      const total = stats.gpuExecutions + stats.cpuFallbacks;
+      const ratio = total > 0 ? stats.gpuExecutions / total : 0;
+      lines.push(`backend_batch_gpu_utilization_ratio{processor="${processor}"} ${ratio.toFixed(4)}`);
+    }
+
+    // ==================== MÉTRICAS DE ÍNDICES ESPACIALES ====================
+    lines.push(
+      "# HELP backend_spatial_query_count_total Total spatial index queries",
+    );
+    lines.push("# TYPE backend_spatial_query_count_total counter");
+    for (const [index, stats] of this.spatialIndexStats.entries()) {
+      lines.push(`backend_spatial_query_count_total{index="${index}"} ${stats.queryCount}`);
+    }
+
+    lines.push(
+      "# HELP backend_spatial_query_duration_ms Spatial query execution time",
+    );
+    lines.push("# TYPE backend_spatial_query_duration_ms gauge");
+    for (const [index, stats] of this.spatialIndexStats.entries()) {
+      lines.push(`backend_spatial_query_duration_ms{index="${index}",stat="avg"} ${stats.avgQueryMs.toFixed(6)}`);
+      lines.push(`backend_spatial_query_duration_ms{index="${index}",stat="max"} ${stats.maxQueryMs.toFixed(6)}`);
+    }
+
+    lines.push(
+      "# HELP backend_spatial_avg_results_per_query Average results per spatial query",
+    );
+    lines.push("# TYPE backend_spatial_avg_results_per_query gauge");
+    for (const [index, stats] of this.spatialIndexStats.entries()) {
+      lines.push(`backend_spatial_avg_results_per_query{index="${index}"} ${stats.avgResultsPerQuery.toFixed(2)}`);
+    }
+
+    lines.push(
+      "# HELP backend_spatial_rebuild_count_total Spatial index rebuilds",
+    );
+    lines.push("# TYPE backend_spatial_rebuild_count_total counter");
+    for (const [index, stats] of this.spatialIndexStats.entries()) {
+      lines.push(`backend_spatial_rebuild_count_total{index="${index}"} ${stats.rebuildCount}`);
+    }
+
+    lines.push(
+      "# HELP backend_spatial_rebuild_duration_ms Total time spent rebuilding spatial indexes",
+    );
+    lines.push("# TYPE backend_spatial_rebuild_duration_ms counter");
+    for (const [index, stats] of this.spatialIndexStats.entries()) {
+      lines.push(`backend_spatial_rebuild_duration_ms{index="${index}"} ${stats.totalRebuildMs.toFixed(6)}`);
+    }
 
     return `${lines.join("\n")}\n`;
   }

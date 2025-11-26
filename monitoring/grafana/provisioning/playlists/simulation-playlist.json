@@ -39,6 +39,24 @@
       "value": "game-logic",
       "order": 6,
       "title": "5. Lógica de Juego"
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "operations-deep-dive",
+      "order": 7,
+      "title": "6. Operations Deep Dive"
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "batch-processing-efficiency",
+      "order": 8,
+      "title": "7. Batch Processing & GPU"
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "spatial-indexes-performance",
+      "order": 9,
+      "title": "8. Spatial Indexes"
     }
   ]
 }
