@@ -60,9 +60,21 @@ class Logger {
     this.ensureLogDir();
     this.logFilePath = path.join(this.config.logDir, "logs.json");
 
-    // Escribir periódicamente cada 10 segundos para poder observar con watch
-    const writeIntervalMs = Number(process.env.LOG_WRITE_INTERVAL_MS ?? 10000);
+    // Escribir periódicamente cada 5 segundos para poder observar con watch
+    const writeIntervalMs = Number(process.env.LOG_WRITE_INTERVAL_MS ?? 5000);
     this.evacuationInterval = setInterval(() => this.checkEvacuation(), writeIntervalMs);
+
+    // Crear archivo inicial vacío si no existe para que watch lo detecte
+    if (!fs.existsSync(this.logFilePath)) {
+      try {
+        fs.writeFileSync(this.logFilePath, "[]", "utf-8");
+      } catch (error) {
+        console.warn(
+          `Failed to create initial log file ${this.logFilePath}:`,
+          error instanceof Error ? error.message : String(error),
+        );
+      }
+    }
 
     const flushAndExit = async (): Promise<void> => {
       try {
@@ -172,6 +184,9 @@ class Logger {
       const maxLogsInFile = this.config.maxMemoryLogs * 2;
       const logsToKeep = allLogs.slice(-maxLogsInFile);
 
+      // Asegurarse de que el directorio existe antes de escribir
+      await fs.promises.mkdir(this.config.logDir, { recursive: true });
+
       // Escribir todos los logs al archivo
       await fs.promises.writeFile(
         this.logFilePath,
@@ -186,7 +201,13 @@ class Logger {
         0,
         this.config.maxMemoryLogs,
       );
-      console.error("Failed to evacuate logs:", error);
+      console.error("Failed to evacuate logs:", {
+        error: error instanceof Error ? error.message : String(error),
+        bufferSize: logsToWrite.length,
+        filePath: this.logFilePath,
+        dirExists: fs.existsSync(this.config.logDir),
+        fileExists: fs.existsSync(this.logFilePath),
+      });
     } finally {
       this.isEvacuating = false;
     }
@@ -194,16 +215,14 @@ class Logger {
 
   private checkEvacuation(): void {
     const timeSinceLastEvacuation = Date.now() - this.lastEvacuation;
-    const forceIntervalMs = Number(process.env.LOG_FORCE_INTERVAL_MS ?? 60000);
+    const minWriteIntervalMs = 3000; // 3 segundos mínimo
     
-    // Escribir si hay logs en el buffer y:
+    // Escribir si hay logs y:
     // 1. Se alcanzó el umbral
-    // 2. Han pasado más de 10 segundos desde la última escritura (para watch)
-    // 3. Hay logs y ha pasado el intervalo forzado
+    // 2. Han pasado más de 3 segundos desde la última escritura
     if (
       this.memoryBuffer.length >= this.config.evacuationThreshold ||
-      (this.memoryBuffer.length > 0 && timeSinceLastEvacuation > 10000) ||
-      (this.memoryBuffer.length > 0 && timeSinceLastEvacuation > forceIntervalMs)
+      (this.memoryBuffer.length > 0 && timeSinceLastEvacuation > minWriteIntervalMs)
     ) {
       void this.evacuateToFile();
     }

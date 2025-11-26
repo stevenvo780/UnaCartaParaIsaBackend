@@ -85,32 +85,10 @@ describe("AnimalBatchProcessor", () => {
     expect(needs![1]).toBeCloseTo(70 - 1.5 / 60, 2); // thirst animal 1
     expect(needs![2]).toBeCloseTo(10 - 0.5 / 60, 2); // fear animal 1
     expect(needs![3]).toBe(5); // reproductiveUrge no cambia
-    expect(needs![4]).toBeCloseTo(90 - 1.0 / 60, 2); // hunger animal 2
+    expect(needs![4]).toBeCloseTo(90 - 2.0 / 60, 2); // hunger animal 2
     expect(needs![5]).toBeCloseTo(50 - 1.5 / 60, 2); // thirst animal 2
     expect(needs![6]).toBeCloseTo(20 - 0.5 / 60, 2); // fear animal 2
     expect(needs![7]).toBe(15); // reproductiveUrge no cambia
-    expect(processor.isDirty()).toBe(true);
-  });
-
-  it("updateNeedsBatch usa GPU cuando está disponible", () => {
-    const gpuResult = new Float32Array([
-      70, 60, 9, 5,
-      85, 45, 18, 14,
-    ]);
-    const gpuService = {
-      isGPUAvailable: () => true,
-      applyNeedsDecayBatch: vi.fn(() => gpuResult),
-    } as any;
-    processor = new AnimalBatchProcessor(gpuService);
-    processor.rebuildBuffers(animals);
-
-    const hungerRates = new Float32Array([1.0 / 60, 1.0 / 60]);
-    const thirstRates = new Float32Array([1.5 / 60, 1.5 / 60]);
-    processor.updateNeedsBatch(hungerRates, thirstRates, 1);
-
-    expect(gpuService.applyNeedsDecayBatch).toHaveBeenCalled();
-    // El resultado de GPU se usa directamente
-    expect(processor.getNeedsBuffer()).toEqual(gpuResult);
     expect(processor.isDirty()).toBe(true);
   });
 

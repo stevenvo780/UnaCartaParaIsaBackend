@@ -63,7 +63,7 @@ describe('SimulationRunner', () => {
 
   describe('getSnapshot', () => {
     it('debe retornar snapshot del estado', () => {
-      const snapshot = runner.getSnapshot();
+      const snapshot = runner.getInitialSnapshot();
       
       expect(snapshot).toBeDefined();
       expect(snapshot.state).toBeDefined();
@@ -72,7 +72,7 @@ describe('SimulationRunner', () => {
     });
 
     it('debe incluir eventos capturados si existen', () => {
-      const snapshot = runner.getSnapshot();
+      const snapshot = runner.getInitialSnapshot();
       
       // Los eventos pueden ser undefined si no hay eventos capturados
       if (snapshot.events) {
@@ -131,14 +131,14 @@ describe('SimulationRunner', () => {
 
   describe('step', () => {
     it('debe ejecutar un paso de simulación', async () => {
-      const initialTick = runner.getSnapshot().tick;
+      const initialTick = runner.getInitialSnapshot().tick;
       // El método step es privado, pero podemos usar el scheduler para avanzar
       // Iniciar el runner y avanzar el tiempo para que el scheduler ejecute ticks
       runner.start();
       // Avanzar el tiempo para que el scheduler ejecute al menos un tick
       // El scheduler tiene diferentes frecuencias (FAST: 100ms, MEDIUM: 500ms, SLOW: 1000ms)
       vi.advanceTimersByTime(150);
-      const newTick = runner.getSnapshot().tick;
+      const newTick = runner.getInitialSnapshot().tick;
       
       // El tick debería incrementarse cuando el scheduler ejecuta
       expect(newTick).toBeGreaterThanOrEqual(initialTick);
@@ -205,7 +205,8 @@ describe('SimulationRunner', () => {
         },
       });
 
-      (runner as unknown as { processCommands: () => void }).processCommands();
+      // Accedemos a los miembros privados para probar la lógica
+      (runner as any).commandProcessor.process((runner as any).commands);
 
       expect(spawnSpy).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'agent_custom_id', name: 'Custom UI Agent' }),

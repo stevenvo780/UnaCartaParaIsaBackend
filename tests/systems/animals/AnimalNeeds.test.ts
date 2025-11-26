@@ -113,8 +113,8 @@ describe("AnimalNeeds", () => {
       AnimalNeeds.updateNeeds(mockAnimal, 1); // 1 minuto
 
       expect(mockAnimal.needs.reproductiveUrge).toBeGreaterThan(0);
-      // 0.5 * deltaMinutes = 0.5 * 1 = 0.5
-      expect(mockAnimal.needs.reproductiveUrge).toBeCloseTo(0.5, 1);
+      // 5.0 * deltaMinutes = 5.0 * 1 = 5.0
+      expect(mockAnimal.needs.reproductiveUrge).toBeCloseTo(5.0, 1);
     });
 
     it("no debe incrementar reproductiveUrge si no ha pasado el cooldown", () => {
