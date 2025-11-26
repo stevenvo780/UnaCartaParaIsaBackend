@@ -61,11 +61,13 @@ export class MarriageSystem {
       const memberIndex = group.members.indexOf(agentId);
       if (memberIndex !== -1) {
         group.members.splice(memberIndex, 1);
-        
+
         // If group has less than 2 members, dissolve it
         if (group.members.length < 2) {
           this.marriageGroups.delete(groupId);
-          logger.debug(`💔 [MARRIAGE] Group ${groupId} dissolved after member ${agentId} removed`);
+          logger.debug(
+            `💔 [MARRIAGE] Group ${groupId} dissolved after member ${agentId} removed`,
+          );
         } else {
           // Recalculate cohesion
           group.cohesion = Math.max(
@@ -76,7 +78,7 @@ export class MarriageSystem {
         break;
       }
     }
-    
+
     // Remove any pending proposals involving this agent
     this.pendingProposals.delete(agentId);
     for (const [targetId, proposal] of this.pendingProposals) {
