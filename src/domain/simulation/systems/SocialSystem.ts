@@ -145,6 +145,12 @@ export class SocialSystem {
       "update",
       duration,
     );
+    performanceMonitor.recordOperation(
+      "social_update",
+      duration,
+      1,
+      0,
+    );
   }
 
   /**
@@ -683,5 +689,5 @@ export class SocialSystem {
       timestamp: number;
       [key: string]: unknown;
     },
-  ): void {}
+  ): void { }
 }

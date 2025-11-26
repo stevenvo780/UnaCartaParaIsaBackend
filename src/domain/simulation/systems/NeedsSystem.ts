@@ -795,6 +795,12 @@ export class NeedsSystem extends EventEmitter {
         "applySocialMoraleBoostBatch_GPU",
         duration,
       );
+      performanceMonitor.recordBatchProcessing(
+        "social_morale_gpu",
+        entityPositions.length,
+        duration,
+        true,
+      );
     } else {
       for (const entityId of entityIds) {
         const needs = this.entityNeeds.get(entityId);

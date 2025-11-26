@@ -145,6 +145,7 @@ export class SharedSpatialIndex {
       "rebuild",
       duration,
     );
+    performanceMonitor.recordSpatialRebuild("full_rebuild", duration);
   }
 
   /**
@@ -295,6 +296,12 @@ export class SharedSpatialIndex {
         });
       }
     }
+
+    performanceMonitor.recordSpatialQuery(
+      "radius_query",
+      duration,
+      output.length,
+    );
 
     return output;
   }

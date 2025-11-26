@@ -3,6 +3,8 @@ import { logger } from "../../../infrastructure/utils/logger";
 import { getAnimalConfig } from "../../../infrastructure/services/world/config/AnimalConfigs";
 import type { GPUComputeService } from "../core/GPUComputeService";
 import { injectable } from "inversify";
+import { performance } from "node:perf_hooks";
+import { performanceMonitor } from "../core/PerformanceMonitor";
 
 /**
  * Procesador batch optimizado para animales
@@ -121,11 +123,18 @@ export class AnimalBatchProcessor {
   // Reusable work buffer for CPU fallback to avoid allocations
   private workBuffer: Float32Array | null = null;
 
+
+
+  // ... (imports)
+
+  // ... (class definition)
+
   public updateNeedsBatch(
     hungerDecayRates: Float32Array,
     thirstDecayRates: Float32Array,
     deltaMinutes: number,
   ): void {
+    const startTime = performance.now();
     if (
       !this.needsBuffer ||
       !this.healthBuffer ||
@@ -189,9 +198,18 @@ export class AnimalBatchProcessor {
     // Atomic swap after CPU processing
     this.needsBuffer = workBuffer;
     this.bufferDirty = true;
+
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordBatchProcessing(
+      "animal_needs",
+      animalCount,
+      duration,
+      false, // CPU fallback
+    );
   }
 
   public updateAgesBatch(ageIncrement: number): void {
+    const startTime = performance.now();
     if (!this.ageBuffer || this.animalIdArray.length === 0) return;
 
     const animalCount = this.animalIdArray.length;
@@ -201,6 +219,14 @@ export class AnimalBatchProcessor {
     }
 
     this.bufferDirty = true;
+
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordBatchProcessing(
+      "animal_ages",
+      animalCount,
+      duration,
+      false, // CPU fallback
+    );
   }
 
   public syncToAnimals(animals: Map<string, Animal>): void {
