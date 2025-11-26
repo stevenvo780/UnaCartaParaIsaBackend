@@ -245,6 +245,11 @@ export class AISystem extends EventEmitter {
   public update(_deltaTimeMs: number): void {
     const now = getFrameTime();
 
+    // Only update if enough time has passed according to config
+    if (now - this.lastUpdate < this.config.updateIntervalMs) {
+      return;
+    }
+
     if (now - this._lastMemoryCleanupTime >= this.MEMORY_CLEANUP_INTERVAL) {
       this.cleanupAgentMemory(now);
       this._lastMemoryCleanupTime = now;
@@ -717,7 +722,20 @@ export class AISystem extends EventEmitter {
 
     const goal = aiState.currentGoal;
 
-    aiState.memory.visitedZones.add(zoneId);
+    if (zoneId) {
+      aiState.memory.visitedZones.add(zoneId);
+      
+      // Update home zone if this is a rest/shelter zone and agent doesn't have a home
+      if (!aiState.memory.homeZoneId && this.householdSystem) {
+        const zone = this.gameState.zones?.find((z) => z.id === zoneId);
+        if (zone && (zone.type === "rest" || zone.type === "shelter" || zone.type === "house")) {
+          const household = this.householdSystem.findHouseholdForAgent(entityId);
+          if (household && household.zoneId === zoneId) {
+            aiState.memory.homeZoneId = zoneId;
+          }
+        }
+      }
+    }
 
     if (
       goal.type.startsWith("assist_") &&
@@ -781,7 +799,7 @@ export class AISystem extends EventEmitter {
     }
 
     const zone = this.gameState.zones?.find((z) => z.id === zoneId);
-    if (zone) {
+    if (zone && zoneId) {
       const activity = this.pickActivityForZone(zone.type, goal);
       const duration = this.estimateActivityDuration(entityId, zone.type, goal);
 
