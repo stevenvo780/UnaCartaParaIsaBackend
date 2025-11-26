@@ -121,7 +121,10 @@ class PerformanceMonitor {
   private spatialIndexStats = new Map<string, SpatialIndexStats>();
 
   // Métricas de throughput (rolling window de 10 segundos)
-  private throughputWindow = new Map<string, { timestamp: number; count: number }[]>();
+  private throughputWindow = new Map<
+    string,
+    { timestamp: number; count: number }[]
+  >();
   private readonly THROUGHPUT_WINDOW_MS = 10000;
 
   public recordSubsystemExecution(
@@ -575,9 +578,7 @@ class PerformanceMonitor {
 
     // ==================== MÉTRICAS DE RENDIMIENTO DE GPU ====================
 
-    lines.push(
-      "# HELP backend_batch_size Batch size for GPU processing",
-    );
+    lines.push("# HELP backend_batch_size Batch size for GPU processing");
     lines.push("# TYPE backend_batch_size gauge");
     lines.push(
       `backend_batch_size{processor="animal"} ${this.batchStats.animalBatchSize}`,
@@ -601,7 +602,9 @@ class PerformanceMonitor {
     );
     lines.push("# TYPE backend_operation_executions_total counter");
     for (const [name, stats] of this.operationStats.entries()) {
-      lines.push(`backend_operation_executions_total{operation="${name}"} ${stats.count}`);
+      lines.push(
+        `backend_operation_executions_total{operation="${name}"} ${stats.count}`,
+      );
     }
 
     lines.push(
@@ -609,7 +612,9 @@ class PerformanceMonitor {
     );
     lines.push("# TYPE backend_operation_skipped_total counter");
     for (const [name, stats] of this.operationStats.entries()) {
-      lines.push(`backend_operation_skipped_total{operation="${name}"} ${stats.skipped}`);
+      lines.push(
+        `backend_operation_skipped_total{operation="${name}"} ${stats.skipped}`,
+      );
     }
 
     lines.push(
@@ -617,7 +622,9 @@ class PerformanceMonitor {
     );
     lines.push("# TYPE backend_operation_entities_processed_total counter");
     for (const [name, stats] of this.operationStats.entries()) {
-      lines.push(`backend_operation_entities_processed_total{operation="${name}"} ${stats.entitiesProcessed}`);
+      lines.push(
+        `backend_operation_entities_processed_total{operation="${name}"} ${stats.entitiesProcessed}`,
+      );
     }
 
     lines.push(
@@ -626,10 +633,18 @@ class PerformanceMonitor {
     lines.push("# TYPE backend_operation_duration_ms gauge");
     for (const [name, stats] of this.operationStats.entries()) {
       const avgMs = stats.count > 0 ? stats.totalMs / stats.count : 0;
-      lines.push(`backend_operation_duration_ms{operation="${name}",stat="avg"} ${avgMs.toFixed(6)}`);
-      lines.push(`backend_operation_duration_ms{operation="${name}",stat="max"} ${stats.maxMs.toFixed(6)}`);
-      lines.push(`backend_operation_duration_ms{operation="${name}",stat="min"} ${stats.minMs === Infinity ? 0 : stats.minMs.toFixed(6)}`);
-      lines.push(`backend_operation_duration_ms{operation="${name}",stat="last"} ${stats.lastMs.toFixed(6)}`);
+      lines.push(
+        `backend_operation_duration_ms{operation="${name}",stat="avg"} ${avgMs.toFixed(6)}`,
+      );
+      lines.push(
+        `backend_operation_duration_ms{operation="${name}",stat="max"} ${stats.maxMs.toFixed(6)}`,
+      );
+      lines.push(
+        `backend_operation_duration_ms{operation="${name}",stat="min"} ${stats.minMs === Infinity ? 0 : stats.minMs.toFixed(6)}`,
+      );
+      lines.push(
+        `backend_operation_duration_ms{operation="${name}",stat="last"} ${stats.lastMs.toFixed(6)}`,
+      );
     }
 
     lines.push(
@@ -638,7 +653,9 @@ class PerformanceMonitor {
     lines.push("# TYPE backend_operation_throughput_per_sec gauge");
     for (const operation of this.operationStats.keys()) {
       const throughput = this.getThroughput(operation);
-      lines.push(`backend_operation_throughput_per_sec{operation="${operation}"} ${throughput.toFixed(2)}`);
+      lines.push(
+        `backend_operation_throughput_per_sec{operation="${operation}"} ${throughput.toFixed(2)}`,
+      );
     }
 
     // ==================== MÉTRICAS DE BATCH PROCESSING ====================
@@ -647,8 +664,12 @@ class PerformanceMonitor {
     );
     lines.push("# TYPE backend_batch_executions_total counter");
     for (const [processor, stats] of this.batchProcessingStats.entries()) {
-      lines.push(`backend_batch_executions_total{processor="${processor}",type="gpu"} ${stats.gpuExecutions}`);
-      lines.push(`backend_batch_executions_total{processor="${processor}",type="cpu"} ${stats.cpuFallbacks}`);
+      lines.push(
+        `backend_batch_executions_total{processor="${processor}",type="gpu"} ${stats.gpuExecutions}`,
+      );
+      lines.push(
+        `backend_batch_executions_total{processor="${processor}",type="cpu"} ${stats.cpuFallbacks}`,
+      );
     }
 
     lines.push(
@@ -656,7 +677,9 @@ class PerformanceMonitor {
     );
     lines.push("# TYPE backend_batch_avg_size gauge");
     for (const [processor, stats] of this.batchProcessingStats.entries()) {
-      lines.push(`backend_batch_avg_size{processor="${processor}"} ${stats.avgBatchSize.toFixed(2)}`);
+      lines.push(
+        `backend_batch_avg_size{processor="${processor}"} ${stats.avgBatchSize.toFixed(2)}`,
+      );
     }
 
     lines.push(
@@ -664,7 +687,9 @@ class PerformanceMonitor {
     );
     lines.push("# TYPE backend_batch_avg_duration_ms gauge");
     for (const [processor, stats] of this.batchProcessingStats.entries()) {
-      lines.push(`backend_batch_avg_duration_ms{processor="${processor}"} ${stats.avgMs.toFixed(6)}`);
+      lines.push(
+        `backend_batch_avg_duration_ms{processor="${processor}"} ${stats.avgMs.toFixed(6)}`,
+      );
     }
 
     lines.push(
@@ -672,7 +697,9 @@ class PerformanceMonitor {
     );
     lines.push("# TYPE backend_batch_entities_total counter");
     for (const [processor, stats] of this.batchProcessingStats.entries()) {
-      lines.push(`backend_batch_entities_total{processor="${processor}"} ${stats.totalEntities}`);
+      lines.push(
+        `backend_batch_entities_total{processor="${processor}"} ${stats.totalEntities}`,
+      );
     }
 
     lines.push(
@@ -682,7 +709,9 @@ class PerformanceMonitor {
     for (const [processor, stats] of this.batchProcessingStats.entries()) {
       const total = stats.gpuExecutions + stats.cpuFallbacks;
       const ratio = total > 0 ? stats.gpuExecutions / total : 0;
-      lines.push(`backend_batch_gpu_utilization_ratio{processor="${processor}"} ${ratio.toFixed(4)}`);
+      lines.push(
+        `backend_batch_gpu_utilization_ratio{processor="${processor}"} ${ratio.toFixed(4)}`,
+      );
     }
 
     // ==================== MÉTRICAS DE ÍNDICES ESPACIALES ====================
@@ -691,7 +720,9 @@ class PerformanceMonitor {
     );
     lines.push("# TYPE backend_spatial_query_count_total counter");
     for (const [index, stats] of this.spatialIndexStats.entries()) {
-      lines.push(`backend_spatial_query_count_total{index="${index}"} ${stats.queryCount}`);
+      lines.push(
+        `backend_spatial_query_count_total{index="${index}"} ${stats.queryCount}`,
+      );
     }
 
     lines.push(
@@ -699,8 +730,12 @@ class PerformanceMonitor {
     );
     lines.push("# TYPE backend_spatial_query_duration_ms gauge");
     for (const [index, stats] of this.spatialIndexStats.entries()) {
-      lines.push(`backend_spatial_query_duration_ms{index="${index}",stat="avg"} ${stats.avgQueryMs.toFixed(6)}`);
-      lines.push(`backend_spatial_query_duration_ms{index="${index}",stat="max"} ${stats.maxQueryMs.toFixed(6)}`);
+      lines.push(
+        `backend_spatial_query_duration_ms{index="${index}",stat="avg"} ${stats.avgQueryMs.toFixed(6)}`,
+      );
+      lines.push(
+        `backend_spatial_query_duration_ms{index="${index}",stat="max"} ${stats.maxQueryMs.toFixed(6)}`,
+      );
     }
 
     lines.push(
@@ -708,7 +743,9 @@ class PerformanceMonitor {
     );
     lines.push("# TYPE backend_spatial_avg_results_per_query gauge");
     for (const [index, stats] of this.spatialIndexStats.entries()) {
-      lines.push(`backend_spatial_avg_results_per_query{index="${index}"} ${stats.avgResultsPerQuery.toFixed(2)}`);
+      lines.push(
+        `backend_spatial_avg_results_per_query{index="${index}"} ${stats.avgResultsPerQuery.toFixed(2)}`,
+      );
     }
 
     lines.push(
@@ -716,7 +753,9 @@ class PerformanceMonitor {
     );
     lines.push("# TYPE backend_spatial_rebuild_count_total counter");
     for (const [index, stats] of this.spatialIndexStats.entries()) {
-      lines.push(`backend_spatial_rebuild_count_total{index="${index}"} ${stats.rebuildCount}`);
+      lines.push(
+        `backend_spatial_rebuild_count_total{index="${index}"} ${stats.rebuildCount}`,
+      );
     }
 
     lines.push(
@@ -724,7 +763,9 @@ class PerformanceMonitor {
     );
     lines.push("# TYPE backend_spatial_rebuild_duration_ms counter");
     for (const [index, stats] of this.spatialIndexStats.entries()) {
-      lines.push(`backend_spatial_rebuild_duration_ms{index="${index}"} ${stats.totalRebuildMs.toFixed(6)}`);
+      lines.push(
+        `backend_spatial_rebuild_duration_ms{index="${index}"} ${stats.totalRebuildMs.toFixed(6)}`,
+      );
     }
 
     return `${lines.join("\n")}\n`;

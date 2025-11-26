@@ -52,6 +52,7 @@ class Logger {
   private isEvacuating = false;
   private lastEvacuation = Date.now();
   private evacuationInterval?: NodeJS.Timeout;
+  private evacuationPromise: Promise<void> = Promise.resolve();
 
   constructor(config: Partial<LoggerConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -128,7 +129,13 @@ class Logger {
     }
   }
 
-  private async evacuateToFile(): Promise<void> {
+  private evacuateToFile(): void {
+    this.evacuationPromise = this.evacuationPromise.then(() =>
+      this.doEvacuate(),
+    );
+  }
+
+  private async doEvacuate(): Promise<void> {
     if (this.isEvacuating || this.memoryBuffer.length === 0) return;
 
     this.isEvacuating = true;
@@ -278,7 +285,8 @@ class Logger {
    * Force immediate evacuation of logs to file
    */
   async flush(): Promise<void> {
-    await this.evacuateToFile();
+    await this.evacuationPromise;
+    await this.doEvacuate();
   }
 
   /**
@@ -302,7 +310,7 @@ class Logger {
     if (this.evacuationInterval) {
       clearInterval(this.evacuationInterval);
     }
-    void this.evacuateToFile();
+    void this.evacuationPromise.then(() => this.doEvacuate());
   }
 }
 

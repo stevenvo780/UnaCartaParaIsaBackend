@@ -170,15 +170,11 @@ export class SharedSpatialIndex {
       }
     }
 
-    /**
-     * Performance optimization: sample animals instead of checking all.
-     * For 1000+ animals, only check a subset per frame (max 100).
-     * Reduced from 200 to lower CPU overhead while maintaining position accuracy.
-     */
     const animalArray = Array.from(animals.entries());
     const checkLimit = Math.min(animalArray.length, 100);
     this.updateTick++;
-    const startIdx = (this.updateTick % 100) * Math.floor(animalArray.length / 100);
+    const startIdx =
+      (this.updateTick % 100) * Math.floor(animalArray.length / 100);
 
     for (let i = 0; i < checkLimit; i++) {
       const idx = (startIdx + i) % animalArray.length;

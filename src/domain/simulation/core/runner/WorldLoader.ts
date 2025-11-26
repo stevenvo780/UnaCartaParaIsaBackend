@@ -37,10 +37,8 @@ export class WorldLoader {
 
     for (let cy = 0; cy < chunksY; cy++) {
       for (let cx = 0; cx < chunksX; cx++) {
-        const chunkTiles = await this.runner.worldGenerationService.generateChunk(
-          cx,
-          cy,
-          {
+        const chunkTiles =
+          await this.runner.worldGenerationService.generateChunk(cx, cy, {
             width: worldConfig.width,
             height: worldConfig.height,
             tileSize: worldConfig.tileSize,
@@ -65,8 +63,7 @@ export class WorldLoader {
                 lacunarity: 2.0,
               },
             },
-          },
-        );
+          });
 
         for (const row of chunkTiles) {
           for (const tile of row) {

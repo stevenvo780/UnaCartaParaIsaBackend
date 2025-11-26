@@ -1,8 +1,6 @@
 import { EventEmitter } from "node:events";
-import { Worker } from "node:worker_threads";
-import type { GameResources, GameState } from "../../types/game-types";
+import type { GameState } from "../../types/game-types";
 import { cloneGameState } from "./defaultState";
-import { StateCache } from "./StateCache";
 import { EntityIndex } from "./EntityIndex";
 import { SharedSpatialIndex } from "./SharedSpatialIndex";
 import { WorldGenerationService } from "../../../infrastructure/services/world/worldGenerationService";
@@ -37,7 +35,7 @@ import { TradeSystem } from "../systems/TradeSystem";
 import { MarriageSystem } from "../systems/MarriageSystem";
 import { ConflictResolutionSystem } from "../systems/ConflictResolutionSystem";
 import { NormsSystem } from "../systems/NormsSystem";
-import { simulationEvents, GameEventNames } from "./events";
+import { simulationEvents } from "./events";
 import { BatchedEventEmitter } from "./BatchedEventEmitter";
 import { CombatSystem } from "../systems/CombatSystem";
 import { ResourceAttractionSystem } from "../systems/ResourceAttractionSystem";
@@ -49,12 +47,10 @@ import { TimeSystem } from "../systems/TimeSystem";
 import { InteractionGameSystem } from "../systems/InteractionGameSystem";
 import { KnowledgeNetworkSystem } from "../systems/KnowledgeNetworkSystem";
 import { MovementSystem } from "../systems/MovementSystem";
-import type { BuildingLabel } from "../../types/simulation/buildings";
 import { AppearanceGenerationSystem } from "../systems/AppearanceGenerationSystem";
 import { GPUComputeService } from "./GPUComputeService";
 import { MultiRateScheduler } from "./MultiRateScheduler";
 import { performanceMonitor } from "./PerformanceMonitor";
-import { DeltaEncoder, type DeltaSnapshot } from "./DeltaEncoder";
 import { MetricsCollector } from "./MetricsCollector";
 import { storageService } from "../../../infrastructure/services/storage/storageService";
 import type {
@@ -62,23 +58,13 @@ import type {
   SimulationConfig,
   SimulationSnapshot,
   SimulationEvent,
-  NeedsCommandPayload,
-  RecipeCommandPayload,
-  SocialCommandPayload,
-  ResearchCommandPayload,
-  WorldResourceCommandPayload,
-  DialogueCommandPayload,
-  BuildingCommandPayload,
-  ReputationCommandPayload,
-  TaskCommandPayload,
-  SpawnAgentCommandPayload,
 } from "../../../shared/types/commands/SimulationCommand";
-import type { NeedsConfig } from "../../types/simulation/needs";
-import type { TaskType, TaskMetadata } from "../../types/simulation/tasks";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 
+import { CommandProcessor } from "./runner/CommandProcessor";
+import { SnapshotManager } from "./runner/SnapshotManager";
 import { EventRegistry } from "./runner/EventRegistry";
 import { WorldLoader } from "./runner/WorldLoader";
 
@@ -108,6 +94,8 @@ export class SimulationRunner {
 
   private eventRegistry: EventRegistry;
   private worldLoader: WorldLoader;
+  private commandProcessor: CommandProcessor;
+  private snapshotManager: SnapshotManager;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public on(event: string, listener: (...args: any[]) => void): void {
@@ -119,117 +107,178 @@ export class SimulationRunner {
     this.emitter.off(event, listener);
   }
 
-  private lastUpdate = Date.now();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public emit(event: string, ...args: any[]): void {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    this.emitter.emit(event, ...args);
+  }
+
   private timeScale = 1;
+
+  public get TimeScale(): number {
+    return this.timeScale;
+  }
+
+  public setTimeScale(scale: number): void {
+    this.timeScale = scale;
+  }
+
+  public getTickCounter(): number {
+    return this.tickCounter;
+  }
 
   @inject(TYPES.WorldResourceSystem)
   public readonly worldResourceSystem!: WorldResourceSystem;
+
   @inject(TYPES.LivingLegendsSystem)
   public readonly livingLegendsSystem!: LivingLegendsSystem;
+
   @inject(TYPES.LifeCycleSystem)
   public readonly lifeCycleSystem!: LifeCycleSystem;
+
   @inject(TYPES.NeedsSystem) public readonly needsSystem!: NeedsSystem;
+
   @inject(TYPES.GenealogySystem)
   public readonly _genealogySystem!: GenealogySystem;
+
   @inject(TYPES.SocialSystem) public readonly socialSystem!: SocialSystem;
+
   @inject(TYPES.InventorySystem)
   public readonly inventorySystem!: InventorySystem;
+
   @inject(TYPES.EconomySystem) public readonly economySystem!: EconomySystem;
+
   @inject(TYPES.MarketSystem) public readonly marketSystem!: MarketSystem;
+
   @inject(TYPES.RoleSystem) public readonly roleSystem!: RoleSystem;
+
   @inject(TYPES.AISystem) public readonly aiSystem!: AISystem;
+
   @inject(TYPES.ResourceReservationSystem)
   public readonly resourceReservationSystem!: ResourceReservationSystem;
+
   @inject(TYPES.GovernanceSystem)
   public readonly governanceSystem!: GovernanceSystem;
+
   @inject(TYPES.DivineFavorSystem)
   public readonly divineFavorSystem!: DivineFavorSystem;
+
   @inject(TYPES.HouseholdSystem)
   public readonly householdSystem!: HouseholdSystem;
+
   @inject(TYPES.BuildingSystem) public readonly buildingSystem!: BuildingSystem;
+
   @inject(TYPES.BuildingMaintenanceSystem)
   public readonly buildingMaintenanceSystem!: BuildingMaintenanceSystem;
+
   @inject(TYPES.ProductionSystem)
   public readonly productionSystem!: ProductionSystem;
+
   @inject(TYPES.EnhancedCraftingSystem)
   public readonly enhancedCraftingSystem!: EnhancedCraftingSystem;
+
   @inject(TYPES.AnimalSystem) public readonly animalSystem!: AnimalSystem;
+
   @inject(TYPES.ItemGenerationSystem)
   public readonly itemGenerationSystem!: ItemGenerationSystem;
+
   @inject(TYPES.CombatSystem) public readonly combatSystem!: CombatSystem;
+
   @inject(TYPES.ReputationSystem)
   public readonly reputationSystem!: ReputationSystem;
+
   @inject(TYPES.ResearchSystem)
   public readonly _researchSystem!: ResearchSystem;
+
   @inject(TYPES.RecipeDiscoverySystem)
   public readonly _recipeDiscoverySystem!: RecipeDiscoverySystem;
+
   @inject(TYPES.QuestSystem) public readonly questSystem!: QuestSystem;
+
   @inject(TYPES.TaskSystem) public readonly taskSystem!: TaskSystem;
+
   @inject(TYPES.TradeSystem) public readonly tradeSystem!: TradeSystem;
+
   @inject(TYPES.MarriageSystem) public readonly marriageSystem!: MarriageSystem;
+
   @inject(TYPES.ConflictResolutionSystem)
   public readonly conflictResolutionSystem!: ConflictResolutionSystem;
+
   @inject(TYPES.NormsSystem) public readonly _normsSystem!: NormsSystem;
+
   @inject(TYPES.ResourceAttractionSystem)
   public readonly resourceAttractionSystem!: ResourceAttractionSystem;
+
   @inject(TYPES.CrisisPredictorSystem)
   public readonly crisisPredictorSystem!: CrisisPredictorSystem;
+
   @inject(TYPES.WorldGenerationService)
   public readonly worldGenerationService!: WorldGenerationService;
+
   @inject(TYPES.AmbientAwarenessSystem)
   public readonly ambientAwarenessSystem!: AmbientAwarenessSystem;
+
   @inject(TYPES.CardDialogueSystem)
   public readonly cardDialogueSystem!: CardDialogueSystem;
+
   @inject(TYPES.EmergenceSystem)
   public readonly emergenceSystem!: EmergenceSystem;
+
   @inject(TYPES.TimeSystem) public readonly timeSystem!: TimeSystem;
+
   @inject(TYPES.InteractionGameSystem)
   public readonly interactionGameSystem!: InteractionGameSystem;
+
   @inject(TYPES.KnowledgeNetworkSystem)
   public readonly knowledgeNetworkSystem!: KnowledgeNetworkSystem;
+
   @inject(TYPES.MovementSystem) public readonly movementSystem!: MovementSystem;
+
   @inject(TYPES.AppearanceGenerationSystem)
   public readonly appearanceGenerationSystem!: AppearanceGenerationSystem;
+
   @inject(TYPES.GPUComputeService)
   public readonly gpuComputeService!: GPUComputeService;
 
   public capturedEvents: SimulationEvent[] = [];
-  private stateCache: StateCache;
-  private deltaEncoder: DeltaEncoder;
+
   @inject(TYPES.EntityIndex) public readonly entityIndex!: EntityIndex;
+
   @inject(TYPES.SharedSpatialIndex)
   public readonly sharedSpatialIndex!: SharedSpatialIndex;
 
-  private lastSnapshotTime = 0;
-  private readonly SNAPSHOT_INTERVAL_MS = 250;
-
-  private snapshotWorker?: Worker;
-  private snapshotWorkerReady = false;
-
   private readonly INDEX_REBUILD_INTERVAL_FAST = 5;
+
   private readonly AUTO_SAVE_INTERVAL_MS = 60000;
+
   private autoSaveInterval?: NodeJS.Timeout;
 
   constructor(
     @inject(TYPES.GameState) state: GameState,
+
     @inject(TYPES.SimulationConfig) _config?: SimulationConfig,
   ) {
     this.state = state;
+
     this.maxCommandQueue = _config?.maxCommandQueue ?? 200;
-    this.stateCache = new StateCache();
-    this.deltaEncoder = new DeltaEncoder();
 
     this.scheduler = new MultiRateScheduler({
       FAST: 50,
+
       MEDIUM: 250,
+
       SLOW: 1000,
     });
 
     this.metricsCollector = new MetricsCollector();
+
     this.eventRegistry = new EventRegistry(this);
+
     this.worldLoader = new WorldLoader(this);
 
-    this.initializeSnapshotWorker();
+    this.commandProcessor = new CommandProcessor(this);
+
+    this.snapshotManager = new SnapshotManager(this);
 
     this.scheduleAutoSaves();
   }
@@ -241,66 +290,6 @@ export class SimulationRunner {
    * The worker handles JSON serialization of snapshot data, allowing the main
    * thread to continue processing simulation ticks without interruption.
    */
-  private initializeSnapshotWorker(): void {
-    try {
-      const workerCode = `
-        const { parentPort } = require('worker_threads');
-        if (!parentPort) throw new Error('SnapshotWorker inline requires parentPort');
-        parentPort.postMessage({ type: 'ready' });
-        parentPort.on('message', (msg) => {
-          try {
-            if (msg && msg.type === 'snapshot' && msg.data) {
-              const serialized = JSON.stringify(msg.data);
-              parentPort.postMessage({ type: 'snapshot-ready', data: serialized, size: serialized.length });
-            } else if (msg && msg.type === 'shutdown') {
-              process.exit(0);
-            }
-          } catch (err) {
-            parentPort.postMessage({ type: 'error', error: (err && err.message) || String(err) });
-          }
-        });
-      `;
-
-      this.snapshotWorker = new Worker(workerCode, { eval: true });
-
-      this.snapshotWorker.on("message", (rawMessage: unknown) => {
-        const message = rawMessage as {
-          type: string;
-          data?: string;
-          error?: string;
-        };
-        if (message.type === "ready") {
-          this.snapshotWorkerReady = true;
-          logger.info("🧵 Snapshot worker thread ready");
-        } else if (message.type === "snapshot-ready" && message.data) {
-          try {
-            const parsed: unknown = JSON.parse(message.data as string);
-            this.emitter.emit("tick", parsed);
-          } catch (err) {
-            logger.error("Failed to parse snapshot from worker:", err);
-          }
-        } else if (message.type === "error") {
-          logger.error("Snapshot worker error:", message.error);
-        }
-      });
-
-      this.snapshotWorker.on("error", (error) => {
-        logger.error("Snapshot worker thread error:", error);
-        this.snapshotWorkerReady = false;
-      });
-
-      this.snapshotWorker.on("exit", (code) => {
-        if (code !== 0) {
-          logger.warn(`Snapshot worker stopped with exit code ${code}`);
-        }
-        this.snapshotWorkerReady = false;
-      });
-    } catch (error) {
-      logger.error("Failed to initialize snapshot worker:", error);
-      this.snapshotWorkerReady = false;
-    }
-  }
-
   /**
    * Configures the recurring auto-save interval used during long sessions.
    * Saves are dispatched asynchronously so the tick loop never blocks.
@@ -456,7 +445,7 @@ export class SimulationRunner {
   private configureSchedulerHooks(): void {
     this.scheduler.setHooks({
       preTick: () => {
-        this.processCommands();
+        this.commandProcessor.process(this.commands);
 
         const shouldRebuildIndices =
           this.tickCounter % this.INDEX_REBUILD_INTERVAL_FAST === 0 ||
@@ -507,14 +496,14 @@ export class SimulationRunner {
 
         const tasksChanged = this.taskSystem.syncTasksState();
         if (tasksChanged) {
-          this.stateCache.markDirty("tasks");
+          this.snapshotManager.markDirty("tasks");
         }
 
-        this.stateCache.markDirtyMultiple([...baseDirtySections]);
+        this.snapshotManager.markDirty([...baseDirtySections]);
 
         this.tickCounter += 1;
 
-        this.generateSnapshotThrottled();
+        this.snapshotManager.generateSnapshotThrottled();
 
         performanceMonitor.setSchedulerStats(this.scheduler.getStats());
 
@@ -912,13 +901,6 @@ export class SimulationRunner {
       this.gpuStatsInterval = undefined;
     }
 
-    if (this.snapshotWorker) {
-      this.snapshotWorker.postMessage({ type: "shutdown" });
-      this.snapshotWorker.terminate();
-      this.snapshotWorker = undefined;
-      this.snapshotWorkerReady = false;
-    }
-
     this.eventRegistry.cleanup();
   }
 
@@ -946,320 +928,8 @@ export class SimulationRunner {
    *
    * @returns Full simulation snapshot with all state data
    */
-  getInitialSnapshot(): SimulationSnapshot {
-    const events =
-      this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
-    const snapshotState = cloneGameState(this.state);
-    snapshotState.genealogy =
-      this._genealogySystem?.getSerializedFamilyTree() ?? {};
-
-    const allLegends = this.livingLegendsSystem.getAllLegends();
-    const activeLegends = this.livingLegendsSystem.getActiveLegends();
-    snapshotState.legends = {
-      records: allLegends,
-      activeLegends,
-    };
-
-    if (snapshotState.agents) {
-      snapshotState.agents = snapshotState.agents.map((agent) => {
-        const aiState = this.aiSystem.getAIState(agent.id);
-        if (aiState) {
-          return {
-            ...agent,
-            currentGoal: aiState.currentGoal,
-            goalQueue: aiState.goalQueue,
-            currentAction: aiState.currentAction,
-            offDuty: aiState.offDuty,
-            lastDecisionTime: aiState.lastDecisionTime,
-            ai: {
-              currentGoal: aiState.currentGoal,
-              goalQueue: aiState.goalQueue,
-              currentAction: aiState.currentAction,
-              offDuty: aiState.offDuty,
-              lastDecisionTime: aiState.lastDecisionTime,
-            },
-          };
-        }
-        return agent;
-      });
-    }
-
-    return {
-      state: snapshotState,
-      tick: this.tickCounter,
-      updatedAt: this.lastUpdate,
-      events,
-    };
-  }
-
-  /**
-   * Generates a snapshot with throttling and optional worker thread processing.
-   *
-   * Snapshot generation is conditional:
-   * 1. Only if there are listeners (clients connected via WebSocket)
-   * 2. Only if enough time has elapsed since last snapshot (SNAPSHOT_INTERVAL_MS = 250ms)
-   * 3. Uses worker thread if available, otherwise falls back to main thread
-   *
-   * This throttling prevents excessive snapshot generation when no clients are connected
-   * and reduces event loop blocking by offloading serialization to a worker thread.
-   */
-  private generateSnapshotThrottled(): void {
-    if (this.emitter.listenerCount("tick") === 0) {
-      return;
-    }
-
-    if (!this.snapshotWorkerReady || !this.snapshotWorker) {
-      try {
-        const snapshot = this.getTickSnapshot();
-        this.emitter.emit("tick", snapshot);
-      } catch (error) {
-        logger.error("Error generating snapshot (fallback):", error);
-      }
-      return;
-    }
-
-    const now = Date.now();
-    const elapsed = now - this.lastSnapshotTime;
-
-    if (elapsed < this.SNAPSHOT_INTERVAL_MS) {
-      return;
-    }
-
-    this.lastSnapshotTime = now;
-
-    try {
-      const snapshot = this.getTickSnapshot();
-      this.snapshotWorker.postMessage({
-        type: "snapshot",
-        data: snapshot,
-      });
-    } catch (error) {
-      logger.error("Error sending snapshot to worker:", error);
-    }
-  }
-
-  /**
-   * Generates an optimized snapshot for regular ticks (excludes static terrain data).
-   *
-   * Uses StateCache to minimize cloning overhead by only copying state sections
-   * that have been marked as dirty since the last snapshot. Static data like
-   * terrain tiles, roads, and object layers are excluded to reduce payload size.
-   *
-   * Includes dynamic state: agents, entities, zones, resources, social graph,
-   * market, quests, research, etc. Also includes AI state (goals, actions) and
-   * genealogy/legends data.
-   *
-   * @returns Optimized simulation snapshot with only changed state sections
-   */
-  getTickSnapshot(): SimulationSnapshot {
-    const events =
-      this.capturedEvents.length > 0 ? [...this.capturedEvents] : undefined;
-
-    const snapshotState = this.stateCache.getSnapshot(
-      this.state,
-      this.tickCounter,
-    );
-
-    snapshotState.genealogy =
-      this._genealogySystem?.getSerializedFamilyTree() ?? {};
-
-    const allLegends = this.livingLegendsSystem.getAllLegends();
-    const activeLegends = this.livingLegendsSystem.getActiveLegends();
-    snapshotState.legends = {
-      records: allLegends,
-      activeLegends,
-    };
-
-    if (snapshotState.agents) {
-      snapshotState.agents = snapshotState.agents.map((agent) => {
-        const aiState = this.aiSystem.getAIState(agent.id);
-        if (aiState) {
-          return {
-            ...agent,
-            currentGoal: aiState.currentGoal,
-            goalQueue: aiState.goalQueue,
-            currentAction: aiState.currentAction,
-            offDuty: aiState.offDuty,
-            lastDecisionTime: aiState.lastDecisionTime,
-            ai: {
-              currentGoal: aiState.currentGoal,
-              goalQueue: aiState.goalQueue,
-              currentAction: aiState.currentAction,
-              offDuty: aiState.offDuty,
-              lastDecisionTime: aiState.lastDecisionTime,
-            },
-          };
-        }
-        return agent;
-      });
-    }
-
-    const tickState = { ...snapshotState };
-    delete tickState.terrainTiles;
-    delete tickState.roads;
-    delete tickState.objectLayers;
-
-    return {
-      state: tickState,
-      tick: this.tickCounter,
-      updatedAt: this.lastUpdate,
-      events,
-    };
-  }
-
-  /**
-   * Gets a snapshot (delegates to getTickSnapshot).
-   *
-   * @deprecated Use getInitialSnapshot() or getTickSnapshot() instead
-   * @returns Simulation snapshot
-   */
-  getSnapshot(): SimulationSnapshot {
-    return this.getTickSnapshot();
-  }
-
-  /**
-   * Generates a delta snapshot containing only changes since the last snapshot.
-   *
-   * Uses DeltaEncoder to compute differences between current and previous state,
-   * significantly reducing payload size for WebSocket transmission. This is more
-   * efficient than full snapshots when state changes are incremental.
-   *
-   * @param forceFull - If true, generates a full snapshot regardless of delta interval
-   * @returns Delta snapshot with only changed state sections
-   */
-  getDeltaSnapshot(forceFull = false): DeltaSnapshot {
-    const tickSnapshot = this.getTickSnapshot();
-    return this.deltaEncoder.encodeDelta(tickSnapshot, forceFull);
-  }
-
-  private isStepping = false;
-
-  /**
-   * @deprecated Use MultiRateScheduler instead. This method is kept for compatibility only.
-   * @internal
-   */
-  // @ts-expect-error - Deprecated method kept for compatibility
-  private async step(): Promise<void> {
-    if (this.isStepping) {
-      logger.warn("Simulation step skipped: previous step still running");
-      return;
-    }
-    this.isStepping = true;
-
-    try {
-      const now = Date.now();
-      const delta = now - this.lastUpdate;
-      this.lastUpdate = now;
-
-      this.processCommands();
-      const scaledDelta = delta * this.timeScale;
-
-      this.entityIndex.rebuild(this.state);
-      this.entityIndex.syncAgentsToEntities(this.state);
-      this.sharedSpatialIndex.rebuildIfNeeded(
-        this.state.entities || [],
-        this.animalSystem.getAnimals(),
-      );
-
-      const dirtySections: string[] = [];
-
-      this.advanceSimulation(scaledDelta);
-
-      await Promise.all([
-        Promise.resolve(this.worldResourceSystem.update(scaledDelta)),
-        Promise.resolve(this.animalSystem.update(scaledDelta)),
-        Promise.resolve(this.timeSystem.update(scaledDelta)),
-        Promise.resolve(this.itemGenerationSystem.update(scaledDelta)),
-        Promise.resolve(this.reputationSystem.update()),
-        Promise.resolve(this._researchSystem.update()),
-        Promise.resolve(this.emergenceSystem.update(scaledDelta)),
-        Promise.resolve(this.knowledgeNetworkSystem.update(scaledDelta)),
-        Promise.resolve(this.productionSystem.update(scaledDelta)),
-        Promise.resolve(this._recipeDiscoverySystem.update()),
-        Promise.resolve(this._normsSystem.update()),
-      ]);
-      dirtySections.push(
-        "worldResources",
-        "animals",
-        "research",
-        "recipes",
-        "norms",
-      );
-
-      await Promise.all([
-        Promise.resolve(this.livingLegendsSystem.update(scaledDelta)),
-        Promise.resolve(this.lifeCycleSystem.update(scaledDelta)),
-        Promise.resolve(this.inventorySystem.update()),
-        Promise.resolve(this.resourceReservationSystem.update()),
-      ]);
-      dirtySections.push("agents", "entities", "inventory");
-
-      await Promise.all([
-        Promise.resolve(this.needsSystem.update(scaledDelta)),
-        Promise.resolve(this.socialSystem.update(scaledDelta)),
-        Promise.resolve(this.economySystem.update(scaledDelta)),
-        Promise.resolve(this.marketSystem.update(scaledDelta)),
-      ]);
-      dirtySections.push("socialGraph", "market");
-
-      this.roleSystem.update(scaledDelta);
-      this.aiSystem.update(scaledDelta);
-      dirtySections.push("agents");
-
-      await Promise.all([
-        Promise.resolve(this.divineFavorSystem.update(scaledDelta)),
-        Promise.resolve(this.governanceSystem.update(scaledDelta)),
-        Promise.resolve(this.householdSystem.update(scaledDelta)),
-        Promise.resolve(this.buildingSystem.update(scaledDelta)),
-        Promise.resolve(this.buildingMaintenanceSystem.update(scaledDelta)),
-        Promise.resolve(this.enhancedCraftingSystem.update()),
-      ]);
-      dirtySections.push("zones");
-
-      this.combatSystem.update(scaledDelta);
-      this.taskSystem.update();
-      dirtySections.push("entities", "tasks");
-
-      await Promise.all([
-        Promise.resolve(this.questSystem.update()),
-        Promise.resolve(this.tradeSystem.update()),
-        Promise.resolve(this.marriageSystem.update()),
-        Promise.resolve(this.conflictResolutionSystem.update()),
-        Promise.resolve(this.resourceAttractionSystem.update(scaledDelta)),
-        Promise.resolve(this.crisisPredictorSystem.update(scaledDelta)),
-        Promise.resolve(this.ambientAwarenessSystem.update(scaledDelta)),
-        Promise.resolve(this.cardDialogueSystem.update(scaledDelta)),
-        Promise.resolve(this.interactionGameSystem.update(scaledDelta)),
-      ]);
-      dirtySections.push(
-        "reputation",
-        "quests",
-        "trade",
-        "marriage",
-        "conflicts",
-        "knowledgeGraph",
-      );
-
-      this.movementSystem.update(scaledDelta);
-      dirtySections.push("entities");
-
-      this.syncAnimalsToState();
-
-      this.stateCache.markDirtyMultiple(dirtySections);
-
-      this.tickCounter += 1;
-
-      if (simulationEvents instanceof BatchedEventEmitter) {
-        simulationEvents.flushEvents();
-      }
-
-      const snapshot = this.getTickSnapshot();
-      this.emitter.emit("tick", snapshot);
-
-      this.capturedEvents = [];
-    } finally {
-      this.isStepping = false;
-    }
+  public getInitialSnapshot(): SimulationSnapshot {
+    return this.snapshotManager.getInitialSnapshot();
   }
 
   /**
@@ -1287,564 +957,6 @@ export class SimulationRunner {
     }
   }
 
-  private processCommands(): void {
-    if (this.commands.length > 0) {
-      logger.info(`🎯 Processing ${this.commands.length} command(s)`);
-    }
-    while (this.commands.length > 0) {
-      const command = this.commands.shift();
-      if (!command) break;
-      logger.info(`📝 Processing command: ${command.type}`, command);
-      switch (command.type) {
-        case "SET_TIME_SCALE":
-          this.timeScale = Math.max(0.1, Math.min(10, command.multiplier));
-          break;
-        case "APPLY_RESOURCE_DELTA":
-          this.applyResourceDelta(command.delta);
-          break;
-        case "GATHER_RESOURCE":
-          simulationEvents.emit(GameEventNames.RESOURCE_GATHERED, {
-            resourceId: command.resourceId,
-            amount: command.amount,
-          });
-          break;
-        case "GIVE_RESOURCE":
-          if (
-            command.payload.agentId &&
-            command.payload.resource &&
-            command.payload.amount
-          ) {
-            this.inventorySystem.addResource(
-              command.payload.agentId,
-              command.payload.resource,
-              command.payload.amount,
-            );
-          }
-          break;
-        case "SPAWN_AGENT": {
-          logger.info("🔵 SPAWN_AGENT command received", command.payload);
-          const spawnPayload = (command.payload ??
-            {}) as SpawnAgentCommandPayload;
-
-          const agentPayload: Partial<
-            import("../../types/simulation/agents").AgentProfile
-          > = {
-            ...(spawnPayload as Partial<
-              import("../../types/simulation/agents").AgentProfile
-            >),
-          };
-
-          if (!agentPayload.id && spawnPayload.requestId) {
-            agentPayload.id = spawnPayload.requestId;
-          }
-
-          logger.info("🟢 Spawning agent with payload:", agentPayload);
-          const newAgent = this.lifeCycleSystem.spawnAgent(agentPayload);
-          logger.info(`✅ Agent spawned successfully: ${newAgent.id}`, {
-            totalAgents: this.state.agents.length,
-          });
-          break;
-        }
-        case "KILL_AGENT":
-          this.lifeCycleSystem.removeAgent(command.agentId);
-          break;
-        case "AGENT_COMMAND":
-          this.handleAgentCommand(command);
-          break;
-        case "ANIMAL_COMMAND":
-          this.handleAnimalCommand(command);
-          break;
-        case "NEEDS_COMMAND":
-          this.handleNeedsCommand(command);
-          break;
-        case "RECIPE_COMMAND":
-          this.handleRecipeCommand(command);
-          break;
-        case "SOCIAL_COMMAND":
-          this.handleSocialCommand(command);
-          break;
-        case "RESEARCH_COMMAND":
-          this.handleResearchCommand(command);
-          break;
-        case "WORLD_RESOURCE_COMMAND":
-          this.handleWorldResourceCommand(command);
-          break;
-        case "DIALOGUE_COMMAND":
-          this.handleDialogueCommand(command);
-          break;
-        case "BUILDING_COMMAND":
-          this.handleBuildingCommand(command);
-          break;
-        case "REPUTATION_COMMAND":
-          this.handleReputationCommand(command);
-          break;
-        case "TASK_COMMAND":
-          this.handleTaskCommand(command);
-          break;
-        case "TIME_COMMAND":
-          this.handleTimeCommand(command);
-          break;
-        case "FORCE_EMERGENCE_EVALUATION":
-          this.emergenceSystem.forcePatternEvaluation();
-          break;
-        case "SAVE_GAME":
-          this.saveSimulation().catch((err) => {
-            logger.error("Manual save failed:", err);
-          });
-          break;
-        case "PING":
-        default:
-          break;
-      }
-    }
-  }
-
-  private handleAgentCommand(
-    command: Extract<SimulationCommand, { type: "AGENT_COMMAND" }>,
-  ): void {
-    if (!command.agentId) return;
-    if (!this.ensureMovementState(command.agentId)) return;
-
-    const payload = command.payload;
-
-    switch (command.command) {
-      case "MOVE_TO":
-        if (
-          payload &&
-          typeof payload.x === "number" &&
-          typeof payload.y === "number"
-        ) {
-          this.movementSystem.moveToPoint(
-            command.agentId,
-            payload.x,
-            payload.y,
-          );
-          simulationEvents.emit(GameEventNames.AGENT_ACTION_COMMANDED, {
-            agentId: command.agentId,
-            action: "move",
-            payload,
-          });
-        }
-        break;
-      case "STOP_MOVEMENT":
-        this.movementSystem.stopMovement(command.agentId);
-        break;
-      default:
-        break;
-    }
-  }
-
-  private handleAnimalCommand(
-    command: Extract<SimulationCommand, { type: "ANIMAL_COMMAND" }>,
-  ): void {
-    if (command.command !== "SPAWN_ANIMAL") return;
-    const payload = command.payload;
-    if (
-      !payload ||
-      typeof payload.type !== "string" ||
-      !payload.position ||
-      typeof payload.position.x !== "number" ||
-      typeof payload.position.y !== "number"
-    ) {
-      return;
-    }
-
-    this.animalSystem.spawnAnimal(
-      payload.type,
-      payload.position,
-      payload.biome as string | undefined,
-    );
-  }
-
-  private handleNeedsCommand(
-    command: Extract<SimulationCommand, { type: "NEEDS_COMMAND" }>,
-  ): void {
-    const payload = command.payload ?? ({} as NeedsCommandPayload);
-    switch (command.command) {
-      case "SATISFY_NEED":
-        if (
-          payload.entityId &&
-          payload.needType &&
-          typeof payload.amount === "number"
-        ) {
-          this.needsSystem.satisfyNeed(
-            payload.entityId as string,
-            payload.needType as string,
-            payload.amount,
-          );
-        }
-        break;
-      case "MODIFY_NEED":
-        if (
-          payload.entityId &&
-          payload.needType &&
-          typeof payload.delta === "number"
-        ) {
-          this.needsSystem.modifyNeed(
-            payload.entityId as string,
-            payload.needType as string,
-            payload.delta,
-          );
-        }
-        break;
-      case "UPDATE_CONFIG":
-        this.needsSystem.updateConfig(payload as Partial<NeedsConfig>);
-        break;
-    }
-  }
-
-  private handleRecipeCommand(
-    command: Extract<SimulationCommand, { type: "RECIPE_COMMAND" }>,
-  ): void {
-    const payload = command.payload ?? ({} as RecipeCommandPayload);
-    switch (command.command) {
-      case "TEACH_RECIPE":
-        if ((payload.agentId || payload.teacherId) && payload.recipeId) {
-          this._recipeDiscoverySystem.teachRecipe(
-            (payload.agentId as string) ?? (payload.teacherId as string) ?? "",
-            payload.recipeId as string,
-          );
-        }
-        break;
-      case "SHARE_RECIPE":
-        {
-          const teacherId =
-            (payload.teacherId as string | undefined) ??
-            ((payload as Record<string, unknown>).fromAgentId as
-              | string
-              | undefined);
-          const studentId =
-            (payload.studentId as string | undefined) ??
-            ((payload as Record<string, unknown>).toAgentId as
-              | string
-              | undefined);
-
-          if (teacherId && studentId && payload.recipeId) {
-            this._recipeDiscoverySystem.shareRecipe(
-              teacherId,
-              studentId,
-              payload.recipeId as string,
-            );
-          }
-        }
-        break;
-    }
-  }
-
-  private handleSocialCommand(
-    command: Extract<SimulationCommand, { type: "SOCIAL_COMMAND" }>,
-  ): void {
-    const payload = command.payload ?? ({} as SocialCommandPayload);
-    switch (command.command) {
-      case "IMPOSE_TRUCE":
-        if (
-          payload.aId &&
-          payload.bId &&
-          typeof payload.durationMs === "number"
-        ) {
-          this.socialSystem.imposeTruce(
-            payload.aId as string,
-            payload.bId as string,
-            payload.durationMs,
-          );
-        }
-        break;
-      case "SET_AFFINITY":
-        if (payload.aId && payload.bId && typeof payload.value === "number") {
-          this.socialSystem.setAffinity(
-            payload.aId as string,
-            payload.bId as string,
-            payload.value,
-          );
-        }
-        break;
-      case "MODIFY_AFFINITY":
-        if (payload.aId && payload.bId && typeof payload.delta === "number") {
-          this.socialSystem.modifyAffinity(
-            payload.aId as string,
-            payload.bId as string,
-            payload.delta,
-          );
-        }
-        break;
-      case "REMOVE_RELATIONSHIPS":
-        if (payload.agentId) {
-          this.socialSystem.removeRelationships(payload.agentId as string);
-        }
-        break;
-      case "FRIENDLY_INTERACTION":
-        if (
-          payload.agentA &&
-          payload.agentB &&
-          typeof payload.magnitude === "number"
-        ) {
-          this.socialSystem.modifyAffinity(
-            payload.agentA as string,
-            payload.agentB as string,
-            (payload.magnitude as number) || 0.1,
-          );
-          this.interactionGameSystem.startInteraction(
-            payload.agentA as string,
-            payload.agentB as string,
-            "friendly",
-          );
-        }
-        break;
-      case "HOSTILE_ENCOUNTER":
-        if (
-          payload.agentA &&
-          payload.agentB &&
-          typeof payload.magnitude === "number"
-        ) {
-          this.socialSystem.modifyAffinity(
-            payload.agentA as string,
-            payload.agentB as string,
-            -(payload.magnitude as number) || -0.1,
-          );
-          this.interactionGameSystem.startInteraction(
-            payload.agentA as string,
-            payload.agentB as string,
-            "hostile",
-          );
-        }
-        break;
-    }
-  }
-
-  private handleResearchCommand(
-    command: Extract<SimulationCommand, { type: "RESEARCH_COMMAND" }>,
-  ): void {
-    const payload = command.payload ?? ({} as ResearchCommandPayload);
-    switch (command.command) {
-      case "INITIALIZE_LINEAGE":
-        if (payload.lineageId) {
-          this._researchSystem.initializeLineage(payload.lineageId as string);
-        }
-        break;
-      case "RECIPE_DISCOVERED":
-        if (payload.recipeId) {
-          const lineageId = this.resolveLineageId(
-            payload.lineageId as string | undefined,
-          );
-          const discoveredBy =
-            (payload.discoveredBy as string | undefined) || "unknown";
-
-          this._researchSystem.onRecipeDiscovered(
-            lineageId,
-            payload.recipeId as string,
-            discoveredBy,
-          );
-        }
-        break;
-    }
-  }
-
-  private handleWorldResourceCommand(
-    command: Extract<SimulationCommand, { type: "WORLD_RESOURCE_COMMAND" }>,
-  ): void {
-    const payload = command.payload ?? ({} as WorldResourceCommandPayload);
-    switch (command.command) {
-      case "SPAWN_RESOURCE":
-        if (payload.type && payload.position) {
-          this.worldResourceSystem.spawnResource(
-            payload.type as string,
-            payload.position as { x: number; y: number },
-            (payload.biome as string) || "grass",
-          );
-        }
-        break;
-      case "HARVEST_RESOURCE":
-        if (payload.resourceId && payload.agentId) {
-          this.worldResourceSystem.harvestResource(
-            payload.resourceId as string,
-            payload.agentId as string,
-          );
-        }
-        break;
-    }
-  }
-
-  private handleDialogueCommand(
-    command: Extract<SimulationCommand, { type: "DIALOGUE_COMMAND" }>,
-  ): void {
-    const payload = command.payload ?? ({} as DialogueCommandPayload);
-    switch (command.command) {
-      case "RESPOND_TO_CARD":
-        if (payload.cardId && payload.choiceId) {
-          this.cardDialogueSystem.respondToCard(
-            payload.cardId as string,
-            payload.choiceId as string,
-          );
-        }
-        break;
-    }
-  }
-
-  private handleBuildingCommand(
-    command: Extract<SimulationCommand, { type: "BUILDING_COMMAND" }>,
-  ): void {
-    const payload = command.payload ?? ({} as BuildingCommandPayload);
-    switch (command.command) {
-      case "START_UPGRADE":
-        if (payload.zoneId && payload.agentId) {
-          this.buildingMaintenanceSystem.startUpgrade(
-            payload.zoneId as string,
-            payload.agentId as string,
-          );
-        }
-        break;
-      case "CANCEL_UPGRADE":
-        if (payload.zoneId) {
-          this.buildingMaintenanceSystem.cancelUpgrade(
-            payload.zoneId as string,
-          );
-        }
-        break;
-      case "ENQUEUE_CONSTRUCTION":
-        if (payload.buildingType) {
-          this.buildingSystem.enqueueConstruction(
-            payload.buildingType as BuildingLabel,
-          );
-        }
-        break;
-      case "CONSTRUCT_BUILDING":
-        if (payload.buildingType) {
-          this.buildingSystem.constructBuilding(
-            payload.buildingType as BuildingLabel,
-            payload.position as { x: number; y: number } | undefined,
-          );
-        }
-        break;
-    }
-  }
-
-  private handleReputationCommand(
-    command: Extract<SimulationCommand, { type: "REPUTATION_COMMAND" }>,
-  ): void {
-    const payload = command.payload ?? ({} as ReputationCommandPayload);
-    switch (command.command) {
-      case "UPDATE_TRUST":
-        if (
-          payload.agentA &&
-          payload.agentB &&
-          typeof payload.delta === "number"
-        ) {
-          this.reputationSystem.updateTrust(
-            payload.agentA as string,
-            payload.agentB as string,
-            payload.delta,
-          );
-        }
-        break;
-    }
-  }
-
-  private handleTaskCommand(
-    command: Extract<SimulationCommand, { type: "TASK_COMMAND" }>,
-  ): void {
-    const payload = command.payload ?? ({} as TaskCommandPayload);
-    switch (command.command) {
-      case "CREATE_TASK":
-        if (payload.type && typeof payload.requiredWork === "number") {
-          this.taskSystem.createTask({
-            type: payload.type as TaskType,
-            requiredWork: payload.requiredWork,
-            bounds: payload.bounds as
-              | { x: number; y: number; width: number; height: number }
-              | undefined,
-            zoneId: payload.zoneId as string | undefined,
-            requirements: payload.requirements as
-              | {
-                  resources?: {
-                    wood?: number;
-                    stone?: number;
-                    food?: number;
-                    water?: number;
-                  };
-                  minWorkers?: number;
-                }
-              | undefined,
-            metadata: payload.metadata as TaskMetadata | undefined,
-            targetAnimalId: payload.targetAnimalId as string | undefined,
-          });
-        }
-        break;
-      case "CONTRIBUTE_TO_TASK":
-        if (
-          payload.taskId &&
-          payload.agentId &&
-          typeof payload.contribution === "number"
-        ) {
-          this.taskSystem.contributeToTask(
-            payload.taskId as string,
-            payload.agentId as string,
-            payload.contribution,
-            (payload.socialSynergyMultiplier as number) || 1.0,
-          );
-        }
-        break;
-      case "REMOVE_TASK":
-        if (payload.taskId) {
-          this.taskSystem.removeTask(payload.taskId as string);
-        }
-        break;
-    }
-  }
-
-  private handleTimeCommand(
-    command: Extract<SimulationCommand, { type: "TIME_COMMAND" }>,
-  ): void {
-    if (command.command === "SET_WEATHER" && command.payload?.weatherType) {
-      const weatherType = command.payload.weatherType as string;
-      if (
-        this.timeSystem &&
-        typeof this.timeSystem === "object" &&
-        "setWeather" in this.timeSystem &&
-        typeof this.timeSystem.setWeather === "function"
-      ) {
-        this.timeSystem.setWeather(
-          weatherType as
-            | "clear"
-            | "cloudy"
-            | "rainy"
-            | "stormy"
-            | "foggy"
-            | "snowy",
-        );
-        logger.info(`Weather set to ${weatherType} via TIME_COMMAND`);
-      } else {
-        logger.warn("TimeSystem.setWeather not available");
-      }
-    }
-  }
-
-  private applyResourceDelta(delta: Partial<GameResources["materials"]>): void {
-    if (!this.state.resources) {
-      return;
-    }
-    const materials = this.state.resources.materials;
-    for (const [key, value] of Object.entries(delta)) {
-      const materialKey = key as keyof GameResources["materials"];
-      const current = materials[materialKey] ?? 0;
-      materials[materialKey] = current + (value ?? 0);
-    }
-  }
-
-  private advanceSimulation(deltaMs: number): void {
-    this.state.togetherTime += deltaMs;
-    this.state.dayTime = ((this.state.dayTime ?? 0) + deltaMs) % 86400000;
-
-    this.state.cycles += 1;
-
-    if (this.state.resources) {
-      const regenRate = deltaMs / 1000;
-      this.state.resources.energy = Math.min(
-        100,
-        this.state.resources.energy + regenRate * 0.1,
-      );
-    }
-  }
-
   /**
    * Ensures an agent has a movement state initialized in the MovementSystem.
    *
@@ -1855,7 +967,7 @@ export class SimulationRunner {
    * @param agentId - The agent ID to check and initialize
    * @returns True if movement state exists or was successfully created, false otherwise
    */
-  private ensureMovementState(agentId: string): boolean {
+  public ensureMovementState(agentId: string): boolean {
     if (this.movementSystem.hasMovementState(agentId)) {
       return true;
     }
@@ -1880,7 +992,7 @@ export class SimulationRunner {
     return true;
   }
 
-  private resolveLineageId(requested?: string): string {
+  public resolveLineageId(requested?: string): string {
     if (requested) {
       return requested;
     }
@@ -1896,7 +1008,6 @@ export class SimulationRunner {
     }
     return lineageId;
   }
-
   public getEntityDetails(entityId: string): Record<string, unknown> | null {
     const entity = this.state.entities.find((e) => e.id === entityId);
     if (!entity) return null;

@@ -12,6 +12,7 @@ export class EventRegistry {
 
   private registerEvent(
     eventName: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     handler: (...args: any[]) => void,
   ): void {
     simulationEvents.on(eventName, handler);

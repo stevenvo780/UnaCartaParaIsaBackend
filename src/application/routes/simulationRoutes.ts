@@ -18,7 +18,7 @@ router.post(
   "/api/sim/save",
   async (_req: Request, res: Response): Promise<void> => {
     try {
-      const snapshot = simulationRunner.getSnapshot();
+      const snapshot = simulationRunner.getInitialSnapshot();
       const saveData = {
         ...snapshot.state,
         timestamp: Date.now(),
@@ -42,7 +42,7 @@ router.post(
 
 router.get("/api/sim/health", (_req: Request, res: Response): void => {
   try {
-    const snapshot = simulationRunner.getSnapshot();
+    const snapshot = simulationRunner.getInitialSnapshot();
     res.json({ status: "ok", tick: snapshot.tick });
   } catch (error) {
     const errorMessage =
@@ -54,7 +54,7 @@ router.get("/api/sim/health", (_req: Request, res: Response): void => {
 
 router.get("/api/sim/state", (_req: Request, res: Response): void => {
   try {
-    const snapshot = simulationRunner.getSnapshot();
+    const snapshot = simulationRunner.getInitialSnapshot();
     res.json(snapshot);
   } catch (error) {
     const errorMessage =

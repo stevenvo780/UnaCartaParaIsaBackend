@@ -143,44 +143,6 @@ export class AnimalBatchProcessor {
     this.workBuffer.set(this.needsBuffer);
     const workBuffer = this.workBuffer;
 
-    // GPU path disabled for now as it assumes uniform decay rates which is incorrect for mixed animal types
-    /*
-    if (gpuAvailable && this._gpuService) {
-      try {
-        const deltaSeconds = deltaMinutes * 60;
-
-        const animalCount = this.animalIdArray.length;
-        const decayRates = new Float32Array(this.NEED_COUNT);
-        decayRates[0] = hungerDecayRates[0] || 0; // Usar primer valor como tasa base
-        decayRates[1] = thirstDecayRates[0] || 0;
-        decayRates[2] = 0.5 / 60;
-        decayRates[3] = 0;
-
-        const ageMultipliers = new Float32Array(animalCount).fill(1.0);
-        const divineModifiers = new Float32Array(animalCount).fill(1.0);
-
-        const result = this._gpuService.applyNeedsDecayBatch(
-          workBuffer,
-          decayRates,
-          ageMultipliers,
-          divineModifiers,
-          this.NEED_COUNT,
-          deltaSeconds,
-        );
-
-        // Atomic swap on GPU success
-        this.needsBuffer = result;
-        this.bufferDirty = true;
-        return;
-      } catch (error) {
-        logger.warn(
-          `⚠️ Error en GPU updateNeedsBatch (Animal), usando CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
-        );
-        // workBuffer is intact for CPU fallback
-      }
-    }
-    */
-
     // CPU fallback: work on copy
     const fearDecayRate = 0.5 / 60;
 

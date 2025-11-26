@@ -1134,8 +1134,8 @@ export class GPUComputeService {
         if (distSq < nearestDistSq) {
           nearestDistSq = distSq;
           nearestThreatIdx = j;
-          }
         }
+      }
 
       const dx = ax - threatPositions[nearestThreatIdx * 2];
       const dy = ay - threatPositions[nearestThreatIdx * 2 + 1];

@@ -72,7 +72,7 @@ export class AnimalSystem {
    * 10 animals: GPU batch processing is efficient even with small counts.
    * AnimalSystem processes 4 needs per animal, so 10 animals = 40 operations.
    */
-  private readonly BATCH_THRESHOLD = 10;
+  private readonly BATCH_THRESHOLD = 100;
 
   /**
    * State logging optimization: log every 2s instead of 5% random chance.
@@ -245,7 +245,7 @@ export class AnimalSystem {
       if (
         isIdleState &&
         i % this.IDLE_UPDATE_DIVISOR !==
-        this.updateFrame % this.IDLE_UPDATE_DIVISOR
+          this.updateFrame % this.IDLE_UPDATE_DIVISOR
       ) {
         continue;
       }

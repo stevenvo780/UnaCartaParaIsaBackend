@@ -76,7 +76,7 @@ simulationRunner
 
     // Initialize hardware and start server ONLY after simulation is ready
     detectGPUAvailability();
-    
+
     server = app.listen(CONFIG.PORT, () => {
       logger.info(`Save server running on http://localhost:${CONFIG.PORT}`);
       if (!CONFIG.USE_LOCAL_STORAGE) {

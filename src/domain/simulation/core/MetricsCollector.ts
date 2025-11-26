@@ -1,6 +1,7 @@
 import { performanceMonitor } from "./PerformanceMonitor";
 import type { MultiRateScheduler } from "./MultiRateScheduler";
 import type { GPUComputeService } from "./GPUComputeService";
+import { logger } from "@/infrastructure/utils/logger";
 
 /**
  * MetricsCollector - Collects performance metrics without impacting simulation.
@@ -47,10 +48,13 @@ export class MetricsCollector {
         animalBatchSize: 0,
         movementBatchSize: 0,
         needsBatchSize: 0,
-        gpuUtilization: gpuStats.gpuAvailable ? (gpuStats.gpuOperations / Math.max(1, gpuStats.gpuOperations + gpuStats.cpuFallbacks)) : 0,
+        gpuUtilization: gpuStats.gpuAvailable
+          ? gpuStats.gpuOperations /
+            Math.max(1, gpuStats.gpuOperations + gpuStats.cpuFallbacks)
+          : 0,
       });
     } catch (error) {
-      /* ignore */
+      logger.error("Error collecting metrics:", error);
     }
   }
 }
