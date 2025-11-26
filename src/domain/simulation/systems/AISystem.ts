@@ -248,10 +248,6 @@ export class AISystem extends EventEmitter {
    */
   public update(_deltaTimeMs: number): void {
     const now = Date.now();
-    if (now - this.lastUpdate < this.config.updateIntervalMs) {
-      this.checkDependencies();
-      return;
-    }
 
     if (now - this._lastMemoryCleanupTime >= this.MEMORY_CLEANUP_INTERVAL) {
       this.cleanupAgentMemory(now);
@@ -271,6 +267,13 @@ export class AISystem extends EventEmitter {
     const batchSize = Math.min(this.BATCH_SIZE, agents.length);
     let processed = 0;
 
+    // Log occasionally to confirm AI is running
+    if (Math.random() < 0.01) {
+      logger.debug(
+        `🧠 AISystem update: processing ${batchSize} agents (total: ${agents.length})`,
+      );
+    }
+
     for (let i = 0; i < batchSize; i++) {
       const idx = (this.agentIndex + i) % agents.length;
       const agent = agents[idx];
@@ -286,7 +289,11 @@ export class AISystem extends EventEmitter {
       if (aiState.offDuty) continue;
 
       // Process agent synchronously
-      this.processAgent(agent.id, aiState, now);
+      try {
+        this.processAgent(agent.id, aiState, now);
+      } catch (error) {
+        logger.error(`Error processing agent ${agent.id}`, { error });
+      }
       processed++;
     }
 
