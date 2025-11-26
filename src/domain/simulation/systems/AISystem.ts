@@ -1205,9 +1205,8 @@ export class AISystem extends EventEmitter {
   private isGoalCompleted(goal: AIGoal, agentId: string): boolean {
     const now = Date.now();
 
-    if (goal.expiresAt && now > goal.expiresAt) {
-      return true;
-    }
+    // Note: Expired goals are handled by isGoalInvalid, not here
+    // A goal can only be "completed" if the objective was achieved
 
     const GOAL_TIMEOUT_MS = 60000;
     if (now - goal.createdAt > GOAL_TIMEOUT_MS) {
@@ -1313,7 +1312,16 @@ export class AISystem extends EventEmitter {
   }
 
   private isGoalInvalid(goal: AIGoal, agentId: string): boolean {
-    if (goal.expiresAt && Date.now() > goal.expiresAt) {
+    const now = Date.now();
+
+    // Goal expired explicitly
+    if (goal.expiresAt && now > goal.expiresAt) {
+      return true;
+    }
+
+    // Goal timed out (stuck for too long)
+    const GOAL_TIMEOUT_MS = 60000;
+    if (now - goal.createdAt > GOAL_TIMEOUT_MS) {
       return true;
     }
 
@@ -1350,13 +1358,13 @@ export class AISystem extends EventEmitter {
     if (goal.type.startsWith("assist_") && goal.data?.targetAgentId) {
       const targetId = goal.data.targetAgentId as string;
       const targetAgent = this.gameState.agents?.find((a) => a.id === targetId);
-      if (!targetAgent) {
+      if (!targetAgent || targetAgent.isDead) {
         return true;
       }
     }
 
     const agent = this.gameState.agents?.find((a) => a.id === agentId);
-    if (!agent) {
+    if (!agent || agent.isDead) {
       return true;
     }
 
@@ -1378,6 +1386,7 @@ export class AISystem extends EventEmitter {
 
   private completeGoal(aiState: AIState, _agentId: string): void {
     aiState.currentGoal = null;
+    aiState.currentAction = null; // Clear action when goal completes
     aiState.lastDecisionTime = getFrameTime();
     this._goalsCompleted++;
   }
@@ -1389,6 +1398,7 @@ export class AISystem extends EventEmitter {
       aiState.memory.failedAttempts?.set(zoneId, fails + 1);
     }
     aiState.currentGoal = null;
+    aiState.currentAction = null; // Clear action when goal fails
     aiState.lastDecisionTime = getFrameTime();
     this._goalsFailed++;
   }
