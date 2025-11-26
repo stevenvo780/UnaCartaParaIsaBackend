@@ -241,6 +241,49 @@ export class StorageService {
     return { saveId, size };
   }
 
+  /**
+   * Saves pre-serialized game state to storage.
+   *
+   * Used when the serialization is offloaded to a worker thread.
+   *
+   * @param {string} content - Serialized JSON content
+   * @param {number} timestamp - Timestamp for the save ID
+   * @returns {Promise<{ saveId: string; size: number }>} Save operation result
+   */
+  async saveSerializedGame(
+    content: string,
+    timestamp: number,
+  ): Promise<{ saveId: string; size: number }> {
+    const saveId = `save_${timestamp}`;
+    let size = 0;
+
+    if (this.useGCS && this.bucket) {
+      const file = this.bucket.file(`${saveId}.json`);
+      await file.save(content, {
+        contentType: "application/json",
+        metadata: { cacheControl: "no-cache" },
+      });
+      const [metadata] = await file.getMetadata();
+      size = parseInt(String(metadata.size || "0"));
+    } else {
+      await this.ensureLocalDir();
+      const filepath = path.join(CONFIG.LOCAL_SAVES_PATH, `${saveId}.json`);
+      await fs.writeFile(filepath, content, "utf-8");
+      const stat = await fs.stat(filepath);
+      size = stat.size;
+    }
+
+    if (CONFIG.NAS.ENABLED) {
+      this.backupToNAS(saveId, content).catch((err) =>
+        logger.error("NAS backup error:", err),
+      );
+    }
+
+    this.cleanOldSaves().catch((err) => logger.error("Cleanup error:", err));
+
+    return { saveId, size };
+  }
+
   async deleteSave(id: string): Promise<boolean> {
     if (this.useGCS && this.bucket) {
       const file = this.bucket.file(`${id}.json`);

@@ -638,7 +638,7 @@ export class LifeCycleSystem extends EventEmitter {
     }
 
     if (this._movementSystem) {
-      this._movementSystem.stopMovement(agentId);
+      this._movementSystem.removeEntityMovement(agentId);
     }
 
     if (this._taskSystem) {

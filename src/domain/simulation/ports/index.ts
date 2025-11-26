@@ -157,6 +157,11 @@ export interface IMovementPort {
   stopMovement(entityId: string): void;
 
   /**
+   * Removes all movement state for an entity (on death)
+   */
+  removeEntityMovement(entityId: string): void;
+
+  /**
    * Gets entity's current position
    */
   getPosition(entityId: string): { x: number; y: number } | undefined;
