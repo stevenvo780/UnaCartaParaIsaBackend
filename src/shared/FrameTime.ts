@@ -14,7 +14,7 @@ let _frameTimestamp = 0;
  * Gets the current frame timestamp.
  * Use this instead of Date.now() within systems.
  *
- * IMPORTANT: If _frameTimestamp is too outdated (>100ms),
+ * If _frameTimestamp is too outdated (>100ms),
  * it is automatically updated. This allows systems to work
  * correctly in tests with fake timers and during development.
  *

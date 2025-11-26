@@ -350,7 +350,6 @@ export class LifeCycleSystem extends EventEmitter {
       const motherNeeds = this.needsSystem.getNeeds(motherId);
       const fatherNeeds = this.needsSystem.getNeeds(fatherId);
 
-      // Require healthy needs to reproduce
       if (
         !motherNeeds ||
         !fatherNeeds ||
@@ -652,7 +651,6 @@ export class LifeCycleSystem extends EventEmitter {
       this.householdSystem.removeAgentFromHousehold(agentId);
     }
 
-    // BUG FIX #1: Record death in genealogy system to update lineage stats
     if (this._genealogySystem) {
       this._genealogySystem.recordDeath(agentId);
     }

@@ -582,8 +582,6 @@ export class AISystem extends EventEmitter {
     }
 
     if (aiState.currentGoal) {
-      // BUG FIX #6: Revalidate goal before executing action to prevent race conditions
-      // Goal may have become invalid between validation and execution
       if (this.goalValidator.isGoalInvalid(aiState.currentGoal, agentId)) {
         logger.debug(
           `⚠️ [AI] Agent ${agentId} goal invalidated before action execution`,
@@ -917,7 +915,7 @@ export class AISystem extends EventEmitter {
 
   /**
    * Create urgent rest goal when energy is critical
-   * Note: Rest has slightly lower effective priority than hunger/thirst since
+   * Rest has slightly lower effective priority than hunger/thirst since
    * agents can idle in place to rest if no zone is available
    */
   private createUrgentRestGoal(agentId: string, now: number): AIGoal | null {
@@ -926,7 +924,7 @@ export class AISystem extends EventEmitter {
 
   /**
    * Create urgent social goal when social need is critical
-   * Note: Social needs are less critical than survival needs, priority 9
+   * Social needs are less critical than survival needs, priority 9
    */
   private createUrgentSocialGoal(agentId: string, now: number): AIGoal | null {
     return this.urgentGoals.createUrgentSocialGoal(agentId, now);
@@ -934,7 +932,7 @@ export class AISystem extends EventEmitter {
 
   /**
    * Create urgent fun goal when fun need is critical
-   * Note: Fun needs are least critical, priority 8
+   * Fun needs are least critical, priority 8
    */
   private createUrgentFunGoal(agentId: string, now: number): AIGoal | null {
     return this.urgentGoals.createUrgentFunGoal(agentId, now);
@@ -1382,7 +1380,6 @@ export class AISystem extends EventEmitter {
     this.actionExecutor.executeAction(action);
   }
 
-  // IAIPort implementation
   public setGoal(
     agentId: string,
     goal: {
@@ -1397,7 +1394,6 @@ export class AISystem extends EventEmitter {
     if (aiState) {
       // Convert goal.type to GoalType and validate
       const goalType = goal.type as GoalType;
-      // Convert goal.data to AIGoalData format
       const goalData: AIGoalData | undefined = goal.data
         ? {
             ...Object.fromEntries(

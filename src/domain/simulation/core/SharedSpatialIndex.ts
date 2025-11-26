@@ -264,7 +264,7 @@ export class SharedSpatialIndex {
 
   /**
    * Queries entities within a radius of a position.
-   * IMPORTANT: Call releaseResults() when done processing to reduce memory allocations.
+   * Call releaseResults() when done processing to reduce memory allocations.
    *
    * @param position - Center position for the query
    * @param radius - Query radius in world units

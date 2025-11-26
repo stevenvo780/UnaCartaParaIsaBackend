@@ -30,8 +30,7 @@ export class TradeSystem {
   }
 
   /**
-   * BUG FIX: Listen to AGENT_DEATH to remove offers from dead agents.
-   * Prevents ghost trade offers from deceased agents.
+   * Sets up listener for agent death to remove offers from dead agents.
    */
   private setupDeathListener(): void {
     simulationEvents.on(

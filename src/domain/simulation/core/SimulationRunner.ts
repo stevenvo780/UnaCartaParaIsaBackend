@@ -57,6 +57,7 @@ import { mapEventName } from "./eventNameMapper";
 import { MultiRateScheduler } from "./MultiRateScheduler";
 import { performanceMonitor } from "./PerformanceMonitor";
 import { DeltaEncoder, type DeltaSnapshot } from "./DeltaEncoder";
+import { MetricsCollector } from "./MetricsCollector";
 import { storageService } from "../../../infrastructure/services/storage/storageService";
 import type {
   SimulationCommand,
@@ -508,6 +509,13 @@ export class SimulationRunner {
             : 0,
           totalBuildings: this.state.zones ? this.state.zones.length : 0,
         });
+
+        // Recopilar métricas de rendimiento (muy ligero, cada 5 seg)
+        this.metricsCollector.tryCollect(
+          this.scheduler,
+          this.gpuComputeService,
+          this.state.agents.length,
+        );
       },
       getEntityCount: () => {
         return (
@@ -957,7 +965,8 @@ export class SimulationRunner {
         }
       } catch (err) {
         logger.warn(
-          `Failed to initialize movement state for agent ${agent.id}: ${err instanceof Error ? err.message : String(err)
+          `Failed to initialize movement state for agent ${agent.id}: ${
+            err instanceof Error ? err.message : String(err)
           }`,
         );
       }
@@ -2307,15 +2316,6 @@ export class SimulationRunner {
 
   private syncGenealogyToState(): void {
     if (this._genealogySystem) {
-      // Cast to any to bypass strict type check if needed, or ensure getSnapshot returns exact match
-      // The issue is that GameState.genealogy expects FamilyTree | SerializedFamilyTree
-      // but getSnapshot returns SerializedFamilyTree & { history: GenealogyEvent[] }
-      // which should be compatible with SerializedFamilyTree if it has all props.
-      // It seems I missed 'relationships' in the previous fix or TS is being strict about excess properties?
-      // Actually, GameState.genealogy is FamilyTree | SerializedFamilyTree.
-      // SerializedFamilyTree has { ancestors, lineages, relationships }.
-      // My getSnapshot returns that PLUS history.
-      // Let's just assign it.
       this.state.genealogy = this._genealogySystem.getSnapshot();
     }
   }
@@ -2788,14 +2788,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                resources?: {
-                  wood?: number;
-                  stone?: number;
-                  food?: number;
-                  water?: number;
-                };
-                minWorkers?: number;
-              }
+                  resources?: {
+                    wood?: number;
+                    stone?: number;
+                    food?: number;
+                    water?: number;
+                  };
+                  minWorkers?: number;
+                }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,
@@ -2837,12 +2837,12 @@ export class SimulationRunner {
       ) {
         this.timeSystem.setWeather(
           weatherType as
-          | "clear"
-          | "cloudy"
-          | "rainy"
-          | "stormy"
-          | "foggy"
-          | "snowy",
+            | "clear"
+            | "cloudy"
+            | "rainy"
+            | "stormy"
+            | "foggy"
+            | "snowy",
         );
         logger.info(`Weather set to ${weatherType} via TIME_COMMAND`);
       } else {
@@ -2948,12 +2948,12 @@ export class SimulationRunner {
       social,
       ai: aiState
         ? {
-          currentGoal: aiState.currentGoal,
-          goalQueue: aiState.goalQueue,
-          currentAction: aiState.currentAction,
-          offDuty: aiState.offDuty,
-          lastDecisionTime: aiState.lastDecisionTime,
-        }
+            currentGoal: aiState.currentGoal,
+            goalQueue: aiState.goalQueue,
+            currentAction: aiState.currentAction,
+            offDuty: aiState.offDuty,
+            lastDecisionTime: aiState.lastDecisionTime,
+          }
         : null,
     };
   }
@@ -2975,4 +2975,5 @@ export class SimulationRunner {
       }
     }, 60000);
   }
+
 }

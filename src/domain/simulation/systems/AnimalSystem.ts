@@ -251,8 +251,6 @@ export class AnimalSystem {
       }
 
       const oldPosition = { ...animal.position };
-      // Fix: Multiply deltaSeconds by IDLE_UPDATE_DIVISOR because this animal was skipped for (DIVISOR-1) frames
-      // This ensures it moves the full distance it would have moved in those frames
       this.updateAnimalBehavior(
         animal,
         deltaSeconds * this.IDLE_UPDATE_DIVISOR,
@@ -528,7 +526,6 @@ export class AnimalSystem {
     const cacheKey = `predator_${animal.id}`;
     const cached = this.threatSearchCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
-      // BUG FIX #5: Validate cached threat is still alive before returning
       if (cached.threat) {
         const cachedAnimal = this.animals.get(cached.threat.id);
         if (!cachedAnimal || cachedAnimal.isDead) {

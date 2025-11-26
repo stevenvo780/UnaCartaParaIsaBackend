@@ -48,10 +48,22 @@ export class GenealogySystem {
 
     if (fatherId) {
       const father = this.familyTree.ancestors.get(fatherId);
-      if (father) lineageId = father.lineageId;
-    } else if (motherId) {
+      if (father) {
+        lineageId = father.lineageId;
+        if (!father.children.includes(agent.id)) {
+          father.children.push(agent.id);
+        }
+      }
+    }
+
+    if (motherId) {
       const mother = this.familyTree.ancestors.get(motherId);
-      if (mother) lineageId = mother.lineageId;
+      if (mother) {
+        if (lineageId === "unknown") lineageId = mother.lineageId;
+        if (!mother.children.includes(agent.id)) {
+          mother.children.push(agent.id);
+        }
+      }
     }
 
     if (lineageId === "unknown") {
@@ -170,7 +182,6 @@ export class GenealogySystem {
 
     const ancestorsArray = Array.from(this.familyTree.ancestors.values());
 
-    // Relationships can remain as object/map or be converted if needed.
     // Frontend ClientGenealogySystem doesn't seem to use relationships directly from snapshot in syncFromBackend?
     // It syncs lineages and ancestors.
     // But let's keep relationships as object for now or check if it needs array.

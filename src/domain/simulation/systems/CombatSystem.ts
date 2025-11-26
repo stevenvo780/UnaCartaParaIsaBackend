@@ -520,10 +520,6 @@ export class CombatSystem {
     weaponId: WeaponId,
     timestamp: number,
   ): void {
-    /**
-     * TOCTOU fix: Re-check target state before applying damage.
-     * Target may have died between shouldAttack check and now.
-     */
     if (target.isDead) {
       return;
     }

@@ -145,10 +145,8 @@ export class EnhancedCraftingSystem {
 
   /**
    * Applies the output of a completed crafting recipe.
-   *
-   * NOTE: Due to the simplified inventory system (ResourceType only),
+   * Due to the simplified inventory system (ResourceType only),
    * crafted items are converted to their base resource type.
-   * A proper item-based inventory would store items individually.
    */
   private applyOutput(agentId: string, recipe: CraftingRecipe): void {
     const output = recipe.output.itemId;
@@ -193,13 +191,11 @@ export class EnhancedCraftingSystem {
 
   /**
    * Maps item IDs to base resource types.
-   *
-   * NOTE: This is a workaround for the architectural mismatch between:
+   * This is a workaround for the architectural mismatch between:
    * - RecipesCatalog (uses specific item IDs like "fiber", "iron_ore", "wheat")
    * - Inventory system (uses only ResourceType: wood|stone|food|water|rare_materials)
    *
    * Items are collapsed into their closest resource category.
-   * A proper fix would require an item-based inventory system.
    */
   private mapToResourceKey(itemId: string): ResourceType | null {
     // Direct resource types
