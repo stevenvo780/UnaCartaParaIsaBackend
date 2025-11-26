@@ -30,12 +30,69 @@ export class GPUComputeService {
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
+    console.log("🔍 [GPUComputeService] Starting GPU detection...");
+    console.log(`🔍 [GPUComputeService] Environment vars:`);
+    console.log(`   CUDA_VISIBLE_DEVICES: ${process.env.CUDA_VISIBLE_DEVICES}`);
+    console.log(
+      `   NVIDIA_VISIBLE_DEVICES: ${process.env.NVIDIA_VISIBLE_DEVICES}`,
+    );
+    console.log(
+      `   TF_FORCE_GPU_ALLOW_GROWTH: ${process.env.TF_FORCE_GPU_ALLOW_GROWTH}`,
+    );
+    console.log(`   LD_LIBRARY_PATH: ${process.env.LD_LIBRARY_PATH}`);
+
     try {
+      console.log("🔍 [GPUComputeService] Calling tf.ready()...");
       await tf.ready();
+
       const backend = tf.getBackend();
+      console.log(`🔍 [GPUComputeService] TensorFlow backend: ${backend}`);
+
+      // Obtener info de memoria GPU si está disponible
+      try {
+        const memInfo = tf.memory();
+        console.log(
+          `🔍 [GPUComputeService] TF Memory info:`,
+          JSON.stringify(memInfo),
+        );
+      } catch (memErr) {
+        console.log(
+          `🔍 [GPUComputeService] Could not get memory info: ${memErr}`,
+        );
+      }
+
+      // Intentar una operación simple para verificar GPU real
+      try {
+        console.log(
+          "🔍 [GPUComputeService] Testing GPU with simple tensor operation...",
+        );
+        const testStart = performance.now();
+        const testTensor = tf.randomNormal([1000, 1000]);
+        const result = testTensor.matMul(testTensor.transpose());
+        await result.data(); // Forzar ejecución
+        const testTime = performance.now() - testStart;
+        testTensor.dispose();
+        result.dispose();
+        console.log(
+          `✅ [GPUComputeService] GPU test matmul (1000x1000) completed in ${testTime.toFixed(2)}ms`,
+        );
+      } catch (testErr) {
+        console.warn(`⚠️ [GPUComputeService] GPU test failed: ${testErr}`);
+      }
+
+      // Listar backends disponibles
+      console.log(
+        `🔍 [GPUComputeService] Registered backends:`,
+        tf.engine().registryFactory,
+      );
 
       const gpuBackends = ["tensorflow", "cuda", "webgl", "webgpu"];
       this.gpuAvailable = gpuBackends.includes(backend?.toLowerCase() ?? "");
+
+      const status = this.gpuAvailable
+        ? "✅ GPU AVAILABLE"
+        : "❌ GPU NOT AVAILABLE (CPU fallback)";
+      console.log(`🚀 [GPUComputeService] ${status} - Backend: ${backend}`);
 
       logger.info(
         `🚀 GPUComputeService initialized - Backend: ${backend} (GPU: ${this.gpuAvailable ? "available" : "unavailable, using CPU"})`,
@@ -43,6 +100,10 @@ export class GPUComputeService {
 
       this.initialized = true;
     } catch (error) {
+      console.error(
+        `❌ [GPUComputeService] Error initializing TensorFlow:`,
+        error,
+      );
       logger.warn(
         `⚠️ Error initializing TensorFlow, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -242,8 +303,21 @@ export class GPUComputeService {
       return tf.tidy(() => {
         const needsT = tf.tensor2d(needs, [entityCount, needCount]);
         const decayRatesT = tf.tensor1d(decayRates);
-        const ageMultT = tf.tensor1d(ageMultipliers).expandDims(1);
-        const divineMultT = tf.tensor1d(divineModifiers).expandDims(1);
+
+        // Ensure ageMultipliers and divineModifiers have correct size
+        // If sizes don't match, create default arrays of 1.0
+        let ageMultArray = ageMultipliers;
+        let divineMultArray = divineModifiers;
+
+        if (ageMultipliers.length !== entityCount) {
+          ageMultArray = new Float32Array(entityCount).fill(1.0);
+        }
+        if (divineModifiers.length !== entityCount) {
+          divineMultArray = new Float32Array(entityCount).fill(1.0);
+        }
+
+        const ageMultT = tf.tensor1d(ageMultArray).expandDims(1);
+        const divineMultT = tf.tensor1d(divineMultArray).expandDims(1);
 
         const finalMultiplier = ageMultT.mul(divineMultT);
 
@@ -666,6 +740,432 @@ export class GPUComputeService {
     this.performanceStats.totalCpuTime += elapsed;
 
     return newValues;
+  }
+
+  /**
+   * Logs current performance statistics. Call periodically for monitoring.
+   */
+  logPerformanceStats(): void {
+    const stats = this.getPerformanceStats();
+    const memInfo = tf.memory();
+    const totalOps = stats.gpuOperations + stats.cpuFallbacks;
+    const gpuRatio = totalOps > 0 ? (stats.gpuOperations / totalOps) * 100 : 0;
+
+    console.log(`📊 [GPUComputeService] Performance Stats:`);
+    console.log(`   GPU Available: ${stats.gpuAvailable}`);
+    console.log(
+      `   GPU Operations: ${stats.gpuOperations} (avg ${stats.avgGpuTime.toFixed(2)}ms)`,
+    );
+    console.log(
+      `   CPU Fallbacks: ${stats.cpuFallbacks} (avg ${stats.avgCpuTime.toFixed(2)}ms)`,
+    );
+    console.log(`   GPU Usage Ratio: ${gpuRatio.toFixed(1)}%`);
+    console.log(`   TF Memory: ${JSON.stringify(memInfo)}`);
+  }
+
+  /**
+   * Resets performance statistics.
+   */
+  resetStats(): void {
+    this.performanceStats = {
+      gpuOperations: 0,
+      cpuFallbacks: 0,
+      totalGpuTime: 0,
+      totalCpuTime: 0,
+    };
+  }
+
+  // ==================== SPATIAL QUERY OPTIMIZATIONS ====================
+
+  /**
+   * Computes squared distances from a center point to all entity positions in batch.
+   * Much faster than individual distance calculations for large entity counts.
+   *
+   * @param centerX - Center X coordinate
+   * @param centerY - Center Y coordinate
+   * @param positions - Flat array [x1, y1, x2, y2, ...] of entity positions
+   * @returns Array of squared distances for each entity
+   */
+  computeDistancesBatch(
+    centerX: number,
+    centerY: number,
+    positions: Float32Array,
+  ): Float32Array {
+    const startTime = performance.now();
+    const entityCount = positions.length / 2;
+
+    if (!this.gpuAvailable || entityCount < 50) {
+      return this.computeDistancesBatchCPU(centerX, centerY, positions);
+    }
+
+    try {
+      return tf.tidy(() => {
+        const posT = tf.tensor2d(positions, [entityCount, 2]);
+        const centerT = tf.tensor1d([centerX, centerY]);
+
+        const diff = posT.sub(centerT);
+        const diffSq = diff.square();
+        const distSq = diffSq.sum(1);
+
+        const result = distSq.dataSync() as Float32Array;
+
+        const elapsed = performance.now() - startTime;
+        this.performanceStats.gpuOperations++;
+        this.performanceStats.totalGpuTime += elapsed;
+
+        return result;
+      });
+    } catch (error) {
+      logger.warn(
+        `⚠️ Error in GPU computeDistancesBatch: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      this.performanceStats.cpuFallbacks++;
+      return this.computeDistancesBatchCPU(centerX, centerY, positions);
+    }
+  }
+
+  private computeDistancesBatchCPU(
+    centerX: number,
+    centerY: number,
+    positions: Float32Array,
+  ): Float32Array {
+    const startTime = performance.now();
+    const entityCount = positions.length / 2;
+    const distances = new Float32Array(entityCount);
+
+    for (let i = 0; i < entityCount; i++) {
+      const dx = positions[i * 2] - centerX;
+      const dy = positions[i * 2 + 1] - centerY;
+      distances[i] = dx * dx + dy * dy;
+    }
+
+    const elapsed = performance.now() - startTime;
+    this.performanceStats.totalCpuTime += elapsed;
+    return distances;
+  }
+
+  /**
+   * Filters entities within a radius using GPU-computed distances.
+   * Returns indices of entities within radiusSq.
+   *
+   * @param distancesSq - Squared distances array from computeDistancesBatch
+   * @param radiusSq - Squared radius threshold
+   * @returns Indices of entities within radius
+   */
+  filterByRadius(distancesSq: Float32Array, radiusSq: number): number[] {
+    const indices: number[] = [];
+    for (let i = 0; i < distancesSq.length; i++) {
+      if (distancesSq[i] <= radiusSq) {
+        indices.push(i);
+      }
+    }
+    return indices;
+  }
+
+  // ==================== SOCIAL SYSTEM OPTIMIZATIONS ====================
+
+  /**
+   * Applies decay to social affinity edges in batch.
+   * Positive values decay towards 0, negative values also decay towards 0.
+   *
+   * @param affinities - Array of affinity values
+   * @param decayRate - Decay rate per second
+   * @param deltaSeconds - Elapsed time
+   * @param minAffinity - Minimum threshold (below this becomes 0)
+   * @returns Updated affinity values
+   */
+  decayAffinitiesBatch(
+    affinities: Float32Array,
+    decayRate: number,
+    deltaSeconds: number,
+    minAffinity: number = 0.001,
+  ): Float32Array {
+    const startTime = performance.now();
+    const count = affinities.length;
+
+    if (!this.gpuAvailable || count < 100) {
+      return this.decayAffinitiesBatchCPU(
+        affinities,
+        decayRate,
+        deltaSeconds,
+        minAffinity,
+      );
+    }
+
+    try {
+      return tf.tidy(() => {
+        const affT = tf.tensor1d(affinities);
+        const decayAmount = decayRate * deltaSeconds;
+
+        // For positive values: subtract decay, clamp to 0
+        // For negative values: add decay, clamp to 0
+        const sign = affT.sign();
+        const absAff = affT.abs();
+        const decayed = absAff.sub(decayAmount).maximum(0);
+        const result = decayed.mul(sign);
+
+        // Apply minimum threshold
+        const thresholdMask = result.abs().greater(minAffinity);
+        const finalResult = result.mul(thresholdMask.cast("float32"));
+
+        const output = finalResult.dataSync() as Float32Array;
+
+        const elapsed = performance.now() - startTime;
+        this.performanceStats.gpuOperations++;
+        this.performanceStats.totalGpuTime += elapsed;
+
+        return output;
+      });
+    } catch (error) {
+      logger.warn(
+        `⚠️ Error in GPU decayAffinitiesBatch: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      this.performanceStats.cpuFallbacks++;
+      return this.decayAffinitiesBatchCPU(
+        affinities,
+        decayRate,
+        deltaSeconds,
+        minAffinity,
+      );
+    }
+  }
+
+  private decayAffinitiesBatchCPU(
+    affinities: Float32Array,
+    decayRate: number,
+    deltaSeconds: number,
+    minAffinity: number,
+  ): Float32Array {
+    const startTime = performance.now();
+    const result = new Float32Array(affinities.length);
+    const decayAmount = decayRate * deltaSeconds;
+
+    for (let i = 0; i < affinities.length; i++) {
+      const val = affinities[i];
+      if (Math.abs(val) < minAffinity) {
+        result[i] = 0;
+      } else if (val > 0) {
+        result[i] = Math.max(0, val - decayAmount);
+      } else {
+        result[i] = Math.min(0, val + decayAmount);
+      }
+    }
+
+    const elapsed = performance.now() - startTime;
+    this.performanceStats.totalCpuTime += elapsed;
+    return result;
+  }
+
+  /**
+   * Computes pairwise distances for proximity reinforcement.
+   * Returns a matrix of squared distances between all pairs.
+   *
+   * @param positions - Flat array [x1, y1, x2, y2, ...] of positions
+   * @param maxEntities - Limit computation to first N entities (performance)
+   * @returns Flat array of pairwise squared distances (upper triangle)
+   */
+  computePairwiseDistances(
+    positions: Float32Array,
+    maxEntities: number = 100,
+  ): { distances: Float32Array; pairCount: number } {
+    const startTime = performance.now();
+    const entityCount = Math.min(positions.length / 2, maxEntities);
+    const pairCount = (entityCount * (entityCount - 1)) / 2;
+
+    if (!this.gpuAvailable || entityCount < 20) {
+      return this.computePairwiseDistancesCPU(positions, maxEntities);
+    }
+
+    try {
+      return tf.tidy(() => {
+        const posT = tf.tensor2d(positions.slice(0, entityCount * 2), [
+          entityCount,
+          2,
+        ]);
+
+        // Expand dims for broadcasting: [n, 1, 2] - [1, n, 2] = [n, n, 2]
+        const pos1 = posT.expandDims(1);
+        const pos2 = posT.expandDims(0);
+        const diff = pos1.sub(pos2);
+        const distSq = diff.square().sum(2);
+
+        // Extract upper triangle (excluding diagonal)
+        const distMatrix = distSq.arraySync() as number[][];
+        const distances = new Float32Array(pairCount);
+        let idx = 0;
+        for (let i = 0; i < entityCount; i++) {
+          for (let j = i + 1; j < entityCount; j++) {
+            distances[idx++] = distMatrix[i][j];
+          }
+        }
+
+        const elapsed = performance.now() - startTime;
+        this.performanceStats.gpuOperations++;
+        this.performanceStats.totalGpuTime += elapsed;
+
+        return { distances, pairCount };
+      });
+    } catch (error) {
+      logger.warn(
+        `⚠️ Error in GPU computePairwiseDistances: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      this.performanceStats.cpuFallbacks++;
+      return this.computePairwiseDistancesCPU(positions, maxEntities);
+    }
+  }
+
+  private computePairwiseDistancesCPU(
+    positions: Float32Array,
+    maxEntities: number,
+  ): { distances: Float32Array; pairCount: number } {
+    const startTime = performance.now();
+    const entityCount = Math.min(positions.length / 2, maxEntities);
+    const pairCount = (entityCount * (entityCount - 1)) / 2;
+    const distances = new Float32Array(pairCount);
+
+    let idx = 0;
+    for (let i = 0; i < entityCount; i++) {
+      const x1 = positions[i * 2];
+      const y1 = positions[i * 2 + 1];
+      for (let j = i + 1; j < entityCount; j++) {
+        const dx = positions[j * 2] - x1;
+        const dy = positions[j * 2 + 1] - y1;
+        distances[idx++] = dx * dx + dy * dy;
+      }
+    }
+
+    const elapsed = performance.now() - startTime;
+    this.performanceStats.totalCpuTime += elapsed;
+    return { distances, pairCount };
+  }
+
+  // ==================== ANIMAL BEHAVIOR OPTIMIZATIONS ====================
+
+  /**
+   * Computes flee vectors for multiple animals in batch.
+   * Each animal flees away from the nearest threat.
+   *
+   * @param animalPositions - Flat array [x1, y1, x2, y2, ...] of animal positions
+   * @param threatPositions - Flat array of threat positions (predators/humans)
+   * @param fleeSpeed - Base flee speed multiplier
+   * @param deltaSeconds - Elapsed time
+   * @returns New positions after fleeing
+   */
+  computeFleeVectorsBatch(
+    animalPositions: Float32Array,
+    threatPositions: Float32Array,
+    fleeSpeed: number,
+    deltaSeconds: number,
+  ): Float32Array {
+    const startTime = performance.now();
+    const animalCount = animalPositions.length / 2;
+    const threatCount = threatPositions.length / 2;
+
+    if (!this.gpuAvailable || animalCount < 20 || threatCount === 0) {
+      return this.computeFleeVectorsBatchCPU(
+        animalPositions,
+        threatPositions,
+        fleeSpeed,
+        deltaSeconds,
+      );
+    }
+
+    try {
+      return tf.tidy(() => {
+        const animalsT = tf.tensor2d(animalPositions, [animalCount, 2]);
+        const threatsT = tf.tensor2d(threatPositions, [threatCount, 2]);
+
+        // Compute distances from each animal to each threat
+        const animalExp = animalsT.expandDims(1); // [animals, 1, 2]
+        const threatExp = threatsT.expandDims(0); // [1, threats, 2]
+        const diff = animalExp.sub(threatExp); // [animals, threats, 2]
+        const distSq = diff.square().sum(2); // [animals, threats]
+
+        // Find nearest threat for each animal
+        const nearestIdx = distSq.argMin(1); // [animals]
+        const nearestIdxArray = nearestIdx.arraySync() as number[];
+
+        // Compute flee direction (away from nearest threat)
+        const newPositions = new Float32Array(animalPositions);
+        const moveAmount = fleeSpeed * deltaSeconds;
+
+        for (let i = 0; i < animalCount; i++) {
+          const threatIdx = nearestIdxArray[i];
+          const dx = animalPositions[i * 2] - threatPositions[threatIdx * 2];
+          const dy =
+            animalPositions[i * 2 + 1] - threatPositions[threatIdx * 2 + 1];
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist > 0.001) {
+            newPositions[i * 2] += (dx / dist) * moveAmount;
+            newPositions[i * 2 + 1] += (dy / dist) * moveAmount;
+          }
+        }
+
+        const elapsed = performance.now() - startTime;
+        this.performanceStats.gpuOperations++;
+        this.performanceStats.totalGpuTime += elapsed;
+
+        return newPositions;
+      });
+    } catch (error) {
+      logger.warn(
+        `⚠️ Error in GPU computeFleeVectorsBatch: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      this.performanceStats.cpuFallbacks++;
+      return this.computeFleeVectorsBatchCPU(
+        animalPositions,
+        threatPositions,
+        fleeSpeed,
+        deltaSeconds,
+      );
+    }
+  }
+
+  private computeFleeVectorsBatchCPU(
+    animalPositions: Float32Array,
+    threatPositions: Float32Array,
+    fleeSpeed: number,
+    deltaSeconds: number,
+  ): Float32Array {
+    const startTime = performance.now();
+    const animalCount = animalPositions.length / 2;
+    const threatCount = threatPositions.length / 2;
+    const newPositions = new Float32Array(animalPositions);
+    const moveAmount = fleeSpeed * deltaSeconds;
+
+    for (let i = 0; i < animalCount; i++) {
+      const ax = animalPositions[i * 2];
+      const ay = animalPositions[i * 2 + 1];
+
+      // Find nearest threat
+      let nearestDistSq = Infinity;
+      let nearestThreatIdx = 0;
+
+      for (let j = 0; j < threatCount; j++) {
+        const dx = ax - threatPositions[j * 2];
+        const dy = ay - threatPositions[j * 2 + 1];
+        const distSq = dx * dx + dy * dy;
+        if (distSq < nearestDistSq) {
+          nearestDistSq = distSq;
+          nearestThreatIdx = j;
+        }
+      }
+
+      // Move away from nearest threat
+      const dx = ax - threatPositions[nearestThreatIdx * 2];
+      const dy = ay - threatPositions[nearestThreatIdx * 2 + 1];
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist > 0.001) {
+        newPositions[i * 2] += (dx / dist) * moveAmount;
+        newPositions[i * 2 + 1] += (dy / dist) * moveAmount;
+      }
+    }
+
+    const elapsed = performance.now() - startTime;
+    this.performanceStats.totalCpuTime += elapsed;
+    return newPositions;
   }
 
   /**

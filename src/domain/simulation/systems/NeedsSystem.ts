@@ -13,6 +13,7 @@ import { injectable, inject, unmanaged, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
 import type { SharedSpatialIndex } from "../core/SharedSpatialIndex";
+import type { GPUComputeService } from "../core/GPUComputeService";
 import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
@@ -79,6 +80,9 @@ export class NeedsSystem extends EventEmitter {
     @inject(TYPES.SharedSpatialIndex)
     @optional()
     spatialIndex?: SharedSpatialIndex,
+    @inject(TYPES.GPUComputeService)
+    @optional()
+    gpuService?: GPUComputeService,
   ) {
     super();
     this.gameState = gameState;
@@ -109,7 +113,10 @@ export class NeedsSystem extends EventEmitter {
     };
 
     this.entityNeeds = new Map();
-    this.batchProcessor = new NeedsBatchProcessor();
+    this.batchProcessor = new NeedsBatchProcessor(gpuService);
+    if (gpuService?.isGPUAvailable()) {
+      logger.info("🧠 NeedsSystem: GPU acceleration enabled for batch processing");
+    }
 
     if (systems) {
       this.lifeCyclePort = systems.lifeCyclePort;

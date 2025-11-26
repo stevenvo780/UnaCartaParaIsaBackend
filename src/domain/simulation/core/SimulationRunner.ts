@@ -1752,6 +1752,8 @@ export class SimulationRunner {
     return colors[zoneType] || "#C4B998";
   }
 
+  private gpuStatsInterval?: NodeJS.Timeout;
+
   /**
    * Starts the simulation using the multi-rate scheduler.
    */
@@ -1768,6 +1770,11 @@ export class SimulationRunner {
       rates: { FAST: "50ms", MEDIUM: "250ms", SLOW: "1000ms" },
       agentsCount: this.state.agents.length,
     });
+
+    // Log GPU stats every 30 seconds
+    this.gpuStatsInterval = setInterval(() => {
+      this.gpuComputeService.logPerformanceStats();
+    }, 30000);
   }
 
   /**
@@ -1781,6 +1788,11 @@ export class SimulationRunner {
     if (this.tickHandle) {
       clearInterval(this.tickHandle);
       this.tickHandle = undefined;
+    }
+
+    if (this.gpuStatsInterval) {
+      clearInterval(this.gpuStatsInterval);
+      this.gpuStatsInterval = undefined;
     }
 
     if (this.snapshotWorker) {

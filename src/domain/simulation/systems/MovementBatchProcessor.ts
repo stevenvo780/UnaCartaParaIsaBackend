@@ -1,8 +1,7 @@
 import type { EntityMovementState } from "./MovementSystem";
 import { logger } from "../../../infrastructure/utils/logger";
 import type { GPUComputeService } from "../core/GPUComputeService";
-import { inject, injectable, optional } from "inversify";
-import { TYPES } from "../../../config/Types";
+import { injectable } from "inversify";
 
 /**
  * Procesador batch optimizado para movimiento de entidades
@@ -21,10 +20,13 @@ export class MovementBatchProcessor {
   private readonly FATIGUE_PENALTY_MULTIPLIER = 0.5;
   private gpuService?: GPUComputeService;
 
-  constructor(
-    @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
-  ) {
+  constructor(gpuService?: GPUComputeService) {
     this.gpuService = gpuService;
+    if (gpuService?.isGPUAvailable()) {
+      logger.info("🚶 MovementBatchProcessor: GPU service connected and available");
+    } else {
+      logger.info("🚶 MovementBatchProcessor: Using CPU fallback (no GPU service)");
+    }
   }
 
   public rebuildBuffers(

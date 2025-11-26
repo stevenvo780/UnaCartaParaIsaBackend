@@ -8,8 +8,9 @@ import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "node:perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
 
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import type { GPUComputeService } from "../core/GPUComputeService";
 
 /**
  * System for managing social relationships between agents.
@@ -48,9 +49,14 @@ export class SocialSystem {
   private readonly POSITION_THRESHOLD = 2;
   /** Dirty flag to skip recomputeGroups when no edges changed */
   private edgesModified = false;
+  private gpuService?: GPUComputeService;
 
-  constructor(@inject(TYPES.GameState) gameState: GameState) {
+  constructor(
+    @inject(TYPES.GameState) gameState: GameState,
+    @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
+  ) {
     this.gameState = gameState;
+    this.gpuService = gpuService;
     this.config = {
       proximityRadius: 100,
       reinforcementPerSecond: 0.05,
@@ -177,12 +183,26 @@ export class SocialSystem {
 
   /**
    * 🔧 FIX: Decay optimizado que solo procesa edges con valores no-cero significativos
+   * Uses GPU for batch decay when available and edge count is high
    */
   private decayEdgesOptimized(dt: number): void {
     const decayAmount = this.config.decayPerSecond * dt;
     const bondDecayAmount = decayAmount * 0.05;
     const minAffinity = 0.001;
 
+    // Collect all edges for potential GPU batch processing
+    let totalEdges = 0;
+    for (const neighbors of this.edges.values()) {
+      totalEdges += neighbors.size;
+    }
+
+    // Use GPU batch processing for large edge counts
+    if (this.gpuService?.isGPUAvailable() && totalEdges > 200) {
+      this.decayEdgesGPU(dt, minAffinity);
+      return;
+    }
+
+    // CPU fallback for small edge counts
     for (const [aId, neighbors] of this.edges) {
       for (const [bId, affinity] of neighbors) {
         if (Math.abs(affinity) < minAffinity) {
@@ -205,6 +225,54 @@ export class SocialSystem {
 
         neighbors.set(bId, newAffinity);
       }
+    }
+  }
+
+  /**
+   * GPU-accelerated edge decay for large social networks
+   */
+  private decayEdgesGPU(dt: number, minAffinity: number): void {
+    
+    // Collect non-bond edges for GPU processing
+    const edgeList: Array<{ aId: string; bId: string; affinity: number; hasBond: boolean }> = [];
+    
+    for (const [aId, neighbors] of this.edges) {
+      for (const [bId, affinity] of neighbors) {
+        if (aId < bId) { // Avoid duplicates
+          const hasBond = !!(this.permanentBonds.get(aId)?.get(bId) || this.permanentBonds.get(bId)?.get(aId));
+          edgeList.push({ aId, bId, affinity, hasBond });
+        }
+      }
+    }
+    
+    if (edgeList.length === 0) return;
+    
+    // Separate bonded and non-bonded edges
+    const nonBondedAffinities = new Float32Array(edgeList.filter(e => !e.hasBond).map(e => e.affinity));
+    const bondedAffinities = new Float32Array(edgeList.filter(e => e.hasBond).map(e => e.affinity));
+    
+    // GPU batch decay
+    let newNonBonded: Float32Array | null = null;
+    let newBonded: Float32Array | null = null;
+    
+    if (nonBondedAffinities.length > 0) {
+      newNonBonded = this.gpuService!.decayAffinitiesBatch(nonBondedAffinities, this.config.decayPerSecond, dt, minAffinity);
+    }
+    if (bondedAffinities.length > 0) {
+      newBonded = this.gpuService!.decayAffinitiesBatch(bondedAffinities, this.config.decayPerSecond * 0.05, dt, minAffinity);
+    }
+    
+    // Apply results back
+    let nonBondedIdx = 0;
+    let bondedIdx = 0;
+    
+    for (const edge of edgeList) {
+      const newAffinity = edge.hasBond 
+        ? (newBonded ? newBonded[bondedIdx++] : edge.affinity)
+        : (newNonBonded ? newNonBonded[nonBondedIdx++] : edge.affinity);
+      
+      this.edges.get(edge.aId)?.set(edge.bId, newAffinity);
+      this.edges.get(edge.bId)?.set(edge.aId, newAffinity);
     }
   }
 

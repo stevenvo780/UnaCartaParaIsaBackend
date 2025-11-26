@@ -27,6 +27,7 @@ const DEFAULT_CONFIG: AnimalSystemConfig = {
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import type { GPUComputeService } from "../core/GPUComputeService";
 
 @injectable()
 export class AnimalSystem {
@@ -94,11 +95,17 @@ export class AnimalSystem {
     @inject(TYPES.TerrainSystem)
     @optional()
     private terrainSystem?: TerrainSystem,
+    @inject(TYPES.GPUComputeService)
+    @optional()
+    gpuService?: GPUComputeService,
   ) {
     this.gameState = gameState;
     this.worldResourceSystem = worldResourceSystem;
     this.config = DEFAULT_CONFIG;
-    this.batchProcessor = new AnimalBatchProcessor();
+    this.batchProcessor = new AnimalBatchProcessor(gpuService);
+    if (gpuService?.isGPUAvailable()) {
+      logger.info("🐾 AnimalSystem: GPU acceleration enabled for batch processing");
+    }
 
     this.setupEventListeners();
     logger.info("🐾 AnimalSystem (Backend) initialized");

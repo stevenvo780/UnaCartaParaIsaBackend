@@ -8,6 +8,7 @@ import { GameEventNames, simulationEvents } from "../core/events";
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
+import type { GPUComputeService } from "../core/GPUComputeService";
 import { getFrameTime } from "../../../shared/FrameTime";
 import {
   estimateTravelTime,
@@ -145,6 +146,7 @@ export class MovementSystem extends EventEmitter {
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
     @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
+    @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
   ) {
     super();
     this.gameState = gameState;
@@ -166,7 +168,10 @@ export class MovementSystem extends EventEmitter {
 
     this.precomputeZoneDistances();
     this.initializeObstacles();
-    this.batchProcessor = new MovementBatchProcessor();
+    this.batchProcessor = new MovementBatchProcessor(gpuService);
+    if (gpuService?.isGPUAvailable()) {
+      logger.info("🚶 MovementSystem: GPU acceleration enabled for batch processing");
+    }
 
     logger.info("🚶 MovementSystem initialized", {
       gridSize: `${this.gridWidth}x${this.gridHeight}`,

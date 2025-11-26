@@ -1,8 +1,7 @@
 import type { Animal } from "../../types/simulation/animals";
 import { logger } from "../../../infrastructure/utils/logger";
 import type { GPUComputeService } from "../core/GPUComputeService";
-import { inject, injectable, optional } from "inversify";
-import { TYPES } from "../../../config/Types";
+import { injectable } from "inversify";
 
 /**
  * Procesador batch optimizado para animales
@@ -20,10 +19,13 @@ export class AnimalBatchProcessor {
   private readonly NEED_COUNT = 4;
   private gpuService?: GPUComputeService;
 
-  constructor(
-    @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
-  ) {
+  constructor(gpuService?: GPUComputeService) {
     this.gpuService = gpuService;
+    if (gpuService?.isGPUAvailable()) {
+      logger.info("🐾 AnimalBatchProcessor: GPU service connected and available");
+    } else {
+      logger.info("🐾 AnimalBatchProcessor: Using CPU fallback (no GPU service)");
+    }
   }
 
   /**

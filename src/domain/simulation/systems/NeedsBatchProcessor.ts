@@ -1,8 +1,7 @@
 import type { EntityNeedsData } from "../../types/simulation/needs";
 import { logger } from "../../../infrastructure/utils/logger";
 import type { GPUComputeService } from "../core/GPUComputeService";
-import { inject, injectable, optional } from "inversify";
-import { TYPES } from "../../../config/Types";
+import { injectable } from "inversify";
 
 /**
  * Procesador batch optimizado para necesidades de entidades
@@ -16,10 +15,13 @@ export class NeedsBatchProcessor {
   private bufferDirty = true;
   private gpuService?: GPUComputeService;
 
-  constructor(
-    @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
-  ) {
+  constructor(gpuService?: GPUComputeService) {
     this.gpuService = gpuService;
+    if (gpuService?.isGPUAvailable()) {
+      logger.info("🧠 NeedsBatchProcessor: GPU service connected and available");
+    } else {
+      logger.info("🧠 NeedsBatchProcessor: Using CPU fallback (no GPU service)");
+    }
   }
 
   public rebuildBuffers(entityNeeds: Map<string, EntityNeedsData>): void {

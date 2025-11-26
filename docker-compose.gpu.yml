@@ -3,8 +3,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.gpu
+      network: host
     ports:
       - "8080:8080"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     volumes:
       # Montar código para desarrollo (hot reload)
       - ./src:/app/src:ro
@@ -28,3 +32,10 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - default
+      - uci-monitoring
+
+networks:
+  uci-monitoring:
+    external: true
