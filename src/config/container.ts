@@ -64,6 +64,7 @@ import { MovementSystem } from "../domain/simulation/systems/MovementSystem";
 import { AppearanceGenerationSystem } from "../domain/simulation/systems/AppearanceGenerationSystem";
 import { EntityIndex } from "../domain/simulation/core/EntityIndex";
 import { SharedSpatialIndex } from "../domain/simulation/core/SharedSpatialIndex";
+import { TerrainSystem } from "../domain/simulation/systems/TerrainSystem";
 import { GPUComputeService } from "../domain/simulation/core/GPUComputeService";
 
 export const container = new Container();
@@ -241,6 +242,11 @@ container
 container
   .bind<GPUComputeService>(TYPES.GPUComputeService)
   .to(GPUComputeService)
+  .inSingletonScope();
+
+container
+  .bind<TerrainSystem>(TYPES.TerrainSystem)
+  .to(TerrainSystem)
   .inSingletonScope();
 
 container

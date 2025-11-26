@@ -37,12 +37,38 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/0-home-overview.json
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_USERS_DEFAULT_THEME=dark
+      # Alerting configuration
+      - GF_UNIFIED_ALERTING_ENABLED=true
+      - GF_ALERTING_ENABLED=false
+      - GF_UNIFIED_ALERTING_EXECUTE_ALERTS=true
+      # Feature toggles
+      - GF_FEATURE_TOGGLES_ENABLE=ngalert
+      # SMTP for email alerts (configure as needed)
+      - GF_SMTP_ENABLED=false
+      - GF_SMTP_HOST=smtp.gmail.com:587
+      - GF_SMTP_USER=${SMTP_USER:-}
+      - GF_SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - GF_SMTP_FROM_ADDRESS=grafana@simulation.local
+      - GF_SMTP_FROM_NAME=Simulation Alerts
+      # Webhook/Discord/Slack URLs (configure via env)
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - ALERT_EMAIL_ADDRESSES=${ALERT_EMAIL_ADDRESSES:-admin@localhost}
     ports:
       - "3001:3000"
     volumes:
       - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
       - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/provisioning/alerting:/etc/grafana/provisioning/alerting:ro
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
     depends_on:
       - prometheus
+
+volumes:
+  grafana-data:
 

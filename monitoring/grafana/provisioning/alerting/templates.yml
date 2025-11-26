@@ -1,0 +1,56 @@
+apiVersion: 1
+
+templates:
+  - orgId: 1
+    name: simulation-alert-template
+    template: |
+      {{ define "simulation.title" }}
+      [{{ .Status | toUpper }}{{ if eq .Status "firing" }} x {{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.alertname }}
+      {{ end }}
+
+      {{ define "simulation.message" }}
+      {{ if gt (len .Alerts.Firing) 0 }}
+      🔥 **FIRING ALERTS**
+      {{ range .Alerts.Firing }}
+      ━━━━━━━━━━━━━━━━━━━━━━━
+      **{{ .Labels.alertname }}**
+      • Severity: {{ .Labels.severity | toUpper }}
+      • System: {{ .Labels.system }}
+      • Summary: {{ .Annotations.summary }}
+      • Details: {{ .Annotations.description }}
+      • Started: {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+      {{ end }}
+      {{ end }}
+
+      {{ if gt (len .Alerts.Resolved) 0 }}
+      ✅ **RESOLVED ALERTS**
+      {{ range .Alerts.Resolved }}
+      ━━━━━━━━━━━━━━━━━━━━━━━
+      **{{ .Labels.alertname }}**
+      • Severity: {{ .Labels.severity }}
+      • Resolved at: {{ .EndsAt.Format "2006-01-02 15:04:05" }}
+      {{ end }}
+      {{ end }}
+      {{ end }}
+
+      {{ define "simulation.emoji" }}
+      {{ if eq .Status "firing" }}
+        {{ if eq .CommonLabels.severity "critical" }}🔴{{ else if eq .CommonLabels.severity "warning" }}🟡{{ else }}🔵{{ end }}
+      {{ else }}
+        ✅
+      {{ end }}
+      {{ end }}
+
+      {{ define "simulation.slack" }}
+      {
+        "attachments": [
+          {
+            "color": "{{ if eq .Status "firing" }}{{ if eq .CommonLabels.severity "critical" }}#FF0000{{ else }}#FFA500{{ end }}{{ else }}#00FF00{{ end }}",
+            "title": "{{ template "simulation.title" . }}",
+            "text": "{{ template "simulation.message" . }}",
+            "footer": "Grafana Simulation Monitoring",
+            "ts": {{ .GroupLabels.StartsAt.Unix }}
+          }
+        ]
+      }
+      {{ end }}

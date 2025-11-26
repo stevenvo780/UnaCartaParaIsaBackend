@@ -1,0 +1,47 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: simulation-alerts-webhook
+    receivers:
+      - uid: webhook-default
+        type: webhook
+        settings:
+          url: "http://uci-prometheus:9090/api/v1/alerts"
+          httpMethod: POST
+        disableResolveMessage: false
+
+  # Discord - Descomentado y configurar cuando se tenga webhook
+  # - orgId: 1
+  #   name: simulation-alerts-discord
+  #   receivers:
+  #     - uid: discord-alerts
+  #       type: discord
+  #       settings:
+  #         url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
+  #         use_discord_username: true
+  #       disableResolveMessage: false
+
+  # Slack - Descomentar y configurar cuando se tenga webhook
+  # - orgId: 1
+  #   name: simulation-alerts-slack
+  #   receivers:
+  #     - uid: slack-alerts
+  #       type: slack
+  #       settings:
+  #         url: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+  #         recipient: "#simulation-alerts"
+  #         username: "Grafana Alerts"
+  #       disableResolveMessage: false
+
+  # Email - Descomentar cuando SMTP esté configurado
+  # - orgId: 1
+  #   name: simulation-alerts-email
+  #   receivers:
+  #     - uid: email-alerts
+  #       type: email
+  #       settings:
+  #         addresses: "admin@example.com"
+  #         singleEmail: false
+  #       disableResolveMessage: false
+

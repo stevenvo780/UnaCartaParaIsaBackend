@@ -1,0 +1,44 @@
+{
+  "id": null,
+  "uid": "simulation-monitoring-playlist",
+  "name": "🎬 Simulation Monitoring Tour",
+  "interval": "30s",
+  "items": [
+    {
+      "type": "dashboard_by_uid",
+      "value": "home-overview",
+      "order": 1,
+      "title": "🏠 Home - Panorama General"
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "performance-overview",
+      "order": 2,
+      "title": "1. Rendimiento General"
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "systems-analysis",
+      "order": 3,
+      "title": "2. Análisis de Sistemas"
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "memory-resources",
+      "order": 4,
+      "title": "3. Memoria y Recursos"
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "subsystems-operations",
+      "order": 5,
+      "title": "4. Subsistemas"
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "game-logic",
+      "order": 6,
+      "title": "5. Lógica de Juego"
+    }
+  ]
+}

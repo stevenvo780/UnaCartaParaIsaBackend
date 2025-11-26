@@ -2,6 +2,7 @@ apiVersion: 1
 
 datasources:
   - name: Simulation Prometheus
+    uid: simulation-prometheus
     type: prometheus
     access: proxy
     url: http://uci-prometheus:9090

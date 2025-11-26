@@ -1,0 +1,489 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Simulation Performance Alerts
+    folder: Simulation Monitoring
+    interval: 30s
+    rules:
+      # ==================== TICK PERFORMANCE ====================
+      - uid: tick-fast-critical
+        title: "🔴 CRITICAL: FAST Tick Excede 16ms"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: simulation-prometheus
+            model:
+              expr: backend_tick_duration_ms{rate="FAST"}
+              instant: true
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: []
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - B
+                  reducer:
+                    params: []
+                    type: last
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 16
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: "El tick FAST está excediendo el límite de 16ms para 60fps"
+          description: "Tick FAST actual: {{ $values.B }}ms. Esto puede causar lag visible."
+        labels:
+          severity: critical
+          system: tick-performance
+
+      - uid: tick-fast-warning
+        title: "🟡 WARNING: FAST Tick Alto (>10ms)"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: simulation-prometheus
+            model:
+              expr: backend_tick_duration_ms{rate="FAST"}
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 10
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: "El tick FAST está acercándose al límite"
+          description: "Tick FAST: {{ $values.B }}ms. Considerar optimización."
+        labels:
+          severity: warning
+          system: tick-performance
+
+      - uid: tick-medium-critical
+        title: "🔴 CRITICAL: MEDIUM Tick Excede 33ms"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: simulation-prometheus
+            model:
+              expr: backend_tick_duration_ms{rate="MEDIUM"}
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 33
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: "El tick MEDIUM excede 33ms (30fps target)"
+          description: "Tick MEDIUM: {{ $values.B }}ms"
+        labels:
+          severity: critical
+          system: tick-performance
+
+      # ==================== MEMORY ALERTS ====================
+      - uid: memory-heap-critical
+        title: "🔴 CRITICAL: Heap Memory > 1.5GB"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: simulation-prometheus
+            model:
+              expr: backend_memory_bytes{type="heapUsed"} / 1024 / 1024
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1500
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: "Uso de memoria heap crítico"
+          description: "Heap usado: {{ $values.B }}MB. Riesgo de OOM."
+        labels:
+          severity: critical
+          system: memory
+
+      - uid: memory-heap-warning
+        title: "🟡 WARNING: Heap Memory > 1GB"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: simulation-prometheus
+            model:
+              expr: backend_memory_bytes{type="heapUsed"} / 1024 / 1024
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1000
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "Uso de memoria heap elevado"
+          description: "Heap usado: {{ $values.B }}MB"
+        labels:
+          severity: warning
+          system: memory
+
+      - uid: memory-heap-percentage
+        title: "🟡 WARNING: Heap Usage > 85%"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: simulation-prometheus
+            model:
+              expr: (backend_memory_bytes{type="heapUsed"} / backend_memory_bytes{type="heapTotal"}) * 100
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 85
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 3m
+        annotations:
+          summary: "Porcentaje de heap usado muy alto"
+          description: "Heap: {{ $values.B }}% del total. Posible memory pressure."
+        labels:
+          severity: warning
+          system: memory
+
+      # ==================== SYSTEM PERFORMANCE ====================
+      - uid: system-slow-critical
+        title: "🔴 CRITICAL: Sistema Lento (>8ms)"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: simulation-prometheus
+            model:
+              expr: max(backend_system_execution_ms)
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 8
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: "Un sistema está consumiendo demasiado tiempo"
+          description: "Sistema más lento: {{ $values.B }}ms"
+        labels:
+          severity: critical
+          system: systems
+
+      - uid: system-slow-warning
+        title: "🟡 WARNING: Sistema Lento (>5ms)"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: simulation-prometheus
+            model:
+              expr: max(backend_system_execution_ms)
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 5
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 3m
+        annotations:
+          summary: "Un sistema está tardando más de lo esperado"
+          description: "Sistema más lento: {{ $values.B }}ms"
+        labels:
+          severity: warning
+          system: systems
+
+      # ==================== ENTITY ALERTS ====================
+      - uid: agents-high
+        title: "🟡 WARNING: Muchos Agentes Activos (>150)"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: simulation-prometheus
+            model:
+              expr: backend_active_agents_total
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 150
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "Alto número de agentes activos"
+          description: "Agentes: {{ $values.B }}. Puede afectar rendimiento."
+        labels:
+          severity: warning
+          system: entities
+
+      - uid: agents-critical
+        title: "🔴 CRITICAL: Demasiados Agentes (>250)"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: simulation-prometheus
+            model:
+              expr: backend_active_agents_total
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 250
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: "Número crítico de agentes"
+          description: "Agentes: {{ $values.B }}. Sistema sobrecargado."
+        labels:
+          severity: critical
+          system: entities
+
+      # ==================== NO DATA / DOWN ====================
+      - uid: backend-down
+        title: "🔴 CRITICAL: Backend No Responde"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 60
+              to: 0
+            datasourceUid: simulation-prometheus
+            model:
+              expr: up{job="simulation-backend"}
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: Alerting
+        execErrState: Alerting
+        for: 30s
+        annotations:
+          summary: "El backend de simulación está caído"
+          description: "No se reciben métricas del backend"
+        labels:
+          severity: critical
+          system: availability

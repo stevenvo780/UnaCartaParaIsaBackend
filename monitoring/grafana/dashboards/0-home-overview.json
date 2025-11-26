@@ -1,0 +1,851 @@
+{
+  "id": null,
+  "uid": "home-overview",
+  "title": "🏠 Home - Panorama General",
+  "tags": ["simulation", "home", "overview", "main"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "annotations": {
+    "list": []
+  },
+  "templating": {
+    "list": []
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "🎯 Estado General del Sistema",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "⚡ FAST Tick",
+      "description": "Tiempo promedio del tick FAST (ms)",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "targets": [
+        {
+          "expr": "backend_tick_duration_ms{rate=\"FAST\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 5, "color": "yellow" },
+              { "value": 10, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "🔄 MEDIUM Tick",
+      "description": "Tiempo promedio del tick MEDIUM (ms)",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "targets": [
+        {
+          "expr": "backend_tick_duration_ms{rate=\"MEDIUM\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 10, "color": "yellow" },
+              { "value": 16, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "🐢 SLOW Tick",
+      "description": "Tiempo promedio del tick SLOW (ms)",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "targets": [
+        {
+          "expr": "backend_tick_duration_ms{rate=\"SLOW\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 20, "color": "yellow" },
+              { "value": 33, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "💾 Heap Usado",
+      "description": "Memoria heap utilizada",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "targets": [
+        {
+          "expr": "backend_memory_bytes{type=\"heapUsed\"} / 1024 / 1024",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 500, "color": "yellow" },
+              { "value": 1000, "color": "orange" },
+              { "value": 1500, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "🧠 RSS Total",
+      "description": "Memoria total del proceso",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "targets": [
+        {
+          "expr": "backend_memory_bytes{type=\"rss\"} / 1024 / 1024",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 1000, "color": "yellow" },
+              { "value": 2000, "color": "orange" },
+              { "value": 3000, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "👥 Agentes Activos",
+      "description": "Número de agentes en la simulación",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "targets": [
+        {
+          "expr": "backend_active_agents_total",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "blue" },
+              { "value": 10, "color": "green" },
+              { "value": 50, "color": "yellow" },
+              { "value": 100, "color": "orange" },
+              { "value": 200, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "📊 Rendimiento de Ticks (Tiempo Real)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "📈 Duración de Ticks por Rate",
+      "description": "Tiempo de ejecución de cada tipo de tick en tiempo real",
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 6 },
+      "targets": [
+        {
+          "expr": "backend_tick_duration_ms",
+          "legendFormat": "{{rate}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "FAST" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "MEDIUM" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "SLOW" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": ["mean", "max", "lastNotNull"]
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "🎚️ Tick FAST vs Target (16ms)",
+      "description": "Porcentaje del budget de 16ms utilizado por FAST tick",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 6 },
+      "targets": [
+        {
+          "expr": "(backend_tick_duration_ms{rate=\"FAST\"} / 16) * 100",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 150,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 50, "color": "yellow" },
+              { "value": 75, "color": "orange" },
+              { "value": 100, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "🎚️ Tick MEDIUM vs Target",
+      "description": "Porcentaje del budget utilizado por MEDIUM tick",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 6 },
+      "targets": [
+        {
+          "expr": "(backend_tick_duration_ms{rate=\"MEDIUM\"} / 16) * 100",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 150,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 50, "color": "yellow" },
+              { "value": 75, "color": "orange" },
+              { "value": 100, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      }
+    },
+    {
+      "type": "stat",
+      "title": "📦 Recursos",
+      "description": "Recursos totales en el mundo",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 10 },
+      "targets": [
+        {
+          "expr": "backend_total_resources",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "blue" },
+              { "value": 100, "color": "green" },
+              { "value": 500, "color": "yellow" },
+              { "value": 1000, "color": "orange" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "🏗️ Edificios",
+      "description": "Edificios/Zonas en el mundo",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 10 },
+      "targets": [
+        {
+          "expr": "backend_total_buildings",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "blue" },
+              { "value": 5, "color": "green" },
+              { "value": 20, "color": "yellow" },
+              { "value": 50, "color": "orange" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "🔥 Top Sistemas y Operaciones",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "collapsed": false
+    },
+    {
+      "type": "bargauge",
+      "title": "🏆 Top 8 Sistemas Más Costosos",
+      "description": "Sistemas que consumen más tiempo de ejecución",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+      "targets": [
+        {
+          "expr": "topk(8, backend_system_execution_ms)",
+          "legendFormat": "{{system}} ({{rate}})",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 2, "color": "yellow" },
+              { "value": 5, "color": "orange" },
+              { "value": 8, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "valueMode": "color"
+      }
+    },
+    {
+      "type": "bargauge",
+      "title": "⚙️ Top 8 Operaciones Costosas",
+      "description": "Operaciones de subsistemas que consumen más tiempo",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+      "targets": [
+        {
+          "expr": "topk(8, backend_subsystem_duration_ms)",
+          "legendFormat": "{{system}}::{{operation}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 1, "color": "yellow" },
+              { "value": 3, "color": "orange" },
+              { "value": 5, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "valueMode": "color"
+      }
+    },
+    {
+      "type": "row",
+      "title": "💻 Memoria y Recursos",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "📉 Evolución de Memoria",
+      "description": "Uso de memoria a lo largo del tiempo",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "targets": [
+        {
+          "expr": "backend_memory_bytes{type=\"heapUsed\"} / 1024 / 1024",
+          "legendFormat": "Heap Usado",
+          "refId": "A"
+        },
+        {
+          "expr": "backend_memory_bytes{type=\"heapTotal\"} / 1024 / 1024",
+          "legendFormat": "Heap Total",
+          "refId": "B"
+        },
+        {
+          "expr": "backend_memory_bytes{type=\"rss\"} / 1024 / 1024",
+          "legendFormat": "RSS",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Heap Usado" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Heap Total" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "RSS" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "purple" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": ["mean", "lastNotNull", "max"]
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "👥 Evolución de Entidades",
+      "description": "Cambios en el número de entidades del juego",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "targets": [
+        {
+          "expr": "backend_active_agents_total",
+          "legendFormat": "Agentes Activos",
+          "refId": "A"
+        },
+        {
+          "expr": "backend_total_resources",
+          "legendFormat": "Recursos",
+          "refId": "B"
+        },
+        {
+          "expr": "backend_total_buildings",
+          "legendFormat": "Edificios",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Agentes Activos" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Recursos" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Edificios" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": ["mean", "lastNotNull", "max"]
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "📋 Navegación Rápida a Dashboards",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "collapsed": false
+    },
+    {
+      "type": "text",
+      "title": "",
+      "gridPos": { "h": 3, "w": 24, "x": 0, "y": 33 },
+      "options": {
+        "mode": "markdown",
+        "content": "## 🔗 Dashboards Detallados\n\n| Dashboard | Descripción | Link |\n|-----------|-------------|------|\n| **1. Rendimiento General** | Análisis detallado de ticks y duración | [Ver →](/d/performance-overview) |\n| **2. Análisis de Sistemas** | Top sistemas costosos por rate | [Ver →](/d/systems-analysis) |\n| **3. Memoria y Recursos** | Heap, RSS y uso de memoria | [Ver →](/d/memory-resources) |\n| **4. Subsistemas** | Operaciones detalladas y frecuencia | [Ver →](/d/subsystems-operations) |\n| **5. Lógica de Juego** | Entidades, agentes y estado del mundo | [Ver →](/d/game-logic) |"
+      }
+    },
+    {
+      "type": "row",
+      "title": "⚠️ Alertas y Umbrales",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 36 },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "🔴 Tick Max Actual",
+      "description": "Máximo tick duration en este momento",
+      "gridPos": { "h": 3, "w": 6, "x": 0, "y": 37 },
+      "targets": [
+        {
+          "expr": "max(backend_tick_duration_max_ms)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 10, "color": "yellow" },
+              { "value": 16, "color": "orange" },
+              { "value": 33, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "📊 % Heap Utilizado",
+      "description": "Porcentaje de heap usado vs total",
+      "gridPos": { "h": 3, "w": 6, "x": 6, "y": 37 },
+      "targets": [
+        {
+          "expr": "(backend_memory_bytes{type=\"heapUsed\"} / backend_memory_bytes{type=\"heapTotal\"}) * 100",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 70, "color": "yellow" },
+              { "value": 85, "color": "orange" },
+              { "value": 95, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "🔢 Total Sistemas Activos",
+      "description": "Número de sistemas reportando métricas",
+      "gridPos": { "h": 3, "w": 6, "x": 12, "y": 37 },
+      "targets": [
+        {
+          "expr": "count(backend_system_execution_ms)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "blue" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "⏱️ Total Operaciones",
+      "description": "Número de operaciones de subsistemas",
+      "gridPos": { "h": 3, "w": 6, "x": 18, "y": 37 },
+      "targets": [
+        {
+          "expr": "count(backend_subsystem_duration_ms)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "purple" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    }
+  ],
+  "links": [
+    {
+      "title": "1. Rendimiento",
+      "type": "link",
+      "url": "/d/performance-overview",
+      "icon": "dashboard",
+      "targetBlank": false
+    },
+    {
+      "title": "2. Sistemas",
+      "type": "link",
+      "url": "/d/systems-analysis",
+      "icon": "dashboard",
+      "targetBlank": false
+    },
+    {
+      "title": "3. Memoria",
+      "type": "link",
+      "url": "/d/memory-resources",
+      "icon": "dashboard",
+      "targetBlank": false
+    },
+    {
+      "title": "4. Subsistemas",
+      "type": "link",
+      "url": "/d/subsystems-operations",
+      "icon": "dashboard",
+      "targetBlank": false
+    },
+    {
+      "title": "5. Game Logic",
+      "type": "link",
+      "url": "/d/game-logic",
+      "icon": "dashboard",
+      "targetBlank": false
+    }
+  ]
+}

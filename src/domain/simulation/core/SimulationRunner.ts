@@ -433,8 +433,7 @@ export class SimulationRunner {
           }
         } catch (err) {
           logger.warn(
-            `Failed to initialize movement state for agent ${agent.id}: ${
-              err instanceof Error ? err.message : String(err)
+            `Failed to initialize movement state for agent ${agent.id}: ${err instanceof Error ? err.message : String(err)
             }`,
           );
         }
@@ -796,6 +795,34 @@ export class SimulationRunner {
       name: "ItemGenerationSystem",
       rate: "SLOW",
       update: (delta: number) => this.itemGenerationSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "RecipeDiscoverySystem",
+      rate: "SLOW",
+      update: () => this._recipeDiscoverySystem.update(),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "NormsSystem",
+      rate: "SLOW",
+      update: () => this._normsSystem.update(),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "EmergenceSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.emergenceSystem.update(delta),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
+      name: "KnowledgeNetworkSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.knowledgeNetworkSystem.update(delta),
       enabled: true,
     });
 
@@ -2564,14 +2591,14 @@ export class SimulationRunner {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                  resources?: {
-                    wood?: number;
-                    stone?: number;
-                    food?: number;
-                    water?: number;
-                  };
-                  minWorkers?: number;
-                }
+                resources?: {
+                  wood?: number;
+                  stone?: number;
+                  food?: number;
+                  water?: number;
+                };
+                minWorkers?: number;
+              }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,
@@ -2613,12 +2640,12 @@ export class SimulationRunner {
       ) {
         this.timeSystem.setWeather(
           weatherType as
-            | "clear"
-            | "cloudy"
-            | "rainy"
-            | "stormy"
-            | "foggy"
-            | "snowy",
+          | "clear"
+          | "cloudy"
+          | "rainy"
+          | "stormy"
+          | "foggy"
+          | "snowy",
         );
         logger.info(`Weather set to ${weatherType} via TIME_COMMAND`);
       } else {
@@ -2724,12 +2751,12 @@ export class SimulationRunner {
       social,
       ai: aiState
         ? {
-            currentGoal: aiState.currentGoal,
-            goalQueue: aiState.goalQueue,
-            currentAction: aiState.currentAction,
-            offDuty: aiState.offDuty,
-            lastDecisionTime: aiState.lastDecisionTime,
-          }
+          currentGoal: aiState.currentGoal,
+          goalQueue: aiState.goalQueue,
+          currentAction: aiState.currentAction,
+          offDuty: aiState.offDuty,
+          lastDecisionTime: aiState.lastDecisionTime,
+        }
         : null,
     };
   }
