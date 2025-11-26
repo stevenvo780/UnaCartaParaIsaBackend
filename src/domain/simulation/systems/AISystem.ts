@@ -97,9 +97,10 @@ export class AISystem extends EventEmitter {
 
   /**
    * Batch size for agent processing per update.
-   * Reduced from 10 to 5 to lower latency per frame (each decision ~0.35ms).
+   * With updateInterval=250ms, processing 10 agents ensures all agents
+   * get updated within 250-500ms for responsive behavior.
    */
-  private readonly BATCH_SIZE = 5;
+  private readonly BATCH_SIZE = 10;
 
   private zoneCache = new Map<string, string | undefined>();
   private craftingZoneCache: string | undefined | null = null;
@@ -183,7 +184,7 @@ export class AISystem extends EventEmitter {
     this.entityIndex = entityIndex;
     this.gpuService = gpuService;
     this.config = {
-      updateIntervalMs: 1000,
+      updateIntervalMs: 250, // Match scheduler MEDIUM rate for responsive AI
       enablePersonality: true,
       enableMemory: true,
       maxMemoryItems: 50,

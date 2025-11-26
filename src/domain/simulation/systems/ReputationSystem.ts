@@ -135,6 +135,15 @@ export class ReputationSystem {
       }
       this.reputationHistory.set(agentId, history);
 
+      simulationEvents.emit(GameEventNames.REPUTATION_UPDATED, {
+        agentId,
+        oldValue,
+        newValue: r.value,
+        delta,
+        reason: reason || "unknown",
+        timestamp: now,
+      });
+
       if (Math.abs(delta) >= 0.05) {
         logger.debug(
           `⭐ [REPUTATION] ${agentId}: ${oldValue.toFixed(2)} -> ${r.value.toFixed(2)} (${delta > 0 ? "+" : ""}${delta.toFixed(2)}) - ${reason || "unknown"}`,
@@ -229,8 +238,8 @@ export class ReputationSystem {
       data.aId,
       data.bId,
       REPUTATION_CONFIG.impacts.socialRelation.trust *
-        sign *
-        Math.abs(data.delta),
+      sign *
+      Math.abs(data.delta),
     );
     this.updateReputation(
       data.aId,

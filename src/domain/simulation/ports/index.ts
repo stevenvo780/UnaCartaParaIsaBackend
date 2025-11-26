@@ -198,6 +198,12 @@ export interface ISocialPort {
       [key: string]: unknown;
     },
   ): void;
+
+  /**
+   * Removes all relationships for an agent (e.g., when agent dies).
+   * Cleans up edges, permanent bonds, truces, and infamy.
+   */
+  removeRelationships(agentId: string): void;
 }
 
 /**

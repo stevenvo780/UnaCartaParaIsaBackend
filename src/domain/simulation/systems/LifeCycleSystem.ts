@@ -603,8 +603,7 @@ export class LifeCycleSystem extends EventEmitter {
     }
 
     if (this._socialSystem) {
-      // Social port might not have removeRelationships yet, skipping for now or adding to port
-      // this._socialPort.removeRelationships(agentId);
+      this._socialSystem.removeRelationships(agentId);
     }
 
     if (this._movementSystem) {

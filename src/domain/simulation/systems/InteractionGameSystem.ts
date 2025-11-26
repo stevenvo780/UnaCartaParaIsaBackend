@@ -29,7 +29,24 @@ export class InteractionGameSystem {
     logger.info("🎲 InteractionGameSystem (Backend) initialized");
   }
 
-  public update(_deltaTimeMs: number): void {}
+  public update(_deltaTimeMs: number): void {
+    const now = Date.now();
+    const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes timeout
+
+    for (const [id, interaction] of this.activeInteractions.entries()) {
+      if (now - interaction.startTime > TIMEOUT_MS) {
+        this.activeInteractions.delete(id);
+        simulationEvents.emit(GameEventNames.INTERACTION_GAME_PLAYED, {
+          interactionId: id,
+          ...interaction,
+          result: "expired",
+          timestamp: now,
+          status: "expired",
+        });
+        logger.info(`🎲 Interaction expired: ${id}`);
+      }
+    }
+  }
 
   public startInteraction(
     initiatorId: string,
