@@ -108,7 +108,10 @@ export class AISystem extends EventEmitter {
   private readonly CACHE_INVALIDATION_INTERVAL = 1000;
 
   // Resource search optimization: cache nearest resources by type
-  private nearestResourceCache = new Map<string, { resource: { id: string; x: number; y: number } | null; timestamp: number }>();
+  private nearestResourceCache = new Map<
+    string,
+    { resource: { id: string; x: number; y: number } | null; timestamp: number }
+  >();
   private readonly RESOURCE_CACHE_TTL = 2000; // 2s cache for resource searches
   private readonly MAX_RESOURCE_SEARCH_RADIUS = 500; // Limit search radius for performance
 
@@ -529,10 +532,27 @@ export class AISystem extends EventEmitter {
   }
 
   private processGoals(
-    _agentId: string,
+    agentId: string,
     aiState: AIState,
     now: number,
   ): AIGoal | null {
+    // URGENT: Override with survival goals if needs are critical
+    const needs = this.needsSystem?.getNeeds(agentId);
+    if (needs) {
+      if (needs.hunger < 20) {
+        const foodGoal = this.createUrgentFoodGoal(agentId, now);
+        if (foodGoal) return foodGoal;
+      }
+      if (needs.thirst < 20) {
+        const waterGoal = this.createUrgentWaterGoal(agentId, now);
+        if (waterGoal) return waterGoal;
+      }
+      if (needs.energy < 15) {
+        const restGoal = this.createUrgentRestGoal(agentId, now);
+        if (restGoal) return restGoal;
+      }
+    }
+
     const deps: AgentGoalPlannerDeps = {
       gameState: this.gameState,
       priorityManager: this.priorityManager,
@@ -742,6 +762,95 @@ export class AISystem extends EventEmitter {
       currentAction: null,
       offDuty: false,
     };
+  }
+
+  /**
+   * Create urgent food goal when hunger is critical
+   */
+  private createUrgentFoodGoal(agentId: string, now: number): AIGoal | null {
+    const position = this.getAgentPosition(agentId);
+    if (!position) return null;
+
+    // Find nearest food zone or resource
+    const foodZone = this.gameState.zones?.find(
+      (z) => z.type === "food" || z.type === "kitchen",
+    );
+
+    if (foodZone?.bounds) {
+      return {
+        id: `urgent-food-${agentId}-${now}`,
+        type: "satisfy_hunger",
+        priority: 10,
+        targetZoneId: foodZone.id,
+        createdAt: now,
+      };
+    }
+
+    // Fallback: look for nearest food resource
+    const nearestFood = this.findNearestResourceForEntity(
+      agentId,
+      "berry_bush",
+    );
+    if (nearestFood) {
+      return {
+        id: `urgent-gather-${agentId}-${now}`,
+        type: "gather",
+        priority: 10,
+        targetPosition: nearestFood,
+        createdAt: now,
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * Create urgent water goal when thirst is critical
+   */
+  private createUrgentWaterGoal(agentId: string, now: number): AIGoal | null {
+    const position = this.getAgentPosition(agentId);
+    if (!position) return null;
+
+    const waterZone = this.gameState.zones?.find(
+      (z) => z.type === "water" || z.type === "well",
+    );
+
+    if (waterZone?.bounds) {
+      return {
+        id: `urgent-water-${agentId}-${now}`,
+        type: "satisfy_thirst",
+        priority: 10,
+        targetZoneId: waterZone.id,
+        createdAt: now,
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * Create urgent rest goal when energy is critical
+   */
+  private createUrgentRestGoal(agentId: string, now: number): AIGoal | null {
+    const restZone = this.gameState.zones?.find(
+      (z) =>
+        z.type === "rest" ||
+        z.type === "bed" ||
+        z.type === "shelter" ||
+        z.type === "house",
+    );
+
+    if (restZone?.bounds) {
+      return {
+        id: `urgent-rest-${agentId}-${now}`,
+        type: "satisfy_energy",
+        priority: 10,
+        targetZoneId: restZone.id,
+        createdAt: now,
+      };
+    }
+
+    return null;
   }
 
   /**
@@ -1575,7 +1684,8 @@ export class AISystem extends EventEmitter {
       this.gameState.agents?.find((a) => a.id === entityId);
     if (!agent?.position) return null;
 
-    const maxRadiusSq = this.MAX_RESOURCE_SEARCH_RADIUS * this.MAX_RESOURCE_SEARCH_RADIUS;
+    const maxRadiusSq =
+      this.MAX_RESOURCE_SEARCH_RADIUS * this.MAX_RESOURCE_SEARCH_RADIUS;
     let nearest: { id: string; x: number; y: number } | null = null;
     let minDistance = maxRadiusSq; // Start with max radius as threshold
 
@@ -1612,7 +1722,8 @@ export class AISystem extends EventEmitter {
       }
     } else if (this.gameState.worldResources) {
       for (const resource of Object.values(this.gameState.worldResources)) {
-        if (resource.type !== resourceType || resource.state !== "pristine") continue;
+        if (resource.type !== resourceType || resource.state !== "pristine")
+          continue;
 
         const dx = resource.position.x - agent.position.x;
         const dy = resource.position.y - agent.position.y;
@@ -1640,14 +1751,17 @@ export class AISystem extends EventEmitter {
     }
 
     // Cache result
-    this.nearestResourceCache.set(cacheKey, { resource: nearest, timestamp: now });
+    this.nearestResourceCache.set(cacheKey, {
+      resource: nearest,
+      timestamp: now,
+    });
     return nearest;
   }
 
   /**
    * GPU-accelerated search for nearby agents within a radius.
    * Uses pairwise distance computation on GPU when there are many agents.
-   * 
+   *
    * @param entityId - The entity to search from
    * @param radius - Search radius
    * @returns Array of nearby agents with their distances, sorted by distance
@@ -1671,10 +1785,13 @@ export class AISystem extends EventEmitter {
     const radiusSq = radius * radius;
 
     // Use GPU for large agent counts
-    if (this.gpuService?.isGPUAvailable() && activeAgents.length >= GPU_THRESHOLD) {
+    if (
+      this.gpuService?.isGPUAvailable() &&
+      activeAgents.length >= GPU_THRESHOLD
+    ) {
       // Prepare position data for GPU
       const positions = new Float32Array(activeAgents.length * 2);
-      
+
       for (let i = 0; i < activeAgents.length; i++) {
         const agent = activeAgents[i];
         positions[i * 2] = agent.position!.x;
@@ -1707,12 +1824,12 @@ export class AISystem extends EventEmitter {
 
     // CPU fallback for small agent counts
     const nearby: Array<{ id: string; distance: number }> = [];
-    
+
     for (const agent of activeAgents) {
       const dx = agent.position!.x - myAgent.position.x;
       const dy = agent.position!.y - myAgent.position.y;
       const distSq = dx * dx + dy * dy;
-      
+
       if (distSq <= radiusSq) {
         nearby.push({
           id: agent.id,

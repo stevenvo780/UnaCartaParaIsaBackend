@@ -36,12 +36,16 @@ export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
 
     // Use GPU-accelerated nearby search if available
     if (ctx.getNearbyAgentsWithDistances) {
-      const nearbyAgents = ctx.getNearbyAgentsWithDistances(aiState.entityId, helpRadius);
-      
+      const nearbyAgents = ctx.getNearbyAgentsWithDistances(
+        aiState.entityId,
+        helpRadius,
+      );
+
       for (const { id, distance } of nearbyAgents) {
         const needs = ctx.getNeeds(id);
         const stats = ctx.getEntityStats(id) || {};
-        let need: "water" | "food" | "medical" | "rest" | "social" | null = null;
+        let need: "water" | "food" | "medical" | "rest" | "social" | null =
+          null;
 
         const sensitivity = 1.0 - empathyFactor * 0.3;
 
@@ -73,10 +77,10 @@ export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
 
       for (const id of ids) {
         if (id === aiState.entityId) continue;
-        
+
         const pos = ctx.getEntityPosition(id);
         if (!pos) continue;
-        
+
         const dx = pos.x - myPos.x;
         const dy = pos.y - myPos.y;
         const dSq = dx * dx + dy * dy;
@@ -85,7 +89,8 @@ export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
         const d = Math.sqrt(dSq);
         const needs = ctx.getNeeds(id);
         const stats = ctx.getEntityStats(id) || {};
-        let need: "water" | "food" | "medical" | "rest" | "social" | null = null;
+        let need: "water" | "food" | "medical" | "rest" | "social" | null =
+          null;
 
         const sensitivity = 1.0 - empathyFactor * 0.3;
 

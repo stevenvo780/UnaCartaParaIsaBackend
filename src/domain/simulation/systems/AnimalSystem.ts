@@ -258,6 +258,13 @@ export class AnimalSystem {
 
       const oldPosition = { ...animal.position };
       this.updateAnimalBehavior(animal, deltaSeconds);
+      
+      // Debug: Check if position actually changed
+      const moved = oldPosition.x !== animal.position.x || oldPosition.y !== animal.position.y;
+      if (moved && Math.random() < 0.01) { // Log 1% of moves
+        logger.debug(`🔄 Animal ${animal.id.slice(0,8)} moved from (${oldPosition.x.toFixed(1)}, ${oldPosition.y.toFixed(1)}) to (${animal.position.x.toFixed(1)}, ${animal.position.y.toFixed(1)})`);
+      }
+      
       this.updateSpatialGrid(animal, oldPosition);
       this.checkAnimalDeath(animal);
     }
@@ -469,7 +476,7 @@ export class AnimalSystem {
         animal,
         config.detectionRange,
       );
-      
+
       if (waterResources.length > 0) {
         AnimalBehavior.seekWater(
           animal,
@@ -481,7 +488,10 @@ export class AnimalSystem {
         );
       } else if (this.terrainSystem) {
         // Try to drink from water terrain tiles
-        const waterTile = this.findNearbyWaterTile(animal, config.detectionRange);
+        const waterTile = this.findNearbyWaterTile(
+          animal,
+          config.detectionRange,
+        );
         if (waterTile) {
           this.drinkFromTerrain(animal, waterTile, config, deltaSeconds);
         } else {
@@ -671,11 +681,11 @@ export class AnimalSystem {
       for (let dx = -r; dx <= r; dx++) {
         for (let dy = -r; dy <= r; dy++) {
           if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue; // Only check perimeter
-          
+
           const tileX = centerTileX + dx;
           const tileY = centerTileY + dy;
           const tile = this.terrainSystem.getTile(tileX, tileY);
-          
+
           if (tile && this.isWaterTerrain(tile.assets?.terrain)) {
             return {
               x: (tileX + 0.5) * TILE_SIZE,
@@ -695,10 +705,12 @@ export class AnimalSystem {
    */
   private isWaterTerrain(terrainAsset: string | undefined): boolean {
     if (!terrainAsset) return false;
-    return terrainAsset.includes("water") || 
-           terrainAsset.includes("ocean") || 
-           terrainAsset.includes("river") ||
-           terrainAsset.includes("lake");
+    return (
+      terrainAsset.includes("water") ||
+      terrainAsset.includes("ocean") ||
+      terrainAsset.includes("river") ||
+      terrainAsset.includes("lake")
+    );
   }
 
   /**

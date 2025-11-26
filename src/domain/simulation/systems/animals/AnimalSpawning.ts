@@ -19,7 +19,7 @@ export class AnimalSpawning {
   /**
    * Spawn animals across the entire world during initialization.
    * This is called once when the world is generated.
-   * 
+   *
    * Optimized with larger sample step to reduce initial spawn count.
    */
   public static spawnAnimalsInWorld(
@@ -92,7 +92,7 @@ export class AnimalSpawning {
   /**
    * Spawn animals for a specific chunk (lazy loading).
    * This is the primary spawn method - animals are only created when chunks become visible.
-   * 
+   *
    * Optimizations:
    * - Deduplication via spawnedChunks Set
    * - Larger sample step for fewer spawn checks
@@ -118,7 +118,8 @@ export class AnimalSpawning {
     const sampleStep = 128;
 
     // Pre-compute tile size if tiles available
-    const tileSize = tiles && tiles[0]?.length > 0 ? width / tiles[0].length : 64;
+    const tileSize =
+      tiles && tiles[0]?.length > 0 ? width / tiles[0].length : 64;
 
     for (let x = chunkX; x < chunkX + width; x += sampleStep) {
       for (let y = chunkY; y < chunkY + height; y += sampleStep) {

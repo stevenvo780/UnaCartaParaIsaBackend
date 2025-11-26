@@ -493,6 +493,9 @@ export class SimulationRunner {
           simulationEvents.flushEvents();
         }
 
+        // Sync animals to state before marking dirty
+        this.syncAnimalsToState();
+
         this.stateCache.markDirtyMultiple([
           "agents",
           "entities",
@@ -2126,6 +2129,9 @@ export class SimulationRunner {
       this.movementSystem.update(scaledDelta);
       dirtySections.push("entities");
 
+      // Sync animals from AnimalSystem to GameState
+      this.syncAnimalsToState();
+
       this.stateCache.markDirtyMultiple(dirtySections);
 
       this.tickCounter += 1;
@@ -2141,6 +2147,31 @@ export class SimulationRunner {
     } finally {
       this.isStepping = false;
     }
+  }
+
+  /**
+   * Synchronizes animals from AnimalSystem to GameState.
+   * This ensures the state sent to clients includes updated animal positions.
+   */
+  private syncAnimalsToState(): void {
+    const animalsMap = this.animalSystem.getAnimals();
+    const animalsArray: import("../../types/simulation/animals").Animal[] = [];
+    const byType: Record<string, number> = {};
+
+    for (const animal of animalsMap.values()) {
+      if (!animal.isDead) {
+        animalsArray.push(animal);
+        byType[animal.type] = (byType[animal.type] || 0) + 1;
+      }
+    }
+
+    this.state.animals = {
+      animals: animalsArray,
+      stats: {
+        total: animalsArray.length,
+        byType,
+      },
+    };
   }
 
   private processCommands(): void {
