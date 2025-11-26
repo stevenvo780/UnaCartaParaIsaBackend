@@ -21,6 +21,7 @@ export interface AgentProfile {
   birthTimestamp: number;
   generation: number;
   immortal?: boolean;
+  isDead?: boolean;
   traits: AgentTraits;
   socialStatus?: "noble" | "commoner" | "warrior";
   parents?: {

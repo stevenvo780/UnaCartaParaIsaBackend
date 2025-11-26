@@ -179,6 +179,11 @@ export class NeedsSystem extends EventEmitter {
       this.applyNeedDecay(needs, dtSeconds, entityId, action);
       this.handleZoneBenefits(entityId, needs, dtSeconds);
       this.applySocialMoraleBoost(entityId, needs);
+
+      if (this.config.crossEffectsEnabled) {
+        this.applyCrossEffects(needs);
+      }
+
       this.checkEmergencyNeeds(entityId, needs);
 
       if (this.checkForDeath(entityId, needs)) {
@@ -513,10 +518,14 @@ export class NeedsSystem extends EventEmitter {
 
       // Action-based modifiers
       if (need === "energy") {
-        if (action === "sleep") finalRate = -5.0; // Recover energy fast
-        else if (action === "rest") finalRate = -2.0; // Recover energy
-        else if (action === "idle") finalRate = -0.5; // Recover energy slowly
-        else if (action === "work") finalRate *= 1.5; // Work consumes more energy
+        if (action === "sleep")
+          finalRate = -5.0; // Recover energy fast
+        else if (action === "rest")
+          finalRate = -2.0; // Recover energy
+        else if (action === "idle")
+          finalRate = -0.5; // Recover energy slowly
+        else if (action === "work")
+          finalRate *= 1.5; // Work consumes more energy
         else if (action === "run") finalRate *= 2.0;
       }
 

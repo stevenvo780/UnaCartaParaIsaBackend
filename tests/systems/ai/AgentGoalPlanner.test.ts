@@ -126,7 +126,7 @@ describe("AgentGoalPlanner", () => {
     ]);
 
     const deps = baseDeps();
-    const goals = planGoals(deps, aiState);
+    const goals = planGoals(deps, aiState, Date.now());
 
     expect(evaluateCriticalNeeds).toHaveBeenCalled();
     expect(goals.some((goal) => goal.id === "critical")).toBe(true);
@@ -151,7 +151,7 @@ describe("AgentGoalPlanner", () => {
       getCurrentTimeOfDay: vi.fn(() => "morning"),
     };
 
-    const goals = planGoals(deps, aiState, 0.3);
+    const goals = planGoals(deps, aiState, Date.now(), 0.3);
 
     expect(evaluateWorkOpportunities).toHaveBeenCalled();
     expect(goals.some((goal) => goal.id === "work")).toBe(true);
@@ -164,7 +164,7 @@ describe("AgentGoalPlanner", () => {
     ]);
 
     const deps = baseDeps();
-    const goals = planGoals(deps, aiState, 0.5);
+    const goals = planGoals(deps, aiState, Date.now(), 0.5);
 
     expect(prioritizeGoals).toHaveBeenCalledWith(
       expect.arrayContaining([
@@ -192,7 +192,7 @@ describe("AgentGoalPlanner", () => {
       getEntityNeeds: vi.fn(() => undefined),
     };
 
-    const goals = planGoals(deps, aiState);
+    const goals = planGoals(deps, aiState, Date.now());
 
     expect(goals.some((goal) => goal.id === "default")).toBe(true);
   });

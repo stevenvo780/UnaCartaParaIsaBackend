@@ -17,9 +17,7 @@ import {
   isWorldResourceType,
 } from "../../types/simulation/resourceMapping";
 import { getAnimalConfig } from "../../../infrastructure/services/world/config/AnimalConfigs";
-import type { Task } from "../../types/simulation/tasks";
 import type { WeaponId as CraftingWeaponId } from "../../types/simulation/crafting";
-import type { Quest } from "../../types/simulation/quests";
 import { planGoals, type AgentGoalPlannerDeps } from "./ai/AgentGoalPlanner";
 import { PriorityManager } from "./ai/PriorityManager";
 import { GameEventNames } from "../core/events";
@@ -36,10 +34,11 @@ import type { CombatSystem } from "./CombatSystem";
 import type { AnimalSystem } from "./AnimalSystem";
 import type { MovementSystem } from "./MovementSystem";
 import type { QuestSystem } from "./QuestSystem";
-import type { TimeSystem } from "./TimeSystem";
+import type { TimeSystem, TimeOfDay } from "./TimeSystem";
 import type { EntityIndex } from "../core/EntityIndex";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
+import { getFrameTime } from "../../../shared/FrameTime";
 
 interface AISystemConfig {
   updateIntervalMs: number;
@@ -244,7 +243,7 @@ export class AISystem extends EventEmitter {
    * @param _deltaTimeMs - Elapsed time in milliseconds (not used, uses config interval)
    */
   public update(_deltaTimeMs: number): void {
-    const now = Date.now();
+    const now = getFrameTime();
 
     if (now - this._lastMemoryCleanupTime >= this.MEMORY_CLEANUP_INTERVAL) {
       this.cleanupAgentMemory(now);
@@ -322,7 +321,7 @@ export class AISystem extends EventEmitter {
 
     if (!aiState.currentGoal) {
       const startTime = performance.now();
-      const newGoal = this.makeDecision(agentId, aiState);
+      const newGoal = this.makeDecision(agentId, aiState, now);
       const duration = performance.now() - startTime;
 
       this._decisionTimeTotalMs += duration;
@@ -417,12 +416,16 @@ export class AISystem extends EventEmitter {
    * @param aiState - Agent's AI state
    * @returns Selected goal or null if no suitable goal found
    */
-  private makeDecision(agentId: string, aiState: AIState): AIGoal | null {
+  private makeDecision(
+    agentId: string,
+    aiState: AIState,
+    now: number,
+  ): AIGoal | null {
     const t0 = performance.now();
     let goal: AIGoal | null = null;
 
     try {
-      goal = this.processGoals(agentId, aiState);
+      goal = this.processGoals(agentId, aiState, now);
     } catch (error) {
       logger.error(`Error in makeDecision for agent ${agentId}:`, error);
     }
@@ -473,11 +476,15 @@ export class AISystem extends EventEmitter {
         x: pos.x + (Math.random() - 0.5) * 200,
         y: pos.y + (Math.random() - 0.5) * 200,
       },
-      createdAt: Date.now(),
+      createdAt: getFrameTime(),
     };
   }
 
-  private processGoals(_agentId: string, aiState: AIState): AIGoal | null {
+  private processGoals(
+    _agentId: string,
+    aiState: AIState,
+    now: number,
+  ): AIGoal | null {
     const deps: AgentGoalPlannerDeps = {
       gameState: this.gameState,
       priorityManager: this.priorityManager,
@@ -489,11 +496,9 @@ export class AISystem extends EventEmitter {
       getAgentInventory: (id: string) =>
         this.inventorySystem?.getAgentInventory(id),
       getCurrentZone: (id: string) => {
-        // Check cache first
         if (this.zoneCache.has(id)) {
           return this.zoneCache.get(id);
         }
-
         const agent =
           this.entityIndex?.getAgent(id) ??
           this.gameState.agents.find((a) => a.id === id);
@@ -517,11 +522,9 @@ export class AISystem extends EventEmitter {
       getEquipped: (id: string) =>
         this.combatSystem?.getEquipped(id) || "unarmed",
       getSuggestedCraftZone: () => {
-        // Check cache first
         if (this.craftingZoneCache !== null) {
           return this.craftingZoneCache;
         }
-
         const zone = this.gameState.zones?.find((z) => z.type === "crafting");
         this.craftingZoneCache = zone?.id;
         return this.craftingZoneCache;
@@ -541,120 +544,54 @@ export class AISystem extends EventEmitter {
         );
       },
       getAllActiveAgentIds: () => {
-        // Check cache first
         if (this.activeAgentIdsCache !== null) {
           return this.activeAgentIdsCache;
         }
-
         const activeIds: string[] = [];
         for (const agent of this.gameState.agents) {
-          const entity = this.gameState.entities?.find(
-            (e) => e.id === agent.id,
-          );
-          if (!entity?.isDead) {
-            activeIds.push(agent.id);
-          }
+          if (!agent.isDead) activeIds.push(agent.id);
         }
         this.activeAgentIdsCache = activeIds;
         return activeIds;
       },
       getEntityStats: (id: string) => {
         const entity = this.gameState.entities?.find((e) => e.id === id);
-        if (!entity) return null;
-        const stats = entity.stats;
-        if (!stats) return null;
-        return {
-          health: stats.health ?? 100,
-          stamina: stats.stamina ?? 100,
-          attack: stats.attack ?? 10,
-          defense: stats.defense ?? 0,
-        };
+        return entity?.stats
+          ? {
+              health: entity.stats.health ?? 100,
+              stamina: entity.stats.stamina ?? 100,
+              attack: entity.stats.attack ?? 10,
+              defense: entity.stats.defense ?? 0,
+            }
+          : null;
       },
-      getPreferredResourceForRole: (role: string): string | undefined => {
-        const roleSys = this.roleSystem;
-        if (!roleSys) {
-          return undefined;
-        }
-        const method = roleSys.getPreferredResourceForRole as (
-          roleType: string,
-        ) => string | undefined;
-        return method(role);
-      },
+      getPreferredResourceForRole: (role: string) =>
+        this.roleSystem?.getPreferredResourceForRole(role),
       getStrategy: (id: string) => this.agentStrategies.get(id) || "peaceful",
-      isWarrior: (id: string) => {
-        const role = this.roleSystem?.getAgentRole(id);
-        return role?.roleType === "guard";
+      isWarrior: (id: string) =>
+        this.roleSystem?.getAgentRole(id)?.roleType === "guard",
+      getNearbyPredators: (pos, range) => {
+        return (
+          this.animalSystem
+            ?.getAnimalsInRadius(pos, range)
+            .filter((a) => getAnimalConfig(a.type)?.isPredator)
+            .map((a) => ({ id: a.id, position: a.position })) || []
+        );
       },
-      getNearbyPredators: (pos: { x: number; y: number }, range: number) => {
-        const animalSys = this.animalSystem;
-        if (!animalSys) return [];
-        const animals = animalSys.getAnimalsInRadius(pos, range);
-        return animals
-          .filter((a) => {
-            const config = getAnimalConfig(a.type);
-            return config?.isPredator;
-          })
-          .map((a) => ({ id: a.id, position: a.position }));
+      getEnemiesForAgent: (id, threshold) =>
+        this.combatSystem?.getNearbyEnemies(id, threshold) || [],
+      getTasks: () => this.taskSystem?.getActiveTasks() || [],
+      getActiveQuests: () => this.questSystem?.getActiveQuests() || [],
+      getAvailableQuests: () => this.questSystem?.getAvailableQuests() || [],
+      getCurrentTimeOfDay: () => {
+        return (this.timeSystem?.getCurrentTime().phase ||
+          "morning") as TimeOfDay["phase"];
       },
-      getEnemiesForAgent: (id: string, threshold?: number): string[] => {
-        if (!this.combatSystem) return [];
-        return this.combatSystem.getNearbyEnemies(id, threshold);
-      },
-      getTasks: this.taskSystem
-        ? (): Task[] => this.taskSystem!.getActiveTasks()
-        : undefined,
-      getActiveQuests: this.questSystem
-        ? (): Quest[] => this.questSystem!.getActiveQuests()
-        : undefined,
-      getAvailableQuests: this.questSystem
-        ? (): Quest[] => this.questSystem!.getAvailableQuests()
-        : undefined,
-      getCurrentTimeOfDay: this.timeSystem
-        ? ():
-            | "dawn"
-            | "morning"
-            | "midday"
-            | "afternoon"
-            | "dusk"
-            | "night"
-            | "deep_night" => {
-            const time = this.timeSystem!.getCurrentTimeOfDay();
-            if (time === "evening") return "dusk";
-            if (time === "rest") return "deep_night";
-            return time as
-              | "dawn"
-              | "morning"
-              | "midday"
-              | "afternoon"
-              | "dusk"
-              | "night"
-              | "deep_night";
-          }
-        : undefined,
-      getEntityPosition: (id: string) => {
-        const agent =
-          this.entityIndex?.getAgent(id) ??
-          this.gameState.agents.find((a) => a.id === id);
-        if (agent?.position) {
-          return { x: agent.position.x, y: agent.position.y };
-        }
-        const entity =
-          this.entityIndex?.getEntity(id) ??
-          this.gameState.entities?.find((e) => e.id === id);
-        if (entity?.position) {
-          return { x: entity.position.x, y: entity.position.y };
-        }
-        return null;
-      },
+      getEntityPosition: (id: string) => this.getAgentPosition(id) || null,
     };
 
-    const goals = planGoals(deps, aiState);
-
-    if (goals.length > 0) {
-      return goals[0];
-    }
-
-    return null;
+    const goals = planGoals(deps, aiState, now);
+    return goals.length > 0 ? goals[0] : null;
   }
 
   private derivePersonalityFromTraits(
@@ -764,9 +701,19 @@ export class AISystem extends EventEmitter {
    * @param entityId - Entity identifier
    * @param zoneId - Zone identifier where entity arrived
    */
-  public notifyEntityArrived(entityId: string, zoneId: string): void {
+  public notifyEntityArrived(entityId: string, zoneId?: string): void {
     const aiState = this.aiStates.get(entityId);
-    if (!aiState || !aiState.currentGoal) return;
+    if (!aiState) return;
+
+    if (aiState.currentAction?.actionType === "move") {
+      this.handleActionComplete({
+        agentId: entityId,
+        success: true,
+        actionType: "move",
+      });
+    }
+
+    if (!aiState.currentGoal) return;
 
     const goal = aiState.currentGoal;
 
@@ -1586,18 +1533,6 @@ export class AISystem extends EventEmitter {
         this.failGoal(aiState, payload.agentId);
       }
     }
-  }
-
-  private checkDependencies(): void {
-    if (!this.needsSystem) logger.warn("AISystem: NeedsSystem missing");
-    if (!this.roleSystem) logger.warn("AISystem: RoleSystem missing");
-    if (!this.worldResourceSystem)
-      logger.warn("AISystem: WorldResourceSystem missing");
-    if (!this.inventorySystem) logger.warn("AISystem: InventorySystem missing");
-    if (!this.socialSystem) logger.warn("AISystem: SocialSystem missing");
-    if (!this.craftingSystem)
-      logger.warn("AISystem: EnhancedCraftingSystem missing");
-    if (!this.householdSystem) logger.warn("AISystem: HouseholdSystem missing");
   }
 
   private executeAction(action: AgentAction): void {
