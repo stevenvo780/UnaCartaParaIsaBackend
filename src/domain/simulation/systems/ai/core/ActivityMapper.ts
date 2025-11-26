@@ -1,4 +1,4 @@
-import type { AIGoal } from "../../../types/simulation/ai";
+import type { AIGoal } from "../../../../types/simulation/ai";
 
 export type ActivityType =
   | "idle"

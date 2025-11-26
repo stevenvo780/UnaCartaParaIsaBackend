@@ -1,5 +1,5 @@
-import type { AIState, AIGoal } from "../../../types/simulation/ai";
-import type { EntityNeedsData } from "../../../types/simulation/needs";
+import type { AIState, AIGoal } from "../../../../types/simulation/ai";
+import type { EntityNeedsData } from "../../../../types/simulation/needs";
 
 export interface NeedsEvaluatorDependencies {
   getEntityNeeds: (entityId: string) => EntityNeedsData | undefined;

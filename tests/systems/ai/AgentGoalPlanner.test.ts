@@ -1,61 +1,61 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { planGoals } from "../../../src/domain/simulation/systems/ai/AgentGoalPlanner";
+import { planGoals } from "../../../src/domain/simulation/systems/ai/core/AgentGoalPlanner";
 import { createMockGameState } from "../../setup";
 import type { GameState } from "../../../src/domain/types/game-types";
 import type { AIState } from "../../../src/domain/types/simulation/ai";
 
-vi.mock("../../../src/domain/simulation/systems/ai/NeedsEvaluator", () => ({
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/NeedsEvaluator", () => ({
   evaluateCriticalNeeds: vi.fn(() => []),
 }));
 
-vi.mock("../../../src/domain/simulation/systems/ai/OpportunitiesEvaluator", () => ({
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/OpportunitiesEvaluator", () => ({
   evaluateWorkOpportunities: vi.fn(() => []),
   evaluateExplorationOpportunities: vi.fn(() => []),
 }));
 
-vi.mock("../../../src/domain/simulation/systems/ai/AssistEvaluator", () => ({
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/AssistEvaluator", () => ({
   evaluateAssist: vi.fn(() => []),
 }));
 
-vi.mock("../../../src/domain/simulation/systems/ai/CombatEvaluator", () => ({
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/CombatEvaluator", () => ({
   evaluateCombatGoals: vi.fn(() => []),
 }));
 
-vi.mock("../../../src/domain/simulation/systems/ai/ConstructionEvaluator", () => ({
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/ConstructionEvaluator", () => ({
   evaluateConstructionGoals: vi.fn(() => []),
 }));
 
-vi.mock("../../../src/domain/simulation/systems/ai/DepositEvaluator", () => ({
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/DepositEvaluator", () => ({
   evaluateDepositGoals: vi.fn(() => []),
 }));
 
-vi.mock("../../../src/domain/simulation/systems/ai/CraftingEvaluator", () => ({
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/CraftingEvaluator", () => ({
   evaluateCrafting: vi.fn(() => []),
 }));
 
-vi.mock("../../../src/domain/simulation/systems/ai/AttentionEvaluator", () => ({
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/AttentionEvaluator", () => ({
   evaluateAttention: vi.fn(() => []),
   evaluateDefaultExploration: vi.fn(() => [
     { id: "default", description: "default", priority: 0.5, type: "explore" },
   ]),
 }));
 
-vi.mock("../../../src/domain/simulation/systems/ai/QuestEvaluator", () => ({
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/QuestEvaluator", () => ({
   evaluateQuestGoals: vi.fn(() => []),
 }));
 
-vi.mock("../../../src/domain/simulation/systems/ai/TradeEvaluator", () => ({
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/TradeEvaluator", () => ({
   evaluateTradeGoals: vi.fn(() => []),
 }));
 
 vi.mock(
-  "../../../src/domain/simulation/systems/ai/BuildingContributionEvaluator",
+  "../../../src/domain/simulation/systems/ai/evaluators/BuildingContributionEvaluator",
   () => ({
     evaluateBuildingContributionGoals: vi.fn(() => []),
   }),
 );
 
-vi.mock("../../../src/domain/simulation/systems/ai/utils", () => ({
+vi.mock("../../../src/domain/simulation/systems/ai/core/utils", () => ({
   selectBestZone: vi.fn(() => null),
   getUnexploredZones: vi.fn(() => []),
   prioritizeGoals: vi
@@ -71,13 +71,13 @@ vi.mock("../../../src/domain/simulation/systems/ai/utils", () => ({
   getEntityPosition: vi.fn(() => ({ x: 0, y: 0 })),
 }));
 
-import { evaluateCriticalNeeds } from "../../../src/domain/simulation/systems/ai/NeedsEvaluator";
+import { evaluateCriticalNeeds } from "../../../src/domain/simulation/systems/ai/evaluators/NeedsEvaluator";
 import {
   evaluateWorkOpportunities,
   evaluateExplorationOpportunities,
-} from "../../../src/domain/simulation/systems/ai/OpportunitiesEvaluator";
-import { evaluateAttention, evaluateDefaultExploration } from "../../../src/domain/simulation/systems/ai/AttentionEvaluator";
-import { prioritizeGoals } from "../../../src/domain/simulation/systems/ai/utils";
+} from "../../../src/domain/simulation/systems/ai/evaluators/OpportunitiesEvaluator";
+import { evaluateAttention, evaluateDefaultExploration } from "../../../src/domain/simulation/systems/ai/evaluators/AttentionEvaluator";
+import { prioritizeGoals } from "../../../src/domain/simulation/systems/ai/core/utils";
 
 describe("AgentGoalPlanner", () => {
   let gameState: GameState;

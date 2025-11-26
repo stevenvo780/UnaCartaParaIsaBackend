@@ -9,11 +9,11 @@ import {
   getRecommendedZoneIdsForNeed,
   getEntityPosition,
   getUnexploredZones,
-} from "../../../src/domain/simulation/systems/ai/utils";
+} from "../../../src/domain/simulation/systems/ai/core/utils";
 import type {
   PriorityManager,
   GoalDomain,
-} from "../../../src/domain/simulation/systems/ai/PriorityManager";
+} from "../../../src/domain/simulation/systems/ai/core/PriorityManager";
 import { createMockGameState } from "../../setup";
 
 function createAIState(overrides: Partial<AIState> = {}): AIState {

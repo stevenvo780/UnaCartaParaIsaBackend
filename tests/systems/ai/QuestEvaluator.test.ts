@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { evaluateQuestGoals } from "../../../src/domain/simulation/systems/ai/QuestEvaluator";
+import { evaluateQuestGoals } from "../../../src/domain/simulation/systems/ai/evaluators/QuestEvaluator";
 import type { AIState } from "../../../src/domain/types/simulation/ai";
 import type { Quest } from "../../../src/domain/types/simulation/quests";
 

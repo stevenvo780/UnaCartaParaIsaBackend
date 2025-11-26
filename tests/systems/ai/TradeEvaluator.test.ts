@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { evaluateTradeGoals } from "../../../src/domain/simulation/systems/ai/TradeEvaluator";
+import { evaluateTradeGoals } from "../../../src/domain/simulation/systems/ai/evaluators/TradeEvaluator";
 import type { AIState } from "../../../src/domain/types/simulation/ai";
 
 describe("TradeEvaluator", () => {

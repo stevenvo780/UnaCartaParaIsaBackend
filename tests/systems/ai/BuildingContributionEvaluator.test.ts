@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { evaluateBuildingContributionGoals } from "../../../src/domain/simulation/systems/ai/BuildingContributionEvaluator";
+import { evaluateBuildingContributionGoals } from "../../../src/domain/simulation/systems/ai/evaluators/BuildingContributionEvaluator";
 import type { AIState } from "../../../src/domain/types/simulation/ai";
 
 describe("BuildingContributionEvaluator", () => {

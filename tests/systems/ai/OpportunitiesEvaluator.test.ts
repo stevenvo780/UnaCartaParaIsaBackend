@@ -4,7 +4,7 @@ import {
   evaluateExplorationOpportunities,
   type OpportunitiesEvaluatorDependencies,
   type ExplorationDependencies,
-} from "../../../src/domain/simulation/systems/ai/OpportunitiesEvaluator.ts";
+} from "../../../src/domain/simulation/systems/ai/evaluators/OpportunitiesEvaluator.ts";
 import { createMockGameState } from "../../setup.ts";
 import type { GameState } from "../../../src/domain/types/game-types.ts";
 import type { AIState } from "../../../src/domain/types/simulation/ai.ts";

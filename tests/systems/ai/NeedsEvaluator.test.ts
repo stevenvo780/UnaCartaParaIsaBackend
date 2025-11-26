@@ -3,7 +3,7 @@ import {
   evaluateCriticalNeeds,
   calculateNeedPriority,
   type NeedsEvaluatorDependencies,
-} from "../../../src/domain/simulation/systems/ai/NeedsEvaluator.ts";
+} from "../../../src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts";
 import type { AIState } from "../../../src/domain/types/simulation/ai.ts";
 import type { EntityNeedsData } from "../../../src/domain/types/simulation/needs.ts";
 

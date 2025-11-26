@@ -1,0 +1,376 @@
+import { logger } from "../../../../../infrastructure/utils/logger";
+import type { GameState } from "../../../../types/game-types";
+import type { AgentAction } from "../../../../types/simulation/ai";
+import { toInventoryResource } from "../../../../types/simulation/resourceMapping";
+import type { NeedsSystem } from "../../NeedsSystem";
+import type { InventorySystem } from "../../InventorySystem";
+import type { SocialSystem } from "../../SocialSystem";
+import type { EnhancedCraftingSystem } from "../../EnhancedCraftingSystem";
+import type { WorldResourceSystem } from "../../WorldResourceSystem";
+import type { TaskSystem } from "../../TaskSystem";
+import type { MovementSystem } from "../../MovementSystem";
+import { GameEventNames, simulationEvents } from "../../../core/events";
+
+export interface AIActionExecutorDeps {
+  gameState: GameState;
+  needsSystem?: NeedsSystem;
+  inventorySystem?: InventorySystem;
+  socialSystem?: SocialSystem;
+  craftingSystem?: EnhancedCraftingSystem;
+  worldResourceSystem?: WorldResourceSystem;
+  taskSystem?: TaskSystem;
+  movementSystem?: MovementSystem;
+  tryDepositResources: (entityId: string, zoneId: string) => void;
+}
+
+/**
+ * Executes AI actions by coordinating with game systems.
+ * Handles movement, harvesting, combat, social interactions, crafting, etc.
+ */
+export class AIActionExecutor {
+  private deps: AIActionExecutorDeps;
+
+  constructor(deps: AIActionExecutorDeps) {
+    this.deps = deps;
+  }
+
+  /**
+   * Updates dependencies (for circular dependency resolution).
+   */
+  public updateDeps(deps: Partial<AIActionExecutorDeps>): void {
+    this.deps = { ...this.deps, ...deps };
+  }
+
+  /**
+   * Executes an action for an agent.
+   */
+  public executeAction(action: AgentAction): void {
+    if (!this.deps.movementSystem) return;
+
+    switch (action.actionType) {
+      case "move":
+        this.executeMove(action);
+        break;
+      case "work":
+        this.executeWork(action);
+        break;
+      case "harvest":
+        this.executeHarvest(action);
+        break;
+      case "idle":
+        this.executeIdle(action);
+        break;
+      case "attack":
+        this.executeAttack(action);
+        break;
+      case "socialize":
+        this.executeSocialize(action);
+        break;
+      case "eat":
+        this.executeEat(action);
+        break;
+      case "drink":
+        this.executeDrink(action);
+        break;
+      case "sleep":
+        this.executeSleep(action);
+        break;
+      case "craft":
+        this.executeCraft(action);
+        break;
+      case "deposit":
+        this.executeDeposit(action);
+        break;
+      case "build":
+        this.executeBuild(action);
+        break;
+      default:
+        break;
+    }
+  }
+
+  private executeMove(action: AgentAction): void {
+    const movement = this.deps.movementSystem;
+    if (!movement) return;
+
+    if (action.targetZoneId) {
+      if (movement.isMovingToZone(action.agentId, action.targetZoneId)) {
+        return;
+      }
+      movement.moveToZone(action.agentId, action.targetZoneId);
+    } else if (action.targetPosition) {
+      if (
+        movement.isMovingToPosition(
+          action.agentId,
+          action.targetPosition.x,
+          action.targetPosition.y,
+        )
+      ) {
+        return;
+      }
+      movement.moveToPoint(
+        action.agentId,
+        action.targetPosition.x,
+        action.targetPosition.y,
+      );
+    }
+  }
+
+  private executeWork(action: AgentAction): void {
+    if (!action.targetZoneId) return;
+
+    const movement = this.deps.movementSystem;
+    if (movement?.isMovingToZone(action.agentId, action.targetZoneId)) {
+      return;
+    }
+
+    const agent = this.deps.gameState.agents?.find(
+      (a) => a.id === action.agentId,
+    );
+    if (!agent?.position) {
+      movement?.moveToZone(action.agentId, action.targetZoneId);
+      return;
+    }
+
+    const zone = this.deps.gameState.zones?.find(
+      (z) => z.id === action.targetZoneId,
+    );
+    if (!zone || !zone.bounds) {
+      movement?.moveToZone(action.agentId, action.targetZoneId);
+      return;
+    }
+
+    const inZone =
+      agent.position.x >= zone.bounds.x &&
+      agent.position.x <= zone.bounds.x + zone.bounds.width &&
+      agent.position.y >= zone.bounds.y &&
+      agent.position.y <= zone.bounds.y + zone.bounds.height;
+
+    if (!inZone) {
+      movement?.moveToZone(action.agentId, action.targetZoneId);
+      return;
+    }
+
+    // Agent is in zone - contribute to task
+    if (
+      this.deps.taskSystem &&
+      action.data &&
+      typeof action.data.taskId === "string"
+    ) {
+      const result = this.deps.taskSystem.contributeToTask(
+        action.data.taskId,
+        action.agentId,
+        10, // Base contribution
+        1.0, // Synergy multiplier
+      );
+
+      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+        agentId: action.agentId,
+        actionType: "work",
+        success: true,
+        data: {
+          taskId: action.data.taskId,
+          progressMade: result.progressMade,
+          completed: result.completed,
+        },
+      });
+      return;
+    }
+
+    movement?.moveToZone(action.agentId, action.targetZoneId);
+  }
+
+  private executeHarvest(action: AgentAction): void {
+    if (!action.targetId || !this.deps.worldResourceSystem) return;
+
+    const result = this.deps.worldResourceSystem.harvestResource(
+      action.targetId,
+      action.agentId,
+    );
+
+    if (result.success) {
+      const resource = this.deps.gameState.worldResources?.[action.targetId];
+      if (resource) {
+        const inventoryResourceType = toInventoryResource(resource.type);
+
+        // Satisfy needs based on resource type
+        if (resource.type === "water_source" && this.deps.needsSystem) {
+          this.deps.needsSystem.satisfyNeed(action.agentId, "thirst", 30);
+        } else if (
+          ["berry_bush", "mushroom_patch", "wheat_crop"].includes(
+            resource.type,
+          ) &&
+          this.deps.needsSystem
+        ) {
+          this.deps.needsSystem.satisfyNeed(action.agentId, "hunger", 25);
+        }
+
+        // Add to inventory
+        if (inventoryResourceType && this.deps.inventorySystem) {
+          const added = this.deps.inventorySystem.addResource(
+            action.agentId,
+            inventoryResourceType,
+            result.amount,
+          );
+          if (added) {
+            logger.debug(
+              `🎒 [AI] Agent ${action.agentId} added ${result.amount} ${inventoryResourceType} to inventory`,
+            );
+          }
+        }
+      }
+    }
+
+    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      agentId: action.agentId,
+      actionType: "harvest",
+      success: result.success,
+      data: { amount: result.amount },
+    });
+  }
+
+  private executeIdle(action: AgentAction): void {
+    if (this.deps.needsSystem) {
+      this.deps.needsSystem.satisfyNeed(action.agentId, "energy", 5);
+    }
+    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      agentId: action.agentId,
+      actionType: "idle",
+      success: true,
+    });
+  }
+
+  private executeAttack(action: AgentAction): void {
+    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      agentId: action.agentId,
+      actionType: "attack",
+      success: true,
+      data: { targetId: action.targetId },
+    });
+  }
+
+  private executeSocialize(action: AgentAction): void {
+    if (action.targetZoneId) {
+      this.deps.movementSystem?.moveToZone(action.agentId, action.targetZoneId);
+    } else if (action.targetId && this.deps.socialSystem) {
+      this.deps.socialSystem.registerFriendlyInteraction(
+        action.agentId,
+        action.targetId,
+      );
+      if (this.deps.needsSystem) {
+        this.deps.needsSystem.satisfyNeed(action.agentId, "social", 15);
+      }
+      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+        agentId: action.agentId,
+        actionType: "socialize",
+        success: true,
+        data: { targetId: action.targetId },
+      });
+    } else {
+      if (this.deps.needsSystem) {
+        this.deps.needsSystem.satisfyNeed(action.agentId, "social", 5);
+      }
+      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+        agentId: action.agentId,
+        actionType: "socialize",
+        success: true,
+      });
+    }
+  }
+
+  private executeEat(action: AgentAction): void {
+    if (this.deps.needsSystem) {
+      this.deps.needsSystem.satisfyNeed(action.agentId, "hunger", 30);
+    }
+    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      agentId: action.agentId,
+      actionType: "eat",
+      success: true,
+    });
+  }
+
+  private executeDrink(action: AgentAction): void {
+    if (this.deps.needsSystem) {
+      this.deps.needsSystem.satisfyNeed(action.agentId, "thirst", 30);
+    }
+    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      agentId: action.agentId,
+      actionType: "drink",
+      success: true,
+    });
+  }
+
+  private executeSleep(action: AgentAction): void {
+    if (this.deps.needsSystem) {
+      this.deps.needsSystem.satisfyNeed(action.agentId, "energy", 50);
+    }
+    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      agentId: action.agentId,
+      actionType: "sleep",
+      success: true,
+    });
+  }
+
+  private executeCraft(action: AgentAction): void {
+    if (this.deps.craftingSystem && action.data?.itemType === "weapon") {
+      const weaponId = this.deps.craftingSystem.craftBestWeapon(action.agentId);
+      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+        agentId: action.agentId,
+        actionType: "craft",
+        success: !!weaponId,
+        data: { weaponId },
+      });
+    } else {
+      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+        agentId: action.agentId,
+        actionType: "craft",
+        success: false,
+      });
+    }
+  }
+
+  private executeDeposit(action: AgentAction): void {
+    if (action.targetZoneId) {
+      this.deps.tryDepositResources(action.agentId, action.targetZoneId);
+    }
+    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      agentId: action.agentId,
+      actionType: "deposit",
+      success: true,
+    });
+  }
+
+  private executeBuild(action: AgentAction): void {
+    if (action.targetZoneId && this.deps.taskSystem) {
+      const tasks = this.deps.taskSystem.getTasksInZone(action.targetZoneId);
+      const constructionTask = tasks.find(
+        (t: { type: string }) =>
+          t.type === "build" || t.type === "construction",
+      );
+      if (constructionTask) {
+        const result = this.deps.taskSystem.contributeToTask(
+          constructionTask.id,
+          action.agentId,
+          10,
+          1.0,
+        );
+        simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+          agentId: action.agentId,
+          actionType: "build",
+          success: true,
+          data: {
+            taskId: constructionTask.id,
+            progressMade: result.progressMade,
+            completed: result.completed,
+          },
+        });
+        return;
+      }
+    }
+    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      agentId: action.agentId,
+      actionType: "build",
+      success: false,
+    });
+  }
+}

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import {
   evaluateCombatGoals,
   type CombatContext,
-} from "../../../src/domain/simulation/systems/ai/CombatEvaluator.ts";
+} from "../../../src/domain/simulation/systems/ai/evaluators/CombatEvaluator.ts";
 import type { AIState } from "../../../src/domain/types/simulation/ai.ts";
 
 describe("CombatEvaluator", () => {

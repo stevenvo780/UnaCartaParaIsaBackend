@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { PriorityManager } from "../../../src/domain/simulation/systems/ai/PriorityManager";
+import { PriorityManager } from "../../../src/domain/simulation/systems/ai/core/PriorityManager";
 import { createMockGameState } from "../../setup";
 import type { GameState } from "../../../src/domain/types/game-types";
 

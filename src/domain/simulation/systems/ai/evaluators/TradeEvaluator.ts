@@ -1,5 +1,5 @@
-import type { AIState, AIGoal } from "../../../types/simulation/ai";
-import type { Inventory } from "../../../types/simulation/economy";
+import type { AIState, AIGoal } from "../../../../types/simulation/ai";
+import type { Inventory } from "../../../../types/simulation/economy";
 
 export interface TradeEvaluatorDependencies {
   getAgentInventory: (id: string) => Inventory | undefined;

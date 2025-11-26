@@ -1,5 +1,5 @@
-import type { GameState } from "../../../types/game-types";
-import type { AIGoal, AIState } from "../../../types/simulation/ai";
+import type { GameState } from "../../../../types/game-types";
+import type { AIGoal, AIState } from "../../../../types/simulation/ai";
 import type { PriorityManager, GoalDomain } from "./PriorityManager";
 
 const PRIORITY_TIERS = {

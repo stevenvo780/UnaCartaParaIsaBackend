@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import {
   evaluateCrafting,
   type CraftingContext,
-} from "../../../src/domain/simulation/systems/ai/CraftingEvaluator.ts";
+} from "../../../src/domain/simulation/systems/ai/evaluators/CraftingEvaluator.ts";
 import type { AIState } from "../../../src/domain/types/simulation/ai.ts";
 
 describe("CraftingEvaluator", () => {

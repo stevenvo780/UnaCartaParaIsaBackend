@@ -1,35 +1,35 @@
-import type { GameState } from "../../../types/game-types";
-import type { AIGoal, AIState } from "../../../types/simulation/ai";
-import type { EntityNeedsData } from "../../../types/simulation/needs";
-import type { AgentRole } from "../../../types/simulation/roles";
-import type { Task } from "../../../types/simulation/tasks";
-import type { Inventory } from "../../../types/simulation/economy";
+import type { GameState } from "../../../../types/game-types";
+import type { AIGoal, AIState } from "../../../../types/simulation/ai";
+import type { EntityNeedsData } from "../../../../types/simulation/needs";
+import type { AgentRole } from "../../../../types/simulation/roles";
+import type { Task } from "../../../../types/simulation/tasks";
+import type { Inventory } from "../../../../types/simulation/economy";
 import type { PriorityManager } from "./PriorityManager";
-import { evaluateCriticalNeeds } from "./NeedsEvaluator";
+import { evaluateCriticalNeeds } from "../evaluators/NeedsEvaluator";
 import {
   evaluateWorkOpportunities,
   evaluateExplorationOpportunities,
-} from "./OpportunitiesEvaluator";
-import { evaluateAssist } from "./AssistEvaluator";
-import { evaluateCombatGoals } from "./CombatEvaluator";
-import { evaluateConstructionGoals } from "./ConstructionEvaluator";
-import { evaluateDepositGoals } from "./DepositEvaluator";
-import { evaluateCrafting } from "./CraftingEvaluator";
+} from "../evaluators/OpportunitiesEvaluator";
+import { evaluateAssist } from "../evaluators/AssistEvaluator";
+import { evaluateCombatGoals } from "../evaluators/CombatEvaluator";
+import { evaluateConstructionGoals } from "../evaluators/ConstructionEvaluator";
+import { evaluateDepositGoals } from "../evaluators/DepositEvaluator";
+import { evaluateCrafting } from "../evaluators/CraftingEvaluator";
 import {
   evaluateAttention,
   evaluateDefaultExploration,
-} from "./AttentionEvaluator";
-import { evaluateQuestGoals } from "./QuestEvaluator";
-import { evaluateTradeGoals } from "./TradeEvaluator";
-import { evaluateBuildingContributionGoals } from "./BuildingContributionEvaluator";
+} from "../evaluators/AttentionEvaluator";
+import { evaluateQuestGoals } from "../evaluators/QuestEvaluator";
+import { evaluateTradeGoals } from "../evaluators/TradeEvaluator";
+import { evaluateBuildingContributionGoals } from "../evaluators/BuildingContributionEvaluator";
 import {
   selectBestZone,
   getUnexploredZones,
   prioritizeGoals,
   getEntityPosition,
 } from "./utils";
-import type { Quest } from "../../../types/simulation/quests";
-import { evaluateExpansionGoals } from "./ExpansionEvaluator";
+import type { Quest } from "../../../../types/simulation/quests";
+import { evaluateExpansionGoals } from "../evaluators/ExpansionEvaluator";
 
 /**
  * Dependencies interface for goal planning.

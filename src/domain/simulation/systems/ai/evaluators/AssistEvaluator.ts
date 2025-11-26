@@ -1,6 +1,6 @@
-import { logger } from "../../../../infrastructure/utils/logger";
-import type { AIState, AIGoal } from "../../../types/simulation/ai";
-import type { EntityNeedsData } from "../../../types/simulation/needs";
+import { logger } from "../../../../../infrastructure/utils/logger";
+import type { AIState, AIGoal } from "../../../../types/simulation/ai";
+import type { EntityNeedsData } from "../../../../types/simulation/needs";
 
 export interface AssistContext {
   getAllActiveAgentIds: () => string[];

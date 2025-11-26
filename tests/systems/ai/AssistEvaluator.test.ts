@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import {
   evaluateAssist,
   type AssistContext,
-} from "../../../src/domain/simulation/systems/ai/AssistEvaluator.ts";
+} from "../../../src/domain/simulation/systems/ai/evaluators/AssistEvaluator.ts";
 import type { AIState } from "../../../src/domain/types/simulation/ai.ts";
 import type { EntityNeedsData } from "../../../src/domain/types/simulation/needs.ts";
 

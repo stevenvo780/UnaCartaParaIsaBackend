@@ -67,16 +67,18 @@ simulationRunner
 
     // If no save or load failed, initialize fresh world
     logger.info("🆕 No valid save found. Initializing fresh world...");
-    return simulationRunner.initializeWorldResources({
-      width: 128,
-      height: 128,
-      tileSize: 32,
-      biomeMap: [],
-    }).then(() => {
-      logger.info("🌍 Backend: World resources initialized");
-      simulationRunner.start();
-      logger.info("✅ Backend: Simulation started and running");
-    });
+    return simulationRunner
+      .initializeWorldResources({
+        width: 128,
+        height: 128,
+        tileSize: 32,
+        biomeMap: [],
+      })
+      .then(() => {
+        logger.info("🌍 Backend: World resources initialized");
+        simulationRunner.start();
+        logger.info("✅ Backend: Simulation started and running");
+      });
   })
   .catch((err) => {
     logger.error("❌ Backend: Failed to initialize simulation:", err);

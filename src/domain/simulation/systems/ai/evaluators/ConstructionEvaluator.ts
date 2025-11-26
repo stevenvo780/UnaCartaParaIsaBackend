@@ -1,6 +1,6 @@
-import { logger } from "../../../../infrastructure/utils/logger";
-import type { AIState, AIGoal } from "../../../types/simulation/ai";
-import type { GameState } from "../../../types/game-types";
+import { logger } from "../../../../../infrastructure/utils/logger";
+import type { AIState, AIGoal } from "../../../../types/simulation/ai";
+import type { GameState } from "../../../../types/game-types";
 
 export interface ConstructionContext {
   gameState: GameState;

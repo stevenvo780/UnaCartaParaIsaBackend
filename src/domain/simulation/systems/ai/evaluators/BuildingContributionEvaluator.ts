@@ -1,5 +1,5 @@
-import type { AIState, AIGoal } from "../../../types/simulation/ai";
-import type { GameState } from "../../../types/game-types";
+import type { AIState, AIGoal } from "../../../../types/simulation/ai";
+import type { GameState } from "../../../../types/game-types";
 
 export interface BuildingContributionDependencies {
   gameState: GameState;

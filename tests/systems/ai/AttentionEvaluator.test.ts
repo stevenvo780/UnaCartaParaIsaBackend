@@ -3,7 +3,7 @@ import {
   evaluateAttention,
   evaluateDefaultExploration,
   type AttentionContext,
-} from "../../../src/domain/simulation/systems/ai/AttentionEvaluator.ts";
+} from "../../../src/domain/simulation/systems/ai/evaluators/AttentionEvaluator.ts";
 import { createMockGameState } from "../../setup.ts";
 import type { GameState } from "../../../src/domain/types/game-types.ts";
 import type { AIState } from "../../../src/domain/types/simulation/ai.ts";

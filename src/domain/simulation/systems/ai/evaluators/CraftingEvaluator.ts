@@ -1,5 +1,5 @@
-import { logger } from "../../../../infrastructure/utils/logger";
-import type { AIState, AIGoal } from "../../../types/simulation/ai";
+import { logger } from "../../../../../infrastructure/utils/logger";
+import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 
 export interface CraftingContext {
   getEquipped: (id: string) => string;

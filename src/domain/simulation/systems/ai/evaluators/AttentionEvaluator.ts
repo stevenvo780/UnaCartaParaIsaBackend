@@ -1,6 +1,6 @@
-import type { AIState, AIGoal } from "../../../types/simulation/ai";
-import type { GameState } from "../../../types/game-types";
-import { RandomUtils } from "../../../../shared/utils/RandomUtils";
+import type { AIState, AIGoal } from "../../../../types/simulation/ai";
+import type { GameState } from "../../../../types/game-types";
+import { RandomUtils } from "../../../../../shared/utils/RandomUtils";
 
 export interface AttentionContext {
   gameState: GameState;

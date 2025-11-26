@@ -1,5 +1,5 @@
-import type { AIState, AIGoal } from "../../../types/simulation/ai";
-import type { Quest } from "../../../types/simulation/quests";
+import type { AIState, AIGoal } from "../../../../types/simulation/ai";
+import type { Quest } from "../../../../types/simulation/quests";
 
 export interface QuestEvaluatorDependencies {
   getActiveQuests: () => Quest[];

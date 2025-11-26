@@ -392,15 +392,15 @@ export class LifeCycleSystem extends EventEmitter {
     spec:
       | Partial<AgentProfile>
       | {
-        id?: string;
-        name?: string;
-        sex: "male" | "female";
-        ageYears: number;
-        lifeStage: LifeStage;
-        generation: number;
-        immortal?: boolean;
-        traits?: Partial<AgentTraits>;
-      } = {},
+          id?: string;
+          name?: string;
+          sex: "male" | "female";
+          ageYears: number;
+          lifeStage: LifeStage;
+          generation: number;
+          immortal?: boolean;
+          traits?: Partial<AgentTraits>;
+        } = {},
   ): AgentProfile {
     const partial = spec as Partial<AgentProfile>;
     const id = partial.id ?? `agent_${++this.spawnCounter}`;
@@ -693,7 +693,9 @@ export class LifeCycleSystem extends EventEmitter {
       }
     }
 
-    logger.warn("⚠️ Could not find valid spawn position, using center fallback");
+    logger.warn(
+      "⚠️ Could not find valid spawn position, using center fallback",
+    );
     return {
       x: Math.floor(world.width / 2),
       y: Math.floor(world.height / 2),

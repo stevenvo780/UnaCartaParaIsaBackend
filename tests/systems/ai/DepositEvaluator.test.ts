@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import {
   evaluateDepositGoals,
   type DepositContext,
-} from "../../../src/domain/simulation/systems/ai/DepositEvaluator.ts";
+} from "../../../src/domain/simulation/systems/ai/evaluators/DepositEvaluator.ts";
 import { createMockGameState } from "../../setup.ts";
 import type { GameState } from "../../../src/domain/types/game-types.ts";
 import type { AIState } from "../../../src/domain/types/simulation/ai.ts";

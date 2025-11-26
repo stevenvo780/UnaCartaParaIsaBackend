@@ -1,6 +1,6 @@
-import type { AIState, AIGoal } from "../../../types/simulation/ai";
-import type { AgentRole } from "../../../types/simulation/roles";
-import type { GameState } from "../../../types/game-types";
+import type { AIState, AIGoal } from "../../../../types/simulation/ai";
+import type { AgentRole } from "../../../../types/simulation/roles";
+import type { GameState } from "../../../../types/game-types";
 
 export interface OpportunitiesEvaluatorDependencies {
   getAgentRole: (agentId: string) => AgentRole | undefined;
