@@ -1,0 +1,315 @@
+{
+  "id": null,
+  "uid": "subsystems-operations",
+  "title": "4. Subsistemas y Operaciones Detalladas",
+  "tags": ["simulation", "subsystems", "operations", "detailed"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Top Operaciones por Tiempo de Ejecución",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Top 20 Operaciones Más Costosas",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 1 },
+      "targets": [
+        {
+          "expr": "topk(20, backend_subsystem_duration_ms)",
+          "legendFormat": "{{system}}::{{operation}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": ["mean", "max", "lastNotNull"],
+          "sortBy": "Mean",
+          "sortDesc": true
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Frecuencia de Llamadas",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 11 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Llamadas Totales por Operación (rate 1m)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "expr": "topk(15, rate(backend_subsystem_calls_total[1m]))",
+          "legendFormat": "{{system}}::{{operation}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": ["mean"]
+        }
+      }
+    },
+    {
+      "type": "bargauge",
+      "title": "Llamadas Totales Acumuladas",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "expr": "topk(15, backend_subsystem_calls_total)",
+          "legendFormat": "{{system}}::{{operation}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true
+      }
+    },
+    {
+      "type": "row",
+      "title": "Tiempo Total Acumulado",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 20 },
+      "collapsed": false
+    },
+    {
+      "type": "bargauge",
+      "title": "Tiempo Total Acumulado por Operación (ms)",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 21 },
+      "targets": [
+        {
+          "expr": "topk(25, backend_subsystem_total_duration_ms)",
+          "legendFormat": "{{system}}::{{operation}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 1000, "color": "yellow" },
+              { "value": 5000, "color": "orange" },
+              { "value": 10000, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true
+      }
+    },
+    {
+      "type": "row",
+      "title": "Análisis por Sistema",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
+      "collapsed": false
+    },
+    {
+      "type": "table",
+      "title": "Tabla Detallada de Subsistemas",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 32 },
+      "targets": [
+        {
+          "expr": "backend_subsystem_duration_ms",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "expr": "backend_subsystem_calls_total",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "expr": "backend_subsystem_total_duration_ms",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true
+            },
+            "indexByName": {
+              "system": 0,
+              "operation": 1,
+              "entity_id": 2,
+              "Value #A": 3,
+              "Value #B": 4,
+              "Value #C": 5
+            },
+            "renameByName": {
+              "system": "Sistema",
+              "operation": "Operación",
+              "entity_id": "Entity ID",
+              "Value #A": "Avg Duration (ms)",
+              "Value #B": "Total Calls",
+              "Value #C": "Total Duration (ms)"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Total Duration (ms)",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Avg Duration (ms)" },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "value": null, "color": "green" },
+                    { "value": 5, "color": "yellow" },
+                    { "value": 10, "color": "orange" },
+                    { "value": 20, "color": "red" }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Total Duration (ms)" },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "lcd-gauge"
+              },
+              {
+                "id": "max",
+                "value": 50000
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": []
+      }
+    },
+    {
+      "type": "row",
+      "title": "Operaciones por Entidad (si aplica)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 44 },
+      "collapsed": true,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Operaciones con Entity ID - Duración",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 45 },
+          "targets": [
+            {
+              "expr": "backend_subsystem_duration_ms{entity_id!=\"\"}",
+              "legendFormat": "{{system}}::{{operation}} [{{entity_id}}]",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "min": 0,
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 5
+              }
+            }
+          },
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,320 @@
+{
+  "id": null,
+  "uid": "systems-analysis",
+  "title": "2. Análisis Detallado de Sistemas",
+  "tags": ["simulation", "systems", "performance"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Top 10 Sistemas Más Costosos",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Top 10 Sistemas - Tiempo de Ejecución",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 1 },
+      "targets": [
+        {
+          "expr": "topk(10, backend_system_execution_ms)",
+          "legendFormat": "{{system}} ({{rate}})",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": { "mode": "none" }
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": ["mean", "max", "lastNotNull"],
+          "sortBy": "Mean",
+          "sortDesc": true
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Sistemas FAST Rate",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 11 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "FAST Rate - Todos los Sistemas",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "expr": "backend_system_execution_ms{rate=\"FAST\"}",
+          "legendFormat": "{{system}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": ["mean"]
+        }
+      }
+    },
+    {
+      "type": "bargauge",
+      "title": "FAST Rate - Comparación Actual",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "expr": "sort_desc(backend_system_execution_ms{rate=\"FAST\"})",
+          "legendFormat": "{{system}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 2, "color": "yellow" },
+              { "value": 5, "color": "orange" },
+              { "value": 8, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true
+      }
+    },
+    {
+      "type": "row",
+      "title": "Sistemas MEDIUM Rate",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 20 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "MEDIUM Rate - Todos los Sistemas",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 21 },
+      "targets": [
+        {
+          "expr": "backend_system_execution_ms{rate=\"MEDIUM\"}",
+          "legendFormat": "{{system}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": ["mean"]
+        }
+      }
+    },
+    {
+      "type": "bargauge",
+      "title": "MEDIUM Rate - Comparación Actual",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 21 },
+      "targets": [
+        {
+          "expr": "sort_desc(backend_system_execution_ms{rate=\"MEDIUM\"})",
+          "legendFormat": "{{system}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 5, "color": "yellow" },
+              { "value": 10, "color": "orange" },
+              { "value": 15, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true
+      }
+    },
+    {
+      "type": "row",
+      "title": "Sistemas SLOW Rate",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 29 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "SLOW Rate - Todos los Sistemas",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 30 },
+      "targets": [
+        {
+          "expr": "backend_system_execution_ms{rate=\"SLOW\"}",
+          "legendFormat": "{{system}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": ["mean"]
+        }
+      }
+    },
+    {
+      "type": "bargauge",
+      "title": "SLOW Rate - Comparación Actual",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 30 },
+      "targets": [
+        {
+          "expr": "sort_desc(backend_system_execution_ms{rate=\"SLOW\"})",
+          "legendFormat": "{{system}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 10, "color": "yellow" },
+              { "value": 20, "color": "orange" },
+              { "value": 30, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true
+      }
+    },
+    {
+      "type": "row",
+      "title": "Heatmap de Sistemas",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 38 },
+      "collapsed": false
+    },
+    {
+      "type": "heatmap",
+      "title": "Distribución de Tiempos de Ejecución",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 39 },
+      "targets": [
+        {
+          "expr": "backend_system_execution_ms",
+          "legendFormat": "{{system}}",
+          "refId": "A",
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          }
+        }
+      },
+      "options": {
+        "calculate": true,
+        "cellGap": 2,
+        "color": {
+          "mode": "scheme",
+          "scheme": "Spectral",
+          "steps": 128
+        },
+        "exemplars": {
+          "color": "rgba(255,0,255,0.7)"
+        },
+        "filterValues": {
+          "le": 1e-9
+        },
+        "legend": {
+          "show": true
+        },
+        "tooltip": {
+          "show": true,
+          "yHistogram": false
+        },
+        "yAxis": {
+          "axisPlacement": "left",
+          "reverse": false,
+          "unit": "ms"
+        }
+      }
+    }
+  ]
+}

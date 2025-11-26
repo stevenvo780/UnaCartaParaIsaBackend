@@ -1,6 +1,7 @@
 import { GameState } from "../../types/game-types";
 import { Task, TaskCreationParams } from "../../types/simulation/tasks";
 import { simulationEvents, GameEventNames } from "../core/events";
+import { getFrameTime } from "../../../shared/FrameTime";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -23,15 +24,15 @@ export class TaskSystem {
   private gameState: GameState;
   private tasks = new Map<string, Task>();
   private seq = 0;
-  private lastUpdate = Date.now();
+  private lastUpdate = 0;
 
   constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
-    this.lastUpdate = Date.now();
+    this.lastUpdate = 0;
   }
 
   public update(): void {
-    const now = Date.now();
+    const now = getFrameTime();
     const dtSec = (now - this.lastUpdate) / 1000;
     if (dtSec < 2) return;
     this.lastUpdate = now;

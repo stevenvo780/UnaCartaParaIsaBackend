@@ -40,7 +40,7 @@ export class NeedsSystem extends EventEmitter {
   private gameState: GameState;
   private config: NeedsConfig;
   private entityNeeds: Map<string, EntityNeedsData>;
-  private lastUpdate: number = Date.now();
+  private lastUpdate: number = 0;
 
   private lifeCyclePort?: ILifeCyclePort;
   private divineFavorSystem?: DivineFavorSystem;
@@ -184,12 +184,12 @@ export class NeedsSystem extends EventEmitter {
         this.applyCrossEffects(needs);
       }
 
-      this.checkEmergencyNeeds(entityId, needs);
-
+      // Check death BEFORE emergency needs to prevent zombi states
       if (this.checkForDeath(entityId, needs)) {
         continue;
       }
 
+      this.checkEmergencyNeeds(entityId, needs);
       this.emitNeedEvents(entityId, needs);
     }
     const duration = performance.now() - startTime;
@@ -250,12 +250,13 @@ export class NeedsSystem extends EventEmitter {
     for (const [entityId, needs] of this.entityNeeds.entries()) {
       this.handleZoneBenefits(entityId, needs, dtSeconds);
       this.applySocialMoraleBoost(entityId, needs);
-      this.checkEmergencyNeeds(entityId, needs);
 
+      // Check death BEFORE emergency needs (consistent with updateTraditional)
       if (this.checkForDeath(entityId, needs)) {
         continue;
       }
 
+      this.checkEmergencyNeeds(entityId, needs);
       this.emitNeedEvents(entityId, needs);
     }
     const duration = performance.now() - startTime;

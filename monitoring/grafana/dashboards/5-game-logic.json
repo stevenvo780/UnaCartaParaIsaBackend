@@ -1,0 +1,368 @@
+{
+  "id": null,
+  "uid": "game-logic",
+  "title": "5. Entidades y Lógica de Juego",
+  "tags": ["simulation", "game", "entities"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Estadísticas de Entidades",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "Agentes Activos",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 1 },
+      "targets": [
+        {
+          "expr": "backend_active_agents_total",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "blue" },
+              { "value": 10, "color": "green" },
+              { "value": 50, "color": "yellow" },
+              { "value": 100, "color": "orange" },
+              { "value": 200, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto",
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Recursos del Mundo",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 1 },
+      "targets": [
+        {
+          "expr": "backend_total_resources",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "blue" },
+              { "value": 100, "color": "green" },
+              { "value": 500, "color": "yellow" },
+              { "value": 1000, "color": "orange" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto",
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Edificios/Zonas",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 1 },
+      "targets": [
+        {
+          "expr": "backend_total_buildings",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "blue" },
+              { "value": 5, "color": "green" },
+              { "value": 20, "color": "yellow" },
+              { "value": 50, "color": "orange" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto",
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "type": "row",
+      "title": "Tendencias de Entidades",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Evolución de Agentes Activos",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "backend_active_agents_total",
+          "legendFormat": "Agentes Activos",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "showPoints": "auto"
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "single" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["mean", "lastNotNull", "max", "min"]
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Evolución de Recursos y Edificios",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "backend_total_resources",
+          "legendFormat": "Recursos",
+          "refId": "A"
+        },
+        {
+          "expr": "backend_total_buildings",
+          "legendFormat": "Edificios",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "auto"
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["mean", "lastNotNull", "max"]
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Correlaciones Rendimiento vs Entidades",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Tick Duration vs Número de Agentes",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "targets": [
+        {
+          "expr": "backend_tick_duration_ms",
+          "legendFormat": "{{rate}} Tick",
+          "refId": "A"
+        },
+        {
+          "expr": "backend_active_agents_total / 10",
+          "legendFormat": "Agentes / 10",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": "Agentes.*" },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": { "fill": "dash" }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Memoria vs Entidades",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "targets": [
+        {
+          "expr": "backend_memory_bytes{type=\"heapUsed\"} / 1024 / 1024",
+          "legendFormat": "Heap Usado (MB)",
+          "refId": "A"
+        },
+        {
+          "expr": "backend_scheduler_entity_count / 10",
+          "legendFormat": "Entidades / 10",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": "Entidades.*" },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": { "fill": "dash" }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Tasas de Crecimiento",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Tasa de Crecimiento de Agentes (cambio por minuto)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 26 },
+      "targets": [
+        {
+          "expr": "rate(backend_active_agents_total[1m]) * 60",
+          "legendFormat": "Agentes/min",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "single" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["mean", "lastNotNull"]
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Tasa de Crecimiento de Recursos (cambio por minuto)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 26 },
+      "targets": [
+        {
+          "expr": "rate(backend_total_resources[1m]) * 60",
+          "legendFormat": "Recursos/min",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "single" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["mean", "lastNotNull"]
+        }
+      }
+    }
+  ]
+}

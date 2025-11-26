@@ -1,0 +1,336 @@
+{
+  "id": null,
+  "uid": "memory-resources",
+  "title": "3. Memoria y Recursos del Servidor",
+  "tags": ["simulation", "memory", "resources"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Memoria - Vista General",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Uso de Memoria - Todas las Categorías",
+      "gridPos": { "h": 9, "w": 18, "x": 0, "y": 1 },
+      "targets": [
+        {
+          "expr": "backend_memory_bytes / 1024 / 1024",
+          "legendFormat": "{{type}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "heapUsed" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "heapTotal" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "external" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "rss" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "purple" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["mean", "lastNotNull", "max"]
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Heap Usado",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "targets": [
+        {
+          "expr": "backend_memory_bytes{type=\"heapUsed\"} / 1024 / 1024",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 500, "color": "yellow" },
+              { "value": 1000, "color": "orange" },
+              { "value": 1500, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "RSS (Resident Set)",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 5 },
+      "targets": [
+        {
+          "expr": "backend_memory_bytes{type=\"rss\"} / 1024 / 1024",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 1000, "color": "yellow" },
+              { "value": 2000, "color": "orange" },
+              { "value": 3000, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "row",
+      "title": "Memoria - Heap Detallado",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 10 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Heap: Usado vs Total",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 11 },
+      "targets": [
+        {
+          "expr": "backend_memory_bytes{type=\"heapUsed\"} / 1024 / 1024",
+          "legendFormat": "Heap Usado",
+          "refId": "A"
+        },
+        {
+          "expr": "backend_memory_bytes{type=\"heapTotal\"} / 1024 / 1024",
+          "legendFormat": "Heap Total",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 20
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["mean", "lastNotNull", "max"]
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "% Uso del Heap",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 11 },
+      "targets": [
+        {
+          "expr": "(backend_memory_bytes{type=\"heapUsed\"} / backend_memory_bytes{type=\"heapTotal\"}) * 100",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 70, "color": "yellow" },
+              { "value": 85, "color": "orange" },
+              { "value": 95, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Memoria Externa",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 11 },
+      "targets": [
+        {
+          "expr": "backend_memory_bytes{type=\"external\"} / 1024 / 1024",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "blue" },
+              { "value": 100, "color": "yellow" },
+              { "value": 500, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Array Buffers",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 15 },
+      "targets": [
+        {
+          "expr": "backend_memory_bytes{type=\"arrayBuffers\"} / 1024 / 1024",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 50, "color": "yellow" },
+              { "value": 200, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area"
+      }
+    },
+    {
+      "type": "row",
+      "title": "Tendencias de Memoria",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 19 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Tasa de Crecimiento de Memoria (MB/min)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "targets": [
+        {
+          "expr": "rate(backend_memory_bytes{type=\"heapUsed\"}[1m]) / 1024 / 1024 * 60",
+          "legendFormat": "Heap Usado",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(backend_memory_bytes{type=\"rss\"}[1m]) / 1024 / 1024 * 60",
+          "legendFormat": "RSS",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["mean", "lastNotNull"]
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Historial de Memoria (últimas 24h)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "targets": [
+        {
+          "expr": "backend_memory_bytes / 1024 / 1024",
+          "legendFormat": "{{type}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "min": 0,
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    }
+  ]
+}

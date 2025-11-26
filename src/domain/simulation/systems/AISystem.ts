@@ -341,6 +341,7 @@ export class AISystem extends EventEmitter {
 
       if (newGoal) {
         aiState.currentGoal = newGoal;
+        aiState.lastDecisionTime = now;
         logger.debug(
           `🎯 [AI] Agent ${agentId} new goal: ${newGoal.type} target=${newGoal.targetId || newGoal.targetZoneId || "none"}`,
         );
@@ -689,11 +690,11 @@ export class AISystem extends EventEmitter {
         successfulActivities: new Map(),
         failedAttempts: new Map(),
         lastExplorationTime: 0,
-        lastMemoryCleanup: Date.now(),
+        lastMemoryCleanup: getFrameTime(),
       },
       currentGoal: null,
       goalQueue: [],
-      lastDecisionTime: Date.now(),
+      lastDecisionTime: getFrameTime(),
       currentAction: null,
       offDuty: false,
     };
@@ -724,12 +725,18 @@ export class AISystem extends EventEmitter {
 
     if (zoneId) {
       aiState.memory.visitedZones.add(zoneId);
-      
+
       // Update home zone if this is a rest/shelter zone and agent doesn't have a home
       if (!aiState.memory.homeZoneId && this.householdSystem) {
         const zone = this.gameState.zones?.find((z) => z.id === zoneId);
-        if (zone && (zone.type === "rest" || zone.type === "shelter" || zone.type === "house")) {
-          const household = this.householdSystem.findHouseholdForAgent(entityId);
+        if (
+          zone &&
+          (zone.type === "rest" ||
+            zone.type === "shelter" ||
+            zone.type === "house")
+        ) {
+          const household =
+            this.householdSystem.findHouseholdForAgent(entityId);
           if (household && household.zoneId === zoneId) {
             aiState.memory.homeZoneId = zoneId;
           }
@@ -1178,6 +1185,7 @@ export class AISystem extends EventEmitter {
 
   private completeGoal(aiState: AIState, _agentId: string): void {
     aiState.currentGoal = null;
+    aiState.lastDecisionTime = getFrameTime();
     this._goalsCompleted++;
   }
 
@@ -1188,6 +1196,7 @@ export class AISystem extends EventEmitter {
       aiState.memory.failedAttempts?.set(zoneId, fails + 1);
     }
     aiState.currentGoal = null;
+    aiState.lastDecisionTime = getFrameTime();
     this._goalsFailed++;
   }
 

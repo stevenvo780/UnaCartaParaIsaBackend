@@ -1,0 +1,287 @@
+{
+  "id": null,
+  "uid": "performance-overview",
+  "title": "1. Rendimiento General y Ticks",
+  "tags": ["simulation", "performance", "ticks"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Tick Performance",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Tick Duration - Promedio por Rate",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 1 },
+      "targets": [
+        {
+          "expr": "backend_tick_duration_ms",
+          "legendFormat": "{{rate}} - Avg",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "lastNotNull", "max"] }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Tick Duration - Máximo por Rate",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 1 },
+      "targets": [
+        {
+          "expr": "backend_tick_duration_max_ms",
+          "legendFormat": "{{rate}} - Max",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 10, "color": "yellow" },
+              { "value": 16, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "lastNotNull", "max"] }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "FAST Tick - Promedio",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "targets": [
+        {
+          "expr": "backend_tick_duration_ms{rate=\"FAST\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 5, "color": "yellow" },
+              { "value": 10, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "MEDIUM Tick - Promedio",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "targets": [
+        {
+          "expr": "backend_tick_duration_ms{rate=\"MEDIUM\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 10, "color": "yellow" },
+              { "value": 16, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "SLOW Tick - Promedio",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 5 },
+      "targets": [
+        {
+          "expr": "backend_tick_duration_ms{rate=\"SLOW\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 20, "color": "yellow" },
+              { "value": 33, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Event Loop Utilization",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 5 },
+      "targets": [
+        {
+          "expr": "backend_event_loop_utilization",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 0.7, "color": "yellow" },
+              { "value": 0.9, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "row",
+      "title": "Scheduler Stats",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "collapsed": false
+    },
+    {
+      "type": "bargauge",
+      "title": "Sistemas Habilitados por Rate",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 10 },
+      "targets": [
+        {
+          "expr": "backend_scheduler_enabled_systems",
+          "legendFormat": "{{rate}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Scheduler Tick Avg - Reportado por Scheduler",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 10 },
+      "targets": [
+        {
+          "expr": "backend_scheduler_tick_avg_ms",
+          "legendFormat": "{{rate}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "lastNotNull"] }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Total Entidades en Scheduler",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 10 },
+      "targets": [
+        {
+          "expr": "backend_scheduler_entity_count",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "blue" },
+              { "value": 100, "color": "green" },
+              { "value": 500, "color": "yellow" },
+              { "value": 1000, "color": "orange" },
+              { "value": 2000, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto",
+        "textMode": "value_and_name"
+      }
+    }
+  ]
+}
