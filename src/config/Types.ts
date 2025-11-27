@@ -60,4 +60,5 @@ export const TYPES = {
   GPUComputeService: Symbol.for("GPUComputeService"),
   GPUBatchQueryService: Symbol.for("GPUBatchQueryService"),
   TerrainSystem: Symbol.for("TerrainSystem"),
+  ChunkLoadingSystem: Symbol.for("ChunkLoadingSystem"),
 };

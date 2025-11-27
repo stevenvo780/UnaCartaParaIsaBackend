@@ -250,6 +250,9 @@ export class WorldLoader {
     const baseX = 100;
     const baseY = 100;
 
+    // Bioma por defecto para el pueblo inicial
+    const defaultBiome = "Grassland";
+
     const houseZone: Zone = {
       id: `zone_house_initial_${Date.now()}`,
       type: "shelter",
@@ -268,6 +271,10 @@ export class WorldLoader {
         underConstruction: false,
         buildingId: `building_house_initial_${Date.now()}`,
         builtAt: Date.now(),
+        // Metadatos para sprite por bioma
+        biome: defaultBiome,
+        buildingType: "house",
+        spriteVariant: 0,
       },
     };
 
@@ -290,6 +297,10 @@ export class WorldLoader {
         craftingStation: true,
         buildingId: `building_workbench_initial_${Date.now()}`,
         builtAt: Date.now(),
+        // Metadatos para sprite por bioma
+        biome: defaultBiome,
+        buildingType: "workshop",
+        spriteVariant: 0,
       },
     };
 
@@ -308,6 +319,10 @@ export class WorldLoader {
       metadata: {
         buildingId: `building_storage_initial_${Date.now()}`,
         builtAt: Date.now(),
+        // Metadatos para sprite por bioma
+        biome: defaultBiome,
+        buildingType: "workshop",
+        spriteVariant: 1,
       },
     };
 
@@ -326,6 +341,10 @@ export class WorldLoader {
       },
       metadata: {
         parentZoneId: houseZone.id,
+        // Metadatos para sprite por bioma (usa mismo que la casa padre)
+        biome: defaultBiome,
+        buildingType: "house",
+        spriteVariant: 1,
       },
     };
 
@@ -344,6 +363,10 @@ export class WorldLoader {
       },
       metadata: {
         parentZoneId: houseZone.id,
+        // Metadatos para sprite por bioma
+        biome: defaultBiome,
+        buildingType: "workshop",
+        spriteVariant: 2,
       },
     };
 
@@ -399,6 +422,13 @@ export class WorldLoader {
           if (!zoneType) continue;
 
           const zoneId = `zone_${zoneType}_${x}_${y}`;
+          // Normalizar bioma para sprite (capitalizar primera letra)
+          const normalizedBiome = this.normalizeBiomeForSprite(biome);
+          // Obtener variante aleatoria (0-4)
+          const variantIndex = Math.floor(
+            ((x * 31 + y * 17) % 100) / 20,
+          );
+
           const zone: Zone = {
             id: zoneId,
             type: zoneType,
@@ -411,6 +441,11 @@ export class WorldLoader {
             props: {
               color: this.getZoneColor(zoneType),
               status: "ready",
+            },
+            metadata: {
+              biome: normalizedBiome,
+              spriteVariant: variantIndex,
+              buildingType: this.getZoneBuildingType(zoneType),
             },
           };
 
@@ -470,6 +505,77 @@ export class WorldLoader {
       crafting: "#CD853F",
     };
     return colors[zoneType] || "#C4B998";
+  }
+
+  /**
+   * Normaliza el nombre del bioma para coincidir con los nombres de carpetas de assets
+   * backend: grassland, forest, desert, mountain, wetland, mystical, village
+   * assets: Grassland, Forest, Desert, Mountain, Swamp, Beach, Tundra
+   */
+  private normalizeBiomeForSprite(biome: string): string {
+    const biomeMapping: Record<string, string> = {
+      grassland: "Grassland",
+      forest: "Forest",
+      desert: "Desert",
+      mountain: "Mountain",
+      mountainous: "Mountain",
+      wetland: "Swamp",
+      swamp: "Swamp",
+      mystical: "Forest", // Usa Forest como fallback
+      village: "Grassland",
+      beach: "Beach",
+      tundra: "Snowy Tundra",
+      ocean: "Beach",
+      lake: "Beach",
+    };
+    return biomeMapping[biome.toLowerCase()] || "Grassland";
+  }
+
+  /**
+   * Determina el tipo de edificio sprite basado en el tipo de zona
+   * Mapea tipos de zona a tipos de sprites disponibles: house, workshop, watchtower
+   */
+  private getZoneBuildingType(zoneType: string): string {
+    const buildingTypeMapping: Record<string, string> = {
+      // Casas/descanso
+      rest: "house",
+      shelter: "house",
+      bedroom: "house",
+      living: "house",
+      bathroom: "house",
+      comfort: "house",
+
+      // Trabajo/producción
+      work: "workshop",
+      kitchen: "workshop",
+      office: "workshop",
+      storage: "workshop",
+      market: "workshop",
+      food: "workshop",
+      water: "workshop",
+      crafting: "workshop",
+      energy: "workshop",
+
+      // Torres/defensa/servicios
+      defense: "watchtower",
+      security: "watchtower",
+      medical: "watchtower",
+      spiritual: "watchtower",
+
+      // Servicios sociales/educación (usa house por defecto)
+      social: "house",
+      recreation: "house",
+      entertainment: "house",
+      fun: "house",
+      play: "house",
+      library: "workshop",
+      education: "workshop",
+      training: "workshop",
+      knowledge: "workshop",
+      gym: "workshop",
+      hygiene: "house",
+    };
+    return buildingTypeMapping[zoneType] || "house";
   }
 
   // NOTE: spawnInitialAnimals was removed.

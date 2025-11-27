@@ -7,7 +7,6 @@ import type { ILifeCyclePort } from "../ports";
 import type { DivineFavorSystem } from "./DivineFavorSystem";
 import type { InventorySystem } from "./InventorySystem";
 import type { SocialSystem } from "./SocialSystem";
-import type { Zone } from "../../types/game-types";
 import { NeedsBatchProcessor } from "./NeedsBatchProcessor";
 import { injectable, inject, unmanaged, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -54,7 +53,16 @@ export class NeedsSystem extends EventEmitter {
 
   private respawnQueue = new Map<string, number>();
 
-  private zoneCache = new Map<string, { zones: Zone[]; timestamp: number }>();
+  private zoneCache = new Map<
+    string,
+    {
+      zones: Array<{
+        type: string;
+        bounds: { x: number; y: number; width: number; height: number };
+      }>;
+      timestamp: number;
+    }
+  >();
   private readonly ZONE_CACHE_TTL = 15000;
   private _tickCounter = 0;
   private gpuService?: GPUComputeService;
@@ -167,6 +175,7 @@ export class NeedsSystem extends EventEmitter {
 
     this.processRespawnQueue(now);
 
+    // Clean zone cache periodically
     this._tickCounter = (this._tickCounter || 0) + 1;
     if (this._tickCounter >= 100) {
       this.cleanZoneCache(now);
@@ -289,87 +298,240 @@ export class NeedsSystem extends EventEmitter {
     );
   }
 
-  private handleZoneBenefits(
+  /**
+   * Consumes resources from inventory to satisfy needs.
+   * Agents consume food when hungry (<70) and water when thirsty (<70).
+   * Zone bonuses apply to: rest (better in houses), social/fun (markets, temples).
+   * If inventory is empty, they must gather resources or trade.
+   *
+   * @param entityId - Entity identifier
+   * @param needs - Entity needs data
+   */
+  private consumeResourcesForNeeds(
     entityId: string,
     needs: EntityNeedsData,
-    deltaSeconds: number,
   ): void {
-    let position: { x: number; y: number } | undefined;
-    const agent = this.gameState.agents?.find((e) => e.id === entityId);
-    if (agent?.position) {
-      position = agent.position;
-    } else {
-      const entity = this.gameState.entities?.find((e) => e.id === entityId);
-      if (entity?.position) {
-        position = entity.position;
+    if (!this.inventorySystem) return;
+
+    const inv = this.inventorySystem.getAgentInventory(entityId);
+    if (!inv) return;
+
+    // Get position for zone bonuses
+    const position = this.getEntityPosition(entityId);
+    const nearbyZones = position
+      ? this.findZonesNearPosition(position, 50)
+      : [];
+
+    // Hunger thresholds for eating
+    const HUNGER_THRESHOLD = 70; // Start eating when below this
+    const HUNGER_CRITICAL = 30; // Eat more urgently
+
+    // Thirst thresholds for drinking
+    const THIRST_THRESHOLD = 70;
+    const THIRST_CRITICAL = 30;
+
+    // Consume food when hungry (REQUIRES ITEMS)
+    if (needs.hunger < HUNGER_THRESHOLD && inv.food > 0) {
+      const urgency = needs.hunger < HUNGER_CRITICAL ? 2 : 1;
+      const toConsume = Math.min(urgency, inv.food);
+      const removed = this.inventorySystem.removeFromAgent(
+        entityId,
+        "food",
+        toConsume,
+      );
+
+      if (removed > 0) {
+        // 1 food = 15 hunger points
+        const hungerRestore = removed * 15;
+        needs.hunger = Math.min(100, needs.hunger + hungerRestore);
+
+        logger.debug(
+          `🍖 ${entityId} ate ${removed} food → hunger: ${needs.hunger.toFixed(1)}`,
+        );
+
+        simulationEvents.emit(GameEventNames.RESOURCE_CONSUMED, {
+          agentId: entityId,
+          resourceType: "food",
+          amount: removed,
+          needType: "hunger",
+          newValue: needs.hunger,
+          timestamp: Date.now(),
+        });
       }
     }
-    if (!position) return;
 
-    const nearbyZones = this.findZonesNearPosition(position, 50);
+    // Consume water when thirsty (REQUIRES ITEMS)
+    if (needs.thirst < THIRST_THRESHOLD && inv.water > 0) {
+      const urgency = needs.thirst < THIRST_CRITICAL ? 2 : 1;
+      const toConsume = Math.min(urgency, inv.water);
+      const removed = this.inventorySystem.removeFromAgent(
+        entityId,
+        "water",
+        toConsume,
+      );
 
+      if (removed > 0) {
+        // 1 water = 20 thirst points
+        const thirstRestore = removed * 20;
+        needs.thirst = Math.min(100, needs.thirst + thirstRestore);
+
+        logger.debug(
+          `💧 ${entityId} drank ${removed} water → thirst: ${needs.thirst.toFixed(1)}`,
+        );
+
+        simulationEvents.emit(GameEventNames.RESOURCE_CONSUMED, {
+          agentId: entityId,
+          resourceType: "water",
+          amount: removed,
+          needType: "thirst",
+          newValue: needs.thirst,
+          timestamp: Date.now(),
+        });
+      }
+    }
+
+    // Energy recovery based on action and ZONE BONUSES
+    const action = this.entityActions.get(entityId) || "idle";
+    let baseEnergyRecovery = 0;
+
+    if (action === "sleep") {
+      baseEnergyRecovery = 3;
+    } else if (action === "rest" || action === "idle") {
+      baseEnergyRecovery = 1;
+    }
+
+    // Zone multipliers for rest - resting in a house/bed is much better
+    let restMultiplier = 1.0;
     for (const zone of nearbyZones) {
-      const multiplier = this.config.zoneBonusMultiplier || 1.0;
+      if (
+        zone.type === "house" ||
+        zone.type === "shelter" ||
+        zone.type === "bed" ||
+        zone.type === "rest"
+      ) {
+        restMultiplier = 3.0; // 3x faster rest in proper shelter
+        break;
+      }
+    }
 
+    if (baseEnergyRecovery > 0) {
+      const energyRecovery = baseEnergyRecovery * restMultiplier;
+      needs.energy = Math.min(100, needs.energy + energyRecovery);
+    }
+
+    // ZONE BONUSES for social needs (don't require items)
+    this.applyZoneBonuses(entityId, needs, nearbyZones);
+  }
+
+  /**
+   * Applies zone-based bonuses for social, fun, hygiene, and mental health.
+   * These needs are satisfied by being in the right zones, not by consuming items.
+   */
+  private applyZoneBonuses(
+    _entityId: string,
+    needs: EntityNeedsData,
+    zones: Array<{ type: string }>,
+  ): void {
+    const multiplier = this.config.zoneBonusMultiplier || 1.0;
+
+    for (const zone of zones) {
       switch (zone.type) {
-        case "food":
-        case "kitchen": {
-          const hungerBonus = 50 * deltaSeconds * multiplier; // Increased from 15
-          needs.hunger = Math.min(100, needs.hunger + hungerBonus);
-          break;
-        }
-
-        case "water":
-        case "well": {
-          const thirstBonus = 60 * deltaSeconds * multiplier; // Increased from 20
-          needs.thirst = Math.min(100, needs.thirst + thirstBonus);
-          break;
-        }
-
-        case "rest":
-        case "bed":
-        case "shelter":
-        case "house": {
-          const energyBonus = 150 * deltaSeconds * multiplier;
-          needs.energy = Math.min(100, needs.energy + energyBonus);
-          break;
-        }
-
+        // Hygiene zones
         case "hygiene":
-        case "bath": {
-          const hygieneBonus = 75 * deltaSeconds * multiplier;
+        case "bath":
+        case "well": {
+          const hygieneBonus = 2 * multiplier;
           needs.hygiene = Math.min(100, needs.hygiene + hygieneBonus);
           break;
         }
 
+        // Social zones - gain social and fun by being here
         case "social":
         case "market":
-        case "gathering": {
-          const socialBonus = 20 * deltaSeconds * multiplier; // Increased from 8
-          const funBonus = 25 * deltaSeconds * multiplier; // Increased from 10
+        case "gathering":
+        case "tavern": {
+          const socialBonus = 1.5 * multiplier;
+          const funBonus = 1.0 * multiplier;
           needs.social = Math.min(100, needs.social + socialBonus);
           needs.fun = Math.min(100, needs.fun + funBonus);
           break;
         }
 
+        // Entertainment zones
         case "entertainment":
         case "festival": {
-          const entertainmentBonus = 60 * deltaSeconds * multiplier; // Increased from 20
-          needs.fun = Math.min(100, needs.fun + entertainmentBonus);
-          needs.mentalHealth = Math.min(
-            100,
-            needs.mentalHealth + entertainmentBonus * 0.5,
-          );
+          const funBonus = 2.5 * multiplier;
+          const mentalBonus = 1.0 * multiplier;
+          needs.fun = Math.min(100, needs.fun + funBonus);
+          needs.mentalHealth = Math.min(100, needs.mentalHealth + mentalBonus);
           break;
         }
 
+        // Spiritual zones
         case "temple":
         case "sanctuary": {
-          const mentalBonus = 40 * deltaSeconds * multiplier; // Increased from 15
+          const mentalBonus = 2.0 * multiplier;
+          const socialBonus = 0.5 * multiplier;
           needs.mentalHealth = Math.min(100, needs.mentalHealth + mentalBonus);
-          needs.social = Math.min(100, needs.social + mentalBonus * 0.3);
+          needs.social = Math.min(100, needs.social + socialBonus);
           break;
         }
+      }
+    }
+  }
+
+  /**
+   * Gets an entity's position from gameState.
+   */
+  private getEntityPosition(
+    entityId: string,
+  ): { x: number; y: number } | undefined {
+    const agent = this.gameState.agents?.find((e) => e.id === entityId);
+    if (agent?.position) return agent.position;
+
+    const entity = this.gameState.entities?.find((e) => e.id === entityId);
+    return entity?.position;
+  }
+
+  /**
+   * Finds zones near a position with caching for performance.
+   */
+  private findZonesNearPosition(
+    position: { x: number; y: number },
+    radius: number,
+  ): Array<{
+    type: string;
+    bounds: { x: number; y: number; width: number; height: number };
+  }> {
+    const cacheKey = `${Math.floor(position.x / 100)},${Math.floor(position.y / 100)}`;
+
+    const cached = this.zoneCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < this.ZONE_CACHE_TTL) {
+      return cached.zones;
+    }
+
+    const zones = (this.gameState.zones || []).filter((zone) => {
+      if (!zone.bounds) return false;
+      const dx = zone.bounds.x + zone.bounds.width / 2 - position.x;
+      const dy = zone.bounds.y + zone.bounds.height / 2 - position.y;
+      return Math.sqrt(dx * dx + dy * dy) < radius + zone.bounds.width / 2;
+    });
+
+    this.zoneCache.set(cacheKey, {
+      zones,
+      timestamp: Date.now(),
+    });
+
+    return zones;
+  }
+
+  /**
+   * Cleans expired zone cache entries.
+   */
+  private cleanZoneCache(now: number): void {
+    for (const [key, cache] of this.zoneCache.entries()) {
+      if (now - cache.timestamp > this.ZONE_CACHE_TTL) {
+        this.zoneCache.delete(key);
       }
     }
   }
@@ -809,41 +971,6 @@ export class NeedsSystem extends EventEmitter {
         if (needs) {
           this.applySocialMoraleBoost(entityId, needs);
         }
-      }
-    }
-  }
-
-  private findZonesNearPosition(
-    position: { x: number; y: number },
-    radius: number,
-  ): Zone[] {
-    const cacheKey = `${Math.floor(position.x / 100)},${Math.floor(position.y / 100)}`;
-
-    if (this.zoneCache.has(cacheKey)) {
-      const cached = this.zoneCache.get(cacheKey)!;
-      if (Date.now() - cached.timestamp < this.ZONE_CACHE_TTL) {
-        return cached.zones;
-      }
-    }
-
-    const zones = (this.gameState.zones || []).filter((zone) => {
-      const dx = zone.bounds.x - position.x;
-      const dy = zone.bounds.y - position.y;
-      return Math.sqrt(dx * dx + dy * dy) < radius + zone.bounds.width / 2;
-    });
-
-    this.zoneCache.set(cacheKey, {
-      zones,
-      timestamp: Date.now(),
-    });
-
-    return zones;
-  }
-
-  private cleanZoneCache(now: number): void {
-    for (const [key, cache] of this.zoneCache.entries()) {
-      if (now - cache.timestamp > this.ZONE_CACHE_TTL) {
-        this.zoneCache.delete(key);
       }
     }
   }

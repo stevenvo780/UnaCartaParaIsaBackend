@@ -123,7 +123,7 @@ export class AISystem extends EventEmitter {
     { resource: { id: string; x: number; y: number } | null; timestamp: number }
   >();
   private readonly RESOURCE_CACHE_TTL = 2000; // 2s cache for resource searches
-  private readonly MAX_RESOURCE_SEARCH_RADIUS = 500; // Limit search radius for performance
+  private readonly MAX_RESOURCE_SEARCH_RADIUS = 2000; // Increased to cover most of the map
 
   private readonly MAX_DECISION_TIME_MS = 5;
 
@@ -1248,15 +1248,6 @@ export class AISystem extends EventEmitter {
         const dy = resource.position.y - agent.position.y;
         const dist = dx * dx + dy * dy;
 
-        if (dist < 10000) {
-          nearest = {
-            id: resource.id,
-            x: resource.position.x,
-            y: resource.position.y,
-          };
-          break;
-        }
-
         if (dist < minDistance) {
           minDistance = dist;
           nearest = {
@@ -1274,15 +1265,6 @@ export class AISystem extends EventEmitter {
         const dx = resource.position.x - agent.position.x;
         const dy = resource.position.y - agent.position.y;
         const dist = dx * dx + dy * dy;
-
-        if (dist < 10000) {
-          nearest = {
-            id: resource.id,
-            x: resource.position.x,
-            y: resource.position.y,
-          };
-          break;
-        }
 
         if (dist < minDistance) {
           minDistance = dist;

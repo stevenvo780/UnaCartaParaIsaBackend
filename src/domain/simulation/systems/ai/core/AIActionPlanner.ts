@@ -509,8 +509,19 @@ export class AIActionPlanner {
     if (currentPos) {
       const mapWidth = this.deps.gameState.worldSize?.width || 2000;
       const mapHeight = this.deps.gameState.worldSize?.height || 2000;
-      let targetX = currentPos.x + (Math.random() - 0.5) * this.EXPLORE_RANGE;
-      let targetY = currentPos.y + (Math.random() - 0.5) * this.EXPLORE_RANGE;
+      let targetX: number;
+      let targetY: number;
+
+      if (goal.data?.explorationType === "desperate_search") {
+        // For desperate search, pick a completely random point on the map
+        targetX = Math.random() * mapWidth;
+        targetY = Math.random() * mapHeight;
+      } else {
+        // Normal exploration is local
+        targetX = currentPos.x + (Math.random() - 0.5) * this.EXPLORE_RANGE;
+        targetY = currentPos.y + (Math.random() - 0.5) * this.EXPLORE_RANGE;
+      }
+
       targetX = Math.max(50, Math.min(mapWidth - 50, targetX));
       targetY = Math.max(50, Math.min(mapHeight - 50, targetY));
 

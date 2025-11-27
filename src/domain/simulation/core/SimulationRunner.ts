@@ -49,6 +49,7 @@ import { InteractionGameSystem } from "../systems/InteractionGameSystem";
 import { KnowledgeNetworkSystem } from "../systems/KnowledgeNetworkSystem";
 import { MovementSystem } from "../systems/MovementSystem";
 import { AppearanceGenerationSystem } from "../systems/AppearanceGenerationSystem";
+import { ChunkLoadingSystem } from "../systems/ChunkLoadingSystem";
 import { GPUComputeService } from "./GPUComputeService";
 import { MultiRateScheduler } from "./MultiRateScheduler";
 import { performanceMonitor } from "./PerformanceMonitor";
@@ -247,6 +248,9 @@ export class SimulationRunner {
 
   @inject(TYPES.SharedSpatialIndex)
   public readonly sharedSpatialIndex!: SharedSpatialIndex;
+
+  @inject(TYPES.ChunkLoadingSystem)
+  public readonly chunkLoadingSystem!: ChunkLoadingSystem;
 
   private readonly INDEX_REBUILD_INTERVAL_FAST = 5;
 

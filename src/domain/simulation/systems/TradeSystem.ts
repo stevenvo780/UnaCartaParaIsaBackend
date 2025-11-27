@@ -1,6 +1,7 @@
 import { GameState } from "../../types/game-types";
 import { TradeOffer, TradeRecord } from "../../types/simulation/trade";
 import type { InventorySystem } from "./InventorySystem";
+import type { NeedsSystem } from "./NeedsSystem";
 import { simulationEvents, GameEventNames } from "../core/events";
 
 import { injectable, inject, optional } from "inversify";
@@ -13,9 +14,10 @@ export class TradeSystem {
   private tradeHistory: TradeRecord[] = [];
   private merchantReputation = new Map<string, number>();
   private inventorySystem?: InventorySystem;
+  private needsSystem?: NeedsSystem;
 
-  private readonly BACKGROUND_TRADE_INTERVAL = 30000;
-  private readonly BACKGROUND_TRADE_PROBABILITY = 0.1;
+  private readonly BACKGROUND_TRADE_INTERVAL = 15000; // More frequent for need-based trading
+  private readonly BACKGROUND_TRADE_PROBABILITY = 0.3; // Higher probability
   private _lastBackgroundTrade = 0;
 
   constructor(
@@ -27,6 +29,13 @@ export class TradeSystem {
     this.gameState = gameState;
     this.inventorySystem = inventorySystem;
     this.setupDeathListener();
+  }
+
+  /**
+   * Sets the NeedsSystem dependency for need-based trading.
+   */
+  public setNeedsSystem(needsSystem: NeedsSystem): void {
+    this.needsSystem = needsSystem;
   }
 
   /**
@@ -282,81 +291,224 @@ export class TradeSystem {
     this.gameState.trade.stats = this.getTradeStats();
   }
 
+  /**
+   * Processes background trades based on agent NEEDS.
+   * Agents with hunger/thirst will seek to buy food/water from agents with excess.
+   * This creates natural economic flow based on survival needs.
+   */
   private processBackgroundTrade(): void {
     if (!this.inventorySystem || !this.gameState.agents) return;
 
-    const agents = this.gameState.agents.filter((a) => a.lifeStage === "adult");
+    const agents = this.gameState.agents.filter(
+      (a) => a.lifeStage === "adult" && !a.isDead,
+    );
     if (agents.length < 2) return;
 
-    const resourceTypes: Array<"wood" | "stone" | "food" | "water"> = [
-      "wood",
-      "stone",
-      "food",
-      "water",
-    ];
+    // Priority 1: Trade food/water based on NEEDS (survival-driven economy)
+    this.processNeedBasedTrades(agents, "food", "hunger", 50);
+    this.processNeedBasedTrades(agents, "water", "thirst", 50);
 
-    for (const resourceType of resourceTypes) {
-      const seller = agents.find((agent) => {
-        const inv = this.inventorySystem!.getAgentInventory(agent.id);
-        return inv && (inv[resourceType] || 0) > 20;
-      });
+    // Priority 2: Trade other resources based on inventory levels
+    this.processInventoryBasedTrades(agents, "wood");
+    this.processInventoryBasedTrades(agents, "stone");
+  }
 
-      if (!seller) continue;
+  /**
+   * Processes trades driven by agent needs (hunger, thirst).
+   * Buyers are agents with low needs AND low inventory.
+   * Sellers are agents with excess inventory.
+   */
+  private processNeedBasedTrades(
+    agents: Array<{ id: string; isDead?: boolean }>,
+    resourceType: "food" | "water",
+    needType: "hunger" | "thirst",
+    needThreshold: number,
+  ): void {
+    // Find buyers: agents who NEED this resource (low need value AND no inventory)
+    const potentialBuyers = agents.filter((agent) => {
+      const inv = this.inventorySystem!.getAgentInventory(agent.id);
+      const invAmount = inv ? inv[resourceType] || 0 : 0;
 
-      const buyer = agents.find((agent) => {
-        if (agent.id === seller.id) return false;
-        const inv = this.inventorySystem!.getAgentInventory(agent.id);
-        return inv && (inv[resourceType] || 0) < 5;
-      });
+      // Must have low inventory
+      if (invAmount >= 3) return false;
 
-      if (!buyer) continue;
-
-      const tradeAmount = Math.min(
-        10,
-        Math.max(5, Math.floor(Math.random() * 6) + 5),
-      );
-      const sellerInv = this.inventorySystem.getAgentInventory(seller.id);
-      const available = sellerInv?.[resourceType] || 0;
-
-      if (available >= tradeAmount) {
-        const removed = this.inventorySystem.removeFromAgent(
-          seller.id,
-          resourceType,
-          tradeAmount,
-        );
-
-        if (removed > 0) {
-          this.inventorySystem.addResource(buyer.id, resourceType, removed);
-
-          const value = this.calculateOfferValue([
-            { itemId: resourceType, quantity: removed },
-          ]);
-          this.tradeHistory.push({
-            sellerId: seller.id,
-            buyerId: buyer.id,
-            timestamp: Date.now(),
-            items: [resourceType],
-            value,
-          });
-
-          this.updateReputation(seller.id, 1);
-          this.updateReputation(buyer.id, 0.5);
-
-          simulationEvents.emit(GameEventNames.TRADE_COMPLETED, {
-            offerId: `background_${Date.now()}`,
-            sellerId: seller.id,
-            buyerId: buyer.id,
-            offering: [{ itemId: resourceType, quantity: removed }],
-            requesting: { value },
-            value,
-            timestamp: Date.now(),
-            isBackgroundTrade: true,
-          });
-
-          return;
+      // Check needs if available
+      if (this.needsSystem) {
+        const needs = this.needsSystem.getNeeds(agent.id);
+        if (needs) {
+          // Only buy if actually need it (need value below threshold)
+          return needs[needType] < needThreshold;
         }
       }
+
+      // If no needs system, use inventory-only logic
+      return invAmount < 2;
+    });
+
+    if (potentialBuyers.length === 0) return;
+
+    // Find sellers: agents with EXCESS of this resource
+    const potentialSellers = agents.filter((agent) => {
+      const inv = this.inventorySystem!.getAgentInventory(agent.id);
+      return inv && (inv[resourceType] || 0) > 15; // Has excess
+    });
+
+    if (potentialSellers.length === 0) return;
+
+    // Match buyer with seller and execute trade
+    for (const buyer of potentialBuyers) {
+      const seller = potentialSellers.find((s) => s.id !== buyer.id);
+      if (!seller) continue;
+
+      const sellerInv = this.inventorySystem!.getAgentInventory(seller.id);
+      const available = sellerInv ? sellerInv[resourceType] || 0 : 0;
+
+      // Trade amount based on buyer's need urgency
+      let tradeAmount = 5;
+      if (this.needsSystem) {
+        const needs = this.needsSystem.getNeeds(buyer.id);
+        if (needs && needs[needType] < 30) {
+          tradeAmount = 10; // More urgent need = bigger trade
+        }
+      }
+
+      tradeAmount = Math.min(tradeAmount, available - 10); // Seller keeps minimum 10
+      if (tradeAmount <= 0) continue;
+
+      const removed = this.inventorySystem!.removeFromAgent(
+        seller.id,
+        resourceType,
+        tradeAmount,
+      );
+
+      if (removed > 0) {
+        this.inventorySystem!.addResource(buyer.id, resourceType, removed);
+
+        const value = this.calculateOfferValue([
+          { itemId: resourceType, quantity: removed },
+        ]);
+
+        this.tradeHistory.push({
+          sellerId: seller.id,
+          buyerId: buyer.id,
+          timestamp: Date.now(),
+          items: [resourceType],
+          value,
+        });
+
+        this.updateReputation(seller.id, 1);
+        this.updateReputation(buyer.id, 0.5);
+
+        simulationEvents.emit(GameEventNames.TRADE_COMPLETED, {
+          offerId: `need_trade_${Date.now()}`,
+          sellerId: seller.id,
+          buyerId: buyer.id,
+          offering: [{ itemId: resourceType, quantity: removed }],
+          requesting: { value },
+          value,
+          timestamp: Date.now(),
+          isNeedBasedTrade: true,
+          needType,
+        });
+
+        // Only one trade per cycle to spread opportunities
+        return;
+      }
     }
+  }
+
+  /**
+   * Processes trades based on inventory levels (non-survival resources).
+   */
+  private processInventoryBasedTrades(
+    agents: Array<{ id: string }>,
+    resourceType: "wood" | "stone",
+  ): void {
+    const seller = agents.find((agent) => {
+      const inv = this.inventorySystem!.getAgentInventory(agent.id);
+      return inv && (inv[resourceType] || 0) > 25;
+    });
+
+    if (!seller) return;
+
+    const buyer = agents.find((agent) => {
+      if (agent.id === seller.id) return false;
+      const inv = this.inventorySystem!.getAgentInventory(agent.id);
+      return inv && (inv[resourceType] || 0) < 5;
+    });
+
+    if (!buyer) return;
+
+    const tradeAmount = Math.min(8, Math.floor(Math.random() * 5) + 4);
+    const sellerInv = this.inventorySystem!.getAgentInventory(seller.id);
+    const available = sellerInv?.[resourceType] || 0;
+
+    if (available >= tradeAmount + 10) {
+      const removed = this.inventorySystem!.removeFromAgent(
+        seller.id,
+        resourceType,
+        tradeAmount,
+      );
+
+      if (removed > 0) {
+        this.inventorySystem!.addResource(buyer.id, resourceType, removed);
+
+        const value = this.calculateOfferValue([
+          { itemId: resourceType, quantity: removed },
+        ]);
+
+        this.tradeHistory.push({
+          sellerId: seller.id,
+          buyerId: buyer.id,
+          timestamp: Date.now(),
+          items: [resourceType],
+          value,
+        });
+
+        this.updateReputation(seller.id, 1);
+        this.updateReputation(buyer.id, 0.5);
+
+        simulationEvents.emit(GameEventNames.TRADE_COMPLETED, {
+          offerId: `inventory_trade_${Date.now()}`,
+          sellerId: seller.id,
+          buyerId: buyer.id,
+          offering: [{ itemId: resourceType, quantity: removed }],
+          requesting: { value },
+          value,
+          timestamp: Date.now(),
+          isBackgroundTrade: true,
+        });
+      }
+    }
+  }
+
+  /**
+   * Finds an agent willing to trade a specific resource.
+   * Used by NeedsEvaluator to find trade partners.
+   */
+  public findAgentWithResource(
+    buyerId: string,
+    resourceType: "food" | "water",
+    minAmount: number,
+  ): { agentId: string; x: number; y: number } | null {
+    if (!this.gameState.agents || !this.inventorySystem) return null;
+
+    for (const agent of this.gameState.agents) {
+      if (agent.id === buyerId || agent.isDead) continue;
+
+      const inv = this.inventorySystem.getAgentInventory(agent.id);
+      if (!inv || (inv[resourceType] || 0) < minAmount + 5) continue;
+
+      if (agent.position) {
+        return {
+          agentId: agent.id,
+          x: agent.position.x,
+          y: agent.position.y,
+        };
+      }
+    }
+
+    return null;
   }
 
   public getAllOffers(): TradeOffer[] {

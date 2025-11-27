@@ -65,12 +65,18 @@ describe("NeedsSystem", () => {
     expect(handler).toHaveBeenCalledWith(expect.objectContaining({ criticalThreshold: 10 }));
   });
 
-  it("handleZoneBenefits aumenta necesidades según el tipo de zona", () => {
+  it("applyZoneBonuses aumenta social/fun según el tipo de zona", () => {
     const needs = system.initializeEntityNeeds(entityId);
-    needs.thirst = 10;
+    needs.social = 50;
+    needs.fun = 50;
 
-    (system as any).handleZoneBenefits(entityId, needs, 1);
-    expect(needs.thirst).toBeGreaterThan(10);
+    // Simular zonas de tipo social
+    const zones = [{ type: "market" }];
+    (system as any).applyZoneBonuses(entityId, needs, zones);
+
+    // Zone bonuses should increase social and fun
+    expect(needs.social).toBeGreaterThan(50);
+    expect(needs.fun).toBeGreaterThan(50);
   });
 
   it("applyCrossEffects reduce social/fun/mental cuando energy es baja", () => {

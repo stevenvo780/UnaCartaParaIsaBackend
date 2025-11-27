@@ -67,6 +67,7 @@ import { SharedSpatialIndex } from "../domain/simulation/core/SharedSpatialIndex
 import { TerrainSystem } from "../domain/simulation/systems/TerrainSystem";
 import { GPUComputeService } from "../domain/simulation/core/GPUComputeService";
 import { GPUBatchQueryService } from "../domain/simulation/core/GPUBatchQueryService";
+import { ChunkLoadingSystem } from "../domain/simulation/systems/ChunkLoadingSystem";
 
 export const container = new Container();
 
@@ -253,6 +254,11 @@ container
 container
   .bind<TerrainSystem>(TYPES.TerrainSystem)
   .to(TerrainSystem)
+  .inSingletonScope();
+
+container
+  .bind<ChunkLoadingSystem>(TYPES.ChunkLoadingSystem)
+  .to(ChunkLoadingSystem)
   .inSingletonScope();
 
 container

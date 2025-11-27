@@ -1,6 +1,7 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../../types/simulation/needs";
 import type { RoleType } from "../../../../types/simulation/roles";
+import type { Inventory } from "../../../../types/simulation/economy";
 
 /**
  * Role-based threshold modifiers for individual needs.
@@ -28,10 +29,18 @@ const ROLE_NEED_MODIFIERS: Record<RoleType, RoleNeedModifiers> = {
 
 export interface NeedsEvaluatorDependencies {
   getEntityNeeds: (entityId: string) => EntityNeedsData | undefined;
+  /** Get agent's inventory to check if they have resources */
+  getAgentInventory?: (entityId: string) => Inventory | undefined;
   findNearestResource?: (
     entityId: string,
     resourceType: string,
   ) => { id: string; x: number; y: number } | null;
+  /** Find agents who have excess resources to trade */
+  findAgentWithResource?: (
+    entityId: string,
+    resourceType: "food" | "water",
+    minAmount: number,
+  ) => { agentId: string; x: number; y: number } | null;
   getCurrentTimeOfDay?: () =>
     | "dawn"
     | "morning"
@@ -149,86 +158,151 @@ export function evaluateCriticalNeeds(
   );
 
   if (needs.thirst < thirstThreshold) {
-    let waterTarget = null;
-    if (deps.findNearestResource) {
-      waterTarget = deps.findNearestResource(aiState.entityId, "water_source");
-    }
+    // Check inventory first - if we have water, NeedsSystem will consume it automatically
+    const inventory = deps.getAgentInventory?.(aiState.entityId);
+    const hasWater = inventory && inventory.water > 0;
 
-    if (waterTarget) {
-      goals.push({
-        id: `thirst_${aiState.entityId}_${now}`,
-        type: "satisfy_need",
-        priority: calculateNeedPriority(needs.thirst, 130),
-        targetId: waterTarget.id,
-        targetPosition: { x: waterTarget.x, y: waterTarget.y },
-        data: {
-          need: "thirst",
-          resourceType: "water",
-        },
-        createdAt: now,
-        expiresAt: now + 15000,
-      });
+    if (hasWater) {
+      // Agent has water in inventory, it will be consumed automatically
+      // No goal needed - just idle or continue current task
     } else {
-      goals.push({
-        id: `desperate_water_${aiState.entityId}_${now}`,
-        type: "explore",
-        priority: calculateNeedPriority(needs.thirst, 140),
-        data: {
-          explorationType: "desperate_search",
-          need: "thirst",
-        },
-        createdAt: now,
-        expiresAt: now + 10000,
-      });
+      // Need to acquire water - either gather or trade
+      let waterTarget = null;
+      if (deps.findNearestResource) {
+        waterTarget = deps.findNearestResource(aiState.entityId, "water_source");
+      }
+
+      if (waterTarget) {
+        // Go gather water from a source
+        goals.push({
+          id: `gather_water_${aiState.entityId}_${now}`,
+          type: "gather",
+          priority: calculateNeedPriority(needs.thirst, 130),
+          targetId: waterTarget.id,
+          targetPosition: { x: waterTarget.x, y: waterTarget.y },
+          data: {
+            need: "thirst",
+            resourceType: "water",
+            action: "gather",
+          },
+          createdAt: now,
+          expiresAt: now + 15000,
+        });
+      } else {
+        // Try to trade for water
+        const tradeTarget = deps.findAgentWithResource?.(
+          aiState.entityId,
+          "water",
+          3,
+        );
+
+        if (tradeTarget) {
+          goals.push({
+            id: `trade_water_${aiState.entityId}_${now}`,
+            type: "work",
+            priority: calculateNeedPriority(needs.thirst, 120),
+            targetId: tradeTarget.agentId,
+            targetPosition: { x: tradeTarget.x, y: tradeTarget.y },
+            data: {
+              need: "thirst",
+              resourceType: "water",
+              action: "trade",
+            },
+            createdAt: now,
+            expiresAt: now + 15000,
+          });
+        } else {
+          // Desperate search
+          goals.push({
+            id: `desperate_water_${aiState.entityId}_${now}`,
+            type: "explore",
+            priority: calculateNeedPriority(needs.thirst, 140),
+            data: {
+              explorationType: "desperate_search",
+              need: "thirst",
+            },
+            createdAt: now,
+            expiresAt: now + 10000,
+          });
+        }
+      }
     }
   }
 
   if (needs.hunger < hungerThreshold) {
-    let foodTarget = null;
-    if (deps.findNearestResource) {
-      const foodTypes = ["wheat_crop", "berry_bush", "mushroom_patch"];
-      for (const foodType of foodTypes) {
-        foodTarget = deps.findNearestResource(aiState.entityId, foodType);
-        if (foodTarget) break;
-      }
-    }
+    // Check inventory first - if we have food, NeedsSystem will consume it automatically
+    const inventory = deps.getAgentInventory?.(aiState.entityId);
+    const hasFood = inventory && inventory.food > 0;
 
-    if (foodTarget) {
-      goals.push({
-        id: `hunger_${aiState.entityId}_${now}`,
-        type: "satisfy_need",
-        priority: calculateNeedPriority(needs.hunger, 110),
-        targetId: foodTarget.id,
-        targetPosition: { x: foodTarget.x, y: foodTarget.y },
-        data: {
-          need: "hunger",
-          resourceType: "food",
-        },
-        createdAt: now,
-        expiresAt: now + 15000,
-      });
+    if (hasFood) {
+      // Agent has food in inventory, it will be consumed automatically
+      // No goal needed - just idle or continue current task
     } else {
-      // If no plant food, try hunting if capable
+      // Need to acquire food - either gather or trade
+      let foodTarget = null;
       if (deps.findNearestResource) {
-        // We use findNearestResource but with "animal" type if the system supports it,
-        // or we might need a new dependency. For now, let's assume we can query for "prey".
-        // However, NeedsEvaluatorDependencies doesn't have findNearestAnimal.
-        // We will assume 'prey' is a valid resource type for now or fallback to desperate search.
-        // Ideally, we should inject findNearestPrey.
+        const foodTypes = ["wheat_crop", "berry_bush", "mushroom_patch", "food_zone"];
+        for (const foodType of foodTypes) {
+          foodTarget = deps.findNearestResource(aiState.entityId, foodType);
+          if (foodTarget) break;
+        }
       }
 
-      goals.push({
-        id: `desperate_food_${aiState.entityId}_${now}`,
-        type: "explore",
-        priority: calculateNeedPriority(needs.hunger, 120),
-        data: {
-          explorationType: "desperate_search",
-          need: "hunger",
-          searchFor: "food_or_prey",
-        },
-        createdAt: now,
-        expiresAt: now + 10000,
-      });
+      if (foodTarget) {
+        // Go gather food from a source
+        goals.push({
+          id: `gather_food_${aiState.entityId}_${now}`,
+          type: "gather",
+          priority: calculateNeedPriority(needs.hunger, 110),
+          targetId: foodTarget.id,
+          targetPosition: { x: foodTarget.x, y: foodTarget.y },
+          data: {
+            need: "hunger",
+            resourceType: "food",
+            action: "gather",
+          },
+          createdAt: now,
+          expiresAt: now + 15000,
+        });
+      } else {
+        // Try to trade for food
+        const tradeTarget = deps.findAgentWithResource?.(
+          aiState.entityId,
+          "food",
+          3,
+        );
+
+        if (tradeTarget) {
+          goals.push({
+            id: `trade_food_${aiState.entityId}_${now}`,
+            type: "work",
+            priority: calculateNeedPriority(needs.hunger, 100),
+            targetId: tradeTarget.agentId,
+            targetPosition: { x: tradeTarget.x, y: tradeTarget.y },
+            data: {
+              need: "hunger",
+              resourceType: "food",
+              action: "trade",
+            },
+            createdAt: now,
+            expiresAt: now + 15000,
+          });
+        } else {
+          // Desperate search for food or prey
+          goals.push({
+            id: `desperate_food_${aiState.entityId}_${now}`,
+            type: "explore",
+            priority: calculateNeedPriority(needs.hunger, 120),
+            data: {
+              explorationType: "desperate_search",
+              need: "hunger",
+              searchFor: "food_or_prey",
+            },
+            createdAt: now,
+            expiresAt: now + 10000,
+          });
+        }
+      }
     }
   }
 
