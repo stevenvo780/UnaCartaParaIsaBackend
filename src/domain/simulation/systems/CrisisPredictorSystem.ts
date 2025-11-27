@@ -244,7 +244,7 @@ export class CrisisPredictorSystem {
     const stressIndicator = indicators.find(
       (ind) => ind.name === "population_stress",
     );
-    if (stressIndicator && stressIndicator.severity !== "low") {
+    if (stressIndicator && stressIndicator.severity !== CrisisSeverity.LOW) {
       addPrediction(
         CrisisPredictionType.POPULATION_CRISIS,
         ["population_stress"],
@@ -255,7 +255,7 @@ export class CrisisPredictorSystem {
     const balanceIndicator = indicators.find(
       (ind) => ind.name === "resource_balance",
     );
-    if (balanceIndicator && balanceIndicator.severity !== "low") {
+    if (balanceIndicator && balanceIndicator.severity !== CrisisSeverity.LOW) {
       addPrediction(
         CrisisPredictionType.RESOURCE_SHORTAGE,
         ["resource_balance"],
@@ -272,8 +272,8 @@ export class CrisisPredictorSystem {
     if (
       sustainabilityIndicator &&
       emergencyIndicator &&
-      (sustainabilityIndicator.severity === "high" ||
-        emergencyIndicator.severity === "high")
+      (sustainabilityIndicator.severity === CrisisSeverity.HIGH ||
+        emergencyIndicator.severity === CrisisSeverity.HIGH)
     ) {
       addPrediction(
         CrisisPredictionType.SYSTEM_COLLAPSE,

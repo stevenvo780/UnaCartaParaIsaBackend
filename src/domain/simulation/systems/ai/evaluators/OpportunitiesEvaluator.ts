@@ -4,6 +4,7 @@ import type { GameState } from "../../../../types/game-types";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 import { RoleType } from "../../../../../shared/constants/RoleEnums";
+import { TimeOfDayPhase } from "../../../../../shared/constants/TimeEnums";
 
 export interface OpportunitiesEvaluatorDependencies {
   getAgentRole: (agentId: string) => AgentRole | undefined;
@@ -43,7 +44,7 @@ export function evaluateWorkOpportunities(
   const now = Date.now();
   const timeOfDay = deps.getCurrentTimeOfDay?.() || "midday";
 
-  if (timeOfDay === "night" || timeOfDay === "deep_night") {
+  if (timeOfDay === TimeOfDayPhase.NIGHT || timeOfDay === TimeOfDayPhase.DEEP_NIGHT) {
     return goals; // Don't work at night
   }
 

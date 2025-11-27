@@ -4,6 +4,7 @@ import { InventorySystem } from "./InventorySystem";
 import { GameEventNames, simulationEvents } from "../core/events";
 import { logger } from "../../../infrastructure/utils/logger";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
+import { NeedType } from "../../../shared/constants/AIEnums";
 
 interface Reservation {
   taskId: string;
@@ -34,7 +35,7 @@ export class ResourceReservationSystem {
     simulationEvents.on(
       GameEventNames.NEED_SATISFIED,
       (data: { agentId: string; need: string; value: number }) => {
-        if (data.need === "hunger" || data.need === "thirst") {
+        if (data.need === NeedType.HUNGER || data.need === NeedType.THIRST) {
           this.cleanupStaleReservations(2 * 60 * 1000);
         }
       },

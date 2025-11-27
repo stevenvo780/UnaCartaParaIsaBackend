@@ -1,6 +1,6 @@
 import type { GameState } from "../../../../types/game-types";
 import type { AIGoal, AgentAction } from "../../../../types/simulation/ai";
-import { ActionType, GoalType } from "../../../../../shared/constants/AIEnums";
+import { ActionType, GoalType, NeedType } from "../../../../../shared/constants/AIEnums";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 import { TaskType } from "../../../../../shared/constants/TaskEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
@@ -150,7 +150,7 @@ export class AIActionPlanner {
         timestamp,
       };
     }
-    if (goal.data?.need === "energy") {
+    if (goal.data?.need === NeedType.ENERGY) {
       return { actionType: ActionType.IDLE, agentId, timestamp };
     }
     return null;

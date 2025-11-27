@@ -508,7 +508,7 @@ export class QuestSystem {
         });
         break;
 
-      case "resource_collected":
+      case GameEventType.RESOURCE_GATHERED:
         this.questProgress.activeQuests.forEach((quest) => {
           quest.objectives.forEach((objective) => {
             if (
@@ -526,7 +526,7 @@ export class QuestSystem {
         });
         break;
 
-      case "structure_built":
+      case GameEventType.BUILDING_CONSTRUCTED:
         this.questProgress.activeQuests.forEach((quest) => {
           quest.objectives.forEach((objective) => {
             if (

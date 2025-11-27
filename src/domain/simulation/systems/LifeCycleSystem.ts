@@ -224,7 +224,7 @@ export class LifeCycleSystem extends EventEmitter {
         continue;
       }
 
-      if (agent.lifeStage === "adult") {
+      if (agent.lifeStage === LifeStage.ADULT) {
         this.queueHousingAssignment(agent.id);
       }
     }
@@ -322,7 +322,7 @@ export class LifeCycleSystem extends EventEmitter {
       if (processed >= 3) break;
 
       const agent = this.agentRegistry?.getProfile(agentId);
-      if (agent && agent.lifeStage === "adult") {
+      if (agent && agent.lifeStage === LifeStage.ADULT) {
         const assigned = this.householdSystem?.assignToHouse(agent.id);
         if (assigned) {
           this.pendingHousingAssignments.delete(agentId);
@@ -378,9 +378,9 @@ export class LifeCycleSystem extends EventEmitter {
       return;
     }
 
-    const adults = agents.filter((a) => a.lifeStage === "adult");
-    const males = adults.filter((a) => a.sex === "male");
-    const females = adults.filter((a) => a.sex === "female");
+    const adults = agents.filter((a) => a.lifeStage === LifeStage.ADULT);
+    const males = adults.filter((a) => a.sex === Sex.MALE);
+    const females = adults.filter((a) => a.sex === Sex.FEMALE);
 
     logger.debug(
       `🍼 [Breeding] adults=${adults.length} males=${males.length} females=${females.length}`,
@@ -593,7 +593,7 @@ export class LifeCycleSystem extends EventEmitter {
 
     if (
       this._roleSystem &&
-      (profile.lifeStage === "adult" || profile.lifeStage === "elder")
+      (profile.lifeStage === LifeStage.ADULT || profile.lifeStage === LifeStage.ELDER)
     ) {
       const existingRole = this._roleSystem.getAgentRole(id);
       if (!existingRole) {
@@ -616,7 +616,7 @@ export class LifeCycleSystem extends EventEmitter {
 
     const agents = this.gameState.agents || [];
     for (const agent of agents) {
-      if (agent.lifeStage === "adult" || agent.lifeStage === "elder") {
+      if (agent.lifeStage === LifeStage.ADULT || agent.lifeStage === LifeStage.ELDER) {
         const role = this._roleSystem.getAgentRole(agent.id);
         if (!role) {
           this._roleSystem.assignBestRole(agent);

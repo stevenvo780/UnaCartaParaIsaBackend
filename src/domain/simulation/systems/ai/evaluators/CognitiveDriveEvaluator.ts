@@ -3,6 +3,7 @@ import { GoalType, WorkEthic } from "../../../../../shared/constants/AIEnums";
 import { ExplorationType } from "../../../../../shared/constants/AgentEnums";
 import type { RoleType } from "../../../../types/simulation/roles";
 import { RoleType as RoleTypeEnum } from "../../../../../shared/constants/RoleEnums";
+import { TimeOfDayPhase } from "../../../../../shared/constants/TimeEnums";
 
 import type { Inventory } from "../../../../types/simulation/economy";
 
@@ -31,7 +32,7 @@ export function evaluateCognitiveDrives(
   }
 
   const timeOfDay = deps.getCurrentTimeOfDay?.() || "day";
-  if (timeOfDay === "night" || timeOfDay === "deep_night") {
+  if (timeOfDay === TimeOfDayPhase.NIGHT || timeOfDay === TimeOfDayPhase.DEEP_NIGHT) {
     workDrive -= 0.5;
   }
 

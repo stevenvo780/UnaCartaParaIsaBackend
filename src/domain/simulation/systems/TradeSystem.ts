@@ -5,6 +5,7 @@ import type { NeedsSystem } from "./NeedsSystem";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
 import { TradeOfferStatus } from "../../../shared/constants/EconomyEnums";
+import { LifeStage } from "../../../shared/constants/AgentEnums";
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -316,13 +317,13 @@ export class TradeSystem {
       [];
     if (this.agentRegistry) {
       for (const profile of this.agentRegistry.getAllProfiles()) {
-        if (profile.lifeStage === "adult" && !profile.isDead) {
+        if (profile.lifeStage === LifeStage.ADULT && !profile.isDead) {
           agents.push(profile);
         }
       }
     } else if (this.gameState.agents) {
       for (const a of this.gameState.agents) {
-        if (a.lifeStage === "adult" && !a.isDead) {
+        if (a.lifeStage === LifeStage.ADULT && !a.isDead) {
           agents.push(a);
         }
       }

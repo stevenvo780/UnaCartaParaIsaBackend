@@ -26,6 +26,7 @@ import { RoleSystem } from "./RoleSystem";
 import { logger } from "../../../infrastructure/utils/logger";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
 import { DEFAULT_LINEAGE } from "../../../shared/constants/CommonConstants";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
 /**
  * Configuration for governance system behavior.
@@ -227,7 +228,7 @@ export class GovernanceSystem {
             workerCount: data.workers.length,
           },
         });
-        if (data.resource === "food" && data.amount > 20) {
+        if (data.resource === ResourceType.FOOD && data.amount > 20) {
           for (const [_demandId, demand] of Array.from(
             this.demands.entries(),
           )) {

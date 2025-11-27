@@ -14,7 +14,7 @@ import type {
   Task,
   TaskCreationParams,
 } from "../../../../types/simulation/tasks";
-import { GoalType as GoalTypeEnum } from "../../../../../shared/constants/AIEnums";
+import { GoalType as GoalTypeEnum, NeedType } from "../../../../../shared/constants/AIEnums";
 import { ResourceType as ResourceTypeEnum } from "../../../../../shared/constants/ResourceEnums";
 import { RoleType as RoleTypeEnum } from "../../../../../shared/constants/RoleEnums";
 import { TaskType } from "../../../../../shared/constants/TaskEnums";
@@ -621,17 +621,17 @@ export function adjustNeedThresholdsForRole(
     case RoleTypeEnum.GATHERER:
       // Food/water producers are more tolerant of their own hunger/thirst
       // when the community needs more
-      if (need === "hunger" && collectiveState.foodPerCapita < 5) {
+      if (need === NeedType.HUNGER && collectiveState.foodPerCapita < 5) {
         modifier = 0.8; // Lower threshold = more tolerant
       }
-      if (need === "thirst" && collectiveState.waterPerCapita < 8) {
+      if (need === NeedType.THIRST && collectiveState.waterPerCapita < 8) {
         modifier = 0.85;
       }
       break;
 
     case RoleTypeEnum.BUILDER:
       // Builders are more tolerant of energy depletion when building
-      if (need === "energy") {
+      if (need === NeedType.ENERGY) {
         modifier = 0.85;
       }
       break;
@@ -648,7 +648,7 @@ export function adjustNeedThresholdsForRole(
       if (need === "energy") {
         modifier = 1.15;
       }
-      if (need === "hunger") {
+      if (need === NeedType.HUNGER) {
         modifier = 0.9; // More tolerant of hunger
       }
       break;

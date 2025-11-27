@@ -6,6 +6,7 @@ import type { Inventory } from "../../../../types/simulation/economy";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
 import { NeedType } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
+import { TimeOfDayPhase } from "../../../../../shared/constants/TimeEnums";
 
 /**
  * Role-based threshold modifiers for individual needs.
@@ -167,7 +168,7 @@ export function evaluateCriticalNeeds(
   const baseThirstThreshold = 40;
   let baseEnergyThreshold = 35;
 
-  if (timeOfDay === "night" || timeOfDay === "deep_night") {
+  if (timeOfDay === TimeOfDayPhase.NIGHT || timeOfDay === TimeOfDayPhase.DEEP_NIGHT) {
     baseEnergyThreshold = 50; // More critical at night
     baseHungerThreshold = 35; // Less critical at night
   } else if (timeOfDay === "morning" || timeOfDay === "dawn") {

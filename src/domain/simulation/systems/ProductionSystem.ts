@@ -233,7 +233,7 @@ export class ProductionSystem {
       workers: Array.from(workers),
     });
 
-    if (resource === "food" && this.terrainSystem) {
+    if (resource === ResourceTypeEnum.FOOD && this.terrainSystem) {
       const tilesToModify = Math.min(workers.size, 3);
       const TILE_SIZE = 64;
 

@@ -1089,7 +1089,7 @@ export class AISystem extends EventEmitter {
           targetId: resource.id,
           targetPosition: { x: resource.x, y: resource.y },
           data: {
-            taskType: "gather_food",
+            taskType: TaskType.GATHER_FOOD,
             resourceType: ResourceType.FOOD,
           },
           createdAt: now,

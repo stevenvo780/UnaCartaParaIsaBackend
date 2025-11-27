@@ -14,7 +14,7 @@ import {
   WorkEthic,
   AgentPriority,
 } from "../../../../../shared/constants/AIEnums";
-import { ExplorationType } from "../../../../../shared/constants/AgentEnums";
+import { ExplorationType, LifeStage } from "../../../../../shared/constants/AgentEnums";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
 
 /**
@@ -310,7 +310,7 @@ export class AIStateManager {
     traits: AgentTraits,
     lifeStage: LifeStage,
   ): AgentPersonality {
-    const isChild = lifeStage === "child";
+    const isChild = lifeStage === LifeStage.CHILD;
 
     const openness = (traits.curiosity + (traits.intelligence || 0.5)) / 2;
     const conscientiousness =
