@@ -50,6 +50,7 @@ export type StorageFilePrefixValue = `${StorageFilePrefix}`;
  * Enumeration of interaction game status values.
  */
 export enum InteractionStatus {
+  STARTED = "started",
   EXPIRED = "expired",
   COMPLETED = "completed",
 }

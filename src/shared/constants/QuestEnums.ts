@@ -8,6 +8,14 @@
  */
 
 /**
+ * Enumeration of quest IDs.
+ */
+export enum QuestID {
+  TUTORIAL_SURVIVAL = "tutorial_survival",
+  BUILD_SHELTER = "build_shelter",
+}
+
+/**
  * Enumeration of quest statuses.
  */
 export enum QuestStatus {
@@ -16,6 +24,16 @@ export enum QuestStatus {
   COMPLETED = "completed",
   FAILED = "failed",
   NOT_STARTED = "not_started",
+  ABANDONED = "abandoned",
+}
+
+/**
+ * Enumeration of quest history actions.
+ */
+export enum QuestAction {
+  STARTED = "started",
+  COMPLETED = "completed",
+  FAILED = "failed",
   ABANDONED = "abandoned",
 }
 

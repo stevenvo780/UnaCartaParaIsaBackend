@@ -46,6 +46,9 @@ export enum DialogueTone {
   EXCITED = "excited",
   CONTEMPLATIVE = "contemplative",
   PLAYFUL = "playful",
+  FRIENDLY = "friendly",
+  ENCOURAGING = "encouraging",
+  PROUD = "proud",
 }
 
 /**

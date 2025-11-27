@@ -11,6 +11,7 @@ import {
   ConflictResolutionChoice,
   ConflictResolution,
 } from "../../../shared/constants/ConflictEnums";
+import { SystemProperty } from "../../../shared/constants/SystemEnums";
 
 const CONFLICT_CONFIG = {
   truce: {
@@ -133,8 +134,8 @@ export class ConflictResolutionSystem {
         resolution: ConflictResolution.CONTINUED,
       };
 
-    const { aId, bId } = meta;
-    let resolution: ConflictRecord["resolution"] = ConflictResolution.CONTINUED;
+    const { aId: aId, bId: bId } = meta;
+    let resolution: ConflictRecord[SystemProperty.RESOLUTION] = ConflictResolution.CONTINUED;
     let truceBonus: number | undefined;
 
     if (choice === ConflictResolutionChoice.TRUCE_ACCEPT) {
@@ -150,7 +151,7 @@ export class ConflictResolutionSystem {
       attackerId: aId,
       targetId: bId,
       resolved: resolution !== ConflictResolution.CONTINUED,
-      resolution,
+      [SystemProperty.RESOLUTION]: resolution,
       cardId,
     };
     this.conflictHistory.push(conflict);
@@ -187,7 +188,7 @@ export class ConflictResolutionSystem {
 
     this.activeCards.delete(cardId);
 
-    return { resolved: resolution !== "continued", resolution, truceBonus };
+    return { resolved: resolution !== "continued", [SystemProperty.RESOLUTION]: resolution, truceBonus };
   }
 
   public update(): void {

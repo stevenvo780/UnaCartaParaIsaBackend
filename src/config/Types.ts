@@ -24,7 +24,7 @@ export const TYPES = {
   AISystem: Symbol.for("AISystem"),
   ResourceReservationSystem: Symbol.for("ResourceReservationSystem"),
   GovernanceSystem: Symbol.for("GovernanceSystem"),
-  DivineFavorSystem: Symbol.for("DivineFavorSystem"),
+
   HouseholdSystem: Symbol.for("HouseholdSystem"),
   BuildingSystem: Symbol.for("BuildingSystem"),
   BuildingMaintenanceSystem: Symbol.for("BuildingMaintenanceSystem"),
@@ -34,7 +34,7 @@ export const TYPES = {
   ItemGenerationSystem: Symbol.for("ItemGenerationSystem"),
   CombatSystem: Symbol.for("CombatSystem"),
   ReputationSystem: Symbol.for("ReputationSystem"),
-  ResearchSystem: Symbol.for("ResearchSystem"),
+
   RecipeDiscoverySystem: Symbol.for("RecipeDiscoverySystem"),
   QuestSystem: Symbol.for("QuestSystem"),
   TaskSystem: Symbol.for("TaskSystem"),
@@ -43,15 +43,15 @@ export const TYPES = {
   ConflictResolutionSystem: Symbol.for("ConflictResolutionSystem"),
   NormsSystem: Symbol.for("NormsSystem"),
   ResourceAttractionSystem: Symbol.for("ResourceAttractionSystem"),
-  CrisisPredictorSystem: Symbol.for("CrisisPredictorSystem"),
+
   AmbientAwarenessSystem: Symbol.for("AmbientAwarenessSystem"),
-  CardDialogueSystem: Symbol.for("CardDialogueSystem"),
-  EmergenceSystem: Symbol.for("EmergenceSystem"),
+
+
   TimeSystem: Symbol.for("TimeSystem"),
   InteractionGameSystem: Symbol.for("InteractionGameSystem"),
   KnowledgeNetworkSystem: Symbol.for("KnowledgeNetworkSystem"),
   MovementSystem: Symbol.for("MovementSystem"),
-  AppearanceGenerationSystem: Symbol.for("AppearanceGenerationSystem"),
+
   SimulationConfig: Symbol.for("SimulationConfig"),
   VoronoiGenerator: Symbol.for("VoronoiGenerator"),
   WorldGenerationService: Symbol.for("WorldGenerationService"),

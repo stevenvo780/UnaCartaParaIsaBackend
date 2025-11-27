@@ -67,7 +67,7 @@ export class InteractionGameSystem {
       initiatorId,
       targetId,
       type,
-      result: "started",
+      result: InteractionStatus.STARTED,
       timestamp: Date.now(),
     });
 

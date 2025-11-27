@@ -34,7 +34,7 @@ import { RoleSystem } from "../domain/simulation/systems/RoleSystem";
 import { AISystem } from "../domain/simulation/systems/AISystem";
 import { ResourceReservationSystem } from "../domain/simulation/systems/ResourceReservationSystem";
 import { GovernanceSystem } from "../domain/simulation/systems/GovernanceSystem";
-import { DivineFavorSystem } from "../domain/simulation/systems/DivineFavorSystem";
+
 import { HouseholdSystem } from "../domain/simulation/systems/HouseholdSystem";
 import { BuildingSystem } from "../domain/simulation/systems/BuildingSystem";
 import { BuildingMaintenanceSystem } from "../domain/simulation/systems/BuildingMaintenanceSystem";
@@ -44,7 +44,7 @@ import { AnimalSystem } from "../domain/simulation/systems/AnimalSystem";
 import { ItemGenerationSystem } from "../domain/simulation/systems/ItemGenerationSystem";
 import { CombatSystem } from "../domain/simulation/systems/CombatSystem";
 import { ReputationSystem } from "../domain/simulation/systems/ReputationSystem";
-import { ResearchSystem } from "../domain/simulation/systems/ResearchSystem";
+
 import { RecipeDiscoverySystem } from "../domain/simulation/systems/RecipeDiscoverySystem";
 import { QuestSystem } from "../domain/simulation/systems/QuestSystem";
 import { TaskSystem } from "../domain/simulation/systems/TaskSystem";
@@ -53,15 +53,14 @@ import { MarriageSystem } from "../domain/simulation/systems/MarriageSystem";
 import { ConflictResolutionSystem } from "../domain/simulation/systems/ConflictResolutionSystem";
 import { NormsSystem } from "../domain/simulation/systems/NormsSystem";
 import { ResourceAttractionSystem } from "../domain/simulation/systems/ResourceAttractionSystem";
-import { CrisisPredictorSystem } from "../domain/simulation/systems/CrisisPredictorSystem";
+
 import { AmbientAwarenessSystem } from "../domain/simulation/systems/AmbientAwarenessSystem";
-import { CardDialogueSystem } from "../domain/simulation/systems/CardDialogueSystem";
-import { EmergenceSystem } from "../domain/simulation/systems/EmergenceSystem";
+
 import { TimeSystem } from "../domain/simulation/systems/TimeSystem";
 import { InteractionGameSystem } from "../domain/simulation/systems/InteractionGameSystem";
 import { KnowledgeNetworkSystem } from "../domain/simulation/systems/KnowledgeNetworkSystem";
 import { MovementSystem } from "../domain/simulation/systems/MovementSystem";
-import { AppearanceGenerationSystem } from "../domain/simulation/systems/AppearanceGenerationSystem";
+
 import { EntityIndex } from "../domain/simulation/core/EntityIndex";
 import { SharedSpatialIndex } from "../domain/simulation/core/SharedSpatialIndex";
 import { TerrainSystem } from "../domain/simulation/systems/TerrainSystem";
@@ -137,10 +136,7 @@ container
   .bind<GovernanceSystem>(TYPES.GovernanceSystem)
   .to(GovernanceSystem)
   .inSingletonScope();
-container
-  .bind<DivineFavorSystem>(TYPES.DivineFavorSystem)
-  .to(DivineFavorSystem)
-  .inSingletonScope();
+
 container
   .bind<HouseholdSystem>(TYPES.HouseholdSystem)
   .to(HouseholdSystem)
@@ -177,10 +173,7 @@ container
   .bind<ReputationSystem>(TYPES.ReputationSystem)
   .to(ReputationSystem)
   .inSingletonScope();
-container
-  .bind<ResearchSystem>(TYPES.ResearchSystem)
-  .to(ResearchSystem)
-  .inSingletonScope();
+
 container
   .bind<RecipeDiscoverySystem>(TYPES.RecipeDiscoverySystem)
   .to(RecipeDiscoverySystem)
@@ -210,22 +203,12 @@ container
   .bind<ResourceAttractionSystem>(TYPES.ResourceAttractionSystem)
   .to(ResourceAttractionSystem)
   .inSingletonScope();
-container
-  .bind<CrisisPredictorSystem>(TYPES.CrisisPredictorSystem)
-  .to(CrisisPredictorSystem)
-  .inSingletonScope();
+
 container
   .bind<AmbientAwarenessSystem>(TYPES.AmbientAwarenessSystem)
   .to(AmbientAwarenessSystem)
   .inSingletonScope();
-container
-  .bind<CardDialogueSystem>(TYPES.CardDialogueSystem)
-  .to(CardDialogueSystem)
-  .inSingletonScope();
-container
-  .bind<EmergenceSystem>(TYPES.EmergenceSystem)
-  .to(EmergenceSystem)
-  .inSingletonScope();
+
 container.bind<TimeSystem>(TYPES.TimeSystem).to(TimeSystem).inSingletonScope();
 container
   .bind<InteractionGameSystem>(TYPES.InteractionGameSystem)
@@ -238,10 +221,6 @@ container
 container
   .bind<MovementSystem>(TYPES.MovementSystem)
   .to(MovementSystem)
-  .inSingletonScope();
-container
-  .bind<AppearanceGenerationSystem>(TYPES.AppearanceGenerationSystem)
-  .to(AppearanceGenerationSystem)
   .inSingletonScope();
 
 container

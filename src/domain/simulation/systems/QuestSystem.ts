@@ -11,13 +11,18 @@ import {
   QuestRequirementType,
   QuestDialogueStage,
   QuestObjectiveType,
+  QuestAction,
+  QuestID,
 } from "../../../shared/constants/QuestEnums";
-import { DialogueSpeaker } from "../../../shared/constants/AmbientEnums";
+import {
+  DialogueSpeaker,
+  DialogueTone,
+} from "../../../shared/constants/AmbientEnums";
 import { GameEventType } from "../../../shared/constants/EventEnums";
 
 const QUEST_CATALOG: Quest[] = [
   {
-    id: "tutorial_survival",
+    id: QuestID.TUTORIAL_SURVIVAL,
     title: "First Steps",
     description: "Learn the basics of survival",
     status: QuestStatus.AVAILABLE,
@@ -51,18 +56,18 @@ const QUEST_CATALOG: Quest[] = [
         stage: QuestDialogueStage.INTRO,
         speaker: DialogueSpeaker.SYSTEM,
         text: "Welcome! Let's start by gathering some basic resources.",
-        mood: "friendly",
+        mood: DialogueTone.FRIENDLY,
       },
       {
         stage: QuestDialogueStage.COMPLETION,
         speaker: DialogueSpeaker.SYSTEM,
         text: "Well done! You've learned the basics of survival.",
-        mood: "happy",
+        mood: DialogueTone.HAPPY,
       },
     ],
   },
   {
-    id: "build_shelter",
+    id: QuestID.BUILD_SHELTER,
     title: "A Place to Rest",
     description: "Build your first shelter",
     status: QuestStatus.AVAILABLE,
@@ -87,7 +92,7 @@ const QUEST_CATALOG: Quest[] = [
     requirements: [
       {
         type: QuestRequirementType.QUEST_COMPLETED,
-        questId: "tutorial_survival",
+        questId: QuestID.TUTORIAL_SURVIVAL,
       },
     ],
     dialogues: [
@@ -95,13 +100,13 @@ const QUEST_CATALOG: Quest[] = [
         stage: QuestDialogueStage.INTRO,
         speaker: DialogueSpeaker.SYSTEM,
         text: "Now that you can gather resources, let's build a shelter.",
-        mood: "encouraging",
+        mood: DialogueTone.ENCOURAGING,
       },
       {
         stage: QuestDialogueStage.COMPLETION,
         speaker: DialogueSpeaker.SYSTEM,
         text: "Excellent! Your shelter will protect you from the elements.",
-        mood: "proud",
+        mood: DialogueTone.PROUD,
       },
     ],
   },
@@ -211,7 +216,7 @@ export class QuestSystem {
 
     this.questProgress.questHistory.push({
       questId,
-      action: "started",
+      action: QuestAction.STARTED,
       timestamp: Date.now(),
     });
 
@@ -259,7 +264,7 @@ export class QuestSystem {
 
     this.questProgress.questHistory.push({
       questId,
-      action: QuestStatus.COMPLETED,
+      action: QuestAction.COMPLETED,
       timestamp: Date.now(),
     });
 
@@ -339,7 +344,7 @@ export class QuestSystem {
 
     this.questProgress.questHistory.push({
       questId,
-      action: QuestStatus.FAILED,
+      action: QuestAction.FAILED,
       timestamp: Date.now(),
     });
 

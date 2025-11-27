@@ -20,7 +20,7 @@ import { RoleSystem } from "../systems/RoleSystem";
 import { AISystem } from "../systems/AISystem";
 import { ResourceReservationSystem } from "../systems/ResourceReservationSystem";
 import { GovernanceSystem } from "../systems/GovernanceSystem";
-import { DivineFavorSystem } from "../systems/DivineFavorSystem";
+
 import { HouseholdSystem } from "../systems/HouseholdSystem";
 import { BuildingSystem } from "../systems/BuildingSystem";
 import { BuildingMaintenanceSystem } from "../systems/BuildingMaintenanceSystem";
@@ -29,7 +29,7 @@ import { EnhancedCraftingSystem } from "../systems/EnhancedCraftingSystem";
 import { AnimalSystem } from "../systems/AnimalSystem";
 import { ItemGenerationSystem } from "../systems/ItemGenerationSystem";
 import { ReputationSystem } from "../systems/ReputationSystem";
-import { ResearchSystem } from "../systems/ResearchSystem";
+
 import { RecipeDiscoverySystem } from "../systems/RecipeDiscoverySystem";
 import { QuestSystem } from "../systems/QuestSystem";
 import { TaskSystem } from "../systems/TaskSystem";
@@ -41,16 +41,16 @@ import { simulationEvents } from "./events";
 import { BatchedEventEmitter } from "./BatchedEventEmitter";
 import { CombatSystem } from "../systems/CombatSystem";
 import { ResourceAttractionSystem } from "../systems/ResourceAttractionSystem";
-import { CrisisPredictorSystem } from "../systems/CrisisPredictorSystem";
+
 import { AmbientAwarenessSystem } from "../systems/AmbientAwarenessSystem";
-import { CardDialogueSystem } from "../systems/CardDialogueSystem";
-import { EmergenceSystem } from "../systems/EmergenceSystem";
+
+
 import { TimeSystem } from "../systems/TimeSystem";
 import { InteractionGameSystem } from "../systems/InteractionGameSystem";
 import { KnowledgeNetworkSystem } from "../systems/KnowledgeNetworkSystem";
 import { EntityType } from "../../../shared/constants/EntityEnums";
 import { MovementSystem } from "../systems/MovementSystem";
-import { AppearanceGenerationSystem } from "../systems/AppearanceGenerationSystem";
+
 import { ChunkLoadingSystem } from "../systems/ChunkLoadingSystem";
 import { SharedKnowledgeSystem } from "../systems/SharedKnowledgeSystem";
 import { GPUComputeService } from "./GPUComputeService";
@@ -166,8 +166,7 @@ export class SimulationRunner {
   @inject(TYPES.GovernanceSystem)
   public readonly governanceSystem!: GovernanceSystem;
 
-  @inject(TYPES.DivineFavorSystem)
-  public readonly divineFavorSystem!: DivineFavorSystem;
+
 
   @inject(TYPES.HouseholdSystem)
   public readonly householdSystem!: HouseholdSystem;
@@ -193,8 +192,7 @@ export class SimulationRunner {
   @inject(TYPES.ReputationSystem)
   public readonly reputationSystem!: ReputationSystem;
 
-  @inject(TYPES.ResearchSystem)
-  public readonly _researchSystem!: ResearchSystem;
+
 
   @inject(TYPES.RecipeDiscoverySystem)
   public readonly _recipeDiscoverySystem!: RecipeDiscoverySystem;
@@ -215,8 +213,7 @@ export class SimulationRunner {
   @inject(TYPES.ResourceAttractionSystem)
   public readonly resourceAttractionSystem!: ResourceAttractionSystem;
 
-  @inject(TYPES.CrisisPredictorSystem)
-  public readonly crisisPredictorSystem!: CrisisPredictorSystem;
+
 
   @inject(TYPES.WorldGenerationService)
   public readonly worldGenerationService!: WorldGenerationService;
@@ -224,11 +221,9 @@ export class SimulationRunner {
   @inject(TYPES.AmbientAwarenessSystem)
   public readonly ambientAwarenessSystem!: AmbientAwarenessSystem;
 
-  @inject(TYPES.CardDialogueSystem)
-  public readonly cardDialogueSystem!: CardDialogueSystem;
 
-  @inject(TYPES.EmergenceSystem)
-  public readonly emergenceSystem!: EmergenceSystem;
+
+
 
   @inject(TYPES.TimeSystem) public readonly timeSystem!: TimeSystem;
 
@@ -240,8 +235,7 @@ export class SimulationRunner {
 
   @inject(TYPES.MovementSystem) public readonly movementSystem!: MovementSystem;
 
-  @inject(TYPES.AppearanceGenerationSystem)
-  public readonly appearanceGenerationSystem!: AppearanceGenerationSystem;
+
 
   @inject(TYPES.GPUComputeService)
   public readonly gpuComputeService!: GPUComputeService;
@@ -393,7 +387,7 @@ export class SimulationRunner {
       genealogySystem: this._genealogySystem,
       socialSystem: this.socialSystem,
       marriageSystem: this.marriageSystem,
-      divineFavorSystem: this.divineFavorSystem,
+
       aiSystem: this.aiSystem,
       roleSystem: this.roleSystem,
       taskSystem: this.taskSystem,
@@ -401,7 +395,7 @@ export class SimulationRunner {
 
     this.needsSystem.setDependencies({
       lifeCyclePort: this.lifeCycleSystem as ILifeCyclePort,
-      divineFavorSystem: this.divineFavorSystem,
+
       inventorySystem: this.inventorySystem,
       socialSystem: this.socialSystem,
     });
@@ -424,7 +418,7 @@ export class SimulationRunner {
 
     this.economySystem.setDependencies({
       roleSystem: this.roleSystem,
-      divineFavorSystem: this.divineFavorSystem,
+
       genealogySystem: this._genealogySystem,
     });
 
@@ -644,12 +638,7 @@ export class SimulationRunner {
       minEntities: 10,
     });
 
-    this.scheduler.registerSystem({
-      name: "ResearchSystem",
-      rate: TickRate.SLOW,
-      update: () => this._researchSystem.update(),
-      enabled: true,
-    });
+
 
     this.scheduler.registerSystem({
       name: "ReputationSystem",
@@ -722,12 +711,7 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    this.scheduler.registerSystem({
-      name: "DivineFavorSystem",
-      rate: TickRate.SLOW,
-      update: (delta: number) => this.divineFavorSystem.update(delta),
-      enabled: true,
-    });
+
 
     this.scheduler.registerSystem({
       name: "QuestSystem",
@@ -766,13 +750,7 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    this.scheduler.registerSystem({
-      name: "CrisisPredictorSystem",
-      rate: TickRate.SLOW,
-      update: (delta: number) => this.crisisPredictorSystem.update(delta),
-      enabled: true,
-      minEntities: 20,
-    });
+
 
     this.scheduler.registerSystem({
       name: "AmbientAwarenessSystem",
@@ -781,12 +759,7 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    this.scheduler.registerSystem({
-      name: "CardDialogueSystem",
-      rate: TickRate.SLOW,
-      update: (delta: number) => this.cardDialogueSystem.update(delta),
-      enabled: true,
-    });
+
 
     this.scheduler.registerSystem({
       name: "InteractionGameSystem",
@@ -830,12 +803,7 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    this.scheduler.registerSystem({
-      name: "EmergenceSystem",
-      rate: TickRate.SLOW,
-      update: (delta: number) => this.emergenceSystem.update(delta),
-      enabled: true,
-    });
+
 
     this.scheduler.registerSystem({
       name: "KnowledgeNetworkSystem",
@@ -1089,9 +1057,7 @@ export class SimulationRunner {
         : undefined;
 
     const lineageId = existing ?? "lineage_default";
-    if (!existing) {
-      this._researchSystem.initializeLineage(lineageId);
-    }
+    // ResearchSystem removed - lineage initialization no longer needed
     return lineageId;
   }
 
@@ -1123,12 +1089,12 @@ export class SimulationRunner {
         social,
         ai: aiState
           ? {
-              currentGoal: aiState.currentGoal,
-              goalQueue: aiState.goalQueue,
-              currentAction: aiState.currentAction,
-              offDuty: aiState.offDuty,
-              lastDecisionTime: aiState.lastDecisionTime,
-            }
+            currentGoal: aiState.currentGoal,
+            goalQueue: aiState.goalQueue,
+            currentAction: aiState.currentAction,
+            offDuty: aiState.offDuty,
+            lastDecisionTime: aiState.lastDecisionTime,
+          }
           : null,
       };
     }

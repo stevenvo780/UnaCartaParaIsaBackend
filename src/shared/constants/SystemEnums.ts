@@ -28,6 +28,10 @@ export enum SystemProperty {
   CONFIG = "config",
   METADATA = "metadata",
   INVENTORY = "inventory",
+  TREND = "trend",
+  TRAITS = "traits",
+  SEX = "sex",
+  RESOLUTION = "resolution",
 }
 
 /**

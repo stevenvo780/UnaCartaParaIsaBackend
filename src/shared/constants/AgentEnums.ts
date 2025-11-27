@@ -74,6 +74,14 @@ export enum ClothingStyle {
 }
 
 /**
+ * Enumeration of reasons for appearance updates.
+ */
+export enum AppearanceUpdateReason {
+  AGING = "aging",
+  SOCIAL_GROUP_ASSIGNED = "social_group_assigned",
+}
+
+/**
  * Type representing all possible sex values.
  */
 export type SexValue = `${Sex}`;

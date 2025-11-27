@@ -85,7 +85,7 @@ export class DeltaEncoder {
     this.lastFullSnapshot = currentSnapshot.state;
 
     return {
-      type: "delta",
+      type: SnapshotType.DELTA,
       tick: currentSnapshot.tick,
       updatedAt: currentSnapshot.updatedAt,
       events: currentSnapshot.events,
@@ -183,13 +183,13 @@ export class DeltaEncoder {
       changes.resources = current.resources;
     }
 
-    if (current.inventory) {
-      const prevInventory = previous.inventory;
+    if (current[SystemProperty.INVENTORY]) {
+      const prevInventory = previous[SystemProperty.INVENTORY];
       if (
         !prevInventory ||
-        this.hasInventoryChanged(prevInventory, current.inventory)
+        this.hasInventoryChanged(prevInventory, current[SystemProperty.INVENTORY])
       ) {
-        changes.inventory = current.inventory;
+        changes[SystemProperty.INVENTORY] = current[SystemProperty.INVENTORY];
       }
     }
 

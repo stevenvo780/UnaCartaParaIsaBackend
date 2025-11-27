@@ -12,6 +12,7 @@ import {
 } from "../../../shared/constants/AmbientEnums";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
+import { SystemProperty } from "../../../shared/constants/SystemEnums";
 
 @injectable()
 export class AmbientAwarenessSystem {
@@ -104,7 +105,7 @@ export class AmbientAwarenessSystem {
       this.wellbeingHistory.shift();
     }
 
-    let trend: CollectiveWellbeing["trend"] = CrisisTrend.STABLE;
+    let trend: CollectiveWellbeing[SystemProperty.TREND] = CrisisTrend.STABLE;
     if (this.wellbeingHistory.length >= 10) {
       const recent =
         this.wellbeingHistory.slice(-5).reduce((a, b) => a + b, 0) / 5;
@@ -225,7 +226,7 @@ export class AmbientAwarenessSystem {
     }
 
     if (trend === CrisisTrend.IMPROVING) base *= 0.9;
-    else if (trend === "worsening") base *= 1.1;
+    else if (trend === CrisisTrend.WORSENING) base *= 1.1;
 
     return base;
   }
