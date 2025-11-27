@@ -347,6 +347,15 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     spriteKey: "agent_built_spiritual",
     capacity: 8,
   },
+
+  wild: {
+    name: "Wild Area",
+    color: "#228B22",
+    attractiveness: 3,
+    effects: {},
+    spriteKey: "wild",
+    capacity: 0,
+  },
 };
 
 export function getZoneProperties(zoneType: ZoneType): ZonePropertyConfig {

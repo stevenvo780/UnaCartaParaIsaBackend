@@ -9,6 +9,7 @@ import type {
 } from "../../types/simulation/governance";
 import type { ResourceCost } from "../../types/simulation/economy";
 import type { RoleType } from "../../types/simulation/roles";
+import { RoleType as RoleTypeEnum } from "../../../shared/constants/RoleEnums";
 import { GameEventNames, simulationEvents } from "../core/events";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 import { InventorySystem } from "./InventorySystem";
@@ -68,19 +69,19 @@ const DEMAND_SOLUTIONS: Partial<
   housing_full: {
     project: "build_house",
     cost: { wood: 40, stone: 20 },
-    roleAssignment: { role: "builder", count: 2 },
+    roleAssignment: { role: RoleTypeEnum.BUILDER, count: 2 },
   },
   food_shortage: {
     project: "assign_hunters",
     cost: { wood: 0, stone: 0 },
     resourceBoost: { food: 40 },
-    roleAssignment: { role: "hunter", count: 3 },
+    roleAssignment: { role: RoleTypeEnum.HUNTER, count: 3 },
   },
   water_shortage: {
     project: "gather_water",
     cost: { wood: 0, stone: 0 },
     resourceBoost: { water: 30 },
-    roleAssignment: { role: "gatherer", count: 2 },
+    roleAssignment: { role: RoleTypeEnum.GATHERER, count: 2 },
   },
 };
 
@@ -491,15 +492,15 @@ export class GovernanceSystem {
 
       // Role-specific trait preferences
       switch (targetRole) {
-        case "hunter":
+        case RoleTypeEnum.HUNTER:
           score += (agent.traits.diligence ?? 0.5) * 30;
           score += (agent.traits.neuroticism ?? 0.3) * 15; // Alertness
           break;
-        case "gatherer":
+        case RoleTypeEnum.GATHERER:
           score += (agent.traits.curiosity ?? 0.5) * 25;
           score += (agent.traits.cooperation ?? 0.5) * 15;
           break;
-        case "builder":
+        case RoleTypeEnum.BUILDER:
           score += (agent.traits.diligence ?? 0.5) * 25;
           score += (agent.traits.cooperation ?? 0.5) * 25;
           break;

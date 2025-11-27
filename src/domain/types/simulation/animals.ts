@@ -1,8 +1,12 @@
 import type { Position } from "../../types/game-types.js";
-import { AnimalType, AnimalState } from "../../../shared/constants/AnimalEnums";
+import {
+  AnimalType,
+  AnimalState,
+  AnimalTargetType,
+} from "../../../shared/constants/AnimalEnums";
 
 // Re-export enums for backward compatibility
-export { AnimalType, AnimalState };
+export { AnimalType, AnimalState, AnimalTargetType };
 
 export interface AnimalGenes {
   color: number;
@@ -77,7 +81,7 @@ export interface Animal {
   parentIds: [string | null, string | null];
 
   targetPosition: Position | null;
-  currentTarget: { type: "food" | "water" | "mate"; id: string } | null;
+  currentTarget: { type: AnimalTargetType; id: string } | null;
   fleeTarget: string | null;
 
   biome: string;

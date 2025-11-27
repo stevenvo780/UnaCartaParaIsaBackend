@@ -1,5 +1,4 @@
 import { logger } from "../../../infrastructure/utils/logger";
-import type { ResourceType } from "../../types/simulation/economy";
 import { EventEmitter } from "events";
 import { GameState } from "../../types/game-types";
 import {
@@ -9,6 +8,10 @@ import {
   AgentAction,
   GoalType,
 } from "../../types/simulation/ai";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
+import { GoalType as GoalTypeEnum } from "../../../shared/constants/AIEnums";
+import { RoleType } from "../../../shared/constants/RoleEnums";
+import { AgentPriority } from "../../../shared/constants/AIEnums";
 import { itemToWorldResources } from "../../types/simulation/resourceMapping";
 import type { WorldResourceType } from "../../types/simulation/worldResources";
 import { StockpileType } from "../../../shared/constants/ZoneEnums";
@@ -134,6 +137,7 @@ interface AISystemConfig {
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import type { AgentRegistry } from "../core/AgentRegistry";
 
 /**
  * AI system for agent decision-making and goal planning.
@@ -181,6 +185,7 @@ export class AISystem extends EventEmitter {
   private sharedKnowledgeSystem?: SharedKnowledgeSystem;
   private entityIndex?: EntityIndex;
   private gpuService?: GPUComputeService;
+  private agentRegistry?: AgentRegistry;
 
   private agentIndex = 0;
 
@@ -227,7 +232,7 @@ export class AISystem extends EventEmitter {
     "peaceful" | "tit_for_tat" | "bully"
   >();
   private playerControlledAgents = new Set<string>();
-  private agentPriorities = new Map<string, "survival" | "normal" | "social">();
+  private agentPriorities = new Map<string, AgentPriority>();
 
   private _decisionTimeTotalMs = 0;
   private _decisionCount = 0;
@@ -281,11 +286,15 @@ export class AISystem extends EventEmitter {
     @inject(TYPES.GPUComputeService)
     @optional()
     gpuService?: GPUComputeService,
+    @inject(TYPES.AgentRegistry)
+    @optional()
+    agentRegistry?: AgentRegistry,
   ) {
     super();
     this.gameState = gameState;
     this.entityIndex = entityIndex;
     this.gpuService = gpuService;
+    this.agentRegistry = agentRegistry;
     this.config = {
       updateIntervalMs: 250, // Match scheduler MEDIUM rate for responsive AI
       enablePersonality: true,
@@ -294,6 +303,12 @@ export class AISystem extends EventEmitter {
     };
 
     this.aiStates = new Map();
+
+    // Register aiStates Map in AgentRegistry for unified access
+    if (this.agentRegistry) {
+      this.agentRegistry.registerAIStates(this.aiStates);
+    }
+
     this.priorityManager = new PriorityManager(
       gameState,
       undefined,
@@ -915,7 +930,7 @@ export class AISystem extends EventEmitter {
     }
 
     // Hunters prioritize hunting
-    if (role === "hunter") {
+    if (role === RoleType.HUNTER) {
       // Find nearest huntable animal
       const animal = this.findNearestHuntableAnimal(agentId);
       logger.debug(
@@ -946,13 +961,13 @@ export class AISystem extends EventEmitter {
         if (resource && !excluded.has(resource.id)) {
           return {
             id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: "work" as GoalType,
+            type: GoalTypeEnum.WORK,
             priority: 0.5,
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
               taskType: "gather_food",
-              resourceType: "food" as ResourceType,
+              resourceType: ResourceType.FOOD,
             },
             createdAt: now,
           };
@@ -960,7 +975,7 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    if (role === "logger") {
+    if (role === RoleType.LOGGER) {
       for (const woodType of woodTypes) {
         const resource = this.findNearestResourceForEntity(agentId, woodType);
         if (!resource) {
@@ -972,13 +987,13 @@ export class AISystem extends EventEmitter {
           );
           return {
             id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: "work" as GoalType,
+            type: GoalTypeEnum.WORK,
             priority: 0.6,
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
               taskType: "gather_wood",
-              resourceType: "wood" as ResourceType,
+              resourceType: ResourceType.WOOD,
             },
             createdAt: now,
           };
@@ -987,7 +1002,7 @@ export class AISystem extends EventEmitter {
     }
 
     // Quarrymen (Canteros) gather stone
-    if (role === "quarryman") {
+    if (role === RoleType.QUARRYMAN) {
       for (const stoneType of stoneTypes) {
         const resource = this.findNearestResourceForEntity(agentId, stoneType);
         if (!resource) {
@@ -999,13 +1014,13 @@ export class AISystem extends EventEmitter {
           );
           return {
             id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: "work" as GoalType,
+            type: GoalTypeEnum.WORK,
             priority: 0.6,
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
               taskType: "gather_stone",
-              resourceType: "stone" as ResourceType,
+              resourceType: ResourceType.STONE,
             },
             createdAt: now,
           };
@@ -1014,19 +1029,19 @@ export class AISystem extends EventEmitter {
     }
 
     // Gatherers focus on food
-    if (role === "gatherer") {
+    if (role === RoleType.GATHERER) {
       for (const foodType of foodTypes) {
         const resource = this.findNearestResourceForEntity(agentId, foodType);
         if (resource && !excluded.has(resource.id)) {
           return {
             id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: "work" as GoalType,
+            type: GoalTypeEnum.WORK,
             priority: 0.5,
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
               taskType: "gather_food",
-              resourceType: "food" as ResourceType,
+              resourceType: ResourceType.FOOD,
             },
             createdAt: now,
           };
@@ -1035,19 +1050,19 @@ export class AISystem extends EventEmitter {
     }
 
     // Builders gather wood/stone
-    if (role === "builder") {
+    if (role === RoleType.BUILDER) {
       for (const woodType of woodTypes) {
         const resource = this.findNearestResourceForEntity(agentId, woodType);
         if (resource && !excluded.has(resource.id)) {
           return {
             id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: "work" as GoalType,
+            type: GoalTypeEnum.WORK,
             priority: 0.5,
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
               taskType: "gather_wood",
-              resourceType: "wood" as ResourceType,
+              resourceType: ResourceType.WOOD,
             },
             createdAt: now,
           };
@@ -1058,13 +1073,13 @@ export class AISystem extends EventEmitter {
         if (resource && !excluded.has(resource.id)) {
           return {
             id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: "work" as GoalType,
+            type: GoalTypeEnum.WORK,
             priority: 0.5,
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
               taskType: "gather_stone",
-              resourceType: "stone" as ResourceType,
+              resourceType: ResourceType.STONE,
             },
             createdAt: now,
           };
@@ -1218,9 +1233,7 @@ export class AISystem extends EventEmitter {
         if (this.zoneCache.has(id)) {
           return this.zoneCache.get(id);
         }
-        const agent =
-          this.entityIndex?.getAgent(id) ??
-          this.gameState.agents.find((a) => a.id === id);
+        const agent = this.getAgentProfileFast(id);
         if (!agent?.position) {
           this.zoneCache.set(id, undefined);
           return undefined;
@@ -1378,7 +1391,7 @@ export class AISystem extends EventEmitter {
       },
       findAgentWithResource: (
         entityId: string,
-        resourceType: "food" | "water",
+        resourceType: ResourceType.FOOD | ResourceType.WATER,
         minAmount: number,
       ) => this.findAgentWithResource(entityId, resourceType, minAmount),
       findPotentialMate: (entityId: string) => this.findPotentialMate(entityId),
@@ -1500,10 +1513,7 @@ export class AISystem extends EventEmitter {
    * @param entityId - Entity identifier
    * @param priority - Priority mode ("survival", "normal", or "social")
    */
-  public setEntityPriority(
-    entityId: string,
-    priority: "survival" | "normal" | "social",
-  ): void {
+  public setEntityPriority(entityId: string, priority: AgentPriority): void {
     this.agentPriorities.set(entityId, priority);
   }
 
@@ -1628,9 +1638,7 @@ export class AISystem extends EventEmitter {
   }
 
   private getAgentPosition(agentId: string): { x: number; y: number } | null {
-    const agent =
-      this.entityIndex?.getAgent(agentId) ??
-      this.gameState.agents.find((a) => a.id === agentId);
+    const agent = this.getAgentProfileFast(agentId);
     if (agent?.position) {
       return { x: agent.position.x, y: agent.position.y };
     }
@@ -1817,7 +1825,7 @@ export class AISystem extends EventEmitter {
 
   private findAgentWithResource(
     entityId: string,
-    resourceType: "food" | "water",
+    resourceType: ResourceType.FOOD | ResourceType.WATER,
     minAmount: number,
   ): { agentId: string; x: number; y: number } | null {
     const agent = this.gameState.agents.find((a) => a.id === entityId);
@@ -2201,6 +2209,28 @@ export class AISystem extends EventEmitter {
   public getCurrentGoal(agentId: string): unknown {
     const aiState = this.aiStates.get(agentId);
     return aiState?.currentGoal;
+  }
+
+  /**
+   * Gets agent profile with O(1) lookup using AgentRegistry, EntityIndex, or fallback to gameState
+   * @param agentId - Agent identifier
+   * @returns AgentProfile or undefined
+   */
+  private getAgentProfileFast(
+    agentId: string,
+  ): import("../../types/simulation/agents").AgentProfile | undefined {
+    // Try AgentRegistry first (O(1))
+    if (this.agentRegistry) {
+      const profile = this.agentRegistry.getProfile(agentId);
+      if (profile) return profile;
+    }
+    // Try EntityIndex (O(1))
+    if (this.entityIndex) {
+      const agent = this.entityIndex.getAgent(agentId);
+      if (agent) return agent;
+    }
+    // Fallback to gameState.agents.find (O(n)) - should rarely happen
+    return this.gameState.agents.find((a) => a.id === agentId);
   }
 
   /**

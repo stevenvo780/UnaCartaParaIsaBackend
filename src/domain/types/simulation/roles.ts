@@ -1,19 +1,9 @@
-export type RoleType =
-  | "logger"
-  | "quarryman"
-  | "builder"
-  | "farmer"
-  | "gatherer"
-  | "guard"
-  | "hunter"
-  | "craftsman"
-  | "leader"
-  | "idle";
+import { RoleType, WorkShift } from "../../../shared/constants/RoleEnums";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
+import { ZoneType } from "../../../shared/constants/ZoneEnums";
 
-import { WorkShift } from "../../../shared/constants/RoleEnums";
-
-// Re-export WorkShift enum for backward compatibility
-export { WorkShift };
+// Re-export for backward compatibility
+export { RoleType, WorkShift };
 
 export interface RoleRequirements {
   minAge?: number;
@@ -30,7 +20,7 @@ export interface RoleConfig {
   type: RoleType;
   name: string;
   description: string;
-  primaryResource?: "wood" | "stone" | "food" | "water";
+  primaryResource?: ResourceType;
   requirements: RoleRequirements;
   efficiency: {
     base: number;
@@ -41,7 +31,7 @@ export interface RoleConfig {
       neuroticism?: number;
     };
   };
-  preferredZoneType: "work" | "food" | "water" | "rest" | "wild";
+  preferredZoneType: ZoneType;
   workShifts: WorkShift[];
 }
 

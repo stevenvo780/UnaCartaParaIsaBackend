@@ -19,6 +19,7 @@ import { performance } from "node:perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
 import { SIM_CONSTANTS } from "../core/SimulationConstants";
 import { AnimalState } from "../../../shared/constants/AnimalEnums";
+import { AnimalRegistry } from "../core/AnimalRegistry";
 
 const DEFAULT_CONFIG: AnimalSystemConfig = {
   maxAnimals: SIM_CONSTANTS.MAX_ANIMALS,
@@ -35,14 +36,15 @@ import type { GPUComputeService } from "../core/GPUComputeService";
 export class AnimalSystem {
   private gameState: GameState;
   private config: AnimalSystemConfig;
-  private animals = new Map<string, Animal>();
+  /** @deprecated Use animalRegistry instead - this getter delegates to registry */
+  private get animals(): Map<string, Animal> {
+    return this.animalRegistry.getAnimalsMap();
+  }
   private worldResourceSystem?: WorldResourceSystem;
   private gpuService?: GPUComputeService;
+  private animalRegistry: AnimalRegistry;
 
   private lastCleanup = Date.now();
-
-  private spatialGrid = new Map<string, Set<string>>();
-  private readonly GRID_CELL_SIZE = SIM_CONSTANTS.SPATIAL_CELL_SIZE;
 
   private resourceSearchCache = new Map<
     string,
@@ -101,10 +103,14 @@ export class AnimalSystem {
     @inject(TYPES.GPUComputeService)
     @optional()
     gpuService?: GPUComputeService,
+    @inject(TYPES.AnimalRegistry as symbol)
+    @optional()
+    animalRegistry?: AnimalRegistry,
   ) {
     this.gameState = gameState;
     this.worldResourceSystem = worldResourceSystem;
     this.gpuService = gpuService;
+    this.animalRegistry = animalRegistry ?? new AnimalRegistry();
     this.config = DEFAULT_CONFIG;
     this.batchProcessor = new AnimalBatchProcessor(gpuService);
     if (gpuService?.isGPUAvailable()) {
@@ -114,7 +120,7 @@ export class AnimalSystem {
     }
 
     this.setupEventListeners();
-    logger.info("🐾 AnimalSystem (Backend) initialized");
+    logger.info("🐾 AnimalSystem (Backend) initialized with AnimalRegistry");
   }
 
   private setupEventListeners(): void {
@@ -757,141 +763,80 @@ export class AnimalSystem {
   }
 
   /**
-   * Get animals within radius using spatial grid
+   * Get animals within radius using AnimalRegistry's spatial index
    */
   public getAnimalsInRadius(
     position: { x: number; y: number },
     radius: number,
   ): Animal[] {
-    const result: Animal[] = [];
-    const radiusSq = radius * radius;
-
-    const minX = Math.floor((position.x - radius) / this.GRID_CELL_SIZE);
-    const maxX = Math.floor((position.x + radius) / this.GRID_CELL_SIZE);
-    const minY = Math.floor((position.y - radius) / this.GRID_CELL_SIZE);
-    const maxY = Math.floor((position.y + radius) / this.GRID_CELL_SIZE);
-
-    for (let gridX = minX; gridX <= maxX; gridX++) {
-      for (let gridY = minY; gridY <= maxY; gridY++) {
-        const cellKey = `${gridX},${gridY}`;
-        const cell = this.spatialGrid.get(cellKey);
-        if (!cell) continue;
-
-        for (const animalId of cell) {
-          const animal = this.animals.get(animalId);
-          if (!animal || animal.isDead) continue;
-
-          const dx = animal.position.x - position.x;
-          const dy = animal.position.y - position.y;
-          const distSq = dx * dx + dy * dy;
-
-          if (distSq <= radiusSq) {
-            result.push(animal);
-          }
-        }
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * Add animal to system
-   */
-  private addAnimal(animal: Animal): void {
-    this.animals.set(animal.id, animal);
-    this.addToSpatialGrid(animal);
-    logger.debug(
-      `🐾 [AnimalSystem] Added animal ${animal.id} (${animal.type}) at (${animal.position.x.toFixed(0)}, ${animal.position.y.toFixed(0)}). Total: ${this.animals.size}`,
+    return this.animalRegistry.getAnimalsInRadius(
+      position.x,
+      position.y,
+      radius,
+      true, // excludeDead
     );
   }
 
   /**
-   * Get all live animals directly from the central Map.
-   * This is the source of truth for animal data.
+   * Add animal to system via registry
+   */
+  private addAnimal(animal: Animal): void {
+    this.animalRegistry.registerAnimal(animal);
+    logger.debug(
+      `🐾 [AnimalSystem] Added animal ${animal.id} (${animal.type}) at (${animal.position.x.toFixed(0)}, ${animal.position.y.toFixed(0)}). Total: ${this.animalRegistry.size}`,
+    );
+  }
+
+  /**
+   * Get all live animals from registry.
    */
   public getLiveAnimals(): Animal[] {
-    return [...this.animals.values()].filter((a) => !a.isDead);
+    return this.animalRegistry.getLiveAnimals();
   }
 
   /**
    * Get total count of live animals (fast, no array allocation)
    */
   public getLiveAnimalCount(): number {
-    let count = 0;
-    for (const animal of this.animals.values()) {
-      if (!animal.isDead) count++;
-    }
-    return count;
+    return this.animalRegistry.getStats().alive;
   }
 
   /**
-   * Get animal statistics for game state
+   * Get animal statistics from registry
    */
   public getStats(): {
     totalAnimals: number;
     byType: Record<string, number>;
   } {
-    const byType: Record<string, number> = {};
-    let totalAnimals = 0;
-
-    for (const animal of this.animals.values()) {
-      if (!animal.isDead) {
-        totalAnimals++;
-        byType[animal.type] = (byType[animal.type] || 0) + 1;
-      }
-    }
-
+    const stats = this.animalRegistry.getStats();
     return {
-      totalAnimals,
-      byType,
+      totalAnimals: stats.alive,
+      byType: stats.byType,
     };
   }
 
-  /**
-   * Add animal to spatial grid
-   */
-  private addToSpatialGrid(animal: Animal): void {
-    const cellKey = this.getGridCell(animal.position);
-    let cell = this.spatialGrid.get(cellKey);
-    if (!cell) {
-      cell = new Set();
-      this.spatialGrid.set(cellKey, cell);
-    }
-    cell.add(animal.id);
-  }
-
   private updateGameStateSnapshot(): void {
+    // Delegate to registry's export method
+    const snapshot = this.animalRegistry.exportForGameState();
+
     if (!this.gameState.animals) {
       this.gameState.animals = {
         animals: [],
-        stats: {
-          total: 0,
-          byType: {},
-        },
+        stats: { total: 0, byType: {} },
       };
-    }
-
-    const liveAnimals = [...this.animals.values()].filter((a) => !a.isDead);
-
-    const byType: Record<string, number> = {};
-    for (const animal of liveAnimals) {
-      byType[animal.type] = (byType[animal.type] || 0) + 1;
     }
 
     const now = Date.now();
     if (!this._lastAnimalCountLog || now - this._lastAnimalCountLog > 5000) {
+      const totalInRegistry = this.animalRegistry.size;
       logger.info(
-        `🐾 [AnimalSystem] Map size: ${this.animals.size}, Live: ${liveAnimals.length}, Dead: ${this.animals.size - liveAnimals.length}`,
+        `🐾 [AnimalSystem] Registry size: ${totalInRegistry}, Live: ${snapshot.stats.total}`,
       );
       this._lastAnimalCountLog = now;
     }
 
-    this.gameState.animals.animals = liveAnimals;
-    this.gameState.animals.stats = {
-      total: liveAnimals.length,
-      byType,
-    };
+    this.gameState.animals.animals = snapshot.animals;
+    this.gameState.animals.stats = snapshot.stats;
   }
   private _lastAnimalCountLog?: number;
 
@@ -921,25 +866,19 @@ export class AnimalSystem {
   }
 
   /**
-   * Update animal position in spatial grid
+   * Update animal position tracking in registry
    */
   private updateSpatialGrid(
     animal: Animal,
     oldPosition: { x: number; y: number },
   ): void {
-    const oldCell = this.getGridCell(oldPosition);
-    const newCell = this.getGridCell(animal.position);
-
-    if (oldCell !== newCell) {
-      this.spatialGrid.get(oldCell)?.delete(animal.id);
-      this.addToSpatialGrid(animal);
+    // Check if position changed significantly
+    const dx = Math.abs(animal.position.x - oldPosition.x);
+    const dy = Math.abs(animal.position.y - oldPosition.y);
+    if (dx > 1 || dy > 1) {
+      // Registry automatically handles spatial updates
+      this.animalRegistry.markDirty(animal.id);
     }
-  }
-
-  private getGridCell(position: { x: number; y: number }): string {
-    const gridX = Math.floor(position.x / this.GRID_CELL_SIZE);
-    const gridY = Math.floor(position.y / this.GRID_CELL_SIZE);
-    return `${gridX},${gridY}`;
   }
 
   /**
@@ -965,17 +904,16 @@ export class AnimalSystem {
   }
 
   /**
-   * Kill an animal
+   * Kill an animal via registry
    */
   private killAnimal(
     animalId: string,
     cause: "starvation" | "dehydration" | "old_age" | "hunted",
   ): void {
-    const animal = this.animals.get(animalId);
+    const animal = this.animalRegistry.getAnimal(animalId);
     if (!animal || animal.isDead) return;
 
-    animal.isDead = true;
-    animal.state = AnimalState.DEAD;
+    this.animalRegistry.markDead(animalId);
 
     simulationEvents.emit(GameEventNames.ANIMAL_DIED, {
       animalId,
@@ -991,7 +929,7 @@ export class AnimalSystem {
    * Handle animal hunted by agent
    */
   private handleAnimalHunted(animalId: string, _hunterId: string): void {
-    const animal = this.animals.get(animalId);
+    const animal = this.animalRegistry.getAnimal(animalId);
     if (!animal) return;
 
     const config = getAnimalConfig(animal.type);
@@ -1016,28 +954,12 @@ export class AnimalSystem {
   }
 
   /**
-   * Clean up dead animals
+   * Clean up dead animals via registry
    */
   private cleanupDeadAnimals(): void {
-    const toRemove: string[] = [];
-
-    for (const [id, animal] of this.animals) {
-      if (animal.isDead) {
-        toRemove.push(id);
-      }
-    }
-
-    for (const id of toRemove) {
-      const animal = this.animals.get(id);
-      if (animal) {
-        const cellKey = this.getGridCell(animal.position);
-        this.spatialGrid.get(cellKey)?.delete(id);
-      }
-      this.animals.delete(id);
-    }
-
-    if (toRemove.length > 0) {
-      logger.info(`🧹 Cleaned up ${toRemove.length} dead animals`);
+    const removedCount = this.animalRegistry.cleanup(Date.now());
+    if (removedCount > 0) {
+      logger.info(`🧹 Cleaned up ${removedCount} dead animals via registry`);
     }
   }
 
@@ -1088,29 +1010,24 @@ export class AnimalSystem {
   }
 
   /**
-   * Get all animals
+   * Get all animals map from registry
    */
   public getAnimals(): Map<string, Animal> {
-    return this.animals;
+    return this.animalRegistry.getAnimalsMap();
   }
 
   /**
-   * Get animal by ID
+   * Get animal by ID from registry
    */
   public getAnimal(id: string): Animal | undefined {
-    return this.animals.get(id);
+    return this.animalRegistry.getAnimal(id);
   }
 
   /**
-   * Remove animal manually
+   * Remove animal via registry
    */
   public removeAnimal(id: string): void {
-    const animal = this.animals.get(id);
-    if (animal) {
-      const cellKey = this.getGridCell(animal.position);
-      this.spatialGrid.get(cellKey)?.delete(id);
-      this.animals.delete(id);
-    }
+    this.animalRegistry.removeAnimal(id);
   }
 
   /**

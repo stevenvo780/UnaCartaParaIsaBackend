@@ -4,7 +4,10 @@ import { getAnimalConfig } from "../../../../infrastructure/services/world/confi
 import { AnimalNeeds } from "./AnimalNeeds";
 import { AnimalGenetics } from "./AnimalGenetics";
 import { simulationEvents, GameEventNames } from "../../core/events";
-import { AnimalState } from "../../../../shared/constants/AnimalEnums";
+import {
+  AnimalState,
+  AnimalTargetType,
+} from "../../../../shared/constants/AnimalEnums";
 
 const BASE_ANIMAL_SPEED = 60; // Slightly increased from 50
 
@@ -107,10 +110,13 @@ export class AnimalBehavior {
     const config = getAnimalConfig(animal.type);
     if (!config || !config.consumesVegetation) return;
 
-    if (!animal.currentTarget || animal.currentTarget.type !== "food") {
+    if (
+      !animal.currentTarget ||
+      animal.currentTarget.type !== AnimalTargetType.FOOD
+    ) {
       if (availableResources.length > 0) {
         const target = availableResources[0];
-        animal.currentTarget = { type: "food", id: target.id };
+        animal.currentTarget = { type: AnimalTargetType.FOOD, id: target.id };
         animal.targetPosition = { x: target.position.x, y: target.position.y };
       } else {
         this.wander(animal, 0.5, deltaSeconds);
@@ -166,13 +172,16 @@ export class AnimalBehavior {
     const config = getAnimalConfig(animal.type);
     if (!config?.isPredator || !config.preyTypes) return;
 
-    if (!animal.currentTarget || animal.currentTarget.type !== "food") {
+    if (
+      !animal.currentTarget ||
+      animal.currentTarget.type !== AnimalTargetType.FOOD
+    ) {
       const prey = availablePrey.find((p) =>
         config.preyTypes!.includes(p.type),
       );
 
       if (prey) {
-        animal.currentTarget = { type: "food", id: prey.id };
+        animal.currentTarget = { type: AnimalTargetType.FOOD, id: prey.id };
         animal.targetPosition = { ...prey.position };
         prey.isBeingHunted = true;
       } else {
@@ -239,10 +248,13 @@ export class AnimalBehavior {
     const config = getAnimalConfig(animal.type);
     if (!config?.consumesWater) return;
 
-    if (!animal.currentTarget || animal.currentTarget.type !== "water") {
+    if (
+      !animal.currentTarget ||
+      animal.currentTarget.type !== AnimalTargetType.WATER
+    ) {
       if (availableWaterResources.length > 0) {
         const target = availableWaterResources[0];
-        animal.currentTarget = { type: "water", id: target.id };
+        animal.currentTarget = { type: AnimalTargetType.WATER, id: target.id };
         animal.targetPosition = { ...target.position };
       } else {
         this.wander(animal, 0.5, deltaSeconds);

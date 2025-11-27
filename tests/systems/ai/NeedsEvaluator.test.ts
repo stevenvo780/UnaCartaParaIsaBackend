@@ -6,6 +6,10 @@ import {
 } from "../../../src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts";
 import type { AIState } from "../../../src/domain/types/simulation/ai.ts";
 import type { EntityNeedsData } from "../../../src/domain/types/simulation/needs.ts";
+import { GoalType } from "../../../src/shared/constants/AIEnums";
+import { NeedType } from "../../../src/shared/constants/AIEnums";
+import { ResourceType } from "../../../src/shared/constants/ResourceEnums";
+import { WorldResourceType } from "../../../src/shared/constants/ResourceEnums";
 
 describe("NeedsEvaluator", () => {
   let aiState: AIState;
@@ -134,9 +138,9 @@ describe("NeedsEvaluator", () => {
       });
       const goals = evaluateCriticalNeeds(deps, aiState);
       expect(goals.length).toBe(1);
-      expect(goals[0].type).toBe("gather");
-      expect(goals[0].data?.need).toBe("thirst");
-      expect(goals[0].data?.resourceType).toBe("water_source");
+      expect(goals[0].type).toBe(GoalType.GATHER);
+      expect(goals[0].data?.need).toBe(NeedType.THIRST);
+      expect(goals[0].data?.resourceType).toBe(ResourceType.WATER);
       expect(goals[0].targetId).toBe("water-1");
       expect(goals[0].targetPosition).toEqual({ x: 100, y: 100 });
     });
@@ -153,9 +157,9 @@ describe("NeedsEvaluator", () => {
       });
       const goals = evaluateCriticalNeeds(deps, aiState);
       expect(goals.length).toBe(1);
-      expect(goals[0].type).toBe("gather");
-      expect(goals[0].data?.need).toBe("hunger");
-      expect(goals[0].data?.resourceType).toBe("wheat_crop");
+      expect(goals[0].type).toBe(GoalType.GATHER);
+      expect(goals[0].data?.need).toBe(NeedType.HUNGER);
+      expect(goals[0].data?.resourceType).toBe(ResourceType.FOOD);
       expect(goals[0].targetId).toBe("wheat-1");
       expect(goals[0].targetPosition).toEqual({ x: 200, y: 200 });
     });
@@ -227,7 +231,7 @@ describe("NeedsEvaluator", () => {
       const goals = evaluateCriticalNeeds(deps, aiState);
       // La implementación genera un goal de "desperate_search" cuando no hay recursos
       expect(goals.length).toBe(1);
-      expect(goals[0].type).toBe("explore");
+      expect(goals[0].type).toBe(GoalType.EXPLORE);
       expect(goals[0].data?.explorationType).toBe("desperate_search");
       expect(goals[0].data?.need).toBe("hunger");
     });
@@ -244,8 +248,8 @@ describe("NeedsEvaluator", () => {
       });
       const goals = evaluateCriticalNeeds(deps, aiState);
       expect(goals.length).toBe(1);
-      expect(goals[0].type).toBe("satisfy_need");
-      expect(goals[0].data?.need).toBe("energy");
+      expect(goals[0].type).toBe(GoalType.SATISFY_ENERGY);
+      expect(goals[0].data?.need).toBe(NeedType.ENERGY);
       expect(goals[0].data?.action).toBe("rest");
       expect(goals[0].targetId).toBeUndefined();
       expect(goals[0].targetPosition).toBeUndefined();
@@ -263,8 +267,8 @@ describe("NeedsEvaluator", () => {
       });
       const goals = evaluateCriticalNeeds(deps, aiState);
       expect(goals.length).toBe(1);
-      expect(goals[0].type).toBe("social");
-      expect(goals[0].data?.need).toBe("mentalHealth");
+      expect(goals[0].type).toBe(GoalType.SOCIAL);
+      expect(goals[0].data?.need).toBe(NeedType.MENTAL_HEALTH);
     });
 
     it("debe generar múltiples goals si hay múltiples necesidades críticas", () => {

@@ -69,6 +69,8 @@ import { GPUComputeService } from "../domain/simulation/core/GPUComputeService";
 import { GPUBatchQueryService } from "../domain/simulation/core/GPUBatchQueryService";
 import { ChunkLoadingSystem } from "../domain/simulation/systems/ChunkLoadingSystem";
 import { SharedKnowledgeSystem } from "../domain/simulation/systems/SharedKnowledgeSystem";
+import { AgentRegistry } from "../domain/simulation/core/AgentRegistry";
+import { AnimalRegistry } from "../domain/simulation/core/AnimalRegistry";
 
 export const container = new Container();
 
@@ -280,4 +282,15 @@ container
     const worldHeight = gameState.worldSize?.height ?? 2000;
     return new SharedSpatialIndex(worldWidth, worldHeight, 70);
   })
+  .inSingletonScope();
+
+// ECS Registries - Single Source of Truth
+container
+  .bind<AgentRegistry>(TYPES.AgentRegistry)
+  .to(AgentRegistry)
+  .inSingletonScope();
+
+container
+  .bind<AnimalRegistry>(TYPES.AnimalRegistry)
+  .to(AnimalRegistry)
   .inSingletonScope();

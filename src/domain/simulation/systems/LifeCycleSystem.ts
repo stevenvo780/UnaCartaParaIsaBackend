@@ -42,6 +42,7 @@ import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
 import type { TaskSystem } from "./TaskSystem";
+import type { AgentRegistry } from "../core/AgentRegistry";
 
 /**
  * System for managing agent lifecycle: birth, aging, death, and reproduction.
@@ -81,14 +82,17 @@ export class LifeCycleSystem extends EventEmitter {
   private _taskSystem?: TaskSystem;
   private dependenciesChecked = false;
   private entityIndex?: EntityIndex;
+  private agentRegistry?: AgentRegistry;
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
     @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
+    @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
   ) {
     super();
     this.gameState = gameState;
     this.entityIndex = entityIndex;
+    this.agentRegistry = agentRegistry;
     this.config = {
       secondsPerYear: 30,
       adultAge: 16,
@@ -537,6 +541,9 @@ export class LifeCycleSystem extends EventEmitter {
     if (!this.gameState.agents) this.gameState.agents = [];
     this.gameState.agents.push(profile);
 
+    // Invalidate AgentRegistry profile index
+    this.agentRegistry?.invalidateProfileIndex();
+
     if (profile.position) {
       if (!this.gameState.entities) {
         this.gameState.entities = [];
@@ -675,6 +682,10 @@ export class LifeCycleSystem extends EventEmitter {
     const index = this.gameState.agents.findIndex((a) => a.id === id);
     if (index !== -1) {
       this.gameState.agents.splice(index, 1);
+
+      // Invalidate AgentRegistry profile index
+      this.agentRegistry?.invalidateProfileIndex();
+
       if (this.gameState.entities) {
         const entityIndex = this.gameState.entities.findIndex(
           (e) => e.id === id,
@@ -763,6 +774,9 @@ export class LifeCycleSystem extends EventEmitter {
     if (index === -1) return false;
 
     this.gameState.agents.splice(index, 1);
+
+    // Invalidate AgentRegistry profile index
+    this.agentRegistry?.invalidateProfileIndex();
 
     this.cleanupAgentState(id);
 

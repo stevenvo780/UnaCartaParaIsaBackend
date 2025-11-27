@@ -89,6 +89,16 @@ export enum WorkEthic {
 }
 
 /**
+ * Enumeration of agent priority modes.
+ * Determines how agents prioritize their goals and actions.
+ */
+export enum AgentPriority {
+  SURVIVAL = "survival",
+  NORMAL = "normal",
+  SOCIAL = "social",
+}
+
+/**
  * Type representing all possible goal type values.
  */
 export type GoalTypeValue = `${GoalType}`;
@@ -112,6 +122,11 @@ export type SocialPreferenceValue = `${SocialPreference}`;
  * Type representing all possible work ethic values.
  */
 export type WorkEthicValue = `${WorkEthic}`;
+
+/**
+ * Type representing all possible agent priority values.
+ */
+export type AgentPriorityValue = `${AgentPriority}`;
 
 /**
  * Array of all goal types for iteration.
@@ -153,4 +168,18 @@ export function isActionType(value: string): value is ActionType {
  */
 export function isNeedType(value: string): value is NeedType {
   return Object.values(NeedType).includes(value as NeedType);
+}
+
+/**
+ * Array of all agent priorities for iteration.
+ */
+export const ALL_AGENT_PRIORITIES: readonly AgentPriority[] = Object.values(
+  AgentPriority,
+) as AgentPriority[];
+
+/**
+ * Type guard to check if a string is a valid AgentPriority.
+ */
+export function isAgentPriority(value: string): value is AgentPriority {
+  return Object.values(AgentPriority).includes(value as AgentPriority);
 }

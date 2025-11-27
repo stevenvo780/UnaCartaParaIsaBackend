@@ -12,6 +12,7 @@ import type {
 } from "../../../../types/simulation/economy";
 import type { SettlementDemand } from "../../../../types/simulation/governance";
 import type { PriorityManager } from "./PriorityManager";
+import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 import { evaluateBiologicalDrives } from "../evaluators/BiologicalDriveEvaluator";
 import { evaluateReproductionDrive } from "../evaluators/ReproductionEvaluator";
 import { evaluateSocialDrives } from "../evaluators/SocialDriveEvaluator";
@@ -128,7 +129,7 @@ export interface AgentGoalPlannerDeps {
   // New deps for drives
   findAgentWithResource?: (
     entityId: string,
-    resourceType: "food" | "water",
+    resourceType: ResourceType.FOOD | ResourceType.WATER,
     minAmount: number,
   ) => { agentId: string; x: number; y: number } | null;
   findPotentialMate?: (

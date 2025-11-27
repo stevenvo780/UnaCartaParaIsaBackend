@@ -12,6 +12,7 @@ import { logger } from "../../../../../infrastructure/utils/logger";
 import {
   SocialPreference,
   WorkEthic,
+  AgentPriority,
 } from "../../../../../shared/constants/AIEnums";
 import { ExplorationType } from "../../../../../shared/constants/AgentEnums";
 
@@ -23,10 +24,7 @@ export class AIStateManager {
   private readonly aiStates: Map<string, AIState>;
   private readonly gameState: GameState;
   private readonly playerControlledAgents: Set<string>;
-  private readonly agentPriorities: Map<
-    string,
-    "survival" | "normal" | "social"
-  >;
+  private readonly agentPriorities: Map<string, AgentPriority>;
   private readonly agentStrategies: Map<
     string,
     "peaceful" | "tit_for_tat" | "bully"
@@ -38,7 +36,7 @@ export class AIStateManager {
     gameState: GameState,
     aiStates: Map<string, AIState>,
     playerControlledAgents: Set<string>,
-    agentPriorities: Map<string, "survival" | "normal" | "social">,
+    agentPriorities: Map<string, AgentPriority>,
     agentStrategies: Map<string, "peaceful" | "tit_for_tat" | "bully">,
   ) {
     this.gameState = gameState;
@@ -194,18 +192,15 @@ export class AIStateManager {
   /**
    * Sets agent priority mode.
    */
-  public setAgentPriority(
-    agentId: string,
-    priority: "survival" | "normal" | "social",
-  ): void {
+  public setAgentPriority(agentId: string, priority: AgentPriority): void {
     this.agentPriorities.set(agentId, priority);
   }
 
   /**
    * Gets agent priority mode.
    */
-  public getAgentPriority(agentId: string): "survival" | "normal" | "social" {
-    return this.agentPriorities.get(agentId) || "normal";
+  public getAgentPriority(agentId: string): AgentPriority {
+    return this.agentPriorities.get(agentId) || AgentPriority.NORMAL;
   }
 
   /**

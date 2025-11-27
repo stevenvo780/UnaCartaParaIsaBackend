@@ -10,15 +10,20 @@ import type {
   RoleAssignment,
   RoleSystemConfig,
 } from "../../types/simulation/roles";
-import { WorkShift } from "../../../shared/constants/RoleEnums";
+import {
+  WorkShift,
+  RoleType as RoleTypeEnum,
+} from "../../../shared/constants/RoleEnums";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
+import { ZoneType } from "../../../shared/constants/ZoneEnums";
 import { simulationEvents, GameEventNames } from "../core/events";
 
 const ROLE_DEFINITIONS: RoleConfig[] = [
   {
-    type: "logger" as RoleType,
+    type: RoleTypeEnum.LOGGER,
     name: "Leñador",
     description: "Recolecta madera del bosque",
-    primaryResource: "wood",
+    primaryResource: ResourceType.WOOD,
     requirements: {
       minAge: 16,
       traits: { diligence: 0.4 },
@@ -27,14 +32,14 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       base: 0.6,
       traitBonus: { diligence: 0.3, cooperation: 0.1 },
     },
-    preferredZoneType: "work",
+    preferredZoneType: ZoneType.WORK,
     workShifts: [WorkShift.MORNING, WorkShift.AFTERNOON],
   },
   {
-    type: "quarryman" as RoleType,
+    type: RoleTypeEnum.QUARRYMAN,
     name: "Cantero",
     description: "Extrae piedra de la cantera",
-    primaryResource: "stone",
+    primaryResource: ResourceType.STONE,
     requirements: {
       minAge: 18,
       traits: { diligence: 0.5 },
@@ -43,11 +48,11 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       base: 0.5,
       traitBonus: { diligence: 0.4, cooperation: 0.1 },
     },
-    preferredZoneType: "work",
+    preferredZoneType: ZoneType.WORK,
     workShifts: [WorkShift.MORNING, WorkShift.AFTERNOON],
   },
   {
-    type: "builder" as RoleType,
+    type: RoleTypeEnum.BUILDER,
     name: "Constructor",
     description: "Construye y repara edificios",
     primaryResource: undefined,
@@ -59,14 +64,14 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       base: 0.7,
       traitBonus: { diligence: 0.2, cooperation: 0.3, curiosity: 0.1 },
     },
-    preferredZoneType: "work",
+    preferredZoneType: ZoneType.WORK,
     workShifts: [WorkShift.MORNING, WorkShift.AFTERNOON, WorkShift.EVENING],
   },
   {
-    type: "farmer" as RoleType,
+    type: RoleTypeEnum.FARMER,
     name: "Granjero",
     description: "Cultiva alimentos",
-    primaryResource: "food",
+    primaryResource: ResourceType.FOOD,
     requirements: {
       minAge: 16,
       traits: { diligence: 0.3 },
@@ -75,14 +80,14 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       base: 0.6,
       traitBonus: { diligence: 0.3, curiosity: 0.2 },
     },
-    preferredZoneType: "food",
+    preferredZoneType: ZoneType.FOOD,
     workShifts: [WorkShift.MORNING, WorkShift.AFTERNOON],
   },
   {
-    type: "gatherer" as RoleType,
+    type: RoleTypeEnum.GATHERER,
     name: "Recolector",
     description: "Recolecta agua y recursos básicos",
-    primaryResource: "water",
+    primaryResource: ResourceType.WATER,
     requirements: {
       minAge: 14,
       traits: {},
@@ -91,11 +96,11 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       base: 0.7,
       traitBonus: { curiosity: 0.2, cooperation: 0.1 },
     },
-    preferredZoneType: "water",
+    preferredZoneType: ZoneType.WATER,
     workShifts: [WorkShift.MORNING, WorkShift.AFTERNOON, WorkShift.EVENING],
   },
   {
-    type: "guard" as RoleType,
+    type: RoleTypeEnum.GUARD,
     name: "Guardián",
     description: "Protege el asentamiento",
     primaryResource: undefined,
@@ -107,14 +112,14 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       base: 0.6,
       traitBonus: { cooperation: 0.3, diligence: 0.2 },
     },
-    preferredZoneType: "rest",
+    preferredZoneType: ZoneType.REST,
     workShifts: [WorkShift.EVENING, WorkShift.NIGHT],
   },
   {
-    type: "hunter" as RoleType,
+    type: RoleTypeEnum.HUNTER,
     name: "Cazador",
     description: "Caza animales para obtener carne y pieles",
-    primaryResource: "food",
+    primaryResource: ResourceType.FOOD,
     requirements: {
       minAge: 18,
       traits: { diligence: 0.4, neuroticism: 0.3 }, // Neuroticism helps with alertness
@@ -123,7 +128,7 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       base: 0.6,
       traitBonus: { diligence: 0.3, neuroticism: 0.2 },
     },
-    preferredZoneType: "wild",
+    preferredZoneType: ZoneType.WILD,
     workShifts: [WorkShift.MORNING, WorkShift.EVENING, WorkShift.NIGHT],
   },
 ];
@@ -286,7 +291,7 @@ export class RoleSystem extends EventEmitter {
             (r) => r.type === "logger",
           );
           if (loggerConfig && this.meetsRequirements(agent, loggerConfig)) {
-            const result = this.reassignRole(agent.id, "logger");
+            const result = this.reassignRole(agent.id, RoleTypeEnum.LOGGER);
             if (result.success) {
               logger.info(`🪓 Auto-assigned logger (wood): ${agent.id}`);
               return;
@@ -302,7 +307,7 @@ export class RoleSystem extends EventEmitter {
             quarrymanConfig &&
             this.meetsRequirements(agent, quarrymanConfig)
           ) {
-            const result = this.reassignRole(agent.id, "quarryman");
+            const result = this.reassignRole(agent.id, RoleTypeEnum.QUARRYMAN);
             if (result.success) {
               logger.info(`⛏️ Auto-assigned quarryman (stone): ${agent.id}`);
               return;
@@ -315,7 +320,7 @@ export class RoleSystem extends EventEmitter {
             (r) => r.type === "hunter",
           );
           if (hunterConfig && this.meetsRequirements(agent, hunterConfig)) {
-            const result = this.reassignRole(agent.id, "hunter");
+            const result = this.reassignRole(agent.id, RoleTypeEnum.HUNTER);
             if (result.success) {
               logger.info(`🎯 Auto-assigned hunter: ${agent.id}`);
               return;

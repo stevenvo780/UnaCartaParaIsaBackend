@@ -1,4 +1,5 @@
 import { BuildingType } from "../../../shared/constants/BuildingEnums";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
 // Re-export BuildingType enum for backward compatibility
 export { BuildingType as BuildingLabel };
@@ -45,7 +46,7 @@ export interface RepairAction {
   agentId: string;
   perfectRepair: boolean;
   durabilityRestored: number;
-  resourcesUsed: Partial<Record<"wood" | "stone", number>>;
+  resourcesUsed: Partial<Record<ResourceType, number>>;
   timestamp: number;
 }
 
@@ -74,7 +75,7 @@ export function getBuildingCondition(durability: number): BuildingCondition {
 export function calculateRepairCost(
   currentDurability: number,
   perfectRepair: boolean,
-): Partial<Record<"wood" | "stone", number>> {
+): Partial<Record<ResourceType, number>> {
   const damagePercent = Math.max(0, 100 - currentDurability) / 100;
   const baseWood = 10;
   const baseStone = 6;

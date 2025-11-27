@@ -71,3 +71,31 @@ export function isAnimalType(value: string): value is AnimalType {
 export function isAnimalState(value: string): value is AnimalState {
   return Object.values(AnimalState).includes(value as AnimalState);
 }
+
+/**
+ * Enumeration of animal target types.
+ * Defines what animals can target when seeking resources or mates.
+ */
+export enum AnimalTargetType {
+  FOOD = "food",
+  WATER = "water",
+  MATE = "mate",
+}
+
+/**
+ * Type representing all possible animal target type values.
+ */
+export type AnimalTargetTypeValue = `${AnimalTargetType}`;
+
+/**
+ * Array of all animal target types for iteration.
+ */
+export const ALL_ANIMAL_TARGET_TYPES: readonly AnimalTargetType[] =
+  Object.values(AnimalTargetType) as AnimalTargetType[];
+
+/**
+ * Type guard to check if a string is a valid AnimalTargetType.
+ */
+export function isAnimalTargetType(value: string): value is AnimalTargetType {
+  return Object.values(AnimalTargetType).includes(value as AnimalTargetType);
+}

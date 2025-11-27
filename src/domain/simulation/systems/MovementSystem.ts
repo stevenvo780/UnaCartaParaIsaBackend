@@ -9,6 +9,7 @@ import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
 import type { GPUComputeService } from "../core/GPUComputeService";
+import type { AgentRegistry } from "../core/AgentRegistry";
 import { getFrameTime } from "../../../shared/FrameTime";
 import {
   estimateTravelTime,
@@ -19,29 +20,8 @@ import {
   Difficulty,
 } from "./movement/helpers";
 import { MovementBatchProcessor } from "./MovementBatchProcessor";
-
-const MOVEMENT_CONSTANTS = {
-  BASE_MOVEMENT_SPEED: 80, // Slightly increased from 60 for better feel
-  FATIGUE_PENALTY_MULTIPLIER: 0.5,
-  PATHFINDING: {
-    TIMEOUT_MS: 50,
-    GRID_SIZE: 32,
-    MAX_ITERATIONS: 500,
-  },
-  IDLE_WANDER: {
-    COOLDOWN_MS: 600, // Slightly reduced from 800
-    PROBABILITY: 0.85,
-    RADIUS_MIN: 80,
-    RADIUS_MAX: 280,
-    EXPLORATION_PROBABILITY: 0.35,
-    EXPLORATION_RADIUS_MIN: 400,
-    EXPLORATION_RADIUS_MAX: 900,
-  },
-  WORLD: {
-    WIDTH: 3200,
-    HEIGHT: 3200,
-  },
-};
+import { ActivityType } from "../../../shared/constants/MovementEnums";
+import { SIM_CONSTANTS } from "../core/SimulationConstants";
 
 export interface EntityMovementState {
   entityId: string;
@@ -53,20 +33,7 @@ export interface EntityMovementState {
   movementStartTime?: number;
   estimatedArrivalTime?: number;
   currentPath: Array<{ x: number; y: number }>;
-  currentActivity:
-    | "idle"
-    | "moving"
-    | "eating"
-    | "drinking"
-    | "cleaning"
-    | "playing"
-    | "meditating"
-    | "working"
-    | "resting"
-    | "socializing"
-    | "inspecting"
-    | "fleeing"
-    | "attacking";
+  currentActivity: ActivityType;
   activityStartTime?: number;
   activityDuration?: number;
   fatigue: number;
@@ -112,7 +79,7 @@ export class MovementSystem extends EventEmitter {
   private pathfinder: EasyStar.js;
 
   private zoneDistanceCache = new Map<string, ZoneDistance>();
-  private readonly gridSize = MOVEMENT_CONSTANTS.PATHFINDING.GRID_SIZE;
+  private readonly gridSize = SIM_CONSTANTS.PATHFINDING_GRID_SIZE;
   private gridWidth: number;
   private gridHeight: number;
   private occupiedTiles = new Set<string>();
@@ -144,27 +111,30 @@ export class MovementSystem extends EventEmitter {
   private activePaths = 0;
   private readonly MAX_CONCURRENT_PATHS = 5;
   private entityIndex?: EntityIndex;
+  private agentRegistry?: AgentRegistry;
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
     @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
     @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
+    @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
   ) {
     super();
     this.gameState = gameState;
     this.entityIndex = entityIndex;
+    this.agentRegistry = agentRegistry;
 
     this.pathfinder = new EasyStar.js();
     this.pathfinder.setAcceptableTiles([0]);
     this.pathfinder.enableDiagonals();
     this.pathfinder.setIterationsPerCalculation(
-      MOVEMENT_CONSTANTS.PATHFINDING.MAX_ITERATIONS,
+      SIM_CONSTANTS.PATHFINDING_MAX_ITERATIONS,
     );
 
     const worldWidthPx =
-      this.gameState.worldSize?.width ?? MOVEMENT_CONSTANTS.WORLD.WIDTH;
+      this.gameState.worldSize?.width ?? SIM_CONSTANTS.WORLD_DEFAULT_WIDTH;
     const worldHeightPx =
-      this.gameState.worldSize?.height ?? MOVEMENT_CONSTANTS.WORLD.HEIGHT;
+      this.gameState.worldSize?.height ?? SIM_CONSTANTS.WORLD_DEFAULT_HEIGHT;
     this.gridWidth = Math.max(1, Math.ceil(worldWidthPx / this.gridSize));
     this.gridHeight = Math.max(1, Math.ceil(worldHeightPx / this.gridSize));
 
@@ -174,6 +144,17 @@ export class MovementSystem extends EventEmitter {
     if (gpuService?.isGPUAvailable()) {
       logger.info(
         "🚶 MovementSystem: GPU acceleration enabled for batch processing",
+      );
+    }
+
+    // Register movementStates Map in AgentRegistry for unified access
+    if (this.agentRegistry) {
+      // Cast needed because MovementState has additional properties
+      this.agentRegistry.registerMovement(
+        this.movementStates as Map<
+          string,
+          import("../core/AgentRegistry").MovementState
+        >,
       );
     }
 
@@ -254,8 +235,8 @@ export class MovementSystem extends EventEmitter {
             estimatedTime: estimateTravelTime(
               distance,
               0,
-              MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
-              MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+              SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
+              SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
             ),
             distance,
           });
@@ -359,11 +340,10 @@ export class MovementSystem extends EventEmitter {
     const ageSpeedMultiplier = 1.0;
     const fatigueMultiplier =
       1 /
-      (1 +
-        (state.fatigue / 100) * MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER);
+      (1 + (state.fatigue / 100) * SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER);
 
     const effectiveSpeed =
-      MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED *
+      SIM_CONSTANTS.BASE_MOVEMENT_SPEED *
       ageSpeedMultiplier *
       fatigueMultiplier;
 
@@ -419,7 +399,7 @@ export class MovementSystem extends EventEmitter {
   private completeMovement(state: EntityMovementState): void {
     const now = getFrameTime();
     state.isMoving = false;
-    state.currentActivity = "idle";
+    state.currentActivity = ActivityType.IDLE;
     state.lastArrivalTime = now; // Mark arrival time to prevent immediate idle wander
 
     if (state.targetPosition) {
@@ -471,7 +451,7 @@ export class MovementSystem extends EventEmitter {
 
   private completeActivity(state: EntityMovementState): void {
     const previousActivity = state.currentActivity;
-    state.currentActivity = "idle";
+    state.currentActivity = ActivityType.IDLE;
     state.activityStartTime = undefined;
     state.activityDuration = undefined;
 
@@ -495,7 +475,7 @@ export class MovementSystem extends EventEmitter {
       currentPosition: { ...initialPosition },
       isMoving: false,
       currentPath: [],
-      currentActivity: "idle",
+      currentActivity: ActivityType.IDLE,
       fatigue: 0,
       lastIdleWander: 0,
     };
@@ -553,8 +533,8 @@ export class MovementSystem extends EventEmitter {
         const travelTime = estimateTravelTime(
           pathResult.distance,
           state.fatigue,
-          MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
-          MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+          SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
+          SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
         );
 
         state.isMoving = true;
@@ -564,7 +544,7 @@ export class MovementSystem extends EventEmitter {
         state.currentPath = pathResult.path;
         state.movementStartTime = now;
         state.estimatedArrivalTime = now + travelTime;
-        state.currentActivity = "moving";
+        state.currentActivity = ActivityType.MOVING;
 
         simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
           entityId,
@@ -593,8 +573,8 @@ export class MovementSystem extends EventEmitter {
     const travelTime = estimateTravelTime(
       distance,
       state.fatigue,
-      MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
-      MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+      SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
+      SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
     );
 
     const now = Date.now();
@@ -606,7 +586,7 @@ export class MovementSystem extends EventEmitter {
     state.currentPath = [{ ...state.currentPosition }, { x: tx, y: ty }];
     state.movementStartTime = now;
     state.estimatedArrivalTime = now + travelTime;
-    state.currentActivity = "moving";
+    state.currentActivity = ActivityType.MOVING;
     state.lastArrivalTime = undefined; // Clear arrival time when starting new movement
 
     // Update batch processor target buffer immediately
@@ -632,7 +612,7 @@ export class MovementSystem extends EventEmitter {
     state.currentPath = [];
     state.movementStartTime = undefined;
     state.estimatedArrivalTime = undefined;
-    state.currentActivity = "idle";
+    state.currentActivity = ActivityType.IDLE;
 
     return true;
   }
@@ -729,8 +709,8 @@ export class MovementSystem extends EventEmitter {
               estimatedTime: estimateTravelTime(
                 distance,
                 0,
-                MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
-                MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+                SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
+                SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
               ),
               distance,
             };
@@ -781,8 +761,8 @@ export class MovementSystem extends EventEmitter {
                       estimatedTime: estimateTravelTime(
                         distance,
                         0,
-                        MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
-                        MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+                        SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
+                        SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
                       ),
                       distance,
                     });
@@ -797,8 +777,8 @@ export class MovementSystem extends EventEmitter {
                     estimatedTime: estimateTravelTime(
                       distance,
                       0,
-                      MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
-                      MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+                      SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
+                      SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
                     ),
                     distance,
                   });
@@ -814,8 +794,8 @@ export class MovementSystem extends EventEmitter {
               estimatedTime: estimateTravelTime(
                 distance,
                 0,
-                MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
-                MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+                SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
+                SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
               ),
               distance,
             });
@@ -913,8 +893,8 @@ export class MovementSystem extends EventEmitter {
         const travelTime = estimateTravelTime(
           distance,
           0,
-          MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
-          MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+          SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
+          SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
         );
         const difficulty: Difficulty =
           assessRouteDifficultyByDistance(distance);
@@ -951,19 +931,19 @@ export class MovementSystem extends EventEmitter {
     }
 
     if (
-      (state.lastIdleWander || 0) + MOVEMENT_CONSTANTS.IDLE_WANDER.COOLDOWN_MS >
+      (state.lastIdleWander || 0) + SIM_CONSTANTS.IDLE_WANDER_COOLDOWN_MS >
       now
     ) {
       return;
     }
 
-    if (Math.random() > MOVEMENT_CONSTANTS.IDLE_WANDER.PROBABILITY) return;
+    if (Math.random() > SIM_CONSTANTS.IDLE_WANDER_PROBABILITY) return;
 
     const radius =
-      MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MIN +
+      SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN +
       Math.random() *
-        (MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MAX -
-          MOVEMENT_CONSTANTS.IDLE_WANDER.RADIUS_MIN);
+        (SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX -
+          SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN);
 
     const angle = Math.random() * Math.PI * 2;
     const targetX = state.currentPosition.x + Math.cos(angle) * radius;

@@ -6,8 +6,9 @@ import {
 import type { GameState, StockpileSnapshot } from "../../types/game-types";
 import { logger } from "../../../infrastructure/utils/logger";
 
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import type { AgentRegistry } from "../core/AgentRegistry";
 
 /**
  * System for managing agent inventories and zone stockpiles.
@@ -32,9 +33,19 @@ export class InventorySystem {
   private readonly DEPRECATION_INTERVAL = 10000;
   private readonly DEFAULT_AGENT_CAPACITY = 50;
   private readonly DEFAULT_STOCKPILE_CAPACITY = 1000;
+  private agentRegistry?: AgentRegistry;
 
-  constructor(@inject(TYPES.GameState) gameState: GameState) {
+  constructor(
+    @inject(TYPES.GameState) gameState: GameState,
+    @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
+  ) {
     this.gameState = gameState;
+    this.agentRegistry = agentRegistry;
+
+    // Register agentInventories Map in AgentRegistry for unified access
+    if (this.agentRegistry) {
+      this.agentRegistry.registerInventory(this.agentInventories);
+    }
   }
 
   public initializeAgentInventory(

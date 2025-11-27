@@ -47,6 +47,7 @@ export enum ZoneType {
   FESTIVAL = "festival",
   TEMPLE = "temple",
   SANCTUARY = "sanctuary",
+  WILD = "wild",
 }
 
 /**

@@ -4,6 +4,7 @@ import { logger } from "../../../../infrastructure/utils/logger";
 import type { SimulationRunner } from "../SimulationRunner";
 import { ResourceType } from "../../../../shared/constants/ResourceEnums";
 import { GameEventType } from "../../../../shared/constants/EventEnums";
+import { RoleType } from "../../../../shared/constants/RoleEnums";
 
 export class EventRegistry {
   private eventCleanups: (() => void)[] = [];
@@ -367,7 +368,10 @@ export class EventRegistry {
             if (physicalRoles.includes(role.roleType)) {
               const agent = this.runner.entityIndex.getAgent(data.entityId);
               if (agent) {
-                this.runner.roleSystem.reassignRole(data.entityId, "gatherer");
+                this.runner.roleSystem.reassignRole(
+                  data.entityId,
+                  RoleType.GATHERER,
+                );
               }
             }
           }

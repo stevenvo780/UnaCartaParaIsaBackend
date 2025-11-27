@@ -16,7 +16,7 @@ export interface BiologicalDriveDeps {
   ) => { id: string; x: number; y: number; type: string } | null;
   findAgentWithResource?: (
     entityId: string,
-    resourceType: "food" | "water",
+    resourceType: ResourceType.FOOD | ResourceType.WATER,
     minAmount: number,
   ) => { agentId: string; x: number; y: number } | null;
   getAgentPosition?: (entityId: string) => { x: number; y: number } | null;

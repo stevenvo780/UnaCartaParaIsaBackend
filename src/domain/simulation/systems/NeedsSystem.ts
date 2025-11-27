@@ -13,6 +13,7 @@ import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
 import type { SharedSpatialIndex } from "../core/SharedSpatialIndex";
 import type { GPUComputeService } from "../core/GPUComputeService";
+import type { AgentRegistry } from "../core/AgentRegistry";
 import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
@@ -84,6 +85,7 @@ export class NeedsSystem extends EventEmitter {
   private readonly BATCH_THRESHOLD = 5;
   private entityIndex?: EntityIndex;
   private spatialIndex?: SharedSpatialIndex;
+  private agentRegistry?: AgentRegistry;
 
   private entityActions = new Map<string, string>();
 
@@ -104,12 +106,16 @@ export class NeedsSystem extends EventEmitter {
     @inject(TYPES.GPUComputeService)
     @optional()
     gpuService?: GPUComputeService,
+    @inject(TYPES.AgentRegistry)
+    @optional()
+    agentRegistry?: AgentRegistry,
   ) {
     super();
     this.gameState = gameState;
     this.entityIndex = entityIndex;
     this.spatialIndex = spatialIndex;
     this.gpuService = gpuService;
+    this.agentRegistry = agentRegistry;
     this.config = {
       decayRates: {
         [NeedType.HUNGER]: 0.2,
@@ -135,6 +141,12 @@ export class NeedsSystem extends EventEmitter {
     };
 
     this.entityNeeds = new Map();
+
+    // Register entityNeeds Map in AgentRegistry for unified access
+    if (this.agentRegistry) {
+      this.agentRegistry.registerNeeds(this.entityNeeds);
+    }
+
     this.batchProcessor = new NeedsBatchProcessor(gpuService);
     if (gpuService?.isGPUAvailable()) {
       logger.info(

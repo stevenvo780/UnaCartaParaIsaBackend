@@ -1,6 +1,7 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../../types/simulation/needs";
 import type { RoleType } from "../../../../types/simulation/roles";
+import { RoleType as RoleTypeEnum } from "../../../../../shared/constants/RoleEnums";
 import type { Inventory } from "../../../../types/simulation/economy";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
 import { NeedType } from "../../../../../shared/constants/AIEnums";
@@ -18,16 +19,51 @@ interface RoleNeedModifiers {
 }
 
 const ROLE_NEED_MODIFIERS: Record<RoleType, RoleNeedModifiers> = {
-  logger: { hunger: 0.9, thirst: 0.95, energy: 0.85, social: 1.0 },
-  quarryman: { hunger: 0.9, thirst: 0.9, energy: 0.8, social: 1.0 },
-  builder: { hunger: 0.95, thirst: 0.95, energy: 0.85, social: 1.1 },
-  farmer: { hunger: 0.85, thirst: 0.9, energy: 0.9, social: 0.95 },
-  gatherer: { hunger: 0.9, thirst: 0.85, energy: 0.95, social: 0.9 },
-  guard: { hunger: 1.1, thirst: 1.1, energy: 1.2, social: 0.8 },
-  hunter: { hunger: 0.85, thirst: 0.95, energy: 1.1, social: 0.85 },
-  craftsman: { hunger: 0.95, thirst: 0.95, energy: 0.9, social: 1.0 },
-  leader: { hunger: 1.0, thirst: 1.0, energy: 1.0, social: 1.2 },
-  idle: { hunger: 1.0, thirst: 1.0, energy: 1.0, social: 1.0 },
+  [RoleTypeEnum.LOGGER]: {
+    hunger: 0.9,
+    thirst: 0.95,
+    energy: 0.85,
+    social: 1.0,
+  },
+  [RoleTypeEnum.QUARRYMAN]: {
+    hunger: 0.9,
+    thirst: 0.9,
+    energy: 0.8,
+    social: 1.0,
+  },
+  [RoleTypeEnum.BUILDER]: {
+    hunger: 0.95,
+    thirst: 0.95,
+    energy: 0.85,
+    social: 1.1,
+  },
+  [RoleTypeEnum.FARMER]: {
+    hunger: 0.85,
+    thirst: 0.9,
+    energy: 0.9,
+    social: 0.95,
+  },
+  [RoleTypeEnum.GATHERER]: {
+    hunger: 0.9,
+    thirst: 0.85,
+    energy: 0.95,
+    social: 0.9,
+  },
+  [RoleTypeEnum.GUARD]: { hunger: 1.1, thirst: 1.1, energy: 1.2, social: 0.8 },
+  [RoleTypeEnum.HUNTER]: {
+    hunger: 0.85,
+    thirst: 0.95,
+    energy: 1.1,
+    social: 0.85,
+  },
+  [RoleTypeEnum.CRAFTSMAN]: {
+    hunger: 0.95,
+    thirst: 0.95,
+    energy: 0.9,
+    social: 1.0,
+  },
+  [RoleTypeEnum.LEADER]: { hunger: 1.0, thirst: 1.0, energy: 1.0, social: 1.2 },
+  [RoleTypeEnum.IDLE]: { hunger: 1.0, thirst: 1.0, energy: 1.0, social: 1.0 },
 };
 
 export interface NeedsEvaluatorDependencies {
@@ -127,7 +163,7 @@ export function evaluateCriticalNeeds(
   const now = Date.now();
   const timeOfDay = deps.getCurrentTimeOfDay?.() || "midday";
   const role = deps.getAgentRole?.(aiState.entityId);
-  const roleType = role?.roleType ?? "idle";
+  const roleType = role?.roleType ?? RoleTypeEnum.IDLE;
   const communityState = deps.getCollectiveResourceState?.() ?? null;
 
   let baseHungerThreshold = 45;
