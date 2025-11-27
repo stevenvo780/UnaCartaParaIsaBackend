@@ -1,0 +1,3290 @@
+{
+  "totalMatches": 384,
+  "relevantMatches": 284,
+  "files": {
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/AgentRegistry.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/AgentRegistry.ts",
+        "line": 229,
+        "match": "=== \"function\"",
+        "stringLiteral": "function",
+        "lineContent": "return typeof ref === \"function\" ? ref() : ref;",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/DeltaEncoder.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/DeltaEncoder.ts",
+        "line": 55,
+        "match": ": \"full\",",
+        "stringLiteral": "full",
+        "lineContent": "type: \"full\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/DeltaEncoder.ts",
+        "line": 68,
+        "match": ": \"full\",",
+        "stringLiteral": "full",
+        "lineContent": "type: \"full\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/DeltaEncoder.ts",
+        "line": 84,
+        "match": ": \"delta\",",
+        "stringLiteral": "delta",
+        "lineContent": "type: \"delta\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/DeltaEncoder.ts",
+        "line": 197,
+        "match": "[\"inventory\"]",
+        "stringLiteral": "inventory",
+        "lineContent": "prev: GameState[\"inventory\"],",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/DeltaEncoder.ts",
+        "line": 198,
+        "match": "[\"inventory\"]",
+        "stringLiteral": "inventory",
+        "lineContent": "current: GameState[\"inventory\"],",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/MultiRateScheduler.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/MultiRateScheduler.ts",
+        "line": 414,
+        "match": "? \"enabled\" : \"disabled\"",
+        "stringLiteral": "disabled",
+        "lineContent": "`${enabled ? \"✅\" : \"❌\"} System \"${name}\" ${enabled ? \"enabled\" : \"disabled\"}`,",
+        "isRelevant": true,
+        "pattern": "Operadores ternarios con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/SimulationRunner.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/SimulationRunner.ts",
+        "line": 1149,
+        "match": ": \"zone\",",
+        "stringLiteral": "zone",
+        "lineContent": "type: \"zone\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/SimulationRunner.ts",
+        "line": 1159,
+        "match": ": \"resource\",",
+        "stringLiteral": "resource",
+        "lineContent": "type: \"resource\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 183,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof payload.x === \"number\" &&",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 184,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof payload.y === \"number\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 213,
+        "match": "!== \"string\"",
+        "stringLiteral": "string",
+        "lineContent": "typeof payload.type !== \"string\" ||",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 215,
+        "match": "!== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof payload.position.x !== \"number\" ||",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 216,
+        "match": "!== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof payload.position.y !== \"number\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 237,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof payload.amount === \"number\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 250,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof payload.delta === \"number\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 312,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof payload.durationMs === \"number\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 322,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "if (payload.aId && payload.bId && typeof payload.value === \"number\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 331,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "if (payload.aId && payload.bId && typeof payload.delta === \"number\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 350,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof payload.magnitude === \"number\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 368,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof payload.magnitude === \"number\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 503,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof payload.delta === \"number\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 521,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "if (payload.type && typeof payload.requiredWork === \"number\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 549,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof payload.contribution === \"number\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 577,
+        "match": "=== \"object\"",
+        "stringLiteral": "object",
+        "lineContent": "typeof this.runner.timeSystem === \"object\" &&",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 579,
+        "match": "=== \"function\"",
+        "stringLiteral": "function",
+        "lineContent": "typeof this.runner.timeSystem.setWeather === \"function\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 193,
+        "match": ": \"move\",",
+        "stringLiteral": "move",
+        "lineContent": "action: \"move\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/CommandProcessor.ts",
+        "line": 589,
+        "match": "[\"materials\"]",
+        "stringLiteral": "materials",
+        "lineContent": "private applyResourceDelta(delta: Partial<GameResources[\"materials\"]>): void {",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/EventRegistry.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/core/runner/EventRegistry.ts",
+        "line": 45,
+        "match": "=== \"birth\"",
+        "stringLiteral": "birth",
+        "lineContent": "if (data.action === \"birth\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AISystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AISystem.ts",
+        "line": 1484,
+        "match": "=== \"function\"",
+        "stringLiteral": "function",
+        "lineContent": "typeof this._movementSystem.stopMovement === \"function\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AISystem.ts",
+        "line": 1672,
+        "match": "=== \"function\"",
+        "stringLiteral": "function",
+        "lineContent": "typeof this._movementSystem.stopMovement === \"function\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AISystem.ts",
+        "line": 2134,
+        "match": "=== \"string\"",
+        "stringLiteral": "string",
+        "lineContent": "typeof payload.data.taskId === \"string\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AISystem.ts",
+        "line": 2184,
+        "match": "=== \"string\"",
+        "stringLiteral": "string",
+        "lineContent": "typeof v === \"string\" || typeof v === \"number\" ? v : undefined,",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AISystem.ts",
+        "line": 2184,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof v === \"string\" || typeof v === \"number\" ? v : undefined,",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AISystem.ts",
+        "line": 2145,
+        "match": ".startsWith(\"satisfy_\")",
+        "stringLiteral": "satisfy_",
+        "lineContent": "if (goalType.startsWith(\"satisfy_\")) {",
+        "isRelevant": true,
+        "pattern": "Métodos de string con literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AISystem.ts",
+        "line": 918,
+        "match": "[\"tree\"]",
+        "stringLiteral": "tree",
+        "lineContent": "const woodTypes = [\"tree\"];",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AISystem.ts",
+        "line": 919,
+        "match": "[\"rock\"]",
+        "stringLiteral": "rock",
+        "lineContent": "const stoneTypes = [\"rock\"];",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AISystem.ts",
+        "line": 1341,
+        "match": "[\"phase\"]",
+        "stringLiteral": "phase",
+        "lineContent": "\"morning\") as TimeOfDay[\"phase\"];",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AISystem.ts",
+        "line": 1727,
+        "match": "[\"rock\"]",
+        "stringLiteral": "rock",
+        "lineContent": "// Get target world resource types (e.g. \"stone\" -> [\"rock\"], \"iron_ore\" -> [\"rock\"])",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AISystem.ts",
+        "line": 1727,
+        "match": "[\"rock\"]",
+        "stringLiteral": "rock",
+        "lineContent": "// Get target world resource types (e.g. \"stone\" -> [\"rock\"], \"iron_ore\" -> [\"rock\"])",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AmbientAwarenessSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AmbientAwarenessSystem.ts",
+        "line": 228,
+        "match": "=== \"worsening\"",
+        "stringLiteral": "worsening",
+        "lineContent": "else if (trend === \"worsening\") base *= 1.1;",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AmbientAwarenessSystem.ts",
+        "line": 36,
+        "match": ": \"neutral\",",
+        "stringLiteral": "neutral",
+        "lineContent": "musicMood: \"neutral\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AmbientAwarenessSystem.ts",
+        "line": 163,
+        "match": "return \"neutral\"",
+        "stringLiteral": "neutral",
+        "lineContent": "if (wellbeing.mood === AmbientMood.COMFORTABLE) return \"neutral\";",
+        "isRelevant": true,
+        "pattern": "Return con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AmbientAwarenessSystem.ts",
+        "line": 164,
+        "match": "return \"tense\"",
+        "stringLiteral": "tense",
+        "lineContent": "if (wellbeing.mood === AmbientMood.STRESSED) return \"tense\";",
+        "isRelevant": true,
+        "pattern": "Return con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AmbientAwarenessSystem.ts",
+        "line": 165,
+        "match": "return \"ominous\"",
+        "stringLiteral": "ominous",
+        "lineContent": "if (wellbeing.mood === AmbientMood.CRISIS) return \"ominous\";",
+        "isRelevant": true,
+        "pattern": "Return con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AmbientAwarenessSystem.ts",
+        "line": 166,
+        "match": "return \"chaotic\"",
+        "stringLiteral": "chaotic",
+        "lineContent": "if (wellbeing.mood === AmbientMood.COLLAPSE) return \"chaotic\";",
+        "isRelevant": true,
+        "pattern": "Return con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AmbientAwarenessSystem.ts",
+        "line": 107,
+        "match": "[\"trend\"]",
+        "stringLiteral": "trend",
+        "lineContent": "let trend: CollectiveWellbeing[\"trend\"] = CrisisTrend.STABLE;",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AmbientAwarenessSystem.ts",
+        "line": 206,
+        "match": "[\"trend\"]",
+        "stringLiteral": "trend",
+        "lineContent": "trend: CollectiveWellbeing[\"trend\"],",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AppearanceGenerationSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AppearanceGenerationSystem.ts",
+        "line": 241,
+        "match": "!== \"male\"",
+        "stringLiteral": "male",
+        "lineContent": "if (sex !== \"male\" && sex !== \"female\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AppearanceGenerationSystem.ts",
+        "line": 241,
+        "match": "!== \"female\"",
+        "stringLiteral": "female",
+        "lineContent": "if (sex !== \"male\" && sex !== \"female\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AppearanceGenerationSystem.ts",
+        "line": 368,
+        "match": "=== \"elder\"",
+        "stringLiteral": "elder",
+        "lineContent": "if (newStage === \"elder\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AppearanceGenerationSystem.ts",
+        "line": 353,
+        "match": ": \"social_group_assigned\",",
+        "stringLiteral": "social_group_assigned",
+        "lineContent": "reason: \"social_group_assigned\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AppearanceGenerationSystem.ts",
+        "line": 380,
+        "match": ": \"aging\",",
+        "stringLiteral": "aging",
+        "lineContent": "reason: \"aging\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AppearanceGenerationSystem.ts",
+        "line": 219,
+        "match": "[\"traits\"]",
+        "stringLiteral": "traits",
+        "lineContent": "traits: AgentProfile[\"traits\"],",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/AppearanceGenerationSystem.ts",
+        "line": 235,
+        "match": "[\"sex\"]",
+        "stringLiteral": "sex",
+        "lineContent": "sex: AgentAppearance[\"sex\"],",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/BuildingMaintenanceSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/BuildingMaintenanceSystem.ts",
+        "line": 190,
+        "match": ": \"time\",",
+        "stringLiteral": "time",
+        "lineContent": "state.isAbandoned ? \"abandonment\" : \"time\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/BuildingMaintenanceSystem.ts",
+        "line": 252,
+        "match": "as \"wood\"",
+        "stringLiteral": "wood",
+        "lineContent": "const key = resource as \"wood\" | \"stone\";",
+        "isRelevant": true,
+        "pattern": "Type assertions con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/BuildingMaintenanceSystem.ts",
+        "line": 190,
+        "match": "? \"abandonment\" : \"time\"",
+        "stringLiteral": "time",
+        "lineContent": "state.isAbandoned ? \"abandonment\" : \"time\",",
+        "isRelevant": true,
+        "pattern": "Operadores ternarios con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/BuildingSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/BuildingSystem.ts",
+        "line": 146,
+        "match": "=== \"mine\"",
+        "stringLiteral": "mine",
+        "lineContent": "z.metadata?.building === \"mine\" &&",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/BuildingSystem.ts",
+        "line": 166,
+        "match": "=== \"farm\"",
+        "stringLiteral": "farm",
+        "lineContent": "z.metadata?.building === \"farm\" &&",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/BuildingSystem.ts",
+        "line": 293,
+        "match": "=== \"workbench\"",
+        "stringLiteral": "workbench",
+        "lineContent": "craftingStation: label === \"workbench\",",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/BuildingSystem.ts",
+        "line": 294,
+        "match": "=== \"farm\"",
+        "stringLiteral": "farm",
+        "lineContent": "productionResource: label === \"farm\" ? \"food\" : undefined,",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/BuildingSystem.ts",
+        "line": 290,
+        "match": "[\"metadata\"]",
+        "stringLiteral": "metadata",
+        "lineContent": "const metadata: MutableZone[\"metadata\"] = {",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CardDialogueSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CardDialogueSystem.ts",
+        "line": 213,
+        "match": "=== \"below\"",
+        "stringLiteral": "below",
+        "lineContent": "return trigger.operator === \"below\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CardDialogueSystem.ts",
+        "line": 275,
+        "match": "=== \"below\"",
+        "stringLiteral": "below",
+        "lineContent": "if (trigger.operator === \"below\" && val < trigger.threshold) {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CardDialogueSystem.ts",
+        "line": 277,
+        "match": "=== \"above\"",
+        "stringLiteral": "above",
+        "lineContent": "} else if (trigger.operator === \"above\" && val > trigger.threshold) {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CardDialogueSystem.ts",
+        "line": 283,
+        "match": "=== \"worried\"",
+        "stringLiteral": "worried",
+        "lineContent": "if (template.emotionalTone === \"worried\") score += 0.2;",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CardDialogueSystem.ts",
+        "line": 285,
+        "match": "=== \"worried\"",
+        "stringLiteral": "worried",
+        "lineContent": "if (ctx && template.emotionalTone === \"worried\" && ctx.overallMood < 0.3) {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CardDialogueSystem.ts",
+        "line": 457,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "if (typeof value === \"number\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CardDialogueSystem.ts",
+        "line": 464,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof choice.effects.relationship === \"number\" &&",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CardDialogueSystem.ts",
+        "line": 480,
+        "match": "=== \"string\"",
+        "stringLiteral": "string",
+        "lineContent": "if (typeof questId === \"string\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CardDialogueSystem.ts",
+        "line": 362,
+        "match": ": \"agent_exploring\",",
+        "stringLiteral": "agent_exploring",
+        "lineContent": "id: \"agent_exploring\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CardDialogueSystem.ts",
+        "line": 377,
+        "match": ": \"resource_gathering\",",
+        "stringLiteral": "resource_gathering",
+        "lineContent": "id: \"resource_gathering\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CardDialogueSystem.ts",
+        "line": 393,
+        "match": ": \"low_needs_warning\",",
+        "stringLiteral": "low_needs_warning",
+        "lineContent": "id: \"low_needs_warning\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CardDialogueSystem.ts",
+        "line": 50,
+        "match": "[\"type\"]",
+        "stringLiteral": "type",
+        "lineContent": "type?: DialogueCard[\"type\"];",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CombatSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CombatSystem.ts",
+        "line": 133,
+        "match": "=== \"warrior\"",
+        "stringLiteral": "warrior",
+        "lineContent": "if (agent && agent.socialStatus === \"warrior\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CombatSystem.ts",
+        "line": 487,
+        "match": ".includes(\"animal\")",
+        "stringLiteral": "animal",
+        "lineContent": "target.type === EntityType.ANIMAL || target.tags?.includes(\"animal\");",
+        "isRelevant": true,
+        "pattern": "Métodos de string con literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CombatSystem.ts",
+        "line": 677,
+        "match": ".includes(\"animal\")",
+        "stringLiteral": "animal",
+        "lineContent": "if (target.tags?.includes(\"animal\") || target.type === EntityType.ANIMAL) {",
+        "isRelevant": true,
+        "pattern": "Métodos de string con literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CombatSystem.ts",
+        "line": 177,
+        "match": "[\"animal\"]",
+        "stringLiteral": "animal",
+        "lineContent": "tags: [\"animal\"],",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CombatSystem.ts",
+        "line": 487,
+        "match": ".includes(\"animal\"",
+        "stringLiteral": "animal",
+        "lineContent": "target.type === EntityType.ANIMAL || target.tags?.includes(\"animal\");",
+        "isRelevant": true,
+        "pattern": "Métodos de array con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CombatSystem.ts",
+        "line": 677,
+        "match": ".includes(\"animal\"",
+        "stringLiteral": "animal",
+        "lineContent": "if (target.tags?.includes(\"animal\") || target.type === EntityType.ANIMAL) {",
+        "isRelevant": true,
+        "pattern": "Métodos de array con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 132,
+        "match": "=== \"truce_accept\"",
+        "stringLiteral": "truce_accept",
+        "lineContent": "if (choice === \"truce_accept\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 135,
+        "match": "=== \"apologize\"",
+        "stringLiteral": "apologize",
+        "lineContent": "} else if (choice === \"apologize\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 144,
+        "match": "!== \"continued\"",
+        "stringLiteral": "continued",
+        "lineContent": "resolved: resolution !== \"continued\",",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 156,
+        "match": "=== \"truce_accept\"",
+        "stringLiteral": "truce_accept",
+        "lineContent": "choice === \"truce_accept\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 158,
+        "match": "=== \"apologize\"",
+        "stringLiteral": "apologize",
+        "lineContent": ": choice === \"apologize\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 163,
+        "match": "=== \"truce_accept\"",
+        "stringLiteral": "truce_accept",
+        "lineContent": "if (choice === \"truce_accept\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 171,
+        "match": "=== \"continue\"",
+        "stringLiteral": "continue",
+        "lineContent": "} else if (choice === \"continue\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 182,
+        "match": "!== \"continued\"",
+        "stringLiteral": "continued",
+        "lineContent": "return { resolved: resolution !== \"continued\", resolution, truceBonus };",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 277,
+        "match": "=== \"accepted\"",
+        "stringLiteral": "accepted",
+        "lineContent": "(m) => m.outcome === \"accepted\" || m.outcome === \"apologized\",",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 277,
+        "match": "=== \"apologized\"",
+        "stringLiteral": "apologized",
+        "lineContent": "(m) => m.outcome === \"accepted\" || m.outcome === \"apologized\",",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 280,
+        "match": "=== \"accepted\"",
+        "stringLiteral": "accepted",
+        "lineContent": "(m) => m.outcome === \"accepted\",",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 96,
+        "match": ": \"expired\",",
+        "stringLiteral": "expired",
+        "lineContent": "outcome: \"expired\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 204,
+        "match": ": \"expired\",",
+        "stringLiteral": "expired",
+        "lineContent": "resolution: \"expired\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 85,
+        "match": "[\"reason\"]",
+        "stringLiteral": "reason",
+        "lineContent": "const reason: MediationAttempt[\"reason\"] = lowHealth",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 122,
+        "match": "[\"resolution\"]",
+        "stringLiteral": "resolution",
+        "lineContent": "resolution: ConflictRecord[\"resolution\"];",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ConflictResolutionSystem.ts",
+        "line": 129,
+        "match": "[\"resolution\"]",
+        "stringLiteral": "resolution",
+        "lineContent": "let resolution: ConflictRecord[\"resolution\"] = \"continued\";",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CrisisPredictorSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CrisisPredictorSystem.ts",
+        "line": 245,
+        "match": "=== \"population_stress\"",
+        "stringLiteral": "population_stress",
+        "lineContent": "(ind) => ind.name === \"population_stress\",",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CrisisPredictorSystem.ts",
+        "line": 256,
+        "match": "=== \"resource_balance\"",
+        "stringLiteral": "resource_balance",
+        "lineContent": "(ind) => ind.name === \"resource_balance\",",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CrisisPredictorSystem.ts",
+        "line": 267,
+        "match": "=== \"sustainability\"",
+        "stringLiteral": "sustainability",
+        "lineContent": "(ind) => ind.name === \"sustainability\",",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CrisisPredictorSystem.ts",
+        "line": 270,
+        "match": "=== \"emergency_rate\"",
+        "stringLiteral": "emergency_rate",
+        "lineContent": "(ind) => ind.name === \"emergency_rate\",",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CrisisPredictorSystem.ts",
+        "line": 228,
+        "match": "[\"type\"]",
+        "stringLiteral": "type",
+        "lineContent": "type: CrisisPrediction[\"type\"],",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CrisisPredictorSystem.ts",
+        "line": 261,
+        "match": "[\"resource_balance\"]",
+        "stringLiteral": "resource_balance",
+        "lineContent": "[\"resource_balance\"],",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/CrisisPredictorSystem.ts",
+        "line": 288,
+        "match": "[\"type\"]",
+        "stringLiteral": "type",
+        "lineContent": "private suggestActions(type: CrisisPrediction[\"type\"]): string[] {",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/DivineFavorSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/DivineFavorSystem.ts",
+        "line": 39,
+        "match": ": \"fertility_boost\",",
+        "stringLiteral": "fertility_boost",
+        "lineContent": "type: \"fertility_boost\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/DivineFavorSystem.ts",
+        "line": 45,
+        "match": ": \"productivity_boost\",",
+        "stringLiteral": "productivity_boost",
+        "lineContent": "type: \"productivity_boost\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/DivineFavorSystem.ts",
+        "line": 51,
+        "match": ": \"longevity\",",
+        "stringLiteral": "longevity",
+        "lineContent": "type: \"longevity\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/DivineFavorSystem.ts",
+        "line": 57,
+        "match": ": \"social_harmony\",",
+        "stringLiteral": "social_harmony",
+        "lineContent": "type: \"social_harmony\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/DivineFavorSystem.ts",
+        "line": 63,
+        "match": ": \"resilience\",",
+        "stringLiteral": "resilience",
+        "lineContent": "type: \"resilience\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/DivineFavorSystem.ts",
+        "line": 69,
+        "match": ": \"wisdom\",",
+        "stringLiteral": "wisdom",
+        "lineContent": "type: \"wisdom\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/DivineFavorSystem.ts",
+        "line": 75,
+        "match": ": \"prosperity\",",
+        "stringLiteral": "prosperity",
+        "lineContent": "type: \"prosperity\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/DivineFavorSystem.ts",
+        "line": 163,
+        "match": ": \"blessing_granted\",",
+        "stringLiteral": "blessing_granted",
+        "lineContent": "type: \"blessing_granted\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/DivineFavorSystem.ts",
+        "line": 185,
+        "match": ": \"favor_increased\",",
+        "stringLiteral": "favor_increased",
+        "lineContent": "type: \"favor_increased\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/DivineFavorSystem.ts",
+        "line": 199,
+        "match": ": \"favor_decreased\",",
+        "stringLiteral": "favor_decreased",
+        "lineContent": "type: \"favor_decreased\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EconomySystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EconomySystem.ts",
+        "line": 385,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "return typeof entity.stats.money === \"number\" ? entity.stats.money : 0;",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EconomySystem.ts",
+        "line": 418,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof entity.stats.money === \"number\" ? entity.stats.money : 0;",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EconomySystem.ts",
+        "line": 450,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof entity.stats.money === \"number\" ? entity.stats.money : 0;",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EconomySystem.ts",
+        "line": 425,
+        "match": ": \"add\",",
+        "stringLiteral": "add",
+        "lineContent": "type: \"add\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EconomySystem.ts",
+        "line": 461,
+        "match": ": \"remove\",",
+        "stringLiteral": "remove",
+        "lineContent": "type: \"remove\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EmergenceSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EmergenceSystem.ts",
+        "line": 257,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof e.stats?.birthTimestamp === \"number\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EmergenceSystem.ts",
+        "line": 201,
+        "match": ": \"social\",",
+        "stringLiteral": "social",
+        "lineContent": "type: \"social\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EmergenceSystem.ts",
+        "line": 235,
+        "match": ": \"systemic\",",
+        "stringLiteral": "systemic",
+        "lineContent": "type: \"systemic\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EmergenceSystem.ts",
+        "line": 269,
+        "match": ": \"systemic\",",
+        "stringLiteral": "systemic",
+        "lineContent": "type: \"systemic\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EmergenceSystem.ts",
+        "line": 304,
+        "match": ": \"behavioral\",",
+        "stringLiteral": "behavioral",
+        "lineContent": "type: \"behavioral\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EmergenceSystem.ts",
+        "line": 314,
+        "match": ": \"survival\",",
+        "stringLiteral": "survival",
+        "lineContent": "priority: \"survival\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EmergenceSystem.ts",
+        "line": 370,
+        "match": ": \"resource_production_loop\",",
+        "stringLiteral": "resource_production_loop",
+        "lineContent": "id: \"resource_production_loop\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EmergenceSystem.ts",
+        "line": 371,
+        "match": ": \"positive\",",
+        "stringLiteral": "positive",
+        "lineContent": "type: \"positive\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EmergenceSystem.ts",
+        "line": 384,
+        "match": ": \"population_resource_loop\",",
+        "stringLiteral": "population_resource_loop",
+        "lineContent": "id: \"population_resource_loop\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EmergenceSystem.ts",
+        "line": 385,
+        "match": ": \"negative\",",
+        "stringLiteral": "negative",
+        "lineContent": "type: \"negative\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EmergenceSystem.ts",
+        "line": 367,
+        "match": ".has(\"resource_production_loop\"",
+        "stringLiteral": "resource_production_loop",
+        "lineContent": "!this.feedbackLoops.has(\"resource_production_loop\")",
+        "isRelevant": true,
+        "pattern": "Operaciones Set/Map con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EmergenceSystem.ts",
+        "line": 369,
+        "match": ".set(\"resource_production_loop\"",
+        "stringLiteral": "resource_production_loop",
+        "lineContent": "this.feedbackLoops.set(\"resource_production_loop\", {",
+        "isRelevant": true,
+        "pattern": "Operaciones Set/Map con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EmergenceSystem.ts",
+        "line": 382,
+        "match": ".has(\"population_resource_loop\"",
+        "stringLiteral": "population_resource_loop",
+        "lineContent": "if (!this.feedbackLoops.has(\"population_resource_loop\")) {",
+        "isRelevant": true,
+        "pattern": "Operaciones Set/Map con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EmergenceSystem.ts",
+        "line": 383,
+        "match": ".set(\"population_resource_loop\"",
+        "stringLiteral": "population_resource_loop",
+        "lineContent": "this.feedbackLoops.set(\"population_resource_loop\", {",
+        "isRelevant": true,
+        "pattern": "Operaciones Set/Map con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EnhancedCraftingSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/EnhancedCraftingSystem.ts",
+        "line": 263,
+        "match": "[\"zones\"]",
+        "stringLiteral": "zones",
+        "lineContent": "type ZoneWithMetadata = GameState[\"zones\"][number] & {",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/GenealogySystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/GenealogySystem.ts",
+        "line": 94,
+        "match": ": \"birth\",",
+        "stringLiteral": "birth",
+        "lineContent": "type: \"birth\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/GenealogySystem.ts",
+        "line": 218,
+        "match": ": \"death\",",
+        "stringLiteral": "death",
+        "lineContent": "type: \"death\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/GovernanceSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/GovernanceSystem.ts",
+        "line": 631,
+        "match": "=== \"housing\"",
+        "stringLiteral": "housing",
+        "lineContent": "zone.props.subtype === \"housing\"),",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/GovernanceSystem.ts",
+        "line": 636,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "(zone.props && typeof zone.props.capacity === \"number\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/GovernanceSystem.ts",
+        "line": 690,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "if (typeof value === \"number\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/HouseholdSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/HouseholdSystem.ts",
+        "line": 287,
+        "match": "!== \"wood\"",
+        "stringLiteral": "wood",
+        "lineContent": "resource !== \"wood\" &&",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/HouseholdSystem.ts",
+        "line": 288,
+        "match": "!== \"stone\"",
+        "stringLiteral": "stone",
+        "lineContent": "resource !== \"stone\" &&",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/HouseholdSystem.ts",
+        "line": 289,
+        "match": "!== \"food\"",
+        "stringLiteral": "food",
+        "lineContent": "resource !== \"food\" &&",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/HouseholdSystem.ts",
+        "line": 290,
+        "match": "!== \"water\"",
+        "stringLiteral": "water",
+        "lineContent": "resource !== \"water\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/HouseholdSystem.ts",
+        "line": 340,
+        "match": "!== \"wood\"",
+        "stringLiteral": "wood",
+        "lineContent": "resource !== \"wood\" &&",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/HouseholdSystem.ts",
+        "line": 341,
+        "match": "!== \"stone\"",
+        "stringLiteral": "stone",
+        "lineContent": "resource !== \"stone\" &&",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/HouseholdSystem.ts",
+        "line": 342,
+        "match": "!== \"food\"",
+        "stringLiteral": "food",
+        "lineContent": "resource !== \"food\" &&",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/HouseholdSystem.ts",
+        "line": 343,
+        "match": "!== \"water\"",
+        "stringLiteral": "water",
+        "lineContent": "resource !== \"water\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/HouseholdSystem.ts",
+        "line": 353,
+        "match": ": \"system\",",
+        "stringLiteral": "system",
+        "lineContent": "agentId: \"system\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/InventorySystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/InventorySystem.ts",
+        "line": 75,
+        "match": "[\"type\"]",
+        "stringLiteral": "type",
+        "lineContent": "type: Stockpile[\"type\"],",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ItemGenerationSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ItemGenerationSystem.ts",
+        "line": 62,
+        "match": ": \"food\",",
+        "stringLiteral": "food",
+        "lineContent": "zoneType: \"food\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ItemGenerationSystem.ts",
+        "line": 70,
+        "match": ": \"work\",",
+        "stringLiteral": "work",
+        "lineContent": "zoneType: \"work\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/KnowledgeNetworkSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/KnowledgeNetworkSystem.ts",
+        "line": 8,
+        "match": ": \"fact\";",
+        "stringLiteral": "fact",
+        "lineContent": "| { type: \"fact\"; content: string; category?: string }",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/KnowledgeNetworkSystem.ts",
+        "line": 9,
+        "match": ": \"recipe\";",
+        "stringLiteral": "recipe",
+        "lineContent": "| { type: \"recipe\"; recipeId: string; ingredients: string[] }",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/KnowledgeNetworkSystem.ts",
+        "line": 10,
+        "match": ": \"location\";",
+        "stringLiteral": "location",
+        "lineContent": "| { type: \"location\"; x: number; y: number; zoneId?: string }",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/KnowledgeNetworkSystem.ts",
+        "line": 11,
+        "match": ": \"person\";",
+        "stringLiteral": "person",
+        "lineContent": "| { type: \"person\"; agentId: string; relationship?: string };",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/KnowledgeNetworkSystem.ts",
+        "line": 71,
+        "match": "[\"type\"]",
+        "stringLiteral": "type",
+        "lineContent": "type: KnowledgeNode[\"type\"],",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/LifeCycleSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/LifeCycleSystem.ts",
+        "line": 706,
+        "match": ": \"removed\",",
+        "stringLiteral": "removed",
+        "lineContent": "reason: \"removed\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/LifeCycleSystem.ts",
+        "line": 794,
+        "match": ": \"killed\",",
+        "stringLiteral": "killed",
+        "lineContent": "reason: \"killed\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/LivingLegendsSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/LivingLegendsSystem.ts",
+        "line": 126,
+        "match": ": \"neutral\",",
+        "stringLiteral": "neutral",
+        "lineContent": "type: \"neutral\", // Logic to determine type needed",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/MarriageSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/MarriageSystem.ts",
+        "line": 271,
+        "match": "[\"type\"]",
+        "stringLiteral": "type",
+        "lineContent": "type: MarriageEvent[\"type\"],",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/MovementSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/MovementSystem.ts",
+        "line": 867,
+        "match": "=== \"obstacle\"",
+        "stringLiteral": "obstacle",
+        "lineContent": "type === \"obstacle\" ||",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/MovementSystem.ts",
+        "line": 868,
+        "match": "=== \"building\"",
+        "stringLiteral": "building",
+        "lineContent": "type === \"building\" ||",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/MovementSystem.ts",
+        "line": 869,
+        "match": "=== \"rock\"",
+        "stringLiteral": "rock",
+        "lineContent": "type === \"rock\" ||",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/MovementSystem.ts",
+        "line": 870,
+        "match": "=== \"tree\"",
+        "stringLiteral": "tree",
+        "lineContent": "type === \"tree\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/MovementSystem.ts",
+        "line": 512,
+        "match": ": \"no_path_found\",",
+        "stringLiteral": "no_path_found",
+        "lineContent": "reason: \"no_path_found\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/NeedsSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/NeedsSystem.ts",
+        "line": 782,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "if (typeof needs[key] === \"number\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/NeedsSystem.ts",
+        "line": 1044,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "if (typeof value === \"number\" && value < CRITICAL) {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/NeedsSystem.ts",
+        "line": 1188,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "if (needKey in data && typeof data[needKey] === \"number\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/NeedsSystem.ts",
+        "line": 1215,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "if (needKey in data && typeof data[needKey] === \"number\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/NormsSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/NormsSystem.ts",
+        "line": 78,
+        "match": ": \"violence_in_protected_zone\",",
+        "stringLiteral": "violence_in_protected_zone",
+        "lineContent": "violationType: \"violence_in_protected_zone\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ProductionSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ProductionSystem.ts",
+        "line": 102,
+        "match": ": \"death\",",
+        "stringLiteral": "death",
+        "lineContent": "reason: \"death\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/QuestSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/QuestSystem.ts",
+        "line": 503,
+        "match": "=== \"any\"",
+        "stringLiteral": "any",
+        "lineContent": "objective.target === \"any\")",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/QuestSystem.ts",
+        "line": 520,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof eventData.data.amount === \"number\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/QuestSystem.ts",
+        "line": 29,
+        "match": ": \"wood\",",
+        "stringLiteral": "wood",
+        "lineContent": "target: \"wood\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/QuestSystem.ts",
+        "line": 38,
+        "match": ": \"food\",",
+        "stringLiteral": "food",
+        "lineContent": "target: \"food\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/QuestSystem.ts",
+        "line": 54,
+        "match": ": \"friendly\",",
+        "stringLiteral": "friendly",
+        "lineContent": "mood: \"friendly\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/QuestSystem.ts",
+        "line": 60,
+        "match": ": \"happy\",",
+        "stringLiteral": "happy",
+        "lineContent": "mood: \"happy\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/QuestSystem.ts",
+        "line": 74,
+        "match": ": \"shelter\",",
+        "stringLiteral": "shelter",
+        "lineContent": "target: \"shelter\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/QuestSystem.ts",
+        "line": 84,
+        "match": ": \"advanced_building\",",
+        "stringLiteral": "advanced_building",
+        "lineContent": "unlockId: \"advanced_building\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/QuestSystem.ts",
+        "line": 98,
+        "match": ": \"encouraging\",",
+        "stringLiteral": "encouraging",
+        "lineContent": "mood: \"encouraging\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/QuestSystem.ts",
+        "line": 104,
+        "match": ": \"proud\",",
+        "stringLiteral": "proud",
+        "lineContent": "mood: \"proud\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/QuestSystem.ts",
+        "line": 214,
+        "match": ": \"started\",",
+        "stringLiteral": "started",
+        "lineContent": "action: \"started\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ReputationSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ReputationSystem.ts",
+        "line": 236,
+        "match": "=== \"friendship\"",
+        "stringLiteral": "friendship",
+        "lineContent": "const sign = data.type === \"friendship\" ? 1 : -1;",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ResearchSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ResearchSystem.ts",
+        "line": 29,
+        "match": ": \"stonecraft\",",
+        "stringLiteral": "stonecraft",
+        "lineContent": "id: \"stonecraft\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ResearchSystem.ts",
+        "line": 48,
+        "match": "[\"stonecraft\"]",
+        "stringLiteral": "stonecraft",
+        "lineContent": "prerequisites: [\"stonecraft\"],",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ResourceAttractionSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ResourceAttractionSystem.ts",
+        "line": 69,
+        "match": "!== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "if (typeof value !== \"number\") return;",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ResourceAttractionSystem.ts",
+        "line": 74,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "typeof thresholds.low === \"number\" &&",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/RoleSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/RoleSystem.ts",
+        "line": 207,
+        "match": "!== \"rest\"",
+        "stringLiteral": "rest",
+        "lineContent": "role.currentShift !== \"rest\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/RoleSystem.ts",
+        "line": 223,
+        "match": "!== \"rest\"",
+        "stringLiteral": "rest",
+        "lineContent": "if (this.currentShift !== timePhase && timePhase !== \"rest\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/SocialSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/SocialSystem.ts",
+        "line": 495,
+        "match": ": \"friendly\",",
+        "stringLiteral": "friendly",
+        "lineContent": "type: \"friendly\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/TaskSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/TaskSystem.ts",
+        "line": 30,
+        "match": "[\"stats\"]",
+        "stringLiteral": "stats",
+        "lineContent": "private cachedStats: TaskState[\"stats\"] = {",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/TaskSystem.ts",
+        "line": 482,
+        "match": "[\"tasks\"]",
+        "stringLiteral": "tasks",
+        "lineContent": "private serializeTasks(): TaskState[\"tasks\"] {",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/TaskSystem.ts",
+        "line": 521,
+        "match": "[\"stats\"]",
+        "stringLiteral": "stats",
+        "lineContent": "private hasStatsChanged(next: TaskState[\"stats\"]): boolean {",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/WorldResourceSystem.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/WorldResourceSystem.ts",
+        "line": 339,
+        "match": "=== \"depleted\"",
+        "stringLiteral": "depleted",
+        "lineContent": "if (newState === \"depleted\" && config.canRegenerate) {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/WorldResourceSystem.ts",
+        "line": 261,
+        "match": ".startsWith(\"tree_\")",
+        "stringLiteral": "tree_",
+        "lineContent": "if (asset.startsWith(\"tree_\")) return WorldResourceType.TREE;",
+        "isRelevant": true,
+        "pattern": "Métodos de string con literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/WorldResourceSystem.ts",
+        "line": 262,
+        "match": ".startsWith(\"plant_\")",
+        "stringLiteral": "plant_",
+        "lineContent": "if (asset.startsWith(\"plant_\")) return WorldResourceType.BERRY_BUSH;",
+        "isRelevant": true,
+        "pattern": "Métodos de string con literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/WorldResourceSystem.ts",
+        "line": 263,
+        "match": ".startsWith(\"prop_rock\")",
+        "stringLiteral": "prop_rock",
+        "lineContent": "if (asset.startsWith(\"prop_rock\")) return WorldResourceType.ROCK;",
+        "isRelevant": true,
+        "pattern": "Métodos de string con literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/WorldResourceSystem.ts",
+        "line": 269,
+        "match": ".startsWith(\"decal_rock_\")",
+        "stringLiteral": "decal_rock_",
+        "lineContent": "if (_decal.startsWith(\"decal_rock_\")) return WorldResourceType.ROCK;",
+        "isRelevant": true,
+        "pattern": "Métodos de string con literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIActionExecutor.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIActionExecutor.ts",
+        "line": 189,
+        "match": "=== \"string\"",
+        "stringLiteral": "string",
+        "lineContent": "typeof action.data.taskId === \"string\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIActionPlanner.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIActionPlanner.ts",
+        "line": 879,
+        "match": "=== \"desperate_search\"",
+        "stringLiteral": "desperate_search",
+        "lineContent": "if (goal.data?.explorationType === \"desperate_search\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIGoalValidator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIGoalValidator.ts",
+        "line": 73,
+        "match": ".startsWith(\"satisfy_\")",
+        "stringLiteral": "satisfy_",
+        "lineContent": "if (goal.type.startsWith(\"satisfy_\")) {",
+        "isRelevant": true,
+        "pattern": "Métodos de string con literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIGoalValidator.ts",
+        "line": 126,
+        "match": ".startsWith(\"assist_\")",
+        "stringLiteral": "assist_",
+        "lineContent": "(goal.type === GoalType.ASSIST || goal.type.startsWith(\"assist_\")) &&",
+        "isRelevant": true,
+        "pattern": "Métodos de string con literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIGoalValidator.ts",
+        "line": 209,
+        "match": ".startsWith(\"assist_\")",
+        "stringLiteral": "assist_",
+        "lineContent": "(goal.type === GoalType.ASSIST || goal.type.startsWith(\"assist_\")) &&",
+        "isRelevant": true,
+        "pattern": "Métodos de string con literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIZoneHandler.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIZoneHandler.ts",
+        "line": 393,
+        "match": "=== \"number\"",
+        "stringLiteral": "number",
+        "lineContent": "if (typeof resourceValue === \"number\" && resourceValue >= amount) {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIZoneHandler.ts",
+        "line": 446,
+        "match": "!== \"deposit\"",
+        "stringLiteral": "deposit",
+        "lineContent": "if (goal.type !== GoalType.DEPOSIT && goal.data?.workType !== \"deposit\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIZoneHandler.ts",
+        "line": 462,
+        "match": "!== \"trade\"",
+        "stringLiteral": "trade",
+        "lineContent": "if (goal.data?.action !== \"trade\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIZoneHandler.ts",
+        "line": 484,
+        "match": "!== \"contribute_resources\"",
+        "stringLiteral": "contribute_resources",
+        "lineContent": "if (goal.data?.action !== \"contribute_resources\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIZoneHandler.ts",
+        "line": 523,
+        "match": "!== \"start_quest\"",
+        "stringLiteral": "start_quest",
+        "lineContent": "if (goal.data?.action !== \"start_quest\" || !goal.data?.questId) {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIZoneHandler.ts",
+        "line": 366,
+        "match": ".startsWith(\"assist_\")",
+        "stringLiteral": "assist_",
+        "lineContent": "!(goal.type === GoalType.ASSIST || goal.type.startsWith(\"assist_\")) ||",
+        "isRelevant": true,
+        "pattern": "Métodos de string con literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIZoneHandler.ts",
+        "line": 543,
+        "match": ".includes(\"defense\")",
+        "stringLiteral": "defense",
+        "lineContent": "(goal.targetZoneId || \"\").toLowerCase().includes(\"defense\")",
+        "isRelevant": true,
+        "pattern": "Métodos de string con literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/AIZoneHandler.ts",
+        "line": 543,
+        "match": ".includes(\"defense\"",
+        "stringLiteral": "defense",
+        "lineContent": "(goal.targetZoneId || \"\").toLowerCase().includes(\"defense\")",
+        "isRelevant": true,
+        "pattern": "Métodos de array con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/ActivityMapper.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/ActivityMapper.ts",
+        "line": 17,
+        "match": "=== \"string\"",
+        "stringLiteral": "string",
+        "lineContent": "if (typeof need === \"string\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/utils.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/utils.ts",
+        "line": 170,
+        "match": ".startsWith(\"deposit_\")",
+        "stringLiteral": "deposit_",
+        "lineContent": "if (goal.id?.startsWith(\"deposit_\")) return GoalDomain.LOGISTICS;",
+        "isRelevant": true,
+        "pattern": "Métodos de string con literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/utils.ts",
+        "line": 171,
+        "match": ".startsWith(\"craft_weapon\")",
+        "stringLiteral": "craft_weapon",
+        "lineContent": "if (goal.id?.startsWith(\"craft_weapon\")) return GoalDomain.CRAFTING;",
+        "isRelevant": true,
+        "pattern": "Métodos de string con literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/core/utils.ts",
+        "line": 192,
+        "match": ".startsWith(\"deposit_\")",
+        "stringLiteral": "deposit_",
+        "lineContent": "if (goal.type === GoalType.WORK && goal.id?.startsWith(\"deposit_\")) {",
+        "isRelevant": true,
+        "pattern": "Métodos de string con literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AssistEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AssistEvaluator.ts",
+        "line": 118,
+        "match": "=== \"medical\"",
+        "stringLiteral": "medical",
+        "lineContent": "if (best.need === \"medical\")",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AssistEvaluator.ts",
+        "line": 124,
+        "match": "=== \"rest\"",
+        "stringLiteral": "rest",
+        "lineContent": "else if (best.need === \"rest\")",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AssistEvaluator.ts",
+        "line": 130,
+        "match": "=== \"food\"",
+        "stringLiteral": "food",
+        "lineContent": "else if (best.need === \"food\")",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AssistEvaluator.ts",
+        "line": 136,
+        "match": "=== \"water\"",
+        "stringLiteral": "water",
+        "lineContent": "else if (best.need === \"water\")",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AssistEvaluator.ts",
+        "line": 142,
+        "match": "=== \"social\"",
+        "stringLiteral": "social",
+        "lineContent": "else if (best.need === \"social\")",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AssistEvaluator.ts",
+        "line": 121,
+        "match": "[\"medical\"]",
+        "stringLiteral": "medical",
+        "lineContent": "ctx.getZoneIdsByType([\"medical\"]),",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AssistEvaluator.ts",
+        "line": 133,
+        "match": "[\"food\"]",
+        "stringLiteral": "food",
+        "lineContent": "ctx.getZoneIdsByType([\"food\"]),",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AssistEvaluator.ts",
+        "line": 139,
+        "match": "[\"water\"]",
+        "stringLiteral": "water",
+        "lineContent": "ctx.getZoneIdsByType([\"water\"]),",
+        "isRelevant": true,
+        "pattern": "Acceso a propiedades con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AttentionEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AttentionEvaluator.ts",
+        "line": 52,
+        "match": ": \"inspect\",",
+        "stringLiteral": "inspect",
+        "lineContent": "explorationType: \"inspect\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AttentionEvaluator.ts",
+        "line": 80,
+        "match": ": \"wander\",",
+        "stringLiteral": "wander",
+        "lineContent": "explorationType: \"wander\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AttentionEvaluator.ts",
+        "line": 91,
+        "match": ": \"explore\",",
+        "stringLiteral": "explore",
+        "lineContent": "restZones.length > 0 ? \"rest\" : \"explore\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AttentionEvaluator.ts",
+        "line": 101,
+        "match": ": \"wander\",",
+        "stringLiteral": "wander",
+        "lineContent": "explorationType: \"wander\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AttentionEvaluator.ts",
+        "line": 116,
+        "match": ": \"default\",",
+        "stringLiteral": "default",
+        "lineContent": "explorationType: \"default\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/AttentionEvaluator.ts",
+        "line": 91,
+        "match": "? \"rest\" : \"explore\"",
+        "stringLiteral": "explore",
+        "lineContent": "restZones.length > 0 ? \"rest\" : \"explore\",",
+        "isRelevant": true,
+        "pattern": "Operadores ternarios con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/BiologicalDriveEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/BiologicalDriveEvaluator.ts",
+        "line": 130,
+        "match": ": \"gather\",",
+        "stringLiteral": "gather",
+        "lineContent": "action: \"gather\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/BiologicalDriveEvaluator.ts",
+        "line": 160,
+        "match": ": \"hunt\",",
+        "stringLiteral": "hunt",
+        "lineContent": "action: \"hunt\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/BiologicalDriveEvaluator.ts",
+        "line": 193,
+        "match": ": \"gather\",",
+        "stringLiteral": "gather",
+        "lineContent": "action: \"gather\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/BiologicalDriveEvaluator.ts",
+        "line": 204,
+        "match": ": \"desperate_search\",",
+        "stringLiteral": "desperate_search",
+        "lineContent": "explorationType: \"desperate_search\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/BiologicalDriveEvaluator.ts",
+        "line": 223,
+        "match": ": \"rest\",",
+        "stringLiteral": "rest",
+        "lineContent": "action: \"rest\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/BuildingContributionEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/BuildingContributionEvaluator.ts",
+        "line": 30,
+        "match": "=== \"object\"",
+        "stringLiteral": "object",
+        "lineContent": "typeof z.metadata === \"object\" &&",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/BuildingContributionEvaluator.ts",
+        "line": 56,
+        "match": "=== \"object\"",
+        "stringLiteral": "object",
+        "lineContent": "typeof zone.metadata === \"object\" &&",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/BuildingContributionEvaluator.ts",
+        "line": 99,
+        "match": "=== \"object\"",
+        "stringLiteral": "object",
+        "lineContent": "typeof best.zone.metadata === \"object\" &&",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/BuildingContributionEvaluator.ts",
+        "line": 96,
+        "match": ": \"contribute_resources\",",
+        "stringLiteral": "contribute_resources",
+        "lineContent": "action: \"contribute_resources\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/CognitiveDriveEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/CognitiveDriveEvaluator.ts",
+        "line": 74,
+        "match": ": \"curiosity\",",
+        "stringLiteral": "curiosity",
+        "lineContent": "explorationType: \"curiosity\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/CognitiveDriveEvaluator.ts",
+        "line": 75,
+        "match": ": \"cognitive_drive\",",
+        "stringLiteral": "cognitive_drive",
+        "lineContent": "reason: \"cognitive_drive\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/CollectiveNeedsEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/CollectiveNeedsEvaluator.ts",
+        "line": 641,
+        "match": "=== \"energy\"",
+        "stringLiteral": "energy",
+        "lineContent": "if (need === \"energy\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/CollectiveNeedsEvaluator.ts",
+        "line": 648,
+        "match": "=== \"energy\"",
+        "stringLiteral": "energy",
+        "lineContent": "if (need === \"energy\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/CollectiveNeedsEvaluator.ts",
+        "line": 441,
+        "match": ": \"true\",",
+        "stringLiteral": "true",
+        "lineContent": "collectiveNeed: \"true\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/CollectiveNeedsEvaluator.ts",
+        "line": 481,
+        "match": ": \"true\",",
+        "stringLiteral": "true",
+        "lineContent": "collectiveNeed: \"true\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/CollectiveNeedsEvaluator.ts",
+        "line": 514,
+        "match": ": \"storage\",",
+        "stringLiteral": "storage",
+        "lineContent": "constructionType: \"storage\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/CollectiveNeedsEvaluator.ts",
+        "line": 515,
+        "match": ": \"true\",",
+        "stringLiteral": "true",
+        "lineContent": "collectiveNeed: \"true\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/CollectiveNeedsEvaluator.ts",
+        "line": 537,
+        "match": ": \"true\",",
+        "stringLiteral": "true",
+        "lineContent": "collectiveNeed: \"true\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/ConstructionEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/ConstructionEvaluator.ts",
+        "line": 87,
+        "match": ": \"construction\",",
+        "stringLiteral": "construction",
+        "lineContent": "workType: \"construction\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/CraftingEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/CraftingEvaluator.ts",
+        "line": 43,
+        "match": ": \"weapon\",",
+        "stringLiteral": "weapon",
+        "lineContent": "itemType: \"weapon\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/CraftingEvaluator.ts",
+        "line": 44,
+        "match": ": \"stone_dagger\",",
+        "stringLiteral": "stone_dagger",
+        "lineContent": "itemId: canClub ? \"wooden_club\" : \"stone_dagger\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/CraftingEvaluator.ts",
+        "line": 44,
+        "match": "? \"wooden_club\" : \"stone_dagger\"",
+        "stringLiteral": "stone_dagger",
+        "lineContent": "itemId: canClub ? \"wooden_club\" : \"stone_dagger\",",
+        "isRelevant": true,
+        "pattern": "Operadores ternarios con strings"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/DepositEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/DepositEvaluator.ts",
+        "line": 111,
+        "match": ": \"deposit\",",
+        "stringLiteral": "deposit",
+        "lineContent": "workType: \"deposit\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/ExpansionEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/ExpansionEvaluator.ts",
+        "line": 43,
+        "match": ": \"resource_scout\",",
+        "stringLiteral": "resource_scout",
+        "lineContent": "explorationType: \"resource_scout\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/ExpansionEvaluator.ts",
+        "line": 66,
+        "match": ": \"territory_expansion\",",
+        "stringLiteral": "territory_expansion",
+        "lineContent": "explorationType: \"territory_expansion\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts",
+        "line": 174,
+        "match": "=== \"morning\"",
+        "stringLiteral": "morning",
+        "lineContent": "} else if (timeOfDay === \"morning\" || timeOfDay === \"dawn\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts",
+        "line": 174,
+        "match": "=== \"dawn\"",
+        "stringLiteral": "dawn",
+        "lineContent": "} else if (timeOfDay === \"morning\" || timeOfDay === \"dawn\") {",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts",
+        "line": 221,
+        "match": ": \"gather\",",
+        "stringLiteral": "gather",
+        "lineContent": "action: \"gather\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts",
+        "line": 243,
+        "match": ": \"trade\",",
+        "stringLiteral": "trade",
+        "lineContent": "action: \"trade\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts",
+        "line": 254,
+        "match": ": \"desperate_search\",",
+        "stringLiteral": "desperate_search",
+        "lineContent": "explorationType: \"desperate_search\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts",
+        "line": 293,
+        "match": ": \"gather\",",
+        "stringLiteral": "gather",
+        "lineContent": "action: \"gather\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts",
+        "line": 315,
+        "match": ": \"trade\",",
+        "stringLiteral": "trade",
+        "lineContent": "action: \"trade\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts",
+        "line": 332,
+        "match": ": \"hunt\",",
+        "stringLiteral": "hunt",
+        "lineContent": "action: \"hunt\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts",
+        "line": 343,
+        "match": ": \"desperate_search\",",
+        "stringLiteral": "desperate_search",
+        "lineContent": "explorationType: \"desperate_search\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts",
+        "line": 363,
+        "match": ": \"rest\",",
+        "stringLiteral": "rest",
+        "lineContent": "action: \"rest\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/OpportunitiesEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/OpportunitiesEvaluator.ts",
+        "line": 121,
+        "match": "=== \"adventurous\"",
+        "stringLiteral": "adventurous",
+        "lineContent": "personality.explorationType === \"adventurous\"",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/OpportunitiesEvaluator.ts",
+        "line": 101,
+        "match": ": \"prey\",",
+        "stringLiteral": "prey",
+        "lineContent": "targetType: \"prey\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/OpportunitiesEvaluator.ts",
+        "line": 146,
+        "match": ": \"discovery\",",
+        "stringLiteral": "discovery",
+        "lineContent": "explorationType: \"discovery\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/QuestEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/QuestEvaluator.ts",
+        "line": 76,
+        "match": ": \"start_quest\",",
+        "stringLiteral": "start_quest",
+        "lineContent": "action: \"start_quest\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator.ts",
+        "line": 75,
+        "match": ": \"find_mate\",",
+        "stringLiteral": "find_mate",
+        "lineContent": "action: \"find_mate\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator.ts",
+        "line": 76,
+        "match": ": \"reproduction_drive\",",
+        "stringLiteral": "reproduction_drive",
+        "lineContent": "reason: \"reproduction_drive\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator.ts",
+        "line": 88,
+        "match": ": \"social_search\",",
+        "stringLiteral": "social_search",
+        "lineContent": "explorationType: \"social_search\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator.ts",
+        "line": 90,
+        "match": ": \"reproduction_drive\",",
+        "stringLiteral": "reproduction_drive",
+        "lineContent": "reason: \"reproduction_drive\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/SocialDriveEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/SocialDriveEvaluator.ts",
+        "line": 37,
+        "match": ": \"socialize\",",
+        "stringLiteral": "socialize",
+        "lineContent": "action: \"socialize\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/SocialDriveEvaluator.ts",
+        "line": 53,
+        "match": ": \"play\",",
+        "stringLiteral": "play",
+        "lineContent": "action: \"play\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/SocialDriveEvaluator.ts",
+        "line": 70,
+        "match": ": \"meditate\",",
+        "stringLiteral": "meditate",
+        "lineContent": "action: \"meditate\", // or pray/rest",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/TradeEvaluator.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/ai/evaluators/TradeEvaluator.ts",
+        "line": 65,
+        "match": ": \"trade\",",
+        "stringLiteral": "trade",
+        "lineContent": "action: \"trade\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/animals/AnimalBehavior.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/animals/AnimalBehavior.ts",
+        "line": 143,
+        "match": ": \"vegetation\",",
+        "stringLiteral": "vegetation",
+        "lineContent": "resourceType: \"vegetation\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/animals/AnimalBehavior.ts",
+        "line": 216,
+        "match": ": \"meat\",",
+        "stringLiteral": "meat",
+        "lineContent": "resourceType: \"meat\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/animals/AnimalBehavior.ts",
+        "line": 281,
+        "match": ": \"water\",",
+        "stringLiteral": "water",
+        "lineContent": "resourceType: \"water\",",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/animals/AnimalSpawning.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/simulation/systems/animals/AnimalSpawning.ts",
+        "line": 74,
+        "match": "!== \"wetland\"",
+        "stringLiteral": "wetland",
+        "lineContent": "if (config.isAquatic && isWalkable && biome !== \"wetland\") continue;",
+        "isRelevant": true,
+        "pattern": "Comparaciones con strings literales"
+      }
+    ],
+    "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/types/game-types.ts": [
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/types/game-types.ts",
+        "line": 377,
+        "match": ": \"fact\";",
+        "stringLiteral": "fact",
+        "lineContent": "| { type: \"fact\"; content: string; category?: string }",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/types/game-types.ts",
+        "line": 378,
+        "match": ": \"recipe\";",
+        "stringLiteral": "recipe",
+        "lineContent": "| { type: \"recipe\"; recipeId: string; ingredients: string[] }",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/types/game-types.ts",
+        "line": 379,
+        "match": ": \"location\";",
+        "stringLiteral": "location",
+        "lineContent": "| { type: \"location\"; x: number; y: number; zoneId?: string }",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      },
+      {
+        "file": "/datos/repos/Personal/UnaCartaParaIsaBackend/src/domain/types/game-types.ts",
+        "line": 380,
+        "match": ": \"person\";",
+        "stringLiteral": "person",
+        "lineContent": "| { type: \"person\"; agentId: string; relationship?: string };",
+        "isRelevant": true,
+        "pattern": "Asignaciones con strings literales"
+      }
+    ]
+  },
+  "summary": [
+    {
+      "file": "src/domain/simulation/core/AgentRegistry.ts",
+      "count": 1,
+      "literals": [
+        "function"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/core/DeltaEncoder.ts",
+      "count": 5,
+      "literals": [
+        "full",
+        "delta",
+        "inventory"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/core/MultiRateScheduler.ts",
+      "count": 1,
+      "literals": [
+        "disabled"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/core/SimulationRunner.ts",
+      "count": 2,
+      "literals": [
+        "zone",
+        "resource"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/core/runner/CommandProcessor.ts",
+      "count": 19,
+      "literals": [
+        "number",
+        "string",
+        "object",
+        "function",
+        "move",
+        "materials"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/core/runner/EventRegistry.ts",
+      "count": 1,
+      "literals": [
+        "birth"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/AISystem.ts",
+      "count": 11,
+      "literals": [
+        "function",
+        "string",
+        "number",
+        "satisfy_",
+        "tree",
+        "rock",
+        "phase"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/AmbientAwarenessSystem.ts",
+      "count": 8,
+      "literals": [
+        "worsening",
+        "neutral",
+        "tense",
+        "ominous",
+        "chaotic",
+        "trend"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/AppearanceGenerationSystem.ts",
+      "count": 7,
+      "literals": [
+        "male",
+        "female",
+        "elder",
+        "social_group_assigned",
+        "aging",
+        "traits",
+        "sex"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/BuildingMaintenanceSystem.ts",
+      "count": 3,
+      "literals": [
+        "time",
+        "wood"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/BuildingSystem.ts",
+      "count": 5,
+      "literals": [
+        "mine",
+        "farm",
+        "workbench",
+        "metadata"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/CardDialogueSystem.ts",
+      "count": 12,
+      "literals": [
+        "below",
+        "above",
+        "worried",
+        "number",
+        "string",
+        "agent_exploring",
+        "resource_gathering",
+        "low_needs_warning",
+        "type"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/CombatSystem.ts",
+      "count": 6,
+      "literals": [
+        "warrior",
+        "animal"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ConflictResolutionSystem.ts",
+      "count": 16,
+      "literals": [
+        "truce_accept",
+        "apologize",
+        "continued",
+        "continue",
+        "accepted",
+        "apologized",
+        "expired",
+        "reason",
+        "resolution"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/CrisisPredictorSystem.ts",
+      "count": 7,
+      "literals": [
+        "population_stress",
+        "resource_balance",
+        "sustainability",
+        "emergency_rate",
+        "type"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/DivineFavorSystem.ts",
+      "count": 10,
+      "literals": [
+        "fertility_boost",
+        "productivity_boost",
+        "longevity",
+        "social_harmony",
+        "resilience",
+        "wisdom",
+        "prosperity",
+        "blessing_granted",
+        "favor_increased",
+        "favor_decreased"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/EconomySystem.ts",
+      "count": 5,
+      "literals": [
+        "number",
+        "add",
+        "remove"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/EmergenceSystem.ts",
+      "count": 14,
+      "literals": [
+        "number",
+        "social",
+        "systemic",
+        "behavioral",
+        "survival",
+        "resource_production_loop",
+        "positive",
+        "population_resource_loop",
+        "negative"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/EnhancedCraftingSystem.ts",
+      "count": 1,
+      "literals": [
+        "zones"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/GenealogySystem.ts",
+      "count": 2,
+      "literals": [
+        "birth",
+        "death"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/GovernanceSystem.ts",
+      "count": 3,
+      "literals": [
+        "housing",
+        "number"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/HouseholdSystem.ts",
+      "count": 9,
+      "literals": [
+        "wood",
+        "stone",
+        "food",
+        "water",
+        "system"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/InventorySystem.ts",
+      "count": 1,
+      "literals": [
+        "type"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ItemGenerationSystem.ts",
+      "count": 2,
+      "literals": [
+        "food",
+        "work"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/KnowledgeNetworkSystem.ts",
+      "count": 5,
+      "literals": [
+        "fact",
+        "recipe",
+        "location",
+        "person",
+        "type"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/LifeCycleSystem.ts",
+      "count": 2,
+      "literals": [
+        "removed",
+        "killed"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/LivingLegendsSystem.ts",
+      "count": 1,
+      "literals": [
+        "neutral"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/MarriageSystem.ts",
+      "count": 1,
+      "literals": [
+        "type"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/MovementSystem.ts",
+      "count": 5,
+      "literals": [
+        "obstacle",
+        "building",
+        "rock",
+        "tree",
+        "no_path_found"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/NeedsSystem.ts",
+      "count": 4,
+      "literals": [
+        "number"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/NormsSystem.ts",
+      "count": 1,
+      "literals": [
+        "violence_in_protected_zone"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ProductionSystem.ts",
+      "count": 1,
+      "literals": [
+        "death"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/QuestSystem.ts",
+      "count": 11,
+      "literals": [
+        "any",
+        "number",
+        "wood",
+        "food",
+        "friendly",
+        "happy",
+        "shelter",
+        "advanced_building",
+        "encouraging",
+        "proud",
+        "started"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ReputationSystem.ts",
+      "count": 1,
+      "literals": [
+        "friendship"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ResearchSystem.ts",
+      "count": 2,
+      "literals": [
+        "stonecraft"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ResourceAttractionSystem.ts",
+      "count": 2,
+      "literals": [
+        "number"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/RoleSystem.ts",
+      "count": 2,
+      "literals": [
+        "rest"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/SocialSystem.ts",
+      "count": 1,
+      "literals": [
+        "friendly"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/TaskSystem.ts",
+      "count": 3,
+      "literals": [
+        "stats",
+        "tasks"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/WorldResourceSystem.ts",
+      "count": 5,
+      "literals": [
+        "depleted",
+        "tree_",
+        "plant_",
+        "prop_rock",
+        "decal_rock_"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/core/AIActionExecutor.ts",
+      "count": 1,
+      "literals": [
+        "string"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/core/AIActionPlanner.ts",
+      "count": 1,
+      "literals": [
+        "desperate_search"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/core/AIGoalValidator.ts",
+      "count": 3,
+      "literals": [
+        "satisfy_",
+        "assist_"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/core/AIZoneHandler.ts",
+      "count": 8,
+      "literals": [
+        "number",
+        "deposit",
+        "trade",
+        "contribute_resources",
+        "start_quest",
+        "assist_",
+        "defense"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/core/ActivityMapper.ts",
+      "count": 1,
+      "literals": [
+        "string"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/core/utils.ts",
+      "count": 3,
+      "literals": [
+        "deposit_",
+        "craft_weapon"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/AssistEvaluator.ts",
+      "count": 8,
+      "literals": [
+        "medical",
+        "rest",
+        "food",
+        "water",
+        "social"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/AttentionEvaluator.ts",
+      "count": 6,
+      "literals": [
+        "inspect",
+        "wander",
+        "explore",
+        "default"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/BiologicalDriveEvaluator.ts",
+      "count": 5,
+      "literals": [
+        "gather",
+        "hunt",
+        "desperate_search",
+        "rest"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/BuildingContributionEvaluator.ts",
+      "count": 4,
+      "literals": [
+        "object",
+        "contribute_resources"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/CognitiveDriveEvaluator.ts",
+      "count": 2,
+      "literals": [
+        "curiosity",
+        "cognitive_drive"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/CollectiveNeedsEvaluator.ts",
+      "count": 7,
+      "literals": [
+        "energy",
+        "true",
+        "storage"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/ConstructionEvaluator.ts",
+      "count": 1,
+      "literals": [
+        "construction"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/CraftingEvaluator.ts",
+      "count": 3,
+      "literals": [
+        "weapon",
+        "stone_dagger"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/DepositEvaluator.ts",
+      "count": 1,
+      "literals": [
+        "deposit"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/ExpansionEvaluator.ts",
+      "count": 2,
+      "literals": [
+        "resource_scout",
+        "territory_expansion"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts",
+      "count": 10,
+      "literals": [
+        "morning",
+        "dawn",
+        "gather",
+        "trade",
+        "desperate_search",
+        "hunt",
+        "rest"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/OpportunitiesEvaluator.ts",
+      "count": 3,
+      "literals": [
+        "adventurous",
+        "prey",
+        "discovery"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/QuestEvaluator.ts",
+      "count": 1,
+      "literals": [
+        "start_quest"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator.ts",
+      "count": 4,
+      "literals": [
+        "find_mate",
+        "reproduction_drive",
+        "social_search"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/SocialDriveEvaluator.ts",
+      "count": 3,
+      "literals": [
+        "socialize",
+        "play",
+        "meditate"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/ai/evaluators/TradeEvaluator.ts",
+      "count": 1,
+      "literals": [
+        "trade"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/animals/AnimalBehavior.ts",
+      "count": 3,
+      "literals": [
+        "vegetation",
+        "meat",
+        "water"
+      ]
+    },
+    {
+      "file": "src/domain/simulation/systems/animals/AnimalSpawning.ts",
+      "count": 1,
+      "literals": [
+        "wetland"
+      ]
+    },
+    {
+      "file": "src/domain/types/game-types.ts",
+      "count": 4,
+      "literals": [
+        "fact",
+        "recipe",
+        "location",
+        "person"
+      ]
+    }
+  ]
+}

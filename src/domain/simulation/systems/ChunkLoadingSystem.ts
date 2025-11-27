@@ -68,10 +68,9 @@ export class ChunkLoadingSystem {
       return;
     }
 
-    // Use AgentRegistry for O(1) iteration, fallback to gameState
     const agentSource = this.agentRegistry
       ? Array.from(this.agentRegistry.getAllProfiles())
-      : (this.gameState.agents || []);
+      : this.gameState.agents || [];
     const activeAgents = agentSource
       .filter((agent) => !agent.isDead && agent.position)
       .map((agent) => ({ position: agent.position! }));

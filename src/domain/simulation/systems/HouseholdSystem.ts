@@ -76,10 +76,9 @@ export class HouseholdSystem {
   }
 
   private checkAgentsWithoutHome(): string[] {
-    // Use AgentRegistry for O(1) iteration, fallback to gameState
     const allAgents = this.agentRegistry
       ? Array.from(this.agentRegistry.getAllProfiles())
-      : (this.gameState.agents || []);
+      : this.gameState.agents || [];
     const homeless: string[] = [];
 
     for (const agent of allAgents) {

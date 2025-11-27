@@ -232,10 +232,9 @@ export class CardDialogueSystem {
 
     if (template.triggers.relationshipBased && entityId && this.socialSystem) {
       const satisfied = template.triggers.relationshipBased.some((trigger) => {
-        // Use AgentRegistry for O(1) iteration, fallback to gameState
         const agents = this.agentRegistry
           ? Array.from(this.agentRegistry.getAllProfiles())
-          : (this.gameState.agents || []);
+          : this.gameState.agents || [];
         for (const agent of agents) {
           if (agent.id === entityId) continue;
 

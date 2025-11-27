@@ -742,7 +742,6 @@ export class RoleSystem extends EventEmitter {
     for (const [agentId, role] of this.roles.entries()) {
       if (!rolesWithExtra.includes(role.roleType)) continue;
 
-      // Use AgentRegistry for O(1) lookup, fallback to gameState
       const agent = this.agentRegistry
         ? this.agentRegistry.getProfile(agentId)
         : this.gameState.agents?.find((a) => a.id === agentId);
