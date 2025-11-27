@@ -7,9 +7,7 @@ import type {
   NeedsCommandPayload,
   RecipeCommandPayload,
   SocialCommandPayload,
-  ResearchCommandPayload,
   WorldResourceCommandPayload,
-  DialogueCommandPayload,
   BuildingCommandPayload,
   ReputationCommandPayload,
   TaskCommandPayload,
@@ -19,9 +17,7 @@ import {
   NeedsCommandType,
   RecipeCommandType,
   SocialCommandType,
-  ResearchCommandType,
   WorldResourceCommandType,
-  DialogueCommandType,
   BuildingCommandType,
   ReputationCommandType,
   TaskCommandType,
@@ -36,7 +32,7 @@ import type { TaskType, TaskMetadata } from "../../../types/simulation/tasks";
 import type { BuildingLabel } from "../../../types/simulation/buildings";
 
 export class CommandProcessor {
-  constructor(private runner: SimulationRunner) {}
+  constructor(private runner: SimulationRunner) { }
 
   public process(commands: SimulationCommand[]): void {
     if (commands.length > 0) {
@@ -501,14 +497,14 @@ export class CommandProcessor {
             zoneId: payload.zoneId as string | undefined,
             requirements: payload.requirements as
               | {
-                  resources?: {
-                    wood?: number;
-                    stone?: number;
-                    food?: number;
-                    water?: number;
-                  };
-                  minWorkers?: number;
-                }
+                resources?: {
+                  wood?: number;
+                  stone?: number;
+                  food?: number;
+                  water?: number;
+                };
+                minWorkers?: number;
+              }
               | undefined,
             metadata: payload.metadata as TaskMetadata | undefined,
             targetAnimalId: payload.targetAnimalId as string | undefined,

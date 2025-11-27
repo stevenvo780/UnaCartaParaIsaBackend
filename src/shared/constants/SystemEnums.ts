@@ -32,6 +32,7 @@ export enum SystemProperty {
   TRAITS = "traits",
   SEX = "sex",
   RESOLUTION = "resolution",
+  ASSETS = "assets",
 }
 
 /**

@@ -4,6 +4,7 @@ import { GameState, SimulationTerrainTile } from "../../types/game-types";
 import { TerrainTile } from "../../world/generation/types";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { logger } from "@/infrastructure/utils/logger";
+import { SystemProperty } from "../../../shared/constants/SystemEnums";
 
 @injectable()
 export class TerrainSystem {
@@ -52,7 +53,7 @@ export class TerrainSystem {
 
         let modified = false;
 
-        if ("assets" in updates && updates.assets) {
+        if (SystemProperty.ASSETS in updates && updates.assets) {
           if (updates.assets.terrain) {
             tile.assets.terrain = updates.assets.terrain;
             modified = true;

@@ -131,6 +131,17 @@ export enum GoalPrefix {
 }
 
 /**
+ * Enumeration of exploration types.
+ */
+export enum ExplorationType {
+  WANDER = "wander",
+  SOCIAL_SEARCH = "social_search",
+  INSPECT = "inspect",
+  DEFAULT = "default",
+  DESPERATE_SEARCH = "desperate_search",
+}
+
+/**
  * Type representing all possible goal type values.
  */
 export type GoalTypeValue = `${GoalType}`;

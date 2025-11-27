@@ -22,7 +22,7 @@ import type {
 } from "../ports";
 import type { MarriageSystem } from "./MarriageSystem";
 import type { GenealogySystem } from "./GenealogySystem";
-import type { DivineFavorSystem } from "./DivineFavorSystem";
+
 import type { RoleSystem } from "./RoleSystem";
 import { RandomUtils } from "../../../shared/utils/RandomUtils";
 
@@ -78,7 +78,7 @@ export class LifeCycleSystem extends EventEmitter {
   private _socialSystem?: ISocialPort;
   private _marriageSystem?: MarriageSystem;
   private _genealogySystem?: GenealogySystem;
-  private _divineFavorSystem?: DivineFavorSystem;
+  private _divineFavorSystem?: any; // DivineFavorSystem removed
   private _movementSystem?: IMovementPort;
   private _roleSystem?: RoleSystem;
   private _taskSystem?: TaskSystem;
@@ -143,7 +143,7 @@ export class LifeCycleSystem extends EventEmitter {
     marriageSystem?: MarriageSystem;
     genealogySystem?: GenealogySystem;
     householdSystem?: IHouseholdPort;
-    divineFavorSystem?: DivineFavorSystem;
+    divineFavorSystem?: any; // DivineFavorSystem removed
     movementSystem?: IMovementPort;
     roleSystem?: RoleSystem;
     taskSystem?: TaskSystem;
@@ -178,7 +178,7 @@ export class LifeCycleSystem extends EventEmitter {
     if (!this._socialSystem) missing.push("SocialSystem");
     if (!this._marriageSystem) missing.push("MarriageSystem");
     if (!this._genealogySystem) missing.push("GenealogySystem");
-    if (!this._divineFavorSystem) missing.push("DivineFavorSystem");
+
     if (!this._movementSystem) missing.push("MovementSystem");
     if (!this._roleSystem) missing.push("RoleSystem");
     if (!this._taskSystem) missing.push("TaskSystem");
@@ -410,8 +410,8 @@ export class LifeCycleSystem extends EventEmitter {
 
       logger.debug(
         `🍼 [tryCouple] ${father.name}+${mother.name} needs: ` +
-          `father(hunger=${fatherNeeds?.hunger?.toFixed(0)}, energy=${fatherNeeds?.energy?.toFixed(0)}) ` +
-          `mother(hunger=${motherNeeds?.hunger?.toFixed(0)}, energy=${motherNeeds?.energy?.toFixed(0)})`,
+        `father(hunger=${fatherNeeds?.hunger?.toFixed(0)}, energy=${fatherNeeds?.energy?.toFixed(0)}) ` +
+        `mother(hunger=${motherNeeds?.hunger?.toFixed(0)}, energy=${motherNeeds?.energy?.toFixed(0)})`,
       );
 
       if (
@@ -459,15 +459,15 @@ export class LifeCycleSystem extends EventEmitter {
     spec:
       | Partial<AgentProfile>
       | {
-          id?: string;
-          name?: string;
-          sex: Sex;
-          ageYears: number;
-          lifeStage: LifeStage;
-          generation: number;
-          immortal?: boolean;
-          traits?: Partial<AgentTraits>;
-        } = {},
+        id?: string;
+        name?: string;
+        sex: Sex;
+        ageYears: number;
+        lifeStage: LifeStage;
+        generation: number;
+        immortal?: boolean;
+        traits?: Partial<AgentTraits>;
+      } = {},
   ): AgentProfile {
     const partial = spec as Partial<AgentProfile>;
     const id = partial.id ?? `agent_${++this.spawnCounter}`;
@@ -659,13 +659,13 @@ export class LifeCycleSystem extends EventEmitter {
     const removed = this.agentRegistry
       ? this.agentRegistry.removeAgent(id)
       : ((): boolean => {
-          const index = this.gameState.agents!.findIndex((a) => a.id === id);
-          if (index !== -1) {
-            this.gameState.agents!.splice(index, 1);
-            return true;
-          }
-          return false;
-        })();
+        const index = this.gameState.agents!.findIndex((a) => a.id === id);
+        if (index !== -1) {
+          this.gameState.agents!.splice(index, 1);
+          return true;
+        }
+        return false;
+      })();
 
     if (removed) {
       if (this.gameState.entities) {
@@ -754,13 +754,13 @@ export class LifeCycleSystem extends EventEmitter {
     const removed = this.agentRegistry
       ? this.agentRegistry.removeAgent(id)
       : ((): boolean => {
-          const index = this.gameState.agents!.findIndex((a) => a.id === id);
-          if (index !== -1) {
-            this.gameState.agents!.splice(index, 1);
-            return true;
-          }
-          return false;
-        })();
+        const index = this.gameState.agents!.findIndex((a) => a.id === id);
+        if (index !== -1) {
+          this.gameState.agents!.splice(index, 1);
+          return true;
+        }
+        return false;
+      })();
 
     if (!removed) return false;
 

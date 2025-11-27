@@ -1,11 +1,11 @@
 {
   "summary": {
-    "totalEnums": 126,
-    "totalEnumValues": 819,
-    "totalStringOccurrences": 1777,
-    "missingEnumStrings": 380,
-    "missingEnumOccurrences": 526,
-    "filesAffected": 117
+    "totalEnums": 131,
+    "totalEnumValues": 838,
+    "totalStringOccurrences": 1717,
+    "missingEnumStrings": 341,
+    "missingEnumOccurrences": 472,
+    "filesAffected": 106
   },
   "enums": [
     {
@@ -174,6 +174,14 @@
       "file": "src/shared/constants/AgentEnums.ts"
     },
     {
+      "name": "AppearanceUpdateReason",
+      "values": [
+        "aging",
+        "social_group_assigned"
+      ],
+      "file": "src/shared/constants/AgentEnums.ts"
+    },
+    {
       "name": "CrisisSeverity",
       "values": [
         "low",
@@ -210,7 +218,10 @@
         "worried",
         "excited",
         "contemplative",
-        "playful"
+        "playful",
+        "friendly",
+        "encouraging",
+        "proud"
       ],
       "file": "src/shared/constants/AmbientEnums.ts"
     },
@@ -1064,6 +1075,17 @@
       "file": "src/shared/constants/LegendEnums.ts"
     },
     {
+      "name": "LegendTier",
+      "values": [
+        "mythical",
+        "legendary",
+        "renowned",
+        "respected",
+        "known"
+      ],
+      "file": "src/shared/constants/LegendEnums.ts"
+    },
+    {
       "name": "LogLevel",
       "values": [
         "debug",
@@ -1101,6 +1123,14 @@
       "file": "src/shared/constants/MovementEnums.ts"
     },
     {
+      "name": "QuestID",
+      "values": [
+        "tutorial_survival",
+        "build_shelter"
+      ],
+      "file": "src/shared/constants/QuestEnums.ts"
+    },
+    {
       "name": "QuestStatus",
       "values": [
         "available",
@@ -1111,6 +1141,16 @@
         "abandoned"
       ],
       "file": "../UnaCartaParaIsa/src/constants/QuestEnums.ts"
+    },
+    {
+      "name": "QuestAction",
+      "values": [
+        "started",
+        "completed",
+        "failed",
+        "abandoned"
+      ],
+      "file": "src/shared/constants/QuestEnums.ts"
     },
     {
       "name": "QuestDifficulty",
@@ -1309,6 +1349,7 @@
     {
       "name": "InteractionStatus",
       "values": [
+        "started",
         "expired",
         "completed"
       ],
@@ -1354,7 +1395,20 @@
         "stats",
         "state",
         "config",
-        "metadata"
+        "metadata",
+        "inventory",
+        "trend",
+        "traits",
+        "sex",
+        "resolution"
+      ],
+      "file": "src/shared/constants/SystemEnums.ts"
+    },
+    {
+      "name": "SnapshotType",
+      "values": [
+        "full",
+        "delta"
       ],
       "file": "src/shared/constants/SystemEnums.ts"
     },
@@ -2079,226 +2133,6 @@
       ]
     },
     {
-      "stringLiteral": "full",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/core/DeltaEncoder.ts",
-          "line": 55,
-          "column": 12,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"full\","
-        },
-        {
-          "file": "src/domain/simulation/core/DeltaEncoder.ts",
-          "line": 68,
-          "column": 12,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"full\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "inventory",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/core/DeltaEncoder.ts",
-          "line": 196,
-          "column": 19,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "prev: GameState[\"inventory\"],"
-        },
-        {
-          "file": "src/domain/simulation/core/DeltaEncoder.ts",
-          "line": 197,
-          "column": 22,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "current: GameState[\"inventory\"],"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "trend",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/AmbientAwarenessSystem.ts",
-          "line": 107,
-          "column": 34,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "let trend: CollectiveWellbeing[\"trend\"] = CrisisTrend.STABLE;"
-        },
-        {
-          "file": "src/domain/simulation/systems/AmbientAwarenessSystem.ts",
-          "line": 206,
-          "column": 30,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "trend: CollectiveWellbeing[\"trend\"],"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "aging",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/AppearanceGenerationSystem.ts",
-          "line": 380,
-          "column": 12,
-          "pattern": "Asignaciones",
-          "lineContent": "reason: \"aging\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/rendering/VisualDiversityCoordinator.ts",
-          "line": 130,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "reason: \"aging\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "traits",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/AppearanceGenerationSystem.ts",
-          "line": 219,
-          "column": 24,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "traits: AgentProfile[\"traits\"],"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/rendering/AppearanceGenerationSystem.ts",
-          "line": 236,
-          "column": 24,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "traits: AgentProfile[\"traits\"],"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "sex",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/AppearanceGenerationSystem.ts",
-          "line": 235,
-          "column": 24,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "sex: AgentAppearance[\"sex\"],"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/rendering/AppearanceGenerationSystem.ts",
-          "line": 251,
-          "column": 24,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "sex: AgentAppearance[\"sex\"],"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "resolution",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/ConflictResolutionSystem.ts",
-          "line": 126,
-          "column": 30,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "resolution: ConflictRecord[\"resolution\"];"
-        },
-        {
-          "file": "src/domain/simulation/systems/ConflictResolutionSystem.ts",
-          "line": 137,
-          "column": 34,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "let resolution: ConflictRecord[\"resolution\"] = ConflictResolution.CONTINUED;"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "population_stress",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/CrisisPredictorSystem.ts",
-          "line": 245,
-          "column": 24,
-          "pattern": "Comparaciones",
-          "lineContent": "(ind) => ind.name === \"population_stress\","
-        },
-        {
-          "file": "src/domain/simulation/systems/CrisisPredictorSystem.ts",
-          "line": 250,
-          "column": 8,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "[\"population_stress\"],"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "resource_balance",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/CrisisPredictorSystem.ts",
-          "line": 256,
-          "column": 24,
-          "pattern": "Comparaciones",
-          "lineContent": "(ind) => ind.name === \"resource_balance\","
-        },
-        {
-          "file": "src/domain/simulation/systems/CrisisPredictorSystem.ts",
-          "line": 261,
-          "column": 8,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "[\"resource_balance\"],"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "systemic",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/EmergenceSystem.ts",
-          "line": 274,
-          "column": 12,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"systemic\","
-        },
-        {
-          "file": "src/domain/simulation/systems/EmergenceSystem.ts",
-          "line": 309,
-          "column": 12,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"systemic\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "started",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/InteractionGameSystem.ts",
-          "line": 70,
-          "column": 12,
-          "pattern": "Asignaciones",
-          "lineContent": "result: \"started\","
-        },
-        {
-          "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 214,
-          "column": 12,
-          "pattern": "Asignaciones",
-          "lineContent": "action: \"started\","
-        }
-      ]
-    },
-    {
       "stringLiteral": "fact",
       "count": 2,
       "occurrences": [
@@ -2379,102 +2213,22 @@
       ]
     },
     {
-      "stringLiteral": "mythical",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/LivingLegendsSystem.ts",
-          "line": 178,
-          "column": 18,
-          "pattern": "Comparaciones",
-          "lineContent": "if (newTier === \"mythical\" || newTier === \"legendary\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientLivingLegendsSystem.ts",
-          "line": 144,
-          "column": 28,
-          "pattern": "Comparaciones",
-          "lineContent": "legend.legendTier === \"mythical\""
-        }
-      ]
-    },
-    {
-      "stringLiteral": "renowned",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/LivingLegendsSystem.ts",
-          "line": 182,
-          "column": 25,
-          "pattern": "Comparaciones",
-          "lineContent": "} else if (newTier === \"renowned\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientLivingLegendsSystem.ts",
-          "line": 147,
-          "column": 37,
-          "pattern": "Comparaciones",
-          "lineContent": "} else if (legend.legendTier === \"renowned\") {"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "tutorial_survival",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 20,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"tutorial_survival\","
-        },
-        {
-          "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 90,
-          "column": 15,
-          "pattern": "Asignaciones",
-          "lineContent": "questId: \"tutorial_survival\","
-        }
-      ]
-    },
-    {
       "stringLiteral": "obj_1",
       "count": 2,
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 26,
+          "line": 31,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"obj_1\","
         },
         {
           "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 71,
+          "line": 76,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"obj_1\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "friendly",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 54,
-          "column": 12,
-          "pattern": "Asignaciones",
-          "lineContent": "mood: \"friendly\","
-        },
-        {
-          "file": "src/domain/simulation/systems/SocialSystem.ts",
-          "line": 464,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"friendly\","
         }
       ]
     },
@@ -4439,25 +4193,12 @@
       ]
     },
     {
-      "stringLiteral": "delta",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/core/DeltaEncoder.ts",
-          "line": 84,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"delta\","
-        }
-      ]
-    },
-    {
       "stringLiteral": "zone",
       "count": 1,
       "occurrences": [
         {
           "file": "src/domain/simulation/core/SimulationRunner.ts",
-          "line": 1148,
+          "line": 1091,
           "column": 14,
           "pattern": "Asignaciones",
           "lineContent": "type: \"zone\","
@@ -4470,7 +4211,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/core/SimulationRunner.ts",
-          "line": 1158,
+          "line": 1101,
           "column": 14,
           "pattern": "Asignaciones",
           "lineContent": "type: \"resource\","
@@ -4483,7 +4224,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/AmbientAwarenessSystem.ts",
-          "line": 162,
+          "line": 163,
           "column": 6,
           "pattern": "Return statements",
           "lineContent": "return \"harmonious\";"
@@ -4496,7 +4237,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/AmbientAwarenessSystem.ts",
-          "line": 164,
+          "line": 165,
           "column": 49,
           "pattern": "Return statements",
           "lineContent": "if (wellbeing.mood === AmbientMood.STRESSED) return \"tense\";"
@@ -4509,7 +4250,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/AmbientAwarenessSystem.ts",
-          "line": 165,
+          "line": 166,
           "column": 47,
           "pattern": "Return statements",
           "lineContent": "if (wellbeing.mood === AmbientMood.CRISIS) return \"ominous\";"
@@ -4522,23 +4263,10 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/AmbientAwarenessSystem.ts",
-          "line": 166,
+          "line": 167,
           "column": 49,
           "pattern": "Return statements",
           "lineContent": "if (wellbeing.mood === AmbientMood.COLLAPSE) return \"chaotic\";"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "social_group_assigned",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/AppearanceGenerationSystem.ts",
-          "line": 353,
-          "column": 12,
-          "pattern": "Asignaciones",
-          "lineContent": "reason: \"social_group_assigned\","
         }
       ]
     },
@@ -4556,236 +4284,15 @@
       ]
     },
     {
-      "stringLiteral": "agent_exploring",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/CardDialogueSystem.ts",
-          "line": 377,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"agent_exploring\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "resource_gathering",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/CardDialogueSystem.ts",
-          "line": 396,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"resource_gathering\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "low_needs_warning",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/CardDialogueSystem.ts",
-          "line": 420,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"low_needs_warning\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "rest_recovery",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/CardDialogueSystem.ts",
-          "line": 439,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"rest_recovery\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "day_night_change",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/CardDialogueSystem.ts",
-          "line": 458,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"day_night_change\","
-        }
-      ]
-    },
-    {
       "stringLiteral": "reason",
       "count": 1,
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/ConflictResolutionSystem.ts",
-          "line": 89,
+          "line": 90,
           "column": 34,
           "pattern": "Acceso a propiedades",
           "lineContent": "const reason: MediationAttempt[\"reason\"] = lowHealth"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "sustainability",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/CrisisPredictorSystem.ts",
-          "line": 267,
-          "column": 24,
-          "pattern": "Comparaciones",
-          "lineContent": "(ind) => ind.name === \"sustainability\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "emergency_rate",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/CrisisPredictorSystem.ts",
-          "line": 270,
-          "column": 24,
-          "pattern": "Comparaciones",
-          "lineContent": "(ind) => ind.name === \"emergency_rate\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "fertility_boost",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/DivineFavorSystem.ts",
-          "line": 39,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"fertility_boost\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "productivity_boost",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/DivineFavorSystem.ts",
-          "line": 45,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"productivity_boost\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "longevity",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/DivineFavorSystem.ts",
-          "line": 51,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"longevity\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "social_harmony",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/DivineFavorSystem.ts",
-          "line": 57,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"social_harmony\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "resilience",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/DivineFavorSystem.ts",
-          "line": 63,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"resilience\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "wisdom",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/DivineFavorSystem.ts",
-          "line": 69,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"wisdom\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "prosperity",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/DivineFavorSystem.ts",
-          "line": 75,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"prosperity\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "blessing_granted",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/DivineFavorSystem.ts",
-          "line": 163,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"blessing_granted\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "favor_increased",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/DivineFavorSystem.ts",
-          "line": 185,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"favor_increased\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "favor_decreased",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/DivineFavorSystem.ts",
-          "line": 199,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"favor_decreased\","
         }
       ]
     },
@@ -4812,19 +4319,6 @@
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "type: \"remove\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "behavioral",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/EmergenceSystem.ts",
-          "line": 344,
-          "column": 12,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"behavioral\","
         }
       ]
     },
@@ -4907,19 +4401,6 @@
       ]
     },
     {
-      "stringLiteral": "respected",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/LivingLegendsSystem.ts",
-          "line": 186,
-          "column": 25,
-          "pattern": "Comparaciones",
-          "lineContent": "} else if (newTier === \"respected\") {"
-        }
-      ]
-    },
-    {
       "stringLiteral": "no_path_found",
       "count": 1,
       "occurrences": [
@@ -4951,23 +4432,10 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 35,
+          "line": 40,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"obj_2\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "build_shelter",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 65,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"build_shelter\","
         }
       ]
     },
@@ -4977,36 +4445,10 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 84,
+          "line": 89,
           "column": 16,
           "pattern": "Asignaciones",
           "lineContent": "unlockId: \"advanced_building\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "encouraging",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 98,
-          "column": 12,
-          "pattern": "Asignaciones",
-          "lineContent": "mood: \"encouraging\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "proud",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 104,
-          "column": 12,
-          "pattern": "Asignaciones",
-          "lineContent": "mood: \"proud\","
         }
       ]
     },
@@ -5016,7 +4458,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 235,
+          "line": 240,
           "column": 19,
           "pattern": "Acceso a propiedades",
           "lineContent": "rewards?: Quest[\"rewards\"];"
@@ -7678,15 +7120,6 @@
   ],
   "byFile": [
     {
-      "file": "src/domain/simulation/core/DeltaEncoder.ts",
-      "count": 5,
-      "uniqueStrings": [
-        "full",
-        "delta",
-        "inventory"
-      ]
-    },
-    {
       "file": "src/domain/simulation/core/SimulationRunner.ts",
       "count": 2,
       "uniqueStrings": [
@@ -7710,39 +7143,12 @@
     },
     {
       "file": "src/domain/simulation/systems/AmbientAwarenessSystem.ts",
-      "count": 6,
+      "count": 4,
       "uniqueStrings": [
         "harmonious",
         "tense",
         "ominous",
-        "chaotic",
-        "trend"
-      ]
-    },
-    {
-      "file": "src/domain/simulation/systems/AppearanceGenerationSystem.ts",
-      "count": 4,
-      "uniqueStrings": [
-        "social_group_assigned",
-        "aging",
-        "traits",
-        "sex"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/domain/systems/rendering/VisualDiversityCoordinator.ts",
-      "count": 2,
-      "uniqueStrings": [
-        "aging",
-        "social_group"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/domain/systems/rendering/AppearanceGenerationSystem.ts",
-      "count": 2,
-      "uniqueStrings": [
-        "traits",
-        "sex"
+        "chaotic"
       ]
     },
     {
@@ -7753,48 +7159,10 @@
       ]
     },
     {
-      "file": "src/domain/simulation/systems/CardDialogueSystem.ts",
-      "count": 5,
-      "uniqueStrings": [
-        "agent_exploring",
-        "resource_gathering",
-        "low_needs_warning",
-        "rest_recovery",
-        "day_night_change"
-      ]
-    },
-    {
       "file": "src/domain/simulation/systems/ConflictResolutionSystem.ts",
-      "count": 3,
+      "count": 1,
       "uniqueStrings": [
-        "reason",
-        "resolution"
-      ]
-    },
-    {
-      "file": "src/domain/simulation/systems/CrisisPredictorSystem.ts",
-      "count": 6,
-      "uniqueStrings": [
-        "population_stress",
-        "resource_balance",
-        "sustainability",
-        "emergency_rate"
-      ]
-    },
-    {
-      "file": "src/domain/simulation/systems/DivineFavorSystem.ts",
-      "count": 10,
-      "uniqueStrings": [
-        "fertility_boost",
-        "productivity_boost",
-        "longevity",
-        "social_harmony",
-        "resilience",
-        "wisdom",
-        "prosperity",
-        "blessing_granted",
-        "favor_increased",
-        "favor_decreased"
+        "reason"
       ]
     },
     {
@@ -7803,14 +7171,6 @@
       "uniqueStrings": [
         "add",
         "remove"
-      ]
-    },
-    {
-      "file": "src/domain/simulation/systems/EmergenceSystem.ts",
-      "count": 3,
-      "uniqueStrings": [
-        "systemic",
-        "behavioral"
       ]
     },
     {
@@ -7833,29 +7193,6 @@
       "uniqueStrings": [
         "housing",
         "insufficient_resources"
-      ]
-    },
-    {
-      "file": "src/domain/simulation/systems/InteractionGameSystem.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "started"
-      ]
-    },
-    {
-      "file": "src/domain/simulation/systems/QuestSystem.ts",
-      "count": 12,
-      "uniqueStrings": [
-        "started",
-        "tutorial_survival",
-        "obj_1",
-        "obj_2",
-        "friendly",
-        "build_shelter",
-        "advanced_building",
-        "encouraging",
-        "proud",
-        "rewards"
       ]
     },
     {
@@ -7887,23 +7224,6 @@
       ]
     },
     {
-      "file": "src/domain/simulation/systems/LivingLegendsSystem.ts",
-      "count": 3,
-      "uniqueStrings": [
-        "mythical",
-        "renowned",
-        "respected"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientLivingLegendsSystem.ts",
-      "count": 2,
-      "uniqueStrings": [
-        "mythical",
-        "renowned"
-      ]
-    },
-    {
       "file": "src/domain/simulation/systems/MovementSystem.ts",
       "count": 1,
       "uniqueStrings": [
@@ -7918,10 +7238,13 @@
       ]
     },
     {
-      "file": "src/domain/simulation/systems/SocialSystem.ts",
-      "count": 1,
+      "file": "src/domain/simulation/systems/QuestSystem.ts",
+      "count": 5,
       "uniqueStrings": [
-        "friendly"
+        "obj_1",
+        "obj_2",
+        "advanced_building",
+        "rewards"
       ]
     },
     {
@@ -8532,6 +7855,13 @@
       "count": 1,
       "uniqueStrings": [
         "mujer"
+      ]
+    },
+    {
+      "file": "../UnaCartaParaIsa/src/domain/systems/rendering/VisualDiversityCoordinator.ts",
+      "count": 1,
+      "uniqueStrings": [
+        "social_group"
       ]
     },
     {

@@ -4,7 +4,7 @@ import { EntityNeedsData, NeedsConfig } from "../../types/simulation/needs";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { logger } from "@/infrastructure/utils/logger";
 import type { ILifeCyclePort } from "../ports";
-import type { DivineFavorSystem } from "./DivineFavorSystem";
+
 import type { InventorySystem } from "./InventorySystem";
 import type { SocialSystem } from "./SocialSystem";
 import { NeedsBatchProcessor } from "./NeedsBatchProcessor";
@@ -56,7 +56,7 @@ export class NeedsSystem extends EventEmitter {
   private lastUpdate: number = 0;
 
   private lifeCyclePort?: ILifeCyclePort;
-  private divineFavorSystem?: DivineFavorSystem;
+  private divineFavorSystem?: any; // DivineFavorSystem removed
   private inventorySystem?: InventorySystem;
   private socialSystem?: SocialSystem;
 
@@ -95,7 +95,7 @@ export class NeedsSystem extends EventEmitter {
     @unmanaged()
     systems?: {
       lifeCyclePort?: ILifeCyclePort;
-      divineFavorSystem?: DivineFavorSystem;
+      divineFavorSystem?: any; // DivineFavorSystem removed
       inventorySystem?: InventorySystem;
       socialSystem?: SocialSystem;
     },
@@ -168,7 +168,7 @@ export class NeedsSystem extends EventEmitter {
    */
   public setDependencies(systems: {
     lifeCyclePort?: ILifeCyclePort;
-    divineFavorSystem?: DivineFavorSystem;
+    divineFavorSystem?: any; // DivineFavorSystem removed
     inventorySystem?: InventorySystem;
     socialSystem?: SocialSystem;
   }): void {

@@ -5,6 +5,15 @@ import {
   ResourceInteractionType,
 } from "../../../../shared/constants/ResourceEnums";
 import { BiomeType } from "../../../../shared/constants/BiomeEnums";
+import {
+  TreeVariant,
+  RockVariant,
+  WaterSourceVariant,
+  BerryBushVariant,
+  MushroomVariant,
+  WheatVariant,
+  TrashVariant,
+} from "../../../../shared/constants/ResourceVariantEnums";
 
 export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
   [WorldResourceType.TREE]: {
@@ -38,9 +47,9 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     canRegenerate: true,
 
     sprites: {
-      pristine: "tree_full",
-      harvested_partial: "tree_damaged",
-      depleted: "tree_stump",
+      pristine: TreeVariant.FULL,
+      harvested_partial: TreeVariant.DAMAGED,
+      depleted: TreeVariant.STUMP,
     },
 
     spawnProbability: 0.15,

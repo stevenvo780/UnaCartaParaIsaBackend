@@ -3,16 +3,25 @@ import { GameState } from "../../types/game-types";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
+import {
+  KnowledgeNodeType,
+  KnowledgeEdgeType,
+} from "../../../shared/constants/KnowledgeEnums";
 
 export type KnowledgeNodeData =
-  | { type: "fact"; content: string; category?: string }
-  | { type: "recipe"; recipeId: string; ingredients: string[] }
-  | { type: "location"; x: number; y: number; zoneId?: string }
-  | { type: "person"; agentId: string; relationship?: string };
+  | { type: KnowledgeNodeType.FACT; content: string; category?: string }
+  | { type: KnowledgeNodeType.RECIPE; recipeId: string; ingredients: string[] }
+  | {
+      type: KnowledgeNodeType.LOCATION;
+      x: number;
+      y: number;
+      zoneId?: string;
+    }
+  | { type: KnowledgeNodeType.PERSON; agentId: string; relationship?: string };
 
 export interface KnowledgeNode {
   id: string;
-  type: "fact" | "recipe" | "location" | "person";
+  type: KnowledgeNodeType;
   data: KnowledgeNodeData;
   discoveredBy: string[];
   discoveryTime: number;
@@ -22,7 +31,7 @@ export interface KnowledgeEdge {
   source: string;
   target: string;
   weight: number;
-  type: "related" | "prerequisite" | "derived";
+  type: KnowledgeEdgeType;
   cor: number;
 }
 

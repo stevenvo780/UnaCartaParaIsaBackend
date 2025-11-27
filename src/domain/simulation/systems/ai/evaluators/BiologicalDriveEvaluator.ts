@@ -1,8 +1,11 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../../types/simulation/needs";
-import { GoalType, NeedType } from "../../../../../shared/constants/AIEnums";
+import {
+  GoalType,
+  NeedType,
+  ExplorationType,
+} from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
-import { ExplorationType } from "../../../../../shared/constants/AgentEnums";
 import type { Inventory } from "../../../../types/simulation/economy";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
 

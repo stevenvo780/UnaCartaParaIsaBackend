@@ -20,7 +20,7 @@ import { EntityStatus } from "../../../shared/constants/EntityStatusEnums";
 import { GameEventNames, simulationEvents } from "../core/events";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 import { InventorySystem } from "./InventorySystem";
-import { DivineFavorSystem } from "./DivineFavorSystem";
+
 import { ResourceReservationSystem } from "./ResourceReservationSystem";
 import { RoleSystem } from "./RoleSystem";
 import { logger } from "../../../infrastructure/utils/logger";
@@ -108,6 +108,7 @@ export class GovernanceSystem {
   private demandSeq = 0;
   private housingProjectsStarted = 0;
   private agentRegistry?: AgentRegistry;
+  private divineFavorSystem?: any; // DivineFavorSystem removed - kept for compatibility
 
   private readonly handleHighOccupancy = (payload: {
     occupancy?: number;
@@ -151,8 +152,7 @@ export class GovernanceSystem {
     private readonly inventorySystem: InventorySystem,
     @inject(TYPES.LifeCycleSystem)
     private readonly lifeCycleSystem: LifeCycleSystem,
-    @inject(TYPES.DivineFavorSystem)
-    private readonly divineFavorSystem: DivineFavorSystem,
+
     @inject(TYPES.ResourceReservationSystem)
     private readonly reservationSystem: ResourceReservationSystem,
     @inject(TYPES.RoleSystem)

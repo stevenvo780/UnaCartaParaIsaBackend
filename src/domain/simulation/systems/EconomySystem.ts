@@ -9,7 +9,7 @@ import { RoleType } from "../../../shared/constants/RoleEnums";
 import { InventorySystem } from "./InventorySystem";
 import { SocialSystem } from "./SocialSystem";
 import { RoleSystem } from "./RoleSystem";
-import { DivineFavorSystem } from "./DivineFavorSystem";
+
 import { GenealogySystem } from "./GenealogySystem";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { logger } from "../../../infrastructure/utils/logger";
@@ -58,7 +58,7 @@ export class EconomySystem {
   private inventorySystem: InventorySystem;
   private socialSystem: SocialSystem;
   private roleSystem?: RoleSystem;
-  private divineFavorSystem?: DivineFavorSystem;
+  private divineFavorSystem?: any; // DivineFavorSystem removed - kept for compatibility
   private genealogySystem?: GenealogySystem;
   private config: EconomyConfig;
   private yieldResiduals = new Map<string, number>();
@@ -86,7 +86,7 @@ export class EconomySystem {
 
   public setDependencies(deps: {
     roleSystem?: RoleSystem;
-    divineFavorSystem?: DivineFavorSystem;
+    divineFavorSystem?: any; // DivineFavorSystem removed
     genealogySystem?: GenealogySystem;
   }): void {
     this.roleSystem = deps.roleSystem;
