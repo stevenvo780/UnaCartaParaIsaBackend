@@ -282,6 +282,8 @@ export class MovementSystem extends EventEmitter {
 
   private updateBatch(deltaMs: number, now: number): void {
     this.batchProcessor.rebuildBuffers(this.movementStates);
+    // Ensure target buffer is synced with current state targets
+    this.batchProcessor.syncTargetsFromStates(this.movementStates);
 
     const entityIdArray = this.batchProcessor.getEntityIdArray();
     const entityCount = entityIdArray.length;
@@ -607,6 +609,9 @@ export class MovementSystem extends EventEmitter {
     state.currentActivity = "moving";
     state.lastArrivalTime = undefined; // Clear arrival time when starting new movement
 
+    // Update batch processor target buffer immediately
+    this.batchProcessor.updateEntityTarget(entityId, tx, ty);
+
     simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
       entityId,
       activityType: "moving",
@@ -931,7 +936,7 @@ export class MovementSystem extends EventEmitter {
   }
 
   /** Grace period after arrival before idle wander can start (allows AI to plan next action) */
-  private readonly ARRIVAL_GRACE_PERIOD_MS = 500;
+  private readonly ARRIVAL_GRACE_PERIOD_MS = 2000; // Increased to give AI more time
 
   private maybeStartIdleWander(state: EntityMovementState, now: number): void {
     if (state.isMoving || state.currentActivity !== "idle") return;

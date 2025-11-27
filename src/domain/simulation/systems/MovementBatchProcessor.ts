@@ -296,4 +296,56 @@ export class MovementBatchProcessor {
   public isDirty(): boolean {
     return this.bufferDirty;
   }
+
+  /**
+   * Updates the target position for a specific entity in the buffer.
+   * Call this when an entity's target changes (e.g., in moveToPoint).
+   */
+  public updateEntityTarget(
+    entityId: string,
+    targetX: number,
+    targetY: number,
+  ): void {
+    if (!this.targetBuffer || this.entityIdArray.length === 0) {
+      return;
+    }
+
+    const index = this.entityIdArray.indexOf(entityId);
+    if (index === -1) {
+      return;
+    }
+
+    const posOffset = index * 2;
+    this.targetBuffer[posOffset] = targetX;
+    this.targetBuffer[posOffset + 1] = targetY;
+    this.bufferDirty = true;
+  }
+
+  /**
+   * Syncs all target positions from the movement states to the buffer.
+   * Call this at the start of each update cycle to ensure targets are current.
+   */
+  public syncTargetsFromStates(
+    movementStates: Map<string, EntityMovementState>,
+  ): void {
+    if (!this.targetBuffer || this.entityIdArray.length === 0) {
+      return;
+    }
+
+    for (let i = 0; i < this.entityIdArray.length; i++) {
+      const entityId = this.entityIdArray[i];
+      const state = movementStates.get(entityId);
+      if (!state) continue;
+
+      const posOffset = i * 2;
+      if (state.targetPosition) {
+        this.targetBuffer[posOffset] = state.targetPosition.x;
+        this.targetBuffer[posOffset + 1] = state.targetPosition.y;
+      } else {
+        // No target - set to current position to prevent movement
+        this.targetBuffer[posOffset] = state.currentPosition.x;
+        this.targetBuffer[posOffset + 1] = state.currentPosition.y;
+      }
+    }
+  }
 }
