@@ -257,8 +257,10 @@ export class LifeCycleSystem extends EventEmitter {
         stone?: number;
       };
     };
-    const stockpiles: StockpileItem[] =
-      (this.inventorySystem.getAllStockpiles?.() as StockpileItem[]) || [];
+    const getAllStockpiles = this.inventorySystem.getAllStockpiles as
+      | (() => StockpileItem[])
+      | undefined;
+    const stockpiles: StockpileItem[] = getAllStockpiles?.() || [];
     const population = (this.gameState.agents || []).length;
 
     let totalFood = 0,

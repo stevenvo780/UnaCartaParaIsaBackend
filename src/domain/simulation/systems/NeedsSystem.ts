@@ -17,6 +17,7 @@ import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
 import { FoodCatalog } from "../../../simulation/data/FoodCatalog";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
 /**
  * System for managing entity needs (hunger, thirst, energy, hygiene, social, fun, mental health).
