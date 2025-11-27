@@ -3,6 +3,7 @@ import { Zone } from "../../../types/game-types";
 import { BiomeType } from "../../../world/generation/types";
 import type { BuildingLabel } from "../../../types/simulation/buildings";
 import type { SimulationRunner } from "../SimulationRunner";
+import { LifeStage, Sex } from "../../../types/simulation/agents";
 
 export class WorldLoader {
   constructor(private runner: SimulationRunner) {}
@@ -109,9 +110,9 @@ export class WorldLoader {
       isa = this.runner.lifeCycleSystem.spawnAgent({
         id: "isa",
         name: "Isa",
-        sex: "female",
+        sex: Sex.FEMALE,
         ageYears: 25,
-        lifeStage: "adult",
+        lifeStage: LifeStage.ADULT,
         generation: 0,
         immortal: true,
         traits: {
@@ -130,9 +131,9 @@ export class WorldLoader {
       stev = this.runner.lifeCycleSystem.spawnAgent({
         id: "stev",
         name: "Stev",
-        sex: "male",
+        sex: Sex.MALE,
         ageYears: 27,
-        lifeStage: "adult",
+        lifeStage: LifeStage.ADULT,
         generation: 0,
         immortal: true,
         traits: {
@@ -149,12 +150,12 @@ export class WorldLoader {
     logger.info(`👨‍👩‍👧‍👦 Ensuring initial family...`);
 
     const childNames = [
-      { name: "Luna", sex: "female" as const },
-      { name: "Sol", sex: "male" as const },
-      { name: "Estrella", sex: "female" as const },
-      { name: "Cielo", sex: "male" as const },
-      { name: "Mar", sex: "female" as const },
-      { name: "Rio", sex: "male" as const },
+      { name: "Luna", sex: Sex.FEMALE as const },
+      { name: "Sol", sex: Sex.MALE as const },
+      { name: "Estrella", sex: Sex.FEMALE as const },
+      { name: "Cielo", sex: Sex.MALE as const },
+      { name: "Mar", sex: Sex.FEMALE as const },
+      { name: "Rio", sex: Sex.MALE as const },
     ];
 
     let childrenCreated = 0;
@@ -175,7 +176,7 @@ export class WorldLoader {
             name: childData.name,
             sex: childData.sex,
             ageYears: 5,
-            lifeStage: "child",
+            lifeStage: LifeStage.CHILD,
             generation: 1,
             parents: {
               father: stev.id,

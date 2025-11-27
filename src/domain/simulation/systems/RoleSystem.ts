@@ -462,10 +462,9 @@ export class RoleSystem extends EventEmitter {
     RoleType,
     { count: number; percentage: number }
   > {
-    const distribution: Record<
-      RoleType,
-      { count: number; percentage: number }
-    > = {} as any;
+    const distribution: Partial<
+      Record<RoleType, { count: number; percentage: number }>
+    > = {} as Partial<Record<RoleType, { count: number; percentage: number }>>;
     const totalAgents = this.roles.size;
 
     // Initialize all role types
@@ -486,14 +485,21 @@ export class RoleSystem extends EventEmitter {
     }
 
     // Calculate percentages
+    const result: Record<RoleType, { count: number; percentage: number }> =
+      {} as Record<RoleType, { count: number; percentage: number }>;
     for (const roleType in distribution) {
-      distribution[roleType as RoleType].percentage =
-        totalAgents > 0
-          ? distribution[roleType as RoleType].count / totalAgents
-          : 0;
+      const dist = distribution[roleType as RoleType];
+      if (dist) {
+        result[roleType as RoleType] = {
+          count: dist.count,
+          percentage: totalAgents > 0 ? dist.count / totalAgents : 0,
+        };
+      } else {
+        result[roleType as RoleType] = { count: 0, percentage: 0 };
+      }
     }
 
-    return distribution;
+    return result;
   }
 
   /**
@@ -509,7 +515,9 @@ export class RoleSystem extends EventEmitter {
     totalStone: number;
     population: number;
   }): Record<RoleType, number> {
-    const needed: Record<RoleType, number> = {} as any;
+    const needed: Partial<Record<RoleType, number>> = {} as Partial<
+      Record<RoleType, number>
+    >;
     const pop = collectiveState.population;
 
     // Base distribution (percentages)

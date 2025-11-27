@@ -534,7 +534,7 @@ export class CommandProcessor {
           this.runner.taskSystem.contributeToTask(
             payload.taskId as string,
             payload.agentId as string,
-            payload.contribution,
+            payload.contribution as number,
             (payload.socialSynergyMultiplier as number) || 1.0,
           );
         }

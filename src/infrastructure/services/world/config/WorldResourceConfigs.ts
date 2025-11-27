@@ -1,4 +1,6 @@
 import type { WorldResourceConfig } from "../../../../domain/types/simulation/worldResources";
+import { ResourceType } from "../../../../shared/constants/ResourceEnums";
+import { BiomeType } from "../../../../shared/constants/BiomeEnums";
 
 export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
   tree: {
@@ -38,7 +40,12 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     },
 
     spawnProbability: 0.15,
-    suitableBiomes: ["forest", "mystical", "grassland", "village"],
+    suitableBiomes: [
+      BiomeType.FOREST,
+      BiomeType.MYSTICAL,
+      BiomeType.GRASSLAND,
+      BiomeType.VILLAGE,
+    ],
     clusterSize: { min: 3, max: 8 },
     minDistanceBetweenClusters: 200,
   },
@@ -80,7 +87,12 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     },
 
     spawnProbability: 0.12,
-    suitableBiomes: ["mountainous", "grassland", "wetland", "village"],
+    suitableBiomes: [
+      BiomeType.MOUNTAINOUS,
+      BiomeType.GRASSLAND,
+      BiomeType.WETLAND,
+      BiomeType.VILLAGE,
+    ],
     clusterSize: { min: 2, max: 5 },
     minDistanceBetweenClusters: 150,
   },
@@ -93,13 +105,13 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
 
     yields: {
       pristine: {
-        resourceType: "rare_materials",
+        resourceType: ResourceType.RARE_MATERIALS,
         amountMin: 1,
         amountMax: 3,
         rareMaterialsChance: 0.3,
       },
       depleted: {
-        resourceType: "rare_materials",
+        resourceType: ResourceType.RARE_MATERIALS,
         amountMin: 0,
         amountMax: 0,
       },
@@ -153,7 +165,12 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     },
 
     spawnProbability: 0.4, // Increased from 0.1 - water is essential for survival
-    suitableBiomes: ["wetland", "forest", "grassland", "village"],
+    suitableBiomes: [
+      BiomeType.WETLAND,
+      BiomeType.FOREST,
+      BiomeType.GRASSLAND,
+      BiomeType.VILLAGE,
+    ],
     clusterSize: { min: 1, max: 1 },
     minDistanceBetweenClusters: 500,
   },
@@ -166,12 +183,12 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
 
     yields: {
       pristine: {
-        resourceType: "food",
+        resourceType: ResourceType.FOOD,
         amountMin: 3,
         amountMax: 6,
       },
       depleted: {
-        resourceType: "food",
+        resourceType: ResourceType.FOOD,
         amountMin: 0,
         amountMax: 0,
       },
@@ -189,7 +206,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     },
 
     spawnProbability: 0.4, // Increased from 0.2 - food is essential for survival
-    suitableBiomes: ["forest", "grassland", "village"],
+    suitableBiomes: [BiomeType.FOREST, BiomeType.GRASSLAND, BiomeType.VILLAGE],
     clusterSize: { min: 4, max: 10 },
     minDistanceBetweenClusters: 100,
   },
@@ -202,12 +219,12 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
 
     yields: {
       pristine: {
-        resourceType: "food",
+        resourceType: ResourceType.FOOD,
         amountMin: 2,
         amountMax: 5,
       },
       depleted: {
-        resourceType: "food",
+        resourceType: ResourceType.FOOD,
         amountMin: 0,
         amountMax: 0,
       },
@@ -225,7 +242,12 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     },
 
     spawnProbability: 0.15,
-    suitableBiomes: ["forest", "wetland", "mystical", "village"],
+    suitableBiomes: [
+      BiomeType.FOREST,
+      BiomeType.WETLAND,
+      BiomeType.MYSTICAL,
+      BiomeType.VILLAGE,
+    ],
     clusterSize: { min: 3, max: 6 },
     minDistanceBetweenClusters: 150,
   },
@@ -238,12 +260,12 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
 
     yields: {
       pristine: {
-        resourceType: "food",
+        resourceType: ResourceType.FOOD,
         amountMin: 5,
         amountMax: 10,
       },
       depleted: {
-        resourceType: "food",
+        resourceType: ResourceType.FOOD,
         amountMin: 0,
         amountMax: 0,
       },
@@ -261,7 +283,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     },
 
     spawnProbability: 0.1,
-    suitableBiomes: ["grassland", "village"],
+    suitableBiomes: [BiomeType.GRASSLAND, BiomeType.VILLAGE],
     clusterSize: { min: 10, max: 20 },
     minDistanceBetweenClusters: 400,
   },
@@ -273,8 +295,10 @@ export function getResourceConfig(
   return WORLD_RESOURCE_CONFIGS[type];
 }
 
-export function getResourcesForBiome(biome: string): WorldResourceConfig[] {
+export function getResourcesForBiome(
+  biome: BiomeType | string,
+): WorldResourceConfig[] {
   return Object.values(WORLD_RESOURCE_CONFIGS).filter((config) =>
-    config.suitableBiomes?.includes(biome),
+    config.suitableBiomes?.includes(biome as BiomeType),
   );
 }

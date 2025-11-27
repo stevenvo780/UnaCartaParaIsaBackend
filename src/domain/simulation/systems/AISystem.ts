@@ -28,7 +28,11 @@ import { simulationEvents } from "../core/events";
 import type { NeedsSystem } from "./NeedsSystem";
 import { RoleSystem } from "./RoleSystem";
 import type { InventorySystem } from "./InventorySystem";
-import type { ResourceAlert, ThreatAlert } from "./SharedKnowledgeSystem";
+import type {
+  ResourceAlert,
+  ThreatAlert,
+  SharedKnowledgeSystem,
+} from "./SharedKnowledgeSystem";
 import type { SocialSystem } from "./SocialSystem";
 import type { EnhancedCraftingSystem } from "./EnhancedCraftingSystem";
 import type { WorldResourceSystem } from "./WorldResourceSystem";
@@ -743,7 +747,7 @@ export class AISystem extends EventEmitter {
 
     return {
       id: `explore-${agentId}-${Date.now()}`,
-      type: "explore",
+      type: GoalType.EXPLORE,
       priority: 0.5,
       targetPosition: {
         x: targetX,
@@ -923,10 +927,14 @@ export class AISystem extends EventEmitter {
         : undefined,
       sharedKnowledgeSystem: this.sharedKnowledgeSystem
         ? {
-            getKnownResourceAlerts: (agentId: string): ResourceAlert[] =>
-              this.sharedKnowledgeSystem!.getKnownResourceAlerts(agentId),
-            getKnownThreatAlerts: (agentId: string): ThreatAlert[] =>
-              this.sharedKnowledgeSystem!.getKnownThreatAlerts(agentId),
+            getKnownResourceAlerts: (agentId: string): ResourceAlert[] => {
+              if (!this.sharedKnowledgeSystem) return [];
+              return this.sharedKnowledgeSystem.getKnownResourceAlerts(agentId);
+            },
+            getKnownThreatAlerts: (agentId: string): ThreatAlert[] => {
+              if (!this.sharedKnowledgeSystem) return [];
+              return this.sharedKnowledgeSystem.getKnownThreatAlerts(agentId);
+            },
           }
         : undefined,
       getActiveQuests: () => this.questSystem?.getActiveQuests() || [],

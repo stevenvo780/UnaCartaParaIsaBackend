@@ -157,8 +157,9 @@ export class AIActionExecutor {
       action.data &&
       typeof action.data.taskId === "string"
     ) {
+      const taskId = action.data.taskId as string;
       const result = this.deps.taskSystem.contributeToTask(
-        action.data.taskId,
+        taskId,
         action.agentId,
         10,
         1.0,
@@ -169,7 +170,7 @@ export class AIActionExecutor {
         actionType: "work",
         success: true,
         data: {
-          taskId: action.data.taskId,
+          taskId: taskId,
           progressMade: result.progressMade,
           completed: result.completed,
         },

@@ -1,8 +1,9 @@
 import { GameEventNames, simulationEvents } from "../events";
 import type { SimulationEventPayload } from "../../../../shared/types/commands/SimulationCommand";
-import { mapEventName } from "../eventNameMapper";
 import { logger } from "../../../../infrastructure/utils/logger";
 import type { SimulationRunner } from "../SimulationRunner";
+import { ResourceType } from "../../../../shared/constants/ResourceEnums";
+import { GameEventType } from "../../../../shared/constants/EventEnums";
 
 export class EventRegistry {
   private eventCleanups: (() => void)[] = [];
@@ -136,7 +137,7 @@ export class EventRegistry {
             const foodToAdd = Math.floor(data.foodValue || 5);
             this.runner.inventorySystem.addResource(
               data.hunterId,
-              "food",
+              ResourceType.FOOD,
               foodToAdd,
             );
           }
@@ -603,9 +604,8 @@ export class EventRegistry {
     );
 
     this.eventCaptureListener = (eventName: string, payload: unknown): void => {
-      const mappedEventName = mapEventName(eventName);
       this.runner.capturedEvents.push({
-        type: mappedEventName,
+        type: eventName as GameEventType,
         payload: payload as SimulationEventPayload | undefined,
         timestamp: Date.now(),
       });

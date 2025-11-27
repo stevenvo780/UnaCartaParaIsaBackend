@@ -132,6 +132,7 @@ export const eventNameMapper: Record<GameEventType, string> = {
   [GameEventType.CONFLICT_TRUCE_PROPOSED]: "conflict:truce:proposed",
   [GameEventType.CONFLICT_TRUCE_ACCEPTED]: "conflict:truce:accepted",
   [GameEventType.CONFLICT_TRUCE_REJECTED]: "conflict:truce:rejected",
+  [GameEventType.THREAT_DETECTED]: "threat:detected",
 };
 
 /**

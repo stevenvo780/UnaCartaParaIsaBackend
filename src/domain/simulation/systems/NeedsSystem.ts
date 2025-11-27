@@ -336,7 +336,7 @@ export class NeedsSystem extends EventEmitter {
       const toConsume = Math.min(urgency, inv.food);
       const removed = this.inventorySystem.removeFromAgent(
         entityId,
-        "food",
+        ResourceType.FOOD,
         toConsume,
       );
 
@@ -366,7 +366,7 @@ export class NeedsSystem extends EventEmitter {
       const toConsume = Math.min(urgency, inv.water);
       const removed = this.inventorySystem.removeFromAgent(
         entityId,
-        "water",
+        ResourceType.WATER,
         toConsume,
       );
 

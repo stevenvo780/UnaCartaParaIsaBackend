@@ -145,6 +145,8 @@ export interface TaskCommandPayload {
   type?: string;
   requiredWork?: number;
   bounds?: { x: number; y: number; width: number; height: number };
+  contribution?: number;
+  socialSynergyMultiplier?: number;
 }
 
 export interface PingPayload {

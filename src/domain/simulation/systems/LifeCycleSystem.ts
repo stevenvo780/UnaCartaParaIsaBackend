@@ -5,6 +5,8 @@ import {
   AgentProfile,
   AgentTraits,
   LifeStage,
+  Sex,
+  SocialStatus,
 } from "../../types/simulation/agents";
 import { simulationEvents, GameEventNames } from "../core/events";
 import type { SimulationEntity, EntityTraits } from "../core/schema";
@@ -247,7 +249,16 @@ export class LifeCycleSystem extends EventEmitter {
     if (!this._roleSystem || !this.inventorySystem) return;
 
     // Calculate collective state
-    const stockpiles = this.inventorySystem.getAllStockpiles?.() || [];
+    type StockpileItem = {
+      inventory: {
+        food?: number;
+        water?: number;
+        wood?: number;
+        stone?: number;
+      };
+    };
+    const stockpiles: StockpileItem[] =
+      (this.inventorySystem.getAllStockpiles?.() as StockpileItem[]) || [];
     const population = (this.gameState.agents || []).length;
 
     let totalFood = 0,
@@ -274,9 +285,9 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   public getLifeStage(age: number): LifeStage {
-    if (age < this.config.adultAge) return "child";
-    if (age < this.config.elderAge) return "adult";
-    return "elder";
+    if (age < this.config.adultAge) return LifeStage.CHILD;
+    if (age < this.config.elderAge) return LifeStage.ADULT;
+    return LifeStage.ELDER;
   }
 
   private queueHousingAssignment(agentId: string): void {
@@ -416,7 +427,7 @@ export class LifeCycleSystem extends EventEmitter {
     const childId = await this.spawnAgent({
       generation: Math.max(father.generation, mother.generation) + 1,
       parents: { father: fatherId, mother: motherId },
-      sex: RandomUtils.chance(0.5) ? "male" : "female",
+      sex: RandomUtils.chance(0.5) ? Sex.MALE : Sex.FEMALE,
     });
 
     this.reproductionCooldown.set(
@@ -437,7 +448,7 @@ export class LifeCycleSystem extends EventEmitter {
       | {
           id?: string;
           name?: string;
-          sex: "male" | "female";
+          sex: Sex;
           ageYears: number;
           lifeStage: LifeStage;
           generation: number;
@@ -460,14 +471,14 @@ export class LifeCycleSystem extends EventEmitter {
     const profile: AgentProfile = {
       id,
       name: partial.name || `Agent ${id}`,
-      sex: partial.sex || "female",
+      sex: partial.sex || Sex.FEMALE,
       ageYears: 0,
-      lifeStage: "child",
+      lifeStage: LifeStage.CHILD,
       generation: partial.generation || 0,
       birthTimestamp: Date.now(),
       immortal: false,
       traits,
-      socialStatus: "commoner",
+      socialStatus: SocialStatus.COMMONER,
       ...partial,
     };
 

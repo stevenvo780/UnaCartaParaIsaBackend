@@ -3,6 +3,7 @@ import type {
   EconomyConfig,
   ResourceType,
 } from "../../types/simulation/economy";
+import { ResourceType as ResourceTypeEnum } from "../../../shared/constants/ResourceEnums.js";
 import { InventorySystem } from "./InventorySystem.js";
 import { SocialSystem } from "./SocialSystem.js";
 import { RoleSystem } from "./RoleSystem.js";
@@ -223,20 +224,20 @@ export class EconomySystem {
       case "work": {
         const res = zone.props?.resource;
         if (res === "wood") {
-          resourceType = "wood";
+          resourceType = ResourceTypeEnum.WOOD;
           baseYield = this.config.baseYield.wood;
         } else if (res === "stone") {
-          resourceType = "stone";
+          resourceType = ResourceTypeEnum.STONE;
           baseYield = this.config.baseYield.stone;
         }
         break;
       }
       case "food":
-        resourceType = "food";
+        resourceType = ResourceTypeEnum.FOOD;
         baseYield = this.config.baseYield.food;
         break;
       case "water":
-        resourceType = "water";
+        resourceType = ResourceTypeEnum.WATER;
         baseYield = this.config.baseYield.water;
         break;
     }
