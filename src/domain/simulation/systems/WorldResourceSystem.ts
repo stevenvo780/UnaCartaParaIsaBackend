@@ -345,9 +345,17 @@ export class WorldResourceSystem {
 
   public getResourcesByType(type: WorldResourceType): WorldResourceInstance[] {
     if (!this.state.worldResources) return [];
-    return Object.values(this.state.worldResources).filter(
+    const results = Object.values(this.state.worldResources).filter(
       (r) => r.type === type,
     );
+    // Debug water_source searches
+    if (type === WorldResourceType.WATER_SOURCE && results.length > 0) {
+      const states = results.map((r) => r.state).join(", ");
+      logger.debug(
+        `[WorldRes] getResourcesByType(water_source) -> ${results.length} results, states: [${states}]`,
+      );
+    }
+    return results;
   }
 
   public getResourcesNear(

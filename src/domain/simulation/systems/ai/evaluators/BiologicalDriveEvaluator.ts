@@ -3,6 +3,7 @@ import type { EntityNeedsData } from "../../../../types/simulation/needs";
 import { GoalType, NeedType } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 import type { Inventory } from "../../../../types/simulation/economy";
+import { logger } from "@/infrastructure/utils/logger";
 
 export interface BiologicalDriveDeps {
   getEntityNeeds: (entityId: string) => EntityNeedsData | undefined;
@@ -110,6 +111,17 @@ export function evaluateBiologicalDrives(
         aiState.entityId,
         "water_source",
       );
+      
+      // Debug: Log water search result
+      if (!waterTarget) {
+        logger.warn(
+          `[BIO] ${aiState.entityId}: thirst=${needs.thirst.toFixed(1)}, no water_source found`,
+        );
+      } else {
+        logger.debug(
+          `[BIO] ${aiState.entityId}: found water_source ${waterTarget.id} at (${waterTarget.x}, ${waterTarget.y})`,
+        );
+      }
 
       if (
         waterTarget &&
@@ -130,21 +142,9 @@ export function evaluateBiologicalDrives(
           createdAt: now,
           expiresAt: now + 15000,
         });
-      } else {
-        // Trade or Explore
-        // ... (Simplified for brevity, can expand)
-        goals.push({
-          id: `drive_thirst_explore_${aiState.entityId}_${now}`,
-          type: GoalType.EXPLORE,
-          priority: thirstUtility * 0.8, // Lower priority than known source
-          data: {
-            explorationType: "desperate_search",
-            need: NeedType.THIRST,
-          },
-          createdAt: now,
-          expiresAt: now + 10000,
-        });
       }
+      // NOTE: If no water_source is found, don't add explore goal
+      // This allows agents to work instead of endlessly searching for water
     }
   }
 

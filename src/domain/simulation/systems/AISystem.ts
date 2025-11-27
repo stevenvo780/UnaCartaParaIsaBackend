@@ -837,14 +837,19 @@ export class AISystem extends EventEmitter {
     if (aiState.isInCombat) return;
 
     const needs = this.needsSystem?.getNeeds(agentId);
-    logger.debug(
-      `📋 [AI] ${agentId}: prePlanGoals check - hunger=${needs?.hunger?.toFixed(1) ?? "?"}, thirst=${needs?.thirst?.toFixed(1) ?? "?"}, energy=${needs?.energy?.toFixed(1) ?? "?"}`,
+    
+    // Check if urgent needs can actually be satisfied
+    // Only block for thirst if agent can FIND a water_source nearby
+    const canFindWater = this.findNearestResourceForEntity(
+      agentId,
+      "water_source",
     );
-    if (
-      needs &&
-      (needs.hunger < 40 || needs.thirst < 40 || needs.energy < 30)
-    ) {
-      logger.debug(`📋 [AI] ${agentId}: prePlanGoals skipped - urgent needs`);
+    
+    const thirstBlocks = needs && needs.thirst < 40 && canFindWater !== null;
+    const hungerBlocks = needs && needs.hunger < 40;
+    const energyBlocks = needs && needs.energy < 30;
+    
+    if (hungerBlocks || thirstBlocks || energyBlocks) {
       return; // Agent needs to address urgent needs first
     }
 
@@ -1719,6 +1724,13 @@ export class AISystem extends EventEmitter {
 
     // Harvestable states: pristine and harvested_partial still have resources
     const harvestableStates = ["pristine", "harvested_partial"];
+    
+    // Debug: Check if worldResourceSystem is available
+    if (resourceType === "water_source") {
+      logger.debug(
+        `[findNearest] ${entityId}: worldResourceSystem=${!!this.worldResourceSystem}`,
+      );
+    }
 
     if (this.worldResourceSystem) {
       const resources = this.worldResourceSystem.getResourcesByType(

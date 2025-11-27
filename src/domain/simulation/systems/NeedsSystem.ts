@@ -176,14 +176,49 @@ export class NeedsSystem extends EventEmitter {
    */
   private syncNeedsWithAgents(): void {
     const agents = this.gameState.agents || [];
+    let syncCount = 0;
+    let reinitCount = 0;
+    
+    // Debug: log current entityNeeds state and list all entities (periodic)
+    if (this.entityNeeds.size > 0 && this._tickCounter === 0) {
+      const entityIds = Array.from(this.entityNeeds.keys()).join(", ");
+      logger.debug(
+        `🔍 NeedsSystem state: ${this.entityNeeds.size} entities: [${entityIds}]`,
+      );
+    }
+    
     for (const agent of agents) {
       if (agent.isDead) continue;
+      
       if (!this.entityNeeds.has(agent.id)) {
         this.initializeEntityNeeds(agent.id);
+        syncCount++;
         logger.debug(
           `🔄 NeedsSystem auto-initialized needs for existing agent ${agent.name} (${agent.id})`,
         );
+      } else {
+        // Check for corrupted needs (values stuck at 0 or near 0)
+        const needs = this.entityNeeds.get(agent.id);
+        if (
+          needs &&
+          needs.hunger === 0 &&
+          needs.thirst === 0 &&
+          needs.energy <= 1
+        ) {
+          // Reinitialize corrupted needs
+          this.initializeEntityNeeds(agent.id);
+          reinitCount++;
+          logger.warn(
+            `🔧 NeedsSystem re-initialized corrupted needs for ${agent.name} (${agent.id})`,
+          );
+        }
       }
+    }
+    
+    if (syncCount > 0 || reinitCount > 0) {
+      logger.info(
+        `🔄 NeedsSystem: synced=${syncCount}, reinit=${reinitCount}, total=${agents.length}`,
+      );
     }
   }
 

@@ -1065,9 +1065,10 @@ export class SimulationRunner {
     }
 
     if (!agent.position) {
+      // worldSize is in pixels, use center of map
       agent.position = {
-        x: (this.state.worldSize?.width ?? 128) * 16,
-        y: (this.state.worldSize?.height ?? 128) * 16,
+        x: (this.state.worldSize?.width ?? 2048) / 2,
+        y: (this.state.worldSize?.height ?? 2048) / 2,
       };
       logger.warn(
         `ensureMovementState: Agent ${agentId} had no position, assigned default`,

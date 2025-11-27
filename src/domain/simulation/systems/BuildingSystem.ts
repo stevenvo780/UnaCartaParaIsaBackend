@@ -415,9 +415,10 @@ export class BuildingSystem {
     worldSize: { width: number; height: number },
     buildingType: BuildingLabel,
   ): { x: number; y: number } | null {
-    const BUILDING_WIDTH = 120;
-    const BUILDING_HEIGHT = 80;
-    const MAX_ATTEMPTS = 50;
+    // Scale building size based on world size (10% of world dimension, min 8, max 120)
+    const BUILDING_WIDTH = Math.min(120, Math.max(8, Math.floor(worldSize.width * 0.1)));
+    const BUILDING_HEIGHT = Math.min(80, Math.max(6, Math.floor(worldSize.height * 0.1)));
+    const MAX_ATTEMPTS = 100;
 
     // Diagnóstico: log inicial
     const zonesCount = this.state.zones?.length ?? 0;

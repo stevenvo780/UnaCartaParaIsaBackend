@@ -91,11 +91,14 @@ export class WorldLoader {
     }
 
     this.runner.state.terrainTiles = allTiles;
+    // worldSize is stored in pixels (tiles × tileSize) for consistency with zone/building coordinates
     this.runner.state.worldSize = {
-      width: worldConfig.width,
-      height: worldConfig.height,
+      width: worldConfig.width * worldConfig.tileSize,
+      height: worldConfig.height * worldConfig.tileSize,
     };
-    logger.info(`Generated ${allTiles.length} terrain tiles.`);
+    logger.info(
+      `Generated ${allTiles.length} terrain tiles. WorldSize: ${this.runner.state.worldSize.width}x${this.runner.state.worldSize.height} pixels.`,
+    );
 
     this.runner.worldResourceSystem.spawnResourcesInWorld({
       ...worldConfig,
@@ -220,9 +223,10 @@ export class WorldLoader {
     for (const agent of this.runner.state.agents) {
       try {
         if (!agent.position) {
+          // worldSize is now in pixels, use center of map
           agent.position = {
-            x: (this.runner.state.worldSize?.width ?? 128) * 16,
-            y: (this.runner.state.worldSize?.height ?? 128) * 16,
+            x: (this.runner.state.worldSize?.width ?? 2048) / 2,
+            y: (this.runner.state.worldSize?.height ?? 2048) / 2,
           };
         }
         if (!this.runner.movementSystem.hasMovementState(agent.id)) {

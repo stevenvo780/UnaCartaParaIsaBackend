@@ -180,7 +180,77 @@ export class DeltaEncoder {
       changes.resources = current.resources;
     }
 
+    if (current.inventory) {
+      const prevInventory = previous.inventory;
+      if (
+        !prevInventory ||
+        this.hasInventoryChanged(prevInventory, current.inventory)
+      ) {
+        changes.inventory = current.inventory;
+      }
+    }
+
     return changes;
+  }
+
+  private hasInventoryChanged(
+    prev: GameState["inventory"],
+    current: GameState["inventory"],
+  ): boolean {
+    if (!prev || !current) return true;
+
+    // Check global inventory
+    if (
+      prev.global.wood !== current.global.wood ||
+      prev.global.stone !== current.global.stone ||
+      prev.global.food !== current.global.food ||
+      prev.global.water !== current.global.water
+    ) {
+      return true;
+    }
+
+    // Check stockpiles (simplified: check count or deep compare if needed)
+    // For now, checking keys length and a quick sampling or just assuming change if keys differ
+    // A more robust check would be to iterate. Given the scale, iterating might be expensive every tick.
+    // However, we want accuracy.
+    const prevStockpileKeys = Object.keys(prev.stockpiles);
+    const currStockpileKeys = Object.keys(current.stockpiles);
+    if (prevStockpileKeys.length !== currStockpileKeys.length) return true;
+
+    for (const key of currStockpileKeys) {
+      const p = prev.stockpiles[key];
+      const c = current.stockpiles[key];
+      if (!p) return true;
+      if (
+        p.inventory.wood !== c.inventory.wood ||
+        p.inventory.stone !== c.inventory.stone ||
+        p.inventory.food !== c.inventory.food ||
+        p.inventory.water !== c.inventory.water
+      ) {
+        return true;
+      }
+    }
+
+    // Check agents inventory
+    const prevAgentKeys = Object.keys(prev.agents);
+    const currAgentKeys = Object.keys(current.agents);
+    if (prevAgentKeys.length !== currAgentKeys.length) return true;
+
+    for (const key of currAgentKeys) {
+      const p = prev.agents[key];
+      const c = current.agents[key];
+      if (!p) return true;
+      if (
+        p.wood !== c.wood ||
+        p.stone !== c.stone ||
+        p.food !== c.food ||
+        p.water !== c.water
+      ) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   // @ts-expect-error - hasAgentChanged reserved for future use
