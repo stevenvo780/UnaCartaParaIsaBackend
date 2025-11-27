@@ -201,7 +201,9 @@ export class ChunkStreamServer {
           const worldX = message.coords.x * pixelWidth;
           const worldY = message.coords.y * pixelHeight;
 
-          logger.info(`🌍 [ChunkStream] Chunk (${message.coords.x},${message.coords.y}) generated, spawning animals at world (${worldX},${worldY})`);
+          logger.info(
+            `🌍 [ChunkStream] Chunk (${message.coords.x},${message.coords.y}) generated, spawning animals at world (${worldX},${worldY})`,
+          );
 
           // Use the public method that handles addAnimal internally
           const spawned = animalSystem.spawnAnimalsForChunk(
@@ -210,7 +212,9 @@ export class ChunkStreamServer {
             result.chunk,
           );
           if (spawned > 0) {
-            logger.info(`🐾 [ChunkStream] Spawned ${spawned} animals for chunk (${message.coords.x},${message.coords.y})`);
+            logger.info(
+              `🐾 [ChunkStream] Spawned ${spawned} animals for chunk (${message.coords.x},${message.coords.y})`,
+            );
           }
         } catch (error) {
           logger.error(

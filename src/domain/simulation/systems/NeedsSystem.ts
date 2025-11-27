@@ -25,17 +25,20 @@ import { FoodCatalog } from "../../../simulation/data/FoodCatalog";
  * Features:
  * - Decay rates configurable per need type
  * - Cross-effects between needs (e.g., low energy affects social needs)
- * - Zone-based bonuses when entities are in appropriate zones
+ * - Active resource consumption from inventory to satisfy needs
  * - Social morale boost from nearby friendly entities
- * - Emergency auto-satisfaction when needs are critical
  * - Batch processing for performance with many entities
  * - Age-based decay multipliers (children decay slower, elders faster)
  * - Divine favor modifiers to reduce decay
+ *
+ * Agents consume food/water from their inventory to satisfy hunger/thirst.
+ * If inventory is empty, they must gather resources or trade.
  *
  * Uses NeedsBatchProcessor for vectorized operations when entity count >= 20.
  *
  * @see NeedsBatchProcessor for batch processing implementation
  * @see GPUComputeService for GPU-accelerated needs decay
+ * @see InventorySystem for resource storage and consumption
  */
 @injectable()
 export class NeedsSystem extends EventEmitter {
@@ -190,7 +193,7 @@ export class NeedsSystem extends EventEmitter {
       const entityStartTime = performance.now();
       const action = this.entityActions.get(entityId) || "idle";
       this.applyNeedDecay(needs, dtSeconds, entityId, action);
-      this.handleZoneBenefits(entityId, needs, dtSeconds);
+      this.consumeResourcesForNeeds(entityId, needs);
       this.applySocialMoraleBoost(entityId, needs);
 
       if (this.config.crossEffectsEnabled) {
@@ -270,13 +273,12 @@ export class NeedsSystem extends EventEmitter {
     this.applySocialMoraleBoostBatch(entityIdArray);
 
     for (const [entityId, needs] of this.entityNeeds.entries()) {
-      this.handleZoneBenefits(entityId, needs, dtSeconds);
+      this.consumeResourcesForNeeds(entityId, needs);
 
       if (this.checkForDeath(entityId, needs)) {
         continue;
       }
 
-      this.checkEmergencyNeeds(entityId, needs);
       this.emitNeedEvents(entityId, needs);
     }
     const duration = performance.now() - startTime;

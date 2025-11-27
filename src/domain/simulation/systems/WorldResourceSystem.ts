@@ -424,7 +424,7 @@ export class WorldResourceSystem {
     ) {
       harvestAmount = Math.floor(
         Math.random() * (yields.amountMax - yields.amountMin + 1) +
-        yields.amountMin,
+          yields.amountMin,
       );
     }
 

@@ -61,14 +61,14 @@ export interface GovernanceEventDetails {
 export interface GovernanceEvent {
   timestamp: number;
   type:
-  | "demand_created"
-  | "demand_resolved"
-  | "policy_changed"
-  | "project_started"
-  | "project_failed"
-  | "production_generated"
-  | "production_worker_lost"
-  | "role_reassigned";
+    | "demand_created"
+    | "demand_resolved"
+    | "policy_changed"
+    | "project_started"
+    | "project_failed"
+    | "production_generated"
+    | "production_worker_lost"
+    | "role_reassigned";
   details: GovernanceEventDetails;
 }
 
