@@ -334,8 +334,28 @@ export class InventorySystem {
     return transferred;
   }
 
+  /**
+   * Ensures all agents in gameState have their inventories initialized.
+   * Handles agents loaded from saves or created before InventorySystem was ready.
+   */
+  private syncInventoriesWithAgents(): void {
+    if (!this.gameState) return;
+    const agents = this.gameState.agents || [];
+    for (const agent of agents) {
+      if (agent.isDead) continue;
+      if (!this.agentInventories.has(agent.id)) {
+        this.initializeAgentInventory(agent.id);
+        logger.debug(
+          `🔄 InventorySystem auto-initialized inventory for existing agent ${agent.name} (${agent.id})`,
+        );
+      }
+    }
+  }
+
   public update(): void {
     const now = Date.now();
+
+    this.syncInventoriesWithAgents();
 
     this.syncToGameState(now);
     if (now - this.lastDeprecationCheck < this.DEPRECATION_INTERVAL) return;

@@ -428,6 +428,8 @@ export class SimulationRunner {
 
     await this.ensureInitialFamily();
 
+    this.syncAllAgentSystems();
+
     logger.info("📅 SimulationRunner: Registering systems in scheduler...");
     this.registerSystemsInScheduler();
     this.configureSchedulerHooks();
@@ -861,6 +863,39 @@ export class SimulationRunner {
    */
   public async ensureInitialFamily(): Promise<void> {
     await this.worldLoader.ensureInitialFamily();
+  }
+
+  /**
+   * Synchronizes all agent-related systems with the current gameState agents.
+   * Call this after loading a saved state to ensure all agents have their
+   * needs, inventories, and AI states properly initialized.
+   */
+  public syncAllAgentSystems(): void {
+    const agents = this.state.agents || [];
+    let initialized = 0;
+
+    for (const agent of agents) {
+      if (agent.isDead) continue;
+
+      // Initialize needs if missing
+      if (!this.needsSystem.getNeeds(agent.id)) {
+        this.needsSystem.initializeEntityNeeds(agent.id);
+        initialized++;
+      }
+
+      // Initialize inventory if missing
+      if (!this.inventorySystem.getAgentInventory(agent.id)) {
+        this.inventorySystem.initializeAgentInventory(agent.id);
+      }
+
+      // AI state is lazy-initialized in AIStateManager.getAIState()
+    }
+
+    if (initialized > 0) {
+      logger.info(
+        `🔄 SimulationRunner: Synced ${initialized} agents with NeedsSystem`,
+      );
+    }
   }
 
   /**

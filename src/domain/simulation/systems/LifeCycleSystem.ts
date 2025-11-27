@@ -367,13 +367,32 @@ export class LifeCycleSystem extends EventEmitter {
     this.lastBreedingCheck = now;
 
     const agents = this.gameState.agents || [];
-    if (agents.length >= this.config.maxPopulation) return;
+    const agentNames = agents
+      .map((a) => `${a.name}(${a.id},${a.lifeStage},${a.sex})`)
+      .join(", ");
+    logger.debug(
+      `🍼 [Breeding] Checking... pop=${agents.length}/${this.config.maxPopulation} agents=[${agentNames}]`,
+    );
+
+    if (agents.length >= this.config.maxPopulation) {
+      logger.debug(`🍼 [Breeding] SKIP: max population reached`);
+      return;
+    }
 
     const adults = agents.filter((a) => a.lifeStage === "adult");
     const males = adults.filter((a) => a.sex === "male");
     const females = adults.filter((a) => a.sex === "female");
 
-    if (males.length === 0 || females.length === 0) return;
+    logger.debug(
+      `🍼 [Breeding] adults=${adults.length} males=${males.length} females=${females.length}`,
+    );
+
+    if (males.length === 0 || females.length === 0) {
+      logger.debug(
+        `🍼 [Breeding] SKIP: need at least 1 male and 1 female adult`,
+      );
+      return;
+    }
 
     if (RandomUtils.chance(0.6)) {
       const father = RandomUtils.element(males);
@@ -393,7 +412,12 @@ export class LifeCycleSystem extends EventEmitter {
     const pairKey = [fatherId, motherId].sort().join("::");
     const cooldown = this.reproductionCooldown.get(pairKey) || 0;
 
-    if (now < cooldown) return;
+    if (now < cooldown) {
+      logger.debug(
+        `🍼 [tryCouple] ${fatherId}+${motherId} SKIP: cooldown (${Math.round((cooldown - now) / 1000)}s left)`,
+      );
+      return;
+    }
 
     const father =
       this.entityIndex?.getAgent(fatherId) ??
@@ -402,12 +426,23 @@ export class LifeCycleSystem extends EventEmitter {
       this.entityIndex?.getAgent(motherId) ??
       this.gameState.agents?.find((a) => a.id === motherId);
 
-    if (!father || !mother) return;
+    if (!father || !mother) {
+      logger.debug(
+        `🍼 [tryCouple] ${fatherId}+${motherId} SKIP: agents not found`,
+      );
+      return;
+    }
 
     // Verify needs before reproduction
     if (this.needsSystem) {
       const motherNeeds = this.needsSystem.getNeeds(motherId);
       const fatherNeeds = this.needsSystem.getNeeds(fatherId);
+
+      logger.debug(
+        `🍼 [tryCouple] ${father.name}+${mother.name} needs: ` +
+          `father(hunger=${fatherNeeds?.hunger?.toFixed(0)}, energy=${fatherNeeds?.energy?.toFixed(0)}) ` +
+          `mother(hunger=${motherNeeds?.hunger?.toFixed(0)}, energy=${motherNeeds?.energy?.toFixed(0)})`,
+      );
 
       if (
         !motherNeeds ||
@@ -417,9 +452,14 @@ export class LifeCycleSystem extends EventEmitter {
         motherNeeds.energy < 50 ||
         fatherNeeds.energy < 50
       ) {
+        logger.debug(
+          `🍼 [tryCouple] ${father.name}+${mother.name} SKIP: needs too low (req: hunger>=60, energy>=50)`,
+        );
         return; // Don't reproduce if needs are low
       }
     }
+
+    logger.info(`🍼 [tryCouple] ${father.name}+${mother.name} REPRODUCING!`);
 
     simulationEvents.emit(GameEventNames.REPRODUCTION_ATTEMPT, {
       parent1: fatherId,

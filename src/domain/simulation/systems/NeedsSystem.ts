@@ -170,6 +170,24 @@ export class NeedsSystem extends EventEmitter {
   }
 
   /**
+   * Ensures all agents in gameState have their needs initialized.
+   * This handles cases where agents were loaded from a save or created
+   * before NeedsSystem was ready.
+   */
+  private syncNeedsWithAgents(): void {
+    const agents = this.gameState.agents || [];
+    for (const agent of agents) {
+      if (agent.isDead) continue;
+      if (!this.entityNeeds.has(agent.id)) {
+        this.initializeEntityNeeds(agent.id);
+        logger.debug(
+          `🔄 NeedsSystem auto-initialized needs for existing agent ${agent.name} (${agent.id})`,
+        );
+      }
+    }
+  }
+
+  /**
    * Updates the needs system, processing all entity needs.
    * Uses batch processing if entity count >= BATCH_THRESHOLD.
    *
@@ -179,6 +197,8 @@ export class NeedsSystem extends EventEmitter {
     const now = getFrameTime();
 
     this.processRespawnQueue(now);
+
+    this.syncNeedsWithAgents();
 
     // Clean zone cache periodically
     this._tickCounter = (this._tickCounter || 0) + 1;

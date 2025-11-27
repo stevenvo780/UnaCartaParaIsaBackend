@@ -59,6 +59,7 @@ simulationRunner
         Object.assign(gameState, saveData.state);
 
         await simulationRunner.ensureInitialFamily();
+        simulationRunner.syncAllAgentSystems();
 
         logger.info("✅ Backend: State loaded and family verified");
         simulationRunner.start();
