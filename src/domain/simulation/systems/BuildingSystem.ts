@@ -121,6 +121,15 @@ export class BuildingSystem {
   private pickNextConstruction(): BuildingLabel | null {
     const zones = (this.state.zones || []) as MutableZone[];
     const houses = zones.filter((z) => z.type === "rest").length;
+
+    // Log diagnóstico cada 30s aprox
+    if (Math.random() < 0.15) {
+      logger.debug(
+        `🏗️ [BUILDING] Status: houses=${houses}/${this.config.maxHouses}, ` +
+          `zones=${zones.length}, activeJobs=${this.constructionJobs.size}`,
+      );
+    }
+
     if (houses < this.config.maxHouses && !this.hasActiveJob("house")) {
       return "house";
     }
@@ -188,6 +197,12 @@ export class BuildingSystem {
       stone: cost.stone,
     });
     if (!reserved) {
+      // Log diagnóstico: faltan recursos
+      const available = this.reservationSystem.getAvailableResources();
+      logger.debug(
+        `🏗️ [BUILDING] Cannot reserve resources for ${label}: needs wood=${cost.wood}, stone=${cost.stone}. ` +
+          `Available: wood=${available.wood}, stone=${available.stone}`,
+      );
       return false;
     }
 
@@ -398,11 +413,21 @@ export class BuildingSystem {
   private validateAndAdjustPosition(
     position: { x: number; y: number },
     worldSize: { width: number; height: number },
-    _buildingType: BuildingLabel,
+    buildingType: BuildingLabel,
   ): { x: number; y: number } | null {
     const BUILDING_WIDTH = 120;
     const BUILDING_HEIGHT = 80;
     const MAX_ATTEMPTS = 50;
+
+    // Diagnóstico: log inicial
+    const zonesCount = this.state.zones?.length ?? 0;
+    const terrainTilesCount = this.state.terrainTiles?.length ?? 0;
+    const waterTilesCount =
+      this.state.terrainTiles?.filter((t) => t.type === "water").length ?? 0;
+
+    let boundsRejects = 0;
+    let collisionRejects = 0;
+    let waterRejects = 0;
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       const testX =
@@ -420,6 +445,7 @@ export class BuildingSystem {
         testX + BUILDING_WIDTH > worldSize.width ||
         testY + BUILDING_HEIGHT > worldSize.height
       ) {
+        boundsRejects++;
         continue;
       }
 
@@ -434,6 +460,7 @@ export class BuildingSystem {
       });
 
       if (hasCollision) {
+        collisionRejects++;
         continue;
       }
 
@@ -448,6 +475,7 @@ export class BuildingSystem {
         });
 
         if (nearbyWater) {
+          waterRejects++;
           continue;
         }
       }
@@ -456,7 +484,10 @@ export class BuildingSystem {
     }
 
     logger.warn(
-      `Could not find valid position for building after ${MAX_ATTEMPTS} attempts`,
+      `Could not find valid position for ${buildingType} after ${MAX_ATTEMPTS} attempts. ` +
+        `Stats: worldSize=${worldSize.width}x${worldSize.height}, zones=${zonesCount}, ` +
+        `terrainTiles=${terrainTilesCount}, waterTiles=${waterTilesCount}. ` +
+        `Rejects: bounds=${boundsRejects}, collision=${collisionRejects}, water=${waterRejects}`,
     );
     return null;
   }

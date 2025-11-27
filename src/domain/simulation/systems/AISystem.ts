@@ -706,7 +706,7 @@ export class AISystem extends EventEmitter {
       if (aiState.currentAction) {
         return;
       }
-      
+
       // Skip if agent is moving - wait until they arrive
       const isMoving = this._movementSystem?.isMoving(agentId);
       if (isMoving) {
@@ -722,7 +722,10 @@ export class AISystem extends EventEmitter {
         const agentPos = this.getAgentPosition(agentId);
         const goalPos = aiState.currentGoal.targetPosition;
         if (agentPos && goalPos) {
-          const dist = Math.hypot(agentPos.x - goalPos.x, agentPos.y - goalPos.y);
+          const dist = Math.hypot(
+            agentPos.x - goalPos.x,
+            agentPos.y - goalPos.y,
+          );
           logger.debug(
             `🎯 [AI] ${agentId}: goal=${aiState.currentGoal.type} target=${aiState.currentGoal.targetId ?? "none"} dist=${dist.toFixed(0)}`,
           );
@@ -730,7 +733,7 @@ export class AISystem extends EventEmitter {
       }
 
       const action = this.planAction(agentId, aiState.currentGoal);
-      
+
       // Log when we plan a non-MOVE action (like HARVEST)
       if (action && action.actionType !== "move") {
         logger.debug(
@@ -834,10 +837,14 @@ export class AISystem extends EventEmitter {
     if (aiState.isInCombat) return;
 
     const needs = this.needsSystem?.getNeeds(agentId);
+    logger.debug(
+      `📋 [AI] ${agentId}: prePlanGoals check - hunger=${needs?.hunger?.toFixed(1) ?? "?"}, thirst=${needs?.thirst?.toFixed(1) ?? "?"}, energy=${needs?.energy?.toFixed(1) ?? "?"}`,
+    );
     if (
       needs &&
       (needs.hunger < 40 || needs.thirst < 40 || needs.energy < 30)
     ) {
+      logger.debug(`📋 [AI] ${agentId}: prePlanGoals skipped - urgent needs`);
       return; // Agent needs to address urgent needs first
     }
 
@@ -885,6 +892,18 @@ export class AISystem extends EventEmitter {
     const woodTypes = ["tree"];
     const stoneTypes = ["rock"];
 
+    // Log role for ALL agents to debug role assignment
+    logger.debug(
+      `🎭 [AI] ${agentId}: generateWorkGoal called, role=${role ?? "none"}`,
+    );
+    
+    // Log role for debugging
+    if (!role) {
+      logger.debug(`🎭 [AI] ${agentId}: No role assigned, defaulting to food`);
+    } else if (role === "logger" || role === "quarryman") {
+      logger.debug(`🎭 [AI] ${agentId}: Role is ${role}, seeking resources`);
+    }
+
     // Collect all already-targeted resources (current goal + queue)
     const excluded = new Set(excludeTargetIds);
     if (aiState.currentGoal?.targetId) {
@@ -902,9 +921,7 @@ export class AISystem extends EventEmitter {
         `🐺 [AI] ${agentId}: hunter findNearestHuntableAnimal -> ${animal?.id ?? "none"} (type: ${animal?.type ?? "N/A"})`,
       );
       if (animal && !excluded.has(animal.id)) {
-        logger.debug(
-          `🎯 [AI] ${agentId}: Creating HUNT goal for ${animal.id}`,
-        );
+        logger.debug(`🎯 [AI] ${agentId}: Creating HUNT goal for ${animal.id}`);
         return {
           id: `hunt_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
           type: "hunt" as GoalType,
@@ -2032,13 +2049,16 @@ export class AISystem extends EventEmitter {
   }): void {
     const aiState = this.aiStates.get(payload.agentId);
     if (!aiState) return;
-    
+
     // Ignore movement complete events if we didn't have a move action
     // (e.g., idle wander from MovementSystem)
-    if (payload.actionType === "move" && aiState.currentAction?.actionType !== "move") {
+    if (
+      payload.actionType === "move" &&
+      aiState.currentAction?.actionType !== "move"
+    ) {
       return;
     }
-    
+
     const prevAction = aiState.currentAction?.actionType;
     aiState.currentAction = null;
 

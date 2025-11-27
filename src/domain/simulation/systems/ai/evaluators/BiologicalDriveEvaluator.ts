@@ -57,6 +57,12 @@ function isTargetOnCooldown(
 }
 
 /**
+ * Threshold for when biological needs become urgent enough to interrupt work.
+ * Aligned with prePlanGoals threshold (40) so agents work when needs >= 40.
+ */
+const BIOLOGICAL_URGENCY_THRESHOLD = 40;
+
+/**
  * Calculates utility for a biological drive.
  * Returns a value between 0.0 and 1.0.
  * @param value Current need value (0-100, where 100 is satisfied)
@@ -67,12 +73,13 @@ function calculateDriveUtility(
   urgencyExponent: number = 2,
 ): number {
   // For survival needs, we want them to become urgent reasonably fast but not dominate when high.
-  // Uses a custom curve that stays low until ~50, then spikes.
-  if (value > 60) return 0; // Not interested when need is well satisfied
+  // When needs >= 40, agents should work. Below 40, biological needs take priority.
+  if (value >= BIOLOGICAL_URGENCY_THRESHOLD) return 0; // Needs satisfied, allow work
 
-  // Use the exponent to shape the curve for the remaining range (0-60)
-  // Remap 60->0 to 0->1 deficit relative to threshold
-  const relativeDeficit = (60 - value) / 60;
+  // Use the exponent to shape the curve for the remaining range (0-40)
+  // Remap 40->0 to 0->1 deficit relative to threshold
+  const relativeDeficit =
+    (BIOLOGICAL_URGENCY_THRESHOLD - value) / BIOLOGICAL_URGENCY_THRESHOLD;
 
   // Apply exponent: higher exponent = more urgent only when very low
   return Math.pow(relativeDeficit, 1 / urgencyExponent);

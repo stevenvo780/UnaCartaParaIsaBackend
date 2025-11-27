@@ -264,18 +264,53 @@ export class RoleSystem extends EventEmitter {
     const agents = this.getAdultAgents();
     const pop = agents.length;
     const minHunters = Math.max(1, Math.ceil(pop * 0.1));
+    const minLoggers = Math.max(1, Math.ceil(pop * 0.15)); // 15% para madera
+    const minQuarrymen = Math.max(1, Math.ceil(pop * 0.1)); // 10% para piedra
+
+    // Helper to count roles
+    const countRole = (roleType: string): number =>
+      Array.from(this.roles.values()).filter((r) => r.roleType === roleType)
+        .length;
 
     // First, assign roles to agents without any role
     agents.forEach((agent) => {
       if (!this.roles.has(agent.id)) {
-        // Recalculate current hunter count each iteration
-        const currentHunters = Array.from(this.roles.values()).filter(
-          (r) => r.roleType === "hunter",
-        ).length;
-        const needMoreHunters = currentHunters < minHunters;
+        // Check resource gatherer needs first
+        const currentLoggers = countRole("logger");
+        const currentQuarrymen = countRole("quarryman");
+        const currentHunters = countRole("hunter");
 
-        // If we need hunters and this agent qualifies, prioritize hunter
-        if (needMoreHunters) {
+        // Priority: logger > quarryman > hunter > best role
+        if (currentLoggers < minLoggers) {
+          const loggerConfig = ROLE_DEFINITIONS.find(
+            (r) => r.type === "logger",
+          );
+          if (loggerConfig && this.meetsRequirements(agent, loggerConfig)) {
+            const result = this.reassignRole(agent.id, "logger");
+            if (result.success) {
+              logger.info(`🪓 Auto-assigned logger (wood): ${agent.id}`);
+              return;
+            }
+          }
+        }
+
+        if (currentQuarrymen < minQuarrymen) {
+          const quarrymanConfig = ROLE_DEFINITIONS.find(
+            (r) => r.type === "quarryman",
+          );
+          if (
+            quarrymanConfig &&
+            this.meetsRequirements(agent, quarrymanConfig)
+          ) {
+            const result = this.reassignRole(agent.id, "quarryman");
+            if (result.success) {
+              logger.info(`⛏️ Auto-assigned quarryman (stone): ${agent.id}`);
+              return;
+            }
+          }
+        }
+
+        if (currentHunters < minHunters) {
           const hunterConfig = ROLE_DEFINITIONS.find(
             (r) => r.type === "hunter",
           );
@@ -287,34 +322,57 @@ export class RoleSystem extends EventEmitter {
             }
           }
         }
+
         this.assignBestRole(agent);
       }
     });
 
-    // Second pass: ensure we have at least minHunters
-    const currentHunterCount = Array.from(this.roles.values()).filter(
-      (r) => r.roleType === "hunter",
+    // Second pass: ensure minimum resource gatherers
+    this.ensureMinimumRole("logger", minLoggers, agents, "🪓 Forced logger");
+    this.ensureMinimumRole(
+      "quarryman",
+      minQuarrymen,
+      agents,
+      "⛏️ Forced quarryman",
+    );
+    this.ensureMinimumRole("hunter", minHunters, agents, "🎯 Forced hunter");
+  }
+
+  private ensureMinimumRole(
+    roleType: string,
+    minCount: number,
+    agents: AgentProfile[],
+    logPrefix: string,
+  ): void {
+    let currentCount = Array.from(this.roles.values()).filter(
+      (r) => r.roleType === roleType,
     ).length;
 
-    if (currentHunterCount < minHunters) {
-      const hunterConfig = ROLE_DEFINITIONS.find((r) => r.type === "hunter");
-      if (!hunterConfig) return;
+    if (currentCount >= minCount) return;
 
-      // Find eligible agents who aren't hunters yet
-      for (const agent of agents) {
-        if (currentHunterCount >= minHunters) break;
+    const roleConfig = ROLE_DEFINITIONS.find((r) => r.type === roleType);
+    if (!roleConfig) return;
 
-        const currentRole = this.roles.get(agent.id);
-        if (currentRole?.roleType === "hunter") continue;
+    for (const agent of agents) {
+      if (currentCount >= minCount) break;
 
-        if (this.meetsRequirements(agent, hunterConfig)) {
-          const prevRole = currentRole?.roleType ?? "none";
-          const result = this.reassignRole(agent.id, "hunter");
-          if (result.success) {
-            logger.info(
-              `🎯 Forced hunter assignment: ${agent.id} (was ${prevRole})`,
-            );
-          }
+      const currentRole = this.roles.get(agent.id);
+      if (currentRole?.roleType === roleType) continue;
+
+      // Don't steal from other essential roles
+      if (
+        currentRole?.roleType === "logger" ||
+        currentRole?.roleType === "quarryman"
+      ) {
+        continue;
+      }
+
+      if (this.meetsRequirements(agent, roleConfig)) {
+        const prevRole = currentRole?.roleType ?? "none";
+        const result = this.reassignRole(agent.id, roleType as RoleType);
+        if (result.success) {
+          logger.info(`${logPrefix}: ${agent.id} (was ${prevRole})`);
+          currentCount++;
         }
       }
     }

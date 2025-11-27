@@ -241,12 +241,25 @@ export class DeltaEncoder {
     prev: Animal & { currentActivity?: string },
     current: Animal & { currentActivity?: string },
   ): boolean {
-    return (
+    if (
       prev.position?.x !== current.position?.x ||
       prev.position?.y !== current.position?.y ||
       prev.currentActivity !== current.currentActivity ||
       prev.health !== current.health
-    );
+    ) {
+      return true;
+    }
+
+    if (prev.needs && current.needs) {
+      return (
+        prev.needs.hunger !== current.needs.hunger ||
+        prev.needs.thirst !== current.needs.thirst ||
+        prev.needs.fear !== current.needs.fear ||
+        prev.needs.reproductiveUrge !== current.needs.reproductiveUrge
+      );
+    }
+
+    return false;
   }
 
   private hasArrayChanged<T>(prev: T[] | undefined, current: T[]): boolean {

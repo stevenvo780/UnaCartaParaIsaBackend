@@ -287,6 +287,15 @@ export function evaluateCollectiveNeeds(
       const taskUrgency = (task.metadata?.urgency as number) || 0.5;
       const taskResourceType = task.metadata?.resourceType as string;
 
+      // IMPORTANT: Specialized roles (logger, quarryman) should only take matching tasks
+      // This ensures wood/stone gatherers actually gather their assigned resources
+      if (modifiers.preferredResource) {
+        // Skip tasks that don't match the specialized role
+        if (taskResourceType && taskResourceType !== modifiers.preferredResource) {
+          continue; // Skip this task - role mismatch
+        }
+      }
+
       // Calculate priority based on urgency and role match
       let priority = 0.5 + taskUrgency * 0.3;
 

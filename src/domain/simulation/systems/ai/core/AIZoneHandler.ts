@@ -4,6 +4,7 @@ import type { ResourceType } from "../../../../types/simulation/economy";
 import { simulationEvents, GameEventNames } from "../../../core/events";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
+import { logger } from "../../../../../infrastructure/utils/logger";
 
 /**
  * Minimal interface for inventory operations needed by AIZoneHandler.
@@ -166,15 +167,26 @@ export class AIZoneHandler {
    */
   public tryDepositResources(entityId: string, zoneId: string): void {
     const inventorySystem = this.deps.inventorySystem;
-    if (!inventorySystem) return;
+    if (!inventorySystem) {
+      logger.debug(`📦 [DEPOSIT] ${entityId}: No inventory system`);
+      return;
+    }
 
     const inv = inventorySystem.getAgentInventory(entityId);
-    if (!inv) return;
+    if (!inv) {
+      logger.debug(`📦 [DEPOSIT] ${entityId}: No inventory found`);
+      return;
+    }
+
+    logger.debug(
+      `📦 [DEPOSIT] ${entityId} attempting deposit: wood=${inv.wood}, stone=${inv.stone}, food=${inv.food}`,
+    );
 
     let stockpiles = inventorySystem.getStockpilesInZone(zoneId);
     if (stockpiles.length === 0) {
       const stockpile = inventorySystem.createStockpile(zoneId, "general");
       stockpiles = [stockpile];
+      logger.debug(`📦 [DEPOSIT] Created stockpile in zone ${zoneId}`);
     }
 
     const stockpile = stockpiles[0];

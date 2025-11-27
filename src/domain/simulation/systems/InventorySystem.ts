@@ -223,15 +223,25 @@ export class InventorySystem {
       rare_materials: 0,
     };
 
+    const sp = this.stockpiles.get(stockpileId);
+    if (!sp) {
+      logger.debug(
+        `📦 [TRANSFER] Stockpile ${stockpileId} not found. Total stockpiles: ${this.stockpiles.size}`,
+      );
+      return transferred;
+    }
+
+    const inv = this.agentInventories.get(agentId);
+    if (!inv) {
+      logger.debug(`📦 [TRANSFER] Agent ${agentId} has no inventory`);
+      return transferred;
+    }
+
     const entries = Object.entries(resources) as [ResourceType, number][];
     for (const [resource, amount] of entries) {
       if (!amount || amount <= 0) continue;
 
-      const inv = this.agentInventories.get(agentId);
-      if (!inv || inv[resource] <= 0) continue;
-
-      const sp = this.stockpiles.get(stockpileId);
-      if (!sp) continue;
+      if (inv[resource] <= 0) continue;
 
       const currentLoad =
         sp.inventory.wood +
@@ -241,7 +251,10 @@ export class InventorySystem {
         sp.inventory.rare_materials;
       const availableSpace = sp.capacity - currentLoad;
 
-      if (availableSpace <= 0) continue;
+      if (availableSpace <= 0) {
+        logger.debug(`📦 [TRANSFER] Stockpile ${stockpileId} is full`);
+        continue;
+      }
 
       const canTake = Math.min(amount, inv[resource]);
       const canStore = Math.min(canTake, availableSpace);
@@ -250,7 +263,21 @@ export class InventorySystem {
         this.removeFromAgent(agentId, resource, canStore);
         this.addToStockpile(stockpileId, resource, canStore);
         transferred[resource] = canStore;
+        logger.debug(
+          `📦 [TRANSFER] ${agentId} -> stockpile: ${resource}=${canStore}`,
+        );
       }
+    }
+
+    const total =
+      transferred.wood +
+      transferred.stone +
+      transferred.food +
+      transferred.water;
+    if (total > 0) {
+      logger.info(
+        `📦 [TRANSFER] ${agentId} deposited: wood=${transferred.wood}, stone=${transferred.stone}, food=${transferred.food}`,
+      );
     }
 
     return transferred;
