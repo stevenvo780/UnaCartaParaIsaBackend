@@ -261,7 +261,10 @@ export class WorldResourceSystem {
   }
 
   private mapDecalToResource(_decal: string): WorldResourceType | null {
-    // Random loot generation from decals
+    // Specific mapping for rocks
+    if (_decal.startsWith("decal_rock_")) return "rock";
+
+    // Random loot generation from generic decals
     const rand = Math.random();
 
     // 40% chance for small rock/stone

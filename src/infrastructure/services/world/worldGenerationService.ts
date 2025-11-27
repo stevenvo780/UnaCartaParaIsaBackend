@@ -175,6 +175,14 @@ export class WorldGenerationService {
       assets.decals.push(`decal_${biomeConfig.id}`);
     }
 
+    if (
+      biomeConfig.density.rocks &&
+      tileRng() < biomeConfig.density.rocks * 0.1
+    ) {
+      // Use decals for rocks
+      assets.decals.push(`decal_rock_${biomeConfig.id}`);
+    }
+
     const structureNoise = this.noiseGen.noise2D(x * 0.005, y * 0.005);
     if (structureNoise > 0.8 && tileRng() < 0.01) {
       assets.structures.push(`structure_${biomeConfig.id}`);
