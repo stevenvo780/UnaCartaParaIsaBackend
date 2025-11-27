@@ -495,14 +495,14 @@ export class AIZoneHandler {
         if (transferred.wood > 0) {
           this.deps.inventorySystem.removeFromAgent(
             entityId,
-            ResourceTypeEnum.WOOD,
+            "wood" as ResourceType,
             transferred.wood,
           );
         }
         if (transferred.stone > 0) {
           this.deps.inventorySystem.removeFromAgent(
             entityId,
-            ResourceType.STONE,
+            "stone" as ResourceType,
             transferred.stone,
           );
         }

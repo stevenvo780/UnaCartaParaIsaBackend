@@ -516,9 +516,14 @@ export class TradeSystem {
     resourceType: ResourceType,
     minAmount: number,
   ): { agentId: string; x: number; y: number } | null {
-    if (!this.gameState.agents || !this.inventorySystem) return null;
+    if (!this.inventorySystem) return null;
 
-    for (const agent of this.gameState.agents) {
+    // Use AgentRegistry as single source of truth
+    const profiles = this.agentRegistry
+      ? this.agentRegistry.getAllProfiles()
+      : (this.gameState.agents || []).values();
+
+    for (const agent of profiles) {
       if (agent.id === buyerId || agent.isDead) continue;
 
       const inv = this.inventorySystem.getAgentInventory(agent.id);

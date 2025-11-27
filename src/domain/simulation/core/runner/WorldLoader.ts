@@ -481,7 +481,7 @@ export class WorldLoader {
         ) {
           const biome = biomeMap[tileY][tileX];
 
-          if (biome === "ocean" || biome === "lake") continue;
+          if (biome === BiomeType.OCEAN || biome === BiomeType.LAKE) continue;
 
           const zoneType = this.determineZoneType(biome, x, y, worldConfig);
           if (!zoneType) continue;
@@ -540,11 +540,11 @@ export class WorldLoader {
       return ZoneType.SOCIAL;
     }
 
-    if (biome === "forest" && rng() < 0.4) {
+    if (biome === BiomeType.FOREST && rng() < 0.4) {
       return ZoneType.REST;
     }
 
-    if (biome === "grassland" && rng() < 0.3) {
+    if (biome === BiomeType.GRASSLAND && rng() < 0.3) {
       return ZoneType.WORK;
     }
 

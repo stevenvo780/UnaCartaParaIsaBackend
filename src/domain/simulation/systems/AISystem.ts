@@ -1274,10 +1274,12 @@ export class AISystem extends EventEmitter {
         if (this.activeAgentIdsCache !== null) {
           return this.activeAgentIdsCache;
         }
-        const activeIds: string[] = [];
-        for (const agent of this.gameState.agents) {
-          if (!agent.isDead) activeIds.push(agent.id);
-        }
+        // Use AgentRegistry as single source of truth
+        const activeIds = this.agentRegistry
+          ? this.agentRegistry.getAliveAgentIds()
+          : (this.gameState.agents || [])
+              .filter((a) => !a.isDead)
+              .map((a) => a.id);
         this.activeAgentIdsCache = activeIds;
         return activeIds;
       },
@@ -1816,7 +1818,12 @@ export class AISystem extends EventEmitter {
     let nearest: { agentId: string; x: number; y: number } | null = null;
     let minDistance = Infinity;
 
-    for (const other of this.gameState.agents) {
+    // Use AgentRegistry as single source of truth
+    const profiles = this.agentRegistry
+      ? this.agentRegistry.getAllProfiles()
+      : (this.gameState.agents || []).values();
+
+    for (const other of profiles) {
       if (other.id === entityId || other.isDead) continue;
       if (!other.position) continue;
 
@@ -1851,7 +1858,12 @@ export class AISystem extends EventEmitter {
     let nearest: { id: string; x: number; y: number } | null = null;
     let minDistance = Infinity;
 
-    for (const other of this.gameState.agents) {
+    // Use AgentRegistry as single source of truth
+    const profiles = this.agentRegistry
+      ? this.agentRegistry.getAllProfiles()
+      : (this.gameState.agents || []).values();
+
+    for (const other of profiles) {
       if (other.id === entityId || other.isDead) continue;
       if (!other.position) continue;
 
@@ -1884,7 +1896,12 @@ export class AISystem extends EventEmitter {
     let nearest: { id: string; x: number; y: number } | null = null;
     let minDistance = Infinity;
 
-    for (const other of this.gameState.agents) {
+    // Use AgentRegistry as single source of truth
+    const profiles = this.agentRegistry
+      ? this.agentRegistry.getAllProfiles()
+      : (this.gameState.agents || []).values();
+
+    for (const other of profiles) {
       if (other.id === entityId || other.isDead) continue;
       if (!other.position) continue;
 

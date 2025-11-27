@@ -13,7 +13,6 @@ import { BuildingType } from "../../../shared/constants/BuildingEnums";
 import { SystemStatus } from "../../../shared/constants/SystemEnums";
 import { ZoneConstructionStatus } from "../../../shared/constants/StatusEnums";
 import { TileType } from "../../../shared/constants/TileTypeEnums";
-import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
 import { TaskSystem } from "./TaskSystem";
 import { TerrainSystem } from "./TerrainSystem";
@@ -373,17 +372,17 @@ export class BuildingSystem {
     }
 
     zone.metadata.underConstruction = false;
-    zone.metadata.building = job.label === "mine" ? "mine" : job.label;
-    zone.metadata.craftingStation = job.label === "workbench";
+    zone.metadata.building = job.label === BuildingType.MINE ? BuildingType.MINE : job.label;
+    zone.metadata.craftingStation = job.label === BuildingType.WORKBENCH;
     zone.type =
-      job.label === "house"
+      job.label === BuildingType.HOUSE
         ? ZoneType.REST
-        : job.label === "farm"
+        : job.label === BuildingType.FARM
           ? ZoneType.FOOD
           : ZoneType.WORK;
 
     // Si es una granja, spawnear cultivos de trigo
-    if (job.label === "farm" && this.worldResourceSystem && zone.bounds) {
+    if (job.label === BuildingType.FARM && this.worldResourceSystem && zone.bounds) {
       const bounds = zone.bounds as {
         x: number;
         y: number;

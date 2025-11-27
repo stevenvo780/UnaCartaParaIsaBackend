@@ -680,7 +680,7 @@ export class LifeCycleSystem extends EventEmitter {
     // Use AgentRegistry as single source of truth for removing agents
     const removed = this.agentRegistry
       ? this.agentRegistry.removeAgent(id)
-      : (() => {
+      : ((): boolean => {
           const index = this.gameState.agents!.findIndex((a) => a.id === id);
           if (index !== -1) {
             this.gameState.agents!.splice(index, 1);
@@ -776,7 +776,7 @@ export class LifeCycleSystem extends EventEmitter {
     // Use AgentRegistry as single source of truth for removing agents
     const removed = this.agentRegistry
       ? this.agentRegistry.removeAgent(id)
-      : (() => {
+      : ((): boolean => {
           const index = this.gameState.agents!.findIndex((a) => a.id === id);
           if (index !== -1) {
             this.gameState.agents!.splice(index, 1);

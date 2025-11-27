@@ -6,6 +6,7 @@ import type { AnimalSystem } from "./AnimalSystem";
 import { logger } from "../../../infrastructure/utils/logger";
 import type { WorldGenConfig } from "../../world/generation/types";
 import { TileType } from "../../../shared/constants/TileTypeEnums";
+import { BiomeType } from "../../../shared/constants/BiomeEnums";
 
 /**
  * System for dynamically loading chunks around agents.
@@ -217,7 +218,7 @@ export class ChunkLoadingSystem {
 
         if (existingTileIndex === -1 || existingTileIndex === undefined) {
           const tileType: TileType =
-            tile.biome === "ocean" ? TileType.WATER : TileType.GRASS;
+            tile.biome === BiomeType.OCEAN ? TileType.WATER : TileType.GRASS;
 
           this.gameState.terrainTiles?.push({
             x: tile.x,
