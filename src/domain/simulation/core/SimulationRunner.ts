@@ -860,10 +860,17 @@ export class SimulationRunner {
       enabled: true,
     });
 
+    this.scheduler.registerSystem({
+      name: "ChunkLoadingSystem",
+      rate: "SLOW",
+      update: (delta: number) => this.chunkLoadingSystem.update(delta),
+      enabled: true,
+    });
+
     logger.info("📋 All systems registered in multi-rate scheduler", {
       fast: 3,
       medium: 8,
-      slow: 29,
+      slow: 30,
     });
   }
 
@@ -893,6 +900,34 @@ export class SimulationRunner {
     biomeMap: string[][];
   }): Promise<void> {
     await this.worldLoader.initializeWorldResources(worldConfig);
+
+    // Initialize ChunkLoadingSystem with world config
+    this.chunkLoadingSystem.initialize({
+      width: worldConfig.width,
+      height: worldConfig.height,
+      tileSize: worldConfig.tileSize,
+      seed: 12345,
+      noise: {
+        temperature: {
+          scale: 0.0005,
+          octaves: 4,
+          persistence: 0.5,
+          lacunarity: 2.0,
+        },
+        moisture: {
+          scale: 0.0005,
+          octaves: 3,
+          persistence: 0.6,
+          lacunarity: 2.0,
+        },
+        elevation: {
+          scale: 0.0005,
+          octaves: 5,
+          persistence: 0.4,
+          lacunarity: 2.0,
+        },
+      },
+    });
   }
 
   private gpuStatsInterval?: NodeJS.Timeout;

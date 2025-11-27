@@ -3,7 +3,6 @@ import { TYPES } from "../../../config/Types";
 import type { GameState } from "../../types/game-types";
 import type { WorldGenerationService } from "../../../infrastructure/services/world/worldGenerationService";
 import type { AnimalSystem } from "./AnimalSystem";
-import type { WorldResourceSystem } from "./WorldResourceSystem";
 import { logger } from "../../../infrastructure/utils/logger";
 import type { WorldGenConfig } from "../../world/generation/types";
 
@@ -36,7 +35,6 @@ export class ChunkLoadingSystem {
     @inject(TYPES.GameState) private gameState: GameState,
     @inject(TYPES.WorldGenerationService) private worldGenerationService: WorldGenerationService,
     @inject(TYPES.AnimalSystem) private animalSystem: AnimalSystem,
-    @inject(TYPES.WorldResourceSystem) private worldResourceSystem: WorldResourceSystem,
   ) {}
 
   /**
@@ -65,10 +63,10 @@ export class ChunkLoadingSystem {
       return;
     }
 
-    // Get all active (non-dead) agents
-    const activeAgents = this.gameState.agents.filter(
-      (agent) => !agent.isDead && agent.position
-    );
+    // Get all active (non-dead) agents with positions
+    const activeAgents = this.gameState.agents
+      .filter((agent) => !agent.isDead && agent.position)
+      .map((agent) => ({ position: agent.position! }));
 
     if (activeAgents.length === 0) {
       return;
