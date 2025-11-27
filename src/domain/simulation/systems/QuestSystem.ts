@@ -10,6 +10,7 @@ import {
   QuestRewardType,
   QuestRequirementType,
   QuestDialogueStage,
+  QuestObjectiveType,
 } from "../../../shared/constants/QuestEnums";
 import { GameEventType } from "../../../shared/constants/EventEnums";
 
@@ -22,7 +23,7 @@ const QUEST_CATALOG: Quest[] = [
     objectives: [
       {
         id: "obj_1",
-        type: "collect_resource",
+        type: QuestObjectiveType.COLLECT_RESOURCE,
         description: "Gather 5 wood",
         target: "wood",
         requiredAmount: 5,
@@ -31,7 +32,7 @@ const QUEST_CATALOG: Quest[] = [
       },
       {
         id: "obj_2",
-        type: "collect_resource",
+        type: QuestObjectiveType.COLLECT_RESOURCE,
         description: "Gather 3 food",
         target: "food",
         requiredAmount: 3,
@@ -67,7 +68,7 @@ const QUEST_CATALOG: Quest[] = [
     objectives: [
       {
         id: "obj_1",
-        type: "build_structure",
+        type: QuestObjectiveType.BUILD_STRUCTURE,
         description: "Build a basic shelter",
         target: "shelter",
         requiredAmount: 1,
@@ -161,7 +162,7 @@ export class QuestSystem {
       quest.objectives.forEach((objective) => {
         if (objective.isCompleted) return;
 
-        if (objective.type === "survive_time" && objective.requiredAmount) {
+        if (objective.type === QuestObjectiveType.SURVIVE_TIME && objective.requiredAmount) {
           const elapsedTime = now - (quest.startedAt || now);
           if (elapsedTime >= objective.requiredAmount * 1000) {
             this.updateObjectiveProgress(quest.id, objective.id);
@@ -491,7 +492,7 @@ export class QuestSystem {
         this.questProgress.activeQuests.forEach((quest) => {
           quest.objectives.forEach((objective) => {
             if (
-              objective.type === "talk_to_npc" &&
+              objective.type === QuestObjectiveType.TALK_TO_NPC &&
               !objective.isCompleted &&
               (objective.target === eventData.entityId ||
                 objective.target === eventData.data.cardId ||
@@ -507,7 +508,7 @@ export class QuestSystem {
         this.questProgress.activeQuests.forEach((quest) => {
           quest.objectives.forEach((objective) => {
             if (
-              objective.type === "collect_resource" &&
+              objective.type === QuestObjectiveType.COLLECT_RESOURCE &&
               !objective.isCompleted &&
               objective.target === eventData.data.resourceType
             ) {
@@ -525,7 +526,7 @@ export class QuestSystem {
         this.questProgress.activeQuests.forEach((quest) => {
           quest.objectives.forEach((objective) => {
             if (
-              objective.type === "build_structure" &&
+              objective.type === QuestObjectiveType.BUILD_STRUCTURE &&
               !objective.isCompleted &&
               objective.target === eventData.data.structureType
             ) {

@@ -122,7 +122,7 @@ export class BuildingSystem {
 
   private pickNextConstruction(): BuildingLabel | null {
     const zones = (this.state.zones || []) as MutableZone[];
-    const houses = zones.filter((z) => z.type === "rest").length;
+    const houses = zones.filter((z) => z.type === ZoneType.REST).length;
 
     // Log diagnóstico cada 30s aprox
     if (Math.random() < 0.15) {

@@ -7,18 +7,7 @@ import { GoalDomain } from "../../../../../shared/constants/AIEnums";
  * Priority weights for different goal domains.
  * Higher weights increase the priority of goals in that domain.
  */
-export interface DomainWeights {
-  [GoalDomain.SURVIVAL]: number;
-  [GoalDomain.WORK]: number;
-  [GoalDomain.SOCIAL]: number;
-  [GoalDomain.CRAFTING]: number;
-  [GoalDomain.COMBAT]: number;
-  [GoalDomain.FLEE]: number;
-  [GoalDomain.EXPLORE]: number;
-  [GoalDomain.LOGISTICS]: number;
-  [GoalDomain.REST]: number;
-  [GoalDomain.INSPECT]: number;
-}
+export type DomainWeights = Record<GoalDomain, number>;
 
 /**
  * Configuration for priority manager.

@@ -9,6 +9,7 @@ import type { ResourceType } from "../../types/simulation/economy";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
+import { ZoneType } from "../../../shared/constants/ZoneEnums";
 
 const DEFAULT_CONFIG: HouseholdSystemConfig = {
   updateIntervalMs: 5000,
@@ -106,7 +107,7 @@ export class HouseholdSystem {
     }
 
     this.households.clear();
-    const houses = zones.filter((z: Zone) => z.type === "rest");
+    const houses = zones.filter((z: Zone) => z.type === ZoneType.REST);
 
     for (const z of houses) {
       const capacity = Math.max(

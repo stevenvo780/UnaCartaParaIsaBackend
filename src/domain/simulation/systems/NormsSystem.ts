@@ -9,6 +9,7 @@ import { simulationEvents, GameEventNames } from "../core/events";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
+import { ZoneType } from "../../../shared/constants/ZoneEnums";
 
 /**
  * System for managing social norms and violations.
@@ -134,7 +135,7 @@ export class NormsSystem {
   }
 
   private isProtectedZone(zoneType: string): boolean {
-    return zoneType === "social" || zoneType === "market";
+    return zoneType === ZoneType.SOCIAL || zoneType === ZoneType.MARKET;
   }
 
   public update(): void {

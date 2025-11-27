@@ -1081,7 +1081,7 @@ export class AISystem extends EventEmitter {
       if (resource && !excluded.has(resource.id)) {
         return {
           id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-          type: "work" as GoalType,
+          type: GoalTypeEnum.WORK,
           priority: 0.4,
           targetId: resource.id,
           targetPosition: { x: resource.x, y: resource.y },

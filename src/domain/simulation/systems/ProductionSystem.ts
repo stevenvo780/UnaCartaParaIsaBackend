@@ -132,7 +132,7 @@ export class ProductionSystem {
    * @returns True if zone can produce resources
    */
   private isProductionZone(zone: MutableZone): boolean {
-    if (zone.type === "food" || zone.type === "water") return true;
+    if (zone.type === ZoneType.FOOD || zone.type === ZoneType.WATER) return true;
     const resource = this.getProductionResource(zone);
     return Boolean(resource);
   }

@@ -55,6 +55,7 @@ const WEAPON_COSTS: Record<WeaponId, Partial<Record<ResourceType, number>>> = {
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import { SharedSpatialIndex } from "../core/SharedSpatialIndex";
+import type { EntityIndex } from "../core/EntityIndex";
 
 /**
  * System for managing combat between entities.
@@ -84,6 +85,7 @@ export class CombatSystem {
   private normsSystem?: NormsSystem;
   private sharedSpatialIndex?: SharedSpatialIndex;
   private gpuService?: GPUComputeService;
+  private entityIndex?: EntityIndex;
 
   constructor(
     @inject(TYPES.GameState) private readonly state: GameState,
@@ -100,11 +102,15 @@ export class CombatSystem {
     @inject(TYPES.GPUComputeService)
     @optional()
     gpuService?: GPUComputeService,
+    @inject(TYPES.EntityIndex)
+    @optional()
+    entityIndex?: EntityIndex,
   ) {
     this.animalSystem = animalSystem;
     this.normsSystem = normsSystem;
     this.sharedSpatialIndex = sharedSpatialIndex;
     this.gpuService = gpuService;
+    this.entityIndex = entityIndex;
     this.config = DEFAULT_COMBAT_CONFIG;
     const worldWidth = state.worldSize?.width ?? 2000;
     const worldHeight = state.worldSize?.height ?? 2000;
@@ -380,13 +386,20 @@ export class CombatSystem {
     const entities = this.state.entities;
     if (!entities || entities.length === 0) return [];
 
-    const agent = entities.find(
-      (entity): entity is SimulationEntity =>
-        entity.id === agentId &&
-        Boolean(entity.position) &&
-        entity.type === EntityType.AGENT,
-    );
-    if (!agent || !agent.position) return [];
+    const foundAgent =
+      this.entityIndex?.getEntity(agentId) ??
+      entities.find(
+        (entity): entity is SimulationEntity =>
+          entity.id === agentId &&
+          Boolean(entity.position) &&
+          entity.type === EntityType.AGENT,
+      );
+    if (
+      !foundAgent ||
+      !foundAgent.position ||
+      foundAgent.type !== EntityType.AGENT
+    )
+      return [];
 
     const radius = this.config.engagementRadius * 2;
     const result: string[] = [];
@@ -404,8 +417,8 @@ export class CombatSystem {
       const affinity = this.socialSystem.getAffinityBetween(agentId, entity.id);
       if (affinity > hostilityThreshold) continue;
 
-      const dx = entity.position.x - agent.position.x;
-      const dy = entity.position.y - agent.position.y;
+      const dx = entity.position.x - foundAgent.position.x;
+      const dy = entity.position.y - foundAgent.position.y;
       if (Math.hypot(dx, dy) <= radius) {
         result.push(entity.id);
       }

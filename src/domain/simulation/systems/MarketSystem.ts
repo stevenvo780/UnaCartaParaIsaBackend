@@ -3,6 +3,7 @@ import type { MarketConfig } from "../../types/simulation/economy";
 import { InventorySystem } from "./InventorySystem";
 import { logger } from "../../../infrastructure/utils/logger";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
+import type { EntityIndex } from "../core/EntityIndex";
 
 const DEFAULT_MARKET_CONFIG: MarketConfig = {
   scarcityThresholds: { low: 20, high: 100 },
@@ -19,7 +20,7 @@ const DEFAULT_MARKET_CONFIG: MarketConfig = {
   },
 };
 
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 
 /**
@@ -38,13 +39,16 @@ export class MarketSystem {
   private state: GameState;
   private inventorySystem: InventorySystem;
   private config: MarketConfig;
+  private entityIndex?: EntityIndex;
 
   constructor(
     @inject(TYPES.GameState) state: GameState,
     @inject(TYPES.InventorySystem) inventorySystem: InventorySystem,
+    @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
   ) {
     this.state = state;
     this.inventorySystem = inventorySystem;
+    this.entityIndex = entityIndex;
     this.config = DEFAULT_MARKET_CONFIG;
   }
 
@@ -101,7 +105,9 @@ export class MarketSystem {
     const price = this.getResourcePrice(resource);
     const totalCost = price * amount;
 
-    const buyer = this.state.entities.find((e) => e.id === buyerId);
+    const buyer =
+      this.entityIndex?.getEntity(buyerId) ??
+      this.state.entities.find((e) => e.id === buyerId);
     if (!buyer || !buyer.stats) return false;
     const buyerMoney =
       typeof buyer.stats.money === "number" ? buyer.stats.money : 0;
@@ -139,7 +145,9 @@ export class MarketSystem {
     const price = this.getResourcePrice(resource);
     const totalValue = price * removed;
 
-    const seller = this.state.entities.find((e) => e.id === sellerId);
+    const seller =
+      this.entityIndex?.getEntity(sellerId) ??
+      this.state.entities.find((e) => e.id === sellerId);
     if (seller && seller.stats) {
       seller.stats.money =
         (typeof seller.stats.money === "number" ? seller.stats.money : 0) +

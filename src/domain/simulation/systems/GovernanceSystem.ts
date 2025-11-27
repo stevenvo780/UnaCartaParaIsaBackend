@@ -232,7 +232,7 @@ export class GovernanceSystem {
             this.demands.entries(),
           )) {
             if (
-              demand.type === "food_shortage" &&
+              demand.type === DemandType.FOOD_SHORTAGE &&
               !demand.resolvedAt &&
               demand.priority < 8
             ) {

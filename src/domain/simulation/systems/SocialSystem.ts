@@ -7,6 +7,7 @@ import { logger } from "../../../infrastructure/utils/logger";
 import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "node:perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
+import type { EntityIndex } from "../core/EntityIndex";
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -52,13 +53,16 @@ export class SocialSystem {
   /** Dirty flag to skip recomputeGroups when no edges changed */
   private edgesModified = false;
   private gpuService?: GPUComputeService;
+  private entityIndex?: EntityIndex;
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
     @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
+    @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
   ) {
     this.gameState = gameState;
     this.gpuService = gpuService;
+    this.entityIndex = entityIndex;
     this.config = {
       proximityRadius: 100,
       reinforcementPerSecond: 0.05,
@@ -501,7 +505,9 @@ export class SocialSystem {
     const entities = this.gameState.entities;
     if (!entities) return;
 
-    const centerEntity = entities.find((e) => e.id === centerAgentId);
+    const centerEntity =
+      this.entityIndex?.getEntity(centerAgentId) ??
+      entities.find((e) => e.id === centerAgentId);
     if (!centerEntity?.position) return;
 
     const nearby = this.spatialGrid.queryRadius(centerEntity.position, radius);
