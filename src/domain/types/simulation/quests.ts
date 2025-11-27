@@ -1,11 +1,19 @@
+import {
+  QuestStatus,
+  QuestDifficulty,
+  QuestRewardType,
+  QuestRequirementType,
+  QuestDialogueStage,
+} from "../../../shared/constants/QuestEnums";
+
 export interface Quest {
   id: string;
   title: string;
   description: string;
   loreText?: string;
   category?: string;
-  difficulty?: "easy" | "medium" | "hard" | "daily";
-  status: "available" | "active" | "completed" | "failed" | "not_started";
+  difficulty?: QuestDifficulty;
+  status: QuestStatus;
   version?: number;
   objectives: QuestObjective[];
   rewards: QuestReward[];
@@ -43,13 +51,7 @@ export interface QuestObjective {
 }
 
 export interface QuestReward {
-  type:
-    | "experience"
-    | "money"
-    | "item"
-    | "stats_boost"
-    | "title"
-    | "unlock_feature";
+  type: QuestRewardType;
   amount?: number;
   itemId?: string;
   statsBoost?: Record<string, number>;
@@ -59,7 +61,7 @@ export interface QuestReward {
 }
 
 export interface QuestRequirement {
-  type: "quest_completed" | "stats_threshold" | "time_elapsed" | "item_owned";
+  type: QuestRequirementType;
   questId?: string;
   entityId?: string;
   stat?: string;
@@ -70,7 +72,7 @@ export interface QuestRequirement {
 }
 
 export interface QuestDialogue {
-  stage: "intro" | "progress" | "completion" | "failure";
+  stage: QuestDialogueStage;
   speaker: string;
   text: string;
   mood?: string;
@@ -88,8 +90,10 @@ export interface QuestProgress {
   unlockedTitles: string[];
 }
 
+import { GameEventType } from "../../../shared/constants/EventEnums";
+
 export interface QuestEvent {
-  type: string;
+  type: GameEventType;
   questId: string;
   objectiveId?: string;
   timestamp: number;

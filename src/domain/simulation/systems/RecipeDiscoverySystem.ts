@@ -39,8 +39,12 @@ export class RecipeDiscoverySystem {
   }
 
   /**
-   * Intenta descubrir una receta específica de bioma cuando un agente explora.
-   * Las recetas de bioma tienen chance de descubrimiento basada en el tiempo en el bioma.
+   * Attempts to discover a biome-specific recipe when an agent explores.
+   * Biome recipes have a discovery chance based on time spent in the biome.
+   *
+   * @param agentId - Agent attempting the discovery
+   * @param biomeType - Type of biome being explored
+   * @returns Discovery event if successful, null otherwise
    */
   public attemptBiomeDiscovery(
     agentId: string,
@@ -49,16 +53,13 @@ export class RecipeDiscoverySystem {
     const biomeRecipes = BiomeRecipesCatalog.getRecipesForBiome(biomeType);
     if (biomeRecipes.length === 0) return null;
 
-    // Verificar qué recetas del bioma el agente aún no conoce
     const unknownRecipes = biomeRecipes.filter(
       (recipe) => !this.agentKnowsRecipe(agentId, recipe.id),
     );
     if (unknownRecipes.length === 0) return null;
 
-    // Chance de descubrimiento (10% por intento)
     if (this.random() > 0.1) return null;
 
-    // Seleccionar receta aleatoria de las desconocidas
     const recipe =
       unknownRecipes[Math.floor(this.random() * unknownRecipes.length)];
 
@@ -78,14 +79,19 @@ export class RecipeDiscoverySystem {
   }
 
   /**
-   * Obtiene recetas disponibles para un bioma específico
+   * Gets available recipes for a specific biome.
+   *
+   * @param biomeType - Type of biome
+   * @returns Array of crafting recipes available in the biome
    */
   public getBiomeRecipes(biomeType: string): CraftingRecipe[] {
     return BiomeRecipesCatalog.getRecipesForBiome(biomeType);
   }
 
   /**
-   * Obtiene todos los biomas que tienen recetas especiales
+   * Gets all biomes that have special recipes.
+   *
+   * @returns Array of biome type strings
    */
   public getAvailableBiomes(): string[] {
     return BiomeRecipesCatalog.getAvailableBiomes();

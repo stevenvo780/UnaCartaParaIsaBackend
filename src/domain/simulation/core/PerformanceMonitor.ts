@@ -200,8 +200,6 @@ class PerformanceMonitor {
     this.batchStats = stats;
   }
 
-  // ==================== MÉTODOS PARA MÉTRICAS AVANZADAS ====================
-
   /**
    * Records an operation execution with detailed stats
    */

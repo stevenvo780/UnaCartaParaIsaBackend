@@ -271,7 +271,6 @@ export class WorldResourceSystem {
     // 85% of decals are purely decorative - not harvestable
     if (rand < 0.85) return null;
 
-    // 15% chance to spawn a resource:
     const resourceRand = Math.random();
 
     // 40% of resources are rocks/stones

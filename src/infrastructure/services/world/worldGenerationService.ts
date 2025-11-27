@@ -53,8 +53,18 @@ export class WorldGenerationService {
 
   /**
    * Generates a 16x16 terrain chunk at the specified coordinates.
+   *
    * Uses Perlin noise to generate temperature, moisture, elevation, and continentality values.
    * Resolves biomes based on these values and generates appropriate assets.
+   *
+   * @param x - Chunk X coordinate (in chunk units, not pixels)
+   * @param y - Chunk Y coordinate (in chunk units, not pixels)
+   * @param config - World generation configuration (seed, dimensions, noise parameters)
+   * @returns Promise resolving to a 2D array of terrain tiles (16x16)
+   *
+   * @remarks
+   * This method is deterministic when the same seed is used. Chunk generation
+   * is CPU-intensive and should be cached when possible.
    */
   async generateChunk(
     x: number,
@@ -169,7 +179,10 @@ export class WorldGenerationService {
 
     // Decals - increased probability for better visual variety
     // Props-based decals (flowers, leaves, moss, etc.)
-    if (biomeConfig.density.props && tileRng() < biomeConfig.density.props * 0.4) {
+    if (
+      biomeConfig.density.props &&
+      tileRng() < biomeConfig.density.props * 0.4
+    ) {
       assets.decals.push(`decal_${biomeConfig.id}`);
       // Add second decal sometimes for more variety
       if (tileRng() < 0.3) {
@@ -178,7 +191,10 @@ export class WorldGenerationService {
     }
 
     // Rock-based decals (small stones, pebbles)
-    if (biomeConfig.density.rocks && tileRng() < biomeConfig.density.rocks * 0.35) {
+    if (
+      biomeConfig.density.rocks &&
+      tileRng() < biomeConfig.density.rocks * 0.35
+    ) {
       assets.decals.push(`decal_rock_${biomeConfig.id}`);
     }
 

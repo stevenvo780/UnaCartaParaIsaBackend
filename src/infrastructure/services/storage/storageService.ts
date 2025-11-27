@@ -74,6 +74,15 @@ export class StorageService {
     }
   }
 
+  /**
+   * Checks storage service health.
+   *
+   * @returns Health status with storage type (gcs or local)
+   *
+   * @remarks
+   * Side effects: May perform network I/O for GCS or filesystem I/O for local storage.
+   * Used by health check endpoints.
+   */
   async isHealthy(): Promise<{
     status: string;
     timestamp: number;
@@ -90,7 +99,14 @@ export class StorageService {
 
   /**
    * Lists all available save files with metadata.
-   * Saves are sorted by timestamp (newest first).
+   *
+   * Saves are sorted by timestamp (newest first). Supports both GCS and local storage.
+   *
+   * @returns Array of save metadata sorted by timestamp (newest first)
+   *
+   * @remarks
+   * Side effects: May perform I/O operations to list files from storage.
+   * For GCS, this queries the bucket. For local storage, this reads the directory.
    */
   async listSaves(): Promise<SaveMetadata[]> {
     let saves: SaveMetadata[] = [];
@@ -162,6 +178,16 @@ export class StorageService {
     return saves.sort((a, b) => b.timestamp - a.timestamp);
   }
 
+  /**
+   * Retrieves a saved game by ID.
+   *
+   * @param id - Save file ID (format: save_<timestamp>)
+   * @returns Save data if found, null otherwise
+   *
+   * @remarks
+   * Side effects: Performs I/O to read from GCS bucket or local filesystem.
+   * Returns null if save doesn't exist or is corrupted.
+   */
   async getSave(id: string): Promise<SaveData | null> {
     if (this.useGCS && this.bucket) {
       const file = this.bucket.file(`${id}.json`);
@@ -241,6 +267,16 @@ export class StorageService {
     return { saveId, size };
   }
 
+  /**
+   * Deletes a saved game by ID.
+   *
+   * @param id - Save file ID (format: save_<timestamp>)
+   * @returns True if save was deleted, false if it didn't exist
+   *
+   * @remarks
+   * Side effects: Performs I/O to delete from GCS bucket or local filesystem.
+   * This operation is irreversible.
+   */
   async deleteSave(id: string): Promise<boolean> {
     if (this.useGCS && this.bucket) {
       const file = this.bucket.file(`${id}.json`);

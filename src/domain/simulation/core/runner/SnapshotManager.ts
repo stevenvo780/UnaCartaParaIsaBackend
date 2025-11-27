@@ -97,7 +97,9 @@ export class SnapshotManager {
       currentTick,
     );
 
-    logger.info(`[SNAPSHOT DEBUG] Before enrichment: agents=${stateSnapshot.agents?.length ?? 'undefined'}, tick=${currentTick}`);
+    logger.info(
+      `[SNAPSHOT DEBUG] Before enrichment: agents=${stateSnapshot.agents?.length ?? "undefined"}, tick=${currentTick}`,
+    );
 
     // Enrich agents with AI state data before sending to frontend
     if (stateSnapshot.agents) {
@@ -107,12 +109,12 @@ export class SnapshotManager {
         // Serialize AI state for frontend
         const ai = aiState
           ? {
-            currentGoal: aiState.currentGoal || undefined,
-            goalQueue: aiState.goalQueue || [],
-            currentAction: aiState.currentAction || undefined,
-            offDuty: aiState.offDuty || false,
-            lastDecisionTime: aiState.lastDecisionTime || 0,
-          }
+              currentGoal: aiState.currentGoal || undefined,
+              goalQueue: aiState.goalQueue || [],
+              currentAction: aiState.currentAction || undefined,
+              offDuty: aiState.offDuty || false,
+              lastDecisionTime: aiState.lastDecisionTime || 0,
+            }
           : undefined;
 
         return {
@@ -122,7 +124,9 @@ export class SnapshotManager {
       });
     }
 
-    logger.info(`[SNAPSHOT DEBUG] After enrichment: agents=${stateSnapshot.agents?.length ?? 'undefined'}, tick=${currentTick}`);
+    logger.info(
+      `[SNAPSHOT DEBUG] After enrichment: agents=${stateSnapshot.agents?.length ?? "undefined"}, tick=${currentTick}`,
+    );
 
     // We need to construct a SimulationSnapshot to pass to encodeDelta
     const events =
@@ -185,12 +189,12 @@ export class SnapshotManager {
         // Serialize AI state for frontend
         const ai = aiState
           ? {
-            currentGoal: aiState.currentGoal || undefined,
-            goalQueue: aiState.goalQueue || [],
-            currentAction: aiState.currentAction || undefined,
-            offDuty: aiState.offDuty || false,
-            lastDecisionTime: aiState.lastDecisionTime || 0,
-          }
+              currentGoal: aiState.currentGoal || undefined,
+              goalQueue: aiState.goalQueue || [],
+              currentAction: aiState.currentAction || undefined,
+              offDuty: aiState.offDuty || false,
+              lastDecisionTime: aiState.lastDecisionTime || 0,
+            }
           : undefined;
 
         return {

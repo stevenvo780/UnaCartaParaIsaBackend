@@ -3,30 +3,57 @@ import type {
   GameState,
 } from "../../../domain/types/game-types";
 import type { AgentTraits } from "../simulation/agents";
+import { GameEventType } from "../../constants/EventEnums";
+import { ResourceType, WorldResourceType } from "../../constants/ResourceEnums";
+import { BiomeType } from "../../constants/BiomeEnums";
+import { NeedType } from "../../constants/AIEnums";
+import { Sex } from "../../constants/AgentEnums";
 
 export type ResourcesState = NonNullable<GameState["resources"]>;
 
-export type SimulationEventPayload =
-  | { type: string; [key: string]: string | number | boolean | undefined }
-  | {
-      type: string;
-      agentId: string;
-      [key: string]: string | number | boolean | undefined;
-    }
-  | {
-      type: string;
-      zoneId: string;
-      [key: string]: string | number | boolean | undefined;
-    }
-  | {
-      type: string;
-      resourceId: string;
-      [key: string]: string | number | boolean | undefined;
-    }
-  | Record<string, string | number | boolean | undefined>;
+/**
+ * Base interface for all event payloads.
+ */
+export interface BaseEventPayload {
+  type: GameEventType;
+  [key: string]: string | number | boolean | undefined | GameEventType;
+}
 
+/**
+ * Event payload with agent ID.
+ */
+export interface AgentEventPayload extends BaseEventPayload {
+  agentId: string;
+}
+
+/**
+ * Event payload with zone ID.
+ */
+export interface ZoneEventPayload extends BaseEventPayload {
+  zoneId: string;
+}
+
+/**
+ * Event payload with resource ID.
+ */
+export interface ResourceEventPayload extends BaseEventPayload {
+  resourceId: string;
+}
+
+/**
+ * Union type for all possible event payloads.
+ */
+export type SimulationEventPayload =
+  | BaseEventPayload
+  | AgentEventPayload
+  | ZoneEventPayload
+  | ResourceEventPayload;
+
+/**
+ * Simulation event interface with typed event type.
+ */
 export interface SimulationEvent {
-  type: string;
+  type: GameEventType;
   payload?: SimulationEventPayload;
   timestamp?: number;
 }
@@ -41,7 +68,7 @@ export interface SimulationSnapshot {
 export interface SpawnAgentCommandPayload {
   requestId?: string;
   name?: string;
-  sex?: "male" | "female" | "unknown";
+  sex?: Sex | "unknown";
   generation?: number;
   immortal?: boolean;
   parents?: {
@@ -54,10 +81,9 @@ export interface SpawnAgentCommandPayload {
 export interface NeedsCommandPayload {
   entityId?: string;
   agentId?: string;
-  needType?: string;
+  needType?: NeedType;
   amount?: number;
   delta?: number;
-  [key: string]: string | number | undefined;
 }
 
 export interface RecipeCommandPayload {
@@ -65,7 +91,6 @@ export interface RecipeCommandPayload {
   teacherId?: string;
   studentId?: string;
   recipeId?: string;
-  [key: string]: string | undefined;
 }
 
 export interface SocialCommandPayload {
@@ -78,29 +103,25 @@ export interface SocialCommandPayload {
   delta?: number;
   durationMs?: number;
   magnitude?: number;
-  [key: string]: string | number | undefined;
 }
 
 export interface ResearchCommandPayload {
   lineageId?: string;
   recipeId?: string;
   discoveredBy?: string;
-  [key: string]: string | undefined;
 }
 
 export interface WorldResourceCommandPayload {
-  type?: string;
+  type?: WorldResourceType;
   resourceId?: string;
   agentId?: string;
   position?: { x: number; y: number };
-  biome?: string;
-  [key: string]: string | { x: number; y: number } | undefined;
+  biome?: BiomeType;
 }
 
 export interface DialogueCommandPayload {
   cardId?: string;
   choiceId?: string;
-  [key: string]: string | undefined;
 }
 
 export interface BuildingCommandPayload {
@@ -108,7 +129,6 @@ export interface BuildingCommandPayload {
   agentId?: string;
   buildingType?: string;
   position?: { x: number; y: number };
-  [key: string]: string | { x: number; y: number } | number | undefined;
 }
 
 export interface ReputationCommandPayload {
@@ -116,7 +136,6 @@ export interface ReputationCommandPayload {
   agentB?: string;
   trust?: number;
   delta?: number;
-  [key: string]: string | number | undefined;
 }
 
 export interface TaskCommandPayload {
@@ -126,17 +145,11 @@ export interface TaskCommandPayload {
   type?: string;
   requiredWork?: number;
   bounds?: { x: number; y: number; width: number; height: number };
-  [key: string]:
-    | string
-    | number
-    | { x: number; y: number; width: number; height: number }
-    | undefined;
 }
 
 export interface PingPayload {
   message?: string;
   timestamp?: number;
-  [key: string]: string | number | undefined;
 }
 
 export interface AgentCommandPayload {
@@ -144,119 +157,141 @@ export interface AgentCommandPayload {
   y?: number;
   speed?: number;
   activity?: string;
-  [key: string]: string | number | boolean | undefined;
 }
 
 export interface AnimalCommandPayload {
   type?: string;
   position?: { x: number; y: number };
-  biome?: string;
-  [key: string]: string | number | { x: number; y: number } | undefined;
+  biome?: BiomeType;
 }
 
 export interface GiveResourceCommandPayload {
   agentId: string;
-  resource: "wood" | "stone" | "food" | "water";
+  resource: ResourceType;
   amount: number;
   targetType?: "agent";
 }
 
+import {
+  SimulationCommandType,
+  NeedsCommandType,
+  RecipeCommandType,
+  SocialCommandType,
+  ResearchCommandType,
+  WorldResourceCommandType,
+  DialogueCommandType,
+  BuildingCommandType,
+  ReputationCommandType,
+  TaskCommandType,
+  TimeCommandType,
+} from "../../constants/CommandEnums";
+
 export type SimulationCommand =
-  | { type: "SET_TIME_SCALE"; multiplier: number }
+  | { type: SimulationCommandType.SET_TIME_SCALE; multiplier: number }
   | {
-      type: "APPLY_RESOURCE_DELTA";
+      type: SimulationCommandType.APPLY_RESOURCE_DELTA;
       delta: Partial<GameResources["materials"]>;
     }
-  | { type: "GATHER_RESOURCE"; resourceId: string; amount: number }
-  | { type: "GIVE_RESOURCE"; payload: GiveResourceCommandPayload }
-  | { type: "SPAWN_AGENT"; payload?: SpawnAgentCommandPayload }
-  | { type: "KILL_AGENT"; agentId: string }
-  | { type: "PING"; payload?: PingPayload }
   | {
-      type: "AGENT_COMMAND";
+      type: SimulationCommandType.GATHER_RESOURCE;
+      resourceId: string;
+      amount: number;
+    }
+  | {
+      type: SimulationCommandType.GIVE_RESOURCE;
+      payload: GiveResourceCommandPayload;
+    }
+  | {
+      type: SimulationCommandType.SPAWN_AGENT;
+      payload?: SpawnAgentCommandPayload;
+    }
+  | { type: SimulationCommandType.KILL_AGENT; agentId: string }
+  | { type: SimulationCommandType.PING; payload?: PingPayload }
+  | {
+      type: SimulationCommandType.AGENT_COMMAND;
       agentId: string;
       command: string;
       payload?: AgentCommandPayload;
     }
   | {
-      type: "ANIMAL_COMMAND";
+      type: SimulationCommandType.ANIMAL_COMMAND;
       command: string;
       payload?: AnimalCommandPayload;
     }
   | {
-      type: "NEEDS_COMMAND";
-      command: "SATISFY_NEED" | "MODIFY_NEED" | "UPDATE_CONFIG";
+      type: SimulationCommandType.NEEDS_COMMAND;
+      command: NeedsCommandType;
       payload?: NeedsCommandPayload;
     }
   | {
-      type: "RECIPE_COMMAND";
-      command: "TEACH_RECIPE" | "SHARE_RECIPE";
+      type: SimulationCommandType.RECIPE_COMMAND;
+      command: RecipeCommandType;
       payload?: RecipeCommandPayload;
     }
   | {
-      type: "SOCIAL_COMMAND";
-      command:
-        | "IMPOSE_TRUCE"
-        | "SET_AFFINITY"
-        | "MODIFY_AFFINITY"
-        | "FRIENDLY_INTERACTION"
-        | "HOSTILE_ENCOUNTER"
-        | "REMOVE_RELATIONSHIPS";
+      type: SimulationCommandType.SOCIAL_COMMAND;
+      command: SocialCommandType;
       payload?: SocialCommandPayload;
     }
   | {
-      type: "RESEARCH_COMMAND";
-      command: "INITIALIZE_LINEAGE" | "RECIPE_DISCOVERED";
+      type: SimulationCommandType.RESEARCH_COMMAND;
+      command: ResearchCommandType;
       payload?: ResearchCommandPayload;
     }
   | {
-      type: "WORLD_RESOURCE_COMMAND";
-      command: "SPAWN_RESOURCE" | "HARVEST_RESOURCE";
+      type: SimulationCommandType.WORLD_RESOURCE_COMMAND;
+      command: WorldResourceCommandType;
       payload?: WorldResourceCommandPayload;
     }
   | {
-      type: "DIALOGUE_COMMAND";
-      command: "RESPOND_TO_CARD";
+      type: SimulationCommandType.DIALOGUE_COMMAND;
+      command: DialogueCommandType;
       payload?: DialogueCommandPayload;
     }
   | {
-      type: "BUILDING_COMMAND";
-      command:
-        | "START_UPGRADE"
-        | "CANCEL_UPGRADE"
-        | "ENQUEUE_CONSTRUCTION"
-        | "CONSTRUCT_BUILDING";
+      type: SimulationCommandType.BUILDING_COMMAND;
+      command: BuildingCommandType;
       payload?: BuildingCommandPayload;
     }
   | {
-      type: "REPUTATION_COMMAND";
-      command: "UPDATE_TRUST";
+      type: SimulationCommandType.REPUTATION_COMMAND;
+      command: ReputationCommandType;
       payload?: ReputationCommandPayload;
     }
   | {
-      type: "TASK_COMMAND";
-      command: "CREATE_TASK" | "CONTRIBUTE_TO_TASK" | "REMOVE_TASK";
+      type: SimulationCommandType.TASK_COMMAND;
+      command: TaskCommandType;
       payload?: TaskCommandPayload;
     }
   | {
-      type: "TIME_COMMAND";
-      command: "SET_WEATHER";
+      type: SimulationCommandType.TIME_COMMAND;
+      command: TimeCommandType;
       payload?: { weatherType: string };
     }
   | {
-      type: "TIME_COMMAND";
-      command: "SET_WEATHER";
-      payload?: { weatherType: string };
+      type: SimulationCommandType.FORCE_EMERGENCE_EVALUATION;
+      timestamp?: number;
     }
-  | { type: "FORCE_EMERGENCE_EVALUATION"; timestamp?: number }
-  | { type: "SAVE_GAME"; timestamp?: number };
+  | { type: SimulationCommandType.SAVE_GAME; timestamp?: number };
 
 export interface SimulationConfig {
   tickIntervalMs: number;
   maxCommandQueue: number;
 }
 
+import { SimulationRequestType } from "../../constants/CommandEnums";
+
 export type SimulationRequest =
-  | { type: "REQUEST_FULL_STATE"; requestId: string }
-  | { type: "REQUEST_ENTITY_DETAILS"; requestId: string; entityId: string }
-  | { type: "REQUEST_PLAYER_ID"; requestId: string };
+  | {
+      type: SimulationRequestType.REQUEST_FULL_STATE;
+      requestId: string;
+    }
+  | {
+      type: SimulationRequestType.REQUEST_ENTITY_DETAILS;
+      requestId: string;
+      entityId: string;
+    }
+  | {
+      type: SimulationRequestType.REQUEST_PLAYER_ID;
+      requestId: string;
+    };

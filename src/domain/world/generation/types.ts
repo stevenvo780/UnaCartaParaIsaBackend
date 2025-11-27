@@ -1,19 +1,10 @@
-export const enum BiomeType {
-  GRASSLAND = "grassland",
-  FOREST = "forest",
-  DESERT = "desert",
-  TUNDRA = "tundra",
-  SWAMP = "swamp",
-  MOUNTAIN = "mountain",
-  BEACH = "beach",
-  OCEAN = "ocean",
-  RIVER = "river",
-  LAKE = "lake",
-  MYSTICAL = "mystical",
-  WETLAND = "wetland",
-  MOUNTAINOUS = "mountainous",
-  VILLAGE = "village",
-}
+import { BiomeType } from "../../../shared/constants/BiomeEnums";
+
+/**
+ * Re-export BiomeType enum for backward compatibility.
+ * @deprecated Import from shared/constants/BiomeEnums instead
+ */
+export { BiomeType };
 
 export interface BiomeDefinition {
   id: BiomeType;

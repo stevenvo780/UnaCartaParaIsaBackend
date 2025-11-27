@@ -1,32 +1,23 @@
+import {
+  WorldResourceType,
+  ResourceState,
+  ResourceInteractionType,
+  ResourceType,
+} from "../../../shared/constants/ResourceEnums";
+import { BiomeType } from "../../../shared/constants/BiomeEnums";
+
+/**
+ * Re-export enums for backward compatibility.
+ */
+export { WorldResourceType, ResourceState, ResourceInteractionType };
+
 export interface Position {
   x: number;
   y: number;
 }
 
-export type WorldResourceType =
-  | "tree"
-  | "rock"
-  | "trash_pile"
-  | "water_source"
-  | "berry_bush"
-  | "mushroom_patch"
-  | "wheat_crop";
-
-export type ResourceState =
-  | "pristine"
-  | "harvested_partial"
-  | "depleted"
-  | "regenerating";
-
-export type ResourceInteractionType =
-  | "chop"
-  | "mine"
-  | "search"
-  | "collect"
-  | "gather";
-
 export interface ResourceYield {
-  resourceType: "wood" | "stone" | "food" | "water" | "rare_materials";
+  resourceType: ResourceType;
   amountMin: number;
   amountMax: number;
   rareMaterialsChance?: number;
@@ -57,7 +48,7 @@ export interface WorldResourceConfig {
   };
 
   spawnProbability?: number;
-  suitableBiomes?: string[];
+  suitableBiomes?: BiomeType[];
   clusterSize?: { min: number; max: number };
   minDistanceBetweenClusters?: number;
 }
@@ -70,7 +61,7 @@ export interface WorldResourceInstance {
   harvestCount: number;
   lastHarvestTime?: number;
   regenerationStartTime?: number;
-  biome?: string;
+  biome?: BiomeType;
   spawnedAt?: number;
 }
 

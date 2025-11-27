@@ -24,9 +24,28 @@ import { WorldResourceSystem } from "../../domain/simulation/systems/WorldResour
 
 /**
  * Controller for world generation operations.
- * Automatically spawns animals for generated chunks.
+ *
+ * Handles HTTP endpoints for terrain chunk generation. Automatically spawns
+ * animals and resources for generated chunks. Validates chunk parameters
+ * and enforces size limits to prevent resource exhaustion.
+ *
+ * @remarks
+ * Chunk generation is CPU-intensive. Consider rate limiting in production.
+ * Generated chunks are cached by the WorldGenerationService.
  */
 export class WorldController {
+  /**
+   * Generates a terrain chunk at the specified coordinates.
+   *
+   * @param req - Express request with chunk parameters (x, y, seed, width, height, tileSize)
+   * @param res - Express response with generated chunk data
+   *
+   * @remarks
+   * Side effects:
+   * - Spawns animals in the chunk via AnimalSystem
+   * - Spawns resources in the chunk via WorldResourceSystem
+   * - May write to storage if chunk caching is enabled
+   */
   async generateChunk(req: Request, res: Response): Promise<void> {
     try {
       const worldGenerationService = container.get<WorldGenerationService>(

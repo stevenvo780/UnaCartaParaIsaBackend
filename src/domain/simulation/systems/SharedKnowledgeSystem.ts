@@ -29,13 +29,13 @@ export interface ThreatAlert {
 
 /**
  * System for sharing knowledge and alerts among agents.
- * 
+ *
  * Features:
  * - Resource discovery alerts that spread to nearby agents
  * - Threat warnings with severity-based propagation radius
  * - Automatic expiration of old alerts
  * - Spatial propagation based on agent proximity
- * 
+ *
  * This enables emergent collective intelligence where agents
  * can benefit from discoveries and warnings of their peers.
  */
@@ -57,7 +57,7 @@ export class SharedKnowledgeSystem extends EventEmitter {
 
   /**
    * Registers a resource find and propagates to nearby agents.
-   * 
+   *
    * @param agentId - ID of the agent who found the resource
    * @param resourceId - ID of the resource
    * @param resourceType - Type of resource (food, water, wood, stone)
@@ -96,7 +96,7 @@ export class SharedKnowledgeSystem extends EventEmitter {
 
   /**
    * Registers a threat and alerts nearby agents.
-   * 
+   *
    * @param agentId - ID of the agent who detected the threat
    * @param threatId - ID of the threat (e.g., predator ID)
    * @param threatType - Type of threat
@@ -188,7 +188,7 @@ export class SharedKnowledgeSystem extends EventEmitter {
 
   /**
    * Gets active resource alerts that an agent knows about.
-   * 
+   *
    * @param agentId - ID of the agent
    * @returns Array of resource alerts the agent has been notified about
    */
@@ -208,7 +208,7 @@ export class SharedKnowledgeSystem extends EventEmitter {
 
   /**
    * Gets active threat alerts that an agent knows about.
-   * 
+   *
    * @param agentId - ID of the agent
    * @returns Array of threat alerts the agent has been notified about
    */

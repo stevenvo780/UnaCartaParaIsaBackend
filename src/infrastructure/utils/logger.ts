@@ -190,10 +190,7 @@ class Logger {
       const maxLogsInFile = this.config.maxMemoryLogs * 2;
       const logsToKeep = allLogs.slice(-maxLogsInFile);
 
-      // Asegurarse de que el directorio existe antes de escribir
       await fs.promises.mkdir(this.config.logDir, { recursive: true });
-
-      // Escribir todos los logs al archivo
       await fs.promises.writeFile(
         this.logFilePath,
         JSON.stringify(logsToKeep, null, 2),

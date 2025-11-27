@@ -105,7 +105,7 @@ export interface Size {
 /**
  * Rectangle with position and size.
  */
-export interface Rect extends Position, Size { }
+export interface Rect extends Position, Size {}
 
 export type InteractionType =
   | "NOURISH"

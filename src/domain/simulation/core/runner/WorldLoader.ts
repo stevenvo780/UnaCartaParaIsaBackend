@@ -242,7 +242,6 @@ export class WorldLoader {
     );
   }
 
-  // NOTE: ensureInitialAnimals was removed.
   // Animals are ONLY spawned per-chunk via AnimalSpawning.spawnAnimalsInChunk()
   // This is triggered when frontend requests chunks via /api/world/chunk/:x/:y
 
@@ -425,9 +424,7 @@ export class WorldLoader {
           // Normalizar bioma para sprite (capitalizar primera letra)
           const normalizedBiome = this.normalizeBiomeForSprite(biome);
           // Obtener variante aleatoria (0-4)
-          const variantIndex = Math.floor(
-            ((x * 31 + y * 17) % 100) / 20,
-          );
+          const variantIndex = Math.floor(((x * 31 + y * 17) % 100) / 20);
 
           const zone: Zone = {
             id: zoneId,
@@ -577,8 +574,4 @@ export class WorldLoader {
     };
     return buildingTypeMapping[zoneType] || "house";
   }
-
-  // NOTE: spawnInitialAnimals was removed.
-  // Animals are ONLY spawned per-chunk via AnimalSpawning.spawnAnimalsInChunk()
-  // This is triggered when frontend requests chunks via /api/world/chunk/:x/:y
 }

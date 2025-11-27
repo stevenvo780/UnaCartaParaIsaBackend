@@ -424,7 +424,6 @@ export function evaluateCollectiveNeeds(
     });
   }
 
-
   // 5. Evaluate deposit goals when agent has resources and stockpiles need filling
   if (inventory) {
     const agentLoad =
@@ -574,7 +573,6 @@ function getTaskTypeForResource(resource: ResourceType): TaskType {
       return "custom";
   }
 }
-
 
 /**
  * Adjusts individual need thresholds based on agent's role and community state.

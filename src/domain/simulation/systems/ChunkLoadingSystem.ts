@@ -33,7 +33,8 @@ export class ChunkLoadingSystem {
 
   constructor(
     @inject(TYPES.GameState) private gameState: GameState,
-    @inject(TYPES.WorldGenerationService) private worldGenerationService: WorldGenerationService,
+    @inject(TYPES.WorldGenerationService)
+    private worldGenerationService: WorldGenerationService,
     @inject(TYPES.AnimalSystem) private animalSystem: AnimalSystem,
   ) {}
 
@@ -80,7 +81,7 @@ export class ChunkLoadingSystem {
     }
 
     logger.debug(
-      `🌍 ChunkLoadingSystem: Loading ${chunksToLoad.length} chunks for ${activeAgents.length} agents`
+      `🌍 ChunkLoadingSystem: Loading ${chunksToLoad.length} chunks for ${activeAgents.length} agents`,
     );
 
     // Load chunks asynchronously (fire and forget)
@@ -91,7 +92,7 @@ export class ChunkLoadingSystem {
    * Calculate which chunks need to be loaded based on agent positions
    */
   private calculateChunksToLoad(
-    agents: Array<{ position: { x: number; y: number } }>
+    agents: Array<{ position: { x: number; y: number } }>,
   ): Array<{ x: number; y: number }> {
     const chunksNeeded = new Set<string>();
 
@@ -99,12 +100,26 @@ export class ChunkLoadingSystem {
       if (!agent.position) continue;
 
       // Convert agent position to chunk coordinates
-      const agentChunkX = Math.floor(agent.position.x / (this.CHUNK_SIZE * (this.worldConfig?.tileSize ?? 16)));
-      const agentChunkY = Math.floor(agent.position.y / (this.CHUNK_SIZE * (this.worldConfig?.tileSize ?? 16)));
+      const agentChunkX = Math.floor(
+        agent.position.x /
+          (this.CHUNK_SIZE * (this.worldConfig?.tileSize ?? 16)),
+      );
+      const agentChunkY = Math.floor(
+        agent.position.y /
+          (this.CHUNK_SIZE * (this.worldConfig?.tileSize ?? 16)),
+      );
 
       // Add chunks in a radius around the agent
-      for (let dx = -this.LOAD_RADIUS_CHUNKS; dx <= this.LOAD_RADIUS_CHUNKS; dx++) {
-        for (let dy = -this.LOAD_RADIUS_CHUNKS; dy <= this.LOAD_RADIUS_CHUNKS; dy++) {
+      for (
+        let dx = -this.LOAD_RADIUS_CHUNKS;
+        dx <= this.LOAD_RADIUS_CHUNKS;
+        dx++
+      ) {
+        for (
+          let dy = -this.LOAD_RADIUS_CHUNKS;
+          dy <= this.LOAD_RADIUS_CHUNKS;
+          dy++
+        ) {
           const chunkX = agentChunkX + dx;
           const chunkY = agentChunkY + dy;
           const chunkKey = `${chunkX},${chunkY}`;
@@ -119,7 +134,7 @@ export class ChunkLoadingSystem {
 
     // Convert set to array of coordinates
     return Array.from(chunksNeeded).map((key) => {
-      const [x, y] = key.split(',').map(Number);
+      const [x, y] = key.split(",").map(Number);
       return { x, y };
     });
   }
@@ -127,7 +142,9 @@ export class ChunkLoadingSystem {
   /**
    * Load the specified chunks (terrain, animals, resources)
    */
-  private async loadChunks(chunks: Array<{ x: number; y: number }>): Promise<void> {
+  private async loadChunks(
+    chunks: Array<{ x: number; y: number }>,
+  ): Promise<void> {
     if (!this.worldConfig) {
       return;
     }
@@ -138,7 +155,7 @@ export class ChunkLoadingSystem {
       } catch (error) {
         logger.error(
           `❌ Failed to load chunk (${chunkCoords.x}, ${chunkCoords.y}):`,
-          error
+          error,
         );
       }
     }
@@ -147,7 +164,10 @@ export class ChunkLoadingSystem {
   /**
    * Load a single chunk (terrain, animals, resources)
    */
-  private async loadChunk(chunkCoords: { x: number; y: number }): Promise<void> {
+  private async loadChunk(chunkCoords: {
+    x: number;
+    y: number;
+  }): Promise<void> {
     if (!this.worldConfig) {
       return;
     }
@@ -166,14 +186,14 @@ export class ChunkLoadingSystem {
     const worldY = chunkCoords.y * pixelHeight;
 
     logger.debug(
-      `🌍 [ChunkLoadingSystem] Loading chunk (${chunkCoords.x},${chunkCoords.y}) at world position (${worldX},${worldY})`
+      `🌍 [ChunkLoadingSystem] Loading chunk (${chunkCoords.x},${chunkCoords.y}) at world position (${worldX},${worldY})`,
     );
 
     // 1. Generate terrain for this chunk
     const chunkTiles = await this.worldGenerationService.generateChunk(
       chunkCoords.x,
       chunkCoords.y,
-      this.worldConfig
+      this.worldConfig,
     );
 
     // 2. Add terrain tiles to game state
@@ -181,14 +201,17 @@ export class ChunkLoadingSystem {
       for (const tile of row) {
         // Check if tile is within world bounds (if world has bounds)
         if (this.worldConfig.width && this.worldConfig.height) {
-          if (tile.x >= this.worldConfig.width || tile.y >= this.worldConfig.height) {
+          if (
+            tile.x >= this.worldConfig.width ||
+            tile.y >= this.worldConfig.height
+          ) {
             continue;
           }
         }
 
         // Only add if not already in terrain tiles (avoid duplicates)
         const existingTileIndex = this.gameState.terrainTiles?.findIndex(
-          (t) => t.x === tile.x && t.y === tile.y
+          (t) => t.x === tile.x && t.y === tile.y,
         );
 
         if (existingTileIndex === -1 || existingTileIndex === undefined) {
@@ -211,26 +234,22 @@ export class ChunkLoadingSystem {
     const spawned = this.animalSystem.spawnAnimalsForChunk(
       chunkCoords,
       { x: worldX, y: worldY, width: pixelWidth, height: pixelHeight },
-      chunkTiles
+      chunkTiles,
     );
 
     if (spawned > 0) {
       logger.debug(
-        `🐾 [ChunkLoadingSystem] Spawned ${spawned} animals for chunk (${chunkCoords.x},${chunkCoords.y})`
+        `🐾 [ChunkLoadingSystem] Spawned ${spawned} animals for chunk (${chunkCoords.x},${chunkCoords.y})`,
       );
     }
 
     // 4. Spawn resources for this chunk
-    // Note: WorldResourceSystem.spawnResourcesInWorld spawns for entire world
-    // For chunk-based spawning, we'd need a new method. For now, we skip this
-    // as resources are spawned globally during world initialization.
-    // TODO: Implement chunk-based resource spawning if needed
 
     // Mark chunk as loaded
     this.loadedChunks.add(chunkKey);
 
     logger.debug(
-      `✅ [ChunkLoadingSystem] Chunk (${chunkCoords.x},${chunkCoords.y}) loaded successfully`
+      `✅ [ChunkLoadingSystem] Chunk (${chunkCoords.x},${chunkCoords.y}) loaded successfully`,
     );
   }
 

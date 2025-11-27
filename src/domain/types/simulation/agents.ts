@@ -1,5 +1,13 @@
-export type Sex = "male" | "female";
-export type LifeStage = "child" | "adult" | "elder";
+import {
+  Sex,
+  LifeStage,
+  SocialStatus,
+} from "../../../shared/constants/AgentEnums";
+
+/**
+ * Re-export enums for backward compatibility.
+ */
+export { Sex, LifeStage, SocialStatus };
 
 export interface AgentTraits {
   cooperation: number;
@@ -24,7 +32,7 @@ export interface AgentProfile {
   immortal?: boolean;
   isDead?: boolean;
   traits: AgentTraits;
-  socialStatus?: "noble" | "commoner" | "warrior";
+  socialStatus?: SocialStatus;
   parents?: {
     father?: string;
     mother?: string;
@@ -33,6 +41,5 @@ export interface AgentProfile {
   stats?: {
     money?: number;
     reputation?: number;
-    [key: string]: string | number | boolean | undefined;
   };
 }

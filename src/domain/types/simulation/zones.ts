@@ -1,62 +1,12 @@
-export type ZoneType =
-  | "kitchen"
-  | "bedroom"
-  | "living"
-  | "bathroom"
-  | "office"
-  | "gym"
-  | "library"
-  | "social"
-  | "recreation"
-  | "food"
-  | "water"
-  | "shelter"
-  | "rest"
-  | "play"
-  | "comfort"
-  | "work"
-  | "energy"
-  | "hygiene"
-  | "entertainment"
-  | "fun"
-  | "medical"
-  | "education"
-  | "training"
-  | "knowledge"
-  | "market"
-  | "spiritual"
-  | "security"
-  | "storage"
-  | "defense";
+import { ZoneType, ALL_ZONE_TYPES } from "../../../shared/constants/ZoneEnums";
 
-export const ZONE_TYPES = [
-  "kitchen",
-  "bedroom",
-  "living",
-  "bathroom",
-  "office",
-  "gym",
-  "library",
-  "social",
-  "recreation",
-  "food",
-  "water",
-  "shelter",
-  "rest",
-  "play",
-  "comfort",
-  "work",
-  "energy",
-  "hygiene",
-  "entertainment",
-  "fun",
-  "medical",
-  "education",
-  "training",
-  "knowledge",
-  "market",
-  "spiritual",
-  "security",
-  "storage",
-  "defense",
-] as const;
+/**
+ * Re-export enum for backward compatibility.
+ */
+export { ZoneType };
+
+/**
+ * Array of all zone types for iteration.
+ * @deprecated Use ALL_ZONE_TYPES from ZoneEnums instead
+ */
+export const ZONE_TYPES = ALL_ZONE_TYPES;

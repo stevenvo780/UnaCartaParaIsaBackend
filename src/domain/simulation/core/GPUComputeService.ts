@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import * as tf from "@tensorflow/tfjs-node-gpu";
 import { logger } from "../../../infrastructure/utils/logger";
 import { injectable } from "inversify";
@@ -27,84 +26,46 @@ export class GPUComputeService {
   /**
    * Initializes TensorFlow.js and detects GPU availability.
    * Must be called before using any GPU operations.
+   *
+   * @remarks
+   * Performs GPU detection by testing tensor operations. Falls back to CPU
+   * if GPU is unavailable or initialization fails. This method is idempotent
+   * and safe to call multiple times.
+   *
+   * @throws Never throws - errors are caught and logged, CPU fallback is used
    */
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    console.log("🔍 [GPUComputeService] Starting GPU detection...");
-    console.log(`🔍 [GPUComputeService] Environment vars:`);
-    console.log(`   CUDA_VISIBLE_DEVICES: ${process.env.CUDA_VISIBLE_DEVICES}`);
-    console.log(
-      `   NVIDIA_VISIBLE_DEVICES: ${process.env.NVIDIA_VISIBLE_DEVICES}`,
-    );
-    console.log(
-      `   TF_FORCE_GPU_ALLOW_GROWTH: ${process.env.TF_FORCE_GPU_ALLOW_GROWTH}`,
-    );
-    console.log(`   LD_LIBRARY_PATH: ${process.env.LD_LIBRARY_PATH}`);
-
     try {
-      console.log("🔍 [GPUComputeService] Calling tf.ready()...");
       await tf.ready();
 
       const backend = tf.getBackend();
-      console.log(`🔍 [GPUComputeService] TensorFlow backend: ${backend}`);
 
       try {
-        const memInfo = tf.memory();
-        console.log(
-          `🔍 [GPUComputeService] TF Memory info:`,
-          JSON.stringify(memInfo),
-        );
-      } catch (memErr) {
-        console.log(
-          `🔍 [GPUComputeService] Could not get memory info: ${memErr}`,
-        );
-      }
-
-      try {
-        console.log(
-          "🔍 [GPUComputeService] Testing GPU with simple tensor operation...",
-        );
         const testStart = performance.now();
         const testTensor = tf.randomNormal([1000, 1000]);
         const result = testTensor.matMul(testTensor.transpose());
-        await result.data(); // Forzar ejecución
+        await result.data();
         const testTime = performance.now() - testStart;
         testTensor.dispose();
         result.dispose();
-        console.log(
-          `✅ [GPUComputeService] GPU test matmul (1000x1000) completed in ${testTime.toFixed(2)}ms`,
+        logger.debug(
+          `GPU test matmul (1000x1000) completed in ${testTime.toFixed(2)}ms`,
         );
       } catch (testErr) {
-        console.warn(`⚠️ [GPUComputeService] GPU test failed: ${testErr}`);
+        logger.debug(`GPU test failed: ${testErr}`);
       }
-
-      console.log(
-        `🔍 [GPUComputeService] Registered backends:`,
-        tf.engine().registryFactory,
-      );
 
       const gpuBackends = ["tensorflow", "cuda", "webgl", "webgpu"];
       this.gpuAvailable = gpuBackends.includes(backend?.toLowerCase() ?? "");
 
-      const status = this.gpuAvailable
-        ? "✅ GPU AVAILABLE"
-        : "❌ GPU NOT AVAILABLE (CPU fallback)";
-      console.log(`🚀 [GPUComputeService] ${status} - Backend: ${backend}`);
-
-      console.log("🔍 [GPUComputeService] About to call logger.info...");
       logger.info(
         `🚀 GPUComputeService initialized - Backend: ${backend} (GPU: ${this.gpuAvailable ? "available" : "unavailable, using CPU"})`,
       );
-      console.log("🔍 [GPUComputeService] logger.info completed!");
 
       this.initialized = true;
-      console.log("🔍 [GPUComputeService] initialize() complete!");
     } catch (error) {
-      console.error(
-        `❌ [GPUComputeService] Error initializing TensorFlow:`,
-        error,
-      );
       logger.warn(
         `⚠️ Error initializing TensorFlow, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -754,16 +715,15 @@ export class GPUComputeService {
     const totalOps = stats.gpuOperations + stats.cpuFallbacks;
     const gpuRatio = totalOps > 0 ? (stats.gpuOperations / totalOps) * 100 : 0;
 
-    console.log(`📊 [GPUComputeService] Performance Stats:`);
-    console.log(`   GPU Available: ${stats.gpuAvailable}`);
-    console.log(
-      `   GPU Operations: ${stats.gpuOperations} (avg ${stats.avgGpuTime.toFixed(2)}ms)`,
-    );
-    console.log(
-      `   CPU Fallbacks: ${stats.cpuFallbacks} (avg ${stats.avgCpuTime.toFixed(2)}ms)`,
-    );
-    console.log(`   GPU Usage Ratio: ${gpuRatio.toFixed(1)}%`);
-    console.log(`   TF Memory: ${JSON.stringify(memInfo)}`);
+    logger.debug("GPU Compute Service Performance Stats:", {
+      gpuAvailable: stats.gpuAvailable,
+      gpuOperations: stats.gpuOperations,
+      avgGpuTime: stats.avgGpuTime.toFixed(2),
+      cpuFallbacks: stats.cpuFallbacks,
+      avgCpuTime: stats.avgCpuTime.toFixed(2),
+      gpuUsageRatio: gpuRatio.toFixed(1),
+      tfMemory: memInfo,
+    });
   }
 
   /**

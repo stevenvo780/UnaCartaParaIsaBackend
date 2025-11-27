@@ -462,8 +462,10 @@ export class RoleSystem extends EventEmitter {
     RoleType,
     { count: number; percentage: number }
   > {
-    const distribution: Record<RoleType, { count: number; percentage: number }> =
-      {} as any;
+    const distribution: Record<
+      RoleType,
+      { count: number; percentage: number }
+    > = {} as any;
     const totalAgents = this.roles.size;
 
     // Initialize all role types
@@ -629,7 +631,11 @@ export class RoleSystem extends EventEmitter {
     changes.sort((a, b) => b.score - a.score);
 
     const MAX_CHANGES_PER_REBALANCE = 3; // Don't change too many at once
-    for (let i = 0; i < Math.min(MAX_CHANGES_PER_REBALANCE, changes.length); i++) {
+    for (
+      let i = 0;
+      i < Math.min(MAX_CHANGES_PER_REBALANCE, changes.length);
+      i++
+    ) {
       const change = changes[i];
       this.reassignRole(change.agentId, change.newRole);
 
@@ -646,7 +652,6 @@ export class RoleSystem extends EventEmitter {
       });
     }
   }
-
 
   /**
    * Removes an agent's role when they die or are removed.

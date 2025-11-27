@@ -1,47 +1,24 @@
-export type GoalType =
-  | "satisfy_need"
-  | "satisfy_hunger"
-  | "satisfy_thirst"
-  | "satisfy_energy"
-  | "satisfy_social"
-  | "satisfy_fun"
-  | "work"
-  | "explore"
-  | "social"
-  | "combat"
-  | "craft"
-  | "deposit"
-  | "assist"
-  | "construction"
-  | "gather"
-  | "idle"
-  | "rest"
-  | "inspect"
-  | "flee"
-  | "attack"
-  | "hunt";
+import {
+  GoalType,
+  ActionType,
+  NeedType,
+  ExplorationType,
+  SocialPreference,
+  WorkEthic,
+} from "../../../shared/constants/AIEnums";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
-export type ActionType =
-  | "move"
-  | "harvest"
-  | "eat"
-  | "drink"
-  | "sleep"
-  | "work"
-  | "socialize"
-  | "attack"
-  | "craft"
-  | "deposit"
-  | "build"
-  | "idle";
+/**
+ * Re-export enums for backward compatibility.
+ */
+export { GoalType, ActionType, NeedType };
 
 export interface AIGoalData {
-  need?: "hunger" | "thirst" | "energy" | "social" | "fun" | "mentalHealth";
+  need?: NeedType;
   targetAgentId?: string;
-  resourceType?: string;
+  resourceType?: ResourceType;
   amount?: number;
   itemType?: string;
-  [key: string]: string | number | undefined;
 }
 
 export interface AIGoal {
@@ -76,9 +53,9 @@ export interface AgentPersonality {
   aggression?: number;
   sociability?: number;
 
-  explorationType: "cautious" | "balanced" | "adventurous";
-  socialPreference: "introverted" | "balanced" | "extroverted";
-  workEthic: "lazy" | "balanced" | "workaholic";
+  explorationType: ExplorationType;
+  socialPreference: SocialPreference;
+  workEthic: WorkEthic;
   riskTolerance: number;
 
   neuroticism: number;
@@ -111,10 +88,9 @@ export interface AgentMemory {
 }
 
 export interface AgentActionData {
-  resourceType?: string;
+  resourceType?: ResourceType;
   amount?: number;
   itemId?: string;
-  [key: string]: string | number | undefined;
 }
 
 export interface AgentAction {

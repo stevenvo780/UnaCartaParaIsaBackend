@@ -265,7 +265,11 @@ export class AIActionExecutor {
 
       // Add food to hunter's inventory
       if (this.deps.inventorySystem) {
-        this.deps.inventorySystem.addResource(action.agentId, "food", foodValue);
+        this.deps.inventorySystem.addResource(
+          action.agentId,
+          "food",
+          foodValue,
+        );
         logger.info(
           `🏹 Agent ${action.agentId} hunted ${targetAnimal.type} and gained ${foodValue} food`,
         );

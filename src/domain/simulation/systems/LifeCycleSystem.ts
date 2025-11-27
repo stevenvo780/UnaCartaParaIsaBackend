@@ -234,7 +234,10 @@ export class LifeCycleSystem extends EventEmitter {
     if (!this.lastRoleRebalance) {
       this.lastRoleRebalance = now;
     }
-    if (now - this.lastRoleRebalance >= ROLE_REBALANCE_INTERVAL && this._roleSystem) {
+    if (
+      now - this.lastRoleRebalance >= ROLE_REBALANCE_INTERVAL &&
+      this._roleSystem
+    ) {
       this.rebalanceRolesIfNeeded();
       this.lastRoleRebalance = now;
     }
@@ -432,15 +435,15 @@ export class LifeCycleSystem extends EventEmitter {
     spec:
       | Partial<AgentProfile>
       | {
-        id?: string;
-        name?: string;
-        sex: "male" | "female";
-        ageYears: number;
-        lifeStage: LifeStage;
-        generation: number;
-        immortal?: boolean;
-        traits?: Partial<AgentTraits>;
-      } = {},
+          id?: string;
+          name?: string;
+          sex: "male" | "female";
+          ageYears: number;
+          lifeStage: LifeStage;
+          generation: number;
+          immortal?: boolean;
+          traits?: Partial<AgentTraits>;
+        } = {},
   ): AgentProfile {
     const partial = spec as Partial<AgentProfile>;
     const id = partial.id ?? `agent_${++this.spawnCounter}`;
@@ -637,7 +640,9 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   /**
-   * Limpia todos los estados relacionados con un agente en todos los sistemas
+   * Cleans up all agent-related state across all systems.
+   *
+   * @param agentId - Agent ID to clean up
    */
   private cleanupAgentState(agentId: string): void {
     const agent =

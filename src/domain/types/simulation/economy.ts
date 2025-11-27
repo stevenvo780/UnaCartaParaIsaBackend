@@ -1,9 +1,14 @@
-export type ResourceType =
-  | "wood"
-  | "stone"
-  | "food"
-  | "water"
-  | "rare_materials";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
+import { StockpileType } from "../../../shared/constants/ZoneEnums";
+import {
+  MarketOrderType,
+  MarketOrderStatus,
+} from "../../../shared/constants/EconomyEnums";
+
+/**
+ * Re-export enums for backward compatibility.
+ */
+export { ResourceType };
 
 export interface Inventory {
   wood: number;
@@ -20,7 +25,7 @@ export interface Stockpile {
   zoneId: string;
   inventory: Inventory;
   capacity: number;
-  type: "general" | "food" | "materials";
+  type: StockpileType;
   lastUpdateTime?: number;
 }
 
@@ -67,12 +72,12 @@ export interface Transaction {
 export interface MarketOrder {
   id: string;
   agentId: string;
-  type: "buy" | "sell";
+  type: MarketOrderType;
   resource: ResourceType;
   amount: number;
   priceLimit?: number;
   timestamp: number;
-  status: "active" | "completed" | "cancelled";
+  status: MarketOrderStatus;
 }
 
 export interface InventoryItem {

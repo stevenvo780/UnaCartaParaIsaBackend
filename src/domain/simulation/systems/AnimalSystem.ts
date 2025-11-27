@@ -746,7 +746,7 @@ export class AnimalSystem {
       AnimalBehavior.moveToward(
         animal,
         waterTile,
-        config.speed * 0.6, // Note: genes.speed is applied inside moveToward
+        config.speed * 0.6,
         deltaSeconds,
       );
     }

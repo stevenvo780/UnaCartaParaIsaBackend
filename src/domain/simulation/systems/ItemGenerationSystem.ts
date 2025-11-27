@@ -40,7 +40,7 @@ function generateDefaultRulesFromCatalog(): GenerationRule[] {
     const biome = material.metadata?.biome as string | undefined;
     if (biome && biomeToZoneType[biome]) {
       const value = material.properties?.value || 1;
-      const rarity = Math.max(0.1, 1 - value / 100); // Mayor valor = menor chance
+      const rarity = Math.max(0.1, 1 - value / 100);
 
       rules.push({
         zoneType: biomeToZoneType[biome],

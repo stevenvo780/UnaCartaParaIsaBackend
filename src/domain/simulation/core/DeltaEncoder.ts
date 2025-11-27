@@ -105,7 +105,7 @@ export class DeltaEncoder {
   ): Partial<GameState> {
     const changes: Partial<GameState> = {};
 
-    const prevAgentMap = previous.agents
+    const _prevAgentMap = previous.agents
       ? new Map(previous.agents.map((a) => [a.id, a]))
       : new Map<string, AgentProfile>();
     const prevEntityMap = previous.entities
@@ -183,8 +183,16 @@ export class DeltaEncoder {
   }
 
   private hasAgentChanged(
-    prev: AgentProfile & { needs?: EntityNeedsData; health?: number; ai?: unknown },
-    current: AgentProfile & { needs?: EntityNeedsData; health?: number; ai?: unknown },
+    prev: AgentProfile & {
+      needs?: EntityNeedsData;
+      health?: number;
+      ai?: unknown;
+    },
+    current: AgentProfile & {
+      needs?: EntityNeedsData;
+      health?: number;
+      ai?: unknown;
+    },
   ): boolean {
     if (
       prev.position?.x !== current.position?.x ||

@@ -330,8 +330,9 @@ export class TaskSystem {
     const task = this.tasks.get(taskId);
     if (!task || task.completed) return false;
 
-    const maxClaims = task.metadata?.maxClaims as number | undefined || 1;
-    const currentClaims = task.metadata?.claimCount as number | undefined || 0;
+    const maxClaims = (task.metadata?.maxClaims as number | undefined) || 1;
+    const currentClaims =
+      (task.metadata?.claimCount as number | undefined) || 0;
 
     if (currentClaims >= maxClaims) {
       return false; // Task is full
@@ -367,7 +368,7 @@ export class TaskSystem {
         claimedBy.splice(index, 1);
         task.metadata.claimCount = Math.max(
           0,
-          (task.metadata.claimCount as number || 1) - 1,
+          ((task.metadata.claimCount as number) || 1) - 1,
         );
         this.tasksDirty = true;
       }
@@ -386,13 +387,13 @@ export class TaskSystem {
         return false;
       }
 
-      const maxClaims = task.metadata.maxClaims as number | undefined || 1;
-      const currentClaims = task.metadata.claimCount as number | undefined || 0;
+      const maxClaims = (task.metadata.maxClaims as number | undefined) || 1;
+      const currentClaims =
+        (task.metadata.claimCount as number | undefined) || 0;
 
       return currentClaims < maxClaims;
     });
   }
-
 
   public getTaskStats(): {
     total: number;
@@ -409,7 +410,7 @@ export class TaskSystem {
     const avgProgress =
       active.length > 0
         ? active.reduce((sum, t) => sum + t.progress / t.requiredWork, 0) /
-        active.length
+          active.length
         : 0;
 
     return {
@@ -489,26 +490,26 @@ export class TaskSystem {
       zoneId: task.zoneId,
       bounds: task.bounds
         ? {
-          x: task.bounds.x,
-          y: task.bounds.y,
-          width: task.bounds.width,
-          height: task.bounds.height,
-        }
+            x: task.bounds.x,
+            y: task.bounds.y,
+            width: task.bounds.width,
+            height: task.bounds.height,
+          }
         : undefined,
       requirements: task.requirements
         ? {
-          resources: { ...task.requirements.resources },
-          minWorkers: task.requirements.minWorkers,
-        }
+            resources: { ...task.requirements.resources },
+            minWorkers: task.requirements.minWorkers,
+          }
         : undefined,
       metadata: task.metadata ? { ...task.metadata } : undefined,
       contributors: task.contributors
         ? Array.from(task.contributors.entries()).map(
-          ([agentId, contribution]) => ({
-            agentId,
-            contribution,
-          }),
-        )
+            ([agentId, contribution]) => ({
+              agentId,
+              contribution,
+            }),
+          )
         : undefined,
       lastContribution: task.lastContribution,
       createdAt: task.createdAt,
