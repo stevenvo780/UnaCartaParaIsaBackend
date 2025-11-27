@@ -455,6 +455,200 @@ export class RoleSystem extends EventEmitter {
   }
 
   /**
+   * Gets the current distribution of roles in the population.
+   * Returns count and percentage for each role type.
+   */
+  public getRoleDistribution(): Record<
+    RoleType,
+    { count: number; percentage: number }
+  > {
+    const distribution: Record<RoleType, { count: number; percentage: number }> =
+      {} as any;
+    const totalAgents = this.roles.size;
+
+    // Initialize all role types
+    for (const roleConfig of ROLE_DEFINITIONS) {
+      distribution[roleConfig.type] = { count: 0, percentage: 0 };
+    }
+
+    // Add idle type
+    distribution.idle = { count: 0, percentage: 0 };
+    distribution.craftsman = { count: 0, percentage: 0 };
+    distribution.leader = { count: 0, percentage: 0 };
+
+    // Count current assignments
+    for (const role of this.roles.values()) {
+      if (distribution[role.roleType]) {
+        distribution[role.roleType].count++;
+      }
+    }
+
+    // Calculate percentages
+    for (const roleType in distribution) {
+      distribution[roleType as RoleType].percentage =
+        totalAgents > 0
+          ? distribution[roleType as RoleType].count / totalAgents
+          : 0;
+    }
+
+    return distribution;
+  }
+
+  /**
+   * Calculates needed roles based on community resource state.
+   * Returns the target number of agents for each role.
+   *
+   * @param collectiveState - Current state of community resources
+   */
+  public calculateNeededRoles(collectiveState: {
+    foodPerCapita: number;
+    waterPerCapita: number;
+    totalWood: number;
+    totalStone: number;
+    population: number;
+  }): Record<RoleType, number> {
+    const needed: Record<RoleType, number> = {} as any;
+    const pop = collectiveState.population;
+
+    // Base distribution (percentages)
+    const baseDistribution: Record<RoleType, number> = {
+      logger: 0.15,
+      quarryman: 0.1,
+      builder: 0.15,
+      farmer: 0.15,
+      gatherer: 0.15,
+      guard: 0.1,
+      hunter: 0.1,
+      craftsman: 0.05,
+      leader: 0.03,
+      idle: 0.02,
+    };
+
+    // Adjust based on needs
+    if (collectiveState.foodPerCapita < 8) {
+      baseDistribution.farmer += 0.1;
+      baseDistribution.hunter += 0.05;
+      baseDistribution.builder -= 0.05;
+      baseDistribution.craftsman -= 0.05;
+      baseDistribution.guard -= 0.05;
+    }
+
+    if (collectiveState.waterPerCapita < 12) {
+      baseDistribution.gatherer += 0.1;
+      baseDistribution.craftsman -= 0.05;
+      baseDistribution.guard -= 0.05;
+    }
+
+    if (collectiveState.totalWood < 80) {
+      baseDistribution.logger += 0.1;
+      baseDistribution.farmer -= 0.05;
+      baseDistribution.hunter -= 0.05;
+    }
+
+    if (collectiveState.totalStone < 40) {
+      baseDistribution.quarryman += 0.1;
+      baseDistribution.farmer -= 0.05;
+      baseDistribution.hunter -= 0.05;
+    }
+
+    // Convert to absolute numbers
+    for (const roleType in baseDistribution) {
+      needed[roleType as RoleType] = Math.ceil(
+        pop * baseDistribution[roleType as RoleType],
+      );
+    }
+
+    return needed;
+  }
+
+  /**
+   * Rebalances roles to match community needs.
+   * Only reassigns agents who are significantly mismatched.
+   * Limits the number of changes per call to avoid disruption.
+   *
+   * @param collectiveState - Current state of community resources
+   */
+  public rebalanceRoles(collectiveState: {
+    foodPerCapita: number;
+    waterPerCapita: number;
+    totalWood: number;
+    totalStone: number;
+    population: number;
+  }): void {
+    const current = this.getRoleDistribution();
+    const needed = this.calculateNeededRoles(collectiveState);
+
+    const changes: Array<{
+      agentId: string;
+      currentRole: RoleType;
+      newRole: RoleType;
+      score: number;
+    }> = [];
+
+    // Identify roles that need more agents
+    const rolesNeedingMore: RoleType[] = [];
+    const rolesWithExtra: RoleType[] = [];
+
+    for (const roleType in needed) {
+      const rt = roleType as RoleType;
+      const deficit = needed[rt] - current[rt].count;
+
+      if (deficit > 0) {
+        rolesNeedingMore.push(rt);
+      } else if (deficit < -1) {
+        rolesWithExtra.push(rt);
+      }
+    }
+
+    if (rolesNeedingMore.length === 0) return;
+
+    // Find agents in surplus roles who could switch
+    for (const [agentId, role] of this.roles.entries()) {
+      if (!rolesWithExtra.includes(role.roleType)) continue;
+
+      const agent = this.gameState.agents?.find((a) => a.id === agentId);
+      if (!agent) continue;
+
+      // Evaluate fit for needed roles
+      for (const neededRole of rolesNeedingMore) {
+        const roleConfig = ROLE_DEFINITIONS.find((r) => r.type === neededRole);
+        if (!roleConfig || !this.meetsRequirements(agent, roleConfig)) continue;
+
+        const score = this.calculateRoleScore(agent, roleConfig);
+
+        changes.push({
+          agentId,
+          currentRole: role.roleType,
+          newRole: neededRole,
+          score,
+        });
+      }
+    }
+
+    // Sort by score descending and apply top changes
+    changes.sort((a, b) => b.score - a.score);
+
+    const MAX_CHANGES_PER_REBALANCE = 3; // Don't change too many at once
+    for (let i = 0; i < Math.min(MAX_CHANGES_PER_REBALANCE, changes.length); i++) {
+      const change = changes[i];
+      this.reassignRole(change.agentId, change.newRole);
+
+      logger.info(
+        `🔄 Rebalanced role: ${change.agentId} ${change.currentRole} -> ${change.newRole} (score: ${change.score.toFixed(2)})`,
+      );
+
+      simulationEvents.emit(GameEventNames.ROLE_REBALANCED, {
+        agentId: change.agentId,
+        previousRole: change.currentRole,
+        newRole: change.newRole,
+        score: change.score,
+        timestamp: Date.now(),
+      });
+    }
+  }
+
+
+  /**
    * Removes an agent's role when they die or are removed.
    * Cleans up role data and schedule entries.
    *

@@ -97,6 +97,29 @@ export class SnapshotManager {
       currentTick,
     );
 
+    // Enrich agents with AI state data before sending to frontend
+    if (stateSnapshot.agents) {
+      stateSnapshot.agents = stateSnapshot.agents.map((agent) => {
+        const aiState = this.runner.aiSystem.getAIState(agent.id);
+
+        // Serialize AI state for frontend
+        const ai = aiState
+          ? {
+              currentGoal: aiState.currentGoal || undefined,
+              goalQueue: aiState.goalQueue || [],
+              currentAction: aiState.currentAction || undefined,
+              offDuty: aiState.offDuty || false,
+              lastDecisionTime: aiState.lastDecisionTime || 0,
+            }
+          : undefined;
+
+        return {
+          ...agent,
+          ai,
+        };
+      });
+    }
+
     // We need to construct a SimulationSnapshot to pass to encodeDelta
     const events =
       this.runner.capturedEvents.length > 0
@@ -153,10 +176,24 @@ export class SnapshotManager {
       snapshotState.agents = snapshotState.agents.map((agent) => {
         const needs = this.runner.needsSystem.getNeeds(agent.id);
         const role = this.runner.roleSystem.getAgentRole(agent.id);
+        const aiState = this.runner.aiSystem.getAIState(agent.id);
+
+        // Serialize AI state for frontend
+        const ai = aiState
+          ? {
+              currentGoal: aiState.currentGoal || undefined,
+              goalQueue: aiState.goalQueue || [],
+              currentAction: aiState.currentAction || undefined,
+              offDuty: aiState.offDuty || false,
+              lastDecisionTime: aiState.lastDecisionTime || 0,
+            }
+          : undefined;
+
         return {
           ...agent,
           needs: needs ? { ...needs } : undefined,
           role: role ? { ...role } : undefined,
+          ai,
         };
       });
     }

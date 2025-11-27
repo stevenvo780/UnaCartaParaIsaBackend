@@ -60,6 +60,7 @@ export class LifeCycleSystem extends EventEmitter {
   private gameState: GameState;
   private config: LifeCycleConfig;
   private lastResourceConsumption: number = 0;
+  private lastRoleRebalance = 0;
 
   private reproductionCooldown = new Map<string, number>();
   private spawnCounter = 0;
@@ -226,6 +227,47 @@ export class LifeCycleSystem extends EventEmitter {
 
     this.tryBreeding(Date.now());
     this.processHousingAssignments();
+
+    // Periodic role rebalancing
+    const now = Date.now();
+    const ROLE_REBALANCE_INTERVAL = 120000; // Every 2 minutes
+    if (!this.lastRoleRebalance) {
+      this.lastRoleRebalance = now;
+    }
+    if (now - this.lastRoleRebalance >= ROLE_REBALANCE_INTERVAL && this._roleSystem) {
+      this.rebalanceRolesIfNeeded();
+      this.lastRoleRebalance = now;
+    }
+  }
+
+  private rebalanceRolesIfNeeded(): void {
+    if (!this._roleSystem || !this.inventorySystem) return;
+
+    // Calculate collective state
+    const stockpiles = this.inventorySystem.getAllStockpiles?.() || [];
+    const population = (this.gameState.agents || []).length;
+
+    let totalFood = 0,
+      totalWater = 0,
+      totalWood = 0,
+      totalStone = 0;
+
+    for (const sp of stockpiles) {
+      totalFood += sp.inventory.food || 0;
+      totalWater += sp.inventory.water || 0;
+      totalWood += sp.inventory.wood || 0;
+      totalStone += sp.inventory.stone || 0;
+    }
+
+    const collectiveState = {
+      foodPerCapita: totalFood / Math.max(1, population),
+      waterPerCapita: totalWater / Math.max(1, population),
+      totalWood,
+      totalStone,
+      population,
+    };
+
+    this._roleSystem.rebalanceRoles(collectiveState);
   }
 
   public getLifeStage(age: number): LifeStage {
@@ -390,15 +432,15 @@ export class LifeCycleSystem extends EventEmitter {
     spec:
       | Partial<AgentProfile>
       | {
-          id?: string;
-          name?: string;
-          sex: "male" | "female";
-          ageYears: number;
-          lifeStage: LifeStage;
-          generation: number;
-          immortal?: boolean;
-          traits?: Partial<AgentTraits>;
-        } = {},
+        id?: string;
+        name?: string;
+        sex: "male" | "female";
+        ageYears: number;
+        lifeStage: LifeStage;
+        generation: number;
+        immortal?: boolean;
+        traits?: Partial<AgentTraits>;
+      } = {},
   ): AgentProfile {
     const partial = spec as Partial<AgentProfile>;
     const id = partial.id ?? `agent_${++this.spawnCounter}`;

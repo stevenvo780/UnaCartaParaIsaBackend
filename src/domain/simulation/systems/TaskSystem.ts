@@ -318,6 +318,82 @@ export class TaskSystem {
     });
   }
 
+  /**
+   * Claims a task for an agent, preventing other agents from duplicating work.
+   * Returns true if claim was successful, false if task is full.
+   *
+   * @param taskId - ID of the task to claim
+   * @param agentId - ID of the agent claiming the task
+   * @returns true if claim was successful
+   */
+  public claimTask(taskId: string, agentId: string): boolean {
+    const task = this.tasks.get(taskId);
+    if (!task || task.completed) return false;
+
+    const maxClaims = task.metadata?.maxClaims as number | undefined || 1;
+    const currentClaims = task.metadata?.claimCount as number | undefined || 0;
+
+    if (currentClaims >= maxClaims) {
+      return false; // Task is full
+    }
+
+    if (!task.metadata) task.metadata = {};
+    task.metadata.claimCount = currentClaims + 1;
+
+    // Track who claimed it
+    if (!task.metadata.claimedBy) {
+      task.metadata.claimedBy = [];
+    }
+    (task.metadata.claimedBy as string[]).push(agentId);
+
+    this.tasksDirty = true;
+    return true;
+  }
+
+  /**
+   * Releases a task claim when agent finishes or abandons the task.
+   *
+   * @param taskId - ID of the task
+   * @param agentId - ID of the agent releasing the claim
+   */
+  public releaseTaskClaim(taskId: string, agentId: string): void {
+    const task = this.tasks.get(taskId);
+    if (!task || !task.metadata) return;
+
+    const claimedBy = task.metadata.claimedBy as string[] | undefined;
+    if (claimedBy) {
+      const index = claimedBy.indexOf(agentId);
+      if (index !== -1) {
+        claimedBy.splice(index, 1);
+        task.metadata.claimCount = Math.max(
+          0,
+          (task.metadata.claimCount as number || 1) - 1,
+        );
+        this.tasksDirty = true;
+      }
+    }
+  }
+
+  /**
+   * Gets available community tasks that need workers.
+   * Community tasks are those marked with communityTask: true in metadata.
+   *
+   * @returns Array of available community tasks
+   */
+  public getAvailableCommunityTasks(): Task[] {
+    return Array.from(this.tasks.values()).filter((task) => {
+      if (task.completed || !(task.metadata?.communityTask as boolean)) {
+        return false;
+      }
+
+      const maxClaims = task.metadata.maxClaims as number | undefined || 1;
+      const currentClaims = task.metadata.claimCount as number | undefined || 0;
+
+      return currentClaims < maxClaims;
+    });
+  }
+
+
   public getTaskStats(): {
     total: number;
     active: number;
@@ -333,7 +409,7 @@ export class TaskSystem {
     const avgProgress =
       active.length > 0
         ? active.reduce((sum, t) => sum + t.progress / t.requiredWork, 0) /
-          active.length
+        active.length
         : 0;
 
     return {
@@ -413,26 +489,26 @@ export class TaskSystem {
       zoneId: task.zoneId,
       bounds: task.bounds
         ? {
-            x: task.bounds.x,
-            y: task.bounds.y,
-            width: task.bounds.width,
-            height: task.bounds.height,
-          }
+          x: task.bounds.x,
+          y: task.bounds.y,
+          width: task.bounds.width,
+          height: task.bounds.height,
+        }
         : undefined,
       requirements: task.requirements
         ? {
-            resources: { ...task.requirements.resources },
-            minWorkers: task.requirements.minWorkers,
-          }
+          resources: { ...task.requirements.resources },
+          minWorkers: task.requirements.minWorkers,
+        }
         : undefined,
       metadata: task.metadata ? { ...task.metadata } : undefined,
       contributors: task.contributors
         ? Array.from(task.contributors.entries()).map(
-            ([agentId, contribution]) => ({
-              agentId,
-              contribution,
-            }),
-          )
+          ([agentId, contribution]) => ({
+            agentId,
+            contribution,
+          }),
+        )
         : undefined,
       lastContribution: task.lastContribution,
       createdAt: task.createdAt,

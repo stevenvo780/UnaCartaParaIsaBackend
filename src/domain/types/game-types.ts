@@ -105,7 +105,7 @@ export interface Size {
 /**
  * Rectangle with position and size.
  */
-export interface Rect extends Position, Size {}
+export interface Rect extends Position, Size { }
 
 export type InteractionType =
   | "NOURISH"
@@ -407,7 +407,7 @@ export interface TaskState {
       };
       minWorkers?: number;
     };
-    metadata?: Record<string, string | number | undefined>;
+    metadata?: Record<string, string | number | boolean | string[] | undefined>;
     contributors?: Array<{ agentId: string; contribution: number }>;
     cancelled?: boolean;
     cancellationReason?: string;

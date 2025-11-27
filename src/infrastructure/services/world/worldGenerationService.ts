@@ -121,6 +121,23 @@ export class WorldGenerationService {
       tiles.push(row);
     }
 
+    // Log decal statistics for debugging
+    let totalDecals = 0;
+    let tilesWithDecals = 0;
+    for (const row of tiles) {
+      for (const tile of row) {
+        if (tile.assets.decals && tile.assets.decals.length > 0) {
+          totalDecals += tile.assets.decals.length;
+          tilesWithDecals++;
+        }
+      }
+    }
+    if (totalDecals > 0) {
+      console.log(
+        `📦 Chunk (${x},${y}): ${totalDecals} decals in ${tilesWithDecals} tiles`,
+      );
+    }
+
     return tiles;
   }
 
@@ -167,20 +184,28 @@ export class WorldGenerationService {
       assets.vegetation.push(`plant_${biomeConfig.id}`);
     }
 
-    if (
-      biomeConfig.density.props &&
-      tileRng() < biomeConfig.density.props * 0.05
-    ) {
-      // Use decals for generic ground items instead of props
+    // Decals - increased probability for better visual variety
+    // Props-based decals (flowers, leaves, moss, etc.)
+    if (biomeConfig.density.props && tileRng() < biomeConfig.density.props * 0.4) {
       assets.decals.push(`decal_${biomeConfig.id}`);
+      // Add second decal sometimes for more variety
+      if (tileRng() < 0.3) {
+        assets.decals.push(`decal_${biomeConfig.id}`);
+      }
     }
 
-    if (
-      biomeConfig.density.rocks &&
-      tileRng() < biomeConfig.density.rocks * 0.1
-    ) {
-      // Use decals for rocks
+    // Rock-based decals (small stones, pebbles)
+    if (biomeConfig.density.rocks && tileRng() < biomeConfig.density.rocks * 0.35) {
       assets.decals.push(`decal_rock_${biomeConfig.id}`);
+    }
+
+    // Plants density also contributes to decals for biomes without props
+    if (
+      !biomeConfig.density.props &&
+      biomeConfig.density.plants &&
+      tileRng() < biomeConfig.density.plants * 0.25
+    ) {
+      assets.decals.push(`decal_${biomeConfig.id}`);
     }
 
     const structureNoise = this.noiseGen.noise2D(x * 0.005, y * 0.005);

@@ -1,0 +1,282 @@
+import { EventEmitter } from "events";
+import type { GameState } from "../../types/game-types";
+import { simulationEvents, GameEventNames } from "../core/events";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../config/Types";
+
+export interface ResourceAlert {
+  id: string;
+  resourceId: string;
+  resourceType: string;
+  position: { x: number; y: number };
+  reportedBy: string;
+  reportedAt: number;
+  expiresAt: number;
+  notifiedAgents: Set<string>;
+}
+
+export interface ThreatAlert {
+  id: string;
+  threatId: string;
+  threatType: "predator" | "hostile_agent" | "danger_zone";
+  position: { x: number; y: number };
+  reportedBy: string;
+  reportedAt: number;
+  expiresAt: number;
+  severity: number; // 0-1
+  notifiedAgents: Set<string>;
+}
+
+/**
+ * System for sharing knowledge and alerts among agents.
+ * 
+ * Features:
+ * - Resource discovery alerts that spread to nearby agents
+ * - Threat warnings with severity-based propagation radius
+ * - Automatic expiration of old alerts
+ * - Spatial propagation based on agent proximity
+ * 
+ * This enables emergent collective intelligence where agents
+ * can benefit from discoveries and warnings of their peers.
+ */
+@injectable()
+export class SharedKnowledgeSystem extends EventEmitter {
+  private gameState: GameState;
+  private resourceAlerts = new Map<string, ResourceAlert>();
+  private threatAlerts = new Map<string, ThreatAlert>();
+  private alertSeq = 0;
+
+  private readonly RESOURCE_ALERT_DURATION = 60000; // 1 minute
+  private readonly THREAT_ALERT_DURATION = 30000; // 30 seconds
+  private readonly PROPAGATION_RADIUS = 500; // Share with agents within 500 units
+
+  constructor(@inject(TYPES.GameState) gameState: GameState) {
+    super();
+    this.gameState = gameState;
+  }
+
+  /**
+   * Registers a resource find and propagates to nearby agents.
+   * 
+   * @param agentId - ID of the agent who found the resource
+   * @param resourceId - ID of the resource
+   * @param resourceType - Type of resource (food, water, wood, stone)
+   * @param position - Position where resource was found
+   */
+  public registerResourceFind(
+    agentId: string,
+    resourceId: string,
+    resourceType: string,
+    position: { x: number; y: number },
+  ): void {
+    const alert: ResourceAlert = {
+      id: `resource_alert_${++this.alertSeq}`,
+      resourceId,
+      resourceType,
+      position,
+      reportedBy: agentId,
+      reportedAt: Date.now(),
+      expiresAt: Date.now() + this.RESOURCE_ALERT_DURATION,
+      notifiedAgents: new Set([agentId]),
+    };
+
+    this.resourceAlerts.set(alert.id, alert);
+
+    // Propagate to nearby agents
+    this.propagateResourceAlert(alert);
+
+    simulationEvents.emit(GameEventNames.RESOURCE_DISCOVERED, {
+      agentId,
+      resourceId,
+      resourceType,
+      position,
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * Registers a threat and alerts nearby agents.
+   * 
+   * @param agentId - ID of the agent who detected the threat
+   * @param threatId - ID of the threat (e.g., predator ID)
+   * @param threatType - Type of threat
+   * @param position - Position of the threat
+   * @param severity - Severity from 0 (minor) to 1 (critical)
+   */
+  public registerThreat(
+    agentId: string,
+    threatId: string,
+    threatType: "predator" | "hostile_agent" | "danger_zone",
+    position: { x: number; y: number },
+    severity: number,
+  ): void {
+    const alert: ThreatAlert = {
+      id: `threat_alert_${++this.alertSeq}`,
+      threatId,
+      threatType,
+      position,
+      reportedBy: agentId,
+      reportedAt: Date.now(),
+      expiresAt: Date.now() + this.THREAT_ALERT_DURATION,
+      severity,
+      notifiedAgents: new Set([agentId]),
+    };
+
+    this.threatAlerts.set(alert.id, alert);
+
+    // Propagate to nearby agents
+    this.propagateThreatAlert(alert);
+
+    simulationEvents.emit(GameEventNames.THREAT_DETECTED, {
+      agentId,
+      threatId,
+      threatType,
+      position,
+      severity,
+      timestamp: Date.now(),
+    });
+  }
+
+  private propagateResourceAlert(alert: ResourceAlert): void {
+    const agents = this.gameState.agents || [];
+
+    for (const agent of agents) {
+      if (alert.notifiedAgents.has(agent.id)) continue;
+      if (!agent.position) continue;
+
+      const dx = agent.position.x - alert.position.x;
+      const dy = agent.position.y - alert.position.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance <= this.PROPAGATION_RADIUS) {
+        alert.notifiedAgents.add(agent.id);
+
+        // Emit event so AI can react
+        this.emit("resource_alert", {
+          agentId: agent.id,
+          alert,
+        });
+      }
+    }
+  }
+
+  private propagateThreatAlert(alert: ThreatAlert): void {
+    const agents = this.gameState.agents || [];
+
+    // Threats propagate faster and further based on severity
+    const threatRadius = this.PROPAGATION_RADIUS * (1 + alert.severity);
+
+    for (const agent of agents) {
+      if (alert.notifiedAgents.has(agent.id)) continue;
+      if (!agent.position) continue;
+
+      const dx = agent.position.x - alert.position.x;
+      const dy = agent.position.y - alert.position.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance <= threatRadius) {
+        alert.notifiedAgents.add(agent.id);
+
+        // Emit event so AI can react
+        this.emit("threat_alert", {
+          agentId: agent.id,
+          alert,
+        });
+      }
+    }
+  }
+
+  /**
+   * Gets active resource alerts that an agent knows about.
+   * 
+   * @param agentId - ID of the agent
+   * @returns Array of resource alerts the agent has been notified about
+   */
+  public getKnownResourceAlerts(agentId: string): ResourceAlert[] {
+    const now = Date.now();
+    const alerts: ResourceAlert[] = [];
+
+    for (const alert of this.resourceAlerts.values()) {
+      if (alert.expiresAt < now) continue;
+      if (!alert.notifiedAgents.has(agentId)) continue;
+
+      alerts.push(alert);
+    }
+
+    return alerts;
+  }
+
+  /**
+   * Gets active threat alerts that an agent knows about.
+   * 
+   * @param agentId - ID of the agent
+   * @returns Array of threat alerts the agent has been notified about
+   */
+  public getKnownThreatAlerts(agentId: string): ThreatAlert[] {
+    const now = Date.now();
+    const alerts: ThreatAlert[] = [];
+
+    for (const alert of this.threatAlerts.values()) {
+      if (alert.expiresAt < now) continue;
+      if (!alert.notifiedAgents.has(agentId)) continue;
+
+      alerts.push(alert);
+    }
+
+    return alerts;
+  }
+
+  /**
+   * Cleans up expired alerts.
+   * Should be called periodically by the simulation loop.
+   */
+  public update(): void {
+    const now = Date.now();
+
+    for (const [id, alert] of this.resourceAlerts.entries()) {
+      if (alert.expiresAt < now) {
+        this.resourceAlerts.delete(id);
+      }
+    }
+
+    for (const [id, alert] of this.threatAlerts.entries()) {
+      if (alert.expiresAt < now) {
+        this.threatAlerts.delete(id);
+      }
+    }
+  }
+
+  /**
+   * Gets stats about current alerts for monitoring.
+   */
+  public getStats(): {
+    activeResourceAlerts: number;
+    activeThreatAlerts: number;
+    totalAgentsNotified: number;
+  } {
+    const now = Date.now();
+    let activeResourceAlerts = 0;
+    let activeThreatAlerts = 0;
+    const notifiedAgents = new Set<string>();
+
+    for (const alert of this.resourceAlerts.values()) {
+      if (alert.expiresAt >= now) {
+        activeResourceAlerts++;
+        alert.notifiedAgents.forEach((id) => notifiedAgents.add(id));
+      }
+    }
+
+    for (const alert of this.threatAlerts.values()) {
+      if (alert.expiresAt >= now) {
+        activeThreatAlerts++;
+        alert.notifiedAgents.forEach((id) => notifiedAgents.add(id));
+      }
+    }
+
+    return {
+      activeResourceAlerts,
+      activeThreatAlerts,
+      totalAgentsNotified: notifiedAgents.size,
+    };
+  }
+}

@@ -3,6 +3,8 @@ export type TaskType =
   | "gather_wood"
   | "gather_stone"
   | "gather_food"
+  | "gather_water"
+  | "deposit_resources"
   | "hunt_animal"
   | "craft_item"
   | "repair_building"
@@ -19,7 +21,13 @@ export interface TaskMetadata {
   itemType?: string;
   resourceType?: string;
   quality?: number;
-  [key: string]: string | number | undefined;
+  // Community task coordination fields
+  communityTask?: boolean;
+  urgency?: number;
+  claimCount?: number;
+  maxClaims?: number;
+  claimedBy?: string[];
+  [key: string]: string | number | boolean | string[] | undefined;
 }
 
 export interface Task {

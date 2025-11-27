@@ -524,7 +524,7 @@ export class WorldLoader {
       mystical: "Forest", // Usa Forest como fallback
       village: "Grassland",
       beach: "Beach",
-      tundra: "Snowy Tundra",
+      tundra: "Tundra",
       ocean: "Beach",
       lake: "Beach",
     };

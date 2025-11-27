@@ -10,6 +10,11 @@ import type {
 } from "../../../../types/simulation/economy";
 import type { RoleType } from "../../../../types/simulation/roles";
 import type { SettlementDemand } from "../../../../types/simulation/governance";
+import type {
+  Task,
+  TaskCreationParams,
+  TaskType,
+} from "../../../../types/simulation/tasks";
 
 /**
  * Configuration for collective needs thresholds.
@@ -122,6 +127,11 @@ export interface CollectiveNeedsContext {
   }>;
   getActiveDemands?: () => SettlementDemand[];
   getPopulation: () => number;
+  taskSystem?: {
+    createTask: (params: TaskCreationParams) => Task | null;
+    getAvailableCommunityTasks: () => Task[];
+    claimTask: (taskId: string, agentId: string) => boolean;
+  };
 }
 
 interface CollectiveNeedsState {
@@ -255,10 +265,122 @@ export function evaluateCollectiveNeeds(
     (d) => d.type === "housing_full" && !d.resolvedAt,
   );
 
-  // 2. Evaluate resource gathering for collective needs
+  // 2. Priority 1: Check for existing community tasks
+  if (ctx.taskSystem) {
+    const availableTasks = ctx.taskSystem.getAvailableCommunityTasks();
+
+    for (const task of availableTasks) {
+      const taskUrgency = (task.metadata?.urgency as number) || 0.5;
+      const taskResourceType = task.metadata?.resourceType as string;
+
+      // Calculate priority based on urgency and role match
+      let priority = 0.5 + taskUrgency * 0.3;
+
+      // Boost if this matches agent's role preference
+      if (modifiers.preferredResource === taskResourceType) {
+        priority += 0.15;
+      }
+
+      // Boost if there's a governance demand
+      if (
+        (taskResourceType === "food" && foodDemand) ||
+        (taskResourceType === "water" && waterDemand)
+      ) {
+        priority += 0.1;
+      }
+
+      priority *= modifiers.gatherPriority;
+      priority = Math.min(0.85, Math.max(0.3, priority));
+
+      goals.push({
+        id: `join_community_task_${task.id}_${now}`,
+        type: "work",
+        priority,
+        data: {
+          taskId: task.id,
+          communityTask: true,
+          taskType: task.type,
+          resourceType: taskResourceType,
+        },
+        createdAt: now,
+        expiresAt: now + 30000,
+      });
+    }
+  }
+
+  // 3. Evaluate if we need to CREATE new community tasks
   const mostNeeded = getMostNeededResource(state, thresholds);
 
-  if (mostNeeded) {
+  if (mostNeeded && ctx.taskSystem) {
+    // Check if there's already a task for this resource
+    const existingTask = ctx.taskSystem
+      .getAvailableCommunityTasks()
+      .find(
+        (t) => (t.metadata?.resourceType as string) === mostNeeded.resource,
+      );
+
+    if (!existingTask) {
+      // Create new community task
+      const workersNeeded = Math.ceil(state.population * 0.15); // 15% of population
+      const taskType = getTaskTypeForResource(mostNeeded.resource);
+
+      const newTask = ctx.taskSystem.createTask({
+        type: taskType,
+        requiredWork: 100,
+        metadata: {
+          communityTask: true,
+          urgency: mostNeeded.urgency,
+          resourceType: mostNeeded.resource,
+          maxClaims: workersNeeded,
+          priority: 0.7 + mostNeeded.urgency * 0.2,
+        },
+      });
+
+      if (newTask) {
+        // Generate goal to join this newly created task
+        let basePriority = 0.4 + mostNeeded.urgency * 0.35;
+
+        // Boost if there's an active governance demand
+        if (
+          (mostNeeded.resource === "food" && foodDemand) ||
+          (mostNeeded.resource === "water" && waterDemand)
+        ) {
+          basePriority += 0.2;
+        }
+
+        // Apply role modifier
+        let finalPriority = basePriority * modifiers.gatherPriority;
+
+        // Extra boost if this is the role's preferred resource
+        if (modifiers.preferredResource === mostNeeded.resource) {
+          finalPriority += 0.15;
+        }
+
+        // Personality influence
+        finalPriority += aiState.personality.diligence * 0.1;
+        finalPriority += aiState.personality.conscientiousness * 0.05;
+
+        // Cap priority
+        finalPriority = Math.min(0.85, Math.max(0.3, finalPriority));
+
+        goals.push({
+          id: `new_community_task_${newTask.id}_${now}`,
+          type: "work",
+          priority: finalPriority,
+          data: {
+            taskId: newTask.id,
+            communityTask: true,
+            resourceType: mostNeeded.resource,
+          },
+          createdAt: now,
+          expiresAt: now + 30000,
+        });
+      }
+    }
+  }
+
+  // 4. Fallback: If no TaskSystem, use original individual gathering logic
+  if (!ctx.taskSystem && mostNeeded) {
     // Base priority for collective gathering
     let basePriority = 0.4 + mostNeeded.urgency * 0.35;
 
@@ -302,7 +424,8 @@ export function evaluateCollectiveNeeds(
     });
   }
 
-  // 3. Evaluate deposit goals when agent has resources and stockpiles need filling
+
+  // 5. Evaluate deposit goals when agent has resources and stockpiles need filling
   if (inventory) {
     const agentLoad =
       (inventory.wood || 0) +
@@ -433,6 +556,25 @@ function getLowestResource(state: CollectiveNeedsState): ResourceType {
   ratios.sort((a, b) => a.ratio - b.ratio);
   return ratios[0].resource;
 }
+
+/**
+ * Returns the task type for gathering a specific resource.
+ */
+function getTaskTypeForResource(resource: ResourceType): TaskType {
+  switch (resource) {
+    case "food":
+      return "gather_food";
+    case "water":
+      return "gather_water";
+    case "wood":
+      return "gather_wood";
+    case "stone":
+      return "gather_stone";
+    default:
+      return "custom";
+  }
+}
+
 
 /**
  * Adjusts individual need thresholds based on agent's role and community state.
