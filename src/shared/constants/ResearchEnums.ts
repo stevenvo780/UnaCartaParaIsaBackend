@@ -37,4 +37,3 @@ export const ALL_RESEARCH_IDS: readonly ResearchId[] = Object.values(
 export function isResearchId(value: string): value is ResearchId {
   return Object.values(ResearchId).includes(value as ResearchId);
 }
-

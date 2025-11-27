@@ -64,7 +64,7 @@ import type { AgentRegistry } from "../core/AgentRegistry";
 export class LifeCycleSystem extends EventEmitter {
   private gameState: GameState;
   private config: LifeCycleConfig;
-  private lastResourceConsumption: number = 0;
+  // NOTE: lastResourceConsumption removed - resource consumption now handled by NeedsSystem only
   private lastRoleRebalance = 0;
 
   private reproductionCooldown = new Map<string, number>();
@@ -196,11 +196,8 @@ export class LifeCycleSystem extends EventEmitter {
     }
     const dtSec = deltaTimeMs / 1000;
 
-    this.lastResourceConsumption += deltaTimeMs;
-    if (this.lastResourceConsumption >= 60000) {
-      this.consumeResourcesPeriodically();
-      this.lastResourceConsumption = 0;
-    }
+    // Resource consumption is now handled exclusively by NeedsSystem.consumeResourcesForNeeds()
+    // to avoid duplicate consumption bugs
 
     const yearInc = dtSec / this.config.secondsPerYear;
     const agents = this.gameState.agents || [];
@@ -334,27 +331,8 @@ export class LifeCycleSystem extends EventEmitter {
     }
   }
 
-  private consumeResourcesPeriodically(): void {
-    if (this.inventorySystem) {
-      const agents = this.gameState.agents || [];
-      for (const agent of agents) {
-        const foodConsumed = this.inventorySystem.consumeFromAgent(agent.id, {
-          food: 1,
-        });
-        const waterConsumed = this.inventorySystem.consumeFromAgent(agent.id, {
-          water: 1,
-        });
-
-        if (foodConsumed && this.needsSystem) {
-          this.needsSystem.satisfyNeed(agent.id, "hunger", 10);
-        }
-
-        if (waterConsumed && this.needsSystem) {
-          this.needsSystem.satisfyNeed(agent.id, "thirst", 10);
-        }
-      }
-    }
-  }
+  // NOTE: consumeResourcesPeriodically was REMOVED - it duplicated NeedsSystem.consumeResourcesForNeeds()
+  // All resource consumption for needs is now handled exclusively by NeedsSystem
 
   private lastBreedingCheck = 0;
   private readonly BREEDING_CHECK_INTERVAL = 60000;

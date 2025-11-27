@@ -34,4 +34,3 @@ export const ALL_FEEDBACK_LOOP_IDS: readonly FeedbackLoopId[] = Object.values(
 export function isFeedbackLoopId(value: string): value is FeedbackLoopId {
   return Object.values(FeedbackLoopId).includes(value as FeedbackLoopId);
 }
-

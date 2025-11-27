@@ -65,7 +65,10 @@ export class ResearchSystem {
 
   public initializeLineage(lineageId: string): void {
     this.lineageResearch.set(lineageId, new Map());
-    this.unlockedCategories.set(lineageId, new Set([ResearchId.BASIC_SURVIVAL]));
+    this.unlockedCategories.set(
+      lineageId,
+      new Set([ResearchId.BASIC_SURVIVAL]),
+    );
     this.lineageSpecializations.set(lineageId, []);
     this.unlockCategory(lineageId, ResearchId.BASIC_SURVIVAL);
   }

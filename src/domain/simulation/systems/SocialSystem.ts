@@ -1,6 +1,5 @@
 import { GameState } from "../../types/game-types";
 import { SocialConfig } from "../../types/simulation/social";
-import { SpatialGrid } from "../../../utils/SpatialGrid";
 import { SocialGroup } from "../../../shared/types/simulation/agents";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { logger } from "../../../infrastructure/utils/logger";
@@ -8,6 +7,7 @@ import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "node:perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
 import type { EntityIndex } from "../core/EntityIndex";
+import type { SharedSpatialIndex } from "../core/SharedSpatialIndex";
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -38,7 +38,8 @@ export class SocialSystem {
     Map<string, "family" | "marriage">
   >();
   private groups: SocialGroup[] = [];
-  private spatialGrid: SpatialGrid<string>;
+  // NOTE: Using SharedSpatialIndex instead of own SpatialGrid to avoid duplication
+  private sharedSpatialIndex?: SharedSpatialIndex;
   private truces = new Map<string, number>();
   private infamy = new Map<string, number>();
   private zoneHeat = new Map<string, number>();
@@ -46,10 +47,7 @@ export class SocialSystem {
   private lastProximityUpdate = 0;
   private lastDecayUpdate = 0;
 
-  private knownEntities = new Set<string>();
-  private positionCache = new Map<string, { x: number; y: number }>();
-  /** Only update position if entity moved more than this threshold */
-  private readonly POSITION_THRESHOLD = 2;
+  // NOTE: Removed knownEntities, positionCache - now handled by SharedSpatialIndex
   /** Dirty flag to skip recomputeGroups when no edges changed */
   private edgesModified = false;
   private gpuService?: GPUComputeService;
@@ -59,10 +57,12 @@ export class SocialSystem {
     @inject(TYPES.GameState) gameState: GameState,
     @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
     @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
+    @inject(TYPES.SharedSpatialIndex) @optional() sharedSpatialIndex?: SharedSpatialIndex,
   ) {
     this.gameState = gameState;
     this.gpuService = gpuService;
     this.entityIndex = entityIndex;
+    this.sharedSpatialIndex = sharedSpatialIndex;
     this.config = {
       proximityRadius: 100,
       reinforcementPerSecond: 0.05,
@@ -70,13 +70,8 @@ export class SocialSystem {
       groupThreshold: 0.6,
     };
 
-    const worldWidth = gameState.worldSize?.width ?? 2000;
-    const worldHeight = gameState.worldSize?.height ?? 2000;
-    this.spatialGrid = new SpatialGrid(
-      worldWidth,
-      worldHeight,
-      this.config.proximityRadius,
-    );
+    // NOTE: SocialSystem now uses SharedSpatialIndex instead of own SpatialGrid
+    // The SharedSpatialIndex is maintained by SimulationRunner and shared across systems
 
     this.setupMarriageListeners();
   }
@@ -164,45 +159,13 @@ export class SocialSystem {
   }
 
   /**
-   * Incremental spatial grid update.
-   * Only updates entities that moved significantly or are new/removed.
+   * NOTE: Spatial indexing now handled by SharedSpatialIndex.
+   * This method is kept for backwards compatibility but is a no-op.
+   * The SharedSpatialIndex is rebuilt by SimulationRunner each tick.
    */
   private updateSpatialGridIncremental(): void {
-    const entities = this.gameState.entities || [];
-    const currentIds = new Set<string>();
-
-    for (const entity of entities) {
-      if (!entity.position) continue;
-
-      currentIds.add(entity.id);
-      const cachedPos = this.positionCache.get(entity.id);
-
-      if (!cachedPos) {
-        this.spatialGrid.insert(entity.id, entity.position);
-        this.positionCache.set(entity.id, {
-          x: entity.position.x,
-          y: entity.position.y,
-        });
-        this.knownEntities.add(entity.id);
-      } else {
-        const dx = Math.abs(entity.position.x - cachedPos.x);
-        const dy = Math.abs(entity.position.y - cachedPos.y);
-
-        if (dx > this.POSITION_THRESHOLD || dy > this.POSITION_THRESHOLD) {
-          this.spatialGrid.insert(entity.id, entity.position);
-          cachedPos.x = entity.position.x;
-          cachedPos.y = entity.position.y;
-        }
-      }
-    }
-
-    for (const id of this.knownEntities) {
-      if (!currentIds.has(id)) {
-        this.spatialGrid.remove(id);
-        this.positionCache.delete(id);
-        this.knownEntities.delete(id);
-      }
-    }
+    // No-op: SharedSpatialIndex is maintained centrally by SimulationRunner
+    // Entities are automatically tracked there
   }
 
   /**
@@ -337,15 +300,20 @@ export class SocialSystem {
       return;
     }
 
+    // Use SharedSpatialIndex for proximity queries
     for (const entity of entitiesWithPos) {
-      const nearby = this.spatialGrid.queryRadius(
+      const nearby = this.sharedSpatialIndex?.queryRadius(
         entity.position,
         this.config.proximityRadius,
       );
 
-      for (const { entity: otherId } of nearby) {
-        if (entity.id >= otherId) continue;
-        this.addEdge(entity.id, otherId, reinforcement);
+      if (nearby) {
+        for (const { entity: otherId } of nearby) {
+          if (entity.id >= otherId) continue;
+          this.addEdge(entity.id, otherId, reinforcement);
+        }
+        // Release results back to pool for memory efficiency
+        this.sharedSpatialIndex?.releaseResults(nearby);
       }
     }
   }

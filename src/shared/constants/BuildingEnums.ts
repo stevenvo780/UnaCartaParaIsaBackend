@@ -115,9 +115,8 @@ export type BuildingSpriteIdValue = `${BuildingSpriteId}`;
 /**
  * Array of all building sprite IDs for iteration.
  */
-export const ALL_BUILDING_SPRITE_IDS: readonly BuildingSpriteId[] = Object.values(
-  BuildingSpriteId,
-) as BuildingSpriteId[];
+export const ALL_BUILDING_SPRITE_IDS: readonly BuildingSpriteId[] =
+  Object.values(BuildingSpriteId) as BuildingSpriteId[];
 
 /**
  * Type guard to check if a string is a valid BuildingSpriteId.

@@ -1,6 +1,9 @@
 import type { CraftingRecipe } from "../../domain/types/simulation/crafting";
 import { ItemId } from "../../shared/constants/ItemEnums";
-import { WorkstationType, SkillType } from "../../shared/constants/CraftingEnums";
+import {
+  WorkstationType,
+  SkillType,
+} from "../../shared/constants/CraftingEnums";
 
 export class BiomeRecipesCatalog {
   private static readonly biomeRecipes: Record<string, CraftingRecipe[]> = {

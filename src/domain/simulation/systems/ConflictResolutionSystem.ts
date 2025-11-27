@@ -134,8 +134,7 @@ export class ConflictResolutionSystem {
       };
 
     const { aId, bId } = meta;
-    let resolution: ConflictRecord["resolution"] =
-      ConflictResolution.CONTINUED;
+    let resolution: ConflictRecord["resolution"] = ConflictResolution.CONTINUED;
     let truceBonus: number | undefined;
 
     if (choice === ConflictResolutionChoice.TRUCE_ACCEPT) {
