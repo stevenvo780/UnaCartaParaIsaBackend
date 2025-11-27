@@ -65,3 +65,33 @@ export function isItemRarity(value: string): value is ItemRarity {
 export function isItemTier(value: string): value is ItemTier {
   return Object.values(ItemTier).includes(value as ItemTier);
 }
+
+/**
+ * Enumeration of item categories.
+ * Defines the broad category classification of items.
+ */
+export enum ItemCategory {
+  MATERIAL = "material",
+  FOOD = "food",
+  CONSUMABLE = "consumable",
+}
+
+/**
+ * Type representing all possible item category values.
+ */
+export type ItemCategoryValue = `${ItemCategory}`;
+
+/**
+ * Array of all item categories for iteration.
+ */
+export const ALL_ITEM_CATEGORIES: readonly ItemCategory[] = Object.values(
+  ItemCategory,
+) as ItemCategory[];
+
+/**
+ * Type guard to check if a string is a valid ItemCategory.
+ */
+export function isItemCategory(value: string): value is ItemCategory {
+  return Object.values(ItemCategory).includes(value as ItemCategory);
+}
+

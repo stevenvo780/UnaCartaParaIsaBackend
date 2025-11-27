@@ -16,6 +16,7 @@ import type {
 } from "../../../../types/simulation/tasks";
 import { GoalType as GoalTypeEnum } from "../../../../../shared/constants/AIEnums";
 import { ResourceType as ResourceTypeEnum } from "../../../../../shared/constants/ResourceEnums";
+import { RoleType as RoleTypeEnum } from "../../../../../shared/constants/RoleEnums";
 import { TaskType } from "../../../../../shared/constants/TaskEnums";
 
 /**
@@ -587,13 +588,13 @@ function getLowestResource(state: CollectiveNeedsState): ResourceType {
  */
 function getTaskTypeForResource(resource: ResourceType): TaskType {
   switch (resource) {
-    case "food":
+    case ResourceTypeEnum.FOOD:
       return TaskType.GATHER_FOOD;
-    case "water":
+    case ResourceTypeEnum.WATER:
       return TaskType.GATHER_WATER;
-    case "wood":
+    case ResourceTypeEnum.WOOD:
       return TaskType.GATHER_WOOD;
-    case "stone":
+    case ResourceTypeEnum.STONE:
       return TaskType.GATHER_STONE;
     default:
       return TaskType.CUSTOM;
@@ -615,8 +616,8 @@ export function adjustNeedThresholdsForRole(
 
   // Role-specific adjustments
   switch (roleType) {
-    case "farmer":
-    case "gatherer":
+    case RoleTypeEnum.FARMER:
+    case RoleTypeEnum.GATHERER:
       // Food/water producers are more tolerant of their own hunger/thirst
       // when the community needs more
       if (need === "hunger" && collectiveState.foodPerCapita < 5) {
@@ -627,21 +628,21 @@ export function adjustNeedThresholdsForRole(
       }
       break;
 
-    case "builder":
+    case RoleTypeEnum.BUILDER:
       // Builders are more tolerant of energy depletion when building
       if (need === "energy") {
         modifier = 0.85;
       }
       break;
 
-    case "guard":
+    case RoleTypeEnum.GUARD:
       // Guards need to stay more alert, less tolerant of low energy
       if (need === "energy") {
         modifier = 1.2; // Higher threshold = less tolerant
       }
       break;
 
-    case "hunter":
+    case RoleTypeEnum.HUNTER:
       // Hunters need energy for chasing prey
       if (need === "energy") {
         modifier = 1.15;

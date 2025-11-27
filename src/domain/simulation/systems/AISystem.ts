@@ -12,6 +12,7 @@ import { ResourceType } from "../../../shared/constants/ResourceEnums";
 import { GoalType as GoalTypeEnum } from "../../../shared/constants/AIEnums";
 import { RoleType } from "../../../shared/constants/RoleEnums";
 import { AgentPriority } from "../../../shared/constants/AIEnums";
+import { TaskType } from "../../../shared/constants/TaskEnums";
 import { itemToWorldResources } from "../../types/simulation/resourceMapping";
 import type { WorldResourceType } from "../../types/simulation/worldResources";
 import { StockpileType } from "../../../shared/constants/ZoneEnums";
@@ -945,7 +946,7 @@ export class AISystem extends EventEmitter {
           targetId: animal.id,
           targetPosition: { x: animal.x, y: animal.y },
           data: {
-            taskType: "hunt",
+            taskType: TaskType.HUNT_ANIMAL,
             animalType: animal.type,
           },
           createdAt: now,
@@ -966,7 +967,7 @@ export class AISystem extends EventEmitter {
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
-              taskType: "gather_food",
+              taskType: TaskType.GATHER_FOOD,
               resourceType: ResourceType.FOOD,
             },
             createdAt: now,
@@ -992,7 +993,7 @@ export class AISystem extends EventEmitter {
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
-              taskType: "gather_wood",
+              taskType: TaskType.GATHER_WOOD,
               resourceType: ResourceType.WOOD,
             },
             createdAt: now,
@@ -1019,7 +1020,7 @@ export class AISystem extends EventEmitter {
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
-              taskType: "gather_stone",
+              taskType: TaskType.GATHER_STONE,
               resourceType: ResourceType.STONE,
             },
             createdAt: now,
@@ -1040,7 +1041,7 @@ export class AISystem extends EventEmitter {
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
-              taskType: "gather_food",
+              taskType: TaskType.GATHER_FOOD,
               resourceType: ResourceType.FOOD,
             },
             createdAt: now,
@@ -1061,7 +1062,7 @@ export class AISystem extends EventEmitter {
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
-              taskType: "gather_wood",
+              taskType: TaskType.GATHER_WOOD,
               resourceType: ResourceType.WOOD,
             },
             createdAt: now,
@@ -1078,7 +1079,7 @@ export class AISystem extends EventEmitter {
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
-              taskType: "gather_stone",
+              taskType: TaskType.GATHER_STONE,
               resourceType: ResourceType.STONE,
             },
             createdAt: now,
@@ -1233,7 +1234,7 @@ export class AISystem extends EventEmitter {
         if (this.zoneCache.has(id)) {
           return this.zoneCache.get(id);
         }
-        const agent = this.getAgentProfileFast(id);
+        const agent = this.agentRegistry?.getProfile(id);
         if (!agent?.position) {
           this.zoneCache.set(id, undefined);
           return undefined;
@@ -1638,7 +1639,7 @@ export class AISystem extends EventEmitter {
   }
 
   private getAgentPosition(agentId: string): { x: number; y: number } | null {
-    const agent = this.getAgentProfileFast(agentId);
+    const agent = this.agentRegistry?.getProfile(agentId);
     if (agent?.position) {
       return { x: agent.position.x, y: agent.position.y };
     }
@@ -1727,9 +1728,7 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    const agent =
-      this.entityIndex?.getAgent(entityId) ??
-      this.gameState.agents?.find((a) => a.id === entityId);
+    const agent = this.agentRegistry?.getProfile(entityId);
     if (!agent?.position) return null;
 
     const maxRadiusSq =
@@ -1828,7 +1827,7 @@ export class AISystem extends EventEmitter {
     resourceType: ResourceType.FOOD | ResourceType.WATER,
     minAmount: number,
   ): { agentId: string; x: number; y: number } | null {
-    const agent = this.gameState.agents.find((a) => a.id === entityId);
+    const agent = this.agentRegistry?.getProfile(entityId);
     if (!agent?.position) return null;
 
     let nearest: { agentId: string; x: number; y: number } | null = null;
@@ -1863,7 +1862,7 @@ export class AISystem extends EventEmitter {
   private findPotentialMate(
     entityId: string,
   ): { id: string; x: number; y: number } | null {
-    const agent = this.gameState.agents.find((a) => a.id === entityId);
+    const agent = this.agentRegistry?.getProfile(entityId);
     if (!agent?.position) return null;
 
     let nearest: { id: string; x: number; y: number } | null = null;
@@ -1897,7 +1896,7 @@ export class AISystem extends EventEmitter {
   private findNearbyAgent(
     entityId: string,
   ): { id: string; x: number; y: number } | null {
-    const agent = this.gameState.agents.find((a) => a.id === entityId);
+    const agent = this.agentRegistry?.getProfile(entityId);
     if (!agent?.position) return null;
 
     let nearest: { id: string; x: number; y: number } | null = null;
@@ -2008,14 +2007,24 @@ export class AISystem extends EventEmitter {
     entityId: string,
     radius: number,
   ): Array<{ id: string; distance: number }> {
-    const myAgent =
-      this.entityIndex?.getAgent(entityId) ??
-      this.gameState.agents?.find((a) => a.id === entityId);
+    const myAgent = this.agentRegistry?.getProfile(entityId);
     if (!myAgent?.position) return [];
 
-    const activeAgents = this.gameState.agents.filter(
-      (a) => !a.isDead && a.id !== entityId && a.position,
-    );
+    // Use AgentRegistry to filter active agents
+    const activeAgents: Array<{ id: string; position: { x: number; y: number } }> = [];
+    if (this.agentRegistry) {
+      for (const a of this.agentRegistry.getAllProfiles()) {
+        if (!a.isDead && a.id !== entityId && a.position) {
+          activeAgents.push({ id: a.id, position: a.position });
+        }
+      }
+    } else {
+      for (const a of this.gameState.agents) {
+        if (!a.isDead && a.id !== entityId && a.position) {
+          activeAgents.push({ id: a.id, position: a.position });
+        }
+      }
+    }
 
     if (activeAgents.length === 0) return [];
 
@@ -2209,28 +2218,6 @@ export class AISystem extends EventEmitter {
   public getCurrentGoal(agentId: string): unknown {
     const aiState = this.aiStates.get(agentId);
     return aiState?.currentGoal;
-  }
-
-  /**
-   * Gets agent profile with O(1) lookup using AgentRegistry, EntityIndex, or fallback to gameState
-   * @param agentId - Agent identifier
-   * @returns AgentProfile or undefined
-   */
-  private getAgentProfileFast(
-    agentId: string,
-  ): import("../../types/simulation/agents").AgentProfile | undefined {
-    // Try AgentRegistry first (O(1))
-    if (this.agentRegistry) {
-      const profile = this.agentRegistry.getProfile(agentId);
-      if (profile) return profile;
-    }
-    // Try EntityIndex (O(1))
-    if (this.entityIndex) {
-      const agent = this.entityIndex.getAgent(agentId);
-      if (agent) return agent;
-    }
-    // Fallback to gameState.agents.find (O(n)) - should rarely happen
-    return this.gameState.agents.find((a) => a.id === agentId);
   }
 
   /**

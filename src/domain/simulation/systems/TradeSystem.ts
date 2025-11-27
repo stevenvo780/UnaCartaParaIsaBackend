@@ -4,9 +4,11 @@ import type { InventorySystem } from "./InventorySystem";
 import type { NeedsSystem } from "./NeedsSystem";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
+import { TradeOfferStatus } from "../../../shared/constants/EconomyEnums";
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import type { AgentRegistry } from "../core/AgentRegistry";
 
 @injectable()
 export class TradeSystem {
@@ -16,6 +18,7 @@ export class TradeSystem {
   private merchantReputation = new Map<string, number>();
   private inventorySystem?: InventorySystem;
   private needsSystem?: NeedsSystem;
+  private agentRegistry?: AgentRegistry;
 
   private readonly BACKGROUND_TRADE_INTERVAL = 15000; // More frequent for need-based trading
   private readonly BACKGROUND_TRADE_PROBABILITY = 0.3; // Higher probability
@@ -26,9 +29,13 @@ export class TradeSystem {
     @inject(TYPES.InventorySystem)
     @optional()
     inventorySystem?: InventorySystem,
+    @inject(TYPES.AgentRegistry)
+    @optional()
+    agentRegistry?: AgentRegistry,
   ) {
     this.gameState = gameState;
     this.inventorySystem = inventorySystem;
+    this.agentRegistry = agentRegistry;
     this.setupDeathListener();
   }
 
@@ -82,7 +89,7 @@ export class TradeSystem {
       sellerId,
       offering,
       requesting,
-      status: "pending",
+      status: TradeOfferStatus.PENDING,
       createdAt: Date.now(),
       expiresAt: Date.now() + duration,
     };
@@ -104,15 +111,15 @@ export class TradeSystem {
   public acceptOffer(offerId: string, buyerId: string): boolean {
     const offer = this.activeOffers.get(offerId);
 
-    if (!offer || offer.status !== "pending") return false;
+    if (!offer || offer.status !== TradeOfferStatus.PENDING) return false;
     if (Date.now() > offer.expiresAt) {
-      offer.status = "expired";
+      offer.status = TradeOfferStatus.EXPIRED;
       return false;
     }
     if (offer.sellerId === buyerId) return false;
 
     offer.buyerId = buyerId;
-    offer.status = "accepted";
+    offer.status = TradeOfferStatus.ACCEPTED;
 
     this.updateReputation(offer.sellerId, 2);
     this.updateReputation(buyerId, 1);
@@ -142,9 +149,9 @@ export class TradeSystem {
 
   public rejectOffer(offerId: string, buyerId: string): boolean {
     const offer = this.activeOffers.get(offerId);
-    if (!offer || offer.status !== "pending") return false;
+    if (!offer || offer.status !== TradeOfferStatus.PENDING) return false;
 
-    offer.status = "rejected";
+    offer.status = TradeOfferStatus.REJECTED;
     offer.buyerId = buyerId;
 
     simulationEvents.emit(GameEventNames.TRADE_REJECTED, {
@@ -159,7 +166,11 @@ export class TradeSystem {
 
   public cancelOffer(offerId: string, sellerId: string): boolean {
     const offer = this.activeOffers.get(offerId);
-    if (!offer || offer.sellerId !== sellerId || offer.status !== "pending") {
+    if (
+      !offer ||
+      offer.sellerId !== sellerId ||
+      offer.status !== TradeOfferStatus.PENDING
+    ) {
       return false;
     }
 
@@ -171,9 +182,9 @@ export class TradeSystem {
     const now = Date.now();
 
     return Array.from(this.activeOffers.values()).filter((offer) => {
-      if (offer.status !== "pending") return false;
+      if (offer.status !== TradeOfferStatus.PENDING) return false;
       if (offer.expiresAt < now) {
-        offer.status = "expired";
+        offer.status = TradeOfferStatus.EXPIRED;
         return false;
       }
       if (buyerId && offer.sellerId === buyerId) return false;
@@ -251,8 +262,11 @@ export class TradeSystem {
     const now = Date.now();
 
     for (const [offerId, offer] of Array.from(this.activeOffers.entries())) {
-      if (offer.expiresAt < now && offer.status === "pending") {
-        offer.status = "expired";
+      if (
+        offer.expiresAt < now &&
+        offer.status === TradeOfferStatus.PENDING
+      ) {
+        offer.status = TradeOfferStatus.EXPIRED;
         this.activeOffers.delete(offerId);
       }
     }
@@ -298,11 +312,23 @@ export class TradeSystem {
    * This creates natural economic flow based on survival needs.
    */
   private processBackgroundTrade(): void {
-    if (!this.inventorySystem || !this.gameState.agents) return;
+    if (!this.inventorySystem) return;
 
-    const agents = this.gameState.agents.filter(
-      (a) => a.lifeStage === "adult" && !a.isDead,
-    );
+    // Get eligible agents using AgentRegistry (O(1) access per agent) or fallback to gameState
+    const agents: Array<{ id: string; lifeStage?: string; isDead?: boolean }> = [];
+    if (this.agentRegistry) {
+      for (const profile of this.agentRegistry.getAllProfiles()) {
+        if (profile.lifeStage === "adult" && !profile.isDead) {
+          agents.push(profile);
+        }
+      }
+    } else if (this.gameState.agents) {
+      for (const a of this.gameState.agents) {
+        if (a.lifeStage === "adult" && !a.isDead) {
+          agents.push(a);
+        }
+      }
+    }
     if (agents.length < 2) return;
 
     // Priority 1: Trade food/water based on NEEDS (survival-driven economy)

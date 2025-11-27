@@ -34,4 +34,3 @@ export const ALL_LEGEND_TRENDS: readonly LegendTrend[] = Object.values(
 export function isLegendTrend(value: string): value is LegendTrend {
   return Object.values(LegendTrend).includes(value as LegendTrend);
 }
-

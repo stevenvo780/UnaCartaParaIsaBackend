@@ -10,6 +10,7 @@ import type { TaskType } from "../../types/simulation/tasks";
 import { logger } from "../../../infrastructure/utils/logger";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
 import { BuildingType } from "../../../shared/constants/BuildingEnums";
+import { SystemStatus } from "../../../shared/constants/SystemEnums";
 
 import { TaskSystem } from "./TaskSystem";
 import { TerrainSystem } from "./TerrainSystem";
@@ -390,7 +391,7 @@ export class BuildingSystem {
     }
     zone.props = {
       ...(zone.props || {}),
-      status: "ready",
+      status: SystemStatus.READY,
     };
     zone.durability = 100;
     zone.maxDurability = 100;

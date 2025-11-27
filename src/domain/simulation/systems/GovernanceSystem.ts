@@ -10,6 +10,8 @@ import type { ResourceCost } from "../../types/simulation/economy";
 import type { RoleType } from "../../types/simulation/roles";
 import { RoleType as RoleTypeEnum } from "../../../shared/constants/RoleEnums";
 import { DemandType } from "../../../shared/constants/GovernanceEnums";
+import { CrisisPredictionType } from "../../../shared/constants/AmbientEnums";
+import { ActivityType } from "../../../shared/constants/MovementEnums";
 import { GameEventNames, simulationEvents } from "../core/events";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 import { InventorySystem } from "./InventorySystem";
@@ -184,11 +186,11 @@ export class GovernanceSystem {
         timestamp: number;
       }) => {
         const prediction = data.prediction;
-        let demandType: DemandType = "housing_full";
-        if (prediction.type === "resource_shortage") {
-          demandType = "food_shortage";
-        } else if (prediction.type === "population_crisis") {
-          demandType = "housing_full";
+        let demandType: DemandType = DemandType.HOUSING_FULL;
+        if (prediction.type === CrisisPredictionType.RESOURCE_SHORTAGE) {
+          demandType = DemandType.FOOD_SHORTAGE;
+        } else if (prediction.type === CrisisPredictionType.POPULATION_CRISIS) {
+          demandType = DemandType.HOUSING_FULL;
         }
         this.createDemand(
           demandType,
@@ -261,7 +263,7 @@ export class GovernanceSystem {
         );
         if (recentLosses.length >= 3) {
           this.createDemand(
-            "housing_full", // Usar tipo existente, podría ser "worker_shortage" en el futuro
+            DemandType.HOUSING_FULL, // Usar tipo existente, podría ser "worker_shortage" en el futuro
             7,
             "Pérdida significativa de trabajadores de producción",
             {
@@ -328,9 +330,10 @@ export class GovernanceSystem {
           8,
           "Reservas de comida bajas",
           {
-          foodPerCapita: stats.foodPerCapita,
-          population: stats.population,
-        });
+            foodPerCapita: stats.foodPerCapita,
+            population: stats.population,
+          },
+        );
       }
     }
 
@@ -342,9 +345,10 @@ export class GovernanceSystem {
           9,
           "Reservas de agua bajas",
           {
-          waterPerCapita: stats.waterPerCapita,
-          population: stats.population,
-        });
+            waterPerCapita: stats.waterPerCapita,
+            population: stats.population,
+          },
+        );
       }
     }
 
@@ -494,7 +498,7 @@ export class GovernanceSystem {
       let score = 0;
 
       // Prefer idle agents
-      if (!currentRole || currentRole.roleType === "idle") {
+      if (!currentRole || currentRole.roleType === RoleTypeEnum.IDLE) {
         score += 50;
       }
 
@@ -645,7 +649,7 @@ export class GovernanceSystem {
     const idleAgents = entities.filter((entity) => {
       const activity = entity.state;
       if (typeof activity === "string") {
-        return activity === "idle";
+        return activity === ActivityType.IDLE;
       }
       if (
         typeof activity === "object" &&

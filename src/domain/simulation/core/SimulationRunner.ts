@@ -4,6 +4,7 @@ import type { ILifeCyclePort } from "../ports";
 import { cloneGameState } from "./defaultState";
 import { EntityIndex } from "./EntityIndex";
 import { SharedSpatialIndex } from "./SharedSpatialIndex";
+import { AgentRegistry } from "./AgentRegistry";
 import { WorldGenerationService } from "../../../infrastructure/services/world/worldGenerationService";
 import { logger } from "../../../infrastructure/utils/logger";
 import { WorldResourceSystem } from "../systems/WorldResourceSystem";
@@ -247,6 +248,9 @@ export class SimulationRunner {
   public capturedEvents: SimulationEvent[] = [];
 
   @inject(TYPES.EntityIndex) public readonly entityIndex!: EntityIndex;
+
+  @inject(TYPES.AgentRegistry)
+  public readonly agentRegistry!: AgentRegistry;
 
   @inject(TYPES.SharedSpatialIndex)
   public readonly sharedSpatialIndex!: SharedSpatialIndex;

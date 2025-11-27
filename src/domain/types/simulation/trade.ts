@@ -1,9 +1,11 @@
+import { TradeOfferStatus } from "../../../shared/constants/EconomyEnums";
+
 export interface TradeOffer {
   id: string;
   sellerId: string;
   offering: Array<{ itemId: string; quantity: number }>;
   requesting: Array<{ itemId: string; quantity: number }> | { value: number };
-  status: "pending" | "accepted" | "rejected" | "expired" | "cancelled";
+  status: TradeOfferStatus;
   createdAt: number;
   expiresAt: number;
   buyerId?: string;

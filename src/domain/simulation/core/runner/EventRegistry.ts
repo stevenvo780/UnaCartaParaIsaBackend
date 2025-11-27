@@ -297,18 +297,25 @@ export class EventRegistry {
         timestamp: number;
       }) => {
         if (data.prediction.probability >= 0.6) {
-          const relevantAgents = this.runner.state.agents.filter((agent) => {
+          // Use AgentRegistry for O(1) iteration
+          const relevantAgents: Array<{ id: string }> = [];
+          for (const agent of this.runner.agentRegistry.getAllProfiles()) {
             const role = this.runner.roleSystem.getAgentRole(agent.id);
-            if (!role) return false;
-            return [
-              RoleType.GUARD,
-              RoleType.BUILDER,
-              RoleType.FARMER,
-              RoleType.GATHERER,
-            ].includes(role.roleType as RoleType);
-          });
+            if (!role) continue;
+            if (
+              [
+                RoleType.GUARD,
+                RoleType.BUILDER,
+                RoleType.FARMER,
+                RoleType.GATHERER,
+              ].includes(role.roleType as RoleType)
+            ) {
+              relevantAgents.push(agent);
+              if (relevantAgents.length >= 3) break; // Only need 3
+            }
+          }
 
-          for (const agent of relevantAgents.slice(0, 3)) {
+          for (const agent of relevantAgents) {
             this.runner.aiSystem.forceGoalReevaluation(agent.id);
           }
         }

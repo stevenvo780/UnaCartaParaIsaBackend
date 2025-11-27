@@ -22,6 +22,7 @@ export enum HttpStatusCode {
   FORBIDDEN = 403,
   NOT_FOUND = 404,
   CONFLICT = 409,
+  TOO_MANY_REQUESTS = 429,
 
   // Server error codes
   INTERNAL_SERVER_ERROR = 500,

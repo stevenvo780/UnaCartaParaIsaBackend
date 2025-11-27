@@ -1,4 +1,5 @@
 import type { Item } from "../../domain/types/simulation/items";
+import { ItemTier } from "../../shared/constants/ItemEnums";
 
 export class BaseMaterialsCatalog {
   private static readonly materials: Item[] = [
@@ -6,7 +7,7 @@ export class BaseMaterialsCatalog {
       id: "wood_log",
       name: "Tronco de Madera",
       description: "Madera sin procesar, útil para crafteo básico",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       sprite: "assets/materials/wood_log.png",
       properties: {
@@ -20,7 +21,7 @@ export class BaseMaterialsCatalog {
       id: "fiber",
       name: "Fibra Vegetal",
       description: "Fibras naturales para textiles y cuerdas",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 0.5,
@@ -34,7 +35,7 @@ export class BaseMaterialsCatalog {
       id: "stone",
       name: "Piedra",
       description: "Piedra común para construcción",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 8,
@@ -47,7 +48,7 @@ export class BaseMaterialsCatalog {
       id: "iron_ore",
       name: "Mineral de Hierro",
       description: "Mineral sin procesar que contiene hierro",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 10,
@@ -60,7 +61,7 @@ export class BaseMaterialsCatalog {
       id: "copper_ore",
       name: "Mineral de Cobre",
       description: "Mineral sin procesar que contiene cobre",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 9,
@@ -73,7 +74,7 @@ export class BaseMaterialsCatalog {
       id: "clay",
       name: "Arcilla",
       description: "Arcilla húmeda para cerámica",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 3,
@@ -87,7 +88,7 @@ export class BaseMaterialsCatalog {
       id: "wheat",
       name: "Trigo",
       description: "Grano de trigo crudo",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "food",
       properties: {
         weight: 1,
@@ -102,7 +103,7 @@ export class BaseMaterialsCatalog {
       id: "berries",
       name: "Bayas",
       description: "Bayas silvestres comestibles",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "food",
       properties: {
         weight: 0.5,
@@ -117,7 +118,7 @@ export class BaseMaterialsCatalog {
       id: "raw_meat",
       name: "Carne Cruda",
       description: "Carne fresca sin cocinar",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "food",
       properties: {
         weight: 3,
@@ -132,7 +133,7 @@ export class BaseMaterialsCatalog {
       id: "fish",
       name: "Pescado",
       description: "Pescado fresco sin procesar",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "food",
       properties: {
         weight: 2,
@@ -147,7 +148,7 @@ export class BaseMaterialsCatalog {
       id: "water",
       name: "Agua",
       description: "Agua potable",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "consumable",
       properties: {
         weight: 1,
@@ -161,7 +162,7 @@ export class BaseMaterialsCatalog {
       id: "leather_hide",
       name: "Cuero Sin Curtir",
       description: "Piel de animal sin procesar",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 4,
@@ -176,7 +177,7 @@ export class BaseMaterialsCatalog {
       id: "coal",
       name: "Carbón",
       description: "Combustible básico",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 2,
@@ -190,7 +191,7 @@ export class BaseMaterialsCatalog {
       id: "mushroom_mystical",
       name: "Champiñón Místico",
       description: "Hongo brillante con propiedades mágicas",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 0.5,
@@ -204,7 +205,7 @@ export class BaseMaterialsCatalog {
       id: "glowing_crystal",
       name: "Cristal Brillante",
       description: "Cristal que emite luz propia",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 3,
@@ -218,7 +219,7 @@ export class BaseMaterialsCatalog {
       id: "mystical_fiber",
       name: "Fibra Mística",
       description: "Fibra imbuida con energía mágica",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 0.3,
@@ -233,7 +234,7 @@ export class BaseMaterialsCatalog {
       id: "swamp_herb",
       name: "Hierba del Pantano",
       description: "Planta medicinal del humedal",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 0.5,
@@ -249,7 +250,7 @@ export class BaseMaterialsCatalog {
       id: "reeds",
       name: "Juncos",
       description: "Plantas acuáticas para tejer",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 1,
@@ -264,7 +265,7 @@ export class BaseMaterialsCatalog {
       id: "mountain_wood",
       name: "Madera de Montaña",
       description: "Madera resistente de árboles alpinos",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 6,
@@ -278,7 +279,7 @@ export class BaseMaterialsCatalog {
       id: "rare_gems",
       name: "Gemas Raras",
       description: "Piedras preciosas encontradas en montañas",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 1,
@@ -293,7 +294,7 @@ export class BaseMaterialsCatalog {
       id: "medicinal_herbs",
       name: "Hierbas Medicinales",
       description: "Plantas curativas del bosque",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 0.5,
@@ -309,7 +310,7 @@ export class BaseMaterialsCatalog {
       id: "honey",
       name: "Miel",
       description: "Miel natural de abejas del bosque",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "food",
       properties: {
         weight: 2,
@@ -323,7 +324,7 @@ export class BaseMaterialsCatalog {
       id: "pine_resin",
       name: "Resina de Pino",
       description: "Sustancia pegajosa de los pinos",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 1,
@@ -338,7 +339,7 @@ export class BaseMaterialsCatalog {
       id: "cotton",
       name: "Algodón",
       description: "Fibra suave de plantas de algodón",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 0.3,
@@ -352,7 +353,7 @@ export class BaseMaterialsCatalog {
       id: "wildflowers",
       name: "Flores Silvestres",
       description: "Flores coloridas de la pradera",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 0.2,
@@ -369,7 +370,7 @@ export class BaseMaterialsCatalog {
       id: "scrap_metal",
       name: "Chatarra Metálica",
       description: "Restos de metal para reciclar",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 5,
@@ -383,7 +384,7 @@ export class BaseMaterialsCatalog {
       id: "old_tools",
       name: "Herramientas Viejas",
       description: "Herramientas desgastadas que pueden repararse",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 4,
@@ -397,7 +398,7 @@ export class BaseMaterialsCatalog {
       id: "seeds",
       name: "Semillas",
       description: "Semillas para cultivar",
-      tier: "raw",
+      tier: ItemTier.RAW,
       category: "material",
       properties: {
         weight: 0.1,

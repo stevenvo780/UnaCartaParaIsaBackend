@@ -73,4 +73,3 @@ export function isGovernanceEventType(
     value as GovernanceEventType,
   );
 }
-

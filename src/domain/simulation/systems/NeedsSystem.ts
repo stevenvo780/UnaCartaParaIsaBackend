@@ -657,7 +657,7 @@ export class NeedsSystem extends EventEmitter {
     }
 
     if (this.gameState.agents) {
-      const agent = this.getAgentFast(entityId);
+      const agent = this.agentRegistry?.getProfile(entityId);
       if (agent) {
         agent.isDead = true;
         entityMarked = true;
@@ -1333,25 +1333,5 @@ export class NeedsSystem extends EventEmitter {
    */
   public getFoodsByCategory(category: FoodCategory): FoodItem[] {
     return FoodCatalog.getFoodsByCategory(category);
-  }
-
-  /**
-   * Gets agent profile with O(1) lookup using AgentRegistry or fallback
-   */
-  private getAgentFast(
-    agentId: string,
-  ): import("../../types/simulation/agents").AgentProfile | undefined {
-    // Try AgentRegistry first (O(1))
-    if (this.agentRegistry) {
-      const profile = this.agentRegistry.getProfile(agentId);
-      if (profile) return profile;
-    }
-    // Try EntityIndex (O(1))
-    if (this.entityIndex) {
-      const agent = this.entityIndex.getAgent(agentId);
-      if (agent) return agent;
-    }
-    // Fallback to gameState.agents.find (O(n)) - should rarely happen
-    return this.gameState.agents?.find((a) => a.id === agentId);
   }
 }

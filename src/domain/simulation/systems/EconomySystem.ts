@@ -36,6 +36,7 @@ const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
+import type { AgentRegistry } from "../core/AgentRegistry";
 
 /**
  * System for managing economic activities: resource production, salaries, and work yields.
@@ -65,17 +66,20 @@ export class EconomySystem {
   private lastSalaryPayment = 0;
   private readonly SALARY_INTERVAL_MS = 60000;
   private entityIndex?: EntityIndex;
+  private agentRegistry?: AgentRegistry;
 
   constructor(
     @inject(TYPES.GameState) state: GameState,
     @inject(TYPES.InventorySystem) inventorySystem: InventorySystem,
     @inject(TYPES.SocialSystem) socialSystem: SocialSystem,
     @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
+    @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
   ) {
     this.state = state;
     this.inventorySystem = inventorySystem;
     this.socialSystem = socialSystem;
     this.entityIndex = entityIndex;
+    this.agentRegistry = agentRegistry;
     this.config = DEFAULT_ECONOMY_CONFIG;
   }
 
@@ -136,11 +140,24 @@ export class EconomySystem {
       };
     }
 
-    if (this.roleSystem && this.state.agents) {
-      const activeWorkers = this.state.agents.filter((agent) => {
-        const role = this.roleSystem?.getAgentRole(agent.id);
-        return role && role.roleType !== undefined;
-      }).length;
+    if (this.roleSystem) {
+      let activeWorkers = 0;
+      // Use AgentRegistry for O(1) iteration
+      if (this.agentRegistry) {
+        for (const agent of this.agentRegistry.getAllProfiles()) {
+          const role = this.roleSystem?.getAgentRole(agent.id);
+          if (role && role.roleType !== undefined) {
+            activeWorkers++;
+          }
+        }
+      } else if (this.state.agents) {
+        for (const agent of this.state.agents) {
+          const role = this.roleSystem?.getAgentRole(agent.id);
+          if (role && role.roleType !== undefined) {
+            activeWorkers++;
+          }
+        }
+      }
       this.state.economy.activeWorkers = activeWorkers;
     }
 

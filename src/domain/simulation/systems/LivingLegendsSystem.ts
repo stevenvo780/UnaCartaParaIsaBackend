@@ -7,8 +7,9 @@ import type {
 } from "../../types/simulation/legends";
 import { LegendTrend } from "../../../shared/constants/LegendEnums";
 
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import type { AgentRegistry } from "../core/AgentRegistry";
 
 @injectable()
 export class LivingLegendsSystem {
@@ -17,6 +18,7 @@ export class LivingLegendsSystem {
   private reputationEvents: ReputationEvent[] = [];
   private readonly MAX_EVENT_HISTORY = 50;
   private lastTitleUpdate = 0;
+  private agentRegistry?: AgentRegistry;
 
   private config = {
     minReputationForLegend: 0.7,
@@ -27,8 +29,12 @@ export class LivingLegendsSystem {
     titleUpdateInterval: 5000,
   };
 
-  constructor(@inject(TYPES.GameState) state: GameState) {
+  constructor(
+    @inject(TYPES.GameState) state: GameState,
+    @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
+  ) {
     this._state = state;
+    this.agentRegistry = agentRegistry;
     this.setupEventListeners();
   }
 
@@ -130,7 +136,7 @@ export class LivingLegendsSystem {
 
   private updateTitles(): void {
     for (const [agentId, legend] of Array.from(this.legends.entries())) {
-      const agent = this._state.agents.find((a) => a.id === agentId);
+      const agent = this.agentRegistry?.getProfile(agentId) ?? this._state.agents?.find((a) => a.id === agentId);
       if (!agent) continue;
 
       const newTitles: string[] = [];
@@ -191,7 +197,7 @@ export class LivingLegendsSystem {
   }
 
   private createLegendRecord(agentId: string): LegendRecord {
-    const agent = this._state.agents.find((a) => a.id === agentId);
+    const agent = this.agentRegistry?.getProfile(agentId) ?? this._state.agents?.find((a) => a.id === agentId);
     const agentName = agent?.name || "Unknown";
 
     return {

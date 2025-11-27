@@ -112,7 +112,7 @@ export class WorldLoader {
   }
 
   public async ensureInitialFamily(): Promise<void> {
-    let isa = this.runner.state.agents.find((a) => a.id === "isa");
+    let isa = this.runner.agentRegistry.getProfile("isa");
     if (!isa) {
       isa = this.runner.lifeCycleSystem.spawnAgent({
         id: "isa",
@@ -133,7 +133,7 @@ export class WorldLoader {
       logger.info("👩 Created missing parent: Isa");
     }
 
-    let stev = this.runner.state.agents.find((a) => a.id === "stev");
+    let stev = this.runner.agentRegistry.getProfile("stev");
     if (!stev) {
       stev = this.runner.lifeCycleSystem.spawnAgent({
         id: "stev",

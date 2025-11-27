@@ -103,7 +103,7 @@ export interface AIZoneHandlerDeps {
   goalsCompletedRef: { value: number };
 }
 
-import { ActivityType } from "../../../../../shared/constants/ActivityEnums";
+import { ActivityType } from "../../../../../shared/constants/MovementEnums";
 
 /**
  * Handles zone arrival notifications and resource deposits for AI agents.

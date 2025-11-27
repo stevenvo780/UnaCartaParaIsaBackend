@@ -124,9 +124,7 @@ export class LifeCycleSystem extends EventEmitter {
 
         // Check if this is a needs-based death (starvation, dehydration, exhaustion)
         // that hasn't been cleaned up yet
-        const agentStillExists = this.gameState.agents?.find(
-          (a) => a.id === agentId,
-        );
+        const agentStillExists = this.agentRegistry?.getProfile(agentId);
         if (agentStillExists) {
           logger.debug(
             `🔄 LifeCycleSystem: Processing deferred death for ${agentId} (${data.cause || "unknown"})`,
@@ -319,9 +317,7 @@ export class LifeCycleSystem extends EventEmitter {
     for (const agentId of this.pendingHousingAssignments) {
       if (processed >= 3) break;
 
-      const agent =
-        this.entityIndex?.getAgent(agentId) ??
-        this.gameState.agents?.find((a) => a.id === agentId);
+      const agent = this.agentRegistry?.getProfile(agentId);
       if (agent && agent.lifeStage === "adult") {
         const assigned = this.householdSystem?.assignToHouse(agent.id);
         if (assigned) {
@@ -423,12 +419,8 @@ export class LifeCycleSystem extends EventEmitter {
       return;
     }
 
-    const father =
-      this.entityIndex?.getAgent(fatherId) ??
-      this.gameState.agents?.find((a) => a.id === fatherId);
-    const mother =
-      this.entityIndex?.getAgent(motherId) ??
-      this.gameState.agents?.find((a) => a.id === motherId);
+    const father = this.agentRegistry?.getProfile(fatherId);
+    const mother = this.agentRegistry?.getProfile(motherId);
 
     if (!father || !mother) {
       logger.debug(
@@ -666,10 +658,12 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   public getAgent(id: string): AgentProfile | undefined {
-    return (
-      this.entityIndex?.getAgent(id) ??
-      this.gameState.agents?.find((a) => a.id === id)
-    );
+    // Use AgentRegistry as primary source (O(1))
+    if (this.agentRegistry) {
+      return this.agentRegistry.getProfile(id);
+    }
+    // Fallback for tests without AgentRegistry
+    return this.gameState.agents?.find((a) => a.id === id);
   }
 
   public getAgents(): AgentProfile[] {
@@ -710,9 +704,7 @@ export class LifeCycleSystem extends EventEmitter {
    * @param agentId - Agent ID to clean up
    */
   private cleanupAgentState(agentId: string): void {
-    const agent =
-      this.entityIndex?.getAgent(agentId) ??
-      this.gameState.agents?.find((a) => a.id === agentId);
+    const agent = this.agentRegistry?.getProfile(agentId);
 
     if (this.inventorySystem) {
       const inv = this.inventorySystem.getAgentInventory(agentId);

@@ -63,6 +63,36 @@ export function isMarketOrderStatus(value: string): value is MarketOrderStatus {
 }
 
 /**
+ * Enumeration of trade offer statuses.
+ * Defines all possible statuses for trade offers in the trading system.
+ */
+export enum TradeOfferStatus {
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+  EXPIRED = "expired",
+  CANCELLED = "cancelled",
+}
+
+/**
+ * Type representing all possible trade offer status values.
+ */
+export type TradeOfferStatusValue = `${TradeOfferStatus}`;
+
+/**
+ * Array of all trade offer statuses for iteration.
+ */
+export const ALL_TRADE_OFFER_STATUSES: readonly TradeOfferStatus[] =
+  Object.values(TradeOfferStatus) as TradeOfferStatus[];
+
+/**
+ * Type guard to check if a string is a valid TradeOfferStatus.
+ */
+export function isTradeOfferStatus(value: string): value is TradeOfferStatus {
+  return Object.values(TradeOfferStatus).includes(value as TradeOfferStatus);
+}
+
+/**
  * Default base prices for resources in the market.
  */
 export const DEFAULT_BASE_PRICES: Readonly<Record<ResourceType, number>> = {

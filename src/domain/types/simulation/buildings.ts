@@ -1,16 +1,11 @@
-import { BuildingType } from "../../../shared/constants/BuildingEnums";
+import {
+  BuildingType,
+  BuildingCondition,
+} from "../../../shared/constants/BuildingEnums";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
 // Re-export BuildingType enum for backward compatibility
 export { BuildingType as BuildingLabel };
-
-export type BuildingCondition =
-  | "pristine"
-  | "good"
-  | "fair"
-  | "poor"
-  | "critical"
-  | "ruined";
 
 export interface BuildingState {
   zoneId: string;
@@ -64,12 +59,12 @@ export const BUILDING_COSTS: Record<BuildingType, BuildingConstructionCost> = {
 };
 
 export function getBuildingCondition(durability: number): BuildingCondition {
-  if (durability >= 90) return "pristine";
-  if (durability >= 70) return "good";
-  if (durability >= 50) return "fair";
-  if (durability >= 30) return "poor";
-  if (durability >= 10) return "critical";
-  return "ruined";
+  if (durability >= 90) return BuildingCondition.PRISTINE;
+  if (durability >= 70) return BuildingCondition.GOOD;
+  if (durability >= 50) return BuildingCondition.FAIR;
+  if (durability >= 30) return BuildingCondition.POOR;
+  if (durability >= 10) return BuildingCondition.CRITICAL;
+  return BuildingCondition.RUINED;
 }
 
 export function calculateRepairCost(
