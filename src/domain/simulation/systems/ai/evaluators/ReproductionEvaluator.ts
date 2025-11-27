@@ -21,12 +21,11 @@ function calculateReproductionDrive(
   needs: EntityNeedsData,
   stats: Record<string, number> | null,
 ): number {
-  const health = stats?.health ?? 100; // Default to 100 if unknown
+  const health = stats?.health ?? 100;
   const energy = needs.energy;
-  const hunger = needs.hunger; // 100 is full
-  const thirst = needs.thirst; // 100 is hydrated
+  const hunger = needs.hunger;
+  const thirst = needs.thirst;
 
-  // Weights
   const wHealth = 0.3;
   const wEnergy = 0.3;
   const wFood = 0.2;
@@ -38,10 +37,8 @@ function calculateReproductionDrive(
     (hunger / 100) * wFood +
     (thirst / 100) * wWater;
 
-  // Only trigger if drive is very high (agents should prioritize survival/work unless thriving)
   if (drive < 0.8) return 0;
 
-  // Remap 0.8-1.0 to 0.0-1.0 utility
   return (drive - 0.8) * 5;
 }
 
@@ -60,8 +57,6 @@ export function evaluateReproductionDrive(
   if (reproductionUtility > 0) {
     const now = Date.now();
 
-    // Find a mate
-    // We assume findPotentialMate is implemented or we use a generic social search
     const mate = deps.findPotentialMate?.(aiState.entityId);
 
     if (mate) {
@@ -79,10 +74,9 @@ export function evaluateReproductionDrive(
         expiresAt: now + 30000,
       });
     } else {
-      // Search for mate (social explore)
       goals.push({
         id: `drive_reproduction_search_${aiState.entityId}_${now} `,
-        type: GoalType.EXPLORE, // Or SOCIAL if supported without target
+        type: GoalType.EXPLORE,
         priority: reproductionUtility * 0.8,
         data: {
           explorationType: "social_search",

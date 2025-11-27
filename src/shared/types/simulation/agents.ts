@@ -1,4 +1,3 @@
-// Re-export enums from AgentEnums for backward compatibility
 import { Sex, LifeStage, SocialStatus } from "../../constants/AgentEnums";
 export { Sex, LifeStage, SocialStatus };
 

@@ -34,7 +34,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     harvestsUntilPartial: 2,
     harvestsUntilDepleted: 4,
 
-    regenerationTime: 300000, // 5 minutos - incentiva exploración
+    regenerationTime: 300000,
     canRegenerate: true,
 
     sprites: {
@@ -109,7 +109,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     harvestsUntilPartial: 3,
     harvestsUntilDepleted: 6,
 
-    regenerationTime: 420000, // 7 minutos - piedra regenera muy lento
+    regenerationTime: 420000,
     canRegenerate: true,
 
     sprites: {
@@ -152,7 +152,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     harvestsUntilPartial: 1,
     harvestsUntilDepleted: 1,
 
-    regenerationTime: 600000, // 10 minutos
+    regenerationTime: 600000,
     canRegenerate: true,
 
     sprites: {
@@ -188,7 +188,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     harvestsUntilPartial: 10,
     harvestsUntilDepleted: 20,
 
-    regenerationTime: 60000, // 1 minuto - agua regenera rápido
+    regenerationTime: 60000,
     canRegenerate: true,
 
     sprites: {
@@ -196,7 +196,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
       depleted: "water_source_dry",
     },
 
-    spawnProbability: 0.4, // Increased from 0.1 - water is essential for survival
+    spawnProbability: 0.4,
     suitableBiomes: [
       BiomeType.WETLAND,
       BiomeType.FOREST,
@@ -229,7 +229,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     harvestsUntilPartial: 2,
     harvestsUntilDepleted: 3,
 
-    regenerationTime: 600000, // 10 minutos - recursos escasos para fomentar caza
+    regenerationTime: 600000,
     canRegenerate: true,
 
     sprites: {
@@ -237,7 +237,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
       depleted: "berry_bush_empty",
     },
 
-    spawnProbability: 0.03, // Muy reducido - fomenta caza al inicio
+    spawnProbability: 0.03,
     suitableBiomes: [BiomeType.FOREST, BiomeType.GRASSLAND, BiomeType.VILLAGE],
     clusterSize: { min: 2, max: 4 },
     minDistanceBetweenClusters: 300,
@@ -265,7 +265,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     harvestsUntilPartial: 1,
     harvestsUntilDepleted: 2,
 
-    regenerationTime: 600000, // 10 minutos - igual que berry_bush
+    regenerationTime: 600000,
     canRegenerate: true,
 
     sprites: {
@@ -273,7 +273,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
       depleted: "mushrooms_picked",
     },
 
-    spawnProbability: 0.05, // Reducido para fomentar caza
+    spawnProbability: 0.05,
     suitableBiomes: [
       BiomeType.FOREST,
       BiomeType.WETLAND,
@@ -306,7 +306,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     harvestsUntilPartial: 3,
     harvestsUntilDepleted: 5,
 
-    regenerationTime: 600000, // 10 minutos
+    regenerationTime: 600000,
     canRegenerate: true,
 
     sprites: {

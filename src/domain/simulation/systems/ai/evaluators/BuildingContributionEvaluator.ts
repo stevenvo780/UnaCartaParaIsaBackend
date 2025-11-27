@@ -72,7 +72,7 @@ export function evaluateBuildingContributionGoals(
 
       return {
         zone,
-        score: 1.0 / (1.0 + dist / 100), // Closer = higher score
+        score: 1.0 / (1.0 + dist / 100),
         distance: dist,
       };
     })
@@ -90,7 +90,7 @@ export function evaluateBuildingContributionGoals(
   goals.push({
     id: `contribute_build_${best.zone.id}_${now}`,
     type: GoalType.WORK,
-    priority: 0.5, // Medium priority
+    priority: 0.5,
     targetZoneId: best.zone.id,
     data: {
       action: "contribute_resources",

@@ -35,8 +35,6 @@ export class AIUrgentGoals {
     const position = this.deps.agentRegistry.getPosition(agentId) ?? null;
     if (!position) return null;
 
-    // Food is only obtained from world resources - no zones satisfy hunger directly
-    // Zones like farms/kitchens PRODUCE food items, but agents must gather from resources
     const foodResourceTypes = [
       WorldResourceType.BERRY_BUSH,
       WorldResourceType.MUSHROOM_PATCH,
@@ -73,8 +71,6 @@ export class AIUrgentGoals {
     const position = this.deps.agentRegistry.getPosition(agentId) ?? null;
     if (!position) return null;
 
-    // Water is only obtained from world resources - no zones satisfy thirst directly
-    // Zones like wells PRODUCE water items, but agents must gather from water_source resources
     const nearestWater = this.deps.findNearestResourceForEntity(
       agentId,
       WorldResourceType.WATER_SOURCE,

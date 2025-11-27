@@ -133,7 +133,7 @@ function adjustThreshold(
 
   if (communityState) {
     if (needType === NeedType.HUNGER && communityState.foodPerCapita < 5) {
-      modifier *= 0.85; // More tolerant when food is scarce (help gather more)
+      modifier *= 0.85;
     }
     if (needType === NeedType.THIRST && communityState.waterPerCapita < 8) {
       modifier *= 0.9;
@@ -168,11 +168,14 @@ export function evaluateCriticalNeeds(
   const baseThirstThreshold = 40;
   let baseEnergyThreshold = 35;
 
-  if (timeOfDay === TimeOfDayPhase.NIGHT || timeOfDay === TimeOfDayPhase.DEEP_NIGHT) {
-    baseEnergyThreshold = 50; // More critical at night
-    baseHungerThreshold = 35; // Less critical at night
+  if (
+    timeOfDay === TimeOfDayPhase.NIGHT ||
+    timeOfDay === TimeOfDayPhase.DEEP_NIGHT
+  ) {
+    baseEnergyThreshold = 50;
+    baseHungerThreshold = 35;
   } else if (timeOfDay === "morning" || timeOfDay === "dawn") {
-    baseHungerThreshold = 50; // More critical in morning
+    baseHungerThreshold = 50;
     baseEnergyThreshold = 40;
   }
 

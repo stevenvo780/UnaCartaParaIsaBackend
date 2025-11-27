@@ -49,7 +49,7 @@ export function evaluateQuestGoals(
         goals.push({
           id: `quest_${quest.id}_${objective.id}_${now}`,
           type: goalType,
-          priority: 0.6, // Medium-high priority for quests
+          priority: 0.6,
           targetZoneId,
           targetPosition,
           data: {
@@ -57,7 +57,7 @@ export function evaluateQuestGoals(
             objectiveId: objective.id,
           },
           createdAt: now,
-          expiresAt: now + 30000, // 30 seconds
+          expiresAt: now + 30000,
         });
       }
     }
@@ -69,7 +69,7 @@ export function evaluateQuestGoals(
       const quest = availableQuests[0];
       goals.push({
         id: `start_quest_${quest.id}_${now}`,
-        type: GoalType.SOCIAL, // Quest acceptance is a social action
+        type: GoalType.SOCIAL,
         priority: 0.5,
         data: {
           questId: quest.id,

@@ -113,7 +113,6 @@ export class DeltaEncoder {
       ? new Map(previous.entities.map((e) => [e.id, e]))
       : new Map<string, SimulationEntity>();
 
-    // Always include agents to ensure AI data is sent
     if (current.agents) {
       changes.agents = current.agents;
     }
@@ -199,7 +198,6 @@ export class DeltaEncoder {
   ): boolean {
     if (!prev || !current) return true;
 
-    // Check global inventory
     if (
       prev.global.wood !== current.global.wood ||
       prev.global.stone !== current.global.stone ||
@@ -209,10 +207,6 @@ export class DeltaEncoder {
       return true;
     }
 
-    // Check stockpiles (simplified: check count or deep compare if needed)
-    // For now, checking keys length and a quick sampling or just assuming change if keys differ
-    // A more robust check would be to iterate. Given the scale, iterating might be expensive every tick.
-    // However, we want accuracy.
     const prevStockpileKeys = Object.keys(prev.stockpiles);
     const currStockpileKeys = Object.keys(current.stockpiles);
     if (prevStockpileKeys.length !== currStockpileKeys.length) return true;
@@ -231,7 +225,6 @@ export class DeltaEncoder {
       }
     }
 
-    // Check agents inventory
     const prevAgentKeys = Object.keys(prev.agents);
     const currAgentKeys = Object.keys(current.agents);
     if (prevAgentKeys.length !== currAgentKeys.length) return true;
@@ -288,7 +281,6 @@ export class DeltaEncoder {
       return true;
     }
 
-    // Check if AI state changed (goals, actions, etc.)
     if (prev.ai !== current.ai) {
       return true;
     }

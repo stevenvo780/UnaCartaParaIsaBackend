@@ -74,7 +74,7 @@ export class HouseholdSystem {
     const homeless: string[] = [];
 
     for (const agent of allAgents) {
-      if (agent.isDead) continue; // Skip dead agents
+      if (agent.isDead) continue;
 
       let hasHome = false;
       for (const h of this.households.values()) {

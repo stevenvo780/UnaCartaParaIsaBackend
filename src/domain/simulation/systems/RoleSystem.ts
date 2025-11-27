@@ -123,7 +123,7 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
     primaryResource: ResourceType.FOOD,
     requirements: {
       minAge: 18,
-      traits: { diligence: 0.4, neuroticism: 0.3 }, // Neuroticism helps with alertness
+      traits: { diligence: 0.4, neuroticism: 0.3 },
     },
     efficiency: {
       base: 0.6,
@@ -392,7 +392,6 @@ export class RoleSystem extends EventEmitter {
   }
 
   private getAdultAgents(): AgentProfile[] {
-    // Use AgentRegistry as single source of truth for agent profiles
     if (this.agentRegistry) {
       const agents: AgentProfile[] = [];
       for (const profile of this.agentRegistry.getAllProfiles()) {
@@ -402,7 +401,7 @@ export class RoleSystem extends EventEmitter {
       }
       return agents;
     }
-    // Fallback to gameState if registry not available
+
     return (this.gameState.agents || []).filter((a) => !a.isDead);
   }
 
@@ -546,7 +545,6 @@ export class RoleSystem extends EventEmitter {
   }
 
   public reassignRole(agentId: string, newRole: RoleType): RoleAssignment {
-    // Use AgentRegistry for O(1) lookup instead of array scan
     let agent: AgentProfile | undefined;
     if (this.agentRegistry) {
       agent = this.agentRegistry.getProfile(agentId);
@@ -653,7 +651,6 @@ export class RoleSystem extends EventEmitter {
     >;
     const pop = collectiveState.population;
 
-    // Base distribution (percentages)
     const baseDistribution: Record<RoleType, number> = {
       [RoleTypeEnum.LOGGER]: 0.15,
       [RoleTypeEnum.QUARRYMAN]: 0.1,
@@ -726,7 +723,6 @@ export class RoleSystem extends EventEmitter {
       score: number;
     }> = [];
 
-    // Identify roles that need more agents
     const rolesNeedingMore: RoleType[] = [];
     const rolesWithExtra: RoleType[] = [];
 
@@ -766,7 +762,7 @@ export class RoleSystem extends EventEmitter {
 
     changes.sort((a, b) => b.score - a.score);
 
-    const MAX_CHANGES_PER_REBALANCE = 3; // Don't change too many at once
+    const MAX_CHANGES_PER_REBALANCE = 3;
     for (
       let i = 0;
       i < Math.min(MAX_CHANGES_PER_REBALANCE, changes.length);

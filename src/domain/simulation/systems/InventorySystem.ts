@@ -46,7 +46,6 @@ export class InventorySystem {
     this.gameState = gameState;
     this.agentRegistry = agentRegistry;
 
-    // Register agentInventories Map in AgentRegistry for unified access
     if (this.agentRegistry) {
       this.agentRegistry.registerInventory(this.agentInventories);
     }

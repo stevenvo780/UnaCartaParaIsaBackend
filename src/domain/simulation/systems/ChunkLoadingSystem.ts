@@ -23,14 +23,12 @@ import { BiomeType } from "../../../shared/constants/BiomeEnums";
 @injectable()
 export class ChunkLoadingSystem {
   private readonly CHUNK_SIZE = 16;
-  private readonly LOAD_RADIUS_CHUNKS = 2; // Load chunks within 2 chunks of any agent
-  private readonly CHECK_INTERVAL_MS = 5000; // Check every 5 seconds
+  private readonly LOAD_RADIUS_CHUNKS = 2;
+  private readonly CHECK_INTERVAL_MS = 5000;
   private lastCheckTime = 0;
 
-  // Track which chunks have been fully loaded (terrain + animals + resources)
   private loadedChunks = new Set<string>();
 
-  // World generation config cached from initialization
   private worldConfig: WorldGenConfig | null = null;
 
   constructor(
@@ -55,7 +53,6 @@ export class ChunkLoadingSystem {
   public update(_deltaMs: number): void {
     const now = Date.now();
 
-    // Only check periodically to avoid performance impact
     if (now - this.lastCheckTime < this.CHECK_INTERVAL_MS) {
       return;
     }
@@ -66,7 +63,6 @@ export class ChunkLoadingSystem {
       return;
     }
 
-    // Get all active (non-dead) agents with positions
     const activeAgents = this.gameState.agents
       .filter((agent) => !agent.isDead && agent.position)
       .map((agent) => ({ position: agent.position! }));
@@ -75,7 +71,6 @@ export class ChunkLoadingSystem {
       return;
     }
 
-    // Calculate which chunks need to be loaded based on agent positions
     const chunksToLoad = this.calculateChunksToLoad(activeAgents);
 
     if (chunksToLoad.length === 0) {
@@ -86,7 +81,6 @@ export class ChunkLoadingSystem {
       `🌍 ChunkLoadingSystem: Loading ${chunksToLoad.length} chunks for ${activeAgents.length} agents`,
     );
 
-    // Load chunks asynchronously (fire and forget)
     void this.loadChunks(chunksToLoad);
   }
 
@@ -101,7 +95,6 @@ export class ChunkLoadingSystem {
     for (const agent of agents) {
       if (!agent.position) continue;
 
-      // Convert agent position to chunk coordinates
       const agentChunkX = Math.floor(
         agent.position.x /
           (this.CHUNK_SIZE * (this.worldConfig?.tileSize ?? 16)),
@@ -111,7 +104,6 @@ export class ChunkLoadingSystem {
           (this.CHUNK_SIZE * (this.worldConfig?.tileSize ?? 16)),
       );
 
-      // Add chunks in a radius around the agent
       for (
         let dx = -this.LOAD_RADIUS_CHUNKS;
         dx <= this.LOAD_RADIUS_CHUNKS;
@@ -126,7 +118,6 @@ export class ChunkLoadingSystem {
           const chunkY = agentChunkY + dy;
           const chunkKey = `${chunkX},${chunkY}`;
 
-          // Only add if not already loaded
           if (!this.loadedChunks.has(chunkKey)) {
             chunksNeeded.add(chunkKey);
           }
@@ -134,7 +125,6 @@ export class ChunkLoadingSystem {
       }
     }
 
-    // Convert set to array of coordinates
     return Array.from(chunksNeeded).map((key) => {
       const [x, y] = key.split(",").map(Number);
       return { x, y };
@@ -176,7 +166,6 @@ export class ChunkLoadingSystem {
 
     const chunkKey = `${chunkCoords.x},${chunkCoords.y}`;
 
-    // Double-check it's not already loaded (race condition protection)
     if (this.loadedChunks.has(chunkKey)) {
       return;
     }
@@ -191,17 +180,14 @@ export class ChunkLoadingSystem {
       `🌍 [ChunkLoadingSystem] Loading chunk (${chunkCoords.x},${chunkCoords.y}) at world position (${worldX},${worldY})`,
     );
 
-    // 1. Generate terrain for this chunk
     const chunkTiles = await this.worldGenerationService.generateChunk(
       chunkCoords.x,
       chunkCoords.y,
       this.worldConfig,
     );
 
-    // 2. Add terrain tiles to game state
     for (const row of chunkTiles) {
       for (const tile of row) {
-        // Check if tile is within world bounds (if world has bounds)
         if (this.worldConfig.width && this.worldConfig.height) {
           if (
             tile.x >= this.worldConfig.width ||
@@ -211,7 +197,6 @@ export class ChunkLoadingSystem {
           }
         }
 
-        // Only add if not already in terrain tiles (avoid duplicates)
         const existingTileIndex = this.gameState.terrainTiles?.findIndex(
           (t) => t.x === tile.x && t.y === tile.y,
         );
@@ -232,7 +217,6 @@ export class ChunkLoadingSystem {
       }
     }
 
-    // 3. Spawn animals for this chunk
     const spawned = this.animalSystem.spawnAnimalsForChunk(
       chunkCoords,
       { x: worldX, y: worldY, width: pixelWidth, height: pixelHeight },
@@ -245,9 +229,6 @@ export class ChunkLoadingSystem {
       );
     }
 
-    // 4. Spawn resources for this chunk
-
-    // Mark chunk as loaded
     this.loadedChunks.add(chunkKey);
 
     logger.debug(

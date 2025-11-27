@@ -21,7 +21,7 @@ const SAVE_CONSTANTS = {
 function sanitizeSaveId(id: string): string | null {
   const sanitized = id
     .replace(/\.\./g, "")
-    .replace(/\//g, "")
+    .replace(/\
     .slice(0, SAVE_CONSTANTS.MAX_SAVE_ID_LENGTH);
   if (!SAVE_CONSTANTS.SAVE_ID_PATTERN.test(sanitized)) {
     return null;

@@ -492,7 +492,7 @@ export class QuestSystem {
     data: QuestEventData;
   }): void {
     switch (eventData.type) {
-      case QuestRequirementType.QUEST_COMPLETED: // dialogue_completed maps to quest_completed
+      case QuestRequirementType.QUEST_COMPLETED:
         this.questProgress.activeQuests.forEach((quest) => {
           quest.objectives.forEach((objective) => {
             if (

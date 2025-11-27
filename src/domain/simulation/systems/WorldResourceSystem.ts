@@ -85,7 +85,7 @@ export class WorldResourceSystem {
   }): void {
     const { width, height, tileSize, biomeMap } = worldConfig;
     let spawned = 0;
-    const sampleStep = 32; // Reduced from 64 to sample more frequently
+    const sampleStep = 32;
     const biomesFound = new Set<string>();
     const resourceCounts: Record<string, number> = {};
 
@@ -198,7 +198,6 @@ export class WorldResourceSystem {
 
     for (const row of tiles) {
       for (const tile of row) {
-        // Check for vegetation assets
         if (tile.assets.vegetation) {
           for (const asset of tile.assets.vegetation) {
             const resourceType = this.mapAssetToResource(asset);
@@ -222,7 +221,6 @@ export class WorldResourceSystem {
           }
         }
 
-        // Check for decal assets (random loot)
         if (tile.assets.decals) {
           for (const decal of tile.assets.decals) {
             const resourceType = this.mapDecalToResource(decal);
@@ -265,28 +263,20 @@ export class WorldResourceSystem {
   }
 
   private mapDecalToResource(_decal: string): WorldResourceType | null {
-    // Rock decals are always mineable
     if (_decal.startsWith("decal_rock_")) return WorldResourceType.ROCK;
 
-    // Most decals are purely decorative (flowers, leaves, moss, branches)
-    // Only a small percentage become interactive resources
     const rand = Math.random();
 
-    // 85% of decals are purely decorative - not harvestable
     if (rand < 0.85) return null;
 
     const resourceRand = Math.random();
 
-    // 40% of resources are rocks/stones
     if (resourceRand < 0.4) return WorldResourceType.ROCK;
 
-    // 35% are berry bushes (food)
     if (resourceRand < 0.75) return WorldResourceType.BERRY_BUSH;
 
-    // 20% are mushroom patches (food)
     if (resourceRand < 0.95) return WorldResourceType.MUSHROOM_PATCH;
 
-    // 5% are trash piles (crafting materials)
     return WorldResourceType.TRASH_PILE;
   }
 
@@ -430,8 +420,6 @@ export class WorldResourceSystem {
       position: resource.position,
     });
 
-    // Calculate actual harvest amount from config yields
-    // Use the state BEFORE the transition to determine yields
     const yieldState =
       resource.state === ResourceState.DEPLETED &&
       previousState === ResourceState.HARVESTED_PARTIAL
@@ -439,11 +427,10 @@ export class WorldResourceSystem {
         : ResourceState.PRISTINE;
 
     const yields = config.yields?.[yieldState];
-    let harvestAmount = 1; // Default fallback
+    let harvestAmount = 1;
 
     const items: { type: string; amount: number }[] = [];
 
-    // Primary yield
     if (
       yields &&
       yields.amountMin !== undefined &&
@@ -453,7 +440,7 @@ export class WorldResourceSystem {
         Math.random() * (yields.amountMax - yields.amountMin + 1) +
           yields.amountMin,
       );
-      // Secondary yields (prioritize rare items)
+
       if (yields?.secondaryYields) {
         for (const secondary of yields.secondaryYields) {
           if (

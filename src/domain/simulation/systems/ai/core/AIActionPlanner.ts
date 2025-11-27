@@ -1,6 +1,10 @@
 import type { GameState } from "../../../../types/game-types";
 import type { AIGoal, AgentAction } from "../../../../types/simulation/ai";
-import { ActionType, GoalType, NeedType } from "../../../../../shared/constants/AIEnums";
+import {
+  ActionType,
+  GoalType,
+  NeedType,
+} from "../../../../../shared/constants/AIEnums";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 import { TaskType } from "../../../../../shared/constants/TaskEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
@@ -245,7 +249,6 @@ export class AIActionPlanner {
     });
 
     if (currentRestZone) {
-      // Already in rest zone, sleep!
       return {
         actionType: ActionType.SLEEP,
         agentId,
@@ -308,7 +311,6 @@ export class AIActionPlanner {
     });
 
     if (currentZone) {
-      // Already in social zone, socialize!
       return {
         actionType: ActionType.SOCIALIZE,
         agentId,
@@ -669,7 +671,7 @@ export class AIActionPlanner {
       );
       targetZoneId = storageZone?.id ?? workZone?.id;
       if (!targetZoneId) {
-        return null; // No suitable zone available
+        return null;
       }
     }
 
@@ -792,7 +794,6 @@ export class AIActionPlanner {
     });
 
     if (currentZone) {
-      // Already in zone, socialize!
       return {
         actionType: ActionType.SOCIALIZE,
         agentId,
@@ -877,11 +878,9 @@ export class AIActionPlanner {
       let targetY: number;
 
       if (goal.data?.explorationType === "desperate_search") {
-        // For desperate search, pick a completely random point on the map
         targetX = Math.random() * mapWidth;
         targetY = Math.random() * mapHeight;
       } else {
-        // Normal exploration is local
         targetX = currentPos.x + (Math.random() - 0.5) * this.EXPLORE_RANGE;
         targetY = currentPos.y + (Math.random() - 0.5) * this.EXPLORE_RANGE;
       }
@@ -961,7 +960,6 @@ export class AIActionPlanner {
     let targetId = goal.targetId;
     let targetPosition = goal.targetPosition;
 
-    // Use findNearestHuntableAnimal if available (delegates to AnimalRegistry)
     if (!targetId && this.deps.findNearestHuntableAnimal) {
       const nearestAnimal = this.deps.findNearestHuntableAnimal(agentId);
       if (nearestAnimal) {

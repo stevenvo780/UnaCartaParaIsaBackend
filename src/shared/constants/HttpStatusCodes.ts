@@ -11,12 +11,10 @@
  * Enumeration of common HTTP status codes used in the application.
  */
 export enum HttpStatusCode {
-  // Success codes
   OK = 200,
   CREATED = 201,
   NO_CONTENT = 204,
 
-  // Client error codes
   BAD_REQUEST = 400,
   UNAUTHORIZED = 401,
   FORBIDDEN = 403,
@@ -24,7 +22,6 @@ export enum HttpStatusCode {
   CONFLICT = 409,
   TOO_MANY_REQUESTS = 429,
 
-  // Server error codes
   INTERNAL_SERVER_ERROR = 500,
   SERVICE_UNAVAILABLE = 503,
 }

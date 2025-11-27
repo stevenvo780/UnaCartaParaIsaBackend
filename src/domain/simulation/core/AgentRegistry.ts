@@ -39,7 +39,7 @@ export interface MovementState {
   currentPath: Array<{ x: number; y: number }>;
   currentActivity: string;
   fatigue: number;
-  [key: string]: unknown; // Allow additional properties from MovementSystem
+  [key: string]: unknown;
 }
 
 /**
@@ -180,10 +180,6 @@ export class AgentRegistry {
     return alive;
   }
 
-  // ============================================================
-  // WRITE OPERATIONS (Single Source of Truth for agents array)
-  // ============================================================
-
   /**
    * Add a new agent profile to gameState.agents - O(1)
    * This is the single source of truth for adding agents.
@@ -294,10 +290,6 @@ export class AgentRegistry {
     const profile = this.getProfile(agentId);
     return profile?.position;
   }
-
-  // ============================================================
-  // STATISTICS
-  // ============================================================
 
   public getStats(): {
     totalAgents: number;

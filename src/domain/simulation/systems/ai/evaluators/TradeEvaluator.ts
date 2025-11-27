@@ -59,7 +59,7 @@ export function evaluateTradeGoals(
     goals.push({
       id: `trade_${aiState.entityId}_${now}`,
       type: GoalType.WORK,
-      priority: 0.4, // Lower priority than critical needs
+      priority: 0.4,
       targetZoneId: nearestMarket.id,
       data: {
         action: "trade",

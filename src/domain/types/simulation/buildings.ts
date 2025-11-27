@@ -4,7 +4,6 @@ import {
 } from "../../../shared/constants/BuildingEnums";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
-// Re-export BuildingType enum for backward compatibility
 export { BuildingType as BuildingLabel };
 
 export interface BuildingState {

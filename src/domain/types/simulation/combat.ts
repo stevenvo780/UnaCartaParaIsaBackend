@@ -1,4 +1,3 @@
-// Re-export WeaponId enum for backward compatibility
 import { WeaponId } from "../../../shared/constants/CraftingEnums";
 export { WeaponId };
 
@@ -24,7 +23,6 @@ export interface AttackResult {
 
 import { CombatEventType } from "../../../shared/constants/CombatEnums";
 
-// Re-export CombatEventType enum for backward compatibility
 export { CombatEventType };
 
 export interface CombatLogEntryBase {

@@ -399,7 +399,7 @@ export class SocialSystem {
     this.edges.get(b)!.set(a, newAffinityB);
 
     if (newAffinityA !== currentA || newAffinityB !== currentB) {
-      this.edgesModified = true; // Mark dirty for recomputeGroups optimization
+      this.edgesModified = true;
       simulationEvents.emit(GameEventNames.SOCIAL_RELATION_CHANGED, {
         agentA: a,
         agentB: b,

@@ -18,9 +18,6 @@ export const ZONE_CONFIG = {
   MIN_SPACING: 150,
 } as const;
 
-// NOTA: CAMERA_CONFIG y UI_CONFIG eliminados - son constantes de frontend
-// Ver frontend: src/constants/WorldConfig.ts
-
 export const WorldUtils = {
   clampToWorld(
     x: number,

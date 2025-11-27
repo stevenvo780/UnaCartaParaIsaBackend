@@ -32,7 +32,10 @@ export function evaluateCognitiveDrives(
   }
 
   const timeOfDay = deps.getCurrentTimeOfDay?.() || "day";
-  if (timeOfDay === TimeOfDayPhase.NIGHT || timeOfDay === TimeOfDayPhase.DEEP_NIGHT) {
+  if (
+    timeOfDay === TimeOfDayPhase.NIGHT ||
+    timeOfDay === TimeOfDayPhase.DEEP_NIGHT
+  ) {
     workDrive -= 0.5;
   }
 
@@ -57,11 +60,9 @@ export function evaluateCognitiveDrives(
   const timeSinceExplore = now - lastExplore;
 
   if (timeSinceExplore > 60000) {
-    // 1 minute
     exploreDrive += 0.2;
   }
   if (timeSinceExplore > 300000) {
-    // 5 minutes
     exploreDrive += 0.4;
   }
 

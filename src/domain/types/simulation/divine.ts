@@ -9,7 +9,6 @@ export type BlessingType =
 
 import { GodId } from "../../../shared/constants/DivineEnums";
 
-// Re-export GodId enum for backward compatibility
 export { GodId };
 
 export interface BlessingTarget {

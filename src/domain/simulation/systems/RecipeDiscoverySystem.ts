@@ -23,7 +23,7 @@ export class RecipeDiscoverySystem {
   private gameState: GameState;
   private agentRecipes = new Map<string, Map<string, AgentKnownRecipe>>();
   private discoveredRecipes = new Set<string>();
-  private biomeDiscoveries = new Map<string, Set<string>>(); // agentId -> discovered biome recipes
+  private biomeDiscoveries = new Map<string, Set<string>>();
   private random: () => number;
 
   constructor(@inject(TYPES.GameState) gameState: GameState) {

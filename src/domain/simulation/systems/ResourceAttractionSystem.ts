@@ -22,7 +22,7 @@ const DESIRE_THRESHOLDS: Partial<
 const RESOURCE_MAPPING: Partial<Record<NeedType, ResourceType | null>> = {
   [NeedType.HUNGER]: ResourceType.FOOD,
   [NeedType.THIRST]: ResourceType.WATER,
-  [NeedType.ENERGY]: null, // Energy doesn't map to a resource
+  [NeedType.ENERGY]: null,
   [NeedType.HYGIENE]: ResourceType.WATER,
 };
 

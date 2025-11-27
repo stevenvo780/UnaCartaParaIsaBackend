@@ -22,6 +22,7 @@ import {
 } from "./movement/helpers";
 import { MovementBatchProcessor } from "./MovementBatchProcessor";
 import { ActivityType } from "../../../shared/constants/MovementEnums";
+import { ActionType } from "../../../shared/constants/AIEnums";
 import { SIM_CONSTANTS } from "../core/SimulationConstants";
 
 export interface EntityMovementState {
@@ -273,7 +274,7 @@ export class MovementSystem extends EventEmitter {
       const state = this.movementStates.get(entityId);
       if (state) {
         isMoving[i] = state.isMoving && !!state.targetPosition;
-        isResting[i] = state.currentActivity === "resting";
+        isResting[i] = state.currentActivity === ActivityType.RESTING;
       } else {
         isMoving[i] = false;
         isResting[i] = false;
@@ -385,7 +386,7 @@ export class MovementSystem extends EventEmitter {
   private updateEntityFatigue(state: EntityMovementState): void {
     if (state.isMoving) {
       state.fatigue = Math.min(100, state.fatigue + 0.1);
-    } else if (state.currentActivity === "resting") {
+    } else if (state.currentActivity === ActivityType.RESTING) {
       state.fatigue = Math.max(0, state.fatigue - 0.5);
     } else {
       state.fatigue = Math.max(0, state.fatigue - 0.1);
@@ -396,7 +397,7 @@ export class MovementSystem extends EventEmitter {
     const now = getFrameTime();
     state.isMoving = false;
     state.currentActivity = ActivityType.IDLE;
-    state.lastArrivalTime = now; // Mark arrival time to prevent immediate idle wander
+    state.lastArrivalTime = now;
 
     if (state.targetPosition) {
       state.currentPosition.x = state.targetPosition.x;
@@ -430,7 +431,7 @@ export class MovementSystem extends EventEmitter {
 
     simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
       agentId: state.entityId,
-      actionType: "move",
+      actionType: ActionType.MOVE,
       success: true,
       position: { ...state.currentPosition },
       targetZone: arrivedZone,
@@ -514,7 +515,7 @@ export class MovementSystem extends EventEmitter {
 
           simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
             agentId: entityId,
-            actionType: "move",
+            actionType: ActionType.MOVE,
             success: false,
             targetZone: targetZoneId,
           });
@@ -540,7 +541,7 @@ export class MovementSystem extends EventEmitter {
 
         simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
           entityId,
-          activityType: "moving",
+          activityType: ActivityType.MOVING,
           destination: state.targetPosition,
           path: pathResult.path,
         });
@@ -579,13 +580,13 @@ export class MovementSystem extends EventEmitter {
     state.movementStartTime = now;
     state.estimatedArrivalTime = now + travelTime;
     state.currentActivity = ActivityType.MOVING;
-    state.lastArrivalTime = undefined; // Clear arrival time when starting new movement
+    state.lastArrivalTime = undefined;
 
     this.batchProcessor.updateEntityTarget(entityId, tx, ty);
 
     simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
       entityId,
-      activityType: "moving",
+      activityType: ActivityType.MOVING,
       destination: { x: tx, y: ty },
       path: state.currentPath,
     });

@@ -457,12 +457,12 @@ export class GPUComputeService {
       const energy = newNeeds[offset + 2];
       if (energy < 30) {
         const penalty = (30 - energy) * 0.02;
-        newNeeds[offset + 4] = Math.max(0, newNeeds[offset + 4] - penalty); // social
-        newNeeds[offset + 5] = Math.max(0, newNeeds[offset + 5] - penalty); // fun
+        newNeeds[offset + 4] = Math.max(0, newNeeds[offset + 4] - penalty);
+        newNeeds[offset + 5] = Math.max(0, newNeeds[offset + 5] - penalty);
         newNeeds[offset + 6] = Math.max(
           0,
           newNeeds[offset + 6] - penalty * 1.5,
-        ); // mentalHealth
+        );
       }
 
       const hunger = newNeeds[offset + 0];
@@ -471,11 +471,11 @@ export class GPUComputeService {
         newNeeds[offset + 2] = Math.max(
           0,
           newNeeds[offset + 2] - hungerPenalty,
-        ); // energy
+        );
         newNeeds[offset + 6] = Math.max(
           0,
           newNeeds[offset + 6] - hungerPenalty * 0.5,
-        ); // mentalHealth
+        );
       }
 
       const thirst = newNeeds[offset + 1];
@@ -484,11 +484,11 @@ export class GPUComputeService {
         newNeeds[offset + 2] = Math.max(
           0,
           newNeeds[offset + 2] - thirstPenalty * 2,
-        ); // energy
+        );
         newNeeds[offset + 6] = Math.max(
           0,
           newNeeds[offset + 6] - thirstPenalty,
-        ); // mentalHealth
+        );
       }
     }
 

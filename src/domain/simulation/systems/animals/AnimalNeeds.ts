@@ -28,11 +28,9 @@ export class AnimalNeeds {
       animal.needs.fear = Math.max(0, animal.needs.fear - 10 * deltaMinutes);
     }
 
-    // Health recovery if needs are met
     if (animal.needs.hunger > 80 && animal.needs.thirst > 80) {
       const maxHealth = config.maxHealth * animal.genes.health;
       if (animal.health < maxHealth) {
-        // Recover 5% of max health per minute
         const recoveryRate = maxHealth * 0.05;
         animal.health = Math.min(
           maxHealth,

@@ -25,13 +25,12 @@ export function evaluateSocialDrives(
 
   const now = Date.now();
 
-  // --- Social Drive ---
   const socialUtility = calculateDriveUtility(needs.social);
   if (socialUtility > 0) {
     goals.push({
       id: `drive_social_${aiState.entityId}_${now}`,
       type: GoalType.SATISFY_SOCIAL,
-      priority: socialUtility * 0.8, // Slightly lower than survival
+      priority: socialUtility * 0.8,
       data: {
         need: NeedType.SOCIAL,
         action: "socialize",
@@ -41,7 +40,6 @@ export function evaluateSocialDrives(
     });
   }
 
-  // --- Fun Drive ---
   const funUtility = calculateDriveUtility(needs.fun);
   if (funUtility > 0) {
     goals.push({
@@ -57,17 +55,15 @@ export function evaluateSocialDrives(
     });
   }
 
-  // --- Mental Health Drive ---
   const mentalUtility = calculateDriveUtility(needs.mentalHealth);
   if (mentalUtility > 0) {
-    // Mental health is critical
     goals.push({
       id: `drive_mental_${aiState.entityId}_${now}`,
-      type: GoalType.SATISFY_SOCIAL, // Often improved by social or rest
+      type: GoalType.SATISFY_SOCIAL,
       priority: mentalUtility * 0.9,
       data: {
         need: NeedType.MENTAL_HEALTH,
-        action: "meditate", // or pray/rest
+        action: "meditate",
       },
       createdAt: now,
       expiresAt: now + 30000,

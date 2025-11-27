@@ -5,7 +5,6 @@ import {
   AnimalTargetType,
 } from "../../../shared/constants/AnimalEnums";
 
-// Re-export enums for backward compatibility
 export { AnimalType, AnimalState, AnimalTargetType };
 
 export interface AnimalGenes {

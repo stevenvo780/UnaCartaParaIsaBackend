@@ -143,7 +143,7 @@ export class EconomySystem {
 
     if (this.roleSystem) {
       let activeWorkers = 0;
-      // Use AgentRegistry for O(1) iteration
+
       if (this.agentRegistry) {
         for (const agent of this.agentRegistry.getAllProfiles()) {
           const role = this.roleSystem?.getAgentRole(agent.id);
@@ -174,7 +174,7 @@ export class EconomySystem {
     let totalSalaries = 0;
 
     for (const agent of this.state.agents) {
-      if (agent.isDead) continue; // Skip dead agents
+      if (agent.isDead) continue;
 
       const role = this.roleSystem.getAgentRole(agent.id);
       if (!role || !role.roleType) continue;
@@ -354,12 +354,12 @@ export class EconomySystem {
       for (const memberId of workerGroup.members) {
         if (memberId === agentId) continue;
         if (agentsInZone.some((e) => e.id === memberId)) {
-          teamBonus += 0.05; // 5% bonus per team member
+          teamBonus += 0.05;
         }
       }
     }
 
-    return Math.min(teamBonus, 1.5); // Cap at 50% bonus
+    return Math.min(teamBonus, 1.5);
   }
 
   private addToGlobalResources(resourceType: string, amount: number): void {
@@ -369,10 +369,6 @@ export class EconomySystem {
       ] += amount;
     }
   }
-
-  // ============================================
-  // Money Management - Single Source of Truth
-  // ============================================
 
   /**
    * Gets the current money balance for an agent.
@@ -482,7 +478,6 @@ export class EconomySystem {
     }
 
     if (!this.addMoney(toId, amount)) {
-      // Rollback if adding fails
       this.addMoney(fromId, amount);
       return false;
     }

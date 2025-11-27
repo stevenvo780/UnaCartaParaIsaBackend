@@ -15,7 +15,7 @@ interface GPUInfo {
     tensorflowGpu?: boolean;
     cuda?: boolean;
   };
-  tf?: unknown; // TensorFlow instance if loaded
+  tf?: unknown;
 }
 
 let cachedTf: unknown = null;

@@ -23,7 +23,6 @@
  * - NeedsEvaluator, CraftingEvaluator, DepositEvaluator, etc.
  */
 
-// Core subsystem components
 export { AIStateManager } from "./core/AIStateManager";
 export {
   AIGoalValidator,
@@ -50,14 +49,11 @@ export {
   type AIZoneNeedsPort,
 } from "./core/AIZoneHandler";
 
-// Goal planning
 export { planGoals, type AgentGoalPlannerDeps } from "./core/AgentGoalPlanner";
 export { PriorityManager } from "./core/PriorityManager";
 
-// Activity mapping
 export * from "./core/ActivityMapper";
 
-// Evaluators - export all functions and types
 export * from "./evaluators/NeedsEvaluator";
 export * from "./evaluators/CraftingEvaluator";
 export * from "./evaluators/DepositEvaluator";
@@ -71,7 +67,6 @@ export * from "./evaluators/OpportunitiesEvaluator";
 export * from "./evaluators/QuestEvaluator";
 export * from "./evaluators/TradeEvaluator";
 
-// Utils - specific exports to avoid conflicts with evaluators (calculateNeedPriority is in NeedsEvaluator)
 export {
   selectBestZone,
   getUnexploredZones,

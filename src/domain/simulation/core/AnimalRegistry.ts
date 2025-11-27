@@ -325,8 +325,6 @@ export class AnimalRegistry {
     );
   }
 
-  // ==================== Bulk Access ====================
-
   /**
    * Gets all animals (iterator for memory efficiency)
    */

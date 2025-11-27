@@ -31,7 +31,7 @@ export class KnowledgeNetworkSystem {
   private gameState: GameState;
   private nodes = new Map<string, KnowledgeNode>();
   private edges: KnowledgeEdge[] = [];
-  private agentKnowledge = new Map<string, Set<string>>(); // agentId -> Set<nodeId>
+  private agentKnowledge = new Map<string, Set<string>>();
 
   constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;

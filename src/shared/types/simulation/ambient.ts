@@ -1,4 +1,3 @@
-// NeedType is now defined in AIEnums.ts - import it from there
 import { NeedType } from "../../constants/AIEnums";
 
 export interface NeedDesireSnapshot {
@@ -46,7 +45,6 @@ export interface ResourceAttractionSnapshot {
   emergencies: ResourceEmergencyRequest[];
 }
 
-// Re-export enums from AmbientEnums for backward compatibility
 import {
   CrisisSeverity,
   CrisisTrend,

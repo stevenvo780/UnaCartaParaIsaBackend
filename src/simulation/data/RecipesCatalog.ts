@@ -405,7 +405,6 @@ export class RecipesCatalog {
     },
   ];
 
-  // Recetas dinámicas registradas en runtime (ej. de biomas)
   private static dynamicRecipes: CraftingRecipe[] = [];
 
   static getAllRecipes(): CraftingRecipe[] {
@@ -426,7 +425,7 @@ export class RecipesCatalog {
    */
   static registerBiomeRecipe(recipe: CraftingRecipe): boolean {
     if (this.getRecipeById(recipe.id)) {
-      return false; // Ya existe
+      return false;
     }
     this.dynamicRecipes.push(recipe);
     return true;

@@ -1,6 +1,5 @@
 import { Difficulty } from "../../../../shared/constants/MovementEnums";
 
-// Re-export Difficulty enum for backward compatibility
 export { Difficulty };
 
 export function estimateTravelTime(

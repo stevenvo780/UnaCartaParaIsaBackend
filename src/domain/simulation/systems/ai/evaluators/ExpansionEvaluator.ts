@@ -41,7 +41,7 @@ export function evaluateExpansionGoals(
         priority: 0.35 + aiState.personality.diligence * 0.2,
         data: {
           explorationType: "resource_scout",
-          targetResource: ResourceType.WOOD, // Default to wood as it's primary building material
+          targetResource: ResourceType.WOOD,
         },
         createdAt: now,
         expiresAt: now + GATHER_GOAL_DURATION_MS,

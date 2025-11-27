@@ -14,7 +14,10 @@ import type {
   Task,
   TaskCreationParams,
 } from "../../../../types/simulation/tasks";
-import { GoalType as GoalTypeEnum, NeedType } from "../../../../../shared/constants/AIEnums";
+import {
+  GoalType as GoalTypeEnum,
+  NeedType,
+} from "../../../../../shared/constants/AIEnums";
 import { ResourceType as ResourceTypeEnum } from "../../../../../shared/constants/ResourceEnums";
 import { RoleType as RoleTypeEnum } from "../../../../../shared/constants/RoleEnums";
 import { TaskType } from "../../../../../shared/constants/TaskEnums";
@@ -224,7 +227,6 @@ function getMostNeededResource(
     });
   }
 
-  // Check wood reserves
   if (state.totalWood < thresholds.minWoodReserve) {
     const urgency = 1 - state.totalWood / thresholds.minWoodReserve;
     needs.push({
@@ -233,7 +235,6 @@ function getMostNeededResource(
     });
   }
 
-  // Check stone reserves
   if (state.totalStone < thresholds.minStoneReserve) {
     const urgency = 1 - state.totalStone / thresholds.minStoneReserve;
     needs.push({
@@ -242,7 +243,6 @@ function getMostNeededResource(
     });
   }
 
-  // Sort by urgency descending
   needs.sort((a, b) => b.urgency - a.urgency);
   return needs[0] || null;
 }
@@ -268,7 +268,6 @@ export function evaluateCollectiveNeeds(
 
   if (!position) return goals;
 
-  // 1. Check for governance demands and boost priority accordingly
   const foodDemand = state.activeDemands.find(
     (d) => d.type === DemandType.FOOD_SHORTAGE && !d.resolvedAt,
   );
@@ -279,7 +278,6 @@ export function evaluateCollectiveNeeds(
     (d) => d.type === DemandType.HOUSING_FULL && !d.resolvedAt,
   );
 
-  // 2. Priority 1: Check for existing community tasks
   if (ctx.taskSystem) {
     const availableTasks = ctx.taskSystem.getAvailableCommunityTasks();
 
@@ -288,24 +286,20 @@ export function evaluateCollectiveNeeds(
       const taskResourceType = task.metadata?.resourceType as string;
 
       if (modifiers.preferredResource) {
-        // Skip tasks that don't match the specialized role
         if (
           taskResourceType &&
           taskResourceType !== modifiers.preferredResource
         ) {
-          continue; // Skip this task - role mismatch
+          continue;
         }
       }
 
-      // Calculate priority based on urgency and role match
       let priority = 0.5 + taskUrgency * 0.3;
 
-      // Boost if this matches agent's role preference
       if (modifiers.preferredResource === taskResourceType) {
         priority += 0.15;
       }
 
-      // Boost if there's a governance demand
       if (
         (taskResourceType === ResourceTypeEnum.FOOD && foodDemand) ||
         (taskResourceType === ResourceTypeEnum.WATER && waterDemand)
@@ -332,11 +326,9 @@ export function evaluateCollectiveNeeds(
     }
   }
 
-  // 3. Evaluate if we need to CREATE new community tasks
   const mostNeeded = getMostNeededResource(state, thresholds);
 
   if (mostNeeded && ctx.taskSystem) {
-    // Check if there's already a task for this resource
     const existingTask = ctx.taskSystem
       .getAvailableCommunityTasks()
       .find(
@@ -344,8 +336,7 @@ export function evaluateCollectiveNeeds(
       );
 
     if (!existingTask) {
-      // Create new community task
-      const workersNeeded = Math.ceil(state.population * 0.15); // 15% of population
+      const workersNeeded = Math.ceil(state.population * 0.15);
       const taskType = getTaskTypeForResource(mostNeeded.resource);
 
       const newTask = ctx.taskSystem.createTask({
@@ -361,10 +352,8 @@ export function evaluateCollectiveNeeds(
       });
 
       if (newTask) {
-        // Generate goal to join this newly created task
         let basePriority = 0.4 + mostNeeded.urgency * 0.35;
 
-        // Boost if there's an active governance demand
         if (
           (mostNeeded.resource === ResourceTypeEnum.FOOD && foodDemand) ||
           (mostNeeded.resource === ResourceTypeEnum.WATER && waterDemand)
@@ -372,19 +361,15 @@ export function evaluateCollectiveNeeds(
           basePriority += 0.2;
         }
 
-        // Apply role modifier
         let finalPriority = basePriority * modifiers.gatherPriority;
 
-        // Extra boost if this is the role's preferred resource
         if (modifiers.preferredResource === mostNeeded.resource) {
           finalPriority += 0.15;
         }
 
-        // Personality influence
         finalPriority += aiState.personality.diligence * 0.1;
         finalPriority += aiState.personality.conscientiousness * 0.05;
 
-        // Cap priority
         finalPriority = Math.min(0.85, Math.max(0.3, finalPriority));
 
         goals.push({
@@ -404,10 +389,8 @@ export function evaluateCollectiveNeeds(
   }
 
   if (!ctx.taskSystem && mostNeeded) {
-    // Base priority for collective gathering
     let basePriority = 0.4 + mostNeeded.urgency * 0.35;
 
-    // Boost if there's an active governance demand
     if (
       (mostNeeded.resource === ResourceTypeEnum.FOOD && foodDemand) ||
       (mostNeeded.resource === ResourceTypeEnum.WATER && waterDemand)
@@ -415,19 +398,15 @@ export function evaluateCollectiveNeeds(
       basePriority += 0.2;
     }
 
-    // Apply role modifier
     let finalPriority = basePriority * modifiers.gatherPriority;
 
-    // Extra boost if this is the role's preferred resource
     if (modifiers.preferredResource === mostNeeded.resource) {
       finalPriority += 0.15;
     }
 
-    // Personality influence: diligent agents contribute more
     finalPriority += aiState.personality.diligence * 0.1;
     finalPriority += aiState.personality.conscientiousness * 0.05;
 
-    // Cap priority
     finalPriority = Math.min(0.85, Math.max(0.3, finalPriority));
 
     const resourceGoalType = getGatherGoalType(mostNeeded.resource);
@@ -447,7 +426,6 @@ export function evaluateCollectiveNeeds(
     });
   }
 
-  // 5. Evaluate deposit goals when agent has resources and stockpiles need filling
   if (inventory) {
     const agentLoad =
       (inventory.wood || 0) +
@@ -458,15 +436,12 @@ export function evaluateCollectiveNeeds(
     const loadRatio = agentLoad / agentCapacity;
 
     const depositThreshold =
-      state.stockpileFillRatio < thresholds.stockpileFillTarget
-        ? 0.3 // Deposit earlier when stockpiles are low
-        : 0.6; // Normal threshold
+      state.stockpileFillRatio < thresholds.stockpileFillTarget ? 0.3 : 0.6;
 
     if (loadRatio > depositThreshold && agentLoad > 5) {
       let depositPriority = 0.5 + (loadRatio - depositThreshold) * 0.4;
       depositPriority *= modifiers.depositPriority;
 
-      // Boost if stockpiles are very low
       if (state.stockpileFillRatio < 0.3) {
         depositPriority += 0.2;
       }
@@ -487,19 +462,16 @@ export function evaluateCollectiveNeeds(
     }
   }
 
-  // 4. Evaluate storage expansion when stockpiles are getting full
   if (state.stockpileFillRatio > thresholds.storageExpansionThreshold) {
     let buildPriority =
       0.5 +
       (state.stockpileFillRatio - thresholds.storageExpansionThreshold) * 2;
     buildPriority *= modifiers.buildPriority;
 
-    // Boost for builders
     if (roleType === RoleTypeEnum.BUILDER) {
       buildPriority += 0.2;
     }
 
-    // Check if there's already a housing demand (might indicate overcrowding)
     if (housingDemand) {
       buildPriority += 0.1;
     }
@@ -520,12 +492,9 @@ export function evaluateCollectiveNeeds(
     });
   }
 
-  // 5. General prosperity goal: even if personal needs are met, contribute
-  // This activates when the agent has nothing urgent and community reserves are moderate
   if (goals.length === 0 && state.stockpileFillRatio < 0.5 && inventory) {
     const prosperityPriority = 0.35 + aiState.personality.diligence * 0.15;
 
-    // Pick a resource to gather based on what's lowest
     const lowestResource = getLowestResource(state);
 
     goals.push({
@@ -615,14 +584,11 @@ export function adjustNeedThresholdsForRole(
 ): number {
   let modifier = 1.0;
 
-  // Role-specific adjustments
   switch (roleType) {
     case RoleTypeEnum.FARMER:
     case RoleTypeEnum.GATHERER:
-      // Food/water producers are more tolerant of their own hunger/thirst
-      // when the community needs more
       if (need === NeedType.HUNGER && collectiveState.foodPerCapita < 5) {
-        modifier = 0.8; // Lower threshold = more tolerant
+        modifier = 0.8;
       }
       if (need === NeedType.THIRST && collectiveState.waterPerCapita < 8) {
         modifier = 0.85;
@@ -630,31 +596,27 @@ export function adjustNeedThresholdsForRole(
       break;
 
     case RoleTypeEnum.BUILDER:
-      // Builders are more tolerant of energy depletion when building
       if (need === NeedType.ENERGY) {
         modifier = 0.85;
       }
       break;
 
     case RoleTypeEnum.GUARD:
-      // Guards need to stay more alert, less tolerant of low energy
       if (need === "energy") {
-        modifier = 1.2; // Higher threshold = less tolerant
+        modifier = 1.2;
       }
       break;
 
     case RoleTypeEnum.HUNTER:
-      // Hunters need energy for chasing prey
       if (need === "energy") {
         modifier = 1.15;
       }
       if (need === NeedType.HUNGER) {
-        modifier = 0.9; // More tolerant of hunger
+        modifier = 0.9;
       }
       break;
   }
 
-  // Community prosperity bonus: when things are good, agents are more relaxed
   if (collectiveState.stockpileFillRatio > 0.7) {
     modifier *= 0.95;
   }

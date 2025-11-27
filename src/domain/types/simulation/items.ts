@@ -1,6 +1,5 @@
 import { ItemTier, ItemCategory } from "../../../shared/constants/ItemEnums";
 
-// Re-export ItemTier and ItemCategory enums for convenience
 export type { ItemTier };
 export { ItemCategory };
 

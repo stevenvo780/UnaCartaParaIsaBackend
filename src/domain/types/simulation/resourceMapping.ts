@@ -23,7 +23,6 @@ import {
  * Items are collapsed into their closest resource category.
  */
 export function itemToInventoryResource(itemId: string): ResourceType | null {
-  // Direct resource types
   if (itemId === ResourceTypeEnum.WOOD) return ResourceTypeEnum.WOOD;
   if (itemId === ResourceTypeEnum.STONE) return ResourceTypeEnum.STONE;
   if (itemId === ResourceTypeEnum.FOOD) return ResourceTypeEnum.FOOD;
@@ -88,8 +87,8 @@ export function itemToInventoryResource(itemId: string): ResourceType | null {
  * Mapping from world resources to inventory resources.
  *
  * @example
- * toInventoryResource("tree") // "wood"
- * toInventoryResource("trash_pile") // null (does not generate inventory resource)
+ * toInventoryResource("tree")
+ * toInventoryResource("trash_pile")
  */
 export const WORLD_TO_INVENTORY: Record<
   WorldResourceType,
@@ -109,7 +108,7 @@ export const WORLD_TO_INVENTORY: Record<
  * An inventory resource can come from multiple world sources.
  *
  * @example
- * INVENTORY_TO_WORLD.food // ["berry_bush", "mushroom_patch", "wheat_crop"]
+ * INVENTORY_TO_WORLD.food
  */
 export const INVENTORY_TO_WORLD: Record<ResourceType, WorldResourceType[]> = {
   [ResourceTypeEnum.WOOD]: [WorldResourceTypeEnum.TREE],
@@ -168,8 +167,8 @@ export function isResourceType(value: string): value is ResourceType {
  * @returns Corresponding ResourceType or null
  *
  * @example
- * toInventoryResource("tree") // "wood"
- * toInventoryResource("trash_pile") // null
+ * toInventoryResource("tree")
+ * toInventoryResource("trash_pile")
  */
 export function toInventoryResource(
   worldType: WorldResourceType,
@@ -184,7 +183,7 @@ export function toInventoryResource(
  * @returns Array of WorldResourceType that produce this resource
  *
  * @example
- * toWorldResources("food") // ["berry_bush", "mushroom_patch", "wheat_crop"]
+ * toWorldResources("food")
  */
 export function toWorldResources(
   inventoryType: ResourceType,
@@ -197,12 +196,10 @@ export function toWorldResources(
  * Handles both direct resource types (wood, stone) and specific items (iron_ore).
  */
 export function itemToWorldResources(itemId: string): WorldResourceType[] {
-  // First check if it's a direct ResourceType
   if (isResourceType(itemId)) {
     return toWorldResources(itemId);
   }
 
-  // Check specific items
   const stoneItems = [
     "iron_ore",
     "copper_ore",
@@ -218,17 +215,11 @@ export function itemToWorldResources(itemId: string): WorldResourceType[] {
     return [WorldResourceTypeEnum.ROCK];
   }
 
-  // Metal items
   if (["iron_ore", "copper_ore"].includes(itemId)) {
     return [WorldResourceTypeEnum.ROCK];
   }
 
-  const woodItems = [
-    "wood_log",
-    "plank",
-    "fiber", // Fiber often comes from trees or bushes, let's assume trees for now or add bushes
-    "rope",
-  ];
+  const woodItems = ["wood_log", "plank", "fiber", "rope"];
   if (woodItems.includes(itemId)) {
     return [WorldResourceTypeEnum.TREE];
   }

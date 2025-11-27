@@ -6,7 +6,7 @@ export interface EntityNeedsData {
   social: number;
   fun: number;
   mentalHealth: number;
-  [key: string]: number | undefined; // Allow for dynamic access
+  [key: string]: number | undefined;
 }
 
 export interface NeedsConfig {

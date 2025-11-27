@@ -1,4 +1,3 @@
-// Re-export WeaponId enum for backward compatibility
 export { WeaponId } from "../../../shared/constants/CraftingEnums";
 
 export interface CraftingIngredient {

@@ -102,7 +102,7 @@ export class GenealogySystem {
     const id = `lineage_${founder.id}`;
     this.familyTree.lineages.set(id, {
       id,
-      surname: "Founder", // Stub
+      surname: "Founder",
       founder: founder.id,
       foundedAt: Date.now(),
       members: [],
@@ -169,24 +169,17 @@ export class GenealogySystem {
   }
 
   public getSnapshot(): SerializedFamilyTree & { history: GenealogyEvent[] } {
-    // Convert Maps to Arrays for frontend consumption
     const lineagesArray = Array.from(this.familyTree.lineages.values()).map(
       (lineage) => {
         const { researchProgress: _, ...rest } = lineage;
         return {
           ...rest,
-          researchProgress: {}, // Stub
+          researchProgress: {},
         };
       },
     );
 
     const ancestorsArray = Array.from(this.familyTree.ancestors.values());
-
-    // Frontend ClientGenealogySystem doesn't seem to use relationships directly from snapshot in syncFromBackend?
-    // It syncs lineages and ancestors.
-    // But let's keep relationships as object for now or check if it needs array.
-    // GameState expects SerializedFamilyTree which has relationships as Record.
-    // But we are returning 'any' to bypass type check for now, as we are changing structure.
 
     const relationshipsObj: Record<string, string[]> = {};
     this.familyTree.relationships.forEach((v, k) => {

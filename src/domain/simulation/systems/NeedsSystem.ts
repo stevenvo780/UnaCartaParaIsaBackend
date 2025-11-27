@@ -142,7 +142,6 @@ export class NeedsSystem extends EventEmitter {
 
     this.entityNeeds = new Map();
 
-    // Register entityNeeds Map in AgentRegistry for unified access
     if (this.agentRegistry) {
       this.agentRegistry.registerNeeds(this.entityNeeds);
     }
@@ -211,7 +210,6 @@ export class NeedsSystem extends EventEmitter {
           `🔄 NeedsSystem auto-initialized needs for existing agent ${agent.name} (${agent.id})`,
         );
       } else {
-        // Check for corrupted needs (values stuck at 0 or near 0)
         const needs = this.entityNeeds.get(agent.id);
         if (
           needs &&
@@ -219,7 +217,6 @@ export class NeedsSystem extends EventEmitter {
           needs.thirst === 0 &&
           needs.energy <= 1
         ) {
-          // Reinitialize corrupted needs
           this.initializeEntityNeeds(agent.id);
           reinitCount++;
           logger.warn(
@@ -249,7 +246,6 @@ export class NeedsSystem extends EventEmitter {
 
     this.syncNeedsWithAgents();
 
-    // Clean zone cache periodically
     this._tickCounter = (this._tickCounter || 0) + 1;
     if (this._tickCounter >= 100) {
       this.cleanZoneCache(now);
@@ -390,21 +386,17 @@ export class NeedsSystem extends EventEmitter {
     const inv = this.inventorySystem.getAgentInventory(entityId);
     if (!inv) return;
 
-    // Get position for zone bonuses - use AgentRegistry O(1)
     const position = this.agentRegistry?.getPosition(entityId);
     const nearbyZones = position
       ? this.findZonesNearPosition(position, 50)
       : [];
 
-    // Hunger thresholds for eating
-    const HUNGER_THRESHOLD = 70; // Start eating when below this
-    const HUNGER_CRITICAL = 30; // Eat more urgently
+    const HUNGER_THRESHOLD = 70;
+    const HUNGER_CRITICAL = 30;
 
-    // Thirst thresholds for drinking
     const THIRST_THRESHOLD = 70;
     const THIRST_CRITICAL = 30;
 
-    // Consume food when hungry (REQUIRES ITEMS)
     if (needs.hunger < HUNGER_THRESHOLD && inv.food > 0) {
       const urgency = needs.hunger < HUNGER_CRITICAL ? 2 : 1;
       const toConsume = Math.min(urgency, inv.food);
@@ -415,7 +407,6 @@ export class NeedsSystem extends EventEmitter {
       );
 
       if (removed > 0) {
-        // 1 food = 15 hunger points
         const hungerRestore = removed * 15;
         needs.hunger = Math.min(100, needs.hunger + hungerRestore);
 
@@ -434,7 +425,6 @@ export class NeedsSystem extends EventEmitter {
       }
     }
 
-    // Consume water when thirsty (REQUIRES ITEMS)
     if (needs.thirst < THIRST_THRESHOLD && inv.water > 0) {
       const urgency = needs.thirst < THIRST_CRITICAL ? 2 : 1;
       const toConsume = Math.min(urgency, inv.water);
@@ -445,7 +435,6 @@ export class NeedsSystem extends EventEmitter {
       );
 
       if (removed > 0) {
-        // 1 water = 20 thirst points
         const thirstRestore = removed * 20;
         needs.thirst = Math.min(100, needs.thirst + thirstRestore);
 
@@ -464,7 +453,6 @@ export class NeedsSystem extends EventEmitter {
       }
     }
 
-    // Energy recovery based on action and ZONE BONUSES
     const action = this.entityActions.get(entityId) || ActionType.IDLE;
     let baseEnergyRecovery = 0;
 
@@ -474,11 +462,10 @@ export class NeedsSystem extends EventEmitter {
       baseEnergyRecovery = 1;
     }
 
-    // Zone multipliers for rest - resting in a house/bed is much better
     let restMultiplier = 1.0;
     for (const zone of nearbyZones) {
       if (zone.type === ZoneType.SHELTER || zone.type === ZoneType.REST) {
-        restMultiplier = 3.0; // 3x faster rest in proper shelter
+        restMultiplier = 3.0;
         break;
       }
     }
@@ -488,7 +475,6 @@ export class NeedsSystem extends EventEmitter {
       needs.energy = Math.min(100, needs.energy + energyRecovery);
     }
 
-    // ZONE BONUSES for social needs (don't require items)
     this.applyZoneBonuses(entityId, needs, nearbyZones);
   }
 
@@ -505,7 +491,6 @@ export class NeedsSystem extends EventEmitter {
 
     for (const zone of zones) {
       switch (zone.type) {
-        // Hygiene zones
         case ZoneType.HYGIENE:
         case ZoneType.BATH:
         case ZoneType.WELL: {
@@ -514,7 +499,6 @@ export class NeedsSystem extends EventEmitter {
           break;
         }
 
-        // Social zones - gain social and fun by being here
         case ZoneType.SOCIAL:
         case ZoneType.MARKET:
         case ZoneType.GATHERING:
@@ -526,7 +510,6 @@ export class NeedsSystem extends EventEmitter {
           break;
         }
 
-        // Entertainment zones
         case ZoneType.ENTERTAINMENT:
         case ZoneType.FESTIVAL: {
           const funBonus = 2.5 * multiplier;
@@ -536,7 +519,6 @@ export class NeedsSystem extends EventEmitter {
           break;
         }
 
-        // Spiritual zones
         case ZoneType.TEMPLE:
         case ZoneType.SANCTUARY: {
           const mentalBonus = 2.0 * multiplier;
@@ -636,8 +618,6 @@ export class NeedsSystem extends EventEmitter {
   ): void {
     logger.info(`💀 Entity ${entityId} died from ${cause}`);
 
-    // Emit event for LifeCycleSystem to handle the death
-    // LifeCycleSystem owns the isDead state modification
     simulationEvents.emit(GameEventNames.AGENT_DEATH, {
       agentId: entityId,
       cause,
@@ -697,7 +677,7 @@ export class NeedsSystem extends EventEmitter {
   }
 
   private checkEmergencyNeeds(entityId: string, needs: EntityNeedsData): void {
-    const CRITICAL = 20; // Increased from 10
+    const CRITICAL = 20;
 
     if (needs.hunger < CRITICAL) {
       if (!this.tryEmergencyFood(entityId, needs)) {
@@ -749,7 +729,7 @@ export class NeedsSystem extends EventEmitter {
   }
 
   private applyEmergencyRest(_entityId: string, needs: EntityNeedsData): void {
-    const emergencyRest = 5; // Increased from 2
+    const emergencyRest = 5;
     needs.energy = Math.min(100, needs.energy + emergencyRest);
   }
 
@@ -769,12 +749,9 @@ export class NeedsSystem extends EventEmitter {
       let finalRate = rate * ageMultiplier;
 
       if (need === NeedType.ENERGY) {
-        if (action === ActionType.SLEEP)
-          finalRate = -5.0; // Recover energy fast
-        else if (action === ActionType.IDLE)
-          finalRate = -0.5; // Recover energy slowly
-        else if (action === ActionType.WORK)
-          finalRate *= 1.5; // Work consumes more energy
+        if (action === ActionType.SLEEP) finalRate = -5.0;
+        else if (action === ActionType.IDLE) finalRate = -0.5;
+        else if (action === ActionType.WORK) finalRate *= 1.5;
         else if (action === ActionType.MOVE) finalRate *= 2.0;
       }
 
@@ -905,7 +882,7 @@ export class NeedsSystem extends EventEmitter {
   private applySocialMoraleBoostBatch(entityIds: string[]): void {
     if (!this.socialSystem || !this.gameState.entities) return;
 
-    const GPU_BATCH_THRESHOLD = 20; // Use GPU when we have ≥20 entities (O(N²) operation)
+    const GPU_BATCH_THRESHOLD = 20;
 
     const entityPositions: Array<{ id: string; x: number; y: number }> = [];
     for (const entityId of entityIds) {
@@ -1245,7 +1222,6 @@ export class NeedsSystem extends EventEmitter {
     const data = this.entityNeeds.get(entityId);
     if (!data) return null;
 
-    // Aplicar efectos de la comida
     const changes = {
       hunger: food.hungerRestore,
       happiness: food.happinessBonus,
@@ -1254,11 +1230,9 @@ export class NeedsSystem extends EventEmitter {
     };
 
     data.hunger = Math.min(100, data.hunger + changes.hunger);
-    data.fun = Math.min(100, data.fun + changes.happiness); // happiness -> fun
+    data.fun = Math.min(100, data.fun + changes.happiness);
     data.energy = Math.min(100, data.energy + changes.energy);
-    // health effect no está en EntityNeedsData, pero podemos emitir evento
 
-    // Si hay efecto de salud, lo procesamos via el logger (el sistema de salud escuchará)
     if (changes.health !== 0) {
       logger.debug(
         `🏥 Food health effect for ${entityId}: ${changes.health > 0 ? "+" : ""}${changes.health}`,

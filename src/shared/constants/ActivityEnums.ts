@@ -7,7 +7,6 @@
  * @module shared/constants/ActivityEnums
  */
 
-// Re-export ActivityType from MovementEnums for backward compatibility
 export {
   ActivityType,
   type ActivityTypeValue,

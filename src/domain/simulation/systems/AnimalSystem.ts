@@ -25,7 +25,7 @@ import { WorldResourceType } from "../../../shared/constants/ResourceEnums";
 const DEFAULT_CONFIG: AnimalSystemConfig = {
   maxAnimals: SIM_CONSTANTS.MAX_ANIMALS,
   spawnRadius: SIM_CONSTANTS.SPAWN_RADIUS,
-  updateInterval: 50, // 20Hz to match FAST scheduler rate for smooth movement
+  updateInterval: 50,
   cleanupInterval: SIM_CONSTANTS.ANIMAL_CLEANUP_INTERVAL,
 };
 
@@ -91,7 +91,7 @@ export class AnimalSystem {
    * Idle/wandering animals update less frequently to reduce CPU load.
    */
   private updateFrame = 0;
-  private readonly IDLE_UPDATE_DIVISOR = 5; // Update idle animals every 5th frame
+  private readonly IDLE_UPDATE_DIVISOR = 5;
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
@@ -366,7 +366,7 @@ export class AnimalSystem {
     const newPositions = this.gpuService!.computeFleeVectorsBatch(
       animalPositions,
       threatPositions,
-      1.2 * 50, // fleeSpeed * baseSpeed
+      1.2 * 50,
       deltaSeconds,
     );
 
@@ -551,7 +551,6 @@ export class AnimalSystem {
       if (cached.threat) {
         const cachedAnimal = this.animals.get(cached.threat.id);
         if (!cachedAnimal || cachedAnimal.isDead) {
-          // Cached threat is dead, invalidate cache and search fresh
           this.threatSearchCache.delete(cacheKey);
         } else {
           return cached.threat;
@@ -694,11 +693,10 @@ export class AnimalSystem {
     const centerTileX = Math.floor(animal.position.x / TILE_SIZE);
     const centerTileY = Math.floor(animal.position.y / TILE_SIZE);
 
-    // Spiral search for nearest water tile
     for (let r = 1; r <= searchRadius; r++) {
       for (let dx = -r; dx <= r; dx++) {
         for (let dy = -r; dy <= r; dy++) {
-          if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue; // Only check perimeter
+          if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue;
 
           const tileX = centerTileX + dx;
           const tileY = centerTileY + dy;
@@ -778,7 +776,7 @@ export class AnimalSystem {
       position.x,
       position.y,
       radius,
-      true, // excludeDead
+      true,
     );
   }
 
@@ -821,7 +819,6 @@ export class AnimalSystem {
   }
 
   private updateGameStateSnapshot(): void {
-    // Delegate to registry's export method
     const snapshot = this.animalRegistry.exportForGameState();
 
     if (!this.gameState.animals) {
@@ -877,11 +874,9 @@ export class AnimalSystem {
     animal: Animal,
     oldPosition: { x: number; y: number },
   ): void {
-    // Check if position changed significantly
     const dx = Math.abs(animal.position.x - oldPosition.x);
     const dy = Math.abs(animal.position.y - oldPosition.y);
     if (dx > 1 || dy > 1) {
-      // Registry automatically handles spatial updates
       this.animalRegistry.markDirty(animal.id);
     }
   }
@@ -980,7 +975,6 @@ export class AnimalSystem {
   private cleanCaches(): void {
     const now = Date.now();
 
-    // Clean expired entries from resourceSearchCache
     for (const [key, cache] of this.resourceSearchCache.entries()) {
       if (now - cache.timestamp > this.CACHE_DURATION) {
         this.resourceSearchCache.delete(key);

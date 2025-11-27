@@ -44,8 +44,11 @@ export function evaluateWorkOpportunities(
   const now = Date.now();
   const timeOfDay = deps.getCurrentTimeOfDay?.() || "midday";
 
-  if (timeOfDay === TimeOfDayPhase.NIGHT || timeOfDay === TimeOfDayPhase.DEEP_NIGHT) {
-    return goals; // Don't work at night
+  if (
+    timeOfDay === TimeOfDayPhase.NIGHT ||
+    timeOfDay === TimeOfDayPhase.DEEP_NIGHT
+  ) {
+    return goals;
   }
 
   const role = deps.getAgentRole(aiState.entityId);

@@ -273,7 +273,7 @@ export class CardDialogueSystem {
       for (const trigger of template.triggers.needsBased) {
         const val = needs[trigger.need] as number;
         if (trigger.operator === "below" && val < trigger.threshold) {
-          score += (trigger.threshold - val) / 100; // Higher score if far below threshold
+          score += (trigger.threshold - val) / 100;
         } else if (trigger.operator === "above" && val > trigger.threshold) {
           score += (val - trigger.threshold) / 100;
         }

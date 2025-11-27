@@ -217,7 +217,7 @@ export class GPUBatchQueryService {
         const centersExp = centers.expandDims(1);
         const entitiesExp = entities.expandDims(0);
         const diff = centersExp.sub(entitiesExp);
-        const distSq = diff.square().sum(2); // [Q, E]
+        const distSq = diff.square().sum(2);
 
         return distSq.arraySync() as number[][];
       });

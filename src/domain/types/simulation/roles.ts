@@ -2,7 +2,6 @@ import { RoleType, WorkShift } from "../../../shared/constants/RoleEnums";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
 
-// Re-export for backward compatibility
 export { RoleType, WorkShift };
 
 export interface RoleRequirements {

@@ -9,7 +9,7 @@ import {
   AnimalTargetType,
 } from "../../../../shared/constants/AnimalEnums";
 
-const BASE_ANIMAL_SPEED = 60; // Slightly increased from 50
+const BASE_ANIMAL_SPEED = 60;
 
 export class AnimalBehavior {
   private static wanderAngles = new Map<string, number>();
@@ -315,7 +315,6 @@ export class AnimalBehavior {
         other.type === animal.type &&
         other.id !== animal.id &&
         other.needs.reproductiveUrge > 70 &&
-        // Ensure both animals are healthy enough to reproduce
         animal.needs.hunger > 50 &&
         animal.needs.thirst > 50 &&
         other.needs.hunger > 50 &&

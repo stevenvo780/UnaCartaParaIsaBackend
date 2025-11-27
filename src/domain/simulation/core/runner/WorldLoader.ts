@@ -180,7 +180,7 @@ export class WorldLoader {
           const child = this.runner.lifeCycleSystem.spawnAgent({
             name: childData.name,
             sex: childData.sex,
-            ageYears: 20, // Start as adults so they can work
+            ageYears: 20,
             lifeStage: LifeStage.ADULT,
             generation: 1,
             parents: {
@@ -254,7 +254,7 @@ export class WorldLoader {
   private spawnInitialAnimals(): void {
     const animalSystem = this.runner.animalSystem;
     const tileSize = 64;
-    const chunkTileSize = 16; // tiles per chunk
+    const chunkTileSize = 16;
     const chunkPixelSize = chunkTileSize * tileSize;
 
     const agents = this.runner.state.agents;

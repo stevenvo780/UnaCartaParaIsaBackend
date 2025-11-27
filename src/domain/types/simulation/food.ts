@@ -1,6 +1,5 @@
 import { FoodCategory } from "../../../shared/constants/FoodEnums";
 
-// Re-export FoodCategory enum for backward compatibility
 export { FoodCategory };
 
 export interface FoodItem {

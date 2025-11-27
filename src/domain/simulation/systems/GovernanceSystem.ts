@@ -199,7 +199,7 @@ export class GovernanceSystem {
         }
         this.createDemand(
           demandType,
-          10, // máxima prioridad
+          10,
           `Crisis predicha: ${prediction.type}`,
           {
             probability: prediction.probability,
@@ -268,7 +268,7 @@ export class GovernanceSystem {
         );
         if (recentLosses.length >= 3) {
           this.createDemand(
-            DemandType.HOUSING_FULL, // Usar tipo existente, podría ser "worker_shortage" en el futuro
+            DemandType.HOUSING_FULL,
             7,
             "Pérdida significativa de trabajadores de producción",
             {
@@ -516,7 +516,7 @@ export class GovernanceSystem {
       switch (targetRole) {
         case RoleTypeEnum.HUNTER:
           score += (agent.traits.diligence ?? 0.5) * 30;
-          score += (agent.traits.neuroticism ?? 0.3) * 15; // Alertness
+          score += (agent.traits.neuroticism ?? 0.3) * 15;
           break;
         case RoleTypeEnum.GATHERER:
           score += (agent.traits.curiosity ?? 0.5) * 25;
@@ -548,7 +548,7 @@ export class GovernanceSystem {
     let assignedCount = 0;
     for (const { agent, score } of scoredAgents) {
       if (assignedCount >= count) break;
-      if (score < 0) continue; // Already has target role
+      if (score < 0) continue;
 
       const result = this.roleSystem.reassignRole(agent.id, targetRole);
       if (result.success) {

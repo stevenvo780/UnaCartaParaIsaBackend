@@ -5,7 +5,6 @@ import { performanceMonitor } from "./PerformanceMonitor";
 import { TickRate } from "../../../shared/constants/SchedulerEnums";
 import type { SchedulerStatsSnapshot } from "./SchedulerTypes";
 
-// Re-export types for backwards compatibility
 export type { TickRate, SchedulerStatsSnapshot } from "./SchedulerTypes";
 
 /**

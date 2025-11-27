@@ -173,7 +173,7 @@ export class EventRegistry {
       }) => {
         if (data.harvesterId) {
           this.runner.questSystem.handleEvent({
-            type: "resource_collected",
+            type: GameEventType.RESOURCE_GATHERED,
             entityId: data.harvesterId,
             timestamp: Date.now(),
             data: {
@@ -199,7 +199,7 @@ export class EventRegistry {
           if (task && task.contributors) {
             task.contributors.forEach((_contribution, agentId) => {
               this.runner.questSystem.handleEvent({
-                type: "structure_built",
+                type: GameEventType.BUILDING_CONSTRUCTED,
                 entityId: agentId,
                 timestamp: Date.now(),
                 data: {
@@ -220,7 +220,7 @@ export class EventRegistry {
           const card = dialogueState.active.find((c) => c.id === data.cardId);
           if (card && card.participants && card.participants.length > 0) {
             this.runner.questSystem.handleEvent({
-              type: "dialogue_completed",
+              type: GameEventType.DIALOGUE_CARD_RESPONDED,
               entityId: card.participants[0],
               timestamp: Date.now(),
               data: {
@@ -327,7 +327,7 @@ export class EventRegistry {
               ].includes(role.roleType as RoleType)
             ) {
               relevantAgents.push(agent);
-              if (relevantAgents.length >= 3) break; // Only need 3
+              if (relevantAgents.length >= 3) break;
             }
           }
 
@@ -352,7 +352,7 @@ export class EventRegistry {
           if (task && task.contributors) {
             task.contributors.forEach((_contribution, agentId) => {
               this.runner.questSystem.handleEvent({
-                type: "structure_construction_started",
+                type: GameEventType.BUILDING_CONSTRUCTION_STARTED,
                 entityId: agentId,
                 timestamp: Date.now(),
                 data: {
@@ -377,7 +377,10 @@ export class EventRegistry {
         const agent = this.runner.entityIndex.getAgent(data.entityId);
         if (!agent) return;
 
-        if (data.currentStage === "adult" && data.previousStage === "child") {
+        if (
+          data.currentStage === LifeStage.ADULT &&
+          data.previousStage === LifeStage.CHILD
+        ) {
           const role = this.runner.roleSystem.getAgentRole(data.entityId);
           if (!role) {
             this.runner.roleSystem.assignBestRole(agent);
@@ -387,7 +390,7 @@ export class EventRegistry {
             this.runner.householdSystem.assignToHouse(data.entityId, "other");
           }
         }
-        if (data.currentStage === "elder") {
+        if (data.currentStage === LifeStage.ELDER) {
           const role = this.runner.roleSystem.getAgentRole(data.entityId);
           if (role) {
             const physicalRoles = [
@@ -457,7 +460,7 @@ export class EventRegistry {
 
         for (const agentId of data.completedBy) {
           this.runner.questSystem.handleEvent({
-            type: "task_completed",
+            type: GameEventType.TASK_COMPLETED,
             entityId: agentId,
             timestamp: data.timestamp,
             data: { taskId: data.taskId },
@@ -594,7 +597,7 @@ export class EventRegistry {
           data.taskType === TaskType.REPAIR_BUILDING
         ) {
           this.runner.questSystem.handleEvent({
-            type: "task_created",
+            type: GameEventType.TASK_CREATED,
             entityId: data.createdBy || "system",
             timestamp: data.timestamp,
             data: { taskId: data.taskId, taskType: data.taskType },

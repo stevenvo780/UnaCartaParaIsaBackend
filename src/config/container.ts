@@ -284,7 +284,6 @@ container
   })
   .inSingletonScope();
 
-// ECS Registries - Single Source of Truth
 container
   .bind<AgentRegistry>(TYPES.AgentRegistry)
   .to(AgentRegistry)

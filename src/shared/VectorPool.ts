@@ -7,7 +7,7 @@
  * Uso:
  *   const pos = VectorPool.acquire();
  *   pos.x = 100; pos.y = 200;
- *   // ... usar pos ...
+ *
  *   VectorPool.release(pos);
  *
  * O con acquire inicializado:
@@ -17,7 +17,7 @@
 export interface PooledVector {
   x: number;
   y: number;
-  _pooled?: boolean; // Marca interna para tracking
+  _pooled?: boolean;
 }
 
 class VectorPoolImpl {
@@ -55,7 +55,7 @@ class VectorPoolImpl {
    * Devuelve un vector al pool para reutilización
    */
   release(vec: PooledVector): void {
-    if (!vec || !vec._pooled) return; // Solo reciclar objetos pooled
+    if (!vec || !vec._pooled) return;
 
     this.released++;
 

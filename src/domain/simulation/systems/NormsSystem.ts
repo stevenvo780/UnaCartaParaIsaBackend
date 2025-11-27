@@ -41,7 +41,7 @@ export class NormsSystem {
     targetId: string,
     zoneId: string,
     zoneType: string,
-    _position?: { x: number; y: number }, // position parameter kept for API compatibility
+    _position?: { x: number; y: number },
   ): {
     violated: boolean;
     sanction?: SanctionRecord;

@@ -126,7 +126,6 @@ export class BuildingSystem {
     const zones = (this.state.zones || []) as MutableZone[];
     const houses = zones.filter((z) => z.type === ZoneType.REST).length;
 
-    // Log diagnóstico cada 30s aprox
     if (Math.random() < 0.15) {
       logger.debug(
         `🏗️ [BUILDING] Status: houses=${houses}/${this.config.maxHouses}, ` +
@@ -160,7 +159,6 @@ export class BuildingSystem {
       return BuildingType.WORKBENCH;
     }
 
-    // Construir granjas para producir comida (requiere madera y piedra)
     const farms = zones.filter(
       (z) =>
         z.metadata?.building === "farm" &&
@@ -204,7 +202,6 @@ export class BuildingSystem {
       stone: cost.stone,
     });
     if (!reserved) {
-      // Log diagnóstico: faltan recursos
       const available = this.reservationSystem.getAvailableResources();
       logger.debug(
         `🏗️ [BUILDING] Cannot reserve resources for ${label}: needs wood=${cost.wood}, stone=${cost.stone}. ` +
@@ -306,7 +303,7 @@ export class BuildingSystem {
     }
 
     if (this.terrainSystem) {
-      const TILE_SIZE = 64; // Assuming standard tile size, ideally should come from config
+      const TILE_SIZE = 64;
       const startTileX = Math.floor(bounds.x / TILE_SIZE);
       const startTileY = Math.floor(bounds.y / TILE_SIZE);
       const endTileX = Math.floor((bounds.x + bounds.width) / TILE_SIZE);
@@ -372,7 +369,8 @@ export class BuildingSystem {
     }
 
     zone.metadata.underConstruction = false;
-    zone.metadata.building = job.label === BuildingType.MINE ? BuildingType.MINE : job.label;
+    zone.metadata.building =
+      job.label === BuildingType.MINE ? BuildingType.MINE : job.label;
     zone.metadata.craftingStation = job.label === BuildingType.WORKBENCH;
     zone.type =
       job.label === BuildingType.HOUSE
@@ -381,8 +379,11 @@ export class BuildingSystem {
           ? ZoneType.FOOD
           : ZoneType.WORK;
 
-    // Si es una granja, spawnear cultivos de trigo
-    if (job.label === BuildingType.FARM && this.worldResourceSystem && zone.bounds) {
+    if (
+      job.label === BuildingType.FARM &&
+      this.worldResourceSystem &&
+      zone.bounds
+    ) {
       const bounds = zone.bounds as {
         x: number;
         y: number;
@@ -422,7 +423,6 @@ export class BuildingSystem {
     worldSize: { width: number; height: number },
     buildingType: BuildingLabel,
   ): { x: number; y: number } | null {
-    // Scale building size based on world size (10% of world dimension, min 8, max 120)
     const BUILDING_WIDTH = Math.min(
       120,
       Math.max(8, Math.floor(worldSize.width * 0.1)),
@@ -433,7 +433,6 @@ export class BuildingSystem {
     );
     const MAX_ATTEMPTS = 100;
 
-    // Diagnóstico: log inicial
     const zonesCount = this.state.zones?.length ?? 0;
     const terrainTilesCount = this.state.terrainTiles?.length ?? 0;
     const waterTilesCount =
@@ -479,13 +478,11 @@ export class BuildingSystem {
         continue;
       }
 
-      // Check for nearby water tiles - terrainTiles use tile indices, convert to pixels
       if (this.state.terrainTiles) {
-        const TILE_SIZE = 64; // Pixel size of each tile
+        const TILE_SIZE = 64;
         const centerX = testX + BUILDING_WIDTH / 2;
         const centerY = testY + BUILDING_HEIGHT / 2;
         const nearbyWater = this.state.terrainTiles.some((tile) => {
-          // Convert tile indices to pixel coordinates (center of tile)
           const tilePixelX = (tile.x + 0.5) * TILE_SIZE;
           const tilePixelY = (tile.y + 0.5) * TILE_SIZE;
           const dx = tilePixelX - centerX;
@@ -524,8 +521,8 @@ export class BuildingSystem {
   }): void {
     if (!this.worldResourceSystem) return;
 
-    const CROP_SPACING = 32; // Espacio entre cultivos
-    const MARGIN = 16; // Margen desde los bordes
+    const CROP_SPACING = 32;
+    const MARGIN = 16;
 
     const startX = bounds.x + MARGIN;
     const startY = bounds.y + MARGIN;
@@ -536,7 +533,6 @@ export class BuildingSystem {
 
     for (let y = startY; y < endY; y += CROP_SPACING) {
       for (let x = startX; x < endX; x += CROP_SPACING) {
-        // Pequeña variación aleatoria en la posición
         const offsetX = (Math.random() - 0.5) * 8;
         const offsetY = (Math.random() - 0.5) * 8;
 

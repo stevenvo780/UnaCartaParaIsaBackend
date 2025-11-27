@@ -25,7 +25,7 @@ export interface ThreatAlert {
   reportedBy: string;
   reportedAt: number;
   expiresAt: number;
-  severity: number; // 0-1
+  severity: number;
   notifiedAgents: Set<string>;
 }
 
@@ -49,9 +49,9 @@ export class SharedKnowledgeSystem extends EventEmitter {
   private threatAlerts = new Map<string, ThreatAlert>();
   private alertSeq = 0;
 
-  private readonly RESOURCE_ALERT_DURATION = 60000; // 1 minute
-  private readonly THREAT_ALERT_DURATION = 30000; // 30 seconds
-  private readonly PROPAGATION_RADIUS = 500; // Share with agents within 500 units
+  private readonly RESOURCE_ALERT_DURATION = 60000;
+  private readonly THREAT_ALERT_DURATION = 30000;
+  private readonly PROPAGATION_RADIUS = 500;
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
@@ -91,7 +91,6 @@ export class SharedKnowledgeSystem extends EventEmitter {
 
     this.resourceAlerts.set(alert.id, alert);
 
-    // Propagate to nearby agents
     this.propagateResourceAlert(alert);
 
     simulationEvents.emit(GameEventNames.RESOURCE_DISCOVERED, {
@@ -133,7 +132,6 @@ export class SharedKnowledgeSystem extends EventEmitter {
 
     this.threatAlerts.set(alert.id, alert);
 
-    // Propagate to nearby agents
     this.propagateThreatAlert(alert);
 
     simulationEvents.emit(GameEventNames.THREAT_DETECTED, {
@@ -147,7 +145,6 @@ export class SharedKnowledgeSystem extends EventEmitter {
   }
 
   private propagateResourceAlert(alert: ResourceAlert): void {
-    // Use SharedSpatialIndex for O(log n) spatial query
     if (this.spatialIndex) {
       const nearbyAgents = this.spatialIndex.queryRadius(
         alert.position,
@@ -169,7 +166,6 @@ export class SharedKnowledgeSystem extends EventEmitter {
       return;
     }
 
-    // Fallback: O(n) iteration when spatialIndex not available
     const agents = this.gameState.agents || [];
     const radiusSq = this.PROPAGATION_RADIUS * this.PROPAGATION_RADIUS;
 
@@ -192,10 +188,8 @@ export class SharedKnowledgeSystem extends EventEmitter {
   }
 
   private propagateThreatAlert(alert: ThreatAlert): void {
-    // Threats propagate faster and further based on severity
     const threatRadius = this.PROPAGATION_RADIUS * (1 + alert.severity);
 
-    // Use SharedSpatialIndex for O(log n) spatial query
     if (this.spatialIndex) {
       const nearbyAgents = this.spatialIndex.queryRadius(
         alert.position,
@@ -217,7 +211,6 @@ export class SharedKnowledgeSystem extends EventEmitter {
       return;
     }
 
-    // Fallback: O(n) iteration when spatialIndex not available
     const agents = this.gameState.agents || [];
     const radiusSq = threatRadius * threatRadius;
 

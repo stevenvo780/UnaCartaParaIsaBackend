@@ -106,18 +106,15 @@ export class MarketSystem {
     const price = this.getResourcePrice(resource);
     const totalCost = price * amount;
 
-    // Use EconomySystem for money validation
     if (!this.economySystem.canAfford(buyerId, totalCost)) {
       return false;
     }
 
-    // Try to add resource first
     const added = this.inventorySystem.addResource(buyerId, resource, amount);
     if (!added) {
       return false;
     }
 
-    // Deduct money through EconomySystem
     this.economySystem.removeMoney(buyerId, totalCost);
 
     if (this.state.resources) {
@@ -142,7 +139,6 @@ export class MarketSystem {
     const price = this.getResourcePrice(resource);
     const totalValue = price * removed;
 
-    // Use EconomySystem for money operations
     this.economySystem.addMoney(sellerId, totalValue);
 
     if (this.state.resources) {
@@ -188,7 +184,6 @@ export class MarketSystem {
           const price = this.getResourcePrice(resource);
           const cost = price * tradeAmount;
 
-          // Use EconomySystem for money validation
           if (!this.economySystem.canAfford(buyer.id, cost)) continue;
 
           const removed = this.inventorySystem.removeFromAgent(
@@ -198,7 +193,7 @@ export class MarketSystem {
           );
           if (removed > 0) {
             this.inventorySystem.addResource(buyer.id, resource, removed);
-            // Use EconomySystem for money transfer
+
             this.economySystem.transferMoney(buyer.id, seller.id, cost);
 
             logger.debug(

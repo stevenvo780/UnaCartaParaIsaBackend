@@ -48,9 +48,9 @@ const DEFAULT_CONFIG: TimeConfig = {
   minutesPerGameHour: 2,
   startHour: 6,
   startMinute: 0,
-  weatherChangeIntervalMs: 300000, // 5 minutes
-  weatherDurationMin: 180000, // 3 minutes
-  weatherDurationMax: 900000, // 15 minutes
+  weatherChangeIntervalMs: 300000,
+  weatherDurationMin: 180000,
+  weatherDurationMax: 900000,
 };
 
 @injectable()

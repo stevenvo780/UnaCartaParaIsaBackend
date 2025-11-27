@@ -14,7 +14,9 @@
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
-    "docs": "typedoc"
+    "docs": "typedoc",
+    "clean:comments": "tsx scripts/clean-comments.ts",
+    "clean:comments:dry": "tsx scripts/clean-comments.ts --dry-run"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.7.0",

@@ -63,7 +63,6 @@ export const TYPES = {
   ChunkLoadingSystem: Symbol.for("ChunkLoadingSystem"),
   SharedKnowledgeSystem: Symbol.for("SharedKnowledgeSystem"),
 
-  // ECS Registries - Single Source of Truth
   AgentRegistry: Symbol.for("AgentRegistry"),
   AnimalRegistry: Symbol.for("AnimalRegistry"),
 };

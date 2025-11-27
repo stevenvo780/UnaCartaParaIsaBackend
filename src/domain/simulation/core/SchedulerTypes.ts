@@ -5,7 +5,6 @@
 
 import { TickRate } from "../../../shared/constants/SchedulerEnums";
 
-// Re-export TickRate enum for backward compatibility
 export { TickRate };
 
 interface RateStats {

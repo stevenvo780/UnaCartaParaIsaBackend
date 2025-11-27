@@ -14,7 +14,10 @@ import {
   WorkEthic,
   AgentPriority,
 } from "../../../../../shared/constants/AIEnums";
-import { ExplorationType, LifeStage } from "../../../../../shared/constants/AgentEnums";
+import {
+  ExplorationType,
+  LifeStage,
+} from "../../../../../shared/constants/AgentEnums";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
 
 /**
@@ -250,8 +253,8 @@ export class AIStateManager {
    * with priority sorting for activities and attempts.
    */
   public cleanupAgentMemory(now: number): void {
-    const THREAT_MAX_AGE_MS = 30000; // Forget threats older than 30s
-    const INTERACTION_MAX_AGE_MS = 60000; // Forget interactions older than 60s
+    const THREAT_MAX_AGE_MS = 30000;
+    const INTERACTION_MAX_AGE_MS = 60000;
 
     for (const [_agentId, aiState] of this.aiStates) {
       if (aiState.memory.visitedZones.size > 100) {

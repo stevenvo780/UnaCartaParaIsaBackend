@@ -58,7 +58,6 @@ export class AnimalBatchProcessor {
       return;
     }
 
-    // Only reallocate if size changed significantly (>20%) or buffers don't exist
     const sizeDiff = Math.abs(animalCount - this.lastBufferSize);
     const needsRealloc =
       !this.positionBuffer ||
@@ -69,7 +68,6 @@ export class AnimalBatchProcessor {
       sizeDiff > this.lastBufferSize * this.REALLOC_THRESHOLD;
 
     if (needsRealloc) {
-      // Allocate with 10% extra capacity to reduce future reallocations
       const capacity = Math.ceil(animalCount * 1.1);
       this.positionBuffer = new Float32Array(capacity * 2);
       this.needsBuffer = new Float32Array(capacity * this.NEED_COUNT);
@@ -80,12 +78,10 @@ export class AnimalBatchProcessor {
       this.lastBufferSize = animalCount;
     }
 
-    // Resize animalIdArray if needed (reuse existing array when possible)
     if (this.animalIdArray.length < animalCount) {
       this.animalIdArray = new Array<string>(Math.ceil(animalCount * 1.1));
     }
 
-    // At this point buffers are guaranteed to exist (allocated above or reused)
     const positionBuffer = this.positionBuffer!;
     const needsBuffer = this.needsBuffer!;
     const ageBuffer = this.ageBuffer!;
@@ -120,7 +116,6 @@ export class AnimalBatchProcessor {
     this.bufferDirty = false;
   }
 
-  // Reusable work buffer for CPU fallback to avoid allocations
   private workBuffer: Float32Array | null = null;
 
   public updateNeedsBatch(
@@ -137,16 +132,14 @@ export class AnimalBatchProcessor {
     )
       return;
 
-    // Reuse work buffer if same size, otherwise reallocate
     const requiredSize = this.needsBuffer.length;
     if (!this.workBuffer || this.workBuffer.length !== requiredSize) {
       this.workBuffer = new Float32Array(requiredSize);
     }
-    // Copy current values to work buffer
+
     this.workBuffer.set(this.needsBuffer);
     const workBuffer = this.workBuffer;
 
-    // CPU fallback: work on copy
     const fearDecayRate = 0.5 / 60;
 
     const animalCount = this.animalIdArray.length;
@@ -154,7 +147,6 @@ export class AnimalBatchProcessor {
     for (let i = 0; i < animalCount; i++) {
       const offset = i * this.NEED_COUNT;
 
-      // Use individual decay rates for each animal
       const hungerRate = hungerDecayRates[i];
       const thirstRate = thirstDecayRates[i];
 
@@ -171,7 +163,6 @@ export class AnimalBatchProcessor {
         workBuffer[offset + 2] - fearDecayRate * deltaMinutes,
       );
 
-      // Health recovery logic
       const currentHunger = workBuffer[offset + 0];
       const currentThirst = workBuffer[offset + 1];
 
@@ -189,7 +180,6 @@ export class AnimalBatchProcessor {
       }
     }
 
-    // Atomic swap after CPU processing
     this.needsBuffer = workBuffer;
     this.bufferDirty = true;
 
@@ -198,7 +188,7 @@ export class AnimalBatchProcessor {
       "animal_needs",
       animalCount,
       duration,
-      false, // CPU fallback
+      false,
     );
   }
 
@@ -219,7 +209,7 @@ export class AnimalBatchProcessor {
       "animal_ages",
       animalCount,
       duration,
-      false, // CPU fallback
+      false,
     );
   }
 

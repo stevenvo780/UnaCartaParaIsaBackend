@@ -116,7 +116,6 @@ class PerformanceMonitor {
 
   private subsystemStats = new Map<string, SimpleStats>();
 
-  // ==================== MÉTRICAS AVANZADAS DE RENDIMIENTO ====================
   private operationStats = new Map<string, OperationStats>();
   private batchProcessingStats = new Map<string, BatchProcessingStats>();
   private spatialIndexStats = new Map<string, SpatialIndexStats>();
@@ -177,14 +176,11 @@ class PerformanceMonitor {
     this.gameLogicStats = stats;
   }
 
-  // ==================== MÉTRICAS DE BATCH PROCESSING ====================
-  // Solo para auditoría de rendimiento de GPU
-
   private batchStats: {
     animalBatchSize: number;
     movementBatchSize: number;
     needsBatchSize: number;
-    gpuUtilization: number; // 0-1
+    gpuUtilization: number;
   } = {
     animalBatchSize: 0,
     movementBatchSize: 0,
@@ -232,7 +228,6 @@ class PerformanceMonitor {
     if (durationMs > stats.maxMs) stats.maxMs = durationMs;
     if (durationMs < stats.minMs) stats.minMs = durationMs;
 
-    // Record throughput
     this.recordThroughput(name, entitiesProcessed);
   }
 
@@ -337,7 +332,6 @@ class PerformanceMonitor {
 
     window.push({ timestamp: now, count });
 
-    // Clean old entries
     const cutoff = now - this.THROUGHPUT_WINDOW_MS;
     while (window.length > 0 && window[0].timestamp < cutoff) {
       window.shift();
@@ -574,8 +568,6 @@ class PerformanceMonitor {
       );
     }
 
-    // ==================== MÉTRICAS DE RENDIMIENTO DE GPU ====================
-
     lines.push("# HELP backend_batch_size Batch size for GPU processing");
     lines.push("# TYPE backend_batch_size gauge");
     lines.push(
@@ -594,7 +586,6 @@ class PerformanceMonitor {
       `backend_gpu_utilization ${this.batchStats.gpuUtilization.toFixed(4)}`,
     );
 
-    // ==================== MÉTRICAS AVANZADAS DE OPERACIONES ====================
     lines.push(
       "# HELP backend_operation_executions_total Total executions per operation",
     );
@@ -656,7 +647,6 @@ class PerformanceMonitor {
       );
     }
 
-    // ==================== MÉTRICAS DE BATCH PROCESSING ====================
     lines.push(
       "# HELP backend_batch_executions_total Total batch executions by type",
     );
@@ -712,7 +702,6 @@ class PerformanceMonitor {
       );
     }
 
-    // ==================== MÉTRICAS DE ÍNDICES ESPACIALES ====================
     lines.push(
       "# HELP backend_spatial_query_count_total Total spatial index queries",
     );

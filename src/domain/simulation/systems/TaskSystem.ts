@@ -336,13 +336,12 @@ export class TaskSystem {
       (task.metadata?.claimCount as number | undefined) || 0;
 
     if (currentClaims >= maxClaims) {
-      return false; // Task is full
+      return false;
     }
 
     if (!task.metadata) task.metadata = {};
     task.metadata.claimCount = currentClaims + 1;
 
-    // Track who claimed it
     if (!task.metadata.claimedBy) {
       task.metadata.claimedBy = [];
     }

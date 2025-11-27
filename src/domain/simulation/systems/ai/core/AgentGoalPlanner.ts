@@ -122,7 +122,6 @@ export interface AgentGoalPlannerDeps {
     stockpileFillRatio: number;
   } | null;
 
-  // New deps for drives
   findAgentWithResource?: (
     entityId: string,
     resourceType: ResourceType.FOOD | ResourceType.WATER,
@@ -429,8 +428,8 @@ export function planGoals(
     aiState,
     deps.priorityManager,
     minPriority,
-    0.1, // Small softmax tau for exploration
+    0.1,
   );
 
-  return prioritized.slice(0, 5); // Return top 5 goals
+  return prioritized.slice(0, 5);
 }

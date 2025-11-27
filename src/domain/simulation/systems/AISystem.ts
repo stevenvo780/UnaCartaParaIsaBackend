@@ -216,8 +216,8 @@ export class AISystem extends EventEmitter {
     string,
     { resource: { id: string; x: number; y: number } | null; timestamp: number }
   >();
-  private readonly RESOURCE_CACHE_TTL = 2000; // 2s cache for resource searches
-  private readonly MAX_RESOURCE_SEARCH_RADIUS = 2000; // Increased to cover most of the map
+  private readonly RESOURCE_CACHE_TTL = 2000;
+  private readonly MAX_RESOURCE_SEARCH_RADIUS = 2000;
 
   private resourceReservations = new Map<string, string>();
 
@@ -305,7 +305,7 @@ export class AISystem extends EventEmitter {
     this.agentRegistry = agentRegistry;
     this.animalRegistry = animalRegistry;
     this.config = {
-      updateIntervalMs: 250, // Match scheduler MEDIUM rate for responsive AI
+      updateIntervalMs: 250,
       enablePersonality: true,
       enableMemory: true,
       maxMemoryItems: 50,
@@ -697,7 +697,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Pre-plan goals to fill queue (up to 3 goals ahead)
     const MAX_QUEUED_GOALS = 3;
     if (aiState.goalQueue.length < MAX_QUEUED_GOALS) {
       this.prePlanGoals(agentId, aiState, now, MAX_QUEUED_GOALS);
@@ -830,7 +829,7 @@ export class AISystem extends EventEmitter {
     const pos = this.agentRegistry?.getPosition(agentId);
     if (!pos) return;
 
-    const radius = 400 + Math.random() * 600; // encourage broader exploration
+    const radius = 400 + Math.random() * 600;
     const angle = Math.random() * Math.PI * 2;
     let targetX = pos.x + Math.cos(angle) * radius;
     let targetY = pos.y + Math.sin(angle) * radius;
@@ -883,7 +882,6 @@ export class AISystem extends EventEmitter {
       if (g.targetId) excludedIds.add(g.targetId);
     }
 
-    // Add work/gather goals to the queue
     let attempts = 0;
     while (aiState.goalQueue.length < maxGoals && attempts < 10) {
       attempts++;
@@ -897,7 +895,7 @@ export class AISystem extends EventEmitter {
         aiState.goalQueue.push(workGoal);
         excludedIds.add(workGoal.targetId);
       } else {
-        break; // No more unique work goals available
+        break;
       }
     }
   }
@@ -926,7 +924,6 @@ export class AISystem extends EventEmitter {
     }
 
     if (role === RoleType.HUNTER) {
-      // Find nearest huntable animal
       const animal = this.findNearestHuntableAnimal(agentId);
       logger.debug(
         `🐺 [AI] ${agentId}: hunter findNearestHuntableAnimal -> ${animal?.id ?? "none"} (type: ${animal?.type ?? "N/A"})`,
@@ -1078,7 +1075,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Default: gather food (everyone needs to eat)
     for (const foodType of foodTypes) {
       const resource = this.findNearestResourceForEntity(agentId, foodType);
       if (resource && !excluded.has(resource.id)) {
@@ -1274,7 +1270,7 @@ export class AISystem extends EventEmitter {
         if (this.activeAgentIdsCache !== null) {
           return this.activeAgentIdsCache;
         }
-        // Use AgentRegistry as single source of truth
+
         const activeIds = this.agentRegistry
           ? this.agentRegistry.getAliveAgentIds()
           : (this.gameState.agents || [])
@@ -1554,7 +1550,7 @@ export class AISystem extends EventEmitter {
    */
   public removeEntityAI(entityId: string): void {
     this.stateManager.removeEntityAI(entityId);
-    this.activeAgentIdsCache = null; // Invalidate cache
+    this.activeAgentIdsCache = null;
   }
 
   /**
@@ -1589,7 +1585,6 @@ export class AISystem extends EventEmitter {
   }
 
   private completeGoal(aiState: AIState, agentId: string): void {
-    // Release resource reservation when goal completes
     this.releaseResourceReservation(agentId);
 
     if (aiState.goalQueue.length > 0) {
@@ -1603,14 +1598,13 @@ export class AISystem extends EventEmitter {
   }
 
   private failGoal(aiState: AIState, agentId: string): void {
-    // Record failed target in memory to avoid immediate retry
     const targetId = aiState.currentGoal?.targetId;
     if (targetId) {
       if (!aiState.memory.failedTargets) {
         aiState.memory.failedTargets = new Map<string, number>();
       }
       aiState.memory.failedTargets.set(targetId, Date.now());
-      // Clean old entries (keep last 20)
+
       if (aiState.memory.failedTargets.size > 20) {
         const entries = [...aiState.memory.failedTargets.entries()];
         entries.sort((a, b) => a[1] - b[1]);
@@ -1620,7 +1614,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Release resource reservation when goal fails
     this.releaseResourceReservation(agentId);
     this.goalValidator.failGoal(aiState);
   }
@@ -1638,7 +1631,6 @@ export class AISystem extends EventEmitter {
   public getAIState(agentId: string): AIState | undefined {
     let state = this.aiStates.get(agentId);
     if (!state) {
-      // Use AgentRegistry for O(1) lookup, fallback to gameState array scan
       const agent =
         this.agentRegistry?.getProfile(agentId) ??
         this.gameState.agents?.find((a) => a.id === agentId);
@@ -1719,24 +1711,17 @@ export class AISystem extends EventEmitter {
     const maxRadiusSq =
       this.MAX_RESOURCE_SEARCH_RADIUS * this.MAX_RESOURCE_SEARCH_RADIUS;
     let nearest: { id: string; x: number; y: number } | null = null;
-    let minDistance = maxRadiusSq; // Start with max radius as threshold
+    let minDistance = maxRadiusSq;
 
-    // Harvestable states: pristine and harvested_partial still have resources
     const harvestableStates = ["pristine", "harvested_partial"];
 
-    // Get target world resource types (e.g. "stone" -> ["rock"], "iron_ore" -> ["rock"])
     const targetWorldTypes = itemToWorldResources(resourceType);
 
-    // If no mapping found, try using the resourceType directly if it's a valid world type
-    // This handles cases where resourceType is already "rock" or "tree"
     if (targetWorldTypes.length === 0) {
-      // We can't easily validate if it is a WorldResourceType here without importing the enum values or type guard
-      // But we can just try to use it as is.
       targetWorldTypes.push(resourceType as WorldResourceType);
     }
 
     if (this.worldResourceSystem) {
-      // Search across all mapped world resource types
       for (const worldType of targetWorldTypes) {
         const resources =
           this.worldResourceSystem.getResourcesByType(worldType);
@@ -1744,7 +1729,6 @@ export class AISystem extends EventEmitter {
         for (const resource of resources) {
           if (!harvestableStates.includes(resource.state)) continue;
 
-          // Skip resources already reserved by other agents
           const reservedBy = this.resourceReservations.get(resource.id);
           if (reservedBy && reservedBy !== entityId) continue;
 
@@ -1770,7 +1754,6 @@ export class AISystem extends EventEmitter {
         )
           continue;
 
-        // Skip resources already reserved by other agents
         const reservedBy = this.resourceReservations.get(resource.id);
         if (reservedBy && reservedBy !== entityId) continue;
 
@@ -1789,9 +1772,7 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Reserve the resource for this agent
     if (nearest) {
-      // Release any previous reservation by this agent
       for (const [resId, agentId] of this.resourceReservations) {
         if (agentId === entityId && resId !== nearest.id) {
           this.resourceReservations.delete(resId);
@@ -1818,7 +1799,6 @@ export class AISystem extends EventEmitter {
     let nearest: { agentId: string; x: number; y: number } | null = null;
     let minDistance = Infinity;
 
-    // Use AgentRegistry as single source of truth
     const profiles = this.agentRegistry
       ? this.agentRegistry.getAllProfiles()
       : (this.gameState.agents || []).values();
@@ -1858,7 +1838,6 @@ export class AISystem extends EventEmitter {
     let nearest: { id: string; x: number; y: number } | null = null;
     let minDistance = Infinity;
 
-    // Use AgentRegistry as single source of truth
     const profiles = this.agentRegistry
       ? this.agentRegistry.getAllProfiles()
       : (this.gameState.agents || []).values();
@@ -1896,7 +1875,6 @@ export class AISystem extends EventEmitter {
     let nearest: { id: string; x: number; y: number } | null = null;
     let minDistance = Infinity;
 
-    // Use AgentRegistry as single source of truth
     const profiles = this.agentRegistry
       ? this.agentRegistry.getAllProfiles()
       : (this.gameState.agents || []).values();
@@ -1942,7 +1920,6 @@ export class AISystem extends EventEmitter {
     const agentPos = this.agentRegistry?.getPosition(entityId);
     if (!agentPos) return null;
 
-    // Use AnimalSystem directly - this is the source of truth for animals
     if (!this.animalSystem) {
       logger.debug(`🐺 [AI] ${entityId}: animalSystem not available`);
       return null;
@@ -2009,7 +1986,6 @@ export class AISystem extends EventEmitter {
     const myAgent = this.agentRegistry?.getProfile(entityId);
     if (!myAgent?.position) return [];
 
-    // Use AgentRegistry to filter active agents
     const activeAgents: Array<{
       id: string;
       position: { x: number; y: number };
@@ -2030,7 +2006,7 @@ export class AISystem extends EventEmitter {
 
     if (activeAgents.length === 0) return [];
 
-    const GPU_THRESHOLD = 30; // Use GPU when checking 30+ agents
+    const GPU_THRESHOLD = 30;
     const radiusSq = radius * radius;
 
     if (
@@ -2094,8 +2070,6 @@ export class AISystem extends EventEmitter {
     const aiState = this.aiStates.get(payload.agentId);
     if (!aiState) return;
 
-    // Ignore movement complete events if we didn't have a move action
-    // (e.g., idle wander from MovementSystem)
     if (
       payload.actionType === ActionType.MOVE &&
       aiState.currentAction?.actionType !== ActionType.MOVE
@@ -2111,9 +2085,7 @@ export class AISystem extends EventEmitter {
       return;
     }
 
-    // Don't complete goal on MOVE actions - the agent just arrived somewhere
     if (payload.actionType === ActionType.MOVE) {
-      // Agent arrived at destination, next tick will plan the actual action
       logger.debug(
         `📍 [AI] ${payload.agentId}: arrived (prev=${prevAction ?? "none"}), ready for harvest`,
       );

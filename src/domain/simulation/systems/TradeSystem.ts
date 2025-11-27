@@ -21,8 +21,8 @@ export class TradeSystem {
   private needsSystem?: NeedsSystem;
   private agentRegistry?: AgentRegistry;
 
-  private readonly BACKGROUND_TRADE_INTERVAL = 15000; // More frequent for need-based trading
-  private readonly BACKGROUND_TRADE_PROBABILITY = 0.3; // Higher probability
+  private readonly BACKGROUND_TRADE_INTERVAL = 15000;
+  private readonly BACKGROUND_TRADE_PROBABILITY = 0.3;
   private _lastBackgroundTrade = 0;
 
   constructor(
@@ -312,7 +312,6 @@ export class TradeSystem {
   private processBackgroundTrade(): void {
     if (!this.inventorySystem) return;
 
-    // Get eligible agents using AgentRegistry (O(1) access per agent) or fallback to gameState
     const agents: Array<{ id: string; lifeStage?: string; isDead?: boolean }> =
       [];
     if (this.agentRegistry) {
@@ -330,11 +329,9 @@ export class TradeSystem {
     }
     if (agents.length < 2) return;
 
-    // Priority 1: Trade food/water based on NEEDS (survival-driven economy)
     this.processNeedBasedTrades(agents, ResourceType.FOOD, "hunger", 50);
     this.processNeedBasedTrades(agents, ResourceType.WATER, "thirst", 50);
 
-    // Priority 2: Trade other resources based on inventory levels
     this.processInventoryBasedTrades(agents, ResourceType.WOOD);
     this.processInventoryBasedTrades(agents, ResourceType.STONE);
   }
@@ -350,38 +347,31 @@ export class TradeSystem {
     needType: "hunger" | "thirst",
     needThreshold: number,
   ): void {
-    // Find buyers: agents who NEED this resource (low need value AND no inventory)
     const potentialBuyers = agents.filter((agent) => {
       const inv = this.inventorySystem!.getAgentInventory(agent.id);
       const invAmount = inv ? inv[resourceType] || 0 : 0;
 
-      // Must have low inventory
       if (invAmount >= 3) return false;
 
-      // Check needs if available
       if (this.needsSystem) {
         const needs = this.needsSystem.getNeeds(agent.id);
         if (needs) {
-          // Only buy if actually need it (need value below threshold)
           return needs[needType] < needThreshold;
         }
       }
 
-      // If no needs system, use inventory-only logic
       return invAmount < 2;
     });
 
     if (potentialBuyers.length === 0) return;
 
-    // Find sellers: agents with EXCESS of this resource
     const potentialSellers = agents.filter((agent) => {
       const inv = this.inventorySystem!.getAgentInventory(agent.id);
-      return inv && (inv[resourceType] || 0) > 15; // Has excess
+      return inv && (inv[resourceType] || 0) > 15;
     });
 
     if (potentialSellers.length === 0) return;
 
-    // Match buyer with seller and execute trade
     for (const buyer of potentialBuyers) {
       const seller = potentialSellers.find((s) => s.id !== buyer.id);
       if (!seller) continue;
@@ -389,16 +379,15 @@ export class TradeSystem {
       const sellerInv = this.inventorySystem!.getAgentInventory(seller.id);
       const available = sellerInv ? sellerInv[resourceType] || 0 : 0;
 
-      // Trade amount based on buyer's need urgency
       let tradeAmount = 5;
       if (this.needsSystem) {
         const needs = this.needsSystem.getNeeds(buyer.id);
         if (needs && needs[needType] < 30) {
-          tradeAmount = 10; // More urgent need = bigger trade
+          tradeAmount = 10;
         }
       }
 
-      tradeAmount = Math.min(tradeAmount, available - 10); // Seller keeps minimum 10
+      tradeAmount = Math.min(tradeAmount, available - 10);
       if (tradeAmount <= 0) continue;
 
       const removed = this.inventorySystem!.removeFromAgent(
@@ -437,7 +426,6 @@ export class TradeSystem {
           needType,
         });
 
-        // Only one trade per cycle to spread opportunities
         return;
       }
     }
@@ -519,7 +507,6 @@ export class TradeSystem {
   ): { agentId: string; x: number; y: number } | null {
     if (!this.inventorySystem) return null;
 
-    // Use AgentRegistry as single source of truth
     const profiles = this.agentRegistry
       ? this.agentRegistry.getAllProfiles()
       : (this.gameState.agents || []).values();

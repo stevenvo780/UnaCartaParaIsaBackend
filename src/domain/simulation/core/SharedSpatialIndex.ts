@@ -261,7 +261,7 @@ export class SharedSpatialIndex {
     results: Array<{ entity: string; distance: number; type: EntityType }>,
   ): void {
     if (this.resultPool.length < this.RESULT_POOL_SIZE) {
-      results.length = 0; // Clear array for reuse
+      results.length = 0;
       this.resultPool.push(results);
     }
   }

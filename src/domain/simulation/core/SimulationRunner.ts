@@ -1133,7 +1133,6 @@ export class SimulationRunner {
       };
     }
 
-    // Use AnimalSystem for O(1) lookup instead of array scan
     const animal = this.animalSystem?.getAnimal(entityId);
     if (animal) {
       return {

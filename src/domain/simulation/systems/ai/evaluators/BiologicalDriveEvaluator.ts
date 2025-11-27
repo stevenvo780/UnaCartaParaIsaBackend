@@ -184,7 +184,7 @@ export function evaluateBiologicalDrives(
           goals.push({
             id: `drive_hunger_gather_${aiState.entityId}_${now}`,
             type: GoalType.GATHER,
-            priority: hungerUtility * 0.9 * distMult, // Slightly lower than hunting
+            priority: hungerUtility * 0.9 * distMult,
             targetId: foodTarget.id,
             targetPosition: { x: foodTarget.x, y: foodTarget.y },
             data: {
@@ -193,7 +193,7 @@ export function evaluateBiologicalDrives(
               action: "gather",
             },
             createdAt: now,
-            expiresAt: now + 45000, // 45 seconds to reach and harvest
+            expiresAt: now + 45000,
           });
         } else {
           goals.push({
@@ -216,7 +216,7 @@ export function evaluateBiologicalDrives(
   if (energyUtility > 0) {
     goals.push({
       id: `drive_energy_rest_${aiState.entityId}_${now}`,
-      type: GoalType.SATISFY_ENERGY, // Or GoalType.REST if available
+      type: GoalType.SATISFY_ENERGY,
       priority: energyUtility,
       data: {
         need: NeedType.ENERGY,

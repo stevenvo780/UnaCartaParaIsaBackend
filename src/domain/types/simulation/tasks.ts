@@ -1,7 +1,6 @@
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
 import { TaskType } from "../../../shared/constants/TaskEnums";
 
-// Re-export TaskType enum for backward compatibility
 export { TaskType };
 
 export interface TaskMetadata {
@@ -11,7 +10,7 @@ export interface TaskMetadata {
   itemType?: string;
   resourceType?: ResourceType;
   quality?: number;
-  // Community task coordination fields
+
   communityTask?: boolean;
   urgency?: number;
   claimCount?: number;

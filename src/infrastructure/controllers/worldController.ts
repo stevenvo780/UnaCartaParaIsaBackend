@@ -27,7 +27,7 @@ const CHUNK_CONSTANTS = {
   MIN_TILE_SIZE: 16,
   MAX_TILE_SIZE: 256,
   MAX_SEED_LENGTH: 100,
-  CHUNK_SIZE: 16, // Used for pixel calculations
+  CHUNK_SIZE: 16,
 } as const;
 
 import { container } from "../../config/container";

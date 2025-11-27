@@ -296,10 +296,8 @@ export class AIActionExecutor {
       return;
     }
 
-    // Use AnimalRegistry for O(1) lookup, fallback to gameState array scan
     let targetAnimal = this.deps.animalRegistry?.getAnimal(targetId);
     if (!targetAnimal || targetAnimal.isDead) {
-      // Fallback to gameState if registry not available or animal not in registry
       const animals = this.deps.gameState.animals?.animals;
       targetAnimal = animals?.find((a) => a.id === targetId && !a.isDead);
     }
@@ -317,7 +315,6 @@ export class AIActionExecutor {
     const config = getAnimalConfig(targetAnimal.type);
     const foodValue = config?.foodValue ?? 15;
 
-    // Delegate to AnimalRegistry - single source of truth for animal death
     if (this.deps.animalRegistry) {
       this.deps.animalRegistry.markDead(targetId);
     }

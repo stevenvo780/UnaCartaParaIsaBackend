@@ -30,7 +30,6 @@ export class AIGoalValidator {
   private readonly GOAL_TIMEOUT_MS = 60000;
   private readonly ARRIVAL_THRESHOLD = 50;
 
-  // Metrics
   private _goalsCompleted = 0;
   private _goalsFailed = 0;
 
@@ -121,7 +120,6 @@ export class AIGoalValidator {
       return false;
     }
 
-    // Check assist goals
     if (
       (goal.type === GoalType.ASSIST || goal.type.startsWith("assist_")) &&
       goal.data?.targetAgentId
@@ -141,14 +139,11 @@ export class AIGoalValidator {
       return false;
     }
 
-    // For gather/work goals with a target resource, don't complete just by arriving
-    // The goal completes when the resource is actually harvested (handled by action completion)
     if (goal.type === GoalType.GATHER || goal.type === GoalType.WORK) {
       if (goal.targetId && goal.data?.resourceType) {
-        // Resource-based goal - only complete via handleActionComplete after harvest
         return false;
       }
-      // Work goals with zone but no specific resource - check if agent arrived and did work
+
       if (goal.targetZoneId) {
         const agentPos = this.deps.agentRegistry.getPosition(agentId) ?? null;
         if (!agentPos) return false;
@@ -158,13 +153,10 @@ export class AIGoalValidator {
         );
         if (!zone || !zone.bounds) return false;
 
-        // Don't auto-complete work goals - they complete via task system or action
-        // Agent position check could be used for zone validation if needed in future
         return false;
       }
     }
 
-    // For other goal types (explore, social, etc.), arriving at destination completes the goal
     if (goal.targetPosition || goal.targetZoneId) {
       return true;
     }
@@ -258,21 +250,16 @@ export class AIGoalValidator {
       return null;
     }
 
-    // If we have a targetId, check if that specific resource exists and is harvestable
-    // First check in worldResources by ID directly
     if (this.deps.gameState.worldResources) {
       const resource = this.deps.gameState.worldResources[goal.targetId];
       if (resource) {
-        // Resource is valid if it exists and is not fully depleted
         return resource.state !== ResourceState.DEPLETED;
       }
     }
 
-    // Also check via worldResourceSystem if available
     if (this.deps.worldResourceSystem) {
       const resourceTypeStr = goal.data?.resourceType as string | undefined;
 
-      // If we have a specific world resource type, search by type
       if (resourceTypeStr && isWorldResourceType(resourceTypeStr)) {
         const resources =
           this.deps.worldResourceSystem.getResourcesByType(resourceTypeStr);
@@ -282,7 +269,6 @@ export class AIGoalValidator {
         }
       }
 
-      // For generic types like "food", search across all possible world resource types
       if (resourceTypeStr === ResourceType.FOOD) {
         const foodTypes = ["berry_bush", "mushroom_patch", "wheat_crop"];
         for (const foodType of foodTypes) {
@@ -330,7 +316,6 @@ export class AIGoalValidator {
       }
     }
 
-    // If we couldn't find the resource, it might have been removed - mark as invalid
     return false;
   }
 

@@ -7,7 +7,6 @@
  * @module shared/constants/ConfigConstants
  */
 
-// Re-export from consolidated location
 export {
   DEFAULT_WORK_DURATION_MS,
   DEFAULT_BASE_YIELD,

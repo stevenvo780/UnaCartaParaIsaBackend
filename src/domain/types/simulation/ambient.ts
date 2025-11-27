@@ -57,7 +57,6 @@ export interface ResourceAttractionSnapshot {
   emergencies: ResourceEmergencyRequest[];
 }
 
-// Re-export enums for backward compatibility
 export {
   CrisisSeverity,
   CrisisTrend,

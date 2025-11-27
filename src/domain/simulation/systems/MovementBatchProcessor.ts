@@ -342,7 +342,6 @@ export class MovementBatchProcessor {
         this.targetBuffer[posOffset] = state.targetPosition.x;
         this.targetBuffer[posOffset + 1] = state.targetPosition.y;
       } else {
-        // No target - set to current position to prevent movement
         this.targetBuffer[posOffset] = state.currentPosition.x;
         this.targetBuffer[posOffset + 1] = state.currentPosition.y;
       }

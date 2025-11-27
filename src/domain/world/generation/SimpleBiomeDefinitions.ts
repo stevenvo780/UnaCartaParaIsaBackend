@@ -84,7 +84,7 @@ export const SIMPLE_BIOMES: SimpleBiomeConfig[] = [
     density: {
       trees: 0.3,
       rocks: 0.2,
-      props: 0.15, // For decals (moss, scattered branches)
+      props: 0.15,
     },
     clustering: 0.2,
     transitionWidth: 4,
@@ -101,7 +101,7 @@ export const SIMPLE_BIOMES: SimpleBiomeConfig[] = [
     density: {
       trees: 0.7,
       plants: 0.8,
-      props: 0.25, // For decals (moss, mushrooms, fallen leaves)
+      props: 0.25,
     },
     clustering: 0.6,
     transitionWidth: 6,
@@ -118,7 +118,7 @@ export const SIMPLE_BIOMES: SimpleBiomeConfig[] = [
     density: {
       rocks: 0.8,
       trees: 0.2,
-      props: 0.1, // For decals (moss, scattered branches)
+      props: 0.1,
     },
     clustering: 0.5,
     transitionWidth: 2,

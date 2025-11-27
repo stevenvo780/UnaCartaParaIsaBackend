@@ -123,7 +123,7 @@ export class LivingLegendsSystem {
 
     const deed: LegendDeed = {
       id: Math.random().toString(36).substr(2, 9),
-      type: "neutral", // Logic to determine type needed
+      type: "neutral",
       description: `Performed ${data.actionType}`,
       impact: data.impact ?? 1,
       timestamp: Date.now(),

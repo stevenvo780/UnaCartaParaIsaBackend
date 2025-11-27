@@ -233,7 +233,7 @@ export class LifeCycleSystem extends EventEmitter {
     this.processHousingAssignments();
 
     const now = Date.now();
-    const ROLE_REBALANCE_INTERVAL = 120000; // Every 2 minutes
+    const ROLE_REBALANCE_INTERVAL = 120000;
     if (!this.lastRoleRebalance) {
       this.lastRoleRebalance = now;
     }
@@ -346,12 +346,10 @@ export class LifeCycleSystem extends EventEmitter {
         });
 
         if (foodConsumed && this.needsSystem) {
-          // Delegate to NeedsSystem - single source of truth for needs modification
           this.needsSystem.satisfyNeed(agent.id, "hunger", 10);
         }
 
         if (waterConsumed && this.needsSystem) {
-          // Delegate to NeedsSystem - single source of truth for needs modification
           this.needsSystem.satisfyNeed(agent.id, "thirst", 10);
         }
       }
@@ -359,7 +357,7 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   private lastBreedingCheck = 0;
-  private readonly BREEDING_CHECK_INTERVAL = 60000; // Check every minute
+  private readonly BREEDING_CHECK_INTERVAL = 60000;
 
   private async tryBreeding(now: number): Promise<void> {
     if (now - this.lastBreedingCheck < this.BREEDING_CHECK_INTERVAL) return;
@@ -449,7 +447,7 @@ export class LifeCycleSystem extends EventEmitter {
         logger.debug(
           `🍼 [tryCouple] ${father.name}+${mother.name} SKIP: needs too low (req: hunger>=60, energy>=50)`,
         );
-        return; // Don't reproduce if needs are low
+        return;
       }
     }
 
@@ -530,7 +528,6 @@ export class LifeCycleSystem extends EventEmitter {
 
     if (!this.gameState.agents) this.gameState.agents = [];
 
-    // Use AgentRegistry as single source of truth for adding agents
     if (this.agentRegistry) {
       this.agentRegistry.addAgent(profile);
     } else {
@@ -593,7 +590,8 @@ export class LifeCycleSystem extends EventEmitter {
 
     if (
       this._roleSystem &&
-      (profile.lifeStage === LifeStage.ADULT || profile.lifeStage === LifeStage.ELDER)
+      (profile.lifeStage === LifeStage.ADULT ||
+        profile.lifeStage === LifeStage.ELDER)
     ) {
       const existingRole = this._roleSystem.getAgentRole(id);
       if (!existingRole) {
@@ -616,7 +614,10 @@ export class LifeCycleSystem extends EventEmitter {
 
     const agents = this.gameState.agents || [];
     for (const agent of agents) {
-      if (agent.lifeStage === LifeStage.ADULT || agent.lifeStage === LifeStage.ELDER) {
+      if (
+        agent.lifeStage === LifeStage.ADULT ||
+        agent.lifeStage === LifeStage.ELDER
+      ) {
         const role = this._roleSystem.getAgentRole(agent.id);
         if (!role) {
           this._roleSystem.assignBestRole(agent);
@@ -677,7 +678,6 @@ export class LifeCycleSystem extends EventEmitter {
   public removeAgent(id: string): void {
     if (!this.gameState.agents) return;
 
-    // Use AgentRegistry as single source of truth for removing agents
     const removed = this.agentRegistry
       ? this.agentRegistry.removeAgent(id)
       : ((): boolean => {
@@ -773,7 +773,6 @@ export class LifeCycleSystem extends EventEmitter {
   public killAgent(id: string): boolean {
     if (!this.gameState.agents) return false;
 
-    // Use AgentRegistry as single source of truth for removing agents
     const removed = this.agentRegistry
       ? this.agentRegistry.removeAgent(id)
       : ((): boolean => {
