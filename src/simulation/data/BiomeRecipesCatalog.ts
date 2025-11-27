@@ -36,7 +36,7 @@ export class BiomeRecipesCatalog {
           { itemId: ItemId.PLANK, quantity: 2 },
         ],
         requirements: {
-          skill: "mysticism",
+          skill: SkillType.MYSTICISM,
           skillLevel: 3,
         },
         craftingTime: 20000,
@@ -121,7 +121,7 @@ export class BiomeRecipesCatalog {
         ],
         requirements: {
           workstation: WorkstationType.ANVIL,
-          skill: "mining",
+          skill: SkillType.MINING,
           skillLevel: 3,
         },
         craftingTime: 18000,
@@ -138,7 +138,7 @@ export class BiomeRecipesCatalog {
           { itemId: ItemId.COPPER_INGOT, quantity: 2 },
         ],
         requirements: {
-          skill: "jewelcrafting",
+          skill: SkillType.JEWELCRAFTING,
           skillLevel: 2,
         },
         craftingTime: 15000,

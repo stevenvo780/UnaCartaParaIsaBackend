@@ -4,6 +4,7 @@ import { simulationEvents, GameEventNames } from "../core/events";
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { SharedSpatialIndex } from "../core/SharedSpatialIndex";
+import type { AgentRegistry } from "../core/AgentRegistry";
 import { EntityType } from "../../../shared/constants/EntityEnums";
 
 export interface ResourceAlert {
@@ -45,6 +46,7 @@ export interface ThreatAlert {
 export class SharedKnowledgeSystem extends EventEmitter {
   private gameState: GameState;
   private spatialIndex?: SharedSpatialIndex;
+  private agentRegistry?: AgentRegistry;
   private resourceAlerts = new Map<string, ResourceAlert>();
   private threatAlerts = new Map<string, ThreatAlert>();
   private alertSeq = 0;
@@ -58,10 +60,14 @@ export class SharedKnowledgeSystem extends EventEmitter {
     @inject(TYPES.SharedSpatialIndex)
     @optional()
     spatialIndex?: SharedSpatialIndex,
+    @inject(TYPES.AgentRegistry)
+    @optional()
+    agentRegistry?: AgentRegistry,
   ) {
     super();
     this.gameState = gameState;
     this.spatialIndex = spatialIndex;
+    this.agentRegistry = agentRegistry;
   }
 
   /**
@@ -166,7 +172,18 @@ export class SharedKnowledgeSystem extends EventEmitter {
       return;
     }
 
-    const agents = this.gameState.agents || [];
+    // NOTA: AgentRegistry es la fuente de verdad para perfiles de agentes
+    const agents: Array<{ id: string; position?: { x: number; y: number } }> =
+      [];
+    if (this.agentRegistry) {
+      for (const profile of this.agentRegistry.getAllProfiles()) {
+        agents.push(profile);
+      }
+    } else if (this.gameState.agents) {
+      // Fallback: solo si AgentRegistry no disponible
+      agents.push(...this.gameState.agents);
+    }
+
     const radiusSq = this.PROPAGATION_RADIUS * this.PROPAGATION_RADIUS;
 
     for (const agent of agents) {

@@ -5,6 +5,7 @@ import { getFrameTime } from "../../../shared/FrameTime";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
+import { SystemProperty } from "../../../shared/constants/SystemEnums";
 
 /**
  * System for managing tasks and work assignments.
@@ -27,7 +28,7 @@ export class TaskSystem {
   private lastUpdate = 0;
   private tasksDirty = true;
   private statsDirty = true;
-  private cachedStats: TaskState["stats"] = {
+  private cachedStats: TaskState[SystemProperty.STATS] = {
     total: 0,
     active: 0,
     completed: 0,
@@ -72,7 +73,7 @@ export class TaskSystem {
     if (!this.gameState.tasks) {
       this.gameState.tasks = {
         tasks: [],
-        stats: {
+        [SystemProperty.STATS]: {
           total: 0,
           active: 0,
           completed: 0,

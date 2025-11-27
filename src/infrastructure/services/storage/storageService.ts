@@ -125,7 +125,9 @@ export class StorageService {
     let saves: SaveMetadata[] = [];
 
     if (this.useGCS && this.bucket) {
-      const [files] = await this.bucket.getFiles({ prefix: StorageFilePrefix.SAVE });
+      const [files] = await this.bucket.getFiles({
+        prefix: StorageFilePrefix.SAVE,
+      });
       const gcsEntries = await Promise.all(
         files
           .filter((f) => f.name.endsWith(".json"))
@@ -160,7 +162,9 @@ export class StorageService {
       const files = await fs.readdir(CONFIG.LOCAL_SAVES_PATH);
       const localEntries = await Promise.all(
         files
-          .filter((f) => f.endsWith(".json") && f.startsWith(StorageFilePrefix.SAVE))
+          .filter(
+            (f) => f.endsWith(".json") && f.startsWith(StorageFilePrefix.SAVE),
+          )
           .map(async (filename) => {
             const filepath = path.join(CONFIG.LOCAL_SAVES_PATH, filename);
             const content = await fs.readFile(filepath, "utf-8");
@@ -395,7 +399,9 @@ export class StorageService {
   private async cleanOldSaves(): Promise<void> {
     try {
       if (this.useGCS && this.bucket) {
-        const [gcsFiles] = await this.bucket.getFiles({ prefix: StorageFilePrefix.SAVE });
+        const [gcsFiles] = await this.bucket.getFiles({
+          prefix: StorageFilePrefix.SAVE,
+        });
         if (gcsFiles.length <= 10) return;
 
         const filesWithMeta = await Promise.all(

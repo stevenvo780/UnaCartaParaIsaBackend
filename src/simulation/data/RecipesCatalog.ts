@@ -12,6 +12,7 @@ import { ItemId } from "../../shared/constants/ItemEnums";
 import {
   WorkstationType,
   ToolType,
+  SkillType,
 } from "../../shared/constants/CraftingEnums";
 
 /**
@@ -226,7 +227,7 @@ export class RecipesCatalog {
       ],
       requirements: {
         workstation: WorkstationType.ANVIL,
-        skill: "smithing",
+        skill: SkillType.SMITHING,
         skillLevel: 2,
       },
       craftingTime: 15000,
@@ -244,7 +245,7 @@ export class RecipesCatalog {
       ],
       requirements: {
         workstation: WorkstationType.ANVIL,
-        skill: "smithing",
+        skill: SkillType.SMITHING,
         skillLevel: 2,
       },
       craftingTime: 15000,
@@ -290,7 +291,7 @@ export class RecipesCatalog {
       ],
       requirements: {
         workstation: WorkstationType.ANVIL,
-        skill: "smithing",
+        skill: SkillType.SMITHING,
         skillLevel: 3,
       },
       craftingTime: 20000,
@@ -307,7 +308,7 @@ export class RecipesCatalog {
         { itemId: ItemId.FIBER, quantity: 5 },
       ],
       requirements: {
-        skill: "crafting",
+        skill: SkillType.CRAFTING,
         skillLevel: 2,
       },
       craftingTime: 12000,
@@ -342,7 +343,7 @@ export class RecipesCatalog {
       ],
       requirements: {
         tool: ToolType.NEEDLE,
-        skill: "leatherworking",
+        skill: SkillType.LEATHERWORKING,
         skillLevel: 2,
       },
       craftingTime: 18000,
@@ -357,7 +358,7 @@ export class RecipesCatalog {
       ingredients: [{ itemId: ItemId.IRON_INGOT, quantity: 5 }],
       requirements: {
         workstation: WorkstationType.ANVIL,
-        skill: "smithing",
+        skill: SkillType.SMITHING,
         skillLevel: 3,
       },
       craftingTime: 16000,
@@ -401,7 +402,7 @@ export class RecipesCatalog {
         { itemId: ItemId.IRON_INGOT, quantity: 2 },
       ],
       requirements: {
-        skill: "carpentry",
+        skill: SkillType.CARPENTRY,
         skillLevel: 2,
       },
       craftingTime: 15000,

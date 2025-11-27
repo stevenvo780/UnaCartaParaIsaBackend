@@ -48,6 +48,13 @@ export enum WorkstationType {
  */
 export enum SkillType {
   HERBALISM = "herbalism",
+  MYSTICISM = "mysticism",
+  MINING = "mining",
+  JEWELCRAFTING = "jewelcrafting",
+  SMITHING = "smithing",
+  CRAFTING = "crafting",
+  LEATHERWORKING = "leatherworking",
+  CARPENTRY = "carpentry",
 }
 
 /**

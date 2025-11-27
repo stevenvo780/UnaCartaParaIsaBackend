@@ -495,7 +495,18 @@ export class GovernanceSystem {
     demandType: DemandType,
   ): number {
     // NOTA: AgentRegistry es la única fuente de verdad para perfiles
-    const agents: Array<{ id: string; isDead?: boolean; ageYears?: number }> = [];
+    type AgentWithTraits = {
+      id: string;
+      isDead?: boolean;
+      ageYears?: number;
+      traits?: {
+        diligence?: number;
+        neuroticism?: number;
+        curiosity?: number;
+        cooperation?: number;
+      };
+    };
+    const agents: AgentWithTraits[] = [];
     if (this.agentRegistry) {
       for (const profile of this.agentRegistry.getAllProfiles()) {
         if (!profile.isDead && (profile.ageYears ?? 0) >= 16) {
@@ -506,7 +517,7 @@ export class GovernanceSystem {
       // Fallback temporal: solo usar si AgentRegistry no está disponible
       for (const a of this.state.agents) {
         if (!a.isDead && (a.ageYears ?? 0) >= 16) {
-          agents.push(a);
+          agents.push(a as AgentWithTraits);
         }
       }
     }
@@ -530,30 +541,32 @@ export class GovernanceSystem {
         score += 20;
       }
 
+      const traits = agent.traits ?? {};
+
       switch (targetRole) {
         case RoleTypeEnum.HUNTER:
-          score += (agent.traits.diligence ?? 0.5) * 30;
-          score += (agent.traits.neuroticism ?? 0.3) * 15;
+          score += (traits.diligence ?? 0.5) * 30;
+          score += (traits.neuroticism ?? 0.3) * 15;
           break;
         case RoleTypeEnum.GATHERER:
-          score += (agent.traits.curiosity ?? 0.5) * 25;
-          score += (agent.traits.cooperation ?? 0.5) * 15;
+          score += (traits.curiosity ?? 0.5) * 25;
+          score += (traits.cooperation ?? 0.5) * 15;
           break;
         case RoleTypeEnum.BUILDER:
-          score += (agent.traits.diligence ?? 0.5) * 25;
-          score += (agent.traits.cooperation ?? 0.5) * 25;
+          score += (traits.diligence ?? 0.5) * 25;
+          score += (traits.cooperation ?? 0.5) * 25;
           break;
         case RoleTypeEnum.FARMER:
-          score += (agent.traits.diligence ?? 0.5) * 30;
-          score += (agent.traits.curiosity ?? 0.5) * 10;
+          score += (traits.diligence ?? 0.5) * 30;
+          score += (traits.curiosity ?? 0.5) * 10;
           break;
         case RoleTypeEnum.LOGGER:
         case RoleTypeEnum.QUARRYMAN:
-          score += (agent.traits.diligence ?? 0.5) * 35;
+          score += (traits.diligence ?? 0.5) * 35;
           break;
         case RoleTypeEnum.GUARD:
-          score += (agent.traits.cooperation ?? 0.5) * 25;
-          score += (agent.traits.diligence ?? 0.5) * 20;
+          score += (traits.cooperation ?? 0.5) * 25;
+          score += (traits.diligence ?? 0.5) * 20;
           break;
       }
 

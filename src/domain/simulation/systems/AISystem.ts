@@ -129,6 +129,7 @@ import type { TimeSystem, TimeOfDay } from "./TimeSystem";
 import type { EntityIndex } from "../core/EntityIndex";
 import type { GPUComputeService } from "../core/GPUComputeService";
 import type { AnimalRegistry } from "../core/AnimalRegistry";
+import { TimeOfDayPhase } from "../../../shared/constants/TimeEnums";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
 import { getFrameTime } from "../../../shared/FrameTime";
@@ -1334,7 +1335,7 @@ export class AISystem extends EventEmitter {
       getAvailableQuests: () => this.questSystem?.getAvailableQuests() || [],
       getCurrentTimeOfDay: () => {
         return (this.timeSystem?.getCurrentTime().phase ||
-          "morning") as TimeOfDay["phase"];
+          TimeOfDayPhase.MORNING) as TimeOfDay["phase"];
       },
       getNearbyAgentsWithDistances: (entityId: string, radius: number) =>
         this.getNearbyAgentsWithDistancesGPU(entityId, radius),

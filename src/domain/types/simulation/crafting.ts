@@ -1,9 +1,11 @@
-export {
+import {
   WeaponId,
   WorkstationType,
   SkillType,
   ToolType,
 } from "../../../shared/constants/CraftingEnums";
+
+export { WeaponId, WorkstationType, SkillType, ToolType };
 
 export interface CraftingIngredient {
   itemId: string;

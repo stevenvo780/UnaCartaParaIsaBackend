@@ -20,6 +20,16 @@ export enum SystemStatus {
 }
 
 /**
+ * Enumeration of common system property names.
+ */
+export enum SystemProperty {
+  STATS = "stats",
+  STATE = "state",
+  CONFIG = "config",
+  METADATA = "metadata",
+}
+
+/**
  * Type representing all possible system status values.
  */
 export type SystemStatusValue = `${SystemStatus}`;

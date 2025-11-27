@@ -10,6 +10,7 @@ import simulationRoutes from "./routes/simulationRoutes.js";
 import metricsRoutes from "./routes/metricsRoutes.js";
 import { logger } from "../infrastructure/utils/logger.js";
 import { HttpStatusCode } from "../shared/constants/HttpStatusCodes";
+import { Environment } from "../shared/constants/EnvironmentEnums";
 
 /**
  * Express application instance.
@@ -36,7 +37,7 @@ app.use(
 
 app.use(express.json({ limit: "50mb" }));
 
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== Environment.PRODUCTION) {
   app.use((req: Request, _res: Response, next: NextFunction) => {
     logger.debug(`${req.method} ${req.path}`);
     next();
@@ -51,7 +52,7 @@ app.use("/", metricsRoutes);
 app.use(
   (err: Error, _req: Request, res: Response, _next: NextFunction): void => {
     const errorMessage =
-      process.env.NODE_ENV === "production"
+      process.env.NODE_ENV === Environment.PRODUCTION
         ? "Internal server error"
         : err.message;
     logger.error("Unhandled error:", err.message);
