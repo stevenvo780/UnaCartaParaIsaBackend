@@ -91,10 +91,12 @@ export function evaluateWorkOpportunities(
   if (role.roleType === "hunter") {
     // Hunters don't look for static resources, they look for prey.
     // We emit a "hunt" goal which the AISystem should interpret.
+    const priority = 0.7 * aiState.personality.diligence * role.efficiency;
+    console.log(`[OpportunitiesEvaluator] Generating hunt goal for ${aiState.entityId}. Priority: ${priority}`);
     goals.push({
       id: `work_hunt_${aiState.entityId}_${now}`,
       type: "hunt",
-      priority: 0.7 * aiState.personality.diligence * role.efficiency,
+      priority: priority,
       data: {
         roleType: "hunter",
         targetType: "prey",
@@ -102,6 +104,8 @@ export function evaluateWorkOpportunities(
       createdAt: now,
       expiresAt: now + 30000,
     });
+  } else {
+    console.log(`[OpportunitiesEvaluator] Agent ${aiState.entityId} is not a hunter (role: ${role.roleType})`);
   }
 
   return goals;

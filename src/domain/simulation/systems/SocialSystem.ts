@@ -139,6 +139,18 @@ export class SocialSystem {
     }
 
     this.updateTruces(now);
+
+    // Sync state for frontend
+    if (!this.gameState.socialGraph) {
+      this.gameState.socialGraph = {
+        groups: this.groups,
+        relationships: this.edges,
+      };
+    } else {
+      this.gameState.socialGraph.groups = this.groups;
+      this.gameState.socialGraph.relationships = this.edges;
+    }
+
     const duration = performance.now() - startTime;
     performanceMonitor.recordSubsystemExecution(
       "SocialSystem",

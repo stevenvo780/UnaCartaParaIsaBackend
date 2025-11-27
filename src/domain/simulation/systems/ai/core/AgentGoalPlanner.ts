@@ -1,3 +1,4 @@
+import { logger } from "../../../../../infrastructure/utils/logger";
 import type { GameState } from "../../../../types/game-types";
 import type { AIGoal, AIState } from "../../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../../types/simulation/needs";
@@ -248,6 +249,11 @@ export function planGoals(
   goals.push(...attentionGoals);
 
   const criticalCount = goals.filter((g) => g.priority > 0.7).length;
+  logger.info(`[AgentGoalPlanner] Agent ${aiState.entityId}: criticalCount=${criticalCount}, goals=${goals.length}`);
+  if (goals.length > 0) {
+    logger.info(`[AgentGoalPlanner] Goals: ${goals.map(g => `${g.type}(${g.priority.toFixed(2)})`).join(", ")}`);
+  }
+
   if (criticalCount === 0) {
     if (deps.getAgentRole && deps.getPreferredResourceForRole) {
       const oppDeps = {

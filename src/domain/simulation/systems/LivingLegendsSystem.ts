@@ -48,6 +48,17 @@ export class LivingLegendsSystem {
       this.lastTitleUpdate = 0;
       this.updateTitles();
     }
+
+    // Sync to GameState for frontend
+    if (!this._state.legends) {
+      this._state.legends = {
+        records: new Map(),
+        activeLegends: [],
+      };
+    }
+
+    this._state.legends.records = this.legends;
+    this._state.legends.activeLegends = this.getActiveLegends();
   }
 
   private handleReputationChange(data: {

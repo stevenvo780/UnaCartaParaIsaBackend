@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { EventEmitter } from "node:events";
 import type { GameState } from "../../types/game-types";
 import { cloneGameState } from "./defaultState";
@@ -359,18 +360,22 @@ export class SimulationRunner {
    */
   public async initialize(): Promise<void> {
     console.log("🔧 [INIT] SimulationRunner.initialize() STARTED");
-    
+
     console.log("🔧 [INIT] Step 1: Initializing GPU Compute Service...");
     await this.gpuComputeService.initialize();
     const gpuStats = this.gpuComputeService.getPerformanceStats();
-    console.log(`🔧 [INIT] Step 1 DONE: GPU=${gpuStats.gpuAvailable ? "ACTIVE" : "CPU_FALLBACK"}`);
+    console.log(
+      `🔧 [INIT] Step 1 DONE: GPU=${gpuStats.gpuAvailable ? "ACTIVE" : "CPU_FALLBACK"}`,
+    );
     logger.info(
       `🚀 GPU Compute Service: ${gpuStats.gpuAvailable ? "GPU active" : "CPU fallback"}`,
     );
 
     console.log("🔧 [INIT] Step 2: Rebuilding entity index...");
     this.entityIndex.rebuild(this.state);
-    console.log(`🔧 [INIT] Step 2 DONE: EntityIndex rebuilt, agents=${this.state.agents.length}`);
+    console.log(
+      `🔧 [INIT] Step 2 DONE: EntityIndex rebuilt, agents=${this.state.agents.length}`,
+    );
 
     if (this.buildingSystem) {
       console.log("🔧 [INIT] Step 3: Setting TaskSystem on BuildingSystem...");
@@ -439,7 +444,9 @@ export class SimulationRunner {
 
     console.log("🔧 [INIT] Step 9: Ensuring initial family...");
     await this.ensureInitialFamily();
-    console.log(`🔧 [INIT] Step 9 DONE: Total agents=${this.state.agents.length}`);
+    console.log(
+      `🔧 [INIT] Step 9 DONE: Total agents=${this.state.agents.length}`,
+    );
 
     console.log("🔧 [INIT] Step 10: Registering systems in scheduler...");
     logger.info("📅 SimulationRunner: Registering systems in scheduler...");
@@ -448,7 +455,9 @@ export class SimulationRunner {
     console.log("🔧 [INIT] Step 10 DONE");
 
     console.log("🔧 [INIT] === INITIALIZATION COMPLETE ===");
-    console.log(`🔧 [INIT] Final stats: agents=${this.state.agents.length}, zones=${this.state.zones?.length ?? 0}, entities=${this.state.entities?.length ?? 0}, tick=${this.tickCounter}`);
+    console.log(
+      `🔧 [INIT] Final stats: agents=${this.state.agents.length}, zones=${this.state.zones?.length ?? 0}, entities=${this.state.entities?.length ?? 0}, tick=${this.tickCounter}`,
+    );
     logger.info("✅ SimulationRunner: Initialization completed successfully", {
       agentsCount: this.state.agents.length,
       zonesCount: this.state.zones?.length ?? 0,

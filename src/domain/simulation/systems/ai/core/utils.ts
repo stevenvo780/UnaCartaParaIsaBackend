@@ -30,18 +30,18 @@ export function selectBestZone(
   const validZones = zoneIds
     .map((id) => gameState.zones?.find((z) => z.id === id))
     .filter(Boolean) as Array<{
-    id: string;
-    attractiveness?: number;
-    bounds: { x: number; y: number; width: number; height: number };
-    metadata?: {
-      priority?: number;
-      agentId?: string;
-      zoneId?: string;
-      resourceType?: string;
-      underConstruction?: boolean;
-      [key: string]: string | number | boolean | undefined;
-    };
-  }>;
+      id: string;
+      attractiveness?: number;
+      bounds: { x: number; y: number; width: number; height: number };
+      metadata?: {
+        priority?: number;
+        agentId?: string;
+        zoneId?: string;
+        resourceType?: string;
+        underConstruction?: boolean;
+        [key: string]: string | number | boolean | undefined;
+      };
+    }>;
 
   if (validZones.length === 0) return null;
 
@@ -191,7 +191,11 @@ export function getGoalTier(goal: AIGoal, _aiState: AIState): number {
     goal.type === "work" ||
     goal.type === "social" ||
     goal.type === "explore" ||
-    goal.type === "attack"
+    goal.type === "attack" ||
+    goal.type === "hunt" ||
+    goal.type === "craft" ||
+    goal.type === "assist" ||
+    goal.type === "construction"
   ) {
     return PRIORITY_TIERS.OPPORTUNITY;
   }
