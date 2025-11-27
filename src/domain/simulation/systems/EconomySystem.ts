@@ -5,6 +5,7 @@ import type {
 } from "../../types/simulation/economy";
 import { ResourceType as ResourceTypeEnum } from "../../../shared/constants/ResourceEnums";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
+import { RoleType } from "../../../shared/constants/RoleEnums";
 import { InventorySystem } from "./InventorySystem";
 import { SocialSystem } from "./SocialSystem";
 import { RoleSystem } from "./RoleSystem";
@@ -268,28 +269,30 @@ export class EconomySystem {
       const role = this.roleSystem.getAgentRole(agentId);
       if (role?.roleType) {
         if (
-          role.roleType === "farmer" &&
+          role.roleType === RoleType.FARMER &&
           resourceType === ResourceTypeEnum.FOOD
         )
           teamBonus += 0.5;
         if (
-          role.roleType === "quarryman" &&
+          role.roleType === RoleType.QUARRYMAN &&
           resourceType === ResourceTypeEnum.STONE
         )
           teamBonus += 0.8;
         if (
-          role.roleType === "logger" &&
+          role.roleType === RoleType.LOGGER &&
           resourceType === ResourceTypeEnum.WOOD
         )
           teamBonus += 0.6;
         if (
-          role.roleType === "gatherer" &&
-          (resourceType === "water" || resourceType === "food")
+          role.roleType === RoleType.GATHERER &&
+          (resourceType === ResourceTypeEnum.WATER ||
+            resourceType === ResourceTypeEnum.FOOD)
         )
           teamBonus += 0.3;
         if (
-          role.roleType === "builder" &&
-          (resourceType === "wood" || resourceType === "stone")
+          role.roleType === RoleType.BUILDER &&
+          (resourceType === ResourceTypeEnum.WOOD ||
+            resourceType === ResourceTypeEnum.STONE)
         )
           teamBonus += 0.3;
       }
@@ -372,5 +375,132 @@ export class EconomySystem {
         resourceType as keyof typeof this.state.resources.materials
       ] += amount;
     }
+  }
+
+  // ============================================
+  // Money Management - Single Source of Truth
+  // ============================================
+
+  /**
+   * Gets the current money balance for an agent.
+   * @param agentId - The agent's ID
+   * @returns The agent's current money balance, or 0 if not found
+   */
+  public getMoney(agentId: string): number {
+    const entity = this.entityIndex?.getEntity(agentId);
+    if (!entity?.stats) return 0;
+    return typeof entity.stats.money === "number" ? entity.stats.money : 0;
+  }
+
+  /**
+   * Checks if an agent can afford a specific amount.
+   * @param agentId - The agent's ID
+   * @param amount - The amount to check
+   * @returns True if the agent has sufficient funds
+   */
+  public canAfford(agentId: string, amount: number): boolean {
+    return this.getMoney(agentId) >= amount;
+  }
+
+  /**
+   * Adds money to an agent's balance.
+   * @param agentId - The agent's ID
+   * @param amount - The amount to add (must be positive)
+   * @returns True if successful, false if entity not found
+   */
+  public addMoney(agentId: string, amount: number): boolean {
+    if (amount < 0) {
+      logger.warn(`EconomySystem: Attempted to add negative money: ${amount}`);
+      return false;
+    }
+
+    const entity = this.entityIndex?.getEntity(agentId);
+    if (!entity) return false;
+
+    if (!entity.stats) {
+      entity.stats = {};
+    }
+
+    const currentMoney =
+      typeof entity.stats.money === "number" ? entity.stats.money : 0;
+    entity.stats.money = currentMoney + amount;
+
+    simulationEvents.emit(GameEventNames.MONEY_CHANGED, {
+      agentId,
+      amount,
+      newBalance: entity.stats.money,
+      type: "add",
+      timestamp: Date.now(),
+    });
+
+    return true;
+  }
+
+  /**
+   * Removes money from an agent's balance.
+   * @param agentId - The agent's ID
+   * @param amount - The amount to remove (must be positive)
+   * @returns True if successful, false if insufficient funds or entity not found
+   */
+  public removeMoney(agentId: string, amount: number): boolean {
+    if (amount < 0) {
+      logger.warn(
+        `EconomySystem: Attempted to remove negative money: ${amount}`,
+      );
+      return false;
+    }
+
+    const entity = this.entityIndex?.getEntity(agentId);
+    if (!entity?.stats) return false;
+
+    const currentMoney =
+      typeof entity.stats.money === "number" ? entity.stats.money : 0;
+    if (currentMoney < amount) {
+      return false;
+    }
+
+    entity.stats.money = currentMoney - amount;
+
+    simulationEvents.emit(GameEventNames.MONEY_CHANGED, {
+      agentId,
+      amount: -amount,
+      newBalance: entity.stats.money,
+      type: "remove",
+      timestamp: Date.now(),
+    });
+
+    return true;
+  }
+
+  /**
+   * Transfers money between two agents.
+   * @param fromId - The sender's ID
+   * @param toId - The receiver's ID
+   * @param amount - The amount to transfer
+   * @returns True if successful
+   */
+  public transferMoney(fromId: string, toId: string, amount: number): boolean {
+    if (!this.canAfford(fromId, amount)) {
+      return false;
+    }
+
+    if (!this.removeMoney(fromId, amount)) {
+      return false;
+    }
+
+    if (!this.addMoney(toId, amount)) {
+      // Rollback if adding fails
+      this.addMoney(fromId, amount);
+      return false;
+    }
+
+    simulationEvents.emit(GameEventNames.MONEY_TRANSFERRED, {
+      fromId,
+      toId,
+      amount,
+      timestamp: Date.now(),
+    });
+
+    return true;
   }
 }

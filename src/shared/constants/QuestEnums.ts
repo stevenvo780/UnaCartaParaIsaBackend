@@ -76,6 +76,7 @@ export enum QuestObjectiveType {
   INTERACT_WITH_ENTITY = "interact_with_entity",
   SURVIVE_EMERGENCY = "survive_emergency",
   BUILD_STRUCTURE = "build_structure",
+  KILL_ENTITY = "kill_entity",
   CUSTOM = "custom",
 }
 

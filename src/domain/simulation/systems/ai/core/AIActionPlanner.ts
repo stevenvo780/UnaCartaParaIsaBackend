@@ -2,6 +2,8 @@ import type { GameState } from "../../../../types/game-types";
 import type { AIGoal, AgentAction } from "../../../../types/simulation/ai";
 import { ActionType, GoalType } from "../../../../../shared/constants/AIEnums";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
+import { TaskType } from "../../../../../shared/constants/TaskEnums";
+import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
 
 export interface AIActionPlannerDeps {
@@ -472,8 +474,8 @@ export class AIActionPlanner {
     }
 
     if (
-      taskType === "gather_food" ||
-      (resourceType === "food" && !goal.targetId)
+      taskType === TaskType.GATHER_FOOD ||
+      (resourceType === ResourceType.FOOD && !goal.targetId)
     ) {
       const foodTypes = ["berry_bush", "mushroom_patch", "wheat_crop"];
 
@@ -536,8 +538,8 @@ export class AIActionPlanner {
     }
 
     if (
-      taskType === "gather_water" ||
-      (resourceType === "water" && !goal.targetId)
+      taskType === TaskType.GATHER_WATER ||
+      (resourceType === ResourceType.WATER && !goal.targetId)
     ) {
       if (this.deps.findNearestResource) {
         const waterSource = this.deps.findNearestResource(
@@ -571,7 +573,7 @@ export class AIActionPlanner {
       }
     }
 
-    if (taskType === "gather_wood" || resourceType === "wood") {
+    if (taskType === TaskType.GATHER_WOOD || resourceType === ResourceType.WOOD) {
       if (this.deps.findNearestResource) {
         const tree = this.deps.findNearestResource(agentId, "tree");
         if (tree) {
@@ -598,7 +600,10 @@ export class AIActionPlanner {
       }
     }
 
-    if (taskType === "gather_stone" || resourceType === "stone") {
+    if (
+      taskType === TaskType.GATHER_STONE ||
+      resourceType === ResourceType.STONE
+    ) {
       if (this.deps.findNearestResource) {
         const rock = this.deps.findNearestResource(agentId, "rock");
         if (rock) {

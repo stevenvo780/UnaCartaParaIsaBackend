@@ -2,6 +2,7 @@ import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import { GoalType, WorkEthic } from "../../../../../shared/constants/AIEnums";
 import { ExplorationType } from "../../../../../shared/constants/AgentEnums";
 import type { RoleType } from "../../../../types/simulation/roles";
+import { RoleType as RoleTypeEnum } from "../../../../../shared/constants/RoleEnums";
 
 import type { Inventory } from "../../../../types/simulation/economy";
 
@@ -25,7 +26,7 @@ export function evaluateCognitiveDrives(
   if (personality.workEthic === WorkEthic.LAZY) workDrive -= 0.2;
 
   const role = deps.getAgentRole?.(aiState.entityId);
-  if (role && role.roleType !== "idle") {
+  if (role && role.roleType !== RoleTypeEnum.IDLE) {
     workDrive += 0.2;
   }
 

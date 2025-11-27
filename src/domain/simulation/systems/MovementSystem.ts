@@ -368,7 +368,10 @@ export class MovementSystem extends EventEmitter {
   }
 
   private updateEntityActivity(state: EntityMovementState, now: number): void {
-    if (state.currentActivity === "moving" || state.currentActivity === "idle")
+    if (
+      state.currentActivity === ActivityType.MOVING ||
+      state.currentActivity === ActivityType.IDLE
+    )
       return;
 
     if (state.activityStartTime && state.activityDuration) {
@@ -904,7 +907,7 @@ export class MovementSystem extends EventEmitter {
   private readonly ARRIVAL_GRACE_PERIOD_MS = 2000;
 
   private maybeStartIdleWander(state: EntityMovementState, now: number): void {
-    if (state.isMoving || state.currentActivity !== "idle") return;
+    if (state.isMoving || state.currentActivity !== ActivityType.IDLE) return;
 
     if (
       state.lastArrivalTime &&

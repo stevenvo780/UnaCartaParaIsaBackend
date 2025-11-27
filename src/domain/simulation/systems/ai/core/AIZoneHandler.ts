@@ -3,8 +3,9 @@ import type { AIGoal, AIState } from "../../../../types/simulation/ai";
 import type { ResourceType } from "../../../../types/simulation/economy";
 import { simulationEvents, GameEventNames } from "../../../core/events";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
-import { GoalType } from "../../../../../shared/constants/AIEnums";
+import { GoalType, ActionType } from "../../../../../shared/constants/AIEnums";
 import { ItemCategory } from "../../../../../shared/constants/ItemEnums";
+import { RoleType } from "../../../../../shared/constants/RoleEnums";
 import { logger } from "../../../../../infrastructure/utils/logger";
 /**
  * Minimal interface for inventory operations needed by AIZoneHandler.
@@ -141,7 +142,7 @@ export class AIZoneHandler {
     zoneId: string | undefined,
     aiState: AIState,
   ): void {
-    if (aiState.currentAction?.actionType === "move") {
+    if (aiState.currentAction?.actionType === ActionType.MOVE) {
       simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
         agentId: entityId,
         success: true,
@@ -535,7 +536,7 @@ export class AIZoneHandler {
 
     const role = this.deps.roleSystem.getAgentRole(entityId);
     if (
-      role?.roleType === "guard" &&
+      role?.roleType === RoleType.GUARD &&
       (goal.targetZoneId || "").toLowerCase().includes("defense")
     ) {
       this.deps.socialSystem.imposeLocalTruces(entityId, 140, 45000);

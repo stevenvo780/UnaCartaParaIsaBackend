@@ -9,7 +9,10 @@ import {
   GoalType,
 } from "../../types/simulation/ai";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
-import { GoalType as GoalTypeEnum } from "../../../shared/constants/AIEnums";
+import {
+  GoalType as GoalTypeEnum,
+  ActionType,
+} from "../../../shared/constants/AIEnums";
 import { RoleType } from "../../../shared/constants/RoleEnums";
 import { AgentPriority } from "../../../shared/constants/AIEnums";
 import { TaskType } from "../../../shared/constants/TaskEnums";
@@ -932,7 +935,7 @@ export class AISystem extends EventEmitter {
         logger.debug(`🎯 [AI] ${agentId}: Creating HUNT goal for ${animal.id}`);
         return {
           id: `hunt_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-          type: "hunt" as GoalType,
+          type: GoalTypeEnum.HUNT,
           priority: 0.6,
           targetId: animal.id,
           targetPosition: { x: animal.x, y: animal.y },
@@ -1293,7 +1296,7 @@ export class AISystem extends EventEmitter {
         this.roleSystem?.getPreferredResourceForRole(role),
       getStrategy: (id: string) => this.agentStrategies.get(id) || "peaceful",
       isWarrior: (id: string) =>
-        this.roleSystem?.getAgentRole(id)?.roleType === "guard",
+        this.roleSystem?.getAgentRole(id)?.roleType === RoleType.GUARD,
       getNearbyPredators: (pos, range) => {
         return (
           this.animalSystem
@@ -2077,8 +2080,8 @@ export class AISystem extends EventEmitter {
     // Ignore movement complete events if we didn't have a move action
     // (e.g., idle wander from MovementSystem)
     if (
-      payload.actionType === "move" &&
-      aiState.currentAction?.actionType !== "move"
+      payload.actionType === ActionType.MOVE &&
+      aiState.currentAction?.actionType !== ActionType.MOVE
     ) {
       return;
     }
@@ -2092,7 +2095,7 @@ export class AISystem extends EventEmitter {
     }
 
     // Don't complete goal on MOVE actions - the agent just arrived somewhere
-    if (payload.actionType === "move") {
+    if (payload.actionType === ActionType.MOVE) {
       // Agent arrived at destination, next tick will plan the actual action
       logger.debug(
         `📍 [AI] ${payload.agentId}: arrived (prev=${prevAction ?? "none"}), ready for harvest`,
@@ -2100,13 +2103,16 @@ export class AISystem extends EventEmitter {
       return;
     }
 
-    if (payload.actionType === "harvest" || payload.actionType === "attack") {
+    if (
+      payload.actionType === ActionType.HARVEST ||
+      payload.actionType === ActionType.ATTACK
+    ) {
       this.completeGoal(aiState, payload.agentId);
       return;
     }
 
     if (
-      payload.actionType === "work" &&
+      payload.actionType === ActionType.WORK &&
       payload.data &&
       typeof payload.data.taskId === "string"
     ) {

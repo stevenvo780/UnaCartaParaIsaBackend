@@ -61,57 +61,57 @@ const ROLE_COLLECTIVE_MODIFIERS: Record<
     preferredResource?: ResourceType;
   }
 > = {
-  logger: {
+  [RoleTypeEnum.LOGGER]: {
     gatherPriority: 1.3,
     buildPriority: 0.8,
     depositPriority: 1.2,
     preferredResource: ResourceTypeEnum.WOOD,
   },
-  quarryman: {
+  [RoleTypeEnum.QUARRYMAN]: {
     gatherPriority: 1.3,
     buildPriority: 0.8,
     depositPriority: 1.2,
     preferredResource: ResourceTypeEnum.STONE,
   },
-  builder: {
+  [RoleTypeEnum.BUILDER]: {
     gatherPriority: 0.9,
     buildPriority: 1.5,
     depositPriority: 1.0,
   },
-  farmer: {
+  [RoleTypeEnum.FARMER]: {
     gatherPriority: 1.2,
     buildPriority: 0.7,
     depositPriority: 1.1,
     preferredResource: ResourceTypeEnum.FOOD,
   },
-  gatherer: {
+  [RoleTypeEnum.GATHERER]: {
     gatherPriority: 1.4,
     buildPriority: 0.6,
     depositPriority: 1.3,
     preferredResource: ResourceTypeEnum.WATER,
   },
-  guard: {
+  [RoleTypeEnum.GUARD]: {
     gatherPriority: 0.5,
     buildPriority: 0.7,
     depositPriority: 0.8,
   },
-  hunter: {
+  [RoleTypeEnum.HUNTER]: {
     gatherPriority: 1.1,
     buildPriority: 0.6,
     depositPriority: 1.0,
     preferredResource: ResourceTypeEnum.FOOD,
   },
-  craftsman: {
+  [RoleTypeEnum.CRAFTSMAN]: {
     gatherPriority: 0.8,
     buildPriority: 1.2,
     depositPriority: 1.1,
   },
-  leader: {
+  [RoleTypeEnum.LEADER]: {
     gatherPriority: 0.6,
     buildPriority: 0.8,
     depositPriority: 0.9,
   },
-  idle: {
+  [RoleTypeEnum.IDLE]: {
     gatherPriority: 1.0,
     buildPriority: 1.0,
     depositPriority: 1.0,
@@ -495,7 +495,7 @@ export function evaluateCollectiveNeeds(
     buildPriority *= modifiers.buildPriority;
 
     // Boost for builders
-    if (roleType === "builder") {
+    if (roleType === RoleTypeEnum.BUILDER) {
       buildPriority += 0.2;
     }
 

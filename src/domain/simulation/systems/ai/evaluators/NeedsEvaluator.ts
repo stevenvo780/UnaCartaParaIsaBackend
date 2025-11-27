@@ -131,10 +131,10 @@ function adjustThreshold(
   let modifier = ROLE_NEED_MODIFIERS[roleType]?.[needType] ?? 1.0;
 
   if (communityState) {
-    if (needType === "hunger" && communityState.foodPerCapita < 5) {
+    if (needType === NeedType.HUNGER && communityState.foodPerCapita < 5) {
       modifier *= 0.85; // More tolerant when food is scarce (help gather more)
     }
-    if (needType === "thirst" && communityState.waterPerCapita < 8) {
+    if (needType === NeedType.THIRST && communityState.waterPerCapita < 8) {
       modifier *= 0.9;
     }
     if (communityState.stockpileFillRatio > 0.8) {

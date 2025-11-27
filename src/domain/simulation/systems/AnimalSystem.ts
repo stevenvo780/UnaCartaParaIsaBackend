@@ -250,7 +250,7 @@ export class AnimalSystem {
       const animal = this.animals.get(animalId);
       if (!animal || animal.isDead) continue;
 
-      if (animal.state === "fleeing") {
+      if (animal.state === AnimalState.FLEEING) {
         const oldPosition = { ...animal.position };
         this.updateSpatialGrid(animal, oldPosition);
         this.checkAnimalDeath(animal);
@@ -258,7 +258,8 @@ export class AnimalSystem {
       }
 
       const isIdleState =
-        animal.state === "idle" || animal.state === "wandering";
+        animal.state === AnimalState.IDLE ||
+        animal.state === AnimalState.WANDERING;
       if (
         isIdleState &&
         i % this.IDLE_UPDATE_DIVISOR !==

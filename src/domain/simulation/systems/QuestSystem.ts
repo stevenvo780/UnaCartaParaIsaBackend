@@ -12,6 +12,7 @@ import {
   QuestDialogueStage,
   QuestObjectiveType,
 } from "../../../shared/constants/QuestEnums";
+import { DialogueSpeaker } from "../../../shared/constants/AmbientEnums";
 import { GameEventType } from "../../../shared/constants/EventEnums";
 
 const QUEST_CATALOG: Quest[] = [
@@ -48,13 +49,13 @@ const QUEST_CATALOG: Quest[] = [
     dialogues: [
       {
         stage: QuestDialogueStage.INTRO,
-        speaker: "Guide",
+        speaker: DialogueSpeaker.SYSTEM,
         text: "Welcome! Let's start by gathering some basic resources.",
         mood: "friendly",
       },
       {
         stage: QuestDialogueStage.COMPLETION,
-        speaker: "Guide",
+        speaker: DialogueSpeaker.SYSTEM,
         text: "Well done! You've learned the basics of survival.",
         mood: "happy",
       },
@@ -92,13 +93,13 @@ const QUEST_CATALOG: Quest[] = [
     dialogues: [
       {
         stage: QuestDialogueStage.INTRO,
-        speaker: "Guide",
+        speaker: DialogueSpeaker.SYSTEM,
         text: "Now that you can gather resources, let's build a shelter.",
         mood: "encouraging",
       },
       {
         stage: QuestDialogueStage.COMPLETION,
-        speaker: "Guide",
+        speaker: DialogueSpeaker.SYSTEM,
         text: "Excellent! Your shelter will protect you from the elements.",
         mood: "proud",
       },
@@ -138,7 +139,7 @@ export class QuestSystem {
       const questCopy = JSON.parse(JSON.stringify(quest)) as Quest;
 
       if (this.checkQuestRequirements(questCopy)) {
-        if (questCopy.status === "available") {
+        if (questCopy.status === QuestStatus.AVAILABLE) {
           this.questProgress.availableQuests.set(questCopy.id, questCopy);
         }
       }

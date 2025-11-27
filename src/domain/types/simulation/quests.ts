@@ -5,6 +5,7 @@ import {
   QuestRequirementType,
   QuestDialogueStage,
 } from "../../../shared/constants/QuestEnums";
+import { DialogueSpeaker } from "../../../shared/constants/AmbientEnums";
 
 export interface Quest {
   id: string;
@@ -73,7 +74,7 @@ export interface QuestRequirement {
 
 export interface QuestDialogue {
   stage: QuestDialogueStage;
-  speaker: string;
+  speaker: DialogueSpeaker;
   text: string;
   mood?: string;
   conditions?: Record<string, unknown>;

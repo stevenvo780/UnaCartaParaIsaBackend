@@ -238,7 +238,8 @@ describe("SocialSystem", () => {
           type: "agent",
         },
       ];
-      // Rebuild entityIndex after modifying gameState.entities
+      // Mark dirty and rebuild entityIndex after modifying gameState.entities
+      entityIndex.markDirty();
       entityIndex.rebuild(gameState);
       // Actualizar para inicializar el spatial grid
       socialSystem.update(1000);

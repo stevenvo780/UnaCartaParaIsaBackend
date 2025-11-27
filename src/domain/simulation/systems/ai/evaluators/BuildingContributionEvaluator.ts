@@ -1,6 +1,7 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { GameState } from "../../../../types/game-types";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
+import { BuildingType } from "../../../../../shared/constants/BuildingEnums";
 
 export interface BuildingContributionDependencies {
   gameState: GameState;
@@ -58,8 +59,9 @@ export function evaluateBuildingContributionGoals(
           : undefined;
 
       const needsWood =
-        buildingType === "house" || buildingType === "workbench";
-      const needsStone = buildingType === "mine";
+        buildingType === BuildingType.HOUSE ||
+        buildingType === BuildingType.WORKBENCH;
+      const needsStone = buildingType === BuildingType.MINE;
 
       const canContribute =
         hasResources &&

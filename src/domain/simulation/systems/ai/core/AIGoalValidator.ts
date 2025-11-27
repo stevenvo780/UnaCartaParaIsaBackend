@@ -6,7 +6,11 @@ import type { AnimalSystem } from "../../AnimalSystem";
 import { isWorldResourceType } from "../../../../types/simulation/resourceMapping";
 import type { WorldResourceType } from "../../../../types/simulation/worldResources";
 import { getFrameTime } from "../../../../../shared/FrameTime";
-import { NeedType, GoalType } from "../../../../../shared/constants/AIEnums";
+import {
+  NeedType,
+  GoalType,
+} from "../../../../../shared/constants/AIEnums";
+import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
 
 export interface AIGoalValidatorDeps {
@@ -279,7 +283,7 @@ export class AIGoalValidator {
       }
 
       // For generic types like "food", search across all possible world resource types
-      if (resourceTypeStr === "food") {
+      if (resourceTypeStr === ResourceType.FOOD) {
         const foodTypes = ["berry_bush", "mushroom_patch", "wheat_crop"];
         for (const foodType of foodTypes) {
           if (isWorldResourceType(foodType)) {
@@ -295,7 +299,7 @@ export class AIGoalValidator {
         }
       }
 
-      if (resourceTypeStr === "water") {
+      if (resourceTypeStr === ResourceType.WATER) {
         const resources = this.deps.worldResourceSystem.getResourcesByType(
           "water_source" as WorldResourceType,
         );
@@ -305,7 +309,7 @@ export class AIGoalValidator {
         }
       }
 
-      if (resourceTypeStr === "wood") {
+      if (resourceTypeStr === ResourceType.WOOD) {
         const resources = this.deps.worldResourceSystem.getResourcesByType(
           "tree" as WorldResourceType,
         );
@@ -315,7 +319,7 @@ export class AIGoalValidator {
         }
       }
 
-      if (resourceTypeStr === "stone") {
+      if (resourceTypeStr === ResourceType.STONE) {
         const resources = this.deps.worldResourceSystem.getResourcesByType(
           "rock" as WorldResourceType,
         );

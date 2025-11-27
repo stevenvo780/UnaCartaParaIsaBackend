@@ -3,6 +3,7 @@ import type { AgentRole } from "../../../../types/simulation/roles";
 import type { GameState } from "../../../../types/game-types";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
+import { RoleType } from "../../../../../shared/constants/RoleEnums";
 
 export interface OpportunitiesEvaluatorDependencies {
   getAgentRole: (agentId: string) => AgentRole | undefined;
@@ -89,7 +90,7 @@ export function evaluateWorkOpportunities(
     });
   }
 
-  if (role.roleType === "hunter") {
+  if (role.roleType === RoleType.HUNTER) {
     const priority = 0.7 * aiState.personality.diligence * role.efficiency;
     goals.push({
       id: `work_hunt_${aiState.entityId}_${now}`,

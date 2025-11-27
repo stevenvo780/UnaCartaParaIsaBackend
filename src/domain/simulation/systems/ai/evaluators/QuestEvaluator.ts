@@ -1,7 +1,10 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { Quest } from "../../../../types/simulation/quests";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
-import { QuestObjectiveType } from "../../../../../shared/constants/QuestEnums";
+import {
+  QuestObjectiveType,
+  QuestStatus,
+} from "../../../../../shared/constants/QuestEnums";
 
 export interface QuestEvaluatorDependencies {
   getActiveQuests: () => Quest[];
@@ -18,7 +21,7 @@ export function evaluateQuestGoals(
 
   const activeQuests = deps.getActiveQuests();
   for (const quest of activeQuests) {
-    if (quest.status !== "active") continue;
+    if (quest.status !== QuestStatus.ACTIVE) continue;
 
     for (const objective of quest.objectives) {
       if (objective.isCompleted) continue;
@@ -37,7 +40,7 @@ export function evaluateQuestGoals(
         case QuestObjectiveType.REACH_LOCATION:
           goalType = GoalType.EXPLORE;
           break;
-        case "kill_entity":
+        case QuestObjectiveType.KILL_ENTITY:
           goalType = GoalType.COMBAT;
           break;
       }

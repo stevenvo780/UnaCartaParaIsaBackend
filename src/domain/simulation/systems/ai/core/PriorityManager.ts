@@ -2,6 +2,7 @@ import type { GameState } from "../../../../types/game-types";
 import type { RoleSystem } from "../../RoleSystem";
 import { logger } from "@/infrastructure/utils/logger";
 import { GoalDomain } from "../../../../../shared/constants/AIEnums";
+import { RoleType } from "../../../../../shared/constants/RoleEnums";
 
 /**
  * Priority weights for different goal domains.
@@ -108,7 +109,7 @@ export class PriorityManager {
 
     try {
       const role = this.roleSystem?.getAgentRole(agentId);
-      const isWarrior = role?.roleType === "guard";
+      const isWarrior = role?.roleType === RoleType.GUARD;
 
       if (isWarrior) {
         if (domain === GoalDomain.COMBAT) adjusted *= 1.25;
