@@ -1,4 +1,7 @@
-export type Difficulty = "easy" | "medium" | "hard";
+import { Difficulty } from "../../../../shared/constants/MovementEnums";
+
+// Re-export Difficulty enum for backward compatibility
+export { Difficulty };
 
 export function estimateTravelTime(
   distancePx: number,

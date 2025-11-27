@@ -5,10 +5,7 @@ import type { SimulationEntity } from "./schema";
 import type { Animal } from "../../types/simulation/animals";
 import { injectable } from "inversify";
 
-/**
- * Entity type filter for spatial queries.
- */
-export type EntityType = "agent" | "animal" | "all";
+import { EntityType } from "../../../shared/constants/EntityEnums";
 
 /**
  * Shared spatial index for all systems.
@@ -104,7 +101,7 @@ export class SharedSpatialIndex {
         Math.abs(lastPos.x - entity.position.x) > 1 ||
         Math.abs(lastPos.y - entity.position.y) > 1
       ) {
-        this.updateEntityPosition(entity.id, entity.position, "agent");
+        this.updateEntityPosition(entity.id, entity.position, EntityType.AGENT);
       }
     }
 
@@ -119,7 +116,7 @@ export class SharedSpatialIndex {
         Math.abs(lastPos.x - animal.position.x) > 1 ||
         Math.abs(lastPos.y - animal.position.y) > 1
       ) {
-        this.updateEntityPosition(animalId, animal.position, "animal");
+        this.updateEntityPosition(animalId, animal.position, EntityType.ANIMAL);
       }
     }
 
@@ -166,7 +163,11 @@ export class SharedSpatialIndex {
         const dx = cached.x - entity.position.x;
         const dy = cached.y - entity.position.y;
         if (dx * dx + dy * dy > MOVE_THRESHOLD_SQ) {
-          this.updateEntityPosition(entity.id, entity.position, "agent");
+          this.updateEntityPosition(
+            entity.id,
+            entity.position,
+            EntityType.AGENT,
+          );
         }
       }
     }
@@ -188,7 +189,11 @@ export class SharedSpatialIndex {
         const dx = cached.x - animal.position.x;
         const dy = cached.y - animal.position.y;
         if (dx * dx + dy * dy > MOVE_THRESHOLD_SQ) {
-          this.updateEntityPosition(animalId, animal.position, "animal");
+          this.updateEntityPosition(
+            animalId,
+            animal.position,
+            EntityType.ANIMAL,
+          );
         }
       }
     }
@@ -287,8 +292,8 @@ export class SharedSpatialIndex {
     const output = this.acquireResultArray();
 
     for (const r of results) {
-      const type = this.entityTypes.get(r.entity) || "agent";
-      if (!filter || filter === "all" || type === filter) {
+      const type = this.entityTypes.get(r.entity) || EntityType.AGENT;
+      if (!filter || filter === EntityType.ALL || type === filter) {
         output.push({
           entity: r.entity,
           distance: r.distance,
@@ -336,7 +341,7 @@ export class SharedSpatialIndex {
   public updatePosition(
     entityId: string,
     position: { x: number; y: number },
-    type: EntityType = "agent",
+    type: EntityType = EntityType.AGENT,
   ): void {
     this.grid.insert(entityId, position);
     this.entityPositions.set(entityId, { ...position });

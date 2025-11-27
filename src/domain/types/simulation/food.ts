@@ -1,4 +1,7 @@
-export type FoodCategory = "healthy" | "junk" | "dessert" | "drink" | "snack";
+import { FoodCategory } from "../../../shared/constants/FoodEnums";
+
+// Re-export FoodCategory enum for backward compatibility
+export { FoodCategory };
 
 export interface FoodItem {
   id: string;

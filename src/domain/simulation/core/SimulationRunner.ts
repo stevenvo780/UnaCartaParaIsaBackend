@@ -53,6 +53,7 @@ import { ChunkLoadingSystem } from "../systems/ChunkLoadingSystem";
 import { SharedKnowledgeSystem } from "../systems/SharedKnowledgeSystem";
 import { GPUComputeService } from "./GPUComputeService";
 import { MultiRateScheduler } from "./MultiRateScheduler";
+import { TickRate } from "../../../shared/constants/SchedulerEnums";
 import { performanceMonitor } from "./PerformanceMonitor";
 import { MetricsCollector } from "./MetricsCollector";
 import { storageService } from "../../../infrastructure/services/storage/storageService";
@@ -556,84 +557,84 @@ export class SimulationRunner {
   private registerSystemsInScheduler(): void {
     this.scheduler.registerSystem({
       name: "MovementSystem",
-      rate: "FAST",
+      rate: TickRate.FAST,
       update: (delta: number) => this.movementSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "CombatSystem",
-      rate: "FAST",
+      rate: TickRate.FAST,
       update: (delta: number) => this.combatSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "AISystem",
-      rate: "MEDIUM",
+      rate: TickRate.MEDIUM,
       update: (delta: number) => this.aiSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "NeedsSystem",
-      rate: "MEDIUM",
+      rate: TickRate.MEDIUM,
       update: (delta: number) => this.needsSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "SocialSystem",
-      rate: "MEDIUM",
+      rate: TickRate.MEDIUM,
       update: (delta: number) => this.socialSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "HouseholdSystem",
-      rate: "MEDIUM",
+      rate: TickRate.MEDIUM,
       update: (delta: number) => this.householdSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "LifeCycleSystem",
-      rate: "MEDIUM",
+      rate: TickRate.MEDIUM,
       update: (delta: number) => this.lifeCycleSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "TimeSystem",
-      rate: "MEDIUM",
+      rate: TickRate.MEDIUM,
       update: (delta: number) => this.timeSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "RoleSystem",
-      rate: "MEDIUM",
+      rate: TickRate.MEDIUM,
       update: (delta: number) => this.roleSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "TaskSystem",
-      rate: "MEDIUM",
+      rate: TickRate.MEDIUM,
       update: () => this.taskSystem.update(),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "EconomySystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.economySystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "MarketSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.marketSystem.update(delta),
       enabled: true,
       minEntities: 10,
@@ -641,21 +642,21 @@ export class SimulationRunner {
 
     this.scheduler.registerSystem({
       name: "ResearchSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: () => this._researchSystem.update(),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "ReputationSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: () => this.reputationSystem.update(),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "GovernanceSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.governanceSystem.update(delta),
       enabled: true,
       minEntities: 15,
@@ -663,77 +664,77 @@ export class SimulationRunner {
 
     this.scheduler.registerSystem({
       name: "WorldResourceSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.worldResourceSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "AnimalSystem",
-      rate: "MEDIUM",
+      rate: TickRate.MEDIUM,
       update: (delta: number) => this.animalSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "ProductionSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.productionSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "BuildingSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.buildingSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "BuildingMaintenanceSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.buildingMaintenanceSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "EnhancedCraftingSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: () => this.enhancedCraftingSystem.update(),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "InventorySystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: () => this.inventorySystem.update(),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "ResourceReservationSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: () => this.resourceReservationSystem.update(),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "DivineFavorSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.divineFavorSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "QuestSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: () => this.questSystem.update(),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "TradeSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: () => this.tradeSystem.update(),
       enabled: true,
       minEntities: 10,
@@ -741,14 +742,14 @@ export class SimulationRunner {
 
     this.scheduler.registerSystem({
       name: "MarriageSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: () => this.marriageSystem.update(),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "ConflictResolutionSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: () => this.conflictResolutionSystem.update(),
       enabled: true,
       minEntities: 10,
@@ -756,14 +757,14 @@ export class SimulationRunner {
 
     this.scheduler.registerSystem({
       name: "ResourceAttractionSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.resourceAttractionSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "CrisisPredictorSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.crisisPredictorSystem.update(delta),
       enabled: true,
       minEntities: 20,
@@ -771,77 +772,77 @@ export class SimulationRunner {
 
     this.scheduler.registerSystem({
       name: "AmbientAwarenessSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.ambientAwarenessSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "CardDialogueSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.cardDialogueSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "InteractionGameSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.interactionGameSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "LivingLegendsSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.livingLegendsSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "ItemGenerationSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.itemGenerationSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "RecipeDiscoverySystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: () => this._recipeDiscoverySystem.update(),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "NormsSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: () => this._normsSystem.update(),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "SharedKnowledgeSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: () => this.sharedKnowledgeSystem.update(),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "EmergenceSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.emergenceSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "KnowledgeNetworkSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.knowledgeNetworkSystem.update(delta),
       enabled: true,
     });
 
     this.scheduler.registerSystem({
       name: "ChunkLoadingSystem",
-      rate: "SLOW",
+      rate: TickRate.SLOW,
       update: (delta: number) => this.chunkLoadingSystem.update(delta),
       enabled: true,
     });

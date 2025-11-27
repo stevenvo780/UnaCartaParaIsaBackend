@@ -85,7 +85,7 @@ export interface AIZoneHandlerDeps {
   goalsCompletedRef: { value: number };
 }
 
-type ActivityType = "eating" | "resting" | "socializing" | "working" | "idle";
+import { ActivityType } from "../../../../../shared/constants/ActivityEnums";
 
 /**
  * Handles zone arrival notifications and resource deposits for AI agents.

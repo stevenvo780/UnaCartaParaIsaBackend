@@ -1,4 +1,7 @@
-export type BuildingLabel = "house" | "mine" | "workbench" | "farm";
+import { BuildingType } from "../../../shared/constants/BuildingEnums";
+
+// Re-export BuildingType enum for backward compatibility
+export { BuildingType as BuildingLabel };
 
 export type BuildingCondition =
   | "pristine"
@@ -52,11 +55,11 @@ export interface BuildingConstructionCost {
   time: number;
 }
 
-export const BUILDING_COSTS: Record<BuildingLabel, BuildingConstructionCost> = {
-  house: { wood: 12, stone: 4, time: 25_000 },
-  mine: { wood: 6, stone: 10, time: 30_000 },
-  workbench: { wood: 8, stone: 4, time: 20_000 },
-  farm: { wood: 8, stone: 2, time: 35_000 },
+export const BUILDING_COSTS: Record<BuildingType, BuildingConstructionCost> = {
+  [BuildingType.HOUSE]: { wood: 12, stone: 4, time: 25_000 },
+  [BuildingType.MINE]: { wood: 6, stone: 10, time: 30_000 },
+  [BuildingType.WORKBENCH]: { wood: 8, stone: 4, time: 20_000 },
+  [BuildingType.FARM]: { wood: 8, stone: 2, time: 35_000 },
 };
 
 export function getBuildingCondition(durability: number): BuildingCondition {

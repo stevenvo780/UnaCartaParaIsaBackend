@@ -47,6 +47,7 @@ export class InventorySystem {
       food: 0,
       water: 0,
       rare_materials: 0,
+      metal: 0,
       capacity: capacity ?? this.DEFAULT_AGENT_CAPACITY,
       lastUpdateTime: Date.now(),
     };
@@ -69,6 +70,7 @@ export class InventorySystem {
         food: 0,
         water: 0,
         rare_materials: 0,
+        metal: 0,
         capacity: capacity ?? this.DEFAULT_STOCKPILE_CAPACITY,
         lastUpdateTime: Date.now(),
       },
@@ -119,7 +121,12 @@ export class InventorySystem {
     if (!inv) return false;
 
     const currentLoad =
-      inv.wood + inv.stone + inv.food + inv.water + inv.rare_materials;
+      inv.wood +
+      inv.stone +
+      inv.food +
+      inv.water +
+      inv.rare_materials +
+      inv.metal;
     const available = inv.capacity - currentLoad;
     const toAdd = Math.min(amount, available);
 
@@ -142,7 +149,8 @@ export class InventorySystem {
       sp.inventory.stone +
       sp.inventory.food +
       sp.inventory.water +
-      sp.inventory.rare_materials;
+      sp.inventory.rare_materials +
+      sp.inventory.metal;
     const available = sp.capacity - currentLoad;
     const toAdd = Math.min(amount, available);
 
@@ -221,6 +229,7 @@ export class InventorySystem {
       food: 0,
       water: 0,
       rare_materials: 0,
+      metal: 0,
     };
 
     const sp = this.stockpiles.get(stockpileId);
@@ -248,7 +257,8 @@ export class InventorySystem {
         sp.inventory.stone +
         sp.inventory.food +
         sp.inventory.water +
-        sp.inventory.rare_materials;
+        sp.inventory.rare_materials +
+        sp.inventory.metal;
       const availableSpace = sp.capacity - currentLoad;
 
       if (availableSpace <= 0) {
@@ -310,6 +320,7 @@ export class InventorySystem {
       food: 0,
       water: 0,
       rare_materials: 0,
+      metal: 0,
     };
 
     for (const [resource, amount] of Object.entries(resources)) {
@@ -328,7 +339,8 @@ export class InventorySystem {
       toInv.stone +
       toInv.food +
       toInv.water +
-      toInv.rare_materials;
+      toInv.rare_materials +
+      toInv.metal;
     const toAvailableCapacity = toInv.capacity - toCurrentLoad;
 
     const transferTotal = Object.values(resources).reduce(
@@ -430,6 +442,7 @@ export class InventorySystem {
           food: 0,
           water: 0,
           rare_materials: 0,
+          metal: 0,
           capacity: 0,
           lastUpdateTime: now,
         },
@@ -463,6 +476,7 @@ export class InventorySystem {
       water: stats.stockpiled.water + stats.inAgents.water,
       rare_materials:
         stats.stockpiled.rare_materials + stats.inAgents.rare_materials,
+      metal: stats.stockpiled.metal + stats.inAgents.metal,
       capacity: 0,
       lastUpdateTime: now,
     };
@@ -477,6 +491,7 @@ export class InventorySystem {
       food: number;
       water: number;
       rare_materials: number;
+      metal: number;
     };
     inAgents: {
       wood: number;
@@ -484,6 +499,7 @@ export class InventorySystem {
       food: number;
       water: number;
       rare_materials: number;
+      metal: number;
     };
   } {
     const totalStockpiled = {
@@ -492,6 +508,7 @@ export class InventorySystem {
       food: 0,
       water: 0,
       rare_materials: 0,
+      metal: 0,
     };
     for (const sp of this.stockpiles.values()) {
       totalStockpiled.wood += sp.inventory.wood;
@@ -499,6 +516,7 @@ export class InventorySystem {
       totalStockpiled.food += sp.inventory.food;
       totalStockpiled.water += sp.inventory.water;
       totalStockpiled.rare_materials += sp.inventory.rare_materials;
+      totalStockpiled.metal += sp.inventory.metal;
     }
 
     const totalInAgents = {
@@ -507,6 +525,7 @@ export class InventorySystem {
       food: 0,
       water: 0,
       rare_materials: 0,
+      metal: 0,
     };
     for (const inv of this.agentInventories.values()) {
       totalInAgents.wood += inv.wood;
@@ -514,6 +533,7 @@ export class InventorySystem {
       totalInAgents.food += inv.food;
       totalInAgents.water += inv.water;
       totalInAgents.rare_materials += inv.rare_materials;
+      totalInAgents.metal += inv.metal;
     }
 
     return {

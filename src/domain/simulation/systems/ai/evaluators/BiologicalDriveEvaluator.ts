@@ -3,7 +3,6 @@ import type { EntityNeedsData } from "../../../../types/simulation/needs";
 import { GoalType, NeedType } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 import type { Inventory } from "../../../../types/simulation/economy";
-import { logger } from "@/infrastructure/utils/logger";
 
 export interface BiologicalDriveDeps {
   getEntityNeeds: (entityId: string) => EntityNeedsData | undefined;
@@ -39,7 +38,6 @@ function distancePriorityMultiplier(
 ): number {
   if (!agentPos) return 1.0;
   const dist = Math.hypot(targetPos.x - agentPos.x, targetPos.y - agentPos.y);
-  // Closer = higher multiplier (1.0), farther = lower (0.6 minimum)
   return Math.max(0.6, 1.0 - (dist / MAX_PRIORITY_DISTANCE) * 0.4);
 }
 
@@ -69,20 +67,24 @@ const BIOLOGICAL_URGENCY_THRESHOLD = 40;
  * @param value Current need value (0-100, where 100 is satisfied)
  * @param urgencyExponent Controls how sharply utility rises as need drops. Higher = more urgent only when very low.
  */
+/**
+ * Calculates utility for a biological drive.
+ * Returns a value between 0.0 and 1.0 based on need urgency.
+ * When needs >= 40, agents should work. Below 40, biological needs take priority.
+ *
+ * @param value - Current need value (0-100, where 100 is satisfied)
+ * @param urgencyExponent - Controls how sharply utility rises as need drops. Higher = more urgent only when very low
+ * @returns Utility value between 0.0 and 1.0
+ */
 function calculateDriveUtility(
   value: number,
   urgencyExponent: number = 2,
 ): number {
-  // For survival needs, we want them to become urgent reasonably fast but not dominate when high.
-  // When needs >= 40, agents should work. Below 40, biological needs take priority.
-  if (value >= BIOLOGICAL_URGENCY_THRESHOLD) return 0; // Needs satisfied, allow work
+  if (value >= BIOLOGICAL_URGENCY_THRESHOLD) return 0;
 
-  // Use the exponent to shape the curve for the remaining range (0-40)
-  // Remap 40->0 to 0->1 deficit relative to threshold
   const relativeDeficit =
     (BIOLOGICAL_URGENCY_THRESHOLD - value) / BIOLOGICAL_URGENCY_THRESHOLD;
 
-  // Apply exponent: higher exponent = more urgent only when very low
   return Math.pow(relativeDeficit, 1 / urgencyExponent);
 }
 
@@ -99,29 +101,16 @@ export function evaluateBiologicalDrives(
   const agentPos = deps.getAgentPosition?.(aiState.entityId) ?? null;
   const failedTargets = deps.getFailedTargets?.(aiState.entityId);
 
-  // --- Thirst Drive ---
   const thirstUtility = calculateDriveUtility(needs.thirst);
   if (thirstUtility > 0) {
     const inventory = deps.getAgentInventory?.(aiState.entityId);
     const hasWater = inventory && inventory.water > 0;
 
     if (!hasWater) {
-      // Plan to get water
       const waterTarget = deps.findNearestResource?.(
         aiState.entityId,
         "water_source",
       );
-
-      // Debug: Log water search result
-      if (!waterTarget) {
-        logger.warn(
-          `[BIO] ${aiState.entityId}: thirst=${needs.thirst.toFixed(1)}, no water_source found`,
-        );
-      } else {
-        logger.debug(
-          `[BIO] ${aiState.entityId}: found water_source ${waterTarget.id} at (${waterTarget.x}, ${waterTarget.y})`,
-        );
-      }
 
       if (
         waterTarget &&
@@ -143,19 +132,15 @@ export function evaluateBiologicalDrives(
           expiresAt: now + 15000,
         });
       }
-      // NOTE: If no water_source is found, don't add explore goal
-      // This allows agents to work instead of endlessly searching for water
     }
   }
 
-  // --- Hunger Drive ---
   const hungerUtility = calculateDriveUtility(needs.hunger);
   if (hungerUtility > 0) {
     const inventory = deps.getAgentInventory?.(aiState.entityId);
     const hasFood = inventory && inventory.food > 0;
 
     if (!hasFood) {
-      // 1. Try to hunt first (more reliable than sparse berry bushes)
       const huntTarget = deps.findNearestHuntableAnimal?.(aiState.entityId);
       if (
         huntTarget &&
@@ -174,10 +159,9 @@ export function evaluateBiologicalDrives(
             action: "hunt",
           },
           createdAt: now,
-          expiresAt: now + 60000, // 60 seconds to complete hunt
+          expiresAt: now + 60000,
         });
       } else {
-        // 2. If no animals, check for gatherable food
         const foodTypes = ["berry_bush", "mushroom_patch", "wheat_crop"];
         let foodTarget = null;
 
@@ -211,7 +195,6 @@ export function evaluateBiologicalDrives(
             expiresAt: now + 45000, // 45 seconds to reach and harvest
           });
         } else {
-          // 3. Explore to find food
           goals.push({
             id: `drive_hunger_explore_${aiState.entityId}_${now}`,
             type: GoalType.EXPLORE,
@@ -228,8 +211,6 @@ export function evaluateBiologicalDrives(
       }
     }
   }
-
-  // --- Energy Drive ---
   const energyUtility = calculateDriveUtility(needs.energy);
   if (energyUtility > 0) {
     goals.push({

@@ -392,6 +392,8 @@ export class WorldResourceSystem {
     resource.harvestCount = (resource.harvestCount || 0) + 1;
     resource.lastHarvestTime = Date.now();
 
+    const previousState = resource.state;
+
     const maxHarvests = config.harvestsUntilDepleted || 5;
     if (resource.harvestCount >= maxHarvests) {
       resource.state = ResourceState.DEPLETED;
@@ -430,11 +432,14 @@ export class WorldResourceSystem {
     });
 
     // Calculate actual harvest amount from config yields
-    const currentState =
-      resource.state === ResourceState.HARVESTED_PARTIAL
-        ? ResourceState.DEPLETED
+    // Use the state BEFORE the transition to determine yields
+    const yieldState =
+      resource.state === ResourceState.DEPLETED &&
+      previousState === ResourceState.HARVESTED_PARTIAL
+        ? ResourceState.HARVESTED_PARTIAL
         : ResourceState.PRISTINE;
-    const yields = config.yields?.[currentState];
+
+    const yields = config.yields?.[yieldState];
     let harvestAmount = 1; // Default fallback
 
     const items: { type: string; amount: number }[] = [];
@@ -452,34 +457,35 @@ export class WorldResourceSystem {
       if (harvestAmount > 0) {
         items.push({ type: yields.resourceType, amount: harvestAmount });
       }
-    }
+      // Secondary yields
+      if (yields?.secondaryYields) {
+        for (const secondary of yields.secondaryYields) {
+          if (
+            secondary.rareMaterialsChance &&
+            Math.random() > secondary.rareMaterialsChance
+          ) {
+            continue;
+          }
 
-    // Secondary yields
-    if (yields?.secondaryYields) {
-      for (const secondary of yields.secondaryYields) {
-        if (
-          secondary.rareMaterialsChance &&
-          Math.random() > secondary.rareMaterialsChance
-        ) {
-          continue;
-        }
+          const amount = Math.floor(
+            Math.random() * (secondary.amountMax - secondary.amountMin + 1) +
+              secondary.amountMin,
+          );
 
-        const amount = Math.floor(
-          Math.random() * (secondary.amountMax - secondary.amountMin + 1) +
-            secondary.amountMin,
-        );
+          if (amount > 0) {
+            items.push({ type: secondary.resourceType, amount });
 
-        if (amount > 0) {
-          items.push({ type: secondary.resourceType, amount });
-
-          simulationEvents.emit(GameEventNames.RESOURCE_GATHERED, {
-            resourceId,
-            resourceType: secondary.resourceType, // This might be an item ID now
-            harvesterId,
-            position: resource.position,
-          });
+            simulationEvents.emit(GameEventNames.RESOURCE_GATHERED, {
+              resourceId,
+              resourceType: secondary.resourceType,
+              harvesterId,
+              position: resource.position,
+            });
+          }
         }
       }
+
+      return { success: true, items };
     }
 
     return { success: true, items };

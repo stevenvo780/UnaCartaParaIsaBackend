@@ -16,6 +16,7 @@ export interface Inventory {
   food: number;
   water: number;
   rare_materials: number;
+  metal: number;
   capacity: number;
   lastUpdateTime?: number;
 }
@@ -37,6 +38,7 @@ export interface EconomyConfig {
     food: number;
     water: number;
     rare_materials: number;
+    metal: number;
   };
   salaryRates: {
     wood: number;
@@ -44,6 +46,7 @@ export interface EconomyConfig {
     food: number;
     water: number;
     rare_materials: number;
+    metal: number;
   };
 }
 
@@ -95,4 +98,5 @@ export interface StorageContainer {
 export interface ResourceCost {
   wood: number;
   stone: number;
+  metal?: number;
 }

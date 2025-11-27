@@ -1,8 +1,9 @@
 import type { AnimalConfig } from "../../../../domain/types/simulation/animals";
+import { AnimalType } from "../../../../shared/constants/AnimalEnums";
 
 export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
   rabbit: {
-    type: "rabbit",
+    type: AnimalType.RABBIT,
     displayName: "Conejo",
 
     spriteKey: "rabbit",
@@ -36,7 +37,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
   },
 
   deer: {
-    type: "deer",
+    type: AnimalType.DEER,
     displayName: "Ciervo",
 
     spriteKey: "deer",
@@ -70,7 +71,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
   },
 
   boar: {
-    type: "boar",
+    type: AnimalType.BOAR,
     displayName: "Jabalí",
 
     spriteKey: "boar",
@@ -104,7 +105,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
   },
 
   bird: {
-    type: "bird",
+    type: AnimalType.BIRD,
     displayName: "Pájaro",
 
     spriteKey: "bird",
@@ -138,7 +139,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
   },
 
   fish: {
-    type: "fish",
+    type: AnimalType.FISH,
     displayName: "Pez",
 
     spriteKey: "fish",
@@ -174,7 +175,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
   },
 
   wolf: {
-    type: "wolf",
+    type: AnimalType.WOLF,
     displayName: "Lobo",
 
     spriteKey: "wolf",
@@ -202,7 +203,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     waterConsumptionRate: 3,
 
     isPredator: true,
-    preyTypes: ["rabbit", "deer", "human"],
+    preyTypes: [AnimalType.RABBIT, AnimalType.DEER, "human"],
     huntingRange: 250,
     attackDamage: 20,
 

@@ -121,6 +121,7 @@ export const INVENTORY_TO_WORLD: Record<ResourceType, WorldResourceType[]> = {
     WorldResourceTypeEnum.WHEAT_CROP,
   ],
   [ResourceTypeEnum.RARE_MATERIALS]: [],
+  [ResourceTypeEnum.METAL]: [WorldResourceTypeEnum.ROCK],
 };
 
 /**
@@ -214,6 +215,11 @@ export function itemToWorldResources(itemId: string): WorldResourceType[] {
     "flint",
   ];
   if (stoneItems.includes(itemId)) {
+    return [WorldResourceTypeEnum.ROCK];
+  }
+
+  // Metal items
+  if (["iron_ore", "copper_ore"].includes(itemId)) {
     return [WorldResourceTypeEnum.ROCK];
   }
 

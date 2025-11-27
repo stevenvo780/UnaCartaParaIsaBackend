@@ -1,8 +1,9 @@
-import type { Weapon, WeaponId } from "../../domain/types/simulation/combat";
+import { WeaponId } from "../../shared/constants/CraftingEnums";
+import type { Weapon } from "../../domain/types/simulation/combat";
 
 export const WEAPON_CATALOG: Record<WeaponId, Weapon> = {
-  unarmed: {
-    id: "unarmed",
+  [WeaponId.UNARMED]: {
+    id: WeaponId.UNARMED,
     name: "Puños",
     baseDamage: 6,
     critChance: 0.05,
@@ -10,8 +11,8 @@ export const WEAPON_CATALOG: Record<WeaponId, Weapon> = {
     range: 40,
     attackSpeed: 1.0,
   },
-  wooden_club: {
-    id: "wooden_club",
+  [WeaponId.WOODEN_CLUB]: {
+    id: WeaponId.WOODEN_CLUB,
     name: "Garrote de madera",
     baseDamage: 10,
     critChance: 0.07,
@@ -19,8 +20,8 @@ export const WEAPON_CATALOG: Record<WeaponId, Weapon> = {
     range: 45,
     attackSpeed: 3.5,
   },
-  stone_dagger: {
-    id: "stone_dagger",
+  [WeaponId.STONE_DAGGER]: {
+    id: WeaponId.STONE_DAGGER,
     name: "Daga de piedra",
     baseDamage: 14,
     critChance: 0.12,

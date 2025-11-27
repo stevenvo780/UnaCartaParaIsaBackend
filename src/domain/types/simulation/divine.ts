@@ -7,7 +7,10 @@ export type BlessingType =
   | "wisdom"
   | "prosperity";
 
-export type GodId = "isa" | "stev";
+import { GodId } from "../../../shared/constants/DivineEnums";
+
+// Re-export GodId enum for backward compatibility
+export { GodId };
 
 export interface BlessingTarget {
   lineageIds?: string[];

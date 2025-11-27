@@ -38,16 +38,9 @@ export function evaluateDepositGoals(
 
     const load =
       agentInv.wood + agentInv.stone + agentInv.food + agentInv.water;
-    const cap = agentInv.capacity || 50; // Default capacity 50
+    const cap = agentInv.capacity || 50;
     const loadRatio = load / cap;
 
-    // Debug: Log agent inventory and load
-    logger.debug(
-      `📦 [DEPOSIT] ${aiState.entityId}: wood=${agentInv.wood}, stone=${agentInv.stone}, food=${agentInv.food}, load=${load}/${cap} (${(loadRatio * 100).toFixed(0)}%)`,
-    );
-
-    // Lower threshold for resource workers (loggers, quarrymen) - they should deposit sooner
-    // Base threshold: 0.3 (15 items) instead of 0.8 (40 items)
     const baseThreshold = 0.3;
     const depositThreshold =
       baseThreshold - personality.conscientiousness * 0.1;

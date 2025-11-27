@@ -23,6 +23,7 @@ export const DEFAULT_BASE_YIELD: Readonly<Record<ResourceType, number>> = {
   [ResourceType.FOOD]: 1,
   [ResourceType.WATER]: 1,
   [ResourceType.RARE_MATERIALS]: 0.1,
+  [ResourceType.METAL]: 0.5,
 } as const;
 
 /**

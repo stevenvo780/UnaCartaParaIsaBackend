@@ -1,4 +1,7 @@
-export type ItemRarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
+import { ItemRarity } from "../../../shared/constants/ItemEnums";
+
+// Re-export ItemRarity enum for backward compatibility
+export { ItemRarity };
 
 export interface GenerationRule {
   zoneType: string;

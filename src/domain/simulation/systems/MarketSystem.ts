@@ -15,6 +15,7 @@ const DEFAULT_MARKET_CONFIG: MarketConfig = {
     food: 8,
     water: 2,
     rare_materials: 25,
+    metal: 15,
   },
 };
 
@@ -64,6 +65,7 @@ export class MarketSystem {
       ResourceType.STONE,
       ResourceType.FOOD,
       ResourceType.WATER,
+      ResourceType.METAL,
     ];
     for (const resource of resourceTypes) {
       prices[resource] = this.getResourcePrice(resource);
@@ -170,6 +172,7 @@ export class MarketSystem {
         "stone",
         "food",
         "water",
+        "metal",
       ] as ResourceType[]) {
         const sellerStock = sellerInv[resource] || 0;
         if (sellerStock < 10) continue;

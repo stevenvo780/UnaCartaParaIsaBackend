@@ -2,7 +2,8 @@ import { performance } from "node:perf_hooks";
 import { logger } from "../../../infrastructure/utils/logger";
 import { updateFrameTime } from "../../../shared/FrameTime";
 import { performanceMonitor } from "./PerformanceMonitor";
-import type { TickRate, SchedulerStatsSnapshot } from "./SchedulerTypes";
+import { TickRate } from "../../../shared/constants/SchedulerEnums";
+import type { SchedulerStatsSnapshot } from "./SchedulerTypes";
 
 // Re-export types for backwards compatibility
 export type { TickRate, SchedulerStatsSnapshot } from "./SchedulerTypes";
@@ -124,13 +125,13 @@ export class MultiRateScheduler {
    */
   public registerSystem(system: ScheduledSystem): void {
     switch (system.rate) {
-      case "FAST":
+      case TickRate.FAST:
         this.fastSystems.push(system);
         break;
-      case "MEDIUM":
+      case TickRate.MEDIUM:
         this.mediumSystems.push(system);
         break;
-      case "SLOW":
+      case TickRate.SLOW:
         this.slowSystems.push(system);
         break;
     }
@@ -239,7 +240,7 @@ export class MultiRateScheduler {
      * Performance threshold: warn only for ticks >120ms.
      * Lower thresholds (e.g., 80ms) are too aggressive with 1000+ entities.
      */
-    performanceMonitor.recordTick("FAST", elapsed);
+    performanceMonitor.recordTick(TickRate.FAST, elapsed);
     if (elapsed > 120) {
       logger.warn(
         `⚠️ FAST tick took ${elapsed.toFixed(2)}ms (>120ms threshold)`,
@@ -271,7 +272,7 @@ export class MultiRateScheduler {
     this.stats.medium.avgMs =
       this.stats.medium.totalMs / this.stats.medium.count;
 
-    performanceMonitor.recordTick("MEDIUM", elapsed);
+    performanceMonitor.recordTick(TickRate.MEDIUM, elapsed);
     if (elapsed > 400) {
       logger.warn(
         `⚠️ MEDIUM tick took ${elapsed.toFixed(2)}ms (>400ms threshold)`,
@@ -302,7 +303,7 @@ export class MultiRateScheduler {
     this.stats.slow.totalMs += elapsed;
     this.stats.slow.avgMs = this.stats.slow.totalMs / this.stats.slow.count;
 
-    performanceMonitor.recordTick("SLOW", elapsed);
+    performanceMonitor.recordTick(TickRate.SLOW, elapsed);
     if (elapsed > 800) {
       logger.warn(
         `⚠️ SLOW tick took ${elapsed.toFixed(2)}ms (>800ms threshold)`,

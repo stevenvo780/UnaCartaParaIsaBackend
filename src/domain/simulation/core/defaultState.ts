@@ -15,6 +15,7 @@ const defaultResources: GameResources = {
     food: 40,
     water: 40,
     rare_materials: 0,
+    metal: 0,
   },
   currency: 100,
   experience: 0,

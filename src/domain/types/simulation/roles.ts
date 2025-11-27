@@ -10,7 +10,10 @@ export type RoleType =
   | "leader"
   | "idle";
 
-export type WorkShift = "morning" | "afternoon" | "evening" | "night" | "rest";
+import { WorkShift } from "../../../shared/constants/RoleEnums";
+
+// Re-export WorkShift enum for backward compatibility
+export { WorkShift };
 
 export interface RoleRequirements {
   minAge?: number;

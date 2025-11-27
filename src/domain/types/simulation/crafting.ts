@@ -1,4 +1,5 @@
-export type WeaponId = "wooden_club" | "stone_dagger";
+// Re-export WeaponId enum for backward compatibility
+export { WeaponId } from "../../../shared/constants/CraftingEnums";
 
 export interface CraftingIngredient {
   itemId: string;

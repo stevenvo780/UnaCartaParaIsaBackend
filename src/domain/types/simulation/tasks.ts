@@ -1,20 +1,8 @@
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
+import { TaskType } from "../../../shared/constants/TaskEnums";
 
-export type TaskType =
-  | "build_house"
-  | "gather_wood"
-  | "gather_stone"
-  | "gather_food"
-  | "gather_water"
-  | "deposit_resources"
-  | "hunt_animal"
-  | "craft_item"
-  | "repair_building"
-  | "farm"
-  | "fish"
-  | "trade"
-  | "research"
-  | "custom";
+// Re-export TaskType enum for backward compatibility
+export { TaskType };
 
 export interface TaskMetadata {
   priority?: number;

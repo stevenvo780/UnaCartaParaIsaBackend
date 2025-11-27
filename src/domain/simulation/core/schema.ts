@@ -14,11 +14,13 @@ import type {
   RoadPolyline,
   ObjectLayer,
 } from "../../types/game-types";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
 /**
- * Material resource types available in the game.
+ * MaterialType is now ResourceType - use ResourceType instead.
+ * @deprecated Use ResourceType from ResourceEnums instead.
  */
-export type MaterialType = "wood" | "stone" | "food" | "water";
+export type MaterialType = ResourceType;
 
 /**
  * State container for material resources.

@@ -130,12 +130,10 @@ export function evaluateCriticalNeeds(
   const roleType = role?.roleType ?? "idle";
   const communityState = deps.getCollectiveResourceState?.() ?? null;
 
-  // Base thresholds
   let baseHungerThreshold = 45;
   const baseThirstThreshold = 40;
   let baseEnergyThreshold = 35;
 
-  // Time of day adjustments to base thresholds
   if (timeOfDay === "night" || timeOfDay === "deep_night") {
     baseEnergyThreshold = 50; // More critical at night
     baseHungerThreshold = 35; // Less critical at night
@@ -374,7 +372,6 @@ export function evaluateCriticalNeeds(
     });
   }
 
-  // Mental health - seek temples, sanctuaries, or social interaction
   if (needs.mentalHealth < 50) {
     goals.push({
       id: `mental_${aiState.entityId}_${now}`,

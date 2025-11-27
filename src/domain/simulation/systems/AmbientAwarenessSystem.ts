@@ -4,8 +4,12 @@ import type {
   AmbientSnapshot,
   CollectiveWellbeing,
   AmbientState,
-  AmbientMood,
 } from "../../types/simulation/ambient";
+import {
+  CrisisTrend,
+  AmbientMood,
+  WeatherType,
+} from "../../../shared/constants/AmbientEnums";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 
@@ -23,17 +27,17 @@ export class AmbientAwarenessSystem {
       wellbeing: {
         average: 75,
         variance: 0.5,
-        trend: "stable",
+        trend: CrisisTrend.STABLE,
         criticalCount: 0,
         totalAgents: 0,
-        mood: "comfortable",
+        mood: AmbientMood.COMFORTABLE,
       },
       ambientState: {
         musicMood: "neutral",
         lightingTint: 0xffffff,
         particleIntensity: 0.5,
         worldPulseRate: 1,
-        weatherBias: "clear",
+        weatherBias: WeatherType.CLEAR,
       },
       lastUpdated: Date.now(),
     };
@@ -124,11 +128,11 @@ export class AmbientAwarenessSystem {
   }
 
   private resolveMood(average: number, criticalPercent: number): AmbientMood {
-    if (average >= 80 && criticalPercent < 5) return "thriving";
-    if (average >= 60 && criticalPercent < 15) return "comfortable";
-    if (average >= 40 && criticalPercent < 30) return "stressed";
-    if (average >= 20) return "crisis";
-    return "collapse";
+    if (average >= 80 && criticalPercent < 5) return AmbientMood.THRIVING;
+    if (average >= 60 && criticalPercent < 15) return AmbientMood.COMFORTABLE;
+    if (average >= 40 && criticalPercent < 30) return AmbientMood.STRESSED;
+    if (average >= 20) return AmbientMood.CRISIS;
+    return AmbientMood.COLLAPSE;
   }
 
   private computeAmbientState(wellbeing: CollectiveWellbeing): AmbientState {

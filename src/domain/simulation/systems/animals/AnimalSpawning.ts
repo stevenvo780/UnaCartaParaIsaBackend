@@ -148,7 +148,7 @@ export class AnimalSpawning {
       id,
       type: type as AnimalType,
       position: { ...position },
-      state: "idle",
+      state: AnimalState.IDLE,
       needs: {
         hunger: 100,
         thirst: 100,

@@ -2,9 +2,7 @@ import { logger } from "../../../../../infrastructure/utils/logger";
 import { getAnimalConfig } from "../../../../../infrastructure/services/world/config/AnimalConfigs";
 import type { GameState } from "../../../../types/game-types";
 import type { AgentAction } from "../../../../types/simulation/ai";
-import {
-  itemToInventoryResource,
-} from "../../../../types/simulation/resourceMapping";
+import { itemToInventoryResource } from "../../../../types/simulation/resourceMapping";
 import type { NeedsSystem } from "../../NeedsSystem";
 import type { InventorySystem } from "../../InventorySystem";
 import type { SocialSystem } from "../../SocialSystem";
@@ -16,6 +14,7 @@ import { GameEventNames, simulationEvents } from "../../../core/events";
 import { ActionType } from "../../../../../shared/constants/AIEnums";
 import { NeedType } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
+import { TargetType } from "../../../../../shared/constants/EntityEnums";
 
 export interface AIActionExecutorDeps {
   gameState: GameState;
@@ -323,7 +322,7 @@ export class AIActionExecutor {
         agentId: action.agentId,
         actionType: ActionType.ATTACK,
         success: true,
-        data: { targetId, targetType: "unknown" },
+        data: { targetId, targetType: TargetType.UNKNOWN },
       });
     }
   }

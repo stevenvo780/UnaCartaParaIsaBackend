@@ -71,15 +71,6 @@ export enum NeedType {
 }
 
 /**
- * Enumeration of exploration personality types.
- */
-export enum ExplorationType {
-  CAUTIOUS = "cautious",
-  BALANCED = "balanced",
-  ADVENTUROUS = "adventurous",
-}
-
-/**
  * Enumeration of social preference types.
  */
 export enum SocialPreference {
@@ -111,11 +102,6 @@ export type ActionTypeValue = `${ActionType}`;
  * Type representing all possible need type values.
  */
 export type NeedTypeValue = `${NeedType}`;
-
-/**
- * Type representing all possible exploration type values.
- */
-export type ExplorationTypeValue = `${ExplorationType}`;
 
 /**
  * Type representing all possible social preference values.

@@ -1,18 +1,8 @@
 import type { Position } from "../../types/game-types.js";
+import { AnimalType, AnimalState } from "../../../shared/constants/AnimalEnums";
 
-export type AnimalType = "rabbit" | "deer" | "boar" | "bird" | "fish" | "wolf";
-
-export type AnimalState =
-  | "idle"
-  | "wandering"
-  | "seeking_food"
-  | "seeking_water"
-  | "eating"
-  | "drinking"
-  | "fleeing"
-  | "hunting"
-  | "mating"
-  | "dead";
+// Re-export enums for backward compatibility
+export { AnimalType, AnimalState };
 
 export interface AnimalGenes {
   color: number;

@@ -71,6 +71,7 @@ export const DEFAULT_BASE_PRICES: Readonly<Record<ResourceType, number>> = {
   [ResourceType.FOOD]: 2,
   [ResourceType.WATER]: 1,
   [ResourceType.RARE_MATERIALS]: 10,
+  [ResourceType.METAL]: 5,
 } as const;
 
 /**
@@ -82,4 +83,5 @@ export const DEFAULT_SALARY_RATES: Readonly<Record<ResourceType, number>> = {
   [ResourceType.FOOD]: 1,
   [ResourceType.WATER]: 0.5,
   [ResourceType.RARE_MATERIALS]: 5,
+  [ResourceType.METAL]: 2,
 } as const;

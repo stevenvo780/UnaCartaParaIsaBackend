@@ -287,8 +287,6 @@ export function evaluateCollectiveNeeds(
       const taskUrgency = (task.metadata?.urgency as number) || 0.5;
       const taskResourceType = task.metadata?.resourceType as string;
 
-      // IMPORTANT: Specialized roles (logger, quarryman) should only take matching tasks
-      // This ensures wood/stone gatherers actually gather their assigned resources
       if (modifiers.preferredResource) {
         // Skip tasks that don't match the specialized role
         if (
@@ -405,7 +403,6 @@ export function evaluateCollectiveNeeds(
     }
   }
 
-  // 4. Fallback: If no TaskSystem, use original individual gathering logic
   if (!ctx.taskSystem && mostNeeded) {
     // Base priority for collective gathering
     let basePriority = 0.4 + mostNeeded.urgency * 0.35;
@@ -460,7 +457,6 @@ export function evaluateCollectiveNeeds(
     const agentCapacity = inventory.capacity || 50;
     const loadRatio = agentLoad / agentCapacity;
 
-    // Lower threshold for depositing when community needs reserves
     const depositThreshold =
       state.stockpileFillRatio < thresholds.stockpileFillTarget
         ? 0.3 // Deposit earlier when stockpiles are low

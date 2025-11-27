@@ -1,4 +1,6 @@
-export type WeaponId = "unarmed" | "wooden_club" | "stone_dagger";
+// Re-export WeaponId enum for backward compatibility
+import { WeaponId } from "../../../shared/constants/CraftingEnums";
+export { WeaponId };
 
 export interface Weapon {
   id: WeaponId;
@@ -20,12 +22,10 @@ export interface AttackResult {
   killed?: boolean;
 }
 
-export type CombatEventType =
-  | "engaged"
-  | "hit"
-  | "kill"
-  | "weapon_crafted"
-  | "weapon_equipped";
+import { CombatEventType } from "../../../shared/constants/CombatEnums";
+
+// Re-export CombatEventType enum for backward compatibility
+export { CombatEventType };
 
 export interface CombatLogEntryBase {
   id: string;
@@ -34,7 +34,7 @@ export interface CombatLogEntryBase {
 }
 
 export interface CombatEngagedLog extends CombatLogEntryBase {
-  type: "engaged";
+  type: CombatEventType.ENGAGED;
   attackerId: string;
   targetId: string;
   weapon: WeaponId;
@@ -47,7 +47,7 @@ export interface CombatEngagedLog extends CombatLogEntryBase {
 }
 
 export interface CombatHitLog extends CombatLogEntryBase {
-  type: "hit";
+  type: CombatEventType.HIT;
   attackerId: string;
   targetId: string;
   weapon: WeaponId;
@@ -59,20 +59,20 @@ export interface CombatHitLog extends CombatLogEntryBase {
 }
 
 export interface CombatKillLog extends CombatLogEntryBase {
-  type: "kill";
+  type: CombatEventType.KILL;
   attackerId: string;
   targetId: string;
   weapon: WeaponId;
 }
 
 export interface CombatWeaponCraftedLog extends CombatLogEntryBase {
-  type: "weapon_crafted";
+  type: CombatEventType.WEAPON_CRAFTED;
   agentId: string;
   weapon: WeaponId;
 }
 
 export interface CombatWeaponEquippedLog extends CombatLogEntryBase {
-  type: "weapon_equipped";
+  type: CombatEventType.WEAPON_EQUIPPED;
   agentId: string;
   weapon: WeaponId;
 }

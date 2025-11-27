@@ -12,7 +12,6 @@ import type {
 } from "../../../../types/simulation/economy";
 import type { SettlementDemand } from "../../../../types/simulation/governance";
 import type { PriorityManager } from "./PriorityManager";
-import { logger } from "../../../../../infrastructure/utils/logger";
 import { evaluateBiologicalDrives } from "../evaluators/BiologicalDriveEvaluator";
 import { evaluateReproductionDrive } from "../evaluators/ReproductionEvaluator";
 import { evaluateSocialDrives } from "../evaluators/SocialDriveEvaluator";
@@ -186,9 +185,7 @@ export function planGoals(
       ?.filter((z) => types.includes(z.type))
       .map((z) => z.id) || [];
 
-  // --- 1. Biological Drives (Survival) ---
   if (entityNeeds) {
-    // Get failedTargets with fallback for backwards compatibility
     const failedTargetsMap: Map<string, number> =
       (aiState.memory.failedTargets as Map<string, number> | undefined) ??
       new Map<string, number>();
@@ -204,18 +201,12 @@ export function planGoals(
     const bioGoals = evaluateBiologicalDrives(bioDeps, aiState);
     goals.push(...bioGoals);
 
-    // If survival is critical, return immediately
     const criticalSurvivalGoal = bioGoals.find((g) => g.priority > 0.9);
     if (criticalSurvivalGoal) {
-      // Log critical goal for debugging
-      logger.debug(
-        `🚨 [PLANNER] ${aiState.entityId}: Critical survival goal (priority ${criticalSurvivalGoal.priority.toFixed(2)}) type=${criticalSurvivalGoal.type}`,
-      );
       return [criticalSurvivalGoal];
     }
   }
 
-  // --- 2. Reproduction Drive ---
   if (entityNeeds) {
     const reproDeps = {
       getEntityNeeds: deps.getEntityNeeds,
@@ -227,7 +218,6 @@ export function planGoals(
     goals.push(...reproGoals);
   }
 
-  // --- 3. Social Drives ---
   if (entityNeeds) {
     const socialDeps = {
       getEntityNeeds: deps.getEntityNeeds,
@@ -237,7 +227,6 @@ export function planGoals(
     goals.push(...socialGoals);
   }
 
-  // --- 4. Cognitive Drives (Work/Explore) ---
   const cognitiveDeps = {
     getAgentRole: deps.getAgentRole
       ? (id: string): { roleType: RoleType } | undefined => {
@@ -251,7 +240,6 @@ export function planGoals(
   const cognitiveGoals = evaluateCognitiveDrives(cognitiveDeps, aiState);
   goals.push(...cognitiveGoals);
 
-  // --- 5. Collective Needs (Community) ---
   if (deps.getAgentInventory && deps.getAllStockpiles && deps.getPopulation) {
     const collectiveDeps: CollectiveNeedsContext = {
       gameState: deps.gameState,
@@ -282,7 +270,6 @@ export function planGoals(
     goals.push(...collectiveGoals);
   }
 
-  // --- 6. Combat ---
   if (
     deps.getStrategy &&
     deps.isWarrior &&

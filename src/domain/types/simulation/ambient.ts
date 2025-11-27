@@ -1,5 +1,16 @@
 import { NeedType } from "../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
+import {
+  CrisisSeverity,
+  CrisisTrend,
+  CrisisPredictionType,
+  AmbientMood,
+  DialoguePriority,
+  DialogueTone,
+  DialogueCardType,
+  DialogueOutcome,
+  WeatherType,
+} from "../../../shared/constants/AmbientEnums";
 
 export interface NeedDesireSnapshot {
   agentId: string;
@@ -46,8 +57,18 @@ export interface ResourceAttractionSnapshot {
   emergencies: ResourceEmergencyRequest[];
 }
 
-export type CrisisSeverity = "low" | "medium" | "high" | "critical";
-export type CrisisTrend = "improving" | "stable" | "worsening";
+// Re-export enums for backward compatibility
+export {
+  CrisisSeverity,
+  CrisisTrend,
+  CrisisPredictionType,
+  AmbientMood,
+  DialoguePriority,
+  DialogueTone,
+  DialogueCardType,
+  DialogueOutcome,
+  WeatherType,
+} from "../../../shared/constants/AmbientEnums";
 
 export interface CrisisIndicator {
   name: string;
@@ -57,12 +78,6 @@ export interface CrisisIndicator {
   trend: CrisisTrend;
   description: string;
 }
-
-export type CrisisPredictionType =
-  | "resource_shortage"
-  | "mass_starvation"
-  | "system_collapse"
-  | "population_crisis";
 
 export interface CrisisPrediction {
   id: string;
@@ -82,13 +97,6 @@ export interface CrisisSnapshot {
   lastUpdated: number;
 }
 
-export type AmbientMood =
-  | "thriving"
-  | "comfortable"
-  | "stressed"
-  | "crisis"
-  | "collapse";
-
 export interface CollectiveWellbeing {
   average: number;
   variance: number;
@@ -103,7 +111,7 @@ export interface AmbientState {
   lightingTint: number;
   particleIntensity: number;
   worldPulseRate: number;
-  weatherBias: "clear" | "cloudy" | "stormy";
+  weatherBias: WeatherType;
 }
 
 export interface AmbientSnapshot {
@@ -112,19 +120,10 @@ export interface AmbientSnapshot {
   lastUpdated: number;
 }
 
-export type DialoguePriority = "low" | "medium" | "high" | "urgent";
-export type DialogueTone =
-  | "happy"
-  | "sad"
-  | "worried"
-  | "excited"
-  | "contemplative"
-  | "playful";
-
 export interface DialogueChoice {
   id: string;
   text: string;
-  outcome: "positive" | "negative" | "neutral";
+  outcome: DialogueOutcome;
   effects: {
     needs?: Partial<Record<string, number>>;
     relationship?: number;
@@ -147,7 +146,7 @@ export interface DialogueCard {
   id: string;
   title: string;
   content: string;
-  type: "mission" | "event" | "memory" | "reflection" | "interaction";
+  type: DialogueCardType;
   priority: DialoguePriority;
   participants: string[];
   triggerCondition?: string;

@@ -1,5 +1,6 @@
 import { performance } from "node:perf_hooks";
-import type { TickRate, SchedulerStatsSnapshot } from "./SchedulerTypes";
+import { TickRate } from "../../../shared/constants/SchedulerEnums";
+import type { SchedulerStatsSnapshot } from "./SchedulerTypes";
 
 interface SimpleStats {
   count: number;
@@ -58,9 +59,9 @@ type SystemKey = `${TickRate}:${string}`;
  */
 class PerformanceMonitor {
   private tickStats: Record<TickRate, TickStats> = {
-    FAST: this.createTickStats("FAST"),
-    MEDIUM: this.createTickStats("MEDIUM"),
-    SLOW: this.createTickStats("SLOW"),
+    [TickRate.FAST]: this.createTickStats(TickRate.FAST),
+    [TickRate.MEDIUM]: this.createTickStats(TickRate.MEDIUM),
+    [TickRate.SLOW]: this.createTickStats(TickRate.SLOW),
   };
 
   private systemStats = new Map<SystemKey, SystemStats>();

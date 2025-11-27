@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { GameState } from "../../types/game-types";
 import { simulationEvents, GameEventNames } from "../core/events";
+import { WeaponId } from "../../../shared/constants/CraftingEnums";
 import type {
   CombatEngagedLog,
   CombatHitLog,
@@ -8,7 +9,6 @@ import type {
   CombatLogEntry,
   CombatWeaponCraftedLog,
   CombatWeaponEquippedLog,
-  WeaponId,
 } from "../../types/simulation/combat";
 import { getWeapon } from "../../../simulation/data/WeaponCatalog";
 import type { ResourceType } from "../../types/simulation/economy";
@@ -45,9 +45,9 @@ const DEFAULT_COMBAT_CONFIG: CombatConfig = {
 };
 
 const WEAPON_COSTS: Record<WeaponId, Partial<Record<ResourceType, number>>> = {
-  unarmed: {},
-  wooden_club: { wood: 10 },
-  stone_dagger: { stone: 8 },
+  [WeaponId.UNARMED]: {},
+  [WeaponId.WOODEN_CLUB]: { wood: 10 },
+  [WeaponId.STONE_DAGGER]: { stone: 8 },
 };
 
 import { injectable, inject, optional } from "inversify";

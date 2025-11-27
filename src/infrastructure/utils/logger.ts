@@ -12,7 +12,7 @@ import path from "path";
  * - Throttling: Prevents log spam from repetitive messages
  */
 
-type LogLevel = "debug" | "info" | "warn" | "error";
+import { LogLevel } from "../../shared/constants/LogEnums";
 
 interface LogEntry {
   level: LogLevel;
@@ -246,7 +246,7 @@ class Logger {
     if (this.shouldThrottle(message)) return;
 
     const entry: LogEntry = {
-      level: "debug",
+      level: LogLevel.DEBUG,
       message,
       timestamp: this.getTimestamp(),
       data: args.length > 0 ? args : undefined,
@@ -256,9 +256,9 @@ class Logger {
 
     // También enviar a consola para visibilidad
     if (args.length > 0) {
-      console.log(this.formatConsoleMessage("debug", message), ...args);
+      console.log(this.formatConsoleMessage(LogLevel.DEBUG, message), ...args);
     } else {
-      console.log(this.formatConsoleMessage("debug", message));
+      console.log(this.formatConsoleMessage(LogLevel.DEBUG, message));
     }
   }
 
@@ -269,7 +269,7 @@ class Logger {
     if (this.shouldThrottle(message)) return;
 
     const entry: LogEntry = {
-      level: "info",
+      level: LogLevel.INFO,
       message,
       timestamp: this.getTimestamp(),
       data: args.length > 0 ? args : undefined,
@@ -279,9 +279,9 @@ class Logger {
 
     // También enviar a consola para visibilidad
     if (args.length > 0) {
-      console.info(this.formatConsoleMessage("info", message), ...args);
+      console.info(this.formatConsoleMessage(LogLevel.INFO, message), ...args);
     } else {
-      console.info(this.formatConsoleMessage("info", message));
+      console.info(this.formatConsoleMessage(LogLevel.INFO, message));
     }
   }
 
@@ -292,7 +292,7 @@ class Logger {
     if (this.shouldThrottle(message)) return;
 
     const entry: LogEntry = {
-      level: "warn",
+      level: LogLevel.WARN,
       message,
       timestamp: this.getTimestamp(),
       data: args.length > 0 ? args : undefined,
@@ -301,9 +301,9 @@ class Logger {
     this.addToMemory(entry);
 
     if (args.length > 0) {
-      console.warn(this.formatConsoleMessage("warn", message), ...args);
+      console.warn(this.formatConsoleMessage(LogLevel.WARN, message), ...args);
     } else {
-      console.warn(this.formatConsoleMessage("warn", message));
+      console.warn(this.formatConsoleMessage(LogLevel.WARN, message));
     }
   }
 
@@ -312,7 +312,7 @@ class Logger {
    */
   error(message: string, ...args: unknown[]): void {
     const entry: LogEntry = {
-      level: "error",
+      level: LogLevel.ERROR,
       message,
       timestamp: this.getTimestamp(),
       data: args.length > 0 ? args : undefined,
@@ -321,9 +321,12 @@ class Logger {
     this.addToMemory(entry);
 
     if (args.length > 0) {
-      console.error(this.formatConsoleMessage("error", message), ...args);
+      console.error(
+        this.formatConsoleMessage(LogLevel.ERROR, message),
+        ...args,
+      );
     } else {
-      console.error(this.formatConsoleMessage("error", message));
+      console.error(this.formatConsoleMessage(LogLevel.ERROR, message));
     }
   }
 

@@ -8,6 +8,7 @@ import { ResourceType, WorldResourceType } from "../../constants/ResourceEnums";
 import { BiomeType } from "../../constants/BiomeEnums";
 import { NeedType } from "../../constants/AIEnums";
 import { Sex } from "../../constants/AgentEnums";
+import { WeatherType } from "../../constants/AmbientEnums";
 
 export type ResourcesState = NonNullable<GameState["resources"]>;
 
@@ -178,11 +179,13 @@ export interface AnimalCommandPayload {
   biome?: BiomeType;
 }
 
+import { TargetType } from "../../constants/EntityEnums";
+
 export interface GiveResourceCommandPayload {
   agentId: string;
   resource: ResourceType;
   amount: number;
-  targetType?: "agent";
+  targetType?: TargetType;
 }
 
 import {
@@ -281,7 +284,7 @@ export type SimulationCommand =
   | {
       type: SimulationCommandType.TIME_COMMAND;
       command: TimeCommandType;
-      payload?: { weatherType: string };
+      payload?: { weatherType: WeatherType };
     }
   | {
       type: SimulationCommandType.FORCE_EMERGENCE_EVALUATION;

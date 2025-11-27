@@ -12,8 +12,8 @@ import { logger } from "../../../../../infrastructure/utils/logger";
 import {
   SocialPreference,
   WorkEthic,
-  ExplorationType,
 } from "../../../../../shared/constants/AIEnums";
+import { ExplorationType } from "../../../../../shared/constants/AgentEnums";
 
 /**
  * Manages AI state creation, retrieval, and cleanup for agents.

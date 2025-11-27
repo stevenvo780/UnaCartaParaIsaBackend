@@ -3,7 +3,10 @@
  * This file exists to break circular dependencies between MultiRateScheduler and PerformanceMonitor.
  */
 
-export type TickRate = "FAST" | "MEDIUM" | "SLOW";
+import { TickRate } from "../../../shared/constants/SchedulerEnums";
+
+// Re-export TickRate enum for backward compatibility
+export { TickRate };
 
 interface RateStats {
   count: number;

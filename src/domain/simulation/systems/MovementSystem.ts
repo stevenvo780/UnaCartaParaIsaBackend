@@ -916,7 +916,8 @@ export class MovementSystem extends EventEmitter {
           MOVEMENT_CONSTANTS.BASE_MOVEMENT_SPEED,
           MOVEMENT_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
         );
-        const difficulty = assessRouteDifficultyByDistance(distance);
+        const difficulty: Difficulty =
+          assessRouteDifficultyByDistance(distance);
 
         const zoneDistance: ZoneDistance = {
           fromZone: zoneA.id,

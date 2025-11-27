@@ -74,7 +74,7 @@ export class AnimalBehavior {
     }
 
     if (Math.random() < 0.02) {
-      animal.state = "idle";
+      animal.state = AnimalState.IDLE;
       return;
     }
 
@@ -255,7 +255,7 @@ export class AnimalBehavior {
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < 30) {
-        animal.state = "drinking";
+        animal.state = AnimalState.DRINKING;
         const consumed = config.waterConsumptionRate;
         AnimalNeeds.hydrate(animal, consumed * 20);
 
@@ -336,7 +336,7 @@ export class AnimalBehavior {
             id: `animal_${animal.type}_${Date.now()}_${Math.random()}`,
             type: animal.type,
             position: offspringPosition,
-            state: "idle",
+            state: AnimalState.IDLE,
             needs: {
               hunger: 100,
               thirst: 100,
@@ -375,7 +375,7 @@ export class AnimalBehavior {
           logger.info(
             `👶 Animal ${animal.type} reproduced: ${offspring.id} (gen ${generation})`,
           );
-          animal.state = "idle";
+          animal.state = AnimalState.IDLE;
         }
       } else {
         this.moveToward(

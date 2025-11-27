@@ -1,7 +1,7 @@
 import { InventorySystem } from "./InventorySystem";
 import type { GameState } from "../../types/game-types";
+import { WeaponId } from "../../../shared/constants/CraftingEnums";
 import type {
-  WeaponId,
   CraftingRecipe,
   CraftingJob,
 } from "../../types/simulation/crafting";
@@ -25,7 +25,7 @@ type AgentRecipeState = {
   timesUsed: number;
 };
 
-const BASE_WEAPONS: WeaponId[] = ["stone_dagger", "wooden_club"];
+const BASE_WEAPONS: WeaponId[] = [WeaponId.STONE_DAGGER, WeaponId.WOODEN_CLUB];
 
 const BASIC_RECIPE_IDS = [
   "wood_to_plank",
