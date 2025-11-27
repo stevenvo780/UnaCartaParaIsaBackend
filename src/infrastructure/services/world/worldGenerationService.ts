@@ -162,10 +162,10 @@ export class WorldGenerationService {
 
     if (
       biomeConfig.density.trees &&
-      tileRng() < biomeConfig.density.trees * 0.1
+      tileRng() < biomeConfig.density.trees * 0.4
     ) {
       const clusterNoise = this.noiseGen.noise2D(x * 0.05, y * 0.05);
-      if (clusterNoise > 1 - (biomeConfig.clustering || 0.5)) {
+      if (clusterNoise > 0.5 - (biomeConfig.clustering || 0.5)) {
         assets.vegetation.push(`tree_${biomeConfig.id}`);
       }
     }

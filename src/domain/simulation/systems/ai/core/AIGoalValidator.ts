@@ -293,7 +293,9 @@ export class AIGoalValidator {
           if (isWorldResourceType(foodType)) {
             const resources =
               this.deps.worldResourceSystem.getResourcesByType(foodType);
-            const targetResource = resources.find((r) => r.id === goal.targetId);
+            const targetResource = resources.find(
+              (r) => r.id === goal.targetId,
+            );
             if (targetResource) {
               return targetResource.state !== "depleted";
             }
@@ -302,8 +304,9 @@ export class AIGoalValidator {
       }
 
       if (resourceTypeStr === "water") {
-        const resources =
-          this.deps.worldResourceSystem.getResourcesByType("water_source" as WorldResourceType);
+        const resources = this.deps.worldResourceSystem.getResourcesByType(
+          "water_source" as WorldResourceType,
+        );
         const targetResource = resources.find((r) => r.id === goal.targetId);
         if (targetResource) {
           return targetResource.state !== "depleted";
@@ -311,8 +314,9 @@ export class AIGoalValidator {
       }
 
       if (resourceTypeStr === "wood") {
-        const resources =
-          this.deps.worldResourceSystem.getResourcesByType("tree" as WorldResourceType);
+        const resources = this.deps.worldResourceSystem.getResourcesByType(
+          "tree" as WorldResourceType,
+        );
         const targetResource = resources.find((r) => r.id === goal.targetId);
         if (targetResource) {
           return targetResource.state !== "depleted";
@@ -320,8 +324,9 @@ export class AIGoalValidator {
       }
 
       if (resourceTypeStr === "stone") {
-        const resources =
-          this.deps.worldResourceSystem.getResourcesByType("rock" as WorldResourceType);
+        const resources = this.deps.worldResourceSystem.getResourcesByType(
+          "rock" as WorldResourceType,
+        );
         const targetResource = resources.find((r) => r.id === goal.targetId);
         if (targetResource) {
           return targetResource.state !== "depleted";

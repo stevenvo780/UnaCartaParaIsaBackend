@@ -346,36 +346,8 @@ export class AISystem extends EventEmitter {
       getAgentPosition: (agentId: string) => this.getAgentPosition(agentId),
       findNearestResource: (entityId: string, resourceType: string) =>
         this.findNearestResourceForEntity(entityId, resourceType),
-      findNearestHuntableAnimal: (entityId: string) => {
-        const agentPos = this.getAgentPosition(entityId);
-        if (!agentPos || !this.gameState.animals?.animals) return null;
-
-        const HUNT_SEARCH_RANGE = 800;
-        let nearest: { id: string; x: number; y: number; type: string } | null =
-          null;
-        let minDist = Infinity;
-
-        for (const animal of this.gameState.animals.animals) {
-          if (animal.isDead) continue;
-          const config = getAnimalConfig(animal.type);
-          if (!config?.canBeHunted) continue;
-
-          const dist = Math.hypot(
-            agentPos.x - animal.position.x,
-            agentPos.y - animal.position.y,
-          );
-          if (dist < minDist && dist < HUNT_SEARCH_RANGE) {
-            minDist = dist;
-            nearest = {
-              id: animal.id,
-              x: animal.position.x,
-              y: animal.position.y,
-              type: animal.type,
-            };
-          }
-        }
-        return nearest;
-      },
+      findNearestHuntableAnimal: (entityId: string) =>
+        this.findNearestHuntableAnimal(entityId),
     });
 
     this.actionExecutor = new AIActionExecutor({
@@ -676,7 +648,9 @@ export class AISystem extends EventEmitter {
         aiState.currentGoal = aiState.goalQueue.shift() ?? null;
         aiState.lastDecisionTime = now;
         if (aiState.currentGoal) {
-          logger.debug(`🎯 [AI] ${agentId}: ${describeGoal(aiState.currentGoal)} (from queue)`);
+          logger.debug(
+            `🎯 [AI] ${agentId}: ${describeGoal(aiState.currentGoal)} (from queue)`,
+          );
           simulationEvents.emit(GameEventNames.AGENT_GOAL_CHANGED, {
             agentId,
             newGoal: aiState.currentGoal,
@@ -825,7 +799,10 @@ export class AISystem extends EventEmitter {
     if (aiState.isInCombat) return;
 
     const needs = this.needsSystem?.getNeeds(agentId);
-    if (needs && (needs.hunger < 40 || needs.thirst < 40 || needs.energy < 30)) {
+    if (
+      needs &&
+      (needs.hunger < 40 || needs.thirst < 40 || needs.energy < 30)
+    ) {
       return; // Agent needs to address urgent needs first
     }
 
@@ -842,7 +819,12 @@ export class AISystem extends EventEmitter {
     let attempts = 0;
     while (aiState.goalQueue.length < maxGoals && attempts < 10) {
       attempts++;
-      const workGoal = this.generateWorkGoal(agentId, aiState, now, excludedIds);
+      const workGoal = this.generateWorkGoal(
+        agentId,
+        aiState,
+        now,
+        excludedIds,
+      );
       if (workGoal && workGoal.targetId) {
         aiState.goalQueue.push(workGoal);
         excludedIds.add(workGoal.targetId); // Prevent same target in next iteration
@@ -863,7 +845,7 @@ export class AISystem extends EventEmitter {
     excludeTargetIds: Set<string> = new Set(),
   ): AIGoal | null {
     const agentRole = this.roleSystem?.getAgentRole(agentId);
-    const role = agentRole?.role;
+    const role = agentRole?.roleType;
     const foodTypes = ["berry_bush", "mushroom_patch", "wheat_crop"];
     const woodTypes = ["tree"];
     const stoneTypes = ["rock"];
@@ -881,6 +863,9 @@ export class AISystem extends EventEmitter {
     if (role === "hunter") {
       // Find nearest huntable animal
       const animal = this.findNearestHuntableAnimal(agentId);
+      logger.debug(
+        `🐺 [AI] ${agentId}: hunter findNearestHuntableAnimal -> ${animal?.id ?? "none"} (type: ${animal?.type ?? "N/A"})`,
+      );
       if (animal && !excluded.has(animal.id)) {
         return {
           id: `hunt_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
@@ -1111,36 +1096,8 @@ export class AISystem extends EventEmitter {
       findNearestResource: (id: string, resourceType: string) => {
         return this.findNearestResourceForEntity(id, resourceType);
       },
-      findNearestHuntableAnimal: (entityId: string) => {
-        const agentPos = this.getAgentPosition(entityId);
-        if (!agentPos || !this.gameState.animals?.animals) return null;
-
-        const HUNT_SEARCH_RANGE = 1050;
-        let nearest: { id: string; x: number; y: number; type: string } | null =
-          null;
-        let minDist = Infinity;
-
-        for (const animal of this.gameState.animals.animals) {
-          if (animal.isDead) continue;
-          const config = getAnimalConfig(animal.type);
-          if (!config?.canBeHunted) continue;
-
-          const dist = Math.hypot(
-            agentPos.x - animal.position.x,
-            agentPos.y - animal.position.y,
-          );
-          if (dist < minDist && dist < HUNT_SEARCH_RANGE) {
-            minDist = dist;
-            nearest = {
-              id: animal.id,
-              x: animal.position.x,
-              y: animal.position.y,
-              type: animal.type,
-            };
-          }
-        }
-        return nearest;
-      },
+      findNearestHuntableAnimal: (entityId: string) =>
+        this.findNearestHuntableAnimal(entityId),
       getAgentRole: (id: string) => this.roleSystem?.getAgentRole(id),
       getAgentInventory: (id: string) =>
         this.inventorySystem?.getAgentInventory(id),
@@ -1306,6 +1263,13 @@ export class AISystem extends EventEmitter {
             totalCapacity > 0 ? usedCapacity / totalCapacity : 0,
         };
       },
+      findAgentWithResource: (
+        entityId: string,
+        resourceType: "food" | "water",
+        minAmount: number,
+      ) => this.findAgentWithResource(entityId, resourceType, minAmount),
+      findPotentialMate: (entityId: string) => this.findPotentialMate(entityId),
+      findNearbyAgent: (entityId: string) => this.findNearbyAgent(entityId),
     };
 
     const goals = planGoals(deps, aiState, now);
@@ -1617,7 +1581,9 @@ export class AISystem extends EventEmitter {
     const now = Date.now();
     if (cached && now - cached.timestamp < this.RESOURCE_CACHE_TTL) {
       // Check if our cached resource is still reserved by us
-      const reservedBy = this.resourceReservations.get(cached.resource?.id ?? "");
+      const reservedBy = this.resourceReservations.get(
+        cached.resource?.id ?? "",
+      );
       if (cached.resource && reservedBy === entityId) {
         return cached.resource;
       }
@@ -1706,6 +1672,106 @@ export class AISystem extends EventEmitter {
     return nearest;
   }
 
+  private findAgentWithResource(
+    entityId: string,
+    resourceType: "food" | "water",
+    minAmount: number,
+  ): { agentId: string; x: number; y: number } | null {
+    const agent = this.gameState.agents.find((a) => a.id === entityId);
+    if (!agent?.position) return null;
+
+    let nearest: { agentId: string; x: number; y: number } | null = null;
+    let minDistance = Infinity;
+
+    for (const other of this.gameState.agents) {
+      if (other.id === entityId || other.isDead) continue;
+      if (!other.position) continue;
+
+      const inventory = this.inventorySystem?.getAgentInventory(other.id);
+      if (!inventory) continue;
+
+      const amount = inventory[resourceType] || 0;
+      if (amount >= minAmount) {
+        const dx = other.position.x - agent.position.x;
+        const dy = other.position.y - agent.position.y;
+        const distSq = dx * dx + dy * dy;
+
+        if (distSq < minDistance) {
+          minDistance = distSq;
+          nearest = {
+            agentId: other.id,
+            x: other.position.x,
+            y: other.position.y,
+          };
+        }
+      }
+    }
+    return nearest;
+  }
+
+  private findPotentialMate(
+    entityId: string,
+  ): { id: string; x: number; y: number } | null {
+    const agent = this.gameState.agents.find((a) => a.id === entityId);
+    if (!agent?.position) return null;
+
+    let nearest: { id: string; x: number; y: number } | null = null;
+    let minDistance = Infinity;
+
+    for (const other of this.gameState.agents) {
+      if (other.id === entityId || other.isDead) continue;
+      if (!other.position) continue;
+
+      // Basic check: opposite sex and adult
+      if (agent.sex && other.sex && agent.sex !== other.sex) {
+        if (other.ageYears >= 18) {
+          const dx = other.position.x - agent.position.x;
+          const dy = other.position.y - agent.position.y;
+          const distSq = dx * dx + dy * dy;
+
+          if (distSq < minDistance) {
+            minDistance = distSq;
+            nearest = {
+              id: other.id,
+              x: other.position.x,
+              y: other.position.y,
+            };
+          }
+        }
+      }
+    }
+    return nearest;
+  }
+
+  private findNearbyAgent(
+    entityId: string,
+  ): { id: string; x: number; y: number } | null {
+    const agent = this.gameState.agents.find((a) => a.id === entityId);
+    if (!agent?.position) return null;
+
+    let nearest: { id: string; x: number; y: number } | null = null;
+    let minDistance = Infinity;
+
+    for (const other of this.gameState.agents) {
+      if (other.id === entityId || other.isDead) continue;
+      if (!other.position) continue;
+
+      const dx = other.position.x - agent.position.x;
+      const dy = other.position.y - agent.position.y;
+      const distSq = dx * dx + dy * dy;
+
+      if (distSq < minDistance) {
+        minDistance = distSq;
+        nearest = {
+          id: other.id,
+          x: other.position.x,
+          y: other.position.y,
+        };
+      }
+    }
+    return nearest;
+  }
+
   /**
    * Releases resource reservation when goal completes or fails.
    */
@@ -1719,19 +1785,38 @@ export class AISystem extends EventEmitter {
 
   /**
    * Finds the nearest huntable animal for an agent.
+   * Uses AnimalSystem directly for real-time animal data.
    */
   private findNearestHuntableAnimal(
     entityId: string,
   ): { id: string; x: number; y: number; type: string } | null {
     const agentPos = this.getAgentPosition(entityId);
-    if (!agentPos || !this.gameState.animals?.animals) return null;
+    if (!agentPos) return null;
+
+    // Use AnimalSystem directly - this is the source of truth for animals
+    if (!this.animalSystem) {
+      logger.debug(`🐺 [AI] ${entityId}: animalSystem not available`);
+      return null;
+    }
 
     const HUNT_SEARCH_RANGE = 800;
+    const animals = this.animalSystem.getAnimalsInRadius(
+      agentPos,
+      HUNT_SEARCH_RANGE,
+    );
+
+    if (animals.length === 0) {
+      logger.debug(
+        `🐺 [AI] ${entityId}: No animals in radius ${HUNT_SEARCH_RANGE} (agentPos: ${Math.round(agentPos.x)},${Math.round(agentPos.y)})`,
+      );
+      return null;
+    }
+
     let nearest: { id: string; x: number; y: number; type: string } | null =
       null;
     let minDist = Infinity;
 
-    for (const animal of this.gameState.animals.animals) {
+    for (const animal of animals) {
       if (animal.isDead) continue;
       const config = getAnimalConfig(animal.type);
       if (!config?.canBeHunted) continue;
@@ -1740,7 +1825,7 @@ export class AISystem extends EventEmitter {
         agentPos.x - animal.position.x,
         agentPos.y - animal.position.y,
       );
-      if (dist < minDist && dist < HUNT_SEARCH_RANGE) {
+      if (dist < minDist) {
         minDist = dist;
         nearest = {
           id: animal.id,
@@ -1750,6 +1835,13 @@ export class AISystem extends EventEmitter {
         };
       }
     }
+
+    if (nearest) {
+      logger.debug(
+        `🐺 [AI] ${entityId}: Found huntable ${nearest.type} at dist ${minDist.toFixed(0)}`,
+      );
+    }
+
     return nearest;
   }
 

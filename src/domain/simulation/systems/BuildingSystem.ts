@@ -18,6 +18,7 @@ interface BuildingSystemConfig {
   maxHouses: number;
   maxMines: number;
   maxWorkbenches: number;
+  maxFarms: number;
 }
 
 interface ConstructionJob {
@@ -34,6 +35,7 @@ const DEFAULT_CONFIG: BuildingSystemConfig = {
   maxHouses: 8,
   maxMines: 4,
   maxWorkbenches: 3,
+  maxFarms: 4,
 };
 
 export interface BuildingMetadata {
@@ -140,6 +142,16 @@ export class BuildingSystem {
       !this.hasActiveJob("workbench")
     ) {
       return "workbench";
+    }
+
+    // Construir granjas para producir comida (requiere madera y piedra)
+    const farms = zones.filter(
+      (z) =>
+        z.metadata?.building === "farm" &&
+        z.metadata?.underConstruction !== true,
+    ).length;
+    if (farms < this.config.maxFarms && !this.hasActiveJob("farm")) {
+      return "farm";
     }
 
     return null;
@@ -257,6 +269,7 @@ export class BuildingSystem {
       building: label,
       underConstruction: true,
       craftingStation: label === "workbench",
+      productionResource: label === "farm" ? "food" : undefined,
     };
 
     const bounds = {
@@ -339,7 +352,23 @@ export class BuildingSystem {
     zone.metadata.underConstruction = false;
     zone.metadata.building = job.label === "mine" ? "mine" : job.label;
     zone.metadata.craftingStation = job.label === "workbench";
-    zone.type = job.label === "house" ? ZoneType.REST : ZoneType.WORK;
+    zone.type =
+      job.label === "house"
+        ? ZoneType.REST
+        : job.label === "farm"
+          ? ZoneType.FOOD
+          : ZoneType.WORK;
+
+    // Si es una granja, spawnear cultivos de trigo
+    if (job.label === "farm" && this.worldResourceSystem && zone.bounds) {
+      const bounds = zone.bounds as {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+      };
+      this.spawnFarmCrops(bounds);
+    }
     zone.props = {
       ...(zone.props || {}),
       status: "ready",
@@ -430,5 +459,50 @@ export class BuildingSystem {
       `Could not find valid position for building after ${MAX_ATTEMPTS} attempts`,
     );
     return null;
+  }
+
+  /**
+   * Spawns wheat crops in a farm zone after construction completes.
+   * Creates a grid of wheat_crop resources within the farm bounds.
+   */
+  private spawnFarmCrops(bounds: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }): void {
+    if (!this.worldResourceSystem) return;
+
+    const CROP_SPACING = 32; // Espacio entre cultivos
+    const MARGIN = 16; // Margen desde los bordes
+
+    const startX = bounds.x + MARGIN;
+    const startY = bounds.y + MARGIN;
+    const endX = bounds.x + bounds.width - MARGIN;
+    const endY = bounds.y + bounds.height - MARGIN;
+
+    let cropsSpawned = 0;
+
+    for (let y = startY; y < endY; y += CROP_SPACING) {
+      for (let x = startX; x < endX; x += CROP_SPACING) {
+        // Pequeña variación aleatoria en la posición
+        const offsetX = (Math.random() - 0.5) * 8;
+        const offsetY = (Math.random() - 0.5) * 8;
+
+        const resource = this.worldResourceSystem.spawnResource(
+          "wheat_crop",
+          { x: x + offsetX, y: y + offsetY },
+          "grassland",
+        );
+
+        if (resource) {
+          cropsSpawned++;
+        }
+      }
+    }
+
+    logger.info(
+      `🌾 [BUILDING] Farm completed: spawned ${cropsSpawned} wheat crops at (${bounds.x}, ${bounds.y})`,
+    );
   }
 }

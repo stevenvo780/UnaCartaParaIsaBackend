@@ -46,7 +46,7 @@ export const SIMPLE_BIOMES: SimpleBiomeConfig[] = [
     color: "#2E7D32",
     isWalkable: true,
     temperature: [0.0, 1.0],
-    moisture: [0.5, 1.0],
+    moisture: [0.55, 1.0],
     elevation: [0.0, 0.85],
     density: {
       trees: 0.98,
@@ -96,7 +96,7 @@ export const SIMPLE_BIOMES: SimpleBiomeConfig[] = [
     color: "#558B2F",
     isWalkable: true,
     temperature: [0.5, 1.0],
-    moisture: [0.8, 1.0],
+    moisture: [0.65, 1.0],
     elevation: [0.0, 0.3],
     density: {
       trees: 0.7,
@@ -157,7 +157,7 @@ export const SIMPLE_BIOMES: SimpleBiomeConfig[] = [
     name: "Bosque Místico",
     color: "#7B1FA2",
     isWalkable: true,
-    temperature: [0.2, 0.4],
+    temperature: [0.2, 0.5],
     moisture: [0.4, 0.7],
     elevation: [0.1, 0.5],
     density: {
@@ -174,7 +174,7 @@ export const SIMPLE_BIOMES: SimpleBiomeConfig[] = [
     color: "#00695C",
     isWalkable: true,
     temperature: [0.4, 0.7],
-    moisture: [0.8, 1.0],
+    moisture: [0.7, 1.0],
     elevation: [0.0, 0.3],
     density: {
       trees: 0.25,

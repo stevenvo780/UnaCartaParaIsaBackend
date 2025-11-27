@@ -12,7 +12,10 @@ import type {
 } from "../../../../types/simulation/economy";
 import type { SettlementDemand } from "../../../../types/simulation/governance";
 import type { PriorityManager } from "./PriorityManager";
-import { evaluateCriticalNeeds } from "../evaluators/NeedsEvaluator";
+import { evaluateBiologicalDrives } from "../evaluators/BiologicalDriveEvaluator";
+import { evaluateReproductionDrive } from "../evaluators/ReproductionEvaluator";
+import { evaluateSocialDrives } from "../evaluators/SocialDriveEvaluator";
+import { evaluateCognitiveDrives } from "../evaluators/CognitiveDriveEvaluator";
 import {
   evaluateWorkOpportunities,
   evaluateExplorationOpportunities,
@@ -121,21 +124,35 @@ export interface AgentGoalPlannerDeps {
     waterPerCapita: number;
     stockpileFillRatio: number;
   } | null;
+
+  // New deps for drives
+  findAgentWithResource?: (
+    entityId: string,
+    resourceType: "food" | "water",
+    minAmount: number,
+  ) => { agentId: string; x: number; y: number } | null;
+  findPotentialMate?: (
+    entityId: string,
+  ) => { id: string; x: number; y: number } | null;
+  findNearbyAgent?: (
+    entityId: string,
+  ) => { id: string; x: number; y: number } | null;
 }
 
 /**
  * Plans goals for an agent based on current state and available opportunities.
  *
  * Evaluates multiple goal categories:
- * - Critical needs (hunger, thirst, energy)
- * - Collective/community needs (stockpile filling, resource shortages)
+ * - Biological Drives (Hunger, Thirst, Energy)
+ * - Reproduction Drive
+ * - Social Drives (Social, Fun, Mental Health)
+ * - Cognitive Drives (Work, Exploration)
+ * - Collective/community needs
  * - Combat and defense
- * - Assistance to other agents
- * - Construction and building
- * - Resource gathering and deposit
+ * - Assistance
+ * - Construction
+ * - Resource gathering
  * - Crafting
- * - Work opportunities
- * - Exploration
  * - Quests
  * - Trade
  *
@@ -168,30 +185,62 @@ export function planGoals(
       ?.filter((z) => types.includes(z.type))
       .map((z) => z.id) || [];
 
+  // --- 1. Biological Drives (Survival) ---
   if (entityNeeds) {
-    const needsDeps = {
+    const bioDeps = {
       getEntityNeeds: deps.getEntityNeeds,
       getAgentInventory: deps.getAgentInventory,
       findNearestResource: deps.findNearestResource,
       findNearestHuntableAnimal: deps.findNearestHuntableAnimal,
-      getCurrentTimeOfDay: deps.getCurrentTimeOfDay,
-      getAgentRole: deps.getAgentRole
-        ? (id: string): { roleType: RoleType } | undefined => {
-            const role = deps.getAgentRole!(id);
-            return role ? { roleType: role.roleType } : undefined;
-          }
-        : undefined,
-      getCollectiveResourceState: deps.getCollectiveResourceState,
+      findAgentWithResource: deps.findAgentWithResource,
     };
-    const criticalGoals = evaluateCriticalNeeds(needsDeps, aiState);
-    goals.push(...criticalGoals);
+    const bioGoals = evaluateBiologicalDrives(bioDeps, aiState);
+    goals.push(...bioGoals);
 
-    const criticalSurvivalGoal = criticalGoals.find((g) => g.priority > 0.8);
+    // If survival is critical, return immediately
+    const criticalSurvivalGoal = bioGoals.find((g) => g.priority > 0.9);
     if (criticalSurvivalGoal) {
       return [criticalSurvivalGoal];
     }
   }
 
+  // --- 2. Reproduction Drive ---
+  if (entityNeeds) {
+    const reproDeps = {
+      getEntityNeeds: deps.getEntityNeeds,
+      getEntityStats: deps.getEntityStats,
+      getAgentInventory: deps.getAgentInventory,
+      findPotentialMate: deps.findPotentialMate,
+    };
+    const reproGoals = evaluateReproductionDrive(reproDeps, aiState);
+    goals.push(...reproGoals);
+  }
+
+  // --- 3. Social Drives ---
+  if (entityNeeds) {
+    const socialDeps = {
+      getEntityNeeds: deps.getEntityNeeds,
+      findNearbyAgent: deps.findNearbyAgent,
+    };
+    const socialGoals = evaluateSocialDrives(socialDeps, aiState);
+    goals.push(...socialGoals);
+  }
+
+  // --- 4. Cognitive Drives (Work/Explore) ---
+  const cognitiveDeps = {
+    getAgentRole: deps.getAgentRole
+      ? (id: string): { roleType: RoleType } | undefined => {
+          const role = deps.getAgentRole!(id);
+          return role ? { roleType: role.roleType } : undefined;
+        }
+      : undefined,
+    getAgentInventory: deps.getAgentInventory,
+    getCurrentTimeOfDay: deps.getCurrentTimeOfDay,
+  };
+  const cognitiveGoals = evaluateCognitiveDrives(cognitiveDeps, aiState);
+  goals.push(...cognitiveGoals);
+
+  // --- 5. Collective Needs (Community) ---
   if (deps.getAgentInventory && deps.getAllStockpiles && deps.getPopulation) {
     const collectiveDeps: CollectiveNeedsContext = {
       gameState: deps.gameState,
@@ -222,6 +271,7 @@ export function planGoals(
     goals.push(...collectiveGoals);
   }
 
+  // --- 6. Combat ---
   if (
     deps.getStrategy &&
     deps.isWarrior &&

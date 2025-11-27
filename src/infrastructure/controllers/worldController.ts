@@ -52,10 +52,14 @@ export class WorldController {
    */
   async generateChunk(req: Request, res: Response): Promise<void> {
     try {
+      const body = req.body as ChunkRequest;
+      logger.info(
+        `🗺️ [WorldController] generateChunk request: x=${body.x}, y=${body.y}`,
+      );
+
       const worldGenerationService = container.get<WorldGenerationService>(
         TYPES.WorldGenerationService,
       );
-      const body = req.body as ChunkRequest;
       const { x, y, seed, width, height, tileSize } = body;
 
       if (typeof x !== "number" || typeof y !== "number") {
@@ -120,7 +124,7 @@ export class WorldController {
         const worldX = x * pixelWidth;
         const worldY = y * pixelHeight;
 
-        animalSystem.spawnAnimalsForChunk(
+        const spawnedCount = animalSystem.spawnAnimalsForChunk(
           { x, y },
           {
             x: worldX,
@@ -130,6 +134,12 @@ export class WorldController {
           },
           chunk,
         );
+
+        if (spawnedCount > 0) {
+          logger.info(
+            `🐾 [WorldController] Spawned ${spawnedCount} animals in chunk (${x}, ${y})`,
+          );
+        }
 
         const worldResourceSystem = container.get<WorldResourceSystem>(
           TYPES.WorldResourceSystem,

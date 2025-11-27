@@ -179,8 +179,8 @@ export class WorldLoader {
           const child = this.runner.lifeCycleSystem.spawnAgent({
             name: childData.name,
             sex: childData.sex,
-            ageYears: 5,
-            lifeStage: LifeStage.CHILD,
+            ageYears: 20, // Start as adults so they can work
+            lifeStage: LifeStage.ADULT,
             generation: 1,
             parents: {
               father: stev.id,
@@ -240,15 +240,82 @@ export class WorldLoader {
       }
     }
 
-    // Animals are spawned per-chunk only (lazy loading via /api/world/chunk endpoint)
-    // No global animal spawn to avoid position inconsistencies
-    logger.info(
-      "🐾 Animals will be spawned when chunks are requested by frontend",
-    );
+    // === SPAWN INITIAL ANIMALS NEAR AGENTS ===
+    // This ensures hunters have animals to hunt even without chunk requests from frontend
+    this.spawnInitialAnimals();
   }
 
-  // Animals are ONLY spawned per-chunk via AnimalSpawning.spawnAnimalsInChunk()
-  // This is triggered when frontend requests chunks via /api/world/chunk/:x/:y
+  /**
+   * Spawns initial animals near agent spawn points.
+   * This ensures the backend has huntable animals from the start,
+   * regardless of whether frontend requests chunks.
+   */
+  private spawnInitialAnimals(): void {
+    const animalSystem = this.runner.animalSystem;
+    const tileSize = 64;
+    const chunkTileSize = 16; // tiles per chunk
+    const chunkPixelSize = chunkTileSize * tileSize;
+
+    // Find the average position of all agents to spawn animals near them
+    const agents = this.runner.state.agents;
+    if (agents.length === 0) {
+      logger.warn(
+        "🐾 [WorldLoader] No agents found, spawning animals at origin",
+      );
+    }
+
+    let avgX = 0;
+    let avgY = 0;
+    let count = 0;
+
+    for (const agent of agents) {
+      if (agent.position) {
+        avgX += agent.position.x;
+        avgY += agent.position.y;
+        count++;
+      }
+    }
+
+    // Use agent center or default to origin area
+    const centerX = count > 0 ? avgX / count : 0;
+    const centerY = count > 0 ? avgY / count : 0;
+
+    // Convert pixel position to chunk coordinates
+    const centerChunkX = Math.max(0, Math.floor(centerX / chunkPixelSize));
+    const centerChunkY = Math.max(0, Math.floor(centerY / chunkPixelSize));
+
+    logger.info(
+      `🐾 [WorldLoader] Spawning animals around agent center: (${Math.round(centerX)}, ${Math.round(centerY)}) = chunk (${centerChunkX}, ${centerChunkY})`,
+    );
+
+    // Spawn in a 5x5 grid of chunks around agent center
+    const chunkRadius = 2;
+    let totalSpawned = 0;
+
+    for (let dx = -chunkRadius; dx <= chunkRadius; dx++) {
+      for (let dy = -chunkRadius; dy <= chunkRadius; dy++) {
+        const chunkX = centerChunkX + dx;
+        const chunkY = centerChunkY + dy;
+
+        if (chunkX < 0 || chunkY < 0) continue;
+
+        const spawned = animalSystem.spawnAnimalsForChunk(
+          { x: chunkX, y: chunkY },
+          {
+            x: chunkX * chunkPixelSize,
+            y: chunkY * chunkPixelSize,
+            width: chunkPixelSize,
+            height: chunkPixelSize,
+          },
+        );
+        totalSpawned += spawned;
+      }
+    }
+
+    logger.info(
+      `🐾 [WorldLoader] Spawned ${totalSpawned} initial animals in ${(chunkRadius * 2 + 1) ** 2} chunks around agent spawn area`,
+    );
+  }
 
   private createInitialInfrastructure(): void {
     const baseX = 100;
@@ -407,8 +474,11 @@ export class WorldLoader {
     const ZONE_SIZE = 120;
     const zones: Zone[] = [];
 
-    for (let x = ZONE_SPACING; x < worldConfig.width; x += ZONE_SPACING) {
-      for (let y = ZONE_SPACING; y < worldConfig.height; y += ZONE_SPACING) {
+    const worldPixelWidth = worldConfig.width * worldConfig.tileSize;
+    const worldPixelHeight = worldConfig.height * worldConfig.tileSize;
+
+    for (let x = ZONE_SPACING; x < worldPixelWidth; x += ZONE_SPACING) {
+      for (let y = ZONE_SPACING; y < worldPixelHeight; y += ZONE_SPACING) {
         const tileX = Math.floor(x / worldConfig.tileSize);
         const tileY = Math.floor(y / worldConfig.tileSize);
 

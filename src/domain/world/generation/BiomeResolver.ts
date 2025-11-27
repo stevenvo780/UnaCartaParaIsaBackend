@@ -37,15 +37,8 @@ export class BiomeResolver {
       return candidates[0].id;
     }
 
-    const specificBiomes = candidates.filter(
-      (b) => b.id !== BiomeType.GRASSLAND,
-    );
-
-    const biomesToConsider =
-      specificBiomes.length > 0 ? specificBiomes : candidates;
-
     const result = this.getBestFit(
-      biomesToConsider,
+      candidates,
       temperature,
       moisture,
       elevation,

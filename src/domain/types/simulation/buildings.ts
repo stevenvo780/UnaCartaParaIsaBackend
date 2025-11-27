@@ -1,4 +1,4 @@
-export type BuildingLabel = "house" | "mine" | "workbench";
+export type BuildingLabel = "house" | "mine" | "workbench" | "farm";
 
 export type BuildingCondition =
   | "pristine"
@@ -56,6 +56,7 @@ export const BUILDING_COSTS: Record<BuildingLabel, BuildingConstructionCost> = {
   house: { wood: 12, stone: 4, time: 25_000 },
   mine: { wood: 6, stone: 10, time: 30_000 },
   workbench: { wood: 8, stone: 4, time: 20_000 },
+  farm: { wood: 8, stone: 2, time: 35_000 },
 };
 
 export function getBuildingCondition(durability: number): BuildingCondition {

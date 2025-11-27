@@ -153,7 +153,7 @@ export class RoleSystem extends EventEmitter {
     this.gameState = gameState;
     this.config = {
       autoAssignRoles: true,
-      reassignmentIntervalSec: 120,
+      reassignmentIntervalSec: 15,
       experienceGainPerSecond: 0.001,
       satisfactionDecayPerSecond: 0.0005,
     };
@@ -262,12 +262,62 @@ export class RoleSystem extends EventEmitter {
 
   private autoAssignRoles(): void {
     const agents = this.getAdultAgents();
+    const pop = agents.length;
+    const minHunters = Math.max(1, Math.ceil(pop * 0.1));
 
+    // First, assign roles to agents without any role
     agents.forEach((agent) => {
       if (!this.roles.has(agent.id)) {
+        // Recalculate current hunter count each iteration
+        const currentHunters = Array.from(this.roles.values()).filter(
+          (r) => r.roleType === "hunter",
+        ).length;
+        const needMoreHunters = currentHunters < minHunters;
+
+        // If we need hunters and this agent qualifies, prioritize hunter
+        if (needMoreHunters) {
+          const hunterConfig = ROLE_DEFINITIONS.find(
+            (r) => r.type === "hunter",
+          );
+          if (hunterConfig && this.meetsRequirements(agent, hunterConfig)) {
+            const result = this.reassignRole(agent.id, "hunter");
+            if (result.success) {
+              logger.info(`🎯 Auto-assigned hunter: ${agent.id}`);
+              return;
+            }
+          }
+        }
         this.assignBestRole(agent);
       }
     });
+
+    // Second pass: ensure we have at least minHunters
+    const currentHunterCount = Array.from(this.roles.values()).filter(
+      (r) => r.roleType === "hunter",
+    ).length;
+
+    if (currentHunterCount < minHunters) {
+      const hunterConfig = ROLE_DEFINITIONS.find((r) => r.type === "hunter");
+      if (!hunterConfig) return;
+
+      // Find eligible agents who aren't hunters yet
+      for (const agent of agents) {
+        if (currentHunterCount >= minHunters) break;
+
+        const currentRole = this.roles.get(agent.id);
+        if (currentRole?.roleType === "hunter") continue;
+
+        if (this.meetsRequirements(agent, hunterConfig)) {
+          const prevRole = currentRole?.roleType ?? "none";
+          const result = this.reassignRole(agent.id, "hunter");
+          if (result.success) {
+            logger.info(
+              `🎯 Forced hunter assignment: ${agent.id} (was ${prevRole})`,
+            );
+          }
+        }
+      }
+    }
   }
 
   private getAdultAgents(): AgentProfile[] {

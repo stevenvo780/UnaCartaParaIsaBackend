@@ -797,6 +797,28 @@ export class AnimalSystem {
   private addAnimal(animal: Animal): void {
     this.animals.set(animal.id, animal);
     this.addToSpatialGrid(animal);
+    logger.debug(
+      `🐾 [AnimalSystem] Added animal ${animal.id} (${animal.type}) at (${animal.position.x.toFixed(0)}, ${animal.position.y.toFixed(0)}). Total: ${this.animals.size}`,
+    );
+  }
+
+  /**
+   * Get all live animals directly from the central Map.
+   * This is the source of truth for animal data.
+   */
+  public getLiveAnimals(): Animal[] {
+    return [...this.animals.values()].filter((a) => !a.isDead);
+  }
+
+  /**
+   * Get total count of live animals (fast, no array allocation)
+   */
+  public getLiveAnimalCount(): number {
+    let count = 0;
+    for (const animal of this.animals.values()) {
+      if (!animal.isDead) count++;
+    }
+    return count;
   }
 
   /**

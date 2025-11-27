@@ -201,7 +201,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     harvestsUntilPartial: 2,
     harvestsUntilDepleted: 3,
 
-    regenerationTime: 120000, // 2 minutos
+    regenerationTime: 600000, // 10 minutos - recursos escasos para fomentar caza
     canRegenerate: true,
 
     sprites: {
@@ -209,10 +209,10 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
       depleted: "berry_bush_empty",
     },
 
-    spawnProbability: 0.4, // Increased from 0.2 - food is essential for survival
+    spawnProbability: 0.03, // Muy reducido - fomenta caza al inicio
     suitableBiomes: [BiomeType.FOREST, BiomeType.GRASSLAND, BiomeType.VILLAGE],
-    clusterSize: { min: 4, max: 10 },
-    minDistanceBetweenClusters: 100,
+    clusterSize: { min: 2, max: 4 },
+    minDistanceBetweenClusters: 300,
   },
 
   [WorldResourceType.MUSHROOM_PATCH]: {
@@ -237,7 +237,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     harvestsUntilPartial: 1,
     harvestsUntilDepleted: 2,
 
-    regenerationTime: 180000, // 3 minutos
+    regenerationTime: 600000, // 10 minutos - igual que berry_bush
     canRegenerate: true,
 
     sprites: {
@@ -245,15 +245,15 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
       depleted: "mushrooms_picked",
     },
 
-    spawnProbability: 0.15,
+    spawnProbability: 0.05, // Reducido para fomentar caza
     suitableBiomes: [
       BiomeType.FOREST,
       BiomeType.WETLAND,
       BiomeType.MYSTICAL,
       BiomeType.VILLAGE,
     ],
-    clusterSize: { min: 3, max: 6 },
-    minDistanceBetweenClusters: 150,
+    clusterSize: { min: 2, max: 4 },
+    minDistanceBetweenClusters: 250,
   },
 
   [WorldResourceType.WHEAT_CROP]: {
