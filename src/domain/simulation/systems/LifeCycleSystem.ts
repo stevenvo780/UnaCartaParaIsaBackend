@@ -345,17 +345,13 @@ export class LifeCycleSystem extends EventEmitter {
         });
 
         if (foodConsumed && this.needsSystem) {
-          const needs = this.needsSystem.getNeeds(agent.id);
-          if (needs) {
-            needs.hunger = Math.min(100, needs.hunger + 10);
-          }
+          // Delegate to NeedsSystem - single source of truth for needs modification
+          this.needsSystem.satisfyNeed(agent.id, "hunger", 10);
         }
 
         if (waterConsumed && this.needsSystem) {
-          const needs = this.needsSystem.getNeeds(agent.id);
-          if (needs) {
-            needs.thirst = Math.min(100, needs.thirst + 10);
-          }
+          // Delegate to NeedsSystem - single source of truth for needs modification
+          this.needsSystem.satisfyNeed(agent.id, "thirst", 10);
         }
       }
     }

@@ -17,6 +17,7 @@ import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 import { TargetType } from "../../../../../shared/constants/EntityEnums";
 import { AnimalState } from "../../../../../shared/constants/AnimalEnums";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
+import type { AnimalRegistry } from "../../../core/AnimalRegistry";
 
 export interface AIActionExecutorDeps {
   gameState: GameState;
@@ -29,6 +30,7 @@ export interface AIActionExecutorDeps {
   movementSystem?: MovementSystem;
   tryDepositResources: (entityId: string, zoneId: string) => void;
   agentRegistry?: AgentRegistry;
+  animalRegistry?: AnimalRegistry;
 }
 
 /**
@@ -294,8 +296,14 @@ export class AIActionExecutor {
       const config = getAnimalConfig(targetAnimal.type);
       const foodValue = config?.foodValue ?? 15;
 
-      targetAnimal.isDead = true;
-      targetAnimal.state = AnimalState.DEAD;
+      // Delegate to AnimalRegistry - single source of truth for animal death
+      if (this.deps.animalRegistry) {
+        this.deps.animalRegistry.markDead(targetId);
+      } else {
+        // Fallback if registry not available
+        targetAnimal.isDead = true;
+        targetAnimal.state = AnimalState.DEAD;
+      }
 
       if (this.deps.inventorySystem) {
         this.deps.inventorySystem.addResource(
