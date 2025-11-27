@@ -163,7 +163,10 @@ export class QuestSystem {
       quest.objectives.forEach((objective) => {
         if (objective.isCompleted) return;
 
-        if (objective.type === QuestObjectiveType.SURVIVE_TIME && objective.requiredAmount) {
+        if (
+          objective.type === QuestObjectiveType.SURVIVE_TIME &&
+          objective.requiredAmount
+        ) {
           const elapsedTime = now - (quest.startedAt || now);
           if (elapsedTime >= objective.requiredAmount * 1000) {
             this.updateObjectiveProgress(quest.id, objective.id);

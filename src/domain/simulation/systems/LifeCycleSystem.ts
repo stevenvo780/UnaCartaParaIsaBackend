@@ -529,9 +529,13 @@ export class LifeCycleSystem extends EventEmitter {
     }
 
     if (!this.gameState.agents) this.gameState.agents = [];
-    this.gameState.agents.push(profile);
 
-    this.agentRegistry?.invalidateProfileIndex();
+    // Use AgentRegistry as single source of truth for adding agents
+    if (this.agentRegistry) {
+      this.agentRegistry.addAgent(profile);
+    } else {
+      this.gameState.agents.push(profile);
+    }
 
     if (profile.position) {
       if (!this.gameState.entities) {
@@ -673,12 +677,19 @@ export class LifeCycleSystem extends EventEmitter {
   public removeAgent(id: string): void {
     if (!this.gameState.agents) return;
 
-    const index = this.gameState.agents.findIndex((a) => a.id === id);
-    if (index !== -1) {
-      this.gameState.agents.splice(index, 1);
+    // Use AgentRegistry as single source of truth for removing agents
+    const removed = this.agentRegistry
+      ? this.agentRegistry.removeAgent(id)
+      : (() => {
+          const index = this.gameState.agents!.findIndex((a) => a.id === id);
+          if (index !== -1) {
+            this.gameState.agents!.splice(index, 1);
+            return true;
+          }
+          return false;
+        })();
 
-      this.agentRegistry?.invalidateProfileIndex();
-
+    if (removed) {
       if (this.gameState.entities) {
         const entityIndex = this.gameState.entities.findIndex(
           (e) => e.id === id,
@@ -761,12 +772,20 @@ export class LifeCycleSystem extends EventEmitter {
 
   public killAgent(id: string): boolean {
     if (!this.gameState.agents) return false;
-    const index = this.gameState.agents.findIndex((a) => a.id === id);
-    if (index === -1) return false;
 
-    this.gameState.agents.splice(index, 1);
+    // Use AgentRegistry as single source of truth for removing agents
+    const removed = this.agentRegistry
+      ? this.agentRegistry.removeAgent(id)
+      : (() => {
+          const index = this.gameState.agents!.findIndex((a) => a.id === id);
+          if (index !== -1) {
+            this.gameState.agents!.splice(index, 1);
+            return true;
+          }
+          return false;
+        })();
 
-    this.agentRegistry?.invalidateProfileIndex();
+    if (!removed) return false;
 
     this.cleanupAgentState(id);
 

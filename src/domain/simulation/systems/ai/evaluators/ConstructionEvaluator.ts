@@ -30,10 +30,7 @@ export function evaluateConstructionGoals(
 
     const tasks = ctx.getTasks();
     const buildTasks = tasks.filter(
-      (t) =>
-        t.type === TaskType.BUILD_HOUSE &&
-        !t.completed &&
-        t.zoneId,
+      (t) => t.type === TaskType.BUILD_HOUSE && !t.completed && t.zoneId,
     );
 
     if (buildTasks.length === 0) return [];

@@ -180,6 +180,50 @@ export class AgentRegistry {
     return alive;
   }
 
+  // ============================================================
+  // WRITE OPERATIONS (Single Source of Truth for agents array)
+  // ============================================================
+
+  /**
+   * Add a new agent profile to gameState.agents - O(1)
+   * This is the single source of truth for adding agents.
+   */
+  public addAgent(profile: AgentProfile): void {
+    if (!this.gameState.agents) {
+      this.gameState.agents = [];
+    }
+    this.gameState.agents.push(profile);
+    this.profileIndex.set(profile.id, profile);
+    logger.debug(`📋 AgentRegistry: Added agent ${profile.id}`);
+  }
+
+  /**
+   * Remove agent from gameState.agents by ID - O(n) for array splice
+   * This is the single source of truth for removing agents.
+   * @returns true if agent was found and removed
+   */
+  public removeAgent(agentId: string): boolean {
+    if (!this.gameState.agents) return false;
+
+    const index = this.gameState.agents.findIndex((a) => a.id === agentId);
+    if (index === -1) return false;
+
+    this.gameState.agents.splice(index, 1);
+    this.profileIndex.delete(agentId);
+    logger.debug(`📋 AgentRegistry: Removed agent ${agentId}`);
+    return true;
+  }
+
+  /**
+   * Get agent count - O(1)
+   */
+  public getAgentCount(): number {
+    if (this.profileIndexDirty) {
+      this.rebuildProfileIndex();
+    }
+    return this.profileIndex.size;
+  }
+
   private resolveMap<T>(ref?: SystemMap<T>): Map<string, T> | undefined {
     if (!ref) return undefined;
     return typeof ref === "function" ? ref() : ref;

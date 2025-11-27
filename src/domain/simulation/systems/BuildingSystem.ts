@@ -324,7 +324,7 @@ export class BuildingSystem {
 
     return {
       id: zoneId,
-      type: "work",
+      type: ZoneType.WORK,
       bounds,
       props: {
         color: "#C4B998",

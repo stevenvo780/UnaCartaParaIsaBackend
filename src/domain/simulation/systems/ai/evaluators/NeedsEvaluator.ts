@@ -81,7 +81,7 @@ export interface NeedsEvaluatorDependencies {
   /** Find agents who have excess resources to trade */
   findAgentWithResource?: (
     entityId: string,
-    resourceType: "food" | "water",
+    resourceType: ResourceType.FOOD | ResourceType.WATER,
     minAmount: number,
   ) => { agentId: string; x: number; y: number } | null;
   getCurrentTimeOfDay?: () =>

@@ -146,7 +146,7 @@ export class AIZoneHandler {
       simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
         agentId: entityId,
         success: true,
-        actionType: "move",
+        actionType: ActionType.MOVE,
       });
     }
 
@@ -415,7 +415,10 @@ export class AIZoneHandler {
     goal: AIGoal,
     aiState: AIState,
   ): boolean {
-    if (goal.type !== GoalType.CRAFT || goal.data?.itemType !== ItemCategory.WEAPON) {
+    if (
+      goal.type !== GoalType.CRAFT ||
+      goal.data?.itemType !== ItemCategory.WEAPON
+    ) {
       return false;
     }
 
@@ -492,14 +495,14 @@ export class AIZoneHandler {
         if (transferred.wood > 0) {
           this.deps.inventorySystem.removeFromAgent(
             entityId,
-            "wood" as ResourceType,
+            ResourceTypeEnum.WOOD,
             transferred.wood,
           );
         }
         if (transferred.stone > 0) {
           this.deps.inventorySystem.removeFromAgent(
             entityId,
-            "stone" as ResourceType,
+            ResourceType.STONE,
             transferred.stone,
           );
         }

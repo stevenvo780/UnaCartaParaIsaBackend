@@ -573,7 +573,10 @@ export class AIActionPlanner {
       }
     }
 
-    if (taskType === TaskType.GATHER_WOOD || resourceType === ResourceType.WOOD) {
+    if (
+      taskType === TaskType.GATHER_WOOD ||
+      resourceType === ResourceType.WOOD
+    ) {
       if (this.deps.findNearestResource) {
         const tree = this.deps.findNearestResource(agentId, "tree");
         if (tree) {

@@ -6,10 +6,7 @@ import type { AnimalSystem } from "../../AnimalSystem";
 import { isWorldResourceType } from "../../../../types/simulation/resourceMapping";
 import type { WorldResourceType } from "../../../../types/simulation/worldResources";
 import { getFrameTime } from "../../../../../shared/FrameTime";
-import {
-  NeedType,
-  GoalType,
-} from "../../../../../shared/constants/AIEnums";
+import { NeedType, GoalType } from "../../../../../shared/constants/AIEnums";
 import {
   ResourceType,
   ResourceState,
@@ -281,7 +278,7 @@ export class AIGoalValidator {
           this.deps.worldResourceSystem.getResourcesByType(resourceTypeStr);
         const targetResource = resources.find((r) => r.id === goal.targetId);
         if (targetResource) {
-          return targetResource.state !== "depleted";
+          return targetResource.state !== ResourceState.DEPLETED;
         }
       }
 
@@ -296,7 +293,7 @@ export class AIGoalValidator {
               (r) => r.id === goal.targetId,
             );
             if (targetResource) {
-              return targetResource.state !== "depleted";
+              return targetResource.state !== ResourceState.DEPLETED;
             }
           }
         }
@@ -304,31 +301,31 @@ export class AIGoalValidator {
 
       if (resourceTypeStr === ResourceType.WATER) {
         const resources = this.deps.worldResourceSystem.getResourcesByType(
-          "water_source" as WorldResourceType,
+          WorldResourceType.WATER_SOURCE,
         );
         const targetResource = resources.find((r) => r.id === goal.targetId);
         if (targetResource) {
-          return targetResource.state !== "depleted";
+          return targetResource.state !== ResourceState.DEPLETED;
         }
       }
 
       if (resourceTypeStr === ResourceType.WOOD) {
         const resources = this.deps.worldResourceSystem.getResourcesByType(
-          "tree" as WorldResourceType,
+          WorldResourceType.TREE,
         );
         const targetResource = resources.find((r) => r.id === goal.targetId);
         if (targetResource) {
-          return targetResource.state !== "depleted";
+          return targetResource.state !== ResourceState.DEPLETED;
         }
       }
 
       if (resourceTypeStr === ResourceType.STONE) {
         const resources = this.deps.worldResourceSystem.getResourcesByType(
-          "rock" as WorldResourceType,
+          WorldResourceType.ROCK,
         );
         const targetResource = resources.find((r) => r.id === goal.targetId);
         if (targetResource) {
-          return targetResource.state !== "depleted";
+          return targetResource.state !== ResourceState.DEPLETED;
         }
       }
     }

@@ -238,6 +238,7 @@ export class TaskSystem {
     position: { x: number; y: number },
     radius: number,
   ): Task[] {
+    const radiusSq = radius * radius;
     return Array.from(this.tasks.values()).filter((task) => {
       if (!task.bounds || task.completed) return false;
 
@@ -246,9 +247,9 @@ export class TaskSystem {
 
       const dx = position.x - centerX;
       const dy = position.y - centerY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      const distanceSq = dx * dx + dy * dy;
 
-      return distance <= radius;
+      return distanceSq <= radiusSq;
     });
   }
 

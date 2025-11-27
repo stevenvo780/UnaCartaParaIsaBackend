@@ -223,7 +223,10 @@ export class AIActionExecutor {
     if (result.success) {
       const resource = this.deps.gameState.worldResources?.[action.targetId];
       if (resource) {
-        if (resource.type === WorldResourceType.WATER_SOURCE && this.deps.needsSystem) {
+        if (
+          resource.type === WorldResourceType.WATER_SOURCE &&
+          this.deps.needsSystem
+        ) {
           this.deps.needsSystem.satisfyNeed(
             action.agentId,
             NeedType.THIRST,
@@ -347,7 +350,7 @@ export class AIActionExecutor {
 
     simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
       agentId: action.agentId,
-      actionType: "attack",
+      actionType: ActionType.ATTACK,
       success: true,
       data: { targetId, targetType: EntityType.ANIMAL, foodValue },
     });
@@ -425,7 +428,10 @@ export class AIActionExecutor {
   }
 
   private executeCraft(action: AgentAction): void {
-    if (this.deps.craftingSystem && action.data?.itemType === ItemCategory.WEAPON) {
+    if (
+      this.deps.craftingSystem &&
+      action.data?.itemType === ItemCategory.WEAPON
+    ) {
       const weaponId = this.deps.craftingSystem.craftBestWeapon(action.agentId);
       simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
         agentId: action.agentId,
@@ -458,7 +464,8 @@ export class AIActionExecutor {
       const tasks = this.deps.taskSystem.getTasksInZone(action.targetZoneId);
       const constructionTask = tasks.find(
         (t: { type: string }) =>
-          t.type === TaskType.BUILD_HOUSE || t.type === TaskType.REPAIR_BUILDING,
+          t.type === TaskType.BUILD_HOUSE ||
+          t.type === TaskType.REPAIR_BUILDING,
       );
       if (constructionTask) {
         const result = this.deps.taskSystem.contributeToTask(

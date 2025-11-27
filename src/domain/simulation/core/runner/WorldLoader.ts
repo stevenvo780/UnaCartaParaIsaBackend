@@ -364,7 +364,7 @@ export class WorldLoader {
         buildingId: `building_workbench_initial_${Date.now()}`,
         builtAt: Date.now(),
         biome: defaultBiome,
-        buildingType: "workshop",
+        buildingType: BuildingType.WORKBENCH,
         spriteVariant: 0,
       },
     };
@@ -385,7 +385,7 @@ export class WorldLoader {
         buildingId: `building_storage_initial_${Date.now()}`,
         builtAt: Date.now(),
         biome: defaultBiome,
-        buildingType: "workshop",
+        buildingType: BuildingType.WORKBENCH,
         spriteVariant: 1,
       },
     };
@@ -427,7 +427,7 @@ export class WorldLoader {
       metadata: {
         parentZoneId: houseZone.id,
         biome: defaultBiome,
-        buildingType: "workshop",
+        buildingType: BuildingType.WORKBENCH,
         spriteVariant: 2,
       },
     };

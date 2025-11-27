@@ -237,7 +237,8 @@ export function getRecommendedZoneIdsForNeed(
 
   const types = zoneTypes[needType] || [];
   return (
-    gameState.zones?.filter((z) => types.includes(z.type as ZoneType)).map((z) => z.id) ||
-    []
+    gameState.zones
+      ?.filter((z) => types.includes(z.type as ZoneType))
+      .map((z) => z.id) || []
   );
 }

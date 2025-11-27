@@ -35,9 +35,7 @@ export function evaluateTradeGoals(
   if (!hasExcess) return goals;
 
   const marketZones =
-    deps.gameState.zones?.filter(
-      (z) => z.type === ZoneType.MARKET,
-    ) || [];
+    deps.gameState.zones?.filter((z) => z.type === ZoneType.MARKET) || [];
 
   if (marketZones.length === 0) return goals;
 

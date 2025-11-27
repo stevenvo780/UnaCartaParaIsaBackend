@@ -167,12 +167,12 @@ export class MarketSystem {
       if (!sellerInv) continue;
 
       for (const resource of [
-        "wood",
-        "stone",
-        "food",
-        "water",
-        "metal",
-      ] as ResourceType[]) {
+        ResourceType.WOOD,
+        ResourceType.STONE,
+        ResourceType.FOOD,
+        ResourceType.WATER,
+        ResourceType.METAL,
+      ]) {
         const sellerStock = sellerInv[resource] || 0;
         if (sellerStock < 10) continue;
 
