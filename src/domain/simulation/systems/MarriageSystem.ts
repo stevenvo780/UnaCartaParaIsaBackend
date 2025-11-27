@@ -319,6 +319,18 @@ export class MarriageSystem {
       }
     }
 
+    // NOTE: Source of truth is this.marriageGroups Map.
+    // gameState.marriage is a READ-ONLY SNAPSHOT for frontend/serialization.
+    // All modifications must go through MarriageSystem methods, not gameState directly.
+    this.syncToGameState();
+  }
+
+  /**
+   * Syncs internal state to gameState for frontend/serialization.
+   * This is a one-way sync - gameState.marriage is READ-ONLY.
+   * Source of truth: this.marriageGroups Map
+   */
+  private syncToGameState(): void {
     if (!this.gameState.marriage) {
       this.gameState.marriage = {
         groups: [],

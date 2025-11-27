@@ -57,7 +57,9 @@ export class SocialSystem {
     @inject(TYPES.GameState) gameState: GameState,
     @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
     @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
-    @inject(TYPES.SharedSpatialIndex) @optional() sharedSpatialIndex?: SharedSpatialIndex,
+    @inject(TYPES.SharedSpatialIndex)
+    @optional()
+    sharedSpatialIndex?: SharedSpatialIndex,
   ) {
     this.gameState = gameState;
     this.gpuService = gpuService;
@@ -451,8 +453,7 @@ export class SocialSystem {
       }
     }
 
-    this.spatialGrid.remove(agentId);
-    this.positionCache.delete(agentId);
+    // NOTE: spatialGrid cleanup now handled by SharedSpatialIndex centrally
   }
 
   public registerFriendlyInteraction(aId: string, bId: string): void {
@@ -476,13 +477,19 @@ export class SocialSystem {
     const centerEntity = this.entityIndex?.getEntity(centerAgentId);
     if (!centerEntity?.position) return;
 
-    const nearby = this.spatialGrid.queryRadius(centerEntity.position, radius);
+    const nearby = this.sharedSpatialIndex?.queryRadius(
+      centerEntity.position,
+      radius,
+    );
+    if (!nearby) return;
 
     for (let i = 0; i < nearby.length; i++) {
       for (let j = i + 1; j < nearby.length; j++) {
         this.imposeTruce(nearby[i].entity, nearby[j].entity, durationMs);
       }
     }
+
+    this.sharedSpatialIndex?.releaseResults(nearby);
   }
 
   public registerPermanentBond(

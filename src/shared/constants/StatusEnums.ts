@@ -35,6 +35,18 @@ export enum StorageType {
 export type StorageTypeValue = `${StorageType}`;
 
 /**
+ * Enumeration of storage file prefixes.
+ */
+export enum StorageFilePrefix {
+  SAVE = "save_",
+}
+
+/**
+ * Type representing all possible storage file prefix values.
+ */
+export type StorageFilePrefixValue = `${StorageFilePrefix}`;
+
+/**
  * Enumeration of interaction game status values.
  */
 export enum InteractionStatus {

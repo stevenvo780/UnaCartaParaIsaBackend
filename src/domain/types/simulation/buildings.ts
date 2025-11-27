@@ -55,6 +55,8 @@ export const BUILDING_COSTS: Record<BuildingType, BuildingConstructionCost> = {
   [BuildingType.MINE]: { wood: 6, stone: 10, time: 30_000 },
   [BuildingType.WORKBENCH]: { wood: 8, stone: 4, time: 20_000 },
   [BuildingType.FARM]: { wood: 8, stone: 2, time: 35_000 },
+  [BuildingType.WORKSHOP]: { wood: 15, stone: 6, time: 40_000 },
+  [BuildingType.WATCHTOWER]: { wood: 10, stone: 15, time: 45_000 },
 };
 
 export function getBuildingCondition(durability: number): BuildingCondition {

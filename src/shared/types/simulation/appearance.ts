@@ -85,7 +85,7 @@ export const GENERATION_STYLES: VisualStyle[] = [
       skin: "#FFE4C4",
     },
     hairColors: ["#FFFFFF", "#FFD700", "#C0C0C0"],
-    clothingStyle: "mystical",
+    clothingStyle: ClothingStyle.MYSTICAL,
   },
 
   {
@@ -99,7 +99,7 @@ export const GENERATION_STYLES: VisualStyle[] = [
       skin: "#D2B48C",
     },
     hairColors: ["#654321", "#8B4513", "#A0522D"],
-    clothingStyle: "simple",
+    clothingStyle: ClothingStyle.SIMPLE,
   },
 
   {
@@ -113,7 +113,7 @@ export const GENERATION_STYLES: VisualStyle[] = [
       skin: "#C19A6B",
     },
     hairColors: ["#2F4F4F", "#696969", "#8B7355"],
-    clothingStyle: "decorated",
+    clothingStyle: ClothingStyle.DECORATED,
   },
 
   {
@@ -127,7 +127,7 @@ export const GENERATION_STYLES: VisualStyle[] = [
       skin: "#E8C4A8",
     },
     hairColors: ["#191970", "#000080", "#4B0082"],
-    clothingStyle: "elegant",
+    clothingStyle: ClothingStyle.ELEGANT,
   },
 
   {
@@ -141,7 +141,7 @@ export const GENERATION_STYLES: VisualStyle[] = [
       skin: "#A0826D",
     },
     hairColors: ["#1C1C1C", "#3D2B1F", "#654321"],
-    clothingStyle: "rugged",
+    clothingStyle: ClothingStyle.RUGGED,
   },
 
   {
@@ -155,7 +155,7 @@ export const GENERATION_STYLES: VisualStyle[] = [
       skin: "#DEB887",
     },
     hairColors: ["#8B4513", "#A0522D", "#CD853F", "#696969"],
-    clothingStyle: "decorated",
+    clothingStyle: ClothingStyle.DECORATED,
   },
 ];
 

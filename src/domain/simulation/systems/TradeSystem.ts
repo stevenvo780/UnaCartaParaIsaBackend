@@ -311,20 +311,14 @@ export class TradeSystem {
    */
   private processBackgroundTrade(): void {
     if (!this.inventorySystem) return;
+    // NOTA: AgentRegistry es la única fuente de verdad para perfiles
+    if (!this.agentRegistry) return;
 
     const agents: Array<{ id: string; lifeStage?: string; isDead?: boolean }> =
       [];
-    if (this.agentRegistry) {
-      for (const profile of this.agentRegistry.getAllProfiles()) {
-        if (profile.lifeStage === LifeStage.ADULT && !profile.isDead) {
-          agents.push(profile);
-        }
-      }
-    } else if (this.gameState.agents) {
-      for (const a of this.gameState.agents) {
-        if (a.lifeStage === LifeStage.ADULT && !a.isDead) {
-          agents.push(a);
-        }
+    for (const profile of this.agentRegistry.getAllProfiles()) {
+      if (profile.lifeStage === LifeStage.ADULT && !profile.isDead) {
+        agents.push(profile);
       }
     }
     if (agents.length < 2) return;
@@ -506,10 +500,10 @@ export class TradeSystem {
     minAmount: number,
   ): { agentId: string; x: number; y: number } | null {
     if (!this.inventorySystem) return null;
+    // NOTA: AgentRegistry es la única fuente de verdad para perfiles
+    if (!this.agentRegistry) return null;
 
-    const profiles = this.agentRegistry
-      ? this.agentRegistry.getAllProfiles()
-      : (this.gameState.agents || []).values();
+    const profiles = this.agentRegistry.getAllProfiles();
 
     for (const agent of profiles) {
       if (agent.id === buyerId || agent.isDead) continue;

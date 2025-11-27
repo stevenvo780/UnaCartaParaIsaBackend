@@ -94,8 +94,9 @@ const DEMAND_SOLUTIONS: Partial<
   },
 };
 
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import type { AgentRegistry } from "../core/AgentRegistry";
 
 @injectable()
 export class GovernanceSystem {
@@ -106,6 +107,7 @@ export class GovernanceSystem {
   private lastCheck = 0;
   private demandSeq = 0;
   private housingProjectsStarted = 0;
+  private agentRegistry?: AgentRegistry;
 
   private readonly handleHighOccupancy = (payload: {
     occupancy?: number;
@@ -155,7 +157,9 @@ export class GovernanceSystem {
     private readonly reservationSystem: ResourceReservationSystem,
     @inject(TYPES.RoleSystem)
     private readonly roleSystem: RoleSystem,
+    @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
   ) {
+    this.agentRegistry = agentRegistry;
     this.config = {
       checkIntervalMs: 30_000,
       demandExpirationMs: 5 * 60_000,
@@ -490,9 +494,22 @@ export class GovernanceSystem {
     count: number,
     demandType: DemandType,
   ): number {
-    const agents = (this.state.agents ?? []).filter(
-      (a) => !a.isDead && a.ageYears >= 16,
-    );
+    // NOTA: AgentRegistry es la única fuente de verdad para perfiles
+    const agents: Array<{ id: string; isDead?: boolean; ageYears?: number }> = [];
+    if (this.agentRegistry) {
+      for (const profile of this.agentRegistry.getAllProfiles()) {
+        if (!profile.isDead && (profile.ageYears ?? 0) >= 16) {
+          agents.push(profile);
+        }
+      }
+    } else if (this.state.agents) {
+      // Fallback temporal: solo usar si AgentRegistry no está disponible
+      for (const a of this.state.agents) {
+        if (!a.isDead && (a.ageYears ?? 0) >= 16) {
+          agents.push(a);
+        }
+      }
+    }
 
     if (agents.length === 0) return 0;
 

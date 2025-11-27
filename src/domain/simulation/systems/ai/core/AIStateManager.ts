@@ -3,10 +3,7 @@ import type {
   AIState,
   AgentPersonality,
 } from "../../../../types/simulation/ai";
-import type {
-  AgentTraits,
-  LifeStage,
-} from "../../../../types/simulation/agents";
+import type { AgentTraits } from "../../../../types/simulation/agents";
 import { getFrameTime } from "../../../../../shared/FrameTime";
 import { logger } from "../../../../../infrastructure/utils/logger";
 import {

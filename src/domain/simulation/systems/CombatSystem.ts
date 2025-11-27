@@ -18,7 +18,7 @@ import type { SimulationEntity } from "../core/schema";
 import { InventorySystem } from "./InventorySystem";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 import { SocialSystem } from "./SocialSystem";
-import { SpatialGrid } from "../../../utils/SpatialGrid";
+// NOTE: Removed SpatialGrid import - now using SharedSpatialIndex exclusively
 import type { AnimalSystem } from "./AnimalSystem";
 import type { NormsSystem } from "./NormsSystem";
 import { getFrameTime } from "../../../shared/FrameTime";
@@ -74,7 +74,7 @@ import type { EntityIndex } from "../core/EntityIndex";
 @injectable()
 export class CombatSystem {
   private readonly config: CombatConfig;
-  private readonly spatialGrid: SpatialGrid<string>;
+  // NOTE: Removed private spatialGrid - now using SharedSpatialIndex exclusively
   private lastUpdate = Date.now();
   private readonly lastAttackAt = new Map<string, number>();
   private readonly equippedWeapons = new Map<string, WeaponId>();
@@ -112,13 +112,8 @@ export class CombatSystem {
     this.gpuService = gpuService;
     this.entityIndex = entityIndex;
     this.config = DEFAULT_COMBAT_CONFIG;
-    const worldWidth = state.worldSize?.width ?? 2000;
-    const worldHeight = state.worldSize?.height ?? 2000;
-    this.spatialGrid = new SpatialGrid(
-      worldWidth,
-      worldHeight,
-      this.config.engagementRadius,
-    );
+    // NOTE: Removed SpatialGrid creation - now using SharedSpatialIndex exclusively
+    // The SharedSpatialIndex is maintained by SimulationRunner and shared across systems
     this.combatLog = this.state.combatLog ?? [];
     this.state.combatLog = this.combatLog;
 
@@ -149,18 +144,12 @@ export class CombatSystem {
     const entitiesById = new Map<string, SimulationEntity>();
     const validEntities = entities.filter((e) => !e.isDead && e.position);
 
-    if (this.sharedSpatialIndex) {
-      for (const entity of validEntities) {
-        entitiesById.set(entity.id, entity);
-      }
-    } else {
-      this.spatialGrid.clear();
-      for (const entity of validEntities) {
-        entitiesById.set(entity.id, entity);
-        this.spatialGrid.insert(entity.id, entity.position!);
-      }
+    // NOTE: Now using SharedSpatialIndex exclusively - no fallback to local spatialGrid
+    for (const entity of validEntities) {
+      entitiesById.set(entity.id, entity);
     }
 
+    // Animals are indexed in SharedSpatialIndex by AnimalSystem/AnimalRegistry
     if (this.animalSystem) {
       const animals = this.animalSystem.getAnimals();
       for (const [animalId, animal] of animals) {
@@ -181,7 +170,7 @@ export class CombatSystem {
           },
         };
         entitiesById.set(animalId, animalEntity);
-        this.spatialGrid.insert(animalId, animal.position);
+        // NOTE: Animal positions are tracked in SharedSpatialIndex by SimulationRunner
       }
     }
 
@@ -202,8 +191,9 @@ export class CombatSystem {
         const weapon = getWeapon(weaponId);
 
         const radius = Math.max(this.config.engagementRadius, weapon.range);
-        let nearby: SimulationEntity[];
+        let nearby: SimulationEntity[] = [];
 
+        // NOTE: Now using SharedSpatialIndex exclusively
         if (this.sharedSpatialIndex) {
           const results = this.sharedSpatialIndex.queryRadius(
             attacker.position,
@@ -216,14 +206,7 @@ export class CombatSystem {
             .filter((candidate): candidate is SimulationEntity =>
               Boolean(candidate && !candidate.isDead),
             );
-        } else {
-          nearby = this.spatialGrid
-            .queryRadius(attacker.position, radius)
-            .filter((candidate) => candidate.entity !== attacker.id)
-            .map((candidate) => entitiesById.get(candidate.entity))
-            .filter((candidate): candidate is SimulationEntity =>
-              Boolean(candidate && !candidate.isDead),
-            );
+          this.sharedSpatialIndex.releaseResults(results);
         }
 
         for (const target of nearby) {
@@ -272,7 +255,8 @@ export class CombatSystem {
     for (const query of queries) {
       const { attacker, center, radius } = query;
 
-      let nearby: SimulationEntity[];
+      let nearby: SimulationEntity[] = [];
+      // NOTE: Now using SharedSpatialIndex exclusively
       if (this.sharedSpatialIndex) {
         const results = this.sharedSpatialIndex.queryRadius(
           center,
@@ -285,14 +269,7 @@ export class CombatSystem {
           .filter((candidate): candidate is SimulationEntity =>
             Boolean(candidate && !candidate.isDead),
           );
-      } else {
-        nearby = this.spatialGrid
-          .queryRadius(center, radius)
-          .filter((candidate) => candidate.entity !== attacker.id)
-          .map((candidate) => entitiesById.get(candidate.entity))
-          .filter((candidate): candidate is SimulationEntity =>
-            Boolean(candidate && !candidate.isDead),
-          );
+        this.sharedSpatialIndex.releaseResults(results);
       }
 
       for (const target of nearby) {

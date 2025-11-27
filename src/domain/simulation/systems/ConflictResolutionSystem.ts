@@ -209,7 +209,7 @@ export class ConflictResolutionSystem {
           attackerId: meta.aId,
           targetId: meta.bId,
           resolved: false,
-          resolution: "expired",
+          resolution: ConflictResolution.EXPIRED,
           cardId,
         };
         this.conflictHistory.push(conflict);

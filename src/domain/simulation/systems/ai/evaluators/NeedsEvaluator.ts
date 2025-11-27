@@ -230,7 +230,7 @@ export function evaluateCriticalNeeds(
       } else {
         const tradeTarget = deps.findAgentWithResource?.(
           aiState.entityId,
-          "water",
+          ResourceType.WATER,
           3,
         );
 
@@ -302,7 +302,7 @@ export function evaluateCriticalNeeds(
       } else {
         const tradeTarget = deps.findAgentWithResource?.(
           aiState.entityId,
-          "food",
+          ResourceType.FOOD,
           3,
         );
 

@@ -233,9 +233,11 @@ export class CardDialogueSystem {
 
     if (template.triggers.relationshipBased && entityId && this.socialSystem) {
       const satisfied = template.triggers.relationshipBased.some((trigger) => {
-        const agents = this.agentRegistry
-          ? Array.from(this.agentRegistry.getAllProfiles())
-          : this.gameState.agents || [];
+        // NOTA: agentRegistry es la única fuente de verdad para perfiles de agentes
+        if (!this.agentRegistry) {
+          return false; // Sin registry no podemos evaluar relaciones
+        }
+        const agents = Array.from(this.agentRegistry.getAllProfiles());
         for (const agent of agents) {
           if (agent.id === entityId) continue;
 

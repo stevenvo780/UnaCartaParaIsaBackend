@@ -4,7 +4,7 @@ import type { WorldResourceSystem } from "../../WorldResourceSystem";
 import type { NeedsSystem } from "../../NeedsSystem";
 import type { AnimalSystem } from "../../AnimalSystem";
 import { isWorldResourceType } from "../../../../types/simulation/resourceMapping";
-import type { WorldResourceType } from "../../../../types/simulation/worldResources";
+import { WorldResourceType } from "../../../../types/simulation/worldResources";
 import { getFrameTime } from "../../../../../shared/FrameTime";
 import { NeedType, GoalType } from "../../../../../shared/constants/AIEnums";
 import {

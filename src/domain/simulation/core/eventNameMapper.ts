@@ -76,6 +76,8 @@ export const eventNameMapper: Record<GameEventType, string> = {
 
   [GameEventType.SALARY_PAID]: "economy:salary:paid",
   [GameEventType.ECONOMY_RESERVATIONS_UPDATE]: "economy:reservations:update",
+  [GameEventType.MONEY_CHANGED]: "economy:money:changed",
+  [GameEventType.MONEY_TRANSFERRED]: "economy:money:transferred",
 
   [GameEventType.CRISIS_PREDICTION]: "crisis:prediction",
   [GameEventType.CRISIS_IMMEDIATE_WARNING]: "crisis:immediate:warning",
