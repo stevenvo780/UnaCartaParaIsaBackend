@@ -2,6 +2,7 @@ import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../../types/simulation/needs";
 import { GoalType, NeedType } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
+import { ExplorationType } from "../../../../../shared/constants/AgentEnums";
 import type { Inventory } from "../../../../types/simulation/economy";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
 
@@ -201,7 +202,7 @@ export function evaluateBiologicalDrives(
             type: GoalType.EXPLORE,
             priority: hungerUtility * 0.7,
             data: {
-              explorationType: "desperate_search",
+              explorationType: ExplorationType.DESPERATE_SEARCH,
               need: NeedType.HUNGER,
               searchFor: "food_or_prey",
             },

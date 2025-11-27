@@ -8,6 +8,7 @@ import type { EconomySystem } from "./EconomySystem.js";
 import type { EntityNeedsData } from "../../types/simulation/needs.js";
 import { injectable, inject, unmanaged } from "inversify";
 import { TYPES } from "../../../config/Types";
+import { FeedbackLoopId } from "../../../shared/constants/EmergenceEnums";
 
 export interface AIModifiers {
   priorityBoost?: number;
@@ -364,10 +365,10 @@ export class EmergenceSystem extends EventEmitter {
 
     if (
       totalResources > 500 &&
-      !this.feedbackLoops.has("resource_production_loop")
+      !this.feedbackLoops.has(FeedbackLoopId.RESOURCE_PRODUCTION_LOOP)
     ) {
-      this.feedbackLoops.set("resource_production_loop", {
-        id: "resource_production_loop",
+      this.feedbackLoops.set(FeedbackLoopId.RESOURCE_PRODUCTION_LOOP, {
+        id: FeedbackLoopId.RESOURCE_PRODUCTION_LOOP,
         type: "positive",
         strength: 0.6,
         elements: ["resource_gathering", "production", "resource_accumulation"],
@@ -379,9 +380,9 @@ export class EmergenceSystem extends EventEmitter {
 
     const entities = this.gameState.entities || [];
     if (entities.length > 10 && totalResources < 200) {
-      if (!this.feedbackLoops.has("population_resource_loop")) {
-        this.feedbackLoops.set("population_resource_loop", {
-          id: "population_resource_loop",
+      if (!this.feedbackLoops.has(FeedbackLoopId.POPULATION_RESOURCE_LOOP)) {
+        this.feedbackLoops.set(FeedbackLoopId.POPULATION_RESOURCE_LOOP, {
+          id: FeedbackLoopId.POPULATION_RESOURCE_LOOP,
           type: "negative",
           strength: 0.5,
           elements: [

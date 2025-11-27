@@ -7,6 +7,10 @@ import {
   ConflictStats,
 } from "../../types/simulation/conflict";
 import { simulationEvents, GameEventNames } from "../core/events";
+import {
+  ConflictResolutionChoice,
+  ConflictResolution,
+} from "../../../shared/constants/ConflictEnums";
 
 const CONFLICT_CONFIG = {
   truce: {
@@ -116,24 +120,29 @@ export class ConflictResolutionSystem {
 
   public resolveConflict(
     cardId: string,
-    choice: "truce_accept" | "apologize" | "continue",
+    choice: ConflictResolutionChoice,
   ): {
     resolved: boolean;
     resolution: ConflictRecord["resolution"];
     truceBonus?: number;
   } {
     const meta = this.activeCards.get(cardId);
-    if (!meta) return { resolved: false, resolution: "continued" };
+    if (!meta)
+      return {
+        resolved: false,
+        resolution: ConflictResolution.CONTINUED,
+      };
 
     const { aId, bId } = meta;
-    let resolution: ConflictRecord["resolution"] = "continued";
+    let resolution: ConflictRecord["resolution"] =
+      ConflictResolution.CONTINUED;
     let truceBonus: number | undefined;
 
-    if (choice === "truce_accept") {
-      resolution = "truce_accepted";
+    if (choice === ConflictResolutionChoice.TRUCE_ACCEPT) {
+      resolution = ConflictResolution.TRUCE_ACCEPTED;
       truceBonus = CONFLICT_CONFIG.friendlyInteraction.truceAcceptBonus;
-    } else if (choice === "apologize") {
-      resolution = "apologized";
+    } else if (choice === ConflictResolutionChoice.APOLOGIZE) {
+      resolution = ConflictResolution.APOLOGIZED;
       truceBonus = CONFLICT_CONFIG.friendlyInteraction.apologizeBonus;
     }
 
@@ -141,7 +150,7 @@ export class ConflictResolutionSystem {
       timestamp: Date.now(),
       attackerId: aId,
       targetId: bId,
-      resolved: resolution !== "continued",
+      resolved: resolution !== ConflictResolution.CONTINUED,
       resolution,
       cardId,
     };
@@ -153,14 +162,14 @@ export class ConflictResolutionSystem {
     const mediation = this.mediationAttempts.find((m) => m.cardId === cardId);
     if (mediation) {
       mediation.outcome =
-        choice === "truce_accept"
+        choice === ConflictResolutionChoice.TRUCE_ACCEPT
           ? "accepted"
-          : choice === "apologize"
+          : choice === ConflictResolutionChoice.APOLOGIZE
             ? "apologized"
             : "rejected";
     }
 
-    if (choice === "truce_accept") {
+    if (choice === ConflictResolutionChoice.TRUCE_ACCEPT) {
       simulationEvents.emit(GameEventNames.CONFLICT_TRUCE_ACCEPTED, {
         cardId,
         attackerId: aId,
@@ -168,7 +177,7 @@ export class ConflictResolutionSystem {
         truceBonus,
         timestamp: Date.now(),
       });
-    } else if (choice === "continue") {
+    } else if (choice === ConflictResolutionChoice.CONTINUE) {
       simulationEvents.emit(GameEventNames.CONFLICT_TRUCE_REJECTED, {
         cardId,
         attackerId: aId,

@@ -52,6 +52,8 @@ export enum ActionType {
   DEPOSIT = "deposit",
   BUILD = "build",
   IDLE = "idle",
+  BIRTH = "birth",
+  DEATH = "death",
 }
 
 /**

@@ -3,6 +3,7 @@ import type { GameState } from "../../../../types/game-types";
 import { RandomUtils } from "../../../../../shared/utils/RandomUtils";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
+import { ExplorationType } from "../../../../../shared/constants/AgentEnums";
 
 export interface AttentionContext {
   gameState: GameState;
@@ -113,7 +114,7 @@ export function evaluateDefaultExploration(
       priority: 0.35,
       targetZoneId: best,
       data: {
-        explorationType: "default",
+        explorationType: ExplorationType.DEFAULT,
       },
       createdAt: now,
       expiresAt: now + 6000,

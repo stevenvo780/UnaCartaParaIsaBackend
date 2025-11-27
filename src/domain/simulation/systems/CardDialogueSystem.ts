@@ -279,9 +279,15 @@ export class CardDialogueSystem {
     if (template.triggers.needsBased) {
       for (const trigger of template.triggers.needsBased) {
         const val = needs[trigger.need] as number;
-        if (trigger.operator === "below" && val < trigger.threshold) {
+        if (
+          trigger.operator === ComparisonOperator.BELOW &&
+          val < trigger.threshold
+        ) {
           score += (trigger.threshold - val) / 100;
-        } else if (trigger.operator === "above" && val > trigger.threshold) {
+        } else if (
+          trigger.operator === ComparisonOperator.ABOVE &&
+          val > trigger.threshold
+        ) {
           score += (val - trigger.threshold) / 100;
         }
       }
@@ -375,7 +381,11 @@ export class CardDialogueSystem {
         ],
         triggers: {
           needsBased: [
-            { need: NeedType.ENERGY, threshold: 50, operator: ComparisonOperator.ABOVE },
+            {
+              need: NeedType.ENERGY,
+              threshold: 50,
+              operator: ComparisonOperator.ABOVE,
+            },
           ],
         },
         emotionalTone: DialogueTone.EXCITED,
@@ -390,8 +400,16 @@ export class CardDialogueSystem {
         ],
         triggers: {
           needsBased: [
-            { need: NeedType.HUNGER, threshold: 60, operator: ComparisonOperator.ABOVE },
-            { need: NeedType.ENERGY, threshold: 40, operator: ComparisonOperator.ABOVE },
+            {
+              need: NeedType.HUNGER,
+              threshold: 60,
+              operator: ComparisonOperator.ABOVE,
+            },
+            {
+              need: NeedType.ENERGY,
+              threshold: 40,
+              operator: ComparisonOperator.ABOVE,
+            },
           ],
         },
         emotionalTone: DialogueTone.HAPPY,
@@ -406,7 +424,11 @@ export class CardDialogueSystem {
         ],
         triggers: {
           needsBased: [
-            { need: NeedType.HUNGER, threshold: 25, operator: ComparisonOperator.BELOW },
+            {
+              need: NeedType.HUNGER,
+              threshold: 25,
+              operator: ComparisonOperator.BELOW,
+            },
           ],
         },
         emotionalTone: DialogueTone.WORRIED,
@@ -421,7 +443,11 @@ export class CardDialogueSystem {
         ],
         triggers: {
           needsBased: [
-            { need: NeedType.ENERGY, threshold: 30, operator: ComparisonOperator.BELOW },
+            {
+              need: NeedType.ENERGY,
+              threshold: 30,
+              operator: ComparisonOperator.BELOW,
+            },
           ],
         },
         emotionalTone: DialogueTone.CONTEMPLATIVE,

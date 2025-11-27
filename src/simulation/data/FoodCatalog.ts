@@ -2,7 +2,10 @@ import type {
   FoodItem,
   FoodCategory,
 } from "../../domain/types/simulation/food";
-import { FoodCategory as FoodCategoryEnum } from "../../shared/constants/FoodEnums";
+import {
+  FoodCategory as FoodCategoryEnum,
+  FoodId,
+} from "../../shared/constants/FoodEnums";
 
 const gameRandom: { random: () => number } = {
   random: () => Math.random(),
@@ -11,7 +14,7 @@ const gameRandom: { random: () => number } = {
 export class FoodCatalog {
   private static readonly foods: FoodItem[] = [
     {
-      id: "apple_pie",
+      id: FoodId.APPLE_PIE,
       name: "Tarta de Manzana",
       sprite: "assets/consumable_items/food/05_apple_pie.png",
       category: FoodCategoryEnum.HEALTHY,
@@ -54,7 +57,7 @@ export class FoodCatalog {
       description: "Ensalada fresca con huevo, ligera y nutritiva",
     },
     {
-      id: "burger",
+      id: FoodId.BURGER,
       name: "Hamburguesa",
       sprite: "assets/consumable_items/food/15_burger.png",
       category: FoodCategoryEnum.JUNK,
@@ -67,7 +70,7 @@ export class FoodCatalog {
       description: "Hamburguesa jugosa pero poco saludable, muy sabrosa",
     },
     {
-      id: "pizza",
+      id: FoodId.PIZZA,
       name: "Pizza",
       sprite: "assets/consumable_items/food/81_pizza.png",
       category: FoodCategoryEnum.JUNK,
@@ -121,7 +124,7 @@ export class FoodCatalog {
         "Exquisita torta de chocolate, pura felicidad en cada bocado",
     },
     {
-      id: "icecream",
+      id: FoodId.ICECREAM,
       name: "Helado",
       sprite: "assets/consumable_items/food/57_icecream.png",
       category: FoodCategoryEnum.DESSERT,
@@ -188,7 +191,7 @@ export class FoodCatalog {
       description: "Pan fresco básico, alimento fundamental y nutritivo",
     },
     {
-      id: "sandwich",
+      id: FoodId.SANDWICH,
       name: "Sándwich",
       sprite: "assets/consumable_items/food/92_sandwich.png",
       category: FoodCategoryEnum.HEALTHY,

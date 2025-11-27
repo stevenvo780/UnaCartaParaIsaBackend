@@ -1,4 +1,9 @@
-export { WeaponId } from "../../../shared/constants/CraftingEnums";
+export {
+  WeaponId,
+  WorkstationType,
+  SkillType,
+  ToolType,
+} from "../../../shared/constants/CraftingEnums";
 
 export interface CraftingIngredient {
   itemId: string;
@@ -15,10 +20,10 @@ export interface CraftingRecipe {
   successRate?: number;
   difficulty?: number;
   requirements?: {
-    workstation?: string;
-    skill?: string;
+    workstation?: WorkstationType;
+    skill?: SkillType;
     skillLevel?: number;
-    tool?: string;
+    tool?: ToolType;
   };
   discoveredBy?: string[];
 }

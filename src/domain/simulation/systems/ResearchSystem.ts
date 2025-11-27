@@ -7,10 +7,11 @@ import {
 } from "../../types/simulation/research";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
+import { ResearchId } from "../../../shared/constants/ResearchEnums";
 
 const RESEARCH_CATEGORIES: ResearchCategory[] = [
   {
-    id: "basic_survival",
+    id: ResearchId.BASIC_SURVIVAL,
     name: "Basic Survival",
     description: "Essential survival skills",
     prerequisites: [],
@@ -21,7 +22,7 @@ const RESEARCH_CATEGORIES: ResearchCategory[] = [
     id: "woodworking",
     name: "Woodworking",
     description: "Working with wood",
-    prerequisites: ["basic_survival"],
+    prerequisites: [ResearchId.BASIC_SURVIVAL],
     recipes: ["wood_to_plank", "wooden_spear", "wooden_bowl", "wooden_axe"],
     level: 2,
   },
@@ -29,7 +30,7 @@ const RESEARCH_CATEGORIES: ResearchCategory[] = [
     id: "stonecraft",
     name: "Stonecraft",
     description: "Working with stone",
-    prerequisites: ["basic_survival"],
+    prerequisites: [ResearchId.BASIC_SURVIVAL],
     recipes: ["stone_axe", "stone_hammer", "grinding_stone", "stone_knife"],
     level: 2,
   },
@@ -64,9 +65,9 @@ export class ResearchSystem {
 
   public initializeLineage(lineageId: string): void {
     this.lineageResearch.set(lineageId, new Map());
-    this.unlockedCategories.set(lineageId, new Set(["basic_survival"]));
+    this.unlockedCategories.set(lineageId, new Set([ResearchId.BASIC_SURVIVAL]));
     this.lineageSpecializations.set(lineageId, []);
-    this.unlockCategory(lineageId, "basic_survival");
+    this.unlockCategory(lineageId, ResearchId.BASIC_SURVIVAL);
   }
 
   public onRecipeDiscovered(

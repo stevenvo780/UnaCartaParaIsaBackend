@@ -312,7 +312,7 @@ export class BuildingSystem {
       for (let y = startTileY; y <= endTileY; y++) {
         for (let x = startTileX; x <= endTileX; x++) {
           this.terrainSystem.modifyTile(x, y, {
-            assets: { terrain: "terrain_dirt" },
+            assets: { terrain: TileType.TERRAIN_DIRT },
           });
         }
       }

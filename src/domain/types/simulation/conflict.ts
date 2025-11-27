@@ -6,12 +6,14 @@ export interface ActiveConflict {
   expiresAt: number;
 }
 
+import { ConflictResolution } from "../../../shared/constants/ConflictEnums";
+
 export interface ConflictRecord {
   timestamp: number;
   attackerId: string;
   targetId: string;
   resolved: boolean;
-  resolution: "truce_accepted" | "apologized" | "continued" | "expired";
+  resolution: ConflictResolution;
   cardId: string;
 }
 

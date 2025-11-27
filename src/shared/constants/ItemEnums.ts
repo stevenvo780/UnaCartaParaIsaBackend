@@ -113,23 +113,29 @@ export enum ItemId {
   STONE_FOUNDATION = "stone_foundation",
   DOOR = "door",
 
-  // Tools & Equipment
+  // Crafting Stations
   ANVIL = "anvil",
   SMITHING = "smithing",
-  STONE_AXE = "stone_axe",
-  STONE_PICKAXE = "stone_pickaxe",
-  IRON_AXE = "iron_axe",
-  IRON_PICKAXE = "iron_pickaxe",
-  WOODEN_CLUB = "wooden_club",
-  STONE_DAGGER = "stone_dagger",
-  IRON_SWORD = "iron_sword",
-  BOW = "bow",
-  CLOTH_SHIRT = "cloth_shirt",
-  LEATHER_VEST = "leather_vest",
-  IRON_HELMET = "iron_helmet",
-  WOODEN_FRAME = "wooden_frame",
-  STONE_FOUNDATION = "stone_foundation",
-  DOOR = "door",
+
+  // Special/Craftable Items
+  MYSTICAL_POTION = "mystical_potion",
+  CRYSTAL_PICKAXE = "crystal_pickaxe",
+  ENERGY_CRYSTAL = "energy_crystal",
+  SWAMP_ANTIDOTE = "swamp_antidote",
+  REED_BASKET = "reed_basket",
+  CLAY_POT = "clay_pot",
+  MOUNTAIN_PICKAXE = "mountain_pickaxe",
+  GEM_NECKLACE = "gem_necklace",
+  CLIMBING_ROPE = "climbing_rope",
+  HEALING_SALVE = "healing_salve",
+  HONEY_BREAD = "honey_bread",
+  PINE_TORCH = "pine_torch",
+  COTTON_CLOTH = "cotton_cloth",
+  FLOWER_DYE = "flower_dye",
+  WHEAT_BEER = "wheat_beer",
+  SCRAP_TOOL = "scrap_tool",
+  QUALITY_SEEDS = "quality_seeds",
+  COMMUNITY_MEAL = "community_meal",
 }
 
 /**

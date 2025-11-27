@@ -18,6 +18,7 @@ import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "node:perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
 import { SIM_CONSTANTS } from "../core/SimulationConstants";
+import { TileType } from "../../../shared/constants/TileTypeEnums";
 import { AnimalState } from "../../../shared/constants/AnimalEnums";
 import { AnimalRegistry } from "../core/AnimalRegistry";
 import { WorldResourceType } from "../../../shared/constants/ResourceEnums";
@@ -453,14 +454,14 @@ export class AnimalSystem {
 
           if (
             terrainTile &&
-            terrainTile.assets.terrain === "terrain_grassland"
+            terrainTile.assets.terrain === TileType.TERRAIN_GRASSLAND
           ) {
             animal.state = AnimalState.EATING;
             if (!animal.stateEndTime) {
               animal.stateEndTime = Date.now() + 2000;
             } else if (Date.now() > animal.stateEndTime) {
               this.terrainSystem.modifyTile(tileX, tileY, {
-                assets: { terrain: "terrain_dirt" },
+                assets: { terrain: TileType.TERRAIN_DIRT },
               });
               animal.needs.hunger = Math.min(100, animal.needs.hunger + 30);
               animal.state = AnimalState.IDLE;

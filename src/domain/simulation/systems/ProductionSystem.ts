@@ -10,6 +10,7 @@ import { performanceMonitor } from "../core/PerformanceMonitor";
 import { ResourceType as ResourceTypeEnum } from "../../../shared/constants/ResourceEnums";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
 import { StockpileType } from "../../../shared/constants/ZoneEnums";
+import { TileType } from "../../../shared/constants/TileTypeEnums";
 
 interface ProductionConfig {
   updateIntervalMs: number;
@@ -262,11 +263,11 @@ export class ProductionSystem {
 
         if (
           tile &&
-          tile.assets.terrain === "terrain_grassland" &&
+          tile.assets.terrain === TileType.TERRAIN_GRASSLAND &&
           !hasObstacle
         ) {
           this.terrainSystem.modifyTile(tileX, tileY, {
-            assets: { terrain: "terrain_dirt" },
+            assets: { terrain: TileType.TERRAIN_DIRT },
           });
         }
       }

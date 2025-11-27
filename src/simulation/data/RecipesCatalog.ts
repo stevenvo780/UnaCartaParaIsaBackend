@@ -9,6 +9,10 @@
 
 import type { CraftingRecipe } from "../../domain/types/simulation/crafting";
 import { ItemId } from "../../shared/constants/ItemEnums";
+import {
+  WorkstationType,
+  ToolType,
+} from "../../shared/constants/CraftingEnums";
 
 /**
  * Static catalog of crafting recipes.
@@ -35,7 +39,7 @@ export class RecipesCatalog {
         { itemId: ItemId.COAL, quantity: 1 },
       ],
       requirements: {
-        workstation: "furnace",
+        workstation: WorkstationType.FURNACE,
       },
       craftingTime: 5000,
       difficulty: 3,
@@ -51,7 +55,7 @@ export class RecipesCatalog {
         { itemId: ItemId.COAL, quantity: 1 },
       ],
       requirements: {
-        workstation: "furnace",
+        workstation: WorkstationType.FURNACE,
       },
       craftingTime: 4500,
       difficulty: 3,
@@ -77,7 +81,7 @@ export class RecipesCatalog {
       output: { itemId: ItemId.CLOTH, quantity: 1 },
       ingredients: [{ itemId: ItemId.FIBER, quantity: 5 }],
       requirements: {
-        workstation: "loom",
+        workstation: WorkstationType.LOOM,
       },
       craftingTime: 6000,
       difficulty: 2,
@@ -103,7 +107,7 @@ export class RecipesCatalog {
         { itemId: ItemId.COAL, quantity: 1 },
       ],
       requirements: {
-        workstation: "kiln",
+        workstation: WorkstationType.KILN,
       },
       craftingTime: 10000,
       difficulty: 2,
@@ -117,7 +121,7 @@ export class RecipesCatalog {
       output: { itemId: ItemId.FLOUR, quantity: 2 },
       ingredients: [{ itemId: ItemId.WHEAT, quantity: 3 }],
       requirements: {
-        tool: "mortar",
+        tool: ToolType.MORTAR,
       },
       craftingTime: 4000,
       difficulty: 1,
@@ -133,7 +137,7 @@ export class RecipesCatalog {
         { itemId: ItemId.WATER, quantity: 1 },
       ],
       requirements: {
-        workstation: "oven",
+        workstation: WorkstationType.OVEN,
       },
       craftingTime: 12000,
       difficulty: 2,
@@ -146,7 +150,7 @@ export class RecipesCatalog {
       output: { itemId: ItemId.COOKED_MEAT, quantity: 1 },
       ingredients: [{ itemId: ItemId.RAW_MEAT, quantity: 1 }],
       requirements: {
-        workstation: "campfire",
+        workstation: WorkstationType.CAMPFIRE,
       },
       craftingTime: 5000,
       difficulty: 1,
@@ -159,7 +163,7 @@ export class RecipesCatalog {
       output: { itemId: ItemId.COOKED_FISH, quantity: 1 },
       ingredients: [{ itemId: ItemId.FISH, quantity: 1 }],
       requirements: {
-        workstation: "campfire",
+        workstation: WorkstationType.CAMPFIRE,
       },
       craftingTime: 4000,
       difficulty: 1,
@@ -176,7 +180,7 @@ export class RecipesCatalog {
         { itemId: ItemId.WATER, quantity: 2 },
       ],
       requirements: {
-        workstation: "cooking_pot",
+        workstation: WorkstationType.COOKING_POT,
       },
       craftingTime: 15000,
       difficulty: 3,
@@ -221,7 +225,7 @@ export class RecipesCatalog {
         { itemId: ItemId.PLANK, quantity: 2 },
       ],
       requirements: {
-        workstation: "anvil",
+        workstation: WorkstationType.ANVIL,
         skill: "smithing",
         skillLevel: 2,
       },
@@ -239,7 +243,7 @@ export class RecipesCatalog {
         { itemId: ItemId.PLANK, quantity: 2 },
       ],
       requirements: {
-        workstation: "anvil",
+        workstation: WorkstationType.ANVIL,
         skill: "smithing",
         skillLevel: 2,
       },
@@ -285,7 +289,7 @@ export class RecipesCatalog {
         { itemId: ItemId.LEATHER, quantity: 1 },
       ],
       requirements: {
-        workstation: "anvil",
+        workstation: WorkstationType.ANVIL,
         skill: "smithing",
         skillLevel: 3,
       },
@@ -321,7 +325,7 @@ export class RecipesCatalog {
         { itemId: ItemId.FIBER, quantity: 2 },
       ],
       requirements: {
-        tool: "needle",
+        tool: ToolType.NEEDLE,
       },
       craftingTime: 10000,
       difficulty: 2,
@@ -337,7 +341,7 @@ export class RecipesCatalog {
         { itemId: ItemId.FIBER, quantity: 3 },
       ],
       requirements: {
-        tool: "needle",
+        tool: ToolType.NEEDLE,
         skill: "leatherworking",
         skillLevel: 2,
       },
@@ -352,7 +356,7 @@ export class RecipesCatalog {
       output: { itemId: ItemId.IRON_HELMET, quantity: 1 },
       ingredients: [{ itemId: ItemId.IRON_INGOT, quantity: 5 }],
       requirements: {
-        workstation: "anvil",
+        workstation: WorkstationType.ANVIL,
         skill: "smithing",
         skillLevel: 3,
       },

@@ -6,6 +6,8 @@ import { ResourceType } from "../../../../shared/constants/ResourceEnums";
 import { GameEventType } from "../../../../shared/constants/EventEnums";
 import { RoleType } from "../../../../shared/constants/RoleEnums";
 import { TaskType } from "../../../../shared/constants/TaskEnums";
+import { LifeStage } from "../../../../shared/constants/AgentEnums";
+import { ActionType } from "../../../../shared/constants/AIEnums";
 
 /**
  * Central registry for simulation event listeners.
@@ -42,7 +44,7 @@ export class EventRegistry {
     this.registerEvent(
       GameEventNames.AGENT_ACTION_COMPLETE,
       (data: { agentId: string; action: string }) => {
-        if (data.action === "birth") {
+        if (data.action === ActionType.BIRTH) {
           const agent = this.runner.entityIndex.getAgent(data.agentId);
           if (agent) {
             this.runner._genealogySystem.registerBirth(

@@ -41,4 +41,3 @@ export function isComparisonOperator(
     value as ComparisonOperator,
   );
 }
-

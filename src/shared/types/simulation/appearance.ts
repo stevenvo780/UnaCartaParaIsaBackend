@@ -1,4 +1,5 @@
 import type { LifeStage, Sex } from "./agents";
+import { ClothingStyle } from "../../constants/AgentEnums";
 
 export type ColorPalette = {
   primary: string;
@@ -13,7 +14,7 @@ export type VisualStyle = {
   description: string;
   palette: ColorPalette;
   hairColors: string[];
-  clothingStyle: "simple" | "decorated" | "elegant" | "rugged" | "mystical";
+  clothingStyle: ClothingStyle;
 };
 
 export type GenerationVisualTheme = {
@@ -48,7 +49,7 @@ export type AgentAppearance = {
 
   clothingPrimary: string;
   clothingSecondary: string;
-  clothingStyle: "simple" | "decorated" | "elegant" | "rugged" | "mystical";
+  clothingStyle: ClothingStyle;
 
   groupMarker?: {
     color: string;

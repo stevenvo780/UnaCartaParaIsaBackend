@@ -7,6 +7,7 @@ import { GoalType } from "../../../../../shared/constants/AIEnums";
 import { NeedType } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 import { TimeOfDayPhase } from "../../../../../shared/constants/TimeEnums";
+import { ExplorationType } from "../../../../../shared/constants/AgentEnums";
 
 /**
  * Role-based threshold modifiers for individual needs.
@@ -254,7 +255,7 @@ export function evaluateCriticalNeeds(
             type: GoalType.EXPLORE,
             priority: calculateNeedPriority(needs.thirst, 140),
             data: {
-              explorationType: "desperate_search",
+              explorationType: ExplorationType.DESPERATE_SEARCH,
               need: NeedType.THIRST,
             },
             createdAt: now,
@@ -343,7 +344,7 @@ export function evaluateCriticalNeeds(
               type: GoalType.EXPLORE,
               priority: calculateNeedPriority(needs.hunger, 120),
               data: {
-                explorationType: "desperate_search",
+                explorationType: ExplorationType.DESPERATE_SEARCH,
                 need: NeedType.HUNGER,
                 searchFor: "food_or_prey",
               },

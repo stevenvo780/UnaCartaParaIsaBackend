@@ -54,6 +54,17 @@ export enum ResourceInteractionType {
 }
 
 /**
+ * Enumeration of world entity types for asset loading and rendering.
+ * These represent visual entity types in the world.
+ */
+export enum WorldEntityType {
+  TREE = "tree",
+  ROCK = "rock",
+  PLANT = "plant",
+  PROP = "prop",
+}
+
+/**
  * Type representing all possible resource type values.
  */
 export type ResourceTypeValue = `${ResourceType}`;
@@ -72,6 +83,11 @@ export type ResourceStateValue = `${ResourceState}`;
  * Type representing all possible resource interaction type values.
  */
 export type ResourceInteractionTypeValue = `${ResourceInteractionType}`;
+
+/**
+ * Type representing all possible world entity type values.
+ */
+export type WorldEntityTypeValue = `${WorldEntityType}`;
 
 /**
  * Array of all resource types for iteration.
@@ -98,6 +114,13 @@ export const ALL_RESOURCE_STATES: readonly ResourceState[] = Object.values(
  */
 export const ALL_RESOURCE_INTERACTION_TYPES: readonly ResourceInteractionType[] =
   Object.values(ResourceInteractionType) as ResourceInteractionType[];
+
+/**
+ * Array of all world entity types for iteration.
+ */
+export const ALL_WORLD_ENTITY_TYPES: readonly WorldEntityType[] = Object.values(
+  WorldEntityType,
+) as WorldEntityType[];
 
 /**
  * Type guard to check if a string is a valid ResourceType.
@@ -129,4 +152,11 @@ export function isResourceInteractionType(
   return Object.values(ResourceInteractionType).includes(
     value as ResourceInteractionType,
   );
+}
+
+/**
+ * Type guard to check if a string is a valid WorldEntityType.
+ */
+export function isWorldEntityType(value: string): value is WorldEntityType {
+  return Object.values(WorldEntityType).includes(value as WorldEntityType);
 }

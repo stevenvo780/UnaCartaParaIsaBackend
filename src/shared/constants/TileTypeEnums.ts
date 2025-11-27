@@ -14,6 +14,8 @@ export enum TileType {
   STONE = "stone",
   WATER = "water",
   PATH = "path",
+  TERRAIN_DIRT = "terrain_dirt",
+  TERRAIN_GRASSLAND = "terrain_grassland",
 }
 
 /**

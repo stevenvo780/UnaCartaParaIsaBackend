@@ -8,6 +8,7 @@ import {
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 import { TaskType } from "../../../../../shared/constants/TaskEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
+import { ExplorationType } from "../../../../../shared/constants/AgentEnums";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
 
 export interface AIActionPlannerDeps {
@@ -877,7 +878,7 @@ export class AIActionPlanner {
       let targetX: number;
       let targetY: number;
 
-      if (goal.data?.explorationType === "desperate_search") {
+      if (goal.data?.explorationType === ExplorationType.DESPERATE_SEARCH) {
         targetX = Math.random() * mapWidth;
         targetY = Math.random() * mapHeight;
       } else {
