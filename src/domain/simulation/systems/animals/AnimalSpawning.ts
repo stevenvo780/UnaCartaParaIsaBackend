@@ -11,6 +11,7 @@ import {
 } from "../../../../infrastructure/services/world/config/AnimalConfigs";
 import { AnimalGenetics } from "./AnimalGenetics";
 import { simulationEvents, GameEventNames } from "../../core/events";
+import { AnimalState } from "../../../../shared/constants/AnimalEnums";
 
 export class AnimalSpawning {
   private static nextAnimalId = 1;

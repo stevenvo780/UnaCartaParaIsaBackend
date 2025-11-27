@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import type { GameState } from "../../types/game-types";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { WeaponId } from "../../../shared/constants/CraftingEnums";
+import { EntityType } from "../../../shared/constants/EntityEnums";
+import { CombatEventType } from "../../../shared/constants/CombatEnums";
 import type {
   CombatEngagedLog,
   CombatHitLog,
@@ -123,7 +125,7 @@ export class CombatSystem {
   private handleAgentBirth(data: { entityId: string }): void {
     const agent = this.lifeCycleSystem.getAgent(data.entityId);
     if (agent && agent.socialStatus === "warrior") {
-      this.equip(data.entityId, "wooden_club");
+      this.equip(data.entityId, WeaponId.WOODEN_CLUB);
     }
   }
 
@@ -200,7 +202,7 @@ export class CombatSystem {
           const results = this.sharedSpatialIndex.queryRadius(
             attacker.position,
             radius,
-            "all",
+            EntityType.ALL,
           );
           nearby = results
             .filter((candidate) => candidate.entity !== attacker.id)
@@ -269,7 +271,7 @@ export class CombatSystem {
         const results = this.sharedSpatialIndex.queryRadius(
           center,
           radius,
-          "all",
+          EntityType.ALL,
         );
         nearby = results
           .filter((candidate) => candidate.entity !== attacker.id)
@@ -420,7 +422,7 @@ export class CombatSystem {
     });
     this.appendLog(
       this.createLogEntry<CombatWeaponEquippedLog>({
-        type: "weapon_equipped",
+        type: CombatEventType.WEAPON_EQUIPPED,
         agentId,
         weapon: weaponId,
       }),
@@ -428,7 +430,7 @@ export class CombatSystem {
   }
 
   public getEquipped(agentId: string): WeaponId {
-    return this.equippedWeapons.get(agentId) ?? "unarmed";
+    return this.equippedWeapons.get(agentId) ?? WeaponId.UNARMED;
   }
 
   public craftWeapon(agentId: string, weaponId: WeaponId): boolean {
@@ -460,7 +462,7 @@ export class CombatSystem {
     });
     this.appendLog(
       this.createLogEntry<CombatWeaponCraftedLog>({
-        type: "weapon_crafted",
+        type: CombatEventType.WEAPON_CRAFTED,
         agentId,
         weapon: weaponId,
       }),
@@ -577,7 +579,7 @@ export class CombatSystem {
     });
     this.appendLog(
       this.createLogEntry<CombatEngagedLog>({
-        type: "engaged",
+        type: CombatEventType.ENGAGED,
         attackerId: attacker.id,
         targetId: target.id,
         weapon: weaponId,
@@ -606,7 +608,7 @@ export class CombatSystem {
     });
     this.appendLog(
       this.createLogEntry<CombatHitLog>({
-        type: "hit",
+        type: CombatEventType.HIT,
         attackerId: attacker.id,
         targetId: target.id,
         weapon: weaponId,
@@ -662,7 +664,7 @@ export class CombatSystem {
     });
     this.appendLog(
       this.createLogEntry<CombatKillLog>({
-        type: "kill",
+        type: CombatEventType.KILL,
         attackerId: attacker.id,
         targetId: target.id,
         weapon: weaponId,

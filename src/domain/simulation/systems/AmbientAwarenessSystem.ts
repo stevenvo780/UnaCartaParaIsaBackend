@@ -104,14 +104,14 @@ export class AmbientAwarenessSystem {
       this.wellbeingHistory.shift();
     }
 
-    let trend: CollectiveWellbeing["trend"] = "stable";
+    let trend: CollectiveWellbeing["trend"] = CrisisTrend.STABLE;
     if (this.wellbeingHistory.length >= 10) {
       const recent =
         this.wellbeingHistory.slice(-5).reduce((a, b) => a + b, 0) / 5;
       const older =
         this.wellbeingHistory.slice(-10, -5).reduce((a, b) => a + b, 0) / 5;
-      if (recent > older + 2) trend = "improving";
-      else if (recent < older - 2) trend = "worsening";
+      if (recent > older + 2) trend = CrisisTrend.IMPROVING;
+      else if (recent < older - 2) trend = CrisisTrend.WORSENING;
     }
 
     const criticalPercent = (critical / samplesList.length) * 100;
@@ -227,18 +227,18 @@ export class AmbientAwarenessSystem {
     return base;
   }
 
-  private resolveWeatherBias(mood: AmbientMood): "clear" | "cloudy" | "stormy" {
+  private resolveWeatherBias(mood: AmbientMood): WeatherType {
     switch (mood) {
-      case "thriving":
-      case "comfortable":
-        return "clear";
-      case "stressed":
-        return "cloudy";
-      case "crisis":
-      case "collapse":
-        return "stormy";
+      case AmbientMood.THRIVING:
+      case AmbientMood.COMFORTABLE:
+        return WeatherType.CLEAR;
+      case AmbientMood.STRESSED:
+        return WeatherType.CLOUDY;
+      case AmbientMood.CRISIS:
+      case AmbientMood.COLLAPSE:
+        return WeatherType.STORMY;
       default:
-        return "clear";
+        return WeatherType.CLEAR;
     }
   }
 }

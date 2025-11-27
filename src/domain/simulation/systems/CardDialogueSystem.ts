@@ -8,9 +8,12 @@ import type {
   DialogueCard,
   DialogueChoice,
   DialogueStateSnapshot,
-  DialogueTone,
-  DialoguePriority,
 } from "../../types/simulation/ambient";
+import {
+  DialogueCardType,
+  DialoguePriority,
+  DialogueTone,
+} from "../../../shared/constants/AmbientEnums";
 
 interface EmotionalContext {
   overallMood: number;
@@ -308,7 +311,7 @@ export class CardDialogueSystem {
       id: `${template.id}_${entityId}_${now}`,
       title: template.title,
       content: contentVariation.replace(/{agent}/g, entityId),
-      type: template.type ?? "event",
+      type: template.type ?? DialogueCardType.EVENT,
       priority,
       participants: [entityId],
       triggerCondition: template.id,
@@ -320,12 +323,12 @@ export class CardDialogueSystem {
   }
 
   private calculateDuration(priority: DialoguePriority): number {
-    const durations = {
-      urgent: 30000,
-      high: 45000,
-      medium: 60000,
-      low: 90000,
-    } as const;
+    const durations: Record<DialoguePriority, number> = {
+      [DialoguePriority.URGENT]: 30000,
+      [DialoguePriority.HIGH]: 45000,
+      [DialoguePriority.MEDIUM]: 60000,
+      [DialoguePriority.LOW]: 90000,
+    };
     return durations[priority];
   }
 
@@ -333,19 +336,19 @@ export class CardDialogueSystem {
     template: CardTemplate,
     needs: EntityNeedsData,
   ): DialoguePriority {
-    if (needs.hunger < 15 || needs.thirst < 15) return "urgent";
+    if (needs.hunger < 15 || needs.thirst < 15) return DialoguePriority.URGENT;
     if (needs.hunger < 30 || needs.thirst < 25 || needs.energy < 20)
-      return "high";
-    if (needs.mentalHealth < 40) return "medium";
+      return DialoguePriority.HIGH;
+    if (needs.mentalHealth < 40) return DialoguePriority.MEDIUM;
 
-    if (!template.triggers.needsBased) return "low";
+    if (!template.triggers.needsBased) return DialoguePriority.LOW;
     const maxThreshold = Math.max(
       ...template.triggers.needsBased.map((t) => t.threshold),
     );
-    if (maxThreshold >= 80) return "urgent";
-    if (maxThreshold >= 60) return "high";
-    if (maxThreshold >= 40) return "medium";
-    return "low";
+    if (maxThreshold >= 80) return DialoguePriority.URGENT;
+    if (maxThreshold >= 60) return DialoguePriority.HIGH;
+    if (maxThreshold >= 40) return DialoguePriority.MEDIUM;
+    return DialoguePriority.LOW;
   }
 
   private createTemplates(): CardTemplate[] {
@@ -361,7 +364,7 @@ export class CardDialogueSystem {
         triggers: {
           needsBased: [{ need: "energy", threshold: 50, operator: "above" }],
         },
-        emotionalTone: "excited",
+        emotionalTone: DialogueTone.EXCITED,
       },
       {
         id: "resource_gathering",
@@ -377,7 +380,7 @@ export class CardDialogueSystem {
             { need: "energy", threshold: 40, operator: "above" },
           ],
         },
-        emotionalTone: "happy",
+        emotionalTone: DialogueTone.HAPPY,
       },
       {
         id: "low_needs_warning",
@@ -390,7 +393,7 @@ export class CardDialogueSystem {
         triggers: {
           needsBased: [{ need: "hunger", threshold: 25, operator: "below" }],
         },
-        emotionalTone: "worried",
+        emotionalTone: DialogueTone.WORRIED,
       },
       {
         id: "rest_recovery",
@@ -403,7 +406,7 @@ export class CardDialogueSystem {
         triggers: {
           needsBased: [{ need: "energy", threshold: 30, operator: "below" }],
         },
-        emotionalTone: "contemplative",
+        emotionalTone: DialogueTone.CONTEMPLATIVE,
       },
       {
         id: "day_night_change",
@@ -416,7 +419,7 @@ export class CardDialogueSystem {
         triggers: {
           timeBased: [{ time: "dawn", frequency: "daily" }],
         },
-        emotionalTone: "contemplative",
+        emotionalTone: DialogueTone.CONTEMPLATIVE,
       },
     ];
   }

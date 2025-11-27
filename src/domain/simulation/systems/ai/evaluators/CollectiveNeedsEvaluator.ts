@@ -13,10 +13,10 @@ import type { SettlementDemand } from "../../../../types/simulation/governance";
 import type {
   Task,
   TaskCreationParams,
-  TaskType,
 } from "../../../../types/simulation/tasks";
 import { GoalType as GoalTypeEnum } from "../../../../../shared/constants/AIEnums";
 import { ResourceType as ResourceTypeEnum } from "../../../../../shared/constants/ResourceEnums";
+import { TaskType } from "../../../../../shared/constants/TaskEnums";
 
 /**
  * Configuration for collective needs thresholds.
@@ -206,7 +206,6 @@ function getMostNeededResource(
 ): { resource: ResourceType; urgency: number } | null {
   const needs: Array<{ resource: ResourceType; urgency: number }> = [];
 
-  // Check food per capita
   if (state.foodPerCapita < thresholds.foodPerCapita) {
     const urgency = 1 - state.foodPerCapita / thresholds.foodPerCapita;
     needs.push({
@@ -215,7 +214,6 @@ function getMostNeededResource(
     });
   }
 
-  // Check water per capita
   if (state.waterPerCapita < thresholds.waterPerCapita) {
     const urgency = 1 - state.waterPerCapita / thresholds.waterPerCapita;
     needs.push({
@@ -590,15 +588,15 @@ function getLowestResource(state: CollectiveNeedsState): ResourceType {
 function getTaskTypeForResource(resource: ResourceType): TaskType {
   switch (resource) {
     case "food":
-      return "gather_food";
+      return TaskType.GATHER_FOOD;
     case "water":
-      return "gather_water";
+      return TaskType.GATHER_WATER;
     case "wood":
-      return "gather_wood";
+      return TaskType.GATHER_WOOD;
     case "stone":
-      return "gather_stone";
+      return TaskType.GATHER_STONE;
     default:
-      return "custom";
+      return TaskType.CUSTOM;
   }
 }
 

@@ -18,6 +18,7 @@ import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "node:perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
 import { SIM_CONSTANTS } from "../core/SimulationConstants";
+import { AnimalState } from "../../../shared/constants/AnimalEnums";
 
 const DEFAULT_CONFIG: AnimalSystemConfig = {
   maxAnimals: SIM_CONSTANTS.MAX_ANIMALS,
@@ -302,7 +303,7 @@ export class AnimalSystem {
         config.detectionRange,
       );
       if (nearbyPredator) {
-        animal.state = "fleeing";
+        animal.state = AnimalState.FLEEING;
         animal.fleeTarget = nearbyPredator.id;
         animal.needs.fear = 100;
         animal.currentTarget = null;
@@ -314,7 +315,7 @@ export class AnimalSystem {
       if (config.fleeFromHumans) {
         const nearbyHuman = this.findNearbyHuman(animal, config.detectionRange);
         if (nearbyHuman) {
-          animal.state = "fleeing";
+          animal.state = AnimalState.FLEEING;
           animal.fleeTarget = nearbyHuman.id;
           animal.needs.fear = 100;
           animal.currentTarget = null;
@@ -376,7 +377,7 @@ export class AnimalSystem {
       config.detectionRange,
     );
     if (nearbyPredator) {
-      animal.state = "fleeing";
+      animal.state = AnimalState.FLEEING;
       animal.fleeTarget = nearbyPredator.id;
       animal.needs.fear = 100;
       animal.currentTarget = null;
@@ -393,7 +394,7 @@ export class AnimalSystem {
     if (config.fleeFromHumans) {
       const nearbyHuman = this.findNearbyHuman(animal, config.detectionRange);
       if (nearbyHuman) {
-        animal.state = "fleeing";
+        animal.state = AnimalState.FLEEING;
         animal.fleeTarget = nearbyHuman.id;
         animal.needs.fear = 100;
         animal.currentTarget = null;
@@ -410,7 +411,7 @@ export class AnimalSystem {
 
     if (animal.needs.hunger < 30) {
       if (config.isPredator) {
-        animal.state = "hunting";
+        animal.state = AnimalState.HUNTING;
         const prey = this.getAnimalsInRadius(
           animal.position,
           config.huntingRange || 200,
@@ -420,7 +421,7 @@ export class AnimalSystem {
         });
         return;
       } else if (config.consumesVegetation) {
-        animal.state = "seeking_food";
+        animal.state = AnimalState.SEEKING_FOOD;
         const foodResources = this.findNearbyFood(
           animal,
           config.detectionRange,
@@ -446,7 +447,7 @@ export class AnimalSystem {
             terrainTile &&
             terrainTile.assets.terrain === "terrain_grassland"
           ) {
-            animal.state = "eating";
+            animal.state = AnimalState.EATING;
             if (!animal.stateEndTime) {
               animal.stateEndTime = Date.now() + 2000;
             } else if (Date.now() > animal.stateEndTime) {
@@ -454,7 +455,7 @@ export class AnimalSystem {
                 assets: { terrain: "terrain_dirt" },
               });
               animal.needs.hunger = Math.min(100, animal.needs.hunger + 30);
-              animal.state = "idle";
+              animal.state = AnimalState.IDLE;
               animal.stateEndTime = undefined;
             }
             return;
@@ -465,7 +466,7 @@ export class AnimalSystem {
     }
 
     if (animal.needs.thirst < 30 && config.consumesWater) {
-      animal.state = "seeking_water";
+      animal.state = AnimalState.SEEKING_WATER;
       const waterResources = this.findNearbyWater(
         animal,
         config.detectionRange,
@@ -497,7 +498,7 @@ export class AnimalSystem {
     }
 
     if (animal.needs.reproductiveUrge > 80) {
-      animal.state = "mating";
+      animal.state = AnimalState.MATING;
       const mates = this.getAnimalsInRadius(animal.position, 60);
       AnimalBehavior.attemptReproduction(
         animal,
@@ -510,21 +511,24 @@ export class AnimalSystem {
       return;
     }
 
-    if (animal.state === "eating" || animal.state === "drinking") {
+    if (
+      animal.state === AnimalState.EATING ||
+      animal.state === AnimalState.DRINKING
+    ) {
       if (animal.stateEndTime && Date.now() > animal.stateEndTime) {
-        animal.state = "idle";
+        animal.state = AnimalState.IDLE;
         animal.stateEndTime = undefined;
       }
       return;
     }
 
-    if (animal.state === "idle") {
+    if (animal.state === AnimalState.IDLE) {
       if (Math.random() < 0.8) {
-        animal.state = "wandering";
+        animal.state = AnimalState.WANDERING;
         AnimalBehavior.wander(animal, 0.5, deltaSeconds);
       }
     } else {
-      animal.state = "wandering";
+      animal.state = AnimalState.WANDERING;
       AnimalBehavior.wander(animal, 0.5, deltaSeconds);
     }
   }
@@ -732,12 +736,12 @@ export class AnimalSystem {
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     if (distance < 40) {
-      animal.state = "drinking";
+      animal.state = AnimalState.DRINKING;
       if (!animal.stateEndTime) {
         animal.stateEndTime = Date.now() + 2000;
       } else if (Date.now() > animal.stateEndTime) {
         AnimalNeeds.hydrate(animal, config.waterConsumptionRate * 20);
-        animal.state = "idle";
+        animal.state = AnimalState.IDLE;
         animal.stateEndTime = undefined;
         animal.targetPosition = null;
       }
@@ -971,7 +975,7 @@ export class AnimalSystem {
     if (!animal || animal.isDead) return;
 
     animal.isDead = true;
-    animal.state = "dead";
+    animal.state = AnimalState.DEAD;
 
     simulationEvents.emit(GameEventNames.ANIMAL_DIED, {
       animalId,

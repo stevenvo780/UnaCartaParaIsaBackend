@@ -6,8 +6,8 @@ import type {
   DivineFavor,
   DivineFavorEvent,
   DivinePower,
-  GodId,
 } from "../../types/simulation/divine";
+import { GodId } from "../../../shared/constants/DivineEnums";
 
 interface DivineFavorConfig {
   basePowerRegenRate: number;
@@ -93,12 +93,12 @@ export class DivineFavorSystem {
     this.config = DEFAULT_CONFIG;
     this.divinePowers = {
       isa: {
-        godId: "isa",
+        godId: GodId.ISA,
         power: this.config.maxPower,
         regenRate: this.config.basePowerRegenRate,
       },
       stev: {
-        godId: "stev",
+        godId: GodId.STEV,
         power: this.config.maxPower,
         regenRate: this.config.basePowerRegenRate,
       },

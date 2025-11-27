@@ -9,6 +9,7 @@ import {
 import type { TaskType } from "../../types/simulation/tasks";
 import { logger } from "../../../infrastructure/utils/logger";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
+import { BuildingType } from "../../../shared/constants/BuildingEnums";
 
 import { TaskSystem } from "./TaskSystem";
 import { TerrainSystem } from "./TerrainSystem";
@@ -130,8 +131,11 @@ export class BuildingSystem {
       );
     }
 
-    if (houses < this.config.maxHouses && !this.hasActiveJob("house")) {
-      return "house";
+    if (
+      houses < this.config.maxHouses &&
+      !this.hasActiveJob(BuildingType.HOUSE)
+    ) {
+      return BuildingType.HOUSE;
     }
 
     const mines = zones.filter(
@@ -139,8 +143,8 @@ export class BuildingSystem {
         z.metadata?.building === "mine" &&
         z.metadata?.underConstruction !== true,
     ).length;
-    if (mines < this.config.maxMines && !this.hasActiveJob("mine")) {
-      return "mine";
+    if (mines < this.config.maxMines && !this.hasActiveJob(BuildingType.MINE)) {
+      return BuildingType.MINE;
     }
 
     const workbenches = zones.filter(
@@ -148,9 +152,9 @@ export class BuildingSystem {
     ).length;
     if (
       workbenches < this.config.maxWorkbenches &&
-      !this.hasActiveJob("workbench")
+      !this.hasActiveJob(BuildingType.WORKBENCH)
     ) {
-      return "workbench";
+      return BuildingType.WORKBENCH;
     }
 
     // Construir granjas para producir comida (requiere madera y piedra)
@@ -159,8 +163,8 @@ export class BuildingSystem {
         z.metadata?.building === "farm" &&
         z.metadata?.underConstruction !== true,
     ).length;
-    if (farms < this.config.maxFarms && !this.hasActiveJob("farm")) {
-      return "farm";
+    if (farms < this.config.maxFarms && !this.hasActiveJob(BuildingType.FARM)) {
+      return BuildingType.FARM;
     }
 
     return null;

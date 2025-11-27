@@ -22,6 +22,9 @@ import { ZoneType } from "../../../shared/constants/ZoneEnums";
 import { NeedType } from "../../../shared/constants/AIEnums";
 import { LifeStage } from "../../../shared/constants/AgentEnums";
 import { ActionType } from "../../../shared/constants/AIEnums";
+import { EntityType } from "../../../shared/constants/EntityEnums";
+import { FoodCategory } from "../../../shared/constants/FoodEnums";
+import type { FoodItem } from "../../types/simulation/food";
 
 /**
  * System for managing entity needs (hunger, thirst, energy, hygiene, social, fun, mental health).
@@ -860,7 +863,7 @@ export class NeedsSystem extends EventEmitter {
       const nearbyResults = this.spatialIndex.queryRadius(
         entityPosition,
         radius,
-        "agent",
+        EntityType.AGENT,
       );
       nearbyEntities = nearbyResults
         .filter((r) => r.entity !== entityId)
@@ -1316,9 +1319,7 @@ export class NeedsSystem extends EventEmitter {
   /**
    * Obtiene todas las comidas disponibles por categoría
    */
-  public getFoodsByCategory(
-    category: "healthy" | "junk" | "dessert" | "drink" | "snack",
-  ): FoodItem[] {
+  public getFoodsByCategory(category: FoodCategory): FoodItem[] {
     return FoodCatalog.getFoodsByCategory(category);
   }
 }

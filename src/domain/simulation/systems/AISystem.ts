@@ -16,7 +16,7 @@ import { ZoneType } from "../../../shared/constants/ZoneEnums";
 import { getAnimalConfig } from "../../../infrastructure/services/world/config/AnimalConfigs";
 import { WeaponId as CraftingWeaponId } from "../../../shared/constants/CraftingEnums";
 import type { QuestEvent } from "../../types/simulation/quests";
-import type { InventorySystem } from "./InventorySystem";
+import type { Stockpile } from "../../types/simulation/economy";
 
 /**
  * Generates a human-readable description of an AI goal.
@@ -1254,8 +1254,8 @@ export class AISystem extends EventEmitter {
       canCraftWeapon: (id: string, weaponId: string) => {
         if (!this.craftingSystem) return false;
         const validWeaponIds: CraftingWeaponId[] = [
-          "wooden_club",
-          "stone_dagger",
+          CraftingWeaponId.WOODEN_CLUB,
+          CraftingWeaponId.STONE_DAGGER,
         ];
         if (!validWeaponIds.includes(weaponId as CraftingWeaponId)) {
           return false;

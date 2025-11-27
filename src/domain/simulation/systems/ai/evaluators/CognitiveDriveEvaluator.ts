@@ -26,13 +26,22 @@ export function evaluateCognitiveDrives(
 
   const role = deps.getAgentRole?.(aiState.entityId);
   if (role && role.roleType !== "idle") {
-    workDrive += 0.2; // Having a role increases drive
+    workDrive += 0.2;
   }
 
-  // Time of day influence
   const timeOfDay = deps.getCurrentTimeOfDay?.() || "day";
   if (timeOfDay === "night" || timeOfDay === "deep_night") {
     workDrive -= 0.5;
+  }
+
+  if (workDrive > 0.5) {
+    goals.push({
+      id: `cognitive_work_${aiState.entityId}_${now}`,
+      type: GoalType.WORK,
+      priority: workDrive,
+      createdAt: now,
+      expiresAt: now + 30000,
+    });
   }
 
   let exploreDrive = 0.2;

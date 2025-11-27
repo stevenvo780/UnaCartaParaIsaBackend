@@ -454,10 +454,7 @@ export class WorldResourceSystem {
         Math.random() * (yields.amountMax - yields.amountMin + 1) +
           yields.amountMin,
       );
-      if (harvestAmount > 0) {
-        items.push({ type: yields.resourceType, amount: harvestAmount });
-      }
-      // Secondary yields
+      // Secondary yields (prioritize rare items)
       if (yields?.secondaryYields) {
         for (const secondary of yields.secondaryYields) {
           if (
@@ -483,6 +480,10 @@ export class WorldResourceSystem {
             });
           }
         }
+      }
+
+      if (harvestAmount > 0) {
+        items.push({ type: yields.resourceType, amount: harvestAmount });
       }
 
       return { success: true, items };

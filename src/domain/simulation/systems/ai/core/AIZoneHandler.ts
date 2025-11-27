@@ -5,14 +5,18 @@ import { simulationEvents, GameEventNames } from "../../../core/events";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
 import { logger } from "../../../../../infrastructure/utils/logger";
-
 /**
  * Minimal interface for inventory operations needed by AIZoneHandler.
  */
 export interface AIZoneInventoryPort {
-  getAgentInventory(
-    agentId: string,
-  ): { wood: number; stone: number; food: number; water: number } | null;
+  getAgentInventory(agentId: string): {
+    wood: number;
+    stone: number;
+    food: number;
+    water: number;
+    metal?: number;
+    rare_materials?: number;
+  } | null;
   removeFromAgent(agentId: string, type: ResourceType, amount: number): void;
   addResource(agentId: string, type: ResourceType, amount: number): boolean;
   getStockpilesInZone(zoneId: string): Array<{ id: string }>;
@@ -20,8 +24,22 @@ export interface AIZoneInventoryPort {
   transferToStockpile(
     agentId: string,
     stockpileId: string,
-    resources: { wood: number; stone: number; food: number; water: number },
-  ): { wood: number; stone: number; food: number; water: number };
+    resources: {
+      wood: number;
+      stone: number;
+      food: number;
+      water: number;
+      metal?: number;
+      rare_materials?: number;
+    },
+  ): {
+    wood: number;
+    stone: number;
+    food: number;
+    water: number;
+    metal?: number;
+    rare_materials?: number;
+  };
 }
 
 /**
@@ -179,7 +197,7 @@ export class AIZoneHandler {
     }
 
     logger.debug(
-      `📦 [DEPOSIT] ${entityId} attempting deposit: wood=${inv.wood}, stone=${inv.stone}, food=${inv.food}`,
+      `📦 [DEPOSIT] ${entityId} attempting deposit: wood=${inv.wood}, stone=${inv.stone}, metal=${inv.metal}, rare=${inv.rare_materials}`,
     );
 
     let stockpiles = inventorySystem.getStockpilesInZone(zoneId);
@@ -195,6 +213,8 @@ export class AIZoneHandler {
       stone: inv.stone,
       food: inv.food,
       water: inv.water,
+      metal: inv.metal || 0,
+      rare_materials: inv.rare_materials || 0,
     };
 
     const transferred = inventorySystem.transferToStockpile(
@@ -207,7 +227,9 @@ export class AIZoneHandler {
       transferred.wood +
       transferred.stone +
       transferred.food +
-      transferred.water;
+      transferred.water +
+      (transferred.metal || 0) +
+      (transferred.rare_materials || 0);
 
     if (totalTransferred > 0) {
       simulationEvents.emit(GameEventNames.RESOURCES_DEPOSITED, {
@@ -226,21 +248,21 @@ export class AIZoneHandler {
     switch (zoneType) {
       case "food":
       case "water":
-        return "eating";
+        return ActivityType.EATING;
       case "rest":
       case "shelter":
       case "house":
-        return "resting";
+        return ActivityType.RESTING;
       case "social":
       case "market":
       case "gathering":
-        return "socializing";
+        return ActivityType.SOCIALIZING;
       case "work":
       case "production":
       case "crafting":
-        return "working";
+        return ActivityType.WORKING;
       default:
-        return "idle";
+        return ActivityType.IDLE;
     }
   }
 

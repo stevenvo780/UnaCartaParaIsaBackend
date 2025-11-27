@@ -4,6 +4,7 @@ import { getAnimalConfig } from "../../../../infrastructure/services/world/confi
 import { AnimalNeeds } from "./AnimalNeeds";
 import { AnimalGenetics } from "./AnimalGenetics";
 import { simulationEvents, GameEventNames } from "../../core/events";
+import { AnimalState } from "../../../../shared/constants/AnimalEnums";
 
 const BASE_ANIMAL_SPEED = 60; // Slightly increased from 50
 
@@ -123,7 +124,7 @@ export class AnimalBehavior {
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < 30) {
-        animal.state = "eating";
+        animal.state = AnimalState.EATING;
         const consumed = config.vegetationConsumptionRate;
         AnimalNeeds.feed(animal, consumed * 15);
 
@@ -195,7 +196,7 @@ export class AnimalBehavior {
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < 25) {
-        animal.state = "eating";
+        animal.state = AnimalState.EATING;
         const consumed = config.foodValue || 50;
         AnimalNeeds.feed(animal, consumed);
 

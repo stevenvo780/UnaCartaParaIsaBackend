@@ -17,9 +17,9 @@ export function estimateTravelTime(
 export function assessRouteDifficultyByDistance(
   distancePx: number,
 ): Difficulty {
-  if (distancePx < 200) return "easy";
-  if (distancePx < 500) return "medium";
-  return "hard";
+  if (distancePx < 200) return Difficulty.EASY;
+  if (distancePx < 500) return Difficulty.MEDIUM;
+  return Difficulty.HARD;
 }
 
 export function findAccessibleDestination(

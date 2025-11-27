@@ -15,6 +15,7 @@ import { ActionType } from "../../../../../shared/constants/AIEnums";
 import { NeedType } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 import { TargetType } from "../../../../../shared/constants/EntityEnums";
+import { AnimalState } from "../../../../../shared/constants/AnimalEnums";
 
 export interface AIActionExecutorDeps {
   gameState: GameState;
@@ -279,7 +280,7 @@ export class AIActionExecutor {
 
       // Mark animal as dead
       targetAnimal.isDead = true;
-      targetAnimal.state = "dead";
+      targetAnimal.state = AnimalState.DEAD;
 
       // Add food to hunter's inventory
       if (this.deps.inventorySystem) {

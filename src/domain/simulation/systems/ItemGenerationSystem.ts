@@ -7,6 +7,7 @@ import type {
 } from "../../types/simulation/itemGeneration";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { BaseMaterialsCatalog } from "../../../simulation/data/BaseMaterialsCatalog";
+import type { Item } from "../../types/simulation/items";
 
 const DEFAULT_CONFIG: ItemGenerationConfig = {
   enableAutoGeneration: true,

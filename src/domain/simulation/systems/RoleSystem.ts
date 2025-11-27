@@ -4,13 +4,13 @@ import type { GameState } from "../../types/game-types";
 import type { AgentProfile } from "../../types/simulation/agents";
 import type {
   RoleType,
-  WorkShift,
   RoleConfig,
   AgentRole,
   ShiftSchedule,
   RoleAssignment,
   RoleSystemConfig,
 } from "../../types/simulation/roles";
+import { WorkShift } from "../../../shared/constants/RoleEnums";
 import { simulationEvents, GameEventNames } from "../core/events";
 
 const ROLE_DEFINITIONS: RoleConfig[] = [
@@ -28,7 +28,7 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       traitBonus: { diligence: 0.3, cooperation: 0.1 },
     },
     preferredZoneType: "work",
-    workShifts: ["morning", "afternoon"],
+    workShifts: [WorkShift.MORNING, WorkShift.AFTERNOON],
   },
   {
     type: "quarryman" as RoleType,
@@ -44,7 +44,7 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       traitBonus: { diligence: 0.4, cooperation: 0.1 },
     },
     preferredZoneType: "work",
-    workShifts: ["morning", "afternoon"],
+    workShifts: [WorkShift.MORNING, WorkShift.AFTERNOON],
   },
   {
     type: "builder" as RoleType,
@@ -60,7 +60,7 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       traitBonus: { diligence: 0.2, cooperation: 0.3, curiosity: 0.1 },
     },
     preferredZoneType: "work",
-    workShifts: ["morning", "afternoon", "evening"],
+    workShifts: [WorkShift.MORNING, WorkShift.AFTERNOON, WorkShift.EVENING],
   },
   {
     type: "farmer" as RoleType,
@@ -76,7 +76,7 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       traitBonus: { diligence: 0.3, curiosity: 0.2 },
     },
     preferredZoneType: "food",
-    workShifts: ["morning", "afternoon"],
+    workShifts: [WorkShift.MORNING, WorkShift.AFTERNOON],
   },
   {
     type: "gatherer" as RoleType,
@@ -92,7 +92,7 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       traitBonus: { curiosity: 0.2, cooperation: 0.1 },
     },
     preferredZoneType: "water",
-    workShifts: ["morning", "afternoon", "evening"],
+    workShifts: [WorkShift.MORNING, WorkShift.AFTERNOON, WorkShift.EVENING],
   },
   {
     type: "guard" as RoleType,
@@ -108,7 +108,7 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       traitBonus: { cooperation: 0.3, diligence: 0.2 },
     },
     preferredZoneType: "rest",
-    workShifts: ["evening", "night"],
+    workShifts: [WorkShift.EVENING, WorkShift.NIGHT],
   },
   {
     type: "hunter" as RoleType,
@@ -124,7 +124,7 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
       traitBonus: { diligence: 0.3, neuroticism: 0.2 },
     },
     preferredZoneType: "wild",
-    workShifts: ["morning", "evening", "night"],
+    workShifts: [WorkShift.MORNING, WorkShift.EVENING, WorkShift.NIGHT],
   },
 ];
 
@@ -143,7 +143,7 @@ export class RoleSystem extends EventEmitter {
     night: [],
     rest: [],
   };
-  private currentShift: WorkShift = "morning";
+  private currentShift: WorkShift = WorkShift.MORNING;
   private lastUpdate = Date.now();
   private lastStatsUpdate = 0;
   private lastReassignment = 0;
@@ -252,7 +252,7 @@ export class RoleSystem extends EventEmitter {
       if (config.workShifts.includes(this.currentShift)) {
         role.currentShift = this.currentShift;
       } else {
-        role.currentShift = "rest";
+        role.currentShift = WorkShift.REST;
         if (!this.schedule.rest.includes(agentId)) {
           this.schedule.rest.push(agentId);
         }

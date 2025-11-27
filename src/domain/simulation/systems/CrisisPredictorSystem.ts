@@ -4,9 +4,12 @@ import type {
   CrisisIndicator,
   CrisisPrediction,
   CrisisSnapshot,
+} from "../../types/simulation/ambient";
+import {
   CrisisSeverity,
   CrisisTrend,
-} from "../../types/simulation/ambient";
+  CrisisPredictionType,
+} from "../../../shared/constants/AmbientEnums";
 import { simulationEvents, GameEventNames } from "../core/events";
 
 const INDICATOR_CONFIG: Record<
@@ -180,20 +183,20 @@ export class CrisisPredictorSystem {
   }
 
   private resolveSeverity(value: number, threshold: number): CrisisSeverity {
-    if (value >= threshold * 2) return "critical";
-    if (value >= threshold * 1.5) return "high";
-    if (value >= threshold) return "medium";
-    return "low";
+    if (value >= threshold * 2) return CrisisSeverity.CRITICAL;
+    if (value >= threshold * 1.5) return CrisisSeverity.HIGH;
+    if (value >= threshold) return CrisisSeverity.MEDIUM;
+    return CrisisSeverity.LOW;
   }
 
   private resolveTrend(name: string, _value: number): CrisisTrend {
     const history = this.indicatorHistory.get(name);
-    if (!history || history.length < 5) return "stable";
+    if (!history || history.length < 5) return CrisisTrend.STABLE;
     const recentAvg = history.slice(-3).reduce((acc, v) => acc + v, 0) / 3;
     const olderAvg = history.slice(-6, -3).reduce((acc, v) => acc + v, 0) / 3;
-    if (recentAvg > olderAvg + 0.05) return "worsening";
-    if (recentAvg < olderAvg - 0.05) return "improving";
-    return "stable";
+    if (recentAvg > olderAvg + 0.05) return CrisisTrend.WORSENING;
+    if (recentAvg < olderAvg - 0.05) return CrisisTrend.IMPROVING;
+    return CrisisTrend.STABLE;
   }
 
   private pushHistory(name: string, value: number): void {
@@ -243,7 +246,7 @@ export class CrisisPredictorSystem {
     );
     if (stressIndicator && stressIndicator.severity !== "low") {
       addPrediction(
-        "population_crisis",
+        CrisisPredictionType.POPULATION_CRISIS,
         ["population_stress"],
         stressIndicator.value,
       );
@@ -254,7 +257,7 @@ export class CrisisPredictorSystem {
     );
     if (balanceIndicator && balanceIndicator.severity !== "low") {
       addPrediction(
-        "resource_shortage",
+        CrisisPredictionType.RESOURCE_SHORTAGE,
         ["resource_balance"],
         balanceIndicator.value,
       );
@@ -273,7 +276,7 @@ export class CrisisPredictorSystem {
         emergencyIndicator.severity === "high")
     ) {
       addPrediction(
-        "system_collapse",
+        CrisisPredictionType.SYSTEM_COLLAPSE,
         ["sustainability", "emergency_rate"],
         Math.max(sustainabilityIndicator.value, emergencyIndicator.value),
       );
