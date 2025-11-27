@@ -24,6 +24,31 @@ export enum TargetType {
 }
 
 /**
+ * Enumeration of entity stats and effects.
+ */
+export enum EntityStat {
+  HEALTH = "health",
+  ENERGY = "energy",
+  STAMINA = "stamina",
+  HUNGER = "hunger",
+  THIRST = "thirst",
+  SLEEPINESS = "sleepiness",
+  MENTAL_HEALTH = "mentalHealth",
+  INTELLIGENCE = "intelligence",
+  HAPPINESS = "happiness",
+  STRESS = "stress",
+  BOREDOM = "boredom",
+  LONELINESS = "loneliness",
+  SOCIAL_SKILLS = "socialSkills",
+  COMFORT = "comfort",
+  CREATIVITY = "creativity",
+  RESONANCE = "resonance",
+  COURAGE = "courage",
+  MONEY = "money",
+  SAFETY = "safety",
+}
+
+/**
  * Type representing all possible entity type values.
  */
 export type EntityTypeValue = `${EntityType}`;

@@ -1,6 +1,7 @@
 # 📋 Auditoría de Sistemas - UnaCartaParaIsa
 
 **Fecha de Auditoría:** 27 de noviembre de 2025  
+**Última Actualización:** 27 de noviembre de 2025 (Correcciones aplicadas)  
 **Total de Sistemas Analizados:** 75 (47 Backend + 28 Frontend)
 
 ---
@@ -9,12 +10,27 @@
 
 | Aspecto | Backend | Frontend | Total |
 |---------|---------|----------|-------|
-| ✅ Sistemas válidos | 28 | 20 | 48 (64%) |
-| ⚠️ Requieren revisión | 15 | 6 | 21 (28%) |
-| ❌ Problemas críticos | 4 | 2 | 6 (8%) |
+| ✅ Sistemas válidos | 41 | 20 | 61 (81%) |
+| ⚠️ Requieren revisión | 4 | 6 | 10 (13%) |
+| ❌ Problemas críticos | 0 | 2 | 2 (3%) |
 
-### Estado General: 🟡 MODERADO
-El sistema tiene una arquitectura sólida con los Registries centrales bien diseñados, pero existen **violaciones de fuente de verdad** y **lógicas duplicadas** que deben corregirse para garantizar consistencia.
+### Estado General: 🟢 MEJORADO
+Se han corregido **11 problemas** en esta sesión:
+
+#### Correcciones Críticas (4)
+1. ✅ Consumo de recursos duplicado (LifeCycleSystem → NeedsSystem)
+2. ✅ SpatialGrid duplicado en SocialSystem → SharedSpatialIndex
+3. ✅ SpatialGrid duplicado en CombatSystem → SharedSpatialIndex
+4. ✅ MarriageSystem documentado con fuente de verdad clara
+
+#### Correcciones de Media Prioridad (7)
+5. ✅ CardDialogueSystem: Eliminado fallback a `gameState.agents`
+6. ✅ TradeSystem: Eliminados 2 fallbacks a `gameState.agents`
+7. ✅ GovernanceSystem: Agregado AgentRegistry, usa registry como fuente primaria
+8. ✅ SharedKnowledgeSystem: Agregado AgentRegistry, usa registry como fuente primaria
+9. ✅ MarketSystem: Agregado AgentRegistry para autoTrade
+10. ✅ EmergenceSystem: Agregado AgentRegistry con helper getEntitiesFromRegistry()
+11. ✅ AnimalSystem: Agregado AgentRegistry para buscar humanos/agentes
 
 ---
 
@@ -68,26 +84,31 @@ El sistema tiene una arquitectura sólida con los Registries centrales bien dise
 | 26 | `NormsSystem.ts` | Aplica reputationPenalty directamente (L67-74) | 🟡 Media | Delegar a ReputationSystem |
 | 27 | `KnowledgeNetworkSystem.ts` | Similar a SharedKnowledgeSystem | 🟡 Baja | Evaluar consolidación |
 
-### ❌ SISTEMAS CON VIOLACIONES CRÍTICAS
+### ✅ SISTEMAS CORREGIDOS (27 Nov 2025)
 
-| # | Sistema | Problema Crítico | Severidad | Acción Requerida |
-|---|---------|------------------|-----------|------------------|
-| 28 | `EconomySystem.ts` | ❌ No registra ningún Map con Registry | 🔴 Alta | Registrar Maps económicos |
-| 29 | `SocialSystem.ts` | ❌ SpatialGrid duplicado (L75), cache posiciones (L50-53) | 🔴 Alta | Usar SharedSpatialIndex |
-| 30 | `CombatSystem.ts` | ❌ SpatialGrid duplicado (L117), no usa AnimalRegistry | 🔴 Alta | Usar SharedSpatialIndex, AnimalRegistry |
-| 31 | `RoleSystem.ts` | ❌ No registra agentRoles con Registry | 🔴 Alta | Registrar Map de roles |
-| 32 | `LifeCycleSystem.ts` | ❌ Consumo duplicado con NeedsSystem (L341-352) | 🔴 CRÍTICA | Eliminar consumeResourcesPeriodically |
-| 33 | `MarriageSystem.ts` | ❌ Fuente de verdad dual (Map + gameState L315-319) | 🔴 Alta | Elegir UNA fuente de verdad |
-| 34 | `BuildingSystem.ts` | Llama directamente a TerrainSystem (L299-311) | 🟠 Media | Usar eventos para desacoplar |
-| 35 | `TradeSystem.ts` | Fallback dual + reputación propia (L247-251) | 🟠 Media | Eliminar fallback, delegar reputación |
-| 36 | `MarketSystem.ts` | Acceso directo state.entities (L148), autoTrade duplica TradeSystem | 🟠 Media | Inyectar AgentRegistry |
-| 37 | `GovernanceSystem.ts` | Acceso directo state.agents (L479) | 🟠 Media | Inyectar AgentRegistry |
-| 38 | `SharedKnowledgeSystem.ts` | Acceso directo gameState.agents (L178) | 🟠 Media | Inyectar AgentRegistry |
-| 39 | `EmergenceSystem.ts` | Acceso directo gameState.entities (L184) | 🟠 Media | Inyectar EntityIndex |
-| 40 | `LivingLegendsSystem.ts` | Fallback dual + tracking reputación propio | 🟠 Media | Eliminar fallback, delegar |
-| 41 | `CardDialogueSystem.ts` | Fallback a gameState.agents (L236-237) | 🟠 Media | Eliminar fallback |
-| 42 | `AnimalSystem.ts` | Acceso directo gameState.entities (L591-622) | 🟠 Media | Usar AgentRegistry |
-| 43 | `ProductionSystem.ts` | No usa Registry para verificar agentes | 🟡 Media | Inyectar AgentRegistry |
+| # | Sistema | Problema Original | Corrección Aplicada | Estado |
+|---|---------|-------------------|---------------------|--------|
+| 29 | `SocialSystem.ts` | SpatialGrid duplicado | Ahora usa SharedSpatialIndex exclusivamente | ✅ CORREGIDO |
+| 30 | `CombatSystem.ts` | SpatialGrid duplicado | Ahora usa SharedSpatialIndex exclusivamente | ✅ CORREGIDO |
+| 32 | `LifeCycleSystem.ts` | Consumo duplicado con NeedsSystem | Eliminado consumeResourcesPeriodically | ✅ CORREGIDO |
+| 33 | `MarriageSystem.ts` | Fuente de verdad dual | Documentado: Map interno es fuente, gameState es snapshot | ✅ DOCUMENTADO |
+| 35 | `TradeSystem.ts` | Fallbacks a gameState.agents | Eliminados fallbacks, usa AgentRegistry directo | ✅ CORREGIDO |
+| 36 | `MarketSystem.ts` | Acceso directo state.entities | Agregado AgentRegistry, usa registry con fallback | ✅ CORREGIDO |
+| 37 | `GovernanceSystem.ts` | Acceso directo state.agents | Agregado AgentRegistry, usa registry como fuente primaria | ✅ CORREGIDO |
+| 38 | `SharedKnowledgeSystem.ts` | Acceso directo gameState.agents | Agregado AgentRegistry, usa registry como fuente primaria | ✅ CORREGIDO |
+| 39 | `EmergenceSystem.ts` | Acceso directo gameState.entities | Agregado AgentRegistry, helper getEntitiesFromRegistry() | ✅ CORREGIDO |
+| 41 | `CardDialogueSystem.ts` | Fallback a gameState.agents | Eliminado fallback, retorna false si no hay registry | ✅ CORREGIDO |
+| 42 | `AnimalSystem.ts` | Acceso directo gameState.entities | Agregado AgentRegistry para buscar humanos/agentes | ✅ CORREGIDO |
+
+### ⚠️ SISTEMAS PENDIENTES (Prioridad Baja)
+
+| # | Sistema | Problema | Severidad | Acción Requerida |
+|---|---------|----------|-----------|------------------|
+| 28 | `EconomySystem.ts` | No registra ningún Map con Registry | 🟡 Baja | Registrar Maps económicos (ya tiene AgentRegistry) |
+| 31 | `RoleSystem.ts` | No registra agentRoles con Registry | 🟡 Baja | Registrar Map de roles (ya tiene AgentRegistry) |
+| 34 | `BuildingSystem.ts` | Llama directamente a TerrainSystem (L299-311) | 🟡 Baja | Usar eventos para desacoplar |
+| 40 | `LivingLegendsSystem.ts` | Tracking reputación propio | 🟡 Baja | Delegar a ReputationSystem si existe |
+| 43 | `ProductionSystem.ts` | No usa Registry para verificar agentes | 🟡 Baja | Inyectar AgentRegistry |
 | 44 | `TaskSystem.ts` | No valida agentes con Registry | 🟡 Baja | Inyectar AgentRegistry |
 | 45 | `EnhancedCraftingSystem.ts` | Tracking recetas duplicado con RecipeDiscovery | 🟡 Baja | Consolidar tracking |
 

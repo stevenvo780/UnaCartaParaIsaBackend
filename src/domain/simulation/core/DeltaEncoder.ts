@@ -4,13 +4,17 @@ import type { AgentProfile } from "../../types/simulation/agents";
 import type { SimulationEntity } from "../core/schema";
 import type { Animal } from "../../types/simulation/animals";
 import type { EntityNeedsData } from "../../types/simulation/needs";
+import {
+  SnapshotType,
+  SystemProperty,
+} from "../../../shared/constants/SystemEnums";
 
 /**
  * Delta snapshot containing only changes since the last snapshot.
  * Used to reduce WebSocket payload size by sending only modified data.
  */
 export interface DeltaSnapshot {
-  type: "delta" | "full";
+  type: SnapshotType;
   tick: number;
   updatedAt: number;
   events?: unknown[];
@@ -52,7 +56,7 @@ export class DeltaEncoder {
       this.ticksSinceFullSnapshot = 0;
 
       return {
-        type: "full",
+        type: SnapshotType.FULL,
         tick: currentSnapshot.tick,
         updatedAt: currentSnapshot.updatedAt,
         events: currentSnapshot.events,
@@ -65,7 +69,7 @@ export class DeltaEncoder {
     if (!this.lastFullSnapshot) {
       this.lastFullSnapshot = currentSnapshot.state;
       return {
-        type: "full",
+        type: SnapshotType.FULL,
         tick: currentSnapshot.tick,
         updatedAt: currentSnapshot.updatedAt,
         events: currentSnapshot.events,

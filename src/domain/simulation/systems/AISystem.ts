@@ -12,6 +12,7 @@ import { ResourceType } from "../../../shared/constants/ResourceEnums";
 import {
   GoalType as GoalTypeEnum,
   ActionType,
+  GoalPrefix,
 } from "../../../shared/constants/AIEnums";
 import { RoleType } from "../../../shared/constants/RoleEnums";
 import { AgentPriority } from "../../../shared/constants/AIEnums";
@@ -2115,7 +2116,7 @@ export class AISystem extends EventEmitter {
     if (aiState.currentGoal) {
       const goalType = aiState.currentGoal.type;
 
-      if (goalType.startsWith("satisfy_")) {
+      if (goalType.startsWith(GoalPrefix.SATISFY)) {
         const needType = aiState.currentGoal.data?.need as string;
         if (needType && this.needsSystem) {
           const needs = this.needsSystem.getNeeds(payload.agentId);

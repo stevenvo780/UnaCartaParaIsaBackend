@@ -27,6 +27,15 @@ export enum SystemProperty {
   STATE = "state",
   CONFIG = "config",
   METADATA = "metadata",
+  INVENTORY = "inventory",
+}
+
+/**
+ * Enumeration of snapshot types.
+ */
+export enum SnapshotType {
+  FULL = "full",
+  DELTA = "delta",
 }
 
 /**

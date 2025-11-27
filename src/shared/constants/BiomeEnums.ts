@@ -28,21 +28,3 @@ export enum BiomeType {
   VILLAGE = "village",
 }
 
-/**
- * Type representing all possible biome type values.
- */
-export type BiomeTypeValue = `${BiomeType}`;
-
-/**
- * Array of all biome types for iteration.
- */
-export const ALL_BIOME_TYPES: readonly BiomeType[] = Object.values(
-  BiomeType,
-) as BiomeType[];
-
-/**
- * Type guard to check if a string is a valid BiomeType.
- */
-export function isBiomeType(value: string): value is BiomeType {
-  return Object.values(BiomeType).includes(value as BiomeType);
-}

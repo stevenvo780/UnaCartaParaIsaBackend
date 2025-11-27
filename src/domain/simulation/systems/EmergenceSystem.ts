@@ -6,8 +6,9 @@ import type { SocialSystem } from "./SocialSystem.js";
 import type { LifeCycleSystem } from "./LifeCycleSystem.js";
 import type { EconomySystem } from "./EconomySystem.js";
 import type { EntityNeedsData } from "../../types/simulation/needs.js";
-import { injectable, inject, unmanaged } from "inversify";
+import { injectable, inject, unmanaged, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import type { AgentRegistry } from "../core/AgentRegistry";
 import { FeedbackLoopId } from "../../../shared/constants/EmergenceEnums";
 
 export interface AIModifiers {
@@ -98,9 +99,11 @@ export class EmergenceSystem extends EventEmitter {
   private socialSystem?: SocialSystem;
   private lifeCycleSystem?: LifeCycleSystem;
   private economySystem?: EconomySystem;
+  private agentRegistry?: AgentRegistry;
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
+    @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
     @unmanaged() config?: Partial<EmergenceConfig>,
     @unmanaged()
     systems?: {
@@ -112,6 +115,7 @@ export class EmergenceSystem extends EventEmitter {
   ) {
     super();
     this.gameState = gameState;
+    this.agentRegistry = agentRegistry;
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.needsSystem = systems?.needsSystem;
     this.socialSystem = systems?.socialSystem;
@@ -146,6 +150,39 @@ export class EmergenceSystem extends EventEmitter {
       autopoiesis: 0.4,
       timestamp: Date.now(),
     };
+  }
+
+  /**
+   * Helper: obtiene entidades desde AgentRegistry (fuente de verdad) con fallback a gameState.
+   */
+  private getEntitiesFromRegistry(): Array<{
+    id: string;
+    position?: { x: number; y: number };
+    stats?: { birthTimestamp?: number };
+  }> {
+    if (this.agentRegistry) {
+      const entities: Array<{
+        id: string;
+        position?: { x: number; y: number };
+        stats?: { birthTimestamp?: number };
+      }> = [];
+      for (const profile of this.agentRegistry.getAllProfiles()) {
+        if (!profile.isDead) {
+          entities.push({
+            id: profile.id,
+            position: profile.position,
+            stats: { birthTimestamp: profile.birthTimestamp },
+          });
+        }
+      }
+      return entities;
+    }
+    // Fallback: solo si AgentRegistry no disponible
+    return (this.gameState.entities || []).map((e) => ({
+      id: e.id,
+      position: e.position,
+      stats: e.stats ? { birthTimestamp: e.stats.birthTimestamp } : undefined,
+    }));
   }
 
   private evaluatePatterns(): void {
@@ -186,7 +223,8 @@ export class EmergenceSystem extends EventEmitter {
   private detectSocialPattern(): EmergencePattern | null {
     if (!this.socialSystem) return null;
 
-    const entities = this.gameState.entities || [];
+    // NOTA: AgentRegistry es la fuente de verdad para entidades
+    const entities = this.getEntitiesFromRegistry();
     if (entities.length < 3) return null;
 
     const positions = entities
@@ -252,7 +290,8 @@ export class EmergenceSystem extends EventEmitter {
   private detectPopulationPattern(): EmergencePattern | null {
     if (!this.lifeCycleSystem) return null;
 
-    const entities = this.gameState.entities || [];
+    // NOTA: AgentRegistry es la fuente de verdad para entidades
+    const entities = this.getEntitiesFromRegistry();
     const birthRate = entities.filter((e) => {
       const birthTimestamp =
         typeof e.stats?.birthTimestamp === "number"
@@ -378,7 +417,8 @@ export class EmergenceSystem extends EventEmitter {
       });
     }
 
-    const entities = this.gameState.entities || [];
+    // NOTA: AgentRegistry es la fuente de verdad para entidades
+    const entities = this.getEntitiesFromRegistry();
     if (entities.length > 10 && totalResources < 200) {
       if (!this.feedbackLoops.has(FeedbackLoopId.POPULATION_RESOURCE_LOOP)) {
         this.feedbackLoops.set(FeedbackLoopId.POPULATION_RESOURCE_LOOP, {
@@ -398,7 +438,8 @@ export class EmergenceSystem extends EventEmitter {
   }
 
   private computeMetrics(): void {
-    const entities = this.gameState.entities || [];
+    // NOTA: AgentRegistry es la fuente de verdad para entidades
+    const entities = this.getEntitiesFromRegistry();
     const entityCount = entities.length;
 
     const cohesion = this.socialSystem ? Math.min(1.0, entityCount / 20) : 0.5;

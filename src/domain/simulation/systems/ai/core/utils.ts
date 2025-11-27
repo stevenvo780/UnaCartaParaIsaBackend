@@ -5,6 +5,7 @@ import {
   GoalType,
   GoalDomain,
   NeedType,
+  GoalPrefix,
 } from "../../../../../shared/constants/AIEnums";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 
@@ -167,7 +168,7 @@ function getGoalDomain(goal: AIGoal): GoalDomain {
   if (goal.type === GoalType.FLEE) return GoalDomain.FLEE;
   if (goal.type === GoalType.ATTACK) return GoalDomain.COMBAT;
   if (goal.type === GoalType.WORK) {
-    if (goal.id?.startsWith("deposit_")) return GoalDomain.LOGISTICS;
+    if (goal.id?.startsWith(GoalPrefix.DEPOSIT)) return GoalDomain.LOGISTICS;
     if (goal.id?.startsWith("craft_weapon")) return GoalDomain.CRAFTING;
     return GoalDomain.WORK;
   }
@@ -189,7 +190,7 @@ export function getGoalTier(goal: AIGoal, _aiState: AIState): number {
     return PRIORITY_TIERS.OPPORTUNITY;
   }
 
-  if (goal.type === GoalType.WORK && goal.id?.startsWith("deposit_")) {
+  if (goal.type === GoalType.WORK && goal.id?.startsWith(GoalPrefix.DEPOSIT)) {
     return PRIORITY_TIERS.LOGISTICS;
   }
 

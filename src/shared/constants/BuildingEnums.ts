@@ -19,25 +19,6 @@ export enum BuildingType {
 }
 
 /**
- * Type representing all possible building type values.
- */
-export type BuildingTypeValue = `${BuildingType}`;
-
-/**
- * Array of all building types for iteration.
- */
-export const ALL_BUILDING_TYPES: readonly BuildingType[] = Object.values(
-  BuildingType,
-) as BuildingType[];
-
-/**
- * Type guard to check if a string is a valid BuildingType.
- */
-export function isBuildingType(value: string): value is BuildingType {
-  return Object.values(BuildingType).includes(value as BuildingType);
-}
-
-/**
  * Enumeration of building condition levels.
  * Defines the state of repair and usability of buildings.
  */
@@ -48,24 +29,6 @@ export enum BuildingCondition {
   POOR = "poor",
   CRITICAL = "critical",
   RUINED = "ruined",
-}
-
-/**
- * Type representing all possible building condition values.
- */
-export type BuildingConditionValue = `${BuildingCondition}`;
-
-/**
- * Array of all building conditions for iteration.
- */
-export const ALL_BUILDING_CONDITIONS: readonly BuildingCondition[] =
-  Object.values(BuildingCondition) as BuildingCondition[];
-
-/**
- * Type guard to check if a string is a valid BuildingCondition.
- */
-export function isBuildingCondition(value: string): value is BuildingCondition {
-  return Object.values(BuildingCondition).includes(value as BuildingCondition);
 }
 
 /**
@@ -81,7 +44,7 @@ export enum BuildingSpriteId {
   AGENT_BUILT_KITCHEN = "agent_built_kitchen",
   AGENT_BUILT_OFFICE = "agent_built_office",
   AGENT_BUILT_MEDICAL = "agent_built_medical",
-  AGENT_BUILT_GYM = "agent_built_gym",
+  AGENT_BUILT_GYM = " agent_built_gym",
   AGENT_BUILT_HOUSE = "agent_built_house",
   AGENT_BUILT_LIBRARY = "agent_built_library",
   AGENT_BUILT_EDUCATION = "agent_built_education",
@@ -107,20 +70,3 @@ export enum BuildingSpriteId {
   AGENT_BUILT_MINE = "agent_built_mine",
 }
 
-/**
- * Type representing all possible building sprite ID values.
- */
-export type BuildingSpriteIdValue = `${BuildingSpriteId}`;
-
-/**
- * Array of all building sprite IDs for iteration.
- */
-export const ALL_BUILDING_SPRITE_IDS: readonly BuildingSpriteId[] =
-  Object.values(BuildingSpriteId) as BuildingSpriteId[];
-
-/**
- * Type guard to check if a string is a valid BuildingSpriteId.
- */
-export function isBuildingSpriteId(value: string): value is BuildingSpriteId {
-  return Object.values(BuildingSpriteId).includes(value as BuildingSpriteId);
-}

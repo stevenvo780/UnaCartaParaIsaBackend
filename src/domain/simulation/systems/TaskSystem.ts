@@ -461,7 +461,7 @@ export class TaskSystem {
     }
 
     if (this.statsDirty) {
-      state.stats = { ...this.cachedStats };
+      state[SystemProperty.STATS] = { ...this.cachedStats };
       this.statsDirty = false;
       changed = true;
     }
@@ -473,7 +473,7 @@ export class TaskSystem {
     if (!this.gameState.tasks) {
       this.gameState.tasks = {
         tasks: [],
-        stats: { ...this.cachedStats },
+        [SystemProperty.STATS]: { ...this.cachedStats },
       };
     }
     return this.gameState.tasks;

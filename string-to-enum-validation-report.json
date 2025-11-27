@@ -1,11 +1,11 @@
 {
   "summary": {
-    "totalEnums": 121,
-    "totalEnumValues": 789,
-    "totalStringOccurrences": 1808,
-    "missingEnumStrings": 404,
-    "missingEnumOccurrences": 580,
-    "filesAffected": 123
+    "totalEnums": 126,
+    "totalEnumValues": 819,
+    "totalStringOccurrences": 1777,
+    "missingEnumStrings": 380,
+    "missingEnumOccurrences": 526,
+    "filesAffected": 117
   },
   "enums": [
     {
@@ -111,6 +111,17 @@
         "logistics",
         "rest",
         "inspect"
+      ],
+      "file": "src/shared/constants/AIEnums.ts"
+    },
+    {
+      "name": "GoalPrefix",
+      "values": [
+        "satisfy_",
+        "assist_",
+        "work_",
+        "hunt_",
+        "deposit_"
       ],
       "file": "src/shared/constants/AIEnums.ts"
     },
@@ -358,7 +369,7 @@
         "agent_built_kitchen",
         "agent_built_office",
         "agent_built_medical",
-        "agent_built_gym",
+        " agent_built_gym",
         "agent_built_house",
         "agent_built_library",
         "agent_built_education",
@@ -603,7 +614,14 @@
     {
       "name": "SkillType",
       "values": [
-        "herbalism"
+        "herbalism",
+        "mysticism",
+        "mining",
+        "jewelcrafting",
+        "smithing",
+        "crafting",
+        "leatherworking",
+        "carpentry"
       ],
       "file": "src/shared/constants/CraftingEnums.ts"
     },
@@ -676,6 +694,31 @@
       "file": "src/shared/constants/EntityEnums.ts"
     },
     {
+      "name": "EntityStat",
+      "values": [
+        "health",
+        "energy",
+        "stamina",
+        "hunger",
+        "thirst",
+        "sleepiness",
+        "mentalHealth",
+        "intelligence",
+        "happiness",
+        "stress",
+        "boredom",
+        "loneliness",
+        "socialSkills",
+        "comfort",
+        "creativity",
+        "resonance",
+        "courage",
+        "money",
+        "safety"
+      ],
+      "file": "src/shared/constants/EntityEnums.ts"
+    },
+    {
       "name": "EntityStatus",
       "values": [
         "active",
@@ -686,6 +729,15 @@
         "disabled"
       ],
       "file": "src/shared/constants/EntityStatusEnums.ts"
+    },
+    {
+      "name": "Environment",
+      "values": [
+        "production",
+        "development",
+        "test"
+      ],
+      "file": "src/shared/constants/EnvironmentEnums.ts"
     },
     {
       "name": "GameEventType",
@@ -1248,6 +1300,13 @@
       "file": "src/shared/constants/StatusEnums.ts"
     },
     {
+      "name": "StorageFilePrefix",
+      "values": [
+        "save_"
+      ],
+      "file": "src/shared/constants/StatusEnums.ts"
+    },
+    {
       "name": "InteractionStatus",
       "values": [
         "expired",
@@ -1286,6 +1345,16 @@
         "running",
         "stopped",
         "disabled"
+      ],
+      "file": "src/shared/constants/SystemEnums.ts"
+    },
+    {
+      "name": "SystemProperty",
+      "values": [
+        "stats",
+        "state",
+        "config",
+        "metadata"
       ],
       "file": "src/shared/constants/SystemEnums.ts"
     },
@@ -1645,40 +1714,6 @@
   ],
   "missingStrings": [
     {
-      "stringLiteral": "save_",
-      "count": 4,
-      "occurrences": [
-        {
-          "file": "src/infrastructure/services/storage/storageService.ts",
-          "line": 127,
-          "column": 57,
-          "pattern": "Asignaciones",
-          "lineContent": "const [files] = await this.bucket.getFiles({ prefix: \"save_\" });"
-        },
-        {
-          "file": "src/infrastructure/services/storage/storageService.ts",
-          "line": 397,
-          "column": 62,
-          "pattern": "Asignaciones",
-          "lineContent": "const [gcsFiles] = await this.bucket.getFiles({ prefix: \"save_\" });"
-        },
-        {
-          "file": "src/infrastructure/services/storage/storageService.ts",
-          "line": 162,
-          "column": 49,
-          "pattern": "Métodos de string",
-          "lineContent": ".filter((f) => f.endsWith(\".json\") && f.startsWith(\"save_\"))"
-        },
-        {
-          "file": "src/infrastructure/services/storage/storageService.ts",
-          "line": 418,
-          "column": 41,
-          "pattern": "Métodos de string",
-          "lineContent": "(f) => f.endsWith(\".json\") && f.startsWith(\"save_\"),"
-        }
-      ]
-    },
-    {
       "stringLiteral": "clock",
       "count": 4,
       "occurrences": [
@@ -1747,42 +1782,15 @@
       ]
     },
     {
-      "stringLiteral": "production",
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "src/application/app.ts",
-          "line": 39,
-          "column": 25,
-          "pattern": "Comparaciones",
-          "lineContent": "if (process.env.NODE_ENV !== \"production\") {"
-        },
-        {
-          "file": "src/application/app.ts",
-          "line": 54,
-          "column": 27,
-          "pattern": "Comparaciones",
-          "lineContent": "process.env.NODE_ENV === \"production\""
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/gameConfig.ts",
-          "line": 508,
-          "column": 58,
-          "pattern": "Comparaciones",
-          "lineContent": "(import.meta as { env?: { MODE?: string } })?.env?.MODE === \"production\""
-        }
-      ]
-    },
-    {
       "stringLiteral": "phase",
       "count": 3,
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/AISystem.ts",
-          "line": 1337,
-          "column": 33,
+          "line": 1339,
+          "column": 46,
           "pattern": "Acceso a propiedades",
-          "lineContent": "\"morning\") as TimeOfDay[\"phase\"];"
+          "lineContent": "TimeOfDayPhase.MORNING) as TimeOfDay[\"phase\"];"
         },
         {
           "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientTimeSystem.ts",
@@ -1797,87 +1805,6 @@
           "column": 35,
           "pattern": "Acceso a propiedades",
           "lineContent": "(state.timeOfDay as TimeOfDay[\"phase\"]) ?? this.currentTime.phase;"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "stats",
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/TaskSystem.ts",
-          "line": 30,
-          "column": 32,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "private cachedStats: TaskState[\"stats\"] = {"
-        },
-        {
-          "file": "src/domain/simulation/systems/TaskSystem.ts",
-          "line": 520,
-          "column": 41,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "private hasStatsChanged(next: TaskState[\"stats\"]): boolean {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 970,
-          "column": 47,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "getSocialStats?: () => RawSocialStats[\"stats\"];"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "assist_",
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/ai/core/AIGoalValidator.ts",
-          "line": 124,
-          "column": 49,
-          "pattern": "Métodos de string",
-          "lineContent": "(goal.type === GoalType.ASSIST || goal.type.startsWith(\"assist_\")) &&"
-        },
-        {
-          "file": "src/domain/simulation/systems/ai/core/AIGoalValidator.ts",
-          "line": 201,
-          "column": 49,
-          "pattern": "Métodos de string",
-          "lineContent": "(goal.type === GoalType.ASSIST || goal.type.startsWith(\"assist_\")) &&"
-        },
-        {
-          "file": "src/domain/simulation/systems/ai/core/AIZoneHandler.ts",
-          "line": 366,
-          "column": 50,
-          "pattern": "Métodos de string",
-          "lineContent": "!(goal.type === GoalType.ASSIST || goal.type.startsWith(\"assist_\")) ||"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "health",
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 267,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"health\", icon: \"💚\", label: \"Salud\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 290,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"health\", icon: \"💚\", label: \"Salud\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientNeedsSystem.ts",
-          "line": 341,
-          "column": 12,
-          "pattern": "Asignaciones",
-          "lineContent": "need: \"health\","
         }
       ]
     },
@@ -2044,33 +1971,6 @@
       ]
     },
     {
-      "stringLiteral": "state",
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientTimeSystem.ts",
-          "line": 196,
-          "column": 29,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "state: SimulationSnapshot[\"state\"],"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientTimeSystem.ts",
-          "line": 219,
-          "column": 58,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "private updateWeatherFromState(state: SimulationSnapshot[\"state\"]): void {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientWorldResourceSystem.ts",
-          "line": 49,
-          "column": 65,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "resource.state = data.newState as WorldResourceInstance[\"state\"];"
-        }
-      ]
-    },
-    {
       "stringLiteral": "chicken_anim",
       "count": 3,
       "occurrences": [
@@ -2219,26 +2119,6 @@
       ]
     },
     {
-      "stringLiteral": "satisfy_",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/AISystem.ts",
-          "line": 2117,
-          "column": 18,
-          "pattern": "Métodos de string",
-          "lineContent": "if (goalType.startsWith(\"satisfy_\")) {"
-        },
-        {
-          "file": "src/domain/simulation/systems/ai/core/AIGoalValidator.ts",
-          "line": 72,
-          "column": 17,
-          "pattern": "Métodos de string",
-          "lineContent": "if (goal.type.startsWith(\"satisfy_\")) {"
-        }
-      ]
-    },
-    {
       "stringLiteral": "trend",
       "count": 2,
       "occurrences": [
@@ -2334,7 +2214,7 @@
           "line": 137,
           "column": 34,
           "pattern": "Acceso a propiedades",
-          "lineContent": "let resolution: ConflictRecord[\"resolution\"] ="
+          "lineContent": "let resolution: ConflictRecord[\"resolution\"] = ConflictResolution.CONTINUED;"
         }
       ]
     },
@@ -2384,14 +2264,14 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/EmergenceSystem.ts",
-          "line": 236,
+          "line": 274,
           "column": 12,
           "pattern": "Asignaciones",
           "lineContent": "type: \"systemic\","
         },
         {
           "file": "src/domain/simulation/systems/EmergenceSystem.ts",
-          "line": 270,
+          "line": 309,
           "column": 12,
           "pattern": "Asignaciones",
           "lineContent": "type: \"systemic\","
@@ -2591,7 +2471,7 @@
         },
         {
           "file": "src/domain/simulation/systems/SocialSystem.ts",
-          "line": 495,
+          "line": 464,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "type: \"friendly\","
@@ -2655,26 +2535,6 @@
           "column": 16,
           "pattern": "Asignaciones",
           "lineContent": "action: \"start_quest\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "deposit_",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/ai/core/utils.ts",
-          "line": 170,
-          "column": 16,
-          "pattern": "Métodos de string",
-          "lineContent": "if (goal.id?.startsWith(\"deposit_\")) return GoalDomain.LOGISTICS;"
-        },
-        {
-          "file": "src/domain/simulation/systems/ai/core/utils.ts",
-          "line": 192,
-          "column": 45,
-          "pattern": "Métodos de string",
-          "lineContent": "if (goal.type === GoalType.WORK && goal.id?.startsWith(\"deposit_\")) {"
         }
       ]
     },
@@ -2964,7 +2824,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 101,
+          "line": 103,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"food_zone_central\","
@@ -2984,7 +2844,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 109,
+          "line": 111,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"water_zone_north\","
@@ -3004,7 +2864,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 117,
+          "line": 119,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"rest_zone_south\","
@@ -3024,7 +2884,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 125,
+          "line": 127,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"work_zone_logging\","
@@ -3044,7 +2904,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 134,
+          "line": 136,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"work_zone_quarry\","
@@ -3064,7 +2924,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 143,
+          "line": 145,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"storage_granary_01\","
@@ -3084,7 +2944,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 150,
+          "line": 152,
           "column": 17,
           "pattern": "Asignaciones",
           "lineContent": "stockpileId: \"granary_01\","
@@ -3104,7 +2964,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 156,
+          "line": 158,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"water_well_central\","
@@ -3124,7 +2984,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 165,
+          "line": 167,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"food_zone_orchard_east\","
@@ -3144,7 +3004,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 173,
+          "line": 175,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"food_zone_farm_west\","
@@ -3164,7 +3024,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 181,
+          "line": 183,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"food_zone_garden_south\","
@@ -3184,7 +3044,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 189,
+          "line": 191,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"water_zone_lake_east\","
@@ -3204,7 +3064,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 198,
+          "line": 200,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"water_zone_spring_west\","
@@ -3224,7 +3084,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 207,
+          "line": 209,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"defense_tower_north\","
@@ -3244,7 +3104,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 216,
+          "line": 218,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"divine_temple_center\","
@@ -3264,7 +3124,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 225,
+          "line": 227,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"medical_zone_hospital\","
@@ -3284,7 +3144,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 233,
+          "line": 235,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"training_zone_gym\","
@@ -3304,7 +3164,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 241,
+          "line": 243,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"knowledge_zone_library\","
@@ -3324,7 +3184,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 249,
+          "line": 251,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"spiritual_zone_temple\","
@@ -3344,7 +3204,7 @@
       "occurrences": [
         {
           "file": "src/shared/constants/WorldConfig.ts",
-          "line": 257,
+          "line": 259,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"market_zone_plaza\","
@@ -3355,206 +3215,6 @@
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "id: \"market_zone_plaza\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "stamina",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 269,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"stamina\", icon: \"🏃\", label: \"Resistencia\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 292,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"stamina\", icon: \"🏃\", label: \"Resistencia\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "sleepiness",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 272,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"sleepiness\", icon: \"😴\", label: \"Sueño\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 295,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"sleepiness\", icon: \"😴\", label: \"Sueño\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "intelligence",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 276,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"intelligence\", icon: \"🎓\", label: \"Inteligencia\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 299,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"intelligence\", icon: \"🎓\", label: \"Inteligencia\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "happiness",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 277,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"happiness\", icon: \"😊\", label: \"Felicidad\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 300,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"happiness\", icon: \"😊\", label: \"Felicidad\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "stress",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 278,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"stress\", icon: \"😰\", label: \"Estrés\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 301,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"stress\", icon: \"😰\", label: \"Estrés\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "boredom",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 279,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"boredom\", icon: \"😑\", label: \"Aburrimiento\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 302,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"boredom\", icon: \"😑\", label: \"Aburrimiento\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "loneliness",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 280,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"loneliness\", icon: \"💔\", label: \"Soledad\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 303,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"loneliness\", icon: \"💔\", label: \"Soledad\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "creativity",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 285,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"creativity\", icon: \"🎨\", label: \"Creatividad\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 308,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"creativity\", icon: \"🎨\", label: \"Creatividad\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "resonance",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 286,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"resonance\", icon: \"🔗\", label: \"Resonancia\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 309,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"resonance\", icon: \"🔗\", label: \"Resonancia\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "courage",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 287,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"courage\", icon: \"💪\", label: \"Coraje\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 310,
-          "column": 9,
-          "pattern": "Asignaciones",
-          "lineContent": "{ key: \"courage\", icon: \"💪\", label: \"Coraje\" },"
         }
       ]
     },
@@ -3704,7 +3364,7 @@
       "occurrences": [
         {
           "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-          "line": 26,
+          "line": 29,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"crystal_tool\","
@@ -3719,32 +3379,12 @@
       ]
     },
     {
-      "stringLiteral": "mysticism",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-          "line": 36,
-          "column": 15,
-          "pattern": "Asignaciones",
-          "lineContent": "skill: \"mysticism\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 34,
-          "column": 15,
-          "pattern": "Asignaciones",
-          "lineContent": "skill: \"mysticism\","
-        }
-      ]
-    },
-    {
       "stringLiteral": "clay_pottery",
       "count": 2,
       "occurrences": [
         {
           "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-          "line": 91,
+          "line": 94,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"clay_pottery\","
@@ -3759,32 +3399,12 @@
       ]
     },
     {
-      "stringLiteral": "mining",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-          "line": 121,
-          "column": 15,
-          "pattern": "Asignaciones",
-          "lineContent": "skill: \"mining\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 119,
-          "column": 15,
-          "pattern": "Asignaciones",
-          "lineContent": "skill: \"mining\","
-        }
-      ]
-    },
-    {
       "stringLiteral": "gem_jewelry",
       "count": 2,
       "occurrences": [
         {
           "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-          "line": 129,
+          "line": 132,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"gem_jewelry\","
@@ -3799,32 +3419,12 @@
       ]
     },
     {
-      "stringLiteral": "jewelcrafting",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-          "line": 138,
-          "column": 15,
-          "pattern": "Asignaciones",
-          "lineContent": "skill: \"jewelcrafting\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 136,
-          "column": 15,
-          "pattern": "Asignaciones",
-          "lineContent": "skill: \"jewelcrafting\","
-        }
-      ]
-    },
-    {
       "stringLiteral": "reinforced_rope",
       "count": 2,
       "occurrences": [
         {
           "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-          "line": 146,
+          "line": 149,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"reinforced_rope\","
@@ -3844,7 +3444,7 @@
       "occurrences": [
         {
           "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-          "line": 260,
+          "line": 263,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"recycled_tools\","
@@ -3864,7 +3464,7 @@
       "occurrences": [
         {
           "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-          "line": 274,
+          "line": 277,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"cultivated_seeds\","
@@ -3884,7 +3484,7 @@
       "occurrences": [
         {
           "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 23,
+          "line": 24,
           "column": 8,
           "pattern": "Asignaciones",
           "lineContent": "id: \"wood_to_plank\","
@@ -3904,7 +3504,7 @@
       "occurrences": [
         {
           "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 33,
+          "line": 34,
           "column": 8,
           "pattern": "Asignaciones",
           "lineContent": "id: \"smelt_iron\","
@@ -3924,7 +3524,7 @@
       "occurrences": [
         {
           "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 49,
+          "line": 50,
           "column": 8,
           "pattern": "Asignaciones",
           "lineContent": "id: \"smelt_copper\","
@@ -3944,7 +3544,7 @@
       "occurrences": [
         {
           "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 65,
+          "line": 66,
           "column": 8,
           "pattern": "Asignaciones",
           "lineContent": "id: \"tan_leather\","
@@ -3964,7 +3564,7 @@
       "occurrences": [
         {
           "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 78,
+          "line": 79,
           "column": 8,
           "pattern": "Asignaciones",
           "lineContent": "id: \"weave_cloth\","
@@ -3984,7 +3584,7 @@
       "occurrences": [
         {
           "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 91,
+          "line": 92,
           "column": 8,
           "pattern": "Asignaciones",
           "lineContent": "id: \"make_rope\","
@@ -4004,7 +3604,7 @@
       "occurrences": [
         {
           "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 101,
+          "line": 102,
           "column": 8,
           "pattern": "Asignaciones",
           "lineContent": "id: \"fire_brick\","
@@ -4024,7 +3624,7 @@
       "occurrences": [
         {
           "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 118,
+          "line": 119,
           "column": 8,
           "pattern": "Asignaciones",
           "lineContent": "id: \"grind_wheat\","
@@ -4044,7 +3644,7 @@
       "occurrences": [
         {
           "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 131,
+          "line": 132,
           "column": 8,
           "pattern": "Asignaciones",
           "lineContent": "id: \"bake_bread\","
@@ -4064,7 +3664,7 @@
       "occurrences": [
         {
           "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 147,
+          "line": 148,
           "column": 8,
           "pattern": "Asignaciones",
           "lineContent": "id: \"cook_meat\","
@@ -4084,7 +3684,7 @@
       "occurrences": [
         {
           "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 160,
+          "line": 161,
           "column": 8,
           "pattern": "Asignaciones",
           "lineContent": "id: \"cook_fish\","
@@ -4104,7 +3704,7 @@
       "occurrences": [
         {
           "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 173,
+          "line": 174,
           "column": 8,
           "pattern": "Asignaciones",
           "lineContent": "id: \"make_stew\","
@@ -4119,42 +3719,22 @@
       ]
     },
     {
-      "stringLiteral": "leatherworking",
+      "stringLiteral": "agent_built_gym",
       "count": 2,
       "occurrences": [
         {
-          "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 345,
+          "file": "src/simulation/data/ZoneProperties.ts",
+          "line": 97,
           "column": 13,
           "pattern": "Asignaciones",
-          "lineContent": "skill: \"leatherworking\","
+          "lineContent": "spriteKey: \"agent_built_gym\","
         },
         {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 328,
+          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
+          "line": 97,
           "column": 13,
           "pattern": "Asignaciones",
-          "lineContent": "skill: \"leatherworking\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "carpentry",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 404,
-          "column": 13,
-          "pattern": "Asignaciones",
-          "lineContent": "skill: \"carpentry\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 387,
-          "column": 13,
-          "pattern": "Asignaciones",
-          "lineContent": "skill: \"carpentry\","
+          "lineContent": "spriteKey: \"agent_built_gym\","
         }
       ]
     },
@@ -4819,26 +4399,6 @@
       ]
     },
     {
-      "stringLiteral": "development",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/utils/logger.ts",
-          "line": 296,
-          "column": 27,
-          "pattern": "Comparaciones",
-          "lineContent": "if (nodeEnv && nodeEnv !== \"development\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/utils/logger.ts",
-          "line": 301,
-          "column": 21,
-          "pattern": "Comparaciones",
-          "lineContent": "if (mode && mode !== \"development\") {"
-        }
-      ]
-    },
-    {
       "stringLiteral": "node_modules",
       "count": 2,
       "occurrences": [
@@ -4996,25 +4556,12 @@
       ]
     },
     {
-      "stringLiteral": "metadata",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/BuildingSystem.ts",
-          "line": 287,
-          "column": 31,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "const metadata: MutableZone[\"metadata\"] = {"
-        }
-      ]
-    },
-    {
       "stringLiteral": "agent_exploring",
       "count": 1,
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/CardDialogueSystem.ts",
-          "line": 375,
+          "line": 377,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"agent_exploring\","
@@ -5027,7 +4574,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/CardDialogueSystem.ts",
-          "line": 394,
+          "line": 396,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"resource_gathering\","
@@ -5040,7 +4587,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/CardDialogueSystem.ts",
-          "line": 418,
+          "line": 420,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"low_needs_warning\","
@@ -5053,7 +4600,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/CardDialogueSystem.ts",
-          "line": 437,
+          "line": 439,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"rest_recovery\","
@@ -5066,7 +4613,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/CardDialogueSystem.ts",
-          "line": 456,
+          "line": 458,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"day_night_change\","
@@ -5274,7 +4821,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/EmergenceSystem.ts",
-          "line": 305,
+          "line": 344,
           "column": 12,
           "pattern": "Asignaciones",
           "lineContent": "type: \"behavioral\","
@@ -5313,7 +4860,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/GovernanceSystem.ts",
-          "line": 631,
+          "line": 661,
           "column": 29,
           "pattern": "Comparaciones",
           "lineContent": "zone.props.subtype === \"housing\"),"
@@ -5326,7 +4873,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/GovernanceSystem.ts",
-          "line": 434,
+          "line": 438,
           "column": 48,
           "pattern": "Asignaciones",
           "lineContent": "details: { demandId: demand.id, reason: \"insufficient_resources\" },"
@@ -5339,7 +4886,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/LifeCycleSystem.ts",
-          "line": 706,
+          "line": 684,
           "column": 14,
           "pattern": "Asignaciones",
           "lineContent": "reason: \"removed\","
@@ -5352,7 +4899,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/LifeCycleSystem.ts",
-          "line": 793,
+          "line": 771,
           "column": 12,
           "pattern": "Asignaciones",
           "lineContent": "reason: \"killed\","
@@ -5521,7 +5068,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/TaskSystem.ts",
-          "line": 481,
+          "line": 482,
           "column": 37,
           "pattern": "Acceso a propiedades",
           "lineContent": "private serializeTasks(): TaskState[\"tasks\"] {"
@@ -5612,7 +5159,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/ai/core/utils.ts",
-          "line": 171,
+          "line": 172,
           "column": 16,
           "pattern": "Métodos de string",
           "lineContent": "if (goal.id?.startsWith(\"craft_weapon\")) return GoalDomain.CRAFTING;"
@@ -8131,20 +7678,6 @@
   ],
   "byFile": [
     {
-      "file": "src/application/app.ts",
-      "count": 2,
-      "uniqueStrings": [
-        "production"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/config/gameConfig.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "production"
-      ]
-    },
-    {
       "file": "src/domain/simulation/core/DeltaEncoder.ts",
       "count": 5,
       "uniqueStrings": [
@@ -8163,26 +7696,16 @@
     },
     {
       "file": "src/domain/simulation/systems/AISystem.ts",
-      "count": 2,
+      "count": 1,
       "uniqueStrings": [
-        "satisfy_",
         "phase"
       ]
     },
     {
-      "file": "src/domain/simulation/systems/ai/core/AIGoalValidator.ts",
-      "count": 3,
-      "uniqueStrings": [
-        "satisfy_",
-        "assist_"
-      ]
-    },
-    {
       "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientTimeSystem.ts",
-      "count": 4,
+      "count": 2,
       "uniqueStrings": [
-        "phase",
-        "state"
+        "phase"
       ]
     },
     {
@@ -8227,13 +7750,6 @@
       "count": 1,
       "uniqueStrings": [
         "time"
-      ]
-    },
-    {
-      "file": "src/domain/simulation/systems/BuildingSystem.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "metadata"
       ]
     },
     {
@@ -8425,20 +7941,9 @@
     },
     {
       "file": "src/domain/simulation/systems/TaskSystem.ts",
-      "count": 3,
+      "count": 1,
       "uniqueStrings": [
-        "stats",
         "tasks"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-      "count": 4,
-      "uniqueStrings": [
-        "stats",
-        "villager",
-        "groups",
-        "marriages"
       ]
     },
     {
@@ -8483,9 +7988,8 @@
     },
     {
       "file": "src/domain/simulation/systems/ai/core/AIZoneHandler.ts",
-      "count": 3,
+      "count": 2,
       "uniqueStrings": [
-        "assist_",
         "contribute_resources",
         "start_quest"
       ]
@@ -8506,9 +8010,8 @@
     },
     {
       "file": "src/domain/simulation/systems/ai/core/utils.ts",
-      "count": 3,
+      "count": 1,
       "uniqueStrings": [
-        "deposit_",
         "craft_weapon"
       ]
     },
@@ -8620,13 +8123,6 @@
       ]
     },
     {
-      "file": "src/infrastructure/services/storage/storageService.ts",
-      "count": 4,
-      "uniqueStrings": [
-        "save_"
-      ]
-    },
-    {
       "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
       "count": 20,
       "uniqueStrings": [
@@ -8661,7 +8157,7 @@
     },
     {
       "file": "src/shared/constants/WorldConfig.ts",
-      "count": 31,
+      "count": 20,
       "uniqueStrings": [
         "food_zone_central",
         "water_zone_north",
@@ -8682,23 +8178,12 @@
         "training_zone_gym",
         "knowledge_zone_library",
         "spiritual_zone_temple",
-        "market_zone_plaza",
-        "health",
-        "stamina",
-        "sleepiness",
-        "intelligence",
-        "happiness",
-        "stress",
-        "boredom",
-        "loneliness",
-        "creativity",
-        "resonance",
-        "courage"
+        "market_zone_plaza"
       ]
     },
     {
       "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-      "count": 31,
+      "count": 20,
       "uniqueStrings": [
         "food_zone_central",
         "water_zone_north",
@@ -8719,25 +8204,7 @@
         "training_zone_gym",
         "knowledge_zone_library",
         "spiritual_zone_temple",
-        "market_zone_plaza",
-        "health",
-        "stamina",
-        "sleepiness",
-        "intelligence",
-        "happiness",
-        "stress",
-        "boredom",
-        "loneliness",
-        "creativity",
-        "resonance",
-        "courage"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientNeedsSystem.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "health"
+        "market_zone_plaza"
       ]
     },
     {
@@ -8787,14 +8254,11 @@
     },
     {
       "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-      "count": 9,
+      "count": 6,
       "uniqueStrings": [
         "crystal_tool",
-        "mysticism",
         "clay_pottery",
-        "mining",
         "gem_jewelry",
-        "jewelcrafting",
         "reinforced_rope",
         "recycled_tools",
         "cultivated_seeds"
@@ -8802,14 +8266,11 @@
     },
     {
       "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-      "count": 9,
+      "count": 6,
       "uniqueStrings": [
         "crystal_tool",
-        "mysticism",
         "clay_pottery",
-        "mining",
         "gem_jewelry",
-        "jewelcrafting",
         "reinforced_rope",
         "recycled_tools",
         "cultivated_seeds"
@@ -8817,7 +8278,7 @@
     },
     {
       "file": "src/simulation/data/RecipesCatalog.ts",
-      "count": 14,
+      "count": 12,
       "uniqueStrings": [
         "wood_to_plank",
         "smelt_iron",
@@ -8830,14 +8291,12 @@
         "bake_bread",
         "cook_meat",
         "cook_fish",
-        "make_stew",
-        "leatherworking",
-        "carpentry"
+        "make_stew"
       ]
     },
     {
       "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-      "count": 14,
+      "count": 12,
       "uniqueStrings": [
         "wood_to_plank",
         "smelt_iron",
@@ -8850,9 +8309,21 @@
         "bake_bread",
         "cook_meat",
         "cook_fish",
-        "make_stew",
-        "leatherworking",
-        "carpentry"
+        "make_stew"
+      ]
+    },
+    {
+      "file": "src/simulation/data/ZoneProperties.ts",
+      "count": 1,
+      "uniqueStrings": [
+        "agent_built_gym"
+      ]
+    },
+    {
+      "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
+      "count": 1,
+      "uniqueStrings": [
+        "agent_built_gym"
       ]
     },
     {
@@ -9249,13 +8720,6 @@
       ]
     },
     {
-      "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientWorldResourceSystem.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "state"
-      ]
-    },
-    {
       "file": "../UnaCartaParaIsa/src/infrastructure/bridges/HTMLUIBridge.ts",
       "count": 1,
       "uniqueStrings": [
@@ -9360,6 +8824,15 @@
       ]
     },
     {
+      "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
+      "count": 3,
+      "uniqueStrings": [
+        "villager",
+        "groups",
+        "marriages"
+      ]
+    },
+    {
       "file": "../UnaCartaParaIsa/src/presentation/ui/LogViewer.ts",
       "count": 2,
       "uniqueStrings": [
@@ -9372,13 +8845,6 @@
       "count": 1,
       "uniqueStrings": [
         "ms"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/utils/logger.ts",
-      "count": 2,
-      "uniqueStrings": [
-        "development"
       ]
     },
     {

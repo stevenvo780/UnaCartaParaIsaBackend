@@ -21,6 +21,7 @@ import { SIM_CONSTANTS } from "../core/SimulationConstants";
 import { TileType } from "../../../shared/constants/TileTypeEnums";
 import { AnimalState } from "../../../shared/constants/AnimalEnums";
 import { AnimalRegistry } from "../core/AnimalRegistry";
+import type { AgentRegistry } from "../core/AgentRegistry";
 import { WorldResourceType } from "../../../shared/constants/ResourceEnums";
 
 const DEFAULT_CONFIG: AnimalSystemConfig = {
@@ -45,6 +46,7 @@ export class AnimalSystem {
   private worldResourceSystem?: WorldResourceSystem;
   private gpuService?: GPUComputeService;
   private animalRegistry: AnimalRegistry;
+  private agentRegistry?: AgentRegistry;
 
   private lastCleanup = Date.now();
 
@@ -108,11 +110,15 @@ export class AnimalSystem {
     @inject(TYPES.AnimalRegistry as symbol)
     @optional()
     animalRegistry?: AnimalRegistry,
+    @inject(TYPES.AgentRegistry)
+    @optional()
+    agentRegistry?: AgentRegistry,
   ) {
     this.gameState = gameState;
     this.worldResourceSystem = worldResourceSystem;
     this.gpuService = gpuService;
     this.animalRegistry = animalRegistry ?? new AnimalRegistry();
+    this.agentRegistry = agentRegistry;
     this.config = DEFAULT_CONFIG;
     this.batchProcessor = new AnimalBatchProcessor(gpuService);
     if (gpuService?.isGPUAvailable()) {
@@ -595,7 +601,25 @@ export class AnimalSystem {
       return cached.threat;
     }
 
-    const entities = this.gameState.entities || [];
+    // NOTA: AgentRegistry es la fuente de verdad para agentes/humanos
+    const entities: Array<{
+      id: string;
+      isDead?: boolean;
+      position?: { x: number; y: number };
+      x?: number;
+      y?: number;
+    }> = [];
+    if (this.agentRegistry) {
+      for (const profile of this.agentRegistry.getAllProfiles()) {
+        if (!profile.isDead) {
+          entities.push(profile);
+        }
+      }
+    } else if (this.gameState.entities) {
+      // Fallback: solo si AgentRegistry no disponible
+      entities.push(...this.gameState.entities);
+    }
+
     for (const entity of entities) {
       if (entity.isDead) continue;
       const entityPos =

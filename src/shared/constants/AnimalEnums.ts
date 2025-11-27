@@ -35,44 +35,6 @@ export enum AnimalState {
 }
 
 /**
- * Type representing all possible animal type values.
- */
-export type AnimalTypeValue = `${AnimalType}`;
-
-/**
- * Type representing all possible animal state values.
- */
-export type AnimalStateValue = `${AnimalState}`;
-
-/**
- * Array of all animal types for iteration.
- */
-export const ALL_ANIMAL_TYPES: readonly AnimalType[] = Object.values(
-  AnimalType,
-) as AnimalType[];
-
-/**
- * Array of all animal states for iteration.
- */
-export const ALL_ANIMAL_STATES: readonly AnimalState[] = Object.values(
-  AnimalState,
-) as AnimalState[];
-
-/**
- * Type guard to check if a string is a valid AnimalType.
- */
-export function isAnimalType(value: string): value is AnimalType {
-  return Object.values(AnimalType).includes(value as AnimalType);
-}
-
-/**
- * Type guard to check if a string is a valid AnimalState.
- */
-export function isAnimalState(value: string): value is AnimalState {
-  return Object.values(AnimalState).includes(value as AnimalState);
-}
-
-/**
  * Enumeration of animal target types.
  * Defines what animals can target when seeking resources or mates.
  */
@@ -82,20 +44,3 @@ export enum AnimalTargetType {
   MATE = "mate",
 }
 
-/**
- * Type representing all possible animal target type values.
- */
-export type AnimalTargetTypeValue = `${AnimalTargetType}`;
-
-/**
- * Array of all animal target types for iteration.
- */
-export const ALL_ANIMAL_TARGET_TYPES: readonly AnimalTargetType[] =
-  Object.values(AnimalTargetType) as AnimalTargetType[];
-
-/**
- * Type guard to check if a string is a valid AnimalTargetType.
- */
-export function isAnimalTargetType(value: string): value is AnimalTargetType {
-  return Object.values(AnimalTargetType).includes(value as AnimalTargetType);
-}

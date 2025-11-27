@@ -119,6 +119,18 @@ export enum GoalDomain {
 }
 
 /**
+ * Enumeration of goal type prefixes.
+ * Used for categorization and pattern matching of goal types.
+ */
+export enum GoalPrefix {
+  SATISFY = "satisfy_",
+  ASSIST = "assist_",
+  WORK = "work_",
+  HUNT = "hunt_",
+  DEPOSIT = "deposit_",
+}
+
+/**
  * Type representing all possible goal type values.
  */
 export type GoalTypeValue = `${GoalType}`;

@@ -20,8 +20,9 @@ const DEFAULT_MARKET_CONFIG: MarketConfig = {
   },
 };
 
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import type { AgentRegistry } from "../core/AgentRegistry";
 
 /**
  * System for managing market dynamics and resource trading.
@@ -41,15 +42,18 @@ export class MarketSystem {
   private inventorySystem: InventorySystem;
   private economySystem: EconomySystem;
   private config: MarketConfig;
+  private agentRegistry?: AgentRegistry;
 
   constructor(
     @inject(TYPES.GameState) state: GameState,
     @inject(TYPES.InventorySystem) inventorySystem: InventorySystem,
     @inject(TYPES.EconomySystem) economySystem: EconomySystem,
+    @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
   ) {
     this.state = state;
     this.inventorySystem = inventorySystem;
     this.economySystem = economySystem;
+    this.agentRegistry = agentRegistry;
     this.config = DEFAULT_MARKET_CONFIG;
   }
 
@@ -152,7 +156,16 @@ export class MarketSystem {
   }
 
   private autoTradeAmongAgents(): void {
-    const entities = this.state.entities || [];
+    // NOTA: AgentRegistry es la fuente de verdad para perfiles de agentes
+    const entities: Array<{ id: string }> = [];
+    if (this.agentRegistry) {
+      for (const profile of this.agentRegistry.getAllProfiles()) {
+        if (!profile.isDead) entities.push(profile);
+      }
+    } else if (this.state.entities) {
+      // Fallback: solo si AgentRegistry no disponible
+      entities.push(...this.state.entities);
+    }
     if (entities.length < 2) return;
 
     for (let i = 0; i < entities.length; i++) {

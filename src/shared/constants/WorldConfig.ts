@@ -1,3 +1,5 @@
+import { EntityStat } from "./EntityEnums";
+
 export const WORLD_CONFIG = {
   WORLD_WIDTH: 4096,
   WORLD_HEIGHT: 4096,
@@ -200,7 +202,7 @@ export const ZONE_DEFINITIONS = [
     type: "water",
     size: ZONE_CONFIG.SMALL,
     color: "#20B2AA",
-    effects: { energy: 10, health: 5 },
+    effects: { energy: 10, [EntityStat.HEALTH]: 5 },
     properties: { infinite: true, renewalRate: 15 },
   },
   {
@@ -227,7 +229,7 @@ export const ZONE_DEFINITIONS = [
     type: "medical",
     size: ZONE_CONFIG.MEDIUM,
     color: "#FF6B6B",
-    effects: { health: 20, comfort: 8, mentalHealth: 5 },
+    effects: { [EntityStat.HEALTH]: 20, comfort: 8, mentalHealth: 5 },
   },
   {
     id: "training_zone_gym",
@@ -235,7 +237,7 @@ export const ZONE_DEFINITIONS = [
     type: "training",
     size: ZONE_CONFIG.MEDIUM,
     color: "#FFA500",
-    effects: { stamina: 15, energy: -5, health: 10 },
+    effects: { stamina: 15, energy: -5, [EntityStat.HEALTH]: 10 },
   },
   {
     id: "knowledge_zone_library",
@@ -264,7 +266,7 @@ export const ZONE_DEFINITIONS = [
 ] as const;
 export const ENTITY_STATS = {
   PHYSICAL: [
-    { key: "health", icon: "💚", label: "Salud" },
+    { key: EntityStat.HEALTH, icon: "💚", label: "Salud" },
     { key: "energy", icon: "⚡", label: "Energía" },
     { key: "stamina", icon: "🏃", label: "Resistencia" },
     { key: "hunger", icon: "🍖", label: "Hambre" },

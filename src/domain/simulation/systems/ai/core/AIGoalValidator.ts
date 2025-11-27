@@ -6,7 +6,11 @@ import type { AnimalSystem } from "../../AnimalSystem";
 import { isWorldResourceType } from "../../../../types/simulation/resourceMapping";
 import { WorldResourceType } from "../../../../types/simulation/worldResources";
 import { getFrameTime } from "../../../../../shared/FrameTime";
-import { NeedType, GoalType } from "../../../../../shared/constants/AIEnums";
+import {
+  NeedType,
+  GoalType,
+  GoalPrefix,
+} from "../../../../../shared/constants/AIEnums";
 import {
   ResourceType,
   ResourceState,
@@ -69,7 +73,7 @@ export class AIGoalValidator {
       return false;
     }
 
-    if (goal.type.startsWith("satisfy_")) {
+    if (goal.type.startsWith(GoalPrefix.SATISFY)) {
       const needType = goal.data?.need as string;
       if (needType && this.deps.needsSystem) {
         const needs = this.deps.needsSystem.getNeeds(agentId);
@@ -121,7 +125,7 @@ export class AIGoalValidator {
     }
 
     if (
-      (goal.type === GoalType.ASSIST || goal.type.startsWith("assist_")) &&
+      (goal.type === GoalType.ASSIST || goal.type.startsWith(GoalPrefix.ASSIST)) &&
       goal.data?.targetAgentId
     ) {
       const targetId = goal.data.targetAgentId as string;
@@ -198,7 +202,7 @@ export class AIGoalValidator {
     }
 
     if (
-      (goal.type === GoalType.ASSIST || goal.type.startsWith("assist_")) &&
+      (goal.type === GoalType.ASSIST || goal.type.startsWith(GoalPrefix.ASSIST)) &&
       goal.data?.targetAgentId
     ) {
       const targetId = goal.data.targetAgentId as string;
