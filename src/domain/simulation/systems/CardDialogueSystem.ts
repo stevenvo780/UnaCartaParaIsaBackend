@@ -57,6 +57,7 @@ interface ActiveCardEntry {
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
+import type { AgentRegistry } from "../core/AgentRegistry";
 
 @injectable()
 export class CardDialogueSystem {
@@ -86,6 +87,9 @@ export class CardDialogueSystem {
     @inject(TYPES.QuestSystem)
     @optional()
     private readonly questSystem?: QuestSystem,
+    @inject(TYPES.AgentRegistry)
+    @optional()
+    private readonly agentRegistry?: AgentRegistry,
   ) {
     this.setupEventListeners();
   }
@@ -228,7 +232,10 @@ export class CardDialogueSystem {
 
     if (template.triggers.relationshipBased && entityId && this.socialSystem) {
       const satisfied = template.triggers.relationshipBased.some((trigger) => {
-        const agents = this.gameState.agents || [];
+        // Use AgentRegistry for O(1) iteration, fallback to gameState
+        const agents = this.agentRegistry
+          ? Array.from(this.agentRegistry.getAllProfiles())
+          : (this.gameState.agents || []);
         for (const agent of agents) {
           if (agent.id === entityId) continue;
 

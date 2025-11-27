@@ -1,6 +1,7 @@
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { GameState } from "../../types/game-types";
+import type { AgentRegistry } from "../core/AgentRegistry";
 import type { WorldGenerationService } from "../../../infrastructure/services/world/worldGenerationService";
 import type { AnimalSystem } from "./AnimalSystem";
 import { logger } from "../../../infrastructure/utils/logger";
@@ -30,13 +31,17 @@ export class ChunkLoadingSystem {
   private loadedChunks = new Set<string>();
 
   private worldConfig: WorldGenConfig | null = null;
+  private agentRegistry?: AgentRegistry;
 
   constructor(
     @inject(TYPES.GameState) private gameState: GameState,
     @inject(TYPES.WorldGenerationService)
     private worldGenerationService: WorldGenerationService,
     @inject(TYPES.AnimalSystem) private animalSystem: AnimalSystem,
-  ) {}
+    @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
+  ) {
+    this.agentRegistry = agentRegistry;
+  }
 
   /**
    * Initialize the system with world configuration
@@ -63,7 +68,11 @@ export class ChunkLoadingSystem {
       return;
     }
 
-    const activeAgents = this.gameState.agents
+    // Use AgentRegistry for O(1) iteration, fallback to gameState
+    const agentSource = this.agentRegistry
+      ? Array.from(this.agentRegistry.getAllProfiles())
+      : (this.gameState.agents || []);
+    const activeAgents = agentSource
       .filter((agent) => !agent.isDead && agent.position)
       .map((agent) => ({ position: agent.position! }));
 

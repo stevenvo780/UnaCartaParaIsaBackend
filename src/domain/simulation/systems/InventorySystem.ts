@@ -393,7 +393,10 @@ export class InventorySystem {
    */
   private syncInventoriesWithAgents(): void {
     if (!this.gameState) return;
-    const agents = this.gameState.agents || [];
+    // Use AgentRegistry for O(1) iteration, fallback to gameState
+    const agents = this.agentRegistry
+      ? Array.from(this.agentRegistry.getAllProfiles())
+      : (this.gameState.agents || []);
     for (const agent of agents) {
       if (agent.isDead) continue;
       if (!this.agentInventories.has(agent.id)) {

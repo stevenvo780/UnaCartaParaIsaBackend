@@ -7,9 +7,10 @@ import type {
 } from "../../types/simulation/household";
 import type { ResourceType } from "../../types/simulation/economy";
 import { simulationEvents, GameEventNames } from "../core/events";
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
+import type { AgentRegistry } from "../core/AgentRegistry";
 
 const DEFAULT_CONFIG: HouseholdSystemConfig = {
   updateIntervalMs: 5000,
@@ -37,9 +38,14 @@ export class HouseholdSystem {
   private config: HouseholdSystemConfig;
   private households = new Map<string, Household>();
   private lastUpdate = Date.now();
+  private agentRegistry?: AgentRegistry;
 
-  constructor(@inject(TYPES.GameState) gameState: GameState) {
+  constructor(
+    @inject(TYPES.GameState) gameState: GameState,
+    @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
+  ) {
     this.gameState = gameState;
+    this.agentRegistry = agentRegistry;
     this.config = DEFAULT_CONFIG;
     this.rebuildFromZones();
     logger.info("🏠 HouseholdSystem (Backend) initialized");
@@ -70,7 +76,10 @@ export class HouseholdSystem {
   }
 
   private checkAgentsWithoutHome(): string[] {
-    const allAgents = this.gameState.agents || [];
+    // Use AgentRegistry for O(1) iteration, fallback to gameState
+    const allAgents = this.agentRegistry
+      ? Array.from(this.agentRegistry.getAllProfiles())
+      : (this.gameState.agents || []);
     const homeless: string[] = [];
 
     for (const agent of allAgents) {
