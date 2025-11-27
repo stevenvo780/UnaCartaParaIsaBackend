@@ -536,9 +536,7 @@ export class LifeCycleSystem extends EventEmitter {
       if (!this.gameState.entities) {
         this.gameState.entities = [];
       }
-      const existingEntity =
-        this.entityIndex?.getEntity(id) ??
-        this.gameState.entities.find((e) => e.id === id);
+      const existingEntity = this.entityIndex?.getEntity(id);
       if (!existingEntity) {
         const entity: SimulationEntity = {
           id,

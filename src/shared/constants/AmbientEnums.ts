@@ -102,6 +102,17 @@ export enum DialogueOutcome {
 }
 
 /**
+ * Enumeration of dialogue speaker identifiers.
+ * Represents who is speaking in dialogue entries.
+ */
+export enum DialogueSpeaker {
+  ISA = "ISA",
+  STEV = "STEV",
+  NARRATOR = "narrator",
+  SYSTEM = "system",
+}
+
+/**
  * Type representing all possible crisis severity values.
  */
 export type CrisisSeverityValue = `${CrisisSeverity}`;
@@ -145,6 +156,11 @@ export type DialogueCardTypeValue = `${DialogueCardType}`;
  * Type representing all possible dialogue outcome values.
  */
 export type DialogueOutcomeValue = `${DialogueOutcome}`;
+
+/**
+ * Type representing all possible dialogue speaker values.
+ */
+export type DialogueSpeakerValue = `${DialogueSpeaker}`;
 
 /**
  * Array of all crisis severity values for iteration.
@@ -205,6 +221,13 @@ export const ALL_DIALOGUE_CARD_TYPES: readonly DialogueCardType[] =
 export const ALL_DIALOGUE_OUTCOMES: readonly DialogueOutcome[] = Object.values(
   DialogueOutcome,
 ) as DialogueOutcome[];
+
+/**
+ * Array of all dialogue speakers for iteration.
+ */
+export const ALL_DIALOGUE_SPEAKERS: readonly DialogueSpeaker[] = Object.values(
+  DialogueSpeaker,
+) as DialogueSpeaker[];
 
 /**
  * Type guard to check if a string is a valid CrisisSeverity.
@@ -271,4 +294,11 @@ export function isDialogueCardType(value: string): value is DialogueCardType {
  */
 export function isDialogueOutcome(value: string): value is DialogueOutcome {
   return Object.values(DialogueOutcome).includes(value as DialogueOutcome);
+}
+
+/**
+ * Type guard to check if a string is a valid DialogueSpeaker.
+ */
+export function isDialogueSpeaker(value: string): value is DialogueSpeaker {
+  return Object.values(DialogueSpeaker).includes(value as DialogueSpeaker);
 }

@@ -6,7 +6,8 @@ import {
   simulationEvents,
   GameEventNames,
 } from "../../src/domain/simulation/core/events";
-import { createMockGameState } from "../setup";
+import { createMockGameState, createEntityIndex } from "../setup";
+import { EntityIndex } from "../../src/domain/simulation/core/EntityIndex";
 
 class MockInventorySystem {
   private inventories = new Map<string, Record<string, number>>();
@@ -83,6 +84,7 @@ describe("CombatSystem", () => {
   let lifeCycleSystem: MockLifeCycleSystem;
   let socialSystem: MockSocialSystem;
   let combatSystem: CombatSystem;
+  let entityIndex: EntityIndex;
   let emitSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
@@ -127,12 +129,18 @@ describe("CombatSystem", () => {
     lifeCycleSystem.setEntityList(gameState.entities as Array<{ id: string; isDead: boolean }>);
     socialSystem = new MockSocialSystem();
     socialSystem.setAffinity("attacker", "target", -0.8);
+    entityIndex = createEntityIndex(gameState);
 
     combatSystem = new CombatSystem(
       gameState,
       inventorySystem as unknown as any,
       lifeCycleSystem as unknown as any,
       socialSystem as unknown as any,
+      undefined, // animalSystem
+      undefined, // normsSystem
+      undefined, // sharedSpatialIndex
+      undefined, // gpuService
+      entityIndex,
     );
   });
 

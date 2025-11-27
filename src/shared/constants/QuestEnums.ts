@@ -16,6 +16,7 @@ export enum QuestStatus {
   COMPLETED = "completed",
   FAILED = "failed",
   NOT_STARTED = "not_started",
+  ABANDONED = "abandoned",
 }
 
 /**

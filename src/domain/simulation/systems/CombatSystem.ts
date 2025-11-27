@@ -386,14 +386,7 @@ export class CombatSystem {
     const entities = this.state.entities;
     if (!entities || entities.length === 0) return [];
 
-    const foundAgent =
-      this.entityIndex?.getEntity(agentId) ??
-      entities.find(
-        (entity): entity is SimulationEntity =>
-          entity.id === agentId &&
-          Boolean(entity.position) &&
-          entity.type === EntityType.AGENT,
-      );
+    const foundAgent = this.entityIndex?.getEntity(agentId);
     if (
       !foundAgent ||
       !foundAgent.position ||

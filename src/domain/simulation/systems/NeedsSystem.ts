@@ -682,9 +682,7 @@ export class NeedsSystem extends EventEmitter {
     needs.mentalHealth = 80;
 
     if (this.gameState.entities) {
-      const entity =
-        this.entityIndex?.getEntity(entityId) ??
-        this.gameState.entities.find((e) => e.id === entityId);
+      const entity = this.entityIndex?.getEntity(entityId);
       if (entity) {
         entity.isDead = false;
       }
@@ -830,9 +828,7 @@ export class NeedsSystem extends EventEmitter {
   ): void {
     if (!this.socialSystem || !this.gameState.entities) return;
 
-    const entity =
-      this.entityIndex?.getEntity(entityId) ??
-      this.gameState.entities.find((e) => e.id === entityId);
+    const entity = this.entityIndex?.getEntity(entityId);
     if (!entity?.position) return;
 
     const entityPosition = entity.position;
@@ -913,9 +909,7 @@ export class NeedsSystem extends EventEmitter {
 
     const entityPositions: Array<{ id: string; x: number; y: number }> = [];
     for (const entityId of entityIds) {
-      const entity =
-        this.entityIndex?.getEntity(entityId) ??
-        this.gameState.entities.find((e) => e.id === entityId);
+      const entity = this.entityIndex?.getEntity(entityId);
       if (entity?.position) {
         entityPositions.push({
           id: entityId,

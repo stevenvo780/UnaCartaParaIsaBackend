@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { MarketSystem } from "../../src/domain/simulation/systems/MarketSystem.ts";
 import { InventorySystem } from "../../src/domain/simulation/systems/InventorySystem.ts";
-import { LifeCycleSystem } from "../../src/domain/simulation/systems/LifeCycleSystem.ts";
+import { EntityIndex } from "../../src/domain/simulation/core/EntityIndex.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 
 describe("MarketSystem", () => {
   let gameState: GameState;
   let inventorySystem: InventorySystem;
-  let lifeCycleSystem: LifeCycleSystem;
+  let entityIndex: EntityIndex;
   let marketSystem: MarketSystem;
 
   beforeEach(() => {
@@ -42,8 +42,9 @@ describe("MarketSystem", () => {
     });
 
     inventorySystem = new InventorySystem();
-    lifeCycleSystem = new LifeCycleSystem(gameState);
-    marketSystem = new MarketSystem(gameState, inventorySystem, lifeCycleSystem);
+    entityIndex = new EntityIndex();
+    entityIndex.rebuild(gameState);
+    marketSystem = new MarketSystem(gameState, inventorySystem, entityIndex);
   });
 
   describe("Inicialización", () => {

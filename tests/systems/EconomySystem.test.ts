@@ -2,16 +2,16 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { EconomySystem } from "../../src/domain/simulation/systems/EconomySystem.ts";
 import { InventorySystem } from "../../src/domain/simulation/systems/InventorySystem.ts";
 import { SocialSystem } from "../../src/domain/simulation/systems/SocialSystem.ts";
-import { LifeCycleSystem } from "../../src/domain/simulation/systems/LifeCycleSystem.ts";
 import { RoleSystem } from "../../src/domain/simulation/systems/RoleSystem.ts";
-import { createMockGameState } from "../setup.ts";
+import { createMockGameState, createEntityIndex } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
+import { EntityIndex } from "../../src/domain/simulation/core/EntityIndex.ts";
 
 describe("EconomySystem", () => {
   let gameState: GameState;
   let inventorySystem: InventorySystem;
   let socialSystem: SocialSystem;
-  let lifeCycleSystem: LifeCycleSystem;
+  let entityIndex: EntityIndex;
   let economySystem: EconomySystem;
 
   beforeEach(() => {
@@ -40,11 +40,12 @@ describe("EconomySystem", () => {
 
     inventorySystem = new InventorySystem();
     socialSystem = new SocialSystem(gameState);
-    lifeCycleSystem = new LifeCycleSystem(gameState);
+    entityIndex = createEntityIndex(gameState);
     economySystem = new EconomySystem(
       gameState,
       inventorySystem,
-      socialSystem
+      socialSystem,
+      entityIndex,
     );
   });
 

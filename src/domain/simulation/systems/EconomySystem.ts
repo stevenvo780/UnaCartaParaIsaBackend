@@ -232,9 +232,7 @@ export class EconomySystem {
     const zone = this.state.zones.find((z) => z.id === zoneId);
     if (!zone) return;
 
-    const agent =
-      this.entityIndex?.getEntity(agentId) ??
-      this.state.entities.find((e) => e.id === agentId);
+    const agent = this.entityIndex?.getEntity(agentId);
     if (!agent) return;
 
     let resourceType: ResourceType | null = null;

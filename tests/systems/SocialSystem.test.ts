@@ -1,15 +1,18 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { SocialSystem } from "../../src/domain/simulation/systems/SocialSystem.ts";
-import { createMockGameState } from "../setup.ts";
+import { createMockGameState, createEntityIndex } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
+import { EntityIndex } from "../../src/domain/simulation/core/EntityIndex.ts";
 
 describe("SocialSystem", () => {
   let gameState: GameState;
   let socialSystem: SocialSystem;
+  let entityIndex: EntityIndex;
 
   beforeEach(() => {
     gameState = createMockGameState();
-    socialSystem = new SocialSystem(gameState);
+    entityIndex = createEntityIndex(gameState);
+    socialSystem = new SocialSystem(gameState, undefined, entityIndex);
   });
 
   describe("Inicialización", () => {
@@ -215,20 +218,28 @@ describe("SocialSystem", () => {
       gameState.entities = [
         {
           id: "agent-18",
+          x: 100,
+          y: 100,
           position: { x: 100, y: 100 },
           type: "agent",
         },
         {
           id: "agent-19",
+          x: 150,
+          y: 100,
           position: { x: 150, y: 100 },
           type: "agent",
         },
         {
           id: "agent-20",
+          x: 200,
+          y: 100,
           position: { x: 200, y: 100 },
           type: "agent",
         },
       ];
+      // Rebuild entityIndex after modifying gameState.entities
+      entityIndex.rebuild(gameState);
       // Actualizar para inicializar el spatial grid
       socialSystem.update(1000);
       socialSystem.imposeLocalTruces("agent-18", 200, 5000);

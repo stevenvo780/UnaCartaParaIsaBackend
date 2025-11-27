@@ -1,6 +1,7 @@
 import { vi } from "vitest";
 import type { GameState } from "../src/domain/types/game-types.js";
 import { createInitialGameState } from "../src/domain/simulation/core/defaultState.js";
+import { EntityIndex } from "../src/domain/simulation/core/EntityIndex.js";
 import type {
   NeedsSystem,
   WorldResourceSystem,
@@ -220,5 +221,14 @@ export function restoreRealTimers() {
  */
 export function mockRandom(returnValue: number) {
   return vi.spyOn(Math, "random").mockReturnValue(returnValue);
+}
+
+/**
+ * Crea un EntityIndex prebuildeado con el gameState proporcionado
+ */
+export function createEntityIndex(gameState: GameState): EntityIndex {
+  const entityIndex = new EntityIndex();
+  entityIndex.rebuild(gameState);
+  return entityIndex;
 }
 

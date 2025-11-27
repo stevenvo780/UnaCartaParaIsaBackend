@@ -20,7 +20,7 @@ const DEFAULT_MARKET_CONFIG: MarketConfig = {
   },
 };
 
-import { injectable, inject, optional } from "inversify";
+import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 
 /**
@@ -39,12 +39,12 @@ export class MarketSystem {
   private state: GameState;
   private inventorySystem: InventorySystem;
   private config: MarketConfig;
-  private entityIndex?: EntityIndex;
+  private entityIndex: EntityIndex;
 
   constructor(
     @inject(TYPES.GameState) state: GameState,
     @inject(TYPES.InventorySystem) inventorySystem: InventorySystem,
-    @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
+    @inject(TYPES.EntityIndex) entityIndex: EntityIndex,
   ) {
     this.state = state;
     this.inventorySystem = inventorySystem;
@@ -105,9 +105,7 @@ export class MarketSystem {
     const price = this.getResourcePrice(resource);
     const totalCost = price * amount;
 
-    const buyer =
-      this.entityIndex?.getEntity(buyerId) ??
-      this.state.entities.find((e) => e.id === buyerId);
+    const buyer = this.entityIndex.getEntity(buyerId);
     if (!buyer || !buyer.stats) return false;
     const buyerMoney =
       typeof buyer.stats.money === "number" ? buyer.stats.money : 0;
@@ -145,9 +143,7 @@ export class MarketSystem {
     const price = this.getResourcePrice(resource);
     const totalValue = price * removed;
 
-    const seller =
-      this.entityIndex?.getEntity(sellerId) ??
-      this.state.entities.find((e) => e.id === sellerId);
+    const seller = this.entityIndex.getEntity(sellerId);
     if (seller && seller.stats) {
       seller.stats.money =
         (typeof seller.stats.money === "number" ? seller.stats.money : 0) +

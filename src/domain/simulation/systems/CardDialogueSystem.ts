@@ -14,6 +14,7 @@ import {
   DialoguePriority,
   DialogueTone,
 } from "../../../shared/constants/AmbientEnums";
+import { TimeOfDayPhase } from "../../../shared/constants/TimeEnums";
 
 interface EmotionalContext {
   overallMood: number;
@@ -32,7 +33,7 @@ interface CardTemplate {
       operator: "below" | "above";
     }>;
     timeBased?: Array<{
-      time: "dawn" | "day" | "dusk" | "night";
+      time: TimeOfDayPhase;
       frequency: "daily" | "hourly";
     }>;
     relationshipBased?: Array<{
@@ -287,11 +288,14 @@ export class CardDialogueSystem {
     return score;
   }
 
-  private resolveTimeOfDay(hour: number): "dawn" | "day" | "dusk" | "night" {
-    if (hour >= 6 && hour < 10) return "dawn";
-    if (hour >= 10 && hour < 18) return "day";
-    if (hour >= 18 && hour < 21) return "dusk";
-    return "night";
+  private resolveTimeOfDay(hour: number): TimeOfDayPhase {
+    if (hour >= 5 && hour < 7) return TimeOfDayPhase.DAWN;
+    if (hour >= 7 && hour < 11) return TimeOfDayPhase.MORNING;
+    if (hour >= 11 && hour < 15) return TimeOfDayPhase.MIDDAY;
+    if (hour >= 15 && hour < 18) return TimeOfDayPhase.AFTERNOON;
+    if (hour >= 18 && hour < 21) return TimeOfDayPhase.DUSK;
+    if (hour >= 21 && hour < 23) return TimeOfDayPhase.NIGHT;
+    return TimeOfDayPhase.DEEP_NIGHT;
   }
 
   private createCard(
@@ -417,7 +421,7 @@ export class CardDialogueSystem {
           "La comunidad continúa su desarrollo natural.",
         ],
         triggers: {
-          timeBased: [{ time: "dawn", frequency: "daily" }],
+          timeBased: [{ time: TimeOfDayPhase.DAWN, frequency: "daily" }],
         },
         emotionalTone: DialogueTone.CONTEMPLATIVE,
       },

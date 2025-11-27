@@ -505,12 +505,17 @@ export class SocialSystem {
     const entities = this.gameState.entities;
     if (!entities) return;
 
-    const centerEntity =
-      this.entityIndex?.getEntity(centerAgentId) ??
-      entities.find((e) => e.id === centerAgentId);
+    const centerEntity = this.entityIndex?.getEntity(centerAgentId);
+    console.log("DEBUG imposeLocalTruces:", {
+      centerAgentId,
+      centerEntity: centerEntity?.id,
+      hasPosition: !!centerEntity?.position,
+      entityIndexAvailable: !!this.entityIndex,
+    });
     if (!centerEntity?.position) return;
 
     const nearby = this.spatialGrid.queryRadius(centerEntity.position, radius);
+    console.log("DEBUG nearby:", nearby.map((n) => n.entity));
 
     for (let i = 0; i < nearby.length; i++) {
       for (let j = i + 1; j < nearby.length; j++) {
