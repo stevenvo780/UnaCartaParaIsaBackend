@@ -17,6 +17,7 @@ import {
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
 import { simulationEvents, GameEventNames } from "../core/events";
+import type { AgentRegistry } from "../core/AgentRegistry";
 
 const ROLE_DEFINITIONS: RoleConfig[] = [
   {
@@ -133,7 +134,7 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
   },
 ];
 
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 
 @injectable()
@@ -152,10 +153,15 @@ export class RoleSystem extends EventEmitter {
   private lastUpdate = Date.now();
   private lastStatsUpdate = 0;
   private lastReassignment = 0;
+  private agentRegistry?: AgentRegistry;
 
-  constructor(@inject(TYPES.GameState) gameState: GameState) {
+  constructor(
+    @inject(TYPES.GameState) gameState: GameState,
+    @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
+  ) {
     super();
     this.gameState = gameState;
+    this.agentRegistry = agentRegistry;
     this.config = {
       autoAssignRoles: true,
       reassignmentIntervalSec: 15,
@@ -388,6 +394,17 @@ export class RoleSystem extends EventEmitter {
   }
 
   private getAdultAgents(): AgentProfile[] {
+    // Use AgentRegistry as single source of truth for agent profiles
+    if (this.agentRegistry) {
+      const agents: AgentProfile[] = [];
+      for (const profile of this.agentRegistry.getAllProfiles()) {
+        if (!profile.isDead) {
+          agents.push(profile);
+        }
+      }
+      return agents;
+    }
+    // Fallback to gameState if registry not available
     return (this.gameState.agents || []).filter((a) => !a.isDead);
   }
 
@@ -531,8 +548,14 @@ export class RoleSystem extends EventEmitter {
   }
 
   public reassignRole(agentId: string, newRole: RoleType): RoleAssignment {
-    const agents = this.getAdultAgents();
-    const agent = agents.find((a) => a.id === agentId);
+    // Use AgentRegistry for O(1) lookup instead of array scan
+    let agent: AgentProfile | undefined;
+    if (this.agentRegistry) {
+      agent = this.agentRegistry.getProfile(agentId);
+    } else {
+      const agents = this.getAdultAgents();
+      agent = agents.find((a) => a.id === agentId);
+    }
     if (!agent) return { success: false, agentId, reason: "Agent not found" };
 
     const roleDef = ROLE_DEFINITIONS.find((r) => r.type === newRole);

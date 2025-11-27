@@ -99,6 +99,24 @@ export enum AgentPriority {
 }
 
 /**
+ * Enumeration of goal domains.
+ * Goal domains categorize goals into different priority categories
+ * for the AI priority management system.
+ */
+export enum GoalDomain {
+  SURVIVAL = "survival",
+  WORK = "work",
+  SOCIAL = "social",
+  CRAFTING = "crafting",
+  COMBAT = "combat",
+  FLEE = "flee",
+  EXPLORE = "explore",
+  LOGISTICS = "logistics",
+  REST = "rest",
+  INSPECT = "inspect",
+}
+
+/**
  * Type representing all possible goal type values.
  */
 export type GoalTypeValue = `${GoalType}`;
@@ -127,6 +145,11 @@ export type WorkEthicValue = `${WorkEthic}`;
  * Type representing all possible agent priority values.
  */
 export type AgentPriorityValue = `${AgentPriority}`;
+
+/**
+ * Type representing all possible goal domain values.
+ */
+export type GoalDomainValue = `${GoalDomain}`;
 
 /**
  * Array of all goal types for iteration.
@@ -182,4 +205,18 @@ export const ALL_AGENT_PRIORITIES: readonly AgentPriority[] = Object.values(
  */
 export function isAgentPriority(value: string): value is AgentPriority {
   return Object.values(AgentPriority).includes(value as AgentPriority);
+}
+
+/**
+ * Array of all goal domains for iteration.
+ */
+export const ALL_GOAL_DOMAINS: readonly GoalDomain[] = Object.values(
+  GoalDomain,
+) as GoalDomain[];
+
+/**
+ * Type guard to check if a string is a valid GoalDomain.
+ */
+export function isGoalDomain(value: string): value is GoalDomain {
+  return Object.values(GoalDomain).includes(value as GoalDomain);
 }

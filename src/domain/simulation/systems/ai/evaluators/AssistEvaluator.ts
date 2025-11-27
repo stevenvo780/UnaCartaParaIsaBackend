@@ -3,6 +3,7 @@ import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../../types/simulation/needs";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
 import { NeedType } from "../../../../../shared/constants/AIEnums";
+import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 
 export interface AssistContext {
   getAllActiveAgentIds: () => string[];
@@ -141,8 +142,12 @@ export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
     else if (best.need === "social")
       targetZone = ctx.selectBestZone(
         aiState,
-        ctx.getZoneIdsByType(["social", "gathering", "market"]),
-        "social",
+        ctx.getZoneIdsByType([
+          ZoneType.SOCIAL,
+          ZoneType.GATHERING,
+          ZoneType.MARKET,
+        ]),
+        ZoneType.SOCIAL,
       );
 
     if (!targetZone) return [];

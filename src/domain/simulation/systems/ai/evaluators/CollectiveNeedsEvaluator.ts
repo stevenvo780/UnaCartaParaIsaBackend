@@ -18,6 +18,7 @@ import { GoalType as GoalTypeEnum } from "../../../../../shared/constants/AIEnum
 import { ResourceType as ResourceTypeEnum } from "../../../../../shared/constants/ResourceEnums";
 import { RoleType as RoleTypeEnum } from "../../../../../shared/constants/RoleEnums";
 import { TaskType } from "../../../../../shared/constants/TaskEnums";
+import { DemandType } from "../../../../../shared/constants/GovernanceEnums";
 
 /**
  * Configuration for collective needs thresholds.
@@ -269,13 +270,13 @@ export function evaluateCollectiveNeeds(
 
   // 1. Check for governance demands and boost priority accordingly
   const foodDemand = state.activeDemands.find(
-    (d) => d.type === "food_shortage" && !d.resolvedAt,
+    (d) => d.type === DemandType.FOOD_SHORTAGE && !d.resolvedAt,
   );
   const waterDemand = state.activeDemands.find(
-    (d) => d.type === "water_shortage" && !d.resolvedAt,
+    (d) => d.type === DemandType.WATER_SHORTAGE && !d.resolvedAt,
   );
   const housingDemand = state.activeDemands.find(
-    (d) => d.type === "housing_full" && !d.resolvedAt,
+    (d) => d.type === DemandType.HOUSING_FULL && !d.resolvedAt,
   );
 
   // 2. Priority 1: Check for existing community tasks

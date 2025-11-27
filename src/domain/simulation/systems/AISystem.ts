@@ -125,6 +125,7 @@ import type { QuestSystem } from "./QuestSystem";
 import type { TimeSystem, TimeOfDay } from "./TimeSystem";
 import type { EntityIndex } from "../core/EntityIndex";
 import type { GPUComputeService } from "../core/GPUComputeService";
+import type { AnimalRegistry } from "../core/AnimalRegistry";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
 import { getFrameTime } from "../../../shared/FrameTime";
@@ -188,6 +189,7 @@ export class AISystem extends EventEmitter {
   private _entityIndex?: EntityIndex;
   private gpuService?: GPUComputeService;
   private agentRegistry?: AgentRegistry;
+  private animalRegistry?: AnimalRegistry;
 
   private agentIndex = 0;
 
@@ -289,12 +291,16 @@ export class AISystem extends EventEmitter {
     @inject(TYPES.AgentRegistry)
     @optional()
     agentRegistry?: AgentRegistry,
+    @inject(TYPES.AnimalRegistry)
+    @optional()
+    animalRegistry?: AnimalRegistry,
   ) {
     super();
     this.gameState = gameState;
     this._entityIndex = entityIndex;
     this.gpuService = gpuService;
     this.agentRegistry = agentRegistry;
+    this.animalRegistry = animalRegistry;
     this.config = {
       updateIntervalMs: 250, // Match scheduler MEDIUM rate for responsive AI
       enablePersonality: true,
@@ -385,6 +391,7 @@ export class AISystem extends EventEmitter {
       tryDepositResources: (entityId: string, zoneId: string): void =>
         this.tryDepositResources(entityId, zoneId),
       agentRegistry: this.agentRegistry,
+      animalRegistry: this.animalRegistry,
     });
 
     this.urgentGoals = new AIUrgentGoals({
@@ -1626,7 +1633,10 @@ export class AISystem extends EventEmitter {
   public getAIState(agentId: string): AIState | undefined {
     let state = this.aiStates.get(agentId);
     if (!state) {
-      const agent = this.agentRegistry?.getProfile(agentId);
+      // Use AgentRegistry for O(1) lookup, fallback to gameState array scan
+      const agent =
+        this.agentRegistry?.getProfile(agentId) ??
+        this.gameState.agents?.find((a) => a.id === agentId);
       if (agent) {
         state = this.createAIState(agentId);
         this.aiStates.set(agentId, state);

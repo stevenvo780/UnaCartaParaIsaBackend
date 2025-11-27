@@ -1,6 +1,12 @@
 import type { GameState } from "../../../../types/game-types";
 import type { AIGoal, AIState } from "../../../../types/simulation/ai";
-import type { PriorityManager, GoalDomain } from "./PriorityManager";
+import type { PriorityManager } from "./PriorityManager";
+import {
+  GoalType,
+  GoalDomain,
+  NeedType,
+} from "../../../../../shared/constants/AIEnums";
+import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 
 const PRIORITY_TIERS = {
   SURVIVAL_CRITICAL: 10.0,
@@ -153,49 +159,53 @@ export function prioritizeGoals(
 }
 
 function getGoalDomain(goal: AIGoal): GoalDomain {
-  if (goal.type === "satisfy_need" || goal.type === "rest") return "survival";
-  if (goal.type === "social") return "social";
-  if (goal.type === "explore") return "explore";
-  if (goal.type === "inspect") return "inspect";
-  if (goal.type === "flee") return "flee";
-  if (goal.type === "attack") return "combat";
-  if (goal.type === "work") {
-    if (goal.id?.startsWith("deposit_")) return "logistics";
-    if (goal.id?.startsWith("craft_weapon")) return "crafting";
-    return "work";
+  if (goal.type === GoalType.SATISFY_NEED || goal.type === GoalType.REST)
+    return GoalDomain.SURVIVAL;
+  if (goal.type === GoalType.SOCIAL) return GoalDomain.SOCIAL;
+  if (goal.type === GoalType.EXPLORE) return GoalDomain.EXPLORE;
+  if (goal.type === GoalType.INSPECT) return GoalDomain.INSPECT;
+  if (goal.type === GoalType.FLEE) return GoalDomain.FLEE;
+  if (goal.type === GoalType.ATTACK) return GoalDomain.COMBAT;
+  if (goal.type === GoalType.WORK) {
+    if (goal.id?.startsWith("deposit_")) return GoalDomain.LOGISTICS;
+    if (goal.id?.startsWith("craft_weapon")) return GoalDomain.CRAFTING;
+    return GoalDomain.WORK;
   }
-  return "work";
+  return GoalDomain.WORK;
 }
 
 export function getGoalTier(goal: AIGoal, _aiState: AIState): number {
-  if (goal.type === "satisfy_need") {
-    if (goal.data?.need === "hunger" || goal.data?.need === "thirst") {
+  if (goal.type === GoalType.SATISFY_NEED) {
+    if (
+      goal.data?.need === NeedType.HUNGER ||
+      goal.data?.need === NeedType.THIRST
+    ) {
       if (goal.priority >= 0.8) return PRIORITY_TIERS.SURVIVAL_CRITICAL;
       if (goal.priority >= 0.5) return PRIORITY_TIERS.SURVIVAL_URGENT;
     }
-    if (goal.data?.need === "energy" && goal.priority >= 0.7) {
+    if (goal.data?.need === NeedType.ENERGY && goal.priority >= 0.7) {
       return PRIORITY_TIERS.SURVIVAL_URGENT;
     }
     return PRIORITY_TIERS.OPPORTUNITY;
   }
 
-  if (goal.type === "work" && goal.id?.startsWith("deposit_")) {
+  if (goal.type === GoalType.WORK && goal.id?.startsWith("deposit_")) {
     return PRIORITY_TIERS.LOGISTICS;
   }
 
-  if (goal.type === "deposit") {
+  if (goal.type === GoalType.DEPOSIT) {
     return PRIORITY_TIERS.LOGISTICS;
   }
 
   if (
-    goal.type === "work" ||
-    goal.type === "social" ||
-    goal.type === "explore" ||
-    goal.type === "attack" ||
-    goal.type === "hunt" ||
-    goal.type === "craft" ||
-    goal.type === "assist" ||
-    goal.type === "construction"
+    goal.type === GoalType.WORK ||
+    goal.type === GoalType.SOCIAL ||
+    goal.type === GoalType.EXPLORE ||
+    goal.type === GoalType.ATTACK ||
+    goal.type === GoalType.HUNT ||
+    goal.type === GoalType.CRAFT ||
+    goal.type === GoalType.ASSIST ||
+    goal.type === GoalType.CONSTRUCTION
   ) {
     return PRIORITY_TIERS.OPPORTUNITY;
   }
@@ -207,27 +217,27 @@ export function getRecommendedZoneIdsForNeed(
   needType: string,
   gameState: GameState,
 ): string[] {
-  const zoneTypes: Record<string, string[]> = {
-    hunger: ["food"],
-    thirst: ["water"],
-    energy: ["rest", "shelter"],
-    mentalHealth: [
-      "social",
-      "rest",
-      "spiritual",
-      "knowledge",
-      "medical",
-      "market",
-      "fun",
+  const zoneTypes: Record<string, ZoneType[]> = {
+    [NeedType.HUNGER]: [ZoneType.FOOD],
+    [NeedType.THIRST]: [ZoneType.WATER],
+    [NeedType.ENERGY]: [ZoneType.REST, ZoneType.SHELTER],
+    [NeedType.MENTAL_HEALTH]: [
+      ZoneType.SOCIAL,
+      ZoneType.REST,
+      ZoneType.SPIRITUAL,
+      ZoneType.KNOWLEDGE,
+      ZoneType.MEDICAL,
+      ZoneType.MARKET,
+      ZoneType.FUN,
     ],
-    social: ["social", "market"],
-    fun: ["fun", "entertainment"],
-    hygiene: ["hygiene"],
+    [NeedType.SOCIAL]: [ZoneType.SOCIAL, ZoneType.MARKET],
+    [NeedType.FUN]: [ZoneType.FUN, ZoneType.ENTERTAINMENT],
+    [NeedType.HYGIENE]: [ZoneType.HYGIENE],
   };
 
   const types = zoneTypes[needType] || [];
   return (
-    gameState.zones?.filter((z) => types.includes(z.type)).map((z) => z.id) ||
+    gameState.zones?.filter((z) => types.includes(z.type as ZoneType)).map((z) => z.id) ||
     []
   );
 }

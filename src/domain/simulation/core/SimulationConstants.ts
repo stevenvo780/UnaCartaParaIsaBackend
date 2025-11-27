@@ -1,83 +1,24 @@
 /**
  * Centralized constants for the simulation system.
  *
- * Eliminates magic numbers scattered throughout the codebase.
- * Individual systems (MovementSystem, AnimalSystem, etc.) may have local constants
- * that should eventually migrate here for consistency.
+ * @deprecated This file has been consolidated into shared/constants/SimulationConstants.ts.
+ * Please import from there instead. This file is kept for backward compatibility only.
  *
  * @example
  * ```typescript
+ * // Old (deprecated):
  * import { SIM_CONSTANTS } from '../core/SimulationConstants';
- * const interval = SIM_CONSTANTS.TICK_INTERVAL_MS;
+ *
+ * // New (preferred):
+ * import { SIMULATION_CONSTANTS } from '../../../shared/constants/SimulationConstants';
+ * const interval = SIMULATION_CONSTANTS.TIMING.TICK_INTERVAL_MS;
  * ```
  */
-export const SIM_CONSTANTS = {
-  TICK_INTERVAL_MS: 200,
-  DEFAULT_UPDATE_INTERVAL_MS: 1000,
-  AI_UPDATE_INTERVAL_MS: 1000,
-  COMBAT_DECISION_INTERVAL_MS: 750,
-  MEMORY_CLEANUP_INTERVAL_MS: 300000,
-  CACHE_CLEANUP_INTERVAL_MS: 30000,
 
-  DEFAULT_CACHE_TTL: 15000,
-  PATH_CACHE_DURATION: 30000,
-  GRID_CACHE_DURATION: 30000,
-  ZONE_CACHE_TTL: 15000,
-
-  MAX_AGENTS_PER_BATCH: 10,
-  MAX_COMMAND_QUEUE: 200,
-  MAX_LOG_ENTRIES: 200,
-
-  SPATIAL_CELL_SIZE: 256,
-  ENGAGEMENT_RADIUS: 70,
-  PROXIMITY_RADIUS: 100,
-  DEFAULT_CELL_SIZE: 70,
-  HARVEST_RANGE: 80,
-  ATTACK_RANGE: 50,
-  EXPLORE_RANGE: 200,
-  WATER_DETECTION_DISTANCE: 60,
-  CROP_SPACING: 32,
-
-  MAX_MEMORY_ITEMS: 50,
-  MAX_VISITED_ZONES: 100,
-  MAX_SUCCESSFUL_ACTIVITIES: 50,
-
-  STAGGER_OFFSET_MS: 50,
-
-  CRITICAL_THRESHOLD: 20,
-  EMERGENCY_THRESHOLD: 10,
-  DEFAULT_NEED_VALUE: 100,
-  NEED_HIGH_THRESHOLD: 80,
-  NEED_MEDIUM_THRESHOLD: 60,
-  NEED_LOW_THRESHOLD: 30,
-  NEED_SATISFIED_THRESHOLD: 70,
-
-  BASE_MOVEMENT_SPEED: 80,
-  FATIGUE_PENALTY_MULTIPLIER: 0.5,
-  PATHFINDING_TIMEOUT_MS: 50,
-  PATHFINDING_MAX_ITERATIONS: 500,
-  PATHFINDING_GRID_SIZE: 32,
-  IDLE_WANDER_COOLDOWN_MS: 600,
-  IDLE_WANDER_PROBABILITY: 0.85,
-  IDLE_WANDER_RADIUS_MIN: 80,
-  IDLE_WANDER_RADIUS_MAX: 280,
-  IDLE_WANDER_EXPLORATION_PROBABILITY: 0.35,
-  IDLE_WANDER_EXPLORATION_RADIUS_MIN: 400,
-  IDLE_WANDER_EXPLORATION_RADIUS_MAX: 900,
-
-  MAX_ANIMALS: 500,
-  SPAWN_RADIUS: 300,
-  ANIMAL_UPDATE_INTERVAL: 1000,
-  ANIMAL_CLEANUP_INTERVAL: 30000,
-
-  DEFAULT_AGENT_CAPACITY: 50,
-  DEFAULT_STOCKPILE_CAPACITY: 1000,
-  FOOD_DECAY_RATE: 0.02,
-  WATER_DECAY_RATE: 0.01,
-  DEPRECATION_INTERVAL: 10000,
-} as const;
-
-/**
- * Type for accessing constants with type safety.
- */
-export type SimConstantsType = typeof SIM_CONSTANTS;
+// Re-export from consolidated location
+export {
+  SIM_CONSTANTS,
+  type SimConstantsType,
+  SIMULATION_CONSTANTS,
+  type SimulationConstantsType,
+} from "../../../shared/constants/SimulationConstants";

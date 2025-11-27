@@ -14,8 +14,7 @@ import { GameEventNames, simulationEvents } from "../../../core/events";
 import { ActionType } from "../../../../../shared/constants/AIEnums";
 import { NeedType } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
-import { TargetType } from "../../../../../shared/constants/EntityEnums";
-import { AnimalState } from "../../../../../shared/constants/AnimalEnums";
+import { ItemCategory } from "../../../../../shared/constants/ItemEnums";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
 import type { AnimalRegistry } from "../../../core/AnimalRegistry";
 
@@ -289,62 +288,64 @@ export class AIActionExecutor {
       return;
     }
 
-    const animals = this.deps.gameState.animals?.animals;
-    const targetAnimal = animals?.find((a) => a.id === targetId && !a.isDead);
+    // Use AnimalRegistry for O(1) lookup, fallback to gameState array scan
+    let targetAnimal = this.deps.animalRegistry?.getAnimal(targetId);
+    if (!targetAnimal || targetAnimal.isDead) {
+      // Fallback to gameState if registry not available or animal not in registry
+      const animals = this.deps.gameState.animals?.animals;
+      targetAnimal = animals?.find((a) => a.id === targetId && !a.isDead);
+    }
 
-    if (targetAnimal) {
-      const config = getAnimalConfig(targetAnimal.type);
-      const foodValue = config?.foodValue ?? 15;
-
-      // Delegate to AnimalRegistry - single source of truth for animal death
-      if (this.deps.animalRegistry) {
-        this.deps.animalRegistry.markDead(targetId);
-      } else {
-        // Fallback if registry not available
-        targetAnimal.isDead = true;
-        targetAnimal.state = AnimalState.DEAD;
-      }
-
-      if (this.deps.inventorySystem) {
-        this.deps.inventorySystem.addResource(
-          action.agentId,
-          ResourceType.FOOD,
-          foodValue,
-        );
-        logger.info(
-          `🏹 Agent ${action.agentId} hunted ${targetAnimal.type} and gained ${foodValue} food`,
-        );
-      }
-
-      if (this.deps.needsSystem) {
-        this.deps.needsSystem.satisfyNeed(
-          action.agentId,
-          NeedType.HUNGER,
-          Math.min(foodValue * 0.3, 25),
-        );
-      }
-
-      simulationEvents.emit(GameEventNames.ANIMAL_HUNTED, {
-        animalId: targetId,
-        hunterId: action.agentId,
-        foodValue,
-        animalType: targetAnimal.type,
-      });
-
-      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
-        agentId: action.agentId,
-        actionType: "attack",
-        success: true,
-        data: { targetId, targetType: "animal", foodValue },
-      });
-    } else {
+    if (!targetAnimal || targetAnimal.isDead) {
       simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
         agentId: action.agentId,
         actionType: ActionType.ATTACK,
-        success: true,
-        data: { targetId, targetType: TargetType.UNKNOWN },
+        success: false,
+        data: { reason: "animal_not_found" },
       });
+      return;
     }
+
+    const config = getAnimalConfig(targetAnimal.type);
+    const foodValue = config?.foodValue ?? 15;
+
+    // Delegate to AnimalRegistry - single source of truth for animal death
+    if (this.deps.animalRegistry) {
+      this.deps.animalRegistry.markDead(targetId);
+    }
+
+    if (this.deps.inventorySystem) {
+      this.deps.inventorySystem.addResource(
+        action.agentId,
+        ResourceType.FOOD,
+        foodValue,
+      );
+      logger.info(
+        `🏹 Agent ${action.agentId} hunted ${targetAnimal.type} and gained ${foodValue} food`,
+      );
+    }
+
+    if (this.deps.needsSystem) {
+      this.deps.needsSystem.satisfyNeed(
+        action.agentId,
+        NeedType.HUNGER,
+        Math.min(foodValue * 0.3, 25),
+      );
+    }
+
+    simulationEvents.emit(GameEventNames.ANIMAL_HUNTED, {
+      animalId: targetId,
+      hunterId: action.agentId,
+      foodValue,
+      animalType: targetAnimal.type,
+    });
+
+    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      agentId: action.agentId,
+      actionType: "attack",
+      success: true,
+      data: { targetId, targetType: "animal", foodValue },
+    });
   }
 
   private executeSocialize(action: AgentAction): void {
@@ -419,7 +420,7 @@ export class AIActionExecutor {
   }
 
   private executeCraft(action: AgentAction): void {
-    if (this.deps.craftingSystem && action.data?.itemType === "weapon") {
+    if (this.deps.craftingSystem && action.data?.itemType === ItemCategory.WEAPON) {
       const weaponId = this.deps.craftingSystem.craftBestWeapon(action.agentId);
       simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
         agentId: action.agentId,

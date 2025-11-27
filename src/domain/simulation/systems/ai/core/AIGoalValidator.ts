@@ -6,7 +6,7 @@ import type { AnimalSystem } from "../../AnimalSystem";
 import { isWorldResourceType } from "../../../../types/simulation/resourceMapping";
 import type { WorldResourceType } from "../../../../types/simulation/worldResources";
 import { getFrameTime } from "../../../../../shared/FrameTime";
-import { NeedType } from "../../../../../shared/constants/AIEnums";
+import { NeedType, GoalType } from "../../../../../shared/constants/AIEnums";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
 
 export interface AIGoalValidatorDeps {
@@ -119,7 +119,7 @@ export class AIGoalValidator {
 
     // Check assist goals
     if (
-      (goal.type === "assist" || goal.type.startsWith("assist_")) &&
+      (goal.type === GoalType.ASSIST || goal.type.startsWith("assist_")) &&
       goal.data?.targetAgentId
     ) {
       const targetId = goal.data.targetAgentId as string;
@@ -139,7 +139,7 @@ export class AIGoalValidator {
 
     // For gather/work goals with a target resource, don't complete just by arriving
     // The goal completes when the resource is actually harvested (handled by action completion)
-    if (goal.type === "gather" || goal.type === "work") {
+    if (goal.type === GoalType.GATHER || goal.type === GoalType.WORK) {
       if (goal.targetId && goal.data?.resourceType) {
         // Resource-based goal - only complete via handleActionComplete after harvest
         return false;
@@ -202,7 +202,7 @@ export class AIGoalValidator {
     }
 
     if (
-      (goal.type === "assist" || goal.type.startsWith("assist_")) &&
+      (goal.type === GoalType.ASSIST || goal.type.startsWith("assist_")) &&
       goal.data?.targetAgentId
     ) {
       const targetId = goal.data.targetAgentId as string;
@@ -334,7 +334,7 @@ export class AIGoalValidator {
    * Validates if a combat target is still valid.
    */
   private isCombatTargetValid(goal: AIGoal): boolean | null {
-    if (goal.type !== "attack" && goal.type !== "combat") {
+    if (goal.type !== GoalType.ATTACK && goal.type !== GoalType.COMBAT) {
       return null;
     }
 

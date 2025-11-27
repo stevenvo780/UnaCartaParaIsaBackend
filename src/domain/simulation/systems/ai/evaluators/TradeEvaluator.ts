@@ -1,6 +1,7 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { Inventory } from "../../../../types/simulation/economy";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
+import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 
 export interface TradeEvaluatorDependencies {
   getAgentInventory: (id: string) => Inventory | undefined;
@@ -35,7 +36,7 @@ export function evaluateTradeGoals(
 
   const marketZones =
     deps.gameState.zones?.filter(
-      (z) => z.type === "market" || z.type === "trade",
+      (z) => z.type === ZoneType.MARKET,
     ) || [];
 
   if (marketZones.length === 0) return goals;

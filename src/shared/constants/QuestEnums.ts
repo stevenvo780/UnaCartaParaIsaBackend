@@ -61,6 +61,24 @@ export enum QuestDialogueStage {
 }
 
 /**
+ * Enumeration of quest objective types.
+ * Defines all possible types of objectives that can be part of a quest.
+ */
+export enum QuestObjectiveType {
+  FIND_ITEM = "find_item",
+  TALK_TO_NPC = "talk_to_npc",
+  REACH_LOCATION = "reach_location",
+  COLLECT_RESOURCE = "collect_resource",
+  SURVIVE_TIME = "survive_time",
+  ACHIEVE_STATS = "achieve_stats",
+  COMPLETE_ACTIVITY = "complete_activity",
+  INTERACT_WITH_ENTITY = "interact_with_entity",
+  SURVIVE_EMERGENCY = "survive_emergency",
+  BUILD_STRUCTURE = "build_structure",
+  CUSTOM = "custom",
+}
+
+/**
  * Type representing all possible quest status values.
  */
 export type QuestStatusValue = `${QuestStatus}`;
@@ -84,6 +102,11 @@ export type QuestRequirementTypeValue = `${QuestRequirementType}`;
  * Type representing all possible quest dialogue stage values.
  */
 export type QuestDialogueStageValue = `${QuestDialogueStage}`;
+
+/**
+ * Type representing all possible quest objective type values.
+ */
+export type QuestObjectiveTypeValue = `${QuestObjectiveType}`;
 
 /**
  * Array of all quest statuses for iteration.
@@ -141,5 +164,22 @@ export function isQuestRequirementType(
 ): value is QuestRequirementType {
   return Object.values(QuestRequirementType).includes(
     value as QuestRequirementType,
+  );
+}
+
+/**
+ * Array of all quest objective types for iteration.
+ */
+export const ALL_QUEST_OBJECTIVE_TYPES: readonly QuestObjectiveType[] =
+  Object.values(QuestObjectiveType) as QuestObjectiveType[];
+
+/**
+ * Type guard to check if a string is a valid QuestObjectiveType.
+ */
+export function isQuestObjectiveType(
+  value: string,
+): value is QuestObjectiveType {
+  return Object.values(QuestObjectiveType).includes(
+    value as QuestObjectiveType,
   );
 }

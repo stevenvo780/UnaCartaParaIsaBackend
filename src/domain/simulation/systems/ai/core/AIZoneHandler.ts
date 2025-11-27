@@ -4,6 +4,7 @@ import type { ResourceType } from "../../../../types/simulation/economy";
 import { simulationEvents, GameEventNames } from "../../../core/events";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
+import { ItemCategory } from "../../../../../shared/constants/ItemEnums";
 import { logger } from "../../../../../infrastructure/utils/logger";
 /**
  * Minimal interface for inventory operations needed by AIZoneHandler.
@@ -361,7 +362,7 @@ export class AIZoneHandler {
     aiState: AIState,
   ): boolean {
     if (
-      !(goal.type === "assist" || goal.type.startsWith("assist_")) ||
+      !(goal.type === GoalType.ASSIST || goal.type.startsWith("assist_")) ||
       !goal.data?.targetAgentId
     ) {
       return false;
@@ -413,7 +414,7 @@ export class AIZoneHandler {
     goal: AIGoal,
     aiState: AIState,
   ): boolean {
-    if (goal.type !== "craft" || goal.data?.itemType !== "weapon") {
+    if (goal.type !== GoalType.CRAFT || goal.data?.itemType !== ItemCategory.WEAPON) {
       return false;
     }
 

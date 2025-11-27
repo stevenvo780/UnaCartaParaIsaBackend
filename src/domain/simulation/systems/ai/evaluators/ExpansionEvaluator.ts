@@ -4,6 +4,7 @@ import type { Inventory } from "../../../../types/simulation/economy";
 import { RandomUtils } from "../../../../../shared/utils/RandomUtils";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
+import { SIMULATION_CONSTANTS } from "../../../../../shared/constants/SimulationConstants";
 
 export interface ExpansionContext {
   gameState: GameState;
@@ -11,7 +12,8 @@ export interface ExpansionContext {
   getEntityPosition: (id: string) => { x: number; y: number } | null;
 }
 
-const DEFAULT_INVENTORY_CAPACITY = 50;
+const DEFAULT_INVENTORY_CAPACITY =
+  SIMULATION_CONSTANTS.INVENTORY.DEFAULT_AGENT_CAPACITY;
 const GATHER_TRIGGER_THRESHOLD = 0.8;
 const GATHER_GOAL_DURATION_MS = 10000;
 const EXPANSION_GOAL_DURATION_MS = 15000;

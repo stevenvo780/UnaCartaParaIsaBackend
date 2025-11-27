@@ -1132,14 +1132,13 @@ export class SimulationRunner {
       };
     }
 
-    if (this.state.animals?.animals) {
-      const animal = this.state.animals.animals.find((a) => a.id === entityId);
-      if (animal) {
-        return {
-          type: "animal",
-          entity: animal,
-        };
-      }
+    // Use AnimalSystem for O(1) lookup instead of array scan
+    const animal = this.animalSystem?.getAnimal(entityId);
+    if (animal) {
+      return {
+        type: "animal",
+        entity: animal,
+      };
     }
 
     if (this.state.zones) {

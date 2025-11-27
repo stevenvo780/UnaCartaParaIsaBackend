@@ -5,6 +5,7 @@ import {
 } from "../../types/simulation/economy";
 import type { GameState, StockpileSnapshot } from "../../types/game-types";
 import { logger } from "../../../infrastructure/utils/logger";
+import { SIMULATION_CONSTANTS } from "../../../shared/constants/SimulationConstants";
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -30,9 +31,12 @@ export class InventorySystem {
   private stockpilesByZone = new Map<string, Set<string>>();
 
   private lastDeprecationCheck = 0;
-  private readonly DEPRECATION_INTERVAL = 10000;
-  private readonly DEFAULT_AGENT_CAPACITY = 50;
-  private readonly DEFAULT_STOCKPILE_CAPACITY = 1000;
+  private readonly DEPRECATION_INTERVAL =
+    SIMULATION_CONSTANTS.TIMING.DEPRECATION_INTERVAL_MS;
+  private readonly DEFAULT_AGENT_CAPACITY =
+    SIMULATION_CONSTANTS.INVENTORY.DEFAULT_AGENT_CAPACITY;
+  private readonly DEFAULT_STOCKPILE_CAPACITY =
+    SIMULATION_CONSTANTS.INVENTORY.DEFAULT_STOCKPILE_CAPACITY;
   private agentRegistry?: AgentRegistry;
 
   constructor(

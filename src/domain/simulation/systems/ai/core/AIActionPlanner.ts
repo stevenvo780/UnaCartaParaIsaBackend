@@ -289,10 +289,10 @@ export class AIActionPlanner {
 
     const currentZone = this.deps.gameState.zones?.find((z) => {
       if (
-        z.type !== "social" &&
-        z.type !== "gathering" &&
-        z.type !== "market" &&
-        z.type !== "tavern"
+        z.type !== ZoneType.SOCIAL &&
+        z.type !== ZoneType.GATHERING &&
+        z.type !== ZoneType.MARKET &&
+        z.type !== ZoneType.TAVERN
       ) {
         return false;
       }
@@ -327,10 +327,10 @@ export class AIActionPlanner {
 
     const socialZone = this.deps.gameState.zones?.find(
       (z) =>
-        z.type === "social" ||
-        z.type === "gathering" ||
-        z.type === "market" ||
-        z.type === "tavern",
+        z.type === ZoneType.SOCIAL ||
+        z.type === ZoneType.GATHERING ||
+        z.type === ZoneType.MARKET ||
+        z.type === ZoneType.TAVERN,
     );
     if (socialZone) {
       return {
@@ -364,10 +364,10 @@ export class AIActionPlanner {
     }
     const funZone = this.deps.gameState.zones?.find(
       (z) =>
-        z.type === "entertainment" ||
-        z.type === "tavern" ||
-        z.type === "market" ||
-        z.type === "gathering",
+        z.type === ZoneType.ENTERTAINMENT ||
+        z.type === ZoneType.TAVERN ||
+        z.type === ZoneType.MARKET ||
+        z.type === ZoneType.GATHERING,
     );
     if (funZone) {
       return {
@@ -765,12 +765,12 @@ export class AIActionPlanner {
 
     const currentZone = this.deps.gameState.zones?.find((z) => {
       if (
-        z.type !== "social" &&
-        z.type !== "gathering" &&
-        z.type !== "market" &&
-        z.type !== "tavern" &&
-        z.type !== "temple" &&
-        z.type !== "sanctuary"
+        z.type !== ZoneType.SOCIAL &&
+        z.type !== ZoneType.GATHERING &&
+        z.type !== ZoneType.MARKET &&
+        z.type !== ZoneType.TAVERN &&
+        z.type !== ZoneType.TEMPLE &&
+        z.type !== ZoneType.SANCTUARY
       ) {
         return false;
       }
@@ -812,11 +812,11 @@ export class AIActionPlanner {
 
     const socialZone = this.deps.gameState.zones?.find(
       (z) =>
-        z.type === "social" ||
-        z.type === "gathering" ||
-        z.type === "market" ||
-        z.type === "temple" ||
-        z.type === "sanctuary",
+        z.type === ZoneType.SOCIAL ||
+        z.type === ZoneType.GATHERING ||
+        z.type === ZoneType.MARKET ||
+        z.type === ZoneType.TEMPLE ||
+        z.type === ZoneType.SANCTUARY,
     );
     if (socialZone) {
       return {

@@ -2,6 +2,7 @@ import { logger } from "../../../../../infrastructure/utils/logger";
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { GameState } from "../../../../types/game-types";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
+import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 
 export interface DepositContext {
   gameState: GameState;
@@ -76,7 +77,7 @@ export function evaluateDepositGoals(
 
     const storageZones =
       ctx.gameState.zones
-        ?.filter((z) => z.type === "storage")
+        ?.filter((z) => z.type === ZoneType.STORAGE)
         .map((z) => z.id) || [];
 
     const depositZones =
@@ -84,10 +85,10 @@ export function evaluateDepositGoals(
         ? storageZones
         : ctx.gameState.zones
             ?.filter((z) => {
-              if (z.type === "rest") return true;
-              if (z.type === "food" && agentInv.food > 0) return true;
-              if (z.type === "water" && agentInv.water > 0) return true;
-              if (z.type === "work") return true;
+              if (z.type === ZoneType.REST) return true;
+              if (z.type === ZoneType.FOOD && agentInv.food > 0) return true;
+              if (z.type === ZoneType.WATER && agentInv.water > 0) return true;
+              if (z.type === ZoneType.WORK) return true;
               return false;
             })
             .map((z) => z.id) || [];

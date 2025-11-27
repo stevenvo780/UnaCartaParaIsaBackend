@@ -1,34 +1,23 @@
 import type { GameState } from "../../../../types/game-types";
 import type { RoleSystem } from "../../RoleSystem";
 import { logger } from "@/infrastructure/utils/logger";
-
-export type GoalDomain =
-  | "survival"
-  | "work"
-  | "social"
-  | "crafting"
-  | "combat"
-  | "flee"
-  | "explore"
-  | "logistics"
-  | "rest"
-  | "inspect";
+import { GoalDomain } from "../../../../../shared/constants/AIEnums";
 
 /**
  * Priority weights for different goal domains.
  * Higher weights increase the priority of goals in that domain.
  */
 export interface DomainWeights {
-  survival: number;
-  work: number;
-  social: number;
-  crafting: number;
-  combat: number;
-  flee: number;
-  explore: number;
-  logistics: number;
-  rest: number;
-  inspect: number;
+  [GoalDomain.SURVIVAL]: number;
+  [GoalDomain.WORK]: number;
+  [GoalDomain.SOCIAL]: number;
+  [GoalDomain.CRAFTING]: number;
+  [GoalDomain.COMBAT]: number;
+  [GoalDomain.FLEE]: number;
+  [GoalDomain.EXPLORE]: number;
+  [GoalDomain.LOGISTICS]: number;
+  [GoalDomain.REST]: number;
+  [GoalDomain.INSPECT]: number;
 }
 
 /**
@@ -52,16 +41,16 @@ export class PriorityManager {
   private gameState: GameState;
   private roleSystem?: RoleSystem;
   private weights: DomainWeights = {
-    survival: 1.0,
-    work: 0.6,
-    social: 0.45,
-    crafting: 0.65,
-    combat: 0.7,
-    flee: 1.1,
-    explore: 0.3,
-    logistics: 0.55,
-    rest: 0.8,
-    inspect: 0.25,
+    [GoalDomain.SURVIVAL]: 1.0,
+    [GoalDomain.WORK]: 0.6,
+    [GoalDomain.SOCIAL]: 0.45,
+    [GoalDomain.CRAFTING]: 0.65,
+    [GoalDomain.COMBAT]: 0.7,
+    [GoalDomain.FLEE]: 1.1,
+    [GoalDomain.EXPLORE]: 0.3,
+    [GoalDomain.LOGISTICS]: 0.55,
+    [GoalDomain.REST]: 0.8,
+    [GoalDomain.INSPECT]: 0.25,
   };
 
   constructor(
@@ -108,16 +97,16 @@ export class PriorityManager {
         const scarceFood = (res.food ?? 0) < 8;
 
         if (scarceWater || scarceFood) {
-          if (domain === "survival") adjusted *= 1.3;
-          if (domain === "logistics") adjusted *= 1.2;
+          if (domain === GoalDomain.SURVIVAL) adjusted *= 1.3;
+          if (domain === GoalDomain.LOGISTICS) adjusted *= 1.2;
         }
 
         const scarceWood = (res.wood ?? 0) < 10;
         const scarceStone = (res.stone ?? 0) < 10;
 
         if (scarceWood || scarceStone) {
-          if (domain === "work") adjusted *= 1.15;
-          if (domain === "logistics") adjusted *= 1.15;
+          if (domain === GoalDomain.WORK) adjusted *= 1.15;
+          if (domain === GoalDomain.LOGISTICS) adjusted *= 1.15;
         }
       }
     } catch (error) {
@@ -133,11 +122,11 @@ export class PriorityManager {
       const isWarrior = role?.roleType === "guard";
 
       if (isWarrior) {
-        if (domain === "combat") adjusted *= 1.25;
-        if (domain === "crafting") adjusted *= 1.15;
+        if (domain === GoalDomain.COMBAT) adjusted *= 1.25;
+        if (domain === GoalDomain.CRAFTING) adjusted *= 1.15;
       } else {
-        if (domain === "flee") adjusted *= 1.2;
-        if (domain === "combat") adjusted *= 0.8;
+        if (domain === GoalDomain.FLEE) adjusted *= 1.2;
+        if (domain === GoalDomain.COMBAT) adjusted *= 0.8;
       }
     } catch (error: unknown) {
       logger.warn("[PriorityManager] Failed to adjust for role", {
