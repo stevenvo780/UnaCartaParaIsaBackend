@@ -361,17 +361,17 @@ export class QuestSystem {
 
     quest.rewards.forEach((reward) => {
       switch (reward.type) {
-        case "experience":
+        case QuestRewardType.EXPERIENCE:
           this.questProgress.totalExperienceGained += reward.amount || 0;
           break;
 
-        case "title":
+        case QuestRewardType.TITLE:
           if (reward.title) {
             this.questProgress.unlockedTitles.push(reward.title);
           }
           break;
 
-        case "unlock_feature":
+        case QuestRewardType.UNLOCK_FEATURE:
           if (reward.unlockId) {
             unlockedFeatures.push(reward.unlockId);
           }
@@ -415,12 +415,12 @@ export class QuestSystem {
   private checkQuestRequirements(quest: Quest): boolean {
     return quest.requirements.every((req) => {
       switch (req.type) {
-        case "quest_completed":
+        case QuestRequirementType.QUEST_COMPLETED:
           return req.questId
             ? this.questProgress.completedQuests.has(req.questId)
             : false;
 
-        case "time_elapsed":
+        case QuestRequirementType.TIME_ELAPSED:
           if (req.duration) {
             const elapsed = Date.now() - this.gameStartTime;
             return elapsed >= req.duration;
@@ -489,7 +489,7 @@ export class QuestSystem {
     data: QuestEventData;
   }): void {
     switch (eventData.type) {
-      case "dialogue_completed":
+      case QuestRequirementType.QUEST_COMPLETED: // dialogue_completed maps to quest_completed
         this.questProgress.activeQuests.forEach((quest) => {
           quest.objectives.forEach((objective) => {
             if (

@@ -11,6 +11,7 @@ import {
 import { simulationEvents, GameEventNames } from "../core/events";
 import type { SimulationEntity, EntityTraits } from "../core/schema";
 import { EntityType } from "../../../shared/constants/EntityEnums";
+import { TileType } from "../../../shared/constants/TileTypeEnums";
 import type {
   INeedsPort,
   IAIPort,
@@ -832,7 +833,7 @@ export class LifeCycleSystem extends EventEmitter {
         const dx = tile.x - position.x;
         const dy = tile.y - position.y;
         const dist = Math.hypot(dx, dy);
-        return dist < 32 && tile.type === "water";
+        return dist < 32 && tile.type === TileType.WATER;
       });
 
       if (nearbyWater) {

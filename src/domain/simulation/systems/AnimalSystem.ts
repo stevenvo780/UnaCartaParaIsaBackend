@@ -20,6 +20,7 @@ import { performanceMonitor } from "../core/PerformanceMonitor";
 import { SIM_CONSTANTS } from "../core/SimulationConstants";
 import { AnimalState } from "../../../shared/constants/AnimalEnums";
 import { AnimalRegistry } from "../core/AnimalRegistry";
+import { WorldResourceType } from "../../../shared/constants/ResourceEnums";
 
 const DEFAULT_CONFIG: AnimalSystemConfig = {
   maxAnimals: SIM_CONSTANTS.MAX_ANIMALS,
@@ -645,9 +646,9 @@ export class AnimalSystem {
         .getResourcesNear?.(animal.position, range)
         ?.filter(
           (r) =>
-            r.type === "berry_bush" ||
-            r.type === "tree" ||
-            r.type === "mushroom_patch",
+            r.type === WorldResourceType.BERRY_BUSH ||
+            r.type === WorldResourceType.TREE ||
+            r.type === WorldResourceType.MUSHROOM_PATCH,
         )
         ?.map((r) => ({ id: r.id, position: r.position, type: r.type })) || [];
 
@@ -670,7 +671,10 @@ export class AnimalSystem {
     const resources =
       this.worldResourceSystem
         .getResourcesNear?.(animal.position, range)
-        ?.filter((r): r is WorldResourceInstance => r.type === "water_source")
+        ?.filter(
+          (r): r is WorldResourceInstance =>
+            r.type === WorldResourceType.WATER_SOURCE,
+        )
         ?.map((r) => ({ id: r.id, position: r.position })) || [];
 
     return resources;

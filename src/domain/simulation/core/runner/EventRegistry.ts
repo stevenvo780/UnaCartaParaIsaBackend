@@ -5,6 +5,7 @@ import type { SimulationRunner } from "../SimulationRunner";
 import { ResourceType } from "../../../../shared/constants/ResourceEnums";
 import { GameEventType } from "../../../../shared/constants/EventEnums";
 import { RoleType } from "../../../../shared/constants/RoleEnums";
+import { TaskType } from "../../../../shared/constants/TaskEnums";
 
 /**
  * Central registry for simulation event listeners.
@@ -588,7 +589,10 @@ export class EventRegistry {
         createdBy?: string;
         timestamp: number;
       }) => {
-        if (data.taskType === "build" || data.taskType === "repair") {
+        if (
+          data.taskType === TaskType.BUILD_HOUSE ||
+          data.taskType === TaskType.REPAIR_BUILDING
+        ) {
           this.runner.questSystem.handleEvent({
             type: "task_created",
             entityId: data.createdBy || "system",

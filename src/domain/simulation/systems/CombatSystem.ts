@@ -402,7 +402,7 @@ export class CombatSystem {
         entity.id === agentId ||
         entity.isDead ||
         !entity.position ||
-        entity.type !== "agent"
+        entity.type !== EntityType.AGENT
       ) {
         continue;
       }
@@ -484,7 +484,7 @@ export class CombatSystem {
     if (target.isDead || target.immortal) return false;
 
     const targetIsAnimal =
-      target.type === "animal" || target.tags?.includes("animal");
+      target.type === EntityType.ANIMAL || target.tags?.includes("animal");
     if (targetIsAnimal) return true;
 
     const attackerProfile = this.lifeCycleSystem.getAgent(attacker.id);
@@ -674,7 +674,7 @@ export class CombatSystem {
       }),
     );
 
-    if (target.tags?.includes("animal") || target.type === "animal") {
+    if (target.tags?.includes("animal") || target.type === EntityType.ANIMAL) {
       simulationEvents.emit(GameEventNames.ANIMAL_HUNTED, {
         animalId: target.id,
         hunterId: attacker.id,

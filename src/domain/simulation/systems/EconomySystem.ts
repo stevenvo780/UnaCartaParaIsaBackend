@@ -181,17 +181,17 @@ export class EconomySystem {
 
       let baseSalary = 10;
       switch (role.roleType) {
-        case "farmer":
-        case "quarryman":
-        case "logger":
+        case RoleType.FARMER:
+        case RoleType.QUARRYMAN:
+        case RoleType.LOGGER:
           baseSalary = 15;
           break;
-        case "builder":
-        case "craftsman":
+        case RoleType.BUILDER:
+        case RoleType.CRAFTSMAN:
           baseSalary = 20;
           break;
-        case "guard":
-        case "leader":
+        case RoleType.GUARD:
+        case RoleType.LEADER:
           baseSalary = 25;
           break;
       }
@@ -208,10 +208,7 @@ export class EconomySystem {
         }
       }
 
-      if (agent.stats) {
-        const currentMoney =
-          typeof agent.stats.money === "number" ? agent.stats.money : 0;
-        agent.stats.money = currentMoney + baseSalary;
+      if (this.addMoney(agent.id, baseSalary)) {
         totalSalaries += baseSalary;
 
         simulationEvents.emit(GameEventNames.SALARY_PAID, {
@@ -331,11 +328,7 @@ export class EconomySystem {
         this.config.salaryRates[resourceType] * teamBonus,
       );
 
-      if (agent.stats) {
-        const currentMoney =
-          typeof agent.stats.money === "number" ? agent.stats.money : 0;
-        agent.stats.money = currentMoney + salary;
-      }
+      this.addMoney(agentId, salary);
 
       logger.debug(
         `⚒️ [ECONOMY] Work: ${agentId} produced ${amount} ${resourceType} (yield: ${totalYield.toFixed(2)}, bonus: ${teamBonus.toFixed(2)})`,

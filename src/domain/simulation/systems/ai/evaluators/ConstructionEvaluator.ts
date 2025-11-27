@@ -2,6 +2,7 @@ import { logger } from "../../../../../infrastructure/utils/logger";
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { GameState } from "../../../../types/game-types";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
+import { TaskType } from "../../../../../shared/constants/TaskEnums";
 
 export interface ConstructionContext {
   gameState: GameState;
@@ -30,9 +31,7 @@ export function evaluateConstructionGoals(
     const tasks = ctx.getTasks();
     const buildTasks = tasks.filter(
       (t) =>
-        (t.type === "build_house" ||
-          t.type === "build_mine" ||
-          t.type === "build_workbench") &&
+        t.type === TaskType.BUILD_HOUSE &&
         !t.completed &&
         t.zoneId,
     );

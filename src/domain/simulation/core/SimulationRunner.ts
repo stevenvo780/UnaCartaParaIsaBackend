@@ -48,6 +48,7 @@ import { EmergenceSystem } from "../systems/EmergenceSystem";
 import { TimeSystem } from "../systems/TimeSystem";
 import { InteractionGameSystem } from "../systems/InteractionGameSystem";
 import { KnowledgeNetworkSystem } from "../systems/KnowledgeNetworkSystem";
+import { EntityType } from "../../../shared/constants/EntityEnums";
 import { MovementSystem } from "../systems/MovementSystem";
 import { AppearanceGenerationSystem } from "../systems/AppearanceGenerationSystem";
 import { ChunkLoadingSystem } from "../systems/ChunkLoadingSystem";
@@ -1114,7 +1115,7 @@ export class SimulationRunner {
       const aiState = this.aiSystem.getAIState(entityId);
 
       return {
-        type: "agent",
+        type: EntityType.AGENT,
         entity,
         needs,
         role,
@@ -1136,7 +1137,7 @@ export class SimulationRunner {
     const animal = this.animalSystem?.getAnimal(entityId);
     if (animal) {
       return {
-        type: "animal",
+        type: EntityType.ANIMAL,
         entity: animal,
       };
     }

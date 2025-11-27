@@ -13,8 +13,13 @@ import type { MovementSystem } from "../../MovementSystem";
 import { GameEventNames, simulationEvents } from "../../../core/events";
 import { ActionType } from "../../../../../shared/constants/AIEnums";
 import { NeedType } from "../../../../../shared/constants/AIEnums";
-import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
+import {
+  ResourceType,
+  WorldResourceType,
+} from "../../../../../shared/constants/ResourceEnums";
 import { ItemCategory } from "../../../../../shared/constants/ItemEnums";
+import { TaskType } from "../../../../../shared/constants/TaskEnums";
+import { EntityType } from "../../../../../shared/constants/EntityEnums";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
 import type { AnimalRegistry } from "../../../core/AnimalRegistry";
 
@@ -218,7 +223,7 @@ export class AIActionExecutor {
     if (result.success) {
       const resource = this.deps.gameState.worldResources?.[action.targetId];
       if (resource) {
-        if (resource.type === "water_source" && this.deps.needsSystem) {
+        if (resource.type === WorldResourceType.WATER_SOURCE && this.deps.needsSystem) {
           this.deps.needsSystem.satisfyNeed(
             action.agentId,
             NeedType.THIRST,
@@ -344,7 +349,7 @@ export class AIActionExecutor {
       agentId: action.agentId,
       actionType: "attack",
       success: true,
-      data: { targetId, targetType: "animal", foodValue },
+      data: { targetId, targetType: EntityType.ANIMAL, foodValue },
     });
   }
 
@@ -453,7 +458,7 @@ export class AIActionExecutor {
       const tasks = this.deps.taskSystem.getTasksInZone(action.targetZoneId);
       const constructionTask = tasks.find(
         (t: { type: string }) =>
-          t.type === "build" || t.type === "construction",
+          t.type === TaskType.BUILD_HOUSE || t.type === TaskType.REPAIR_BUILDING,
       );
       if (constructionTask) {
         const result = this.deps.taskSystem.contributeToTask(

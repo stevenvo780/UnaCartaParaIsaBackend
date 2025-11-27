@@ -10,7 +10,10 @@ import {
   NeedType,
   GoalType,
 } from "../../../../../shared/constants/AIEnums";
-import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
+import {
+  ResourceType,
+  ResourceState,
+} from "../../../../../shared/constants/ResourceEnums";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
 
 export interface AIGoalValidatorDeps {
@@ -264,7 +267,7 @@ export class AIGoalValidator {
       const resource = this.deps.gameState.worldResources[goal.targetId];
       if (resource) {
         // Resource is valid if it exists and is not fully depleted
-        return resource.state !== "depleted";
+        return resource.state !== ResourceState.DEPLETED;
       }
     }
 

@@ -1,9 +1,9 @@
 import type { GameState } from "../../types/game-types";
 import type { MarketConfig } from "../../types/simulation/economy";
 import { InventorySystem } from "./InventorySystem";
+import { EconomySystem } from "./EconomySystem";
 import { logger } from "../../../infrastructure/utils/logger";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
-import type { EntityIndex } from "../core/EntityIndex";
 
 const DEFAULT_MARKET_CONFIG: MarketConfig = {
   scarcityThresholds: { low: 20, high: 100 },
@@ -33,22 +33,23 @@ import { TYPES } from "../../../config/Types";
  * - Price multipliers for low/high scarcity scenarios
  *
  * @see InventorySystem for resource management
+ * @see EconomySystem for money management
  */
 @injectable()
 export class MarketSystem {
   private state: GameState;
   private inventorySystem: InventorySystem;
+  private economySystem: EconomySystem;
   private config: MarketConfig;
-  private entityIndex: EntityIndex;
 
   constructor(
     @inject(TYPES.GameState) state: GameState,
     @inject(TYPES.InventorySystem) inventorySystem: InventorySystem,
-    @inject(TYPES.EntityIndex) entityIndex: EntityIndex,
+    @inject(TYPES.EconomySystem) economySystem: EconomySystem,
   ) {
     this.state = state;
     this.inventorySystem = inventorySystem;
-    this.entityIndex = entityIndex;
+    this.economySystem = economySystem;
     this.config = DEFAULT_MARKET_CONFIG;
   }
 
@@ -105,21 +106,19 @@ export class MarketSystem {
     const price = this.getResourcePrice(resource);
     const totalCost = price * amount;
 
-    const buyer = this.entityIndex.getEntity(buyerId);
-    if (!buyer || !buyer.stats) return false;
-    const buyerMoney =
-      typeof buyer.stats.money === "number" ? buyer.stats.money : 0;
-    if (buyerMoney < totalCost) return false;
-
-    buyer.stats.money = buyerMoney - totalCost;
-
-    const added = this.inventorySystem.addResource(buyerId, resource, amount);
-    if (!added) {
-      buyer.stats.money =
-        (typeof buyer.stats.money === "number" ? buyer.stats.money : 0) +
-        totalCost;
+    // Use EconomySystem for money validation
+    if (!this.economySystem.canAfford(buyerId, totalCost)) {
       return false;
     }
+
+    // Try to add resource first
+    const added = this.inventorySystem.addResource(buyerId, resource, amount);
+    if (!added) {
+      return false;
+    }
+
+    // Deduct money through EconomySystem
+    this.economySystem.removeMoney(buyerId, totalCost);
 
     if (this.state.resources) {
       this.state.resources.currency += totalCost;
@@ -143,12 +142,8 @@ export class MarketSystem {
     const price = this.getResourcePrice(resource);
     const totalValue = price * removed;
 
-    const seller = this.entityIndex.getEntity(sellerId);
-    if (seller && seller.stats) {
-      seller.stats.money =
-        (typeof seller.stats.money === "number" ? seller.stats.money : 0) +
-        totalValue;
-    }
+    // Use EconomySystem for money operations
+    this.economySystem.addMoney(sellerId, totalValue);
 
     if (this.state.resources) {
       this.state.resources.currency = Math.max(
@@ -193,35 +188,23 @@ export class MarketSystem {
           const price = this.getResourcePrice(resource);
           const cost = price * tradeAmount;
 
-          const buyerMoney =
-            buyer.stats && typeof buyer.stats.money === "number"
-              ? buyer.stats.money
-              : 0;
+          // Use EconomySystem for money validation
+          if (!this.economySystem.canAfford(buyer.id, cost)) continue;
 
-          if (buyerMoney >= cost) {
-            const removed = this.inventorySystem.removeFromAgent(
-              seller.id,
-              resource,
-              tradeAmount,
+          const removed = this.inventorySystem.removeFromAgent(
+            seller.id,
+            resource,
+            tradeAmount,
+          );
+          if (removed > 0) {
+            this.inventorySystem.addResource(buyer.id, resource, removed);
+            // Use EconomySystem for money transfer
+            this.economySystem.transferMoney(buyer.id, seller.id, cost);
+
+            logger.debug(
+              `🔄 [MARKET] Auto-trade: ${seller.id} sold ${removed} ${resource} to ${buyer.id} for ${cost}`,
             );
-            if (removed > 0) {
-              this.inventorySystem.addResource(buyer.id, resource, removed);
-              if (buyer.stats) {
-                buyer.stats.money = buyerMoney - cost;
-              }
-              if (seller.stats) {
-                const sellerMoney =
-                  typeof seller.stats.money === "number"
-                    ? seller.stats.money
-                    : 0;
-                seller.stats.money = sellerMoney + cost;
-              }
-
-              logger.debug(
-                `🔄 [MARKET] Auto-trade: ${seller.id} sold ${removed} ${resource} to ${buyer.id} for ${cost}`,
-              );
-              return;
-            }
+            return;
           }
         }
       }

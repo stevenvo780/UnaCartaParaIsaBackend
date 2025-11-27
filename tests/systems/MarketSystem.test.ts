@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { MarketSystem } from "../../src/domain/simulation/systems/MarketSystem.ts";
 import { InventorySystem } from "../../src/domain/simulation/systems/InventorySystem.ts";
-import { EntityIndex } from "../../src/domain/simulation/core/EntityIndex.ts";
-import { createMockGameState } from "../setup.ts";
+import { EconomySystem } from "../../src/domain/simulation/systems/EconomySystem.ts";
+import { createMockGameState, createEntityIndex } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 
 describe("MarketSystem", () => {
   let gameState: GameState;
   let inventorySystem: InventorySystem;
-  let entityIndex: EntityIndex;
+  let economySystem: EconomySystem;
   let marketSystem: MarketSystem;
 
   beforeEach(() => {
@@ -41,10 +41,19 @@ describe("MarketSystem", () => {
       },
     });
 
+    const entityIndex = createEntityIndex(gameState);
     inventorySystem = new InventorySystem();
-    entityIndex = new EntityIndex();
-    entityIndex.rebuild(gameState);
-    marketSystem = new MarketSystem(gameState, inventorySystem, entityIndex);
+    
+    // Create a real EconomySystem with the entityIndex
+    economySystem = new EconomySystem(
+      gameState,
+      {} as any, // eventEmitter mock
+      {} as any, // eventBus mock
+    );
+    // Inject the entityIndex
+    (economySystem as any).entityIndex = entityIndex;
+    
+    marketSystem = new MarketSystem(gameState, inventorySystem, economySystem);
   });
 
   describe("Inicialización", () => {

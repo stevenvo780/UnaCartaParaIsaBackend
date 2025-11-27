@@ -74,6 +74,19 @@ export enum SnapshotWorkerStatus {
 export type SnapshotWorkerStatusValue = `${SnapshotWorkerStatus}`;
 
 /**
+ * Enumeration of zone construction status values.
+ */
+export enum ZoneConstructionStatus {
+  READY = "ready",
+  CONSTRUCTION = "construction",
+}
+
+/**
+ * Type representing all possible zone construction status values.
+ */
+export type ZoneConstructionStatusValue = `${ZoneConstructionStatus}`;
+
+/**
  * Array of all storage status values for iteration.
  */
 export const ALL_STORAGE_STATUSES: readonly StorageStatus[] = Object.values(
@@ -104,6 +117,12 @@ export const ALL_WORLD_GENERATION_STATUSES: readonly WorldGenerationStatus[] =
  */
 export const ALL_SNAPSHOT_WORKER_STATUSES: readonly SnapshotWorkerStatus[] =
   Object.values(SnapshotWorkerStatus) as SnapshotWorkerStatus[];
+
+/**
+ * Array of all zone construction statuses for iteration.
+ */
+export const ALL_ZONE_CONSTRUCTION_STATUSES: readonly ZoneConstructionStatus[] =
+  Object.values(ZoneConstructionStatus) as ZoneConstructionStatus[];
 
 /**
  * Type guard to check if a string is a valid StorageStatus.
@@ -145,5 +164,16 @@ export function isSnapshotWorkerStatus(
 ): value is SnapshotWorkerStatus {
   return Object.values(SnapshotWorkerStatus).includes(
     value as SnapshotWorkerStatus,
+  );
+}
+
+/**
+ * Type guard to check if a string is a valid ZoneConstructionStatus.
+ */
+export function isZoneConstructionStatus(
+  value: string,
+): value is ZoneConstructionStatus {
+  return Object.values(ZoneConstructionStatus).includes(
+    value as ZoneConstructionStatus,
   );
 }

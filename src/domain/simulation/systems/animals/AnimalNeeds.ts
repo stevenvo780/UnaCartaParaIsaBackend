@@ -1,5 +1,6 @@
 import type { Animal } from "../../../types/simulation/animals";
 import { getAnimalConfig } from "../../../../infrastructure/services/world/config/AnimalConfigs";
+import { AnimalState } from "../../../../shared/constants/AnimalEnums";
 
 export class AnimalNeeds {
   public static updateNeeds(animal: Animal, deltaMinutes: number): void {
@@ -23,7 +24,7 @@ export class AnimalNeeds {
       );
     }
 
-    if (animal.state !== "fleeing") {
+    if (animal.state !== AnimalState.FLEEING) {
       animal.needs.fear = Math.max(0, animal.needs.fear - 10 * deltaMinutes);
     }
 

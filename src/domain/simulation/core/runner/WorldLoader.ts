@@ -6,6 +6,8 @@ import type { SimulationRunner } from "../SimulationRunner";
 import { LifeStage, Sex } from "../../../types/simulation/agents";
 import { TileType } from "../../../../shared/constants/TileTypeEnums";
 import { ZoneType } from "../../../../shared/constants/ZoneEnums";
+import { WorldGenerationStatus } from "../../../../shared/constants/StatusEnums";
+import { BuildingType } from "../../../../shared/constants/BuildingEnums";
 
 export class WorldLoader {
   constructor(private runner: SimulationRunner) {}
@@ -332,12 +334,12 @@ export class WorldLoader {
         comfort: 0.7,
       },
       metadata: {
-        building: "house" as BuildingLabel,
+        building: BuildingType.HOUSE as BuildingLabel,
         underConstruction: false,
         buildingId: `building_house_initial_${Date.now()}`,
         builtAt: Date.now(),
         biome: defaultBiome,
-        buildingType: "house",
+        buildingType: BuildingType.HOUSE,
         spriteVariant: 0,
       },
     };
@@ -404,7 +406,7 @@ export class WorldLoader {
       metadata: {
         parentZoneId: houseZone.id,
         biome: defaultBiome,
-        buildingType: "house",
+        buildingType: BuildingType.HOUSE,
         spriteVariant: 1,
       },
     };
@@ -499,7 +501,7 @@ export class WorldLoader {
             },
             props: {
               color: this.getZoneColor(zoneType),
-              status: "ready",
+              status: WorldGenerationStatus.READY,
             },
             metadata: {
               biome: normalizedBiome,

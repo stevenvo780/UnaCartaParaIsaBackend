@@ -219,9 +219,7 @@ export class RoleSystem extends EventEmitter {
     }
   }
 
-  public updateCurrentShift(
-    timePhase: "morning" | "afternoon" | "evening" | "night" | "rest",
-  ): void {
+  public updateCurrentShift(timePhase: WorkShift): void {
     if (this.currentShift !== timePhase && timePhase !== "rest") {
       const previousShift = this.currentShift;
       this.currentShift = timePhase as WorkShift;

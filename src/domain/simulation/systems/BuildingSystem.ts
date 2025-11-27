@@ -11,6 +11,9 @@ import { logger } from "../../../infrastructure/utils/logger";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
 import { BuildingType } from "../../../shared/constants/BuildingEnums";
 import { SystemStatus } from "../../../shared/constants/SystemEnums";
+import { ZoneConstructionStatus } from "../../../shared/constants/StatusEnums";
+import { TileType } from "../../../shared/constants/TileTypeEnums";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
 import { TaskSystem } from "./TaskSystem";
 import { TerrainSystem } from "./TerrainSystem";
@@ -325,7 +328,7 @@ export class BuildingSystem {
       bounds,
       props: {
         color: "#C4B998",
-        status: "construction",
+        status: ZoneConstructionStatus.CONSTRUCTION,
       },
       metadata,
       durability: 10,
@@ -435,7 +438,8 @@ export class BuildingSystem {
     const zonesCount = this.state.zones?.length ?? 0;
     const terrainTilesCount = this.state.terrainTiles?.length ?? 0;
     const waterTilesCount =
-      this.state.terrainTiles?.filter((t) => t.type === "water").length ?? 0;
+      this.state.terrainTiles?.filter((t) => t.type === TileType.WATER)
+        .length ?? 0;
 
     let boundsRejects = 0;
     let collisionRejects = 0;
@@ -488,7 +492,7 @@ export class BuildingSystem {
           const dx = tilePixelX - centerX;
           const dy = tilePixelY - centerY;
           const dist = Math.hypot(dx, dy);
-          return dist < 60 && tile.type === "water";
+          return dist < 60 && tile.type === TileType.WATER;
         });
 
         if (nearbyWater) {

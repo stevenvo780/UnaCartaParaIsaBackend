@@ -455,9 +455,9 @@ export class NeedsSystem extends EventEmitter {
 
         simulationEvents.emit(GameEventNames.RESOURCE_CONSUMED, {
           agentId: entityId,
-          resourceType: "water",
+          resourceType: ResourceType.WATER,
           amount: removed,
-          needType: "thirst",
+          needType: NeedType.THIRST,
           newValue: needs.thirst,
           timestamp: Date.now(),
         });

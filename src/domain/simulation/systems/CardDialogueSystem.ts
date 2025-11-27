@@ -15,6 +15,7 @@ import {
   DialogueTone,
 } from "../../../shared/constants/AmbientEnums";
 import { TimeOfDayPhase } from "../../../shared/constants/TimeEnums";
+import { NeedType } from "../../../shared/constants/AIEnums";
 
 interface EmotionalContext {
   overallMood: number;
@@ -366,7 +367,9 @@ export class CardDialogueSystem {
           "{agent} se aventura hacia territorios desconocidos.",
         ],
         triggers: {
-          needsBased: [{ need: "energy", threshold: 50, operator: "above" }],
+          needsBased: [
+            { need: NeedType.ENERGY, threshold: 50, operator: "above" },
+          ],
         },
         emotionalTone: DialogueTone.EXCITED,
       },
@@ -380,8 +383,8 @@ export class CardDialogueSystem {
         ],
         triggers: {
           needsBased: [
-            { need: "hunger", threshold: 60, operator: "above" },
-            { need: "energy", threshold: 40, operator: "above" },
+            { need: NeedType.HUNGER, threshold: 60, operator: "above" },
+            { need: NeedType.ENERGY, threshold: 40, operator: "above" },
           ],
         },
         emotionalTone: DialogueTone.HAPPY,
@@ -395,7 +398,9 @@ export class CardDialogueSystem {
           "{agent} requiere descanso o alimentación pronto.",
         ],
         triggers: {
-          needsBased: [{ need: "hunger", threshold: 25, operator: "below" }],
+          needsBased: [
+            { need: NeedType.HUNGER, threshold: 25, operator: "below" },
+          ],
         },
         emotionalTone: DialogueTone.WORRIED,
       },
@@ -408,7 +413,9 @@ export class CardDialogueSystem {
           "{agent} recupera energías en un lugar tranquilo.",
         ],
         triggers: {
-          needsBased: [{ need: "energy", threshold: 30, operator: "below" }],
+          needsBased: [
+            { need: NeedType.ENERGY, threshold: 30, operator: "below" },
+          ],
         },
         emotionalTone: DialogueTone.CONTEMPLATIVE,
       },
