@@ -97,12 +97,8 @@ export class WorldLoader {
       biomeMap,
     });
 
-    this.runner.animalSystem.spawnAnimalsInWorld(
-      worldConfig.width,
-      worldConfig.height,
-      worldConfig.tileSize,
-      biomeMap,
-    );
+    // Animals are spawned per-chunk only (lazy loading via /api/world/chunk endpoint)
+    // See AnimalSpawning.spawnAnimalsInChunk() called from worldController
 
     this.generateFunctionalZones(worldConfig, biomeMap);
   }
@@ -238,7 +234,17 @@ export class WorldLoader {
         );
       }
     }
+
+    // Animals are spawned per-chunk only (lazy loading via /api/world/chunk endpoint)
+    // No global animal spawn to avoid position inconsistencies
+    logger.info(
+      "🐾 Animals will be spawned when chunks are requested by frontend",
+    );
   }
+
+  // NOTE: ensureInitialAnimals was removed.
+  // Animals are ONLY spawned per-chunk via AnimalSpawning.spawnAnimalsInChunk()
+  // This is triggered when frontend requests chunks via /api/world/chunk/:x/:y
 
   private createInitialInfrastructure(): void {
     const baseX = 100;
@@ -465,4 +471,8 @@ export class WorldLoader {
     };
     return colors[zoneType] || "#C4B998";
   }
+
+  // NOTE: spawnInitialAnimals was removed.
+  // Animals are ONLY spawned per-chunk via AnimalSpawning.spawnAnimalsInChunk()
+  // This is triggered when frontend requests chunks via /api/world/chunk/:x/:y
 }

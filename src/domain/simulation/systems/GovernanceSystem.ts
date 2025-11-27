@@ -8,11 +8,13 @@ import type {
   DemandType,
 } from "../../types/simulation/governance";
 import type { ResourceCost } from "../../types/simulation/economy";
+import type { AgentProfile } from "../../types/simulation/agents";
 import { GameEventNames, simulationEvents } from "../core/events";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 import { InventorySystem } from "./InventorySystem";
 import { DivineFavorSystem } from "./DivineFavorSystem";
 import { ResourceReservationSystem } from "./ResourceReservationSystem";
+import { RoleSystem } from "./RoleSystem";
 import { logger } from "../../../infrastructure/utils/logger";
 
 /**
@@ -63,9 +65,9 @@ const DEMAND_SOLUTIONS: Partial<
 > = {
   housing_full: { project: "build_house", cost: { wood: 40, stone: 20 } },
   food_shortage: {
-    project: "gather_food",
+    project: "assign_hunters",
     cost: { wood: 0, stone: 0 },
-    resourceBoost: { food: 25 },
+    resourceBoost: { food: 40 },
   },
   water_shortage: {
     project: "gather_water",
@@ -130,6 +132,8 @@ export class GovernanceSystem {
     private readonly divineFavorSystem: DivineFavorSystem,
     @inject(TYPES.ResourceReservationSystem)
     private readonly reservationSystem: ResourceReservationSystem,
+    @inject(TYPES.RoleSystem)
+    private readonly roleSystem: RoleSystem,
   ) {
     this.config = {
       checkIntervalMs: 30_000,
@@ -401,6 +405,35 @@ export class GovernanceSystem {
       const consumed = this.reservationSystem.consume(reservationId);
       if (!consumed) {
         return;
+      }
+    }
+
+    if (solution.project === "assign_hunters") {
+      // Find agents suitable for hunting who are not already hunters
+      const agents = (this.state.entities as unknown as AgentProfile[])?.filter(
+        (e) => !e.isDead && e.ageYears >= 18,
+      );
+      if (agents) {
+        let assignedCount = 0;
+        for (const agent of agents) {
+          if (assignedCount >= 3) break; // Assign max 3 hunters per demand
+          const currentRole = this.roleSystem.getAgentRole(agent.id);
+          if (currentRole?.roleType !== "hunter") {
+            const result = this.roleSystem.reassignRole(agent.id, "hunter");
+            if (result.success) {
+              assignedCount++;
+              this.recordEvent({
+                timestamp: Date.now(),
+                type: "role_reassigned",
+                details: {
+                  agentId: agent.id,
+                  role: "hunter",
+                  reason: "food_shortage_demand",
+                },
+              });
+            }
+          }
+        }
       }
     }
 

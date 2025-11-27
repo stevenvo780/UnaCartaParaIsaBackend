@@ -17,79 +17,8 @@ export class AnimalSpawning {
   private static spawnedChunks = new Set<string>();
 
   /**
-   * Spawn animals across the entire world during initialization.
-   * This is called once when the world is generated.
-   *
-   * Optimized with larger sample step to reduce initial spawn count.
-   */
-  public static spawnAnimalsInWorld(
-    worldWidth: number,
-    worldHeight: number,
-    tileSize: number,
-    biomeMap: string[][],
-    onSpawn: (animal: Animal) => void,
-  ): number {
-    const startTime = performance.now();
-    let spawned = 0;
-
-    if (!biomeMap || biomeMap.length === 0) {
-      logger.warn("⚠️ No biomeMap, skipping animal spawn");
-      return 0;
-    }
-
-    const sampleStep = 128;
-
-    for (let x = 0; x < worldWidth; x += sampleStep) {
-      for (let y = 0; y < worldHeight; y += sampleStep) {
-        const tileX = Math.floor(x / tileSize);
-        const tileY = Math.floor(y / tileSize);
-
-        if (
-          tileY >= 0 &&
-          tileY < biomeMap.length &&
-          tileX >= 0 &&
-          tileX < biomeMap[0].length
-        ) {
-          const biome = biomeMap[tileY][tileX];
-          const animalConfigs = getAnimalsForBiome(biome);
-
-          for (const config of animalConfigs) {
-            if (Math.random() < config.spawnProbability) {
-              const groupSize = Math.min(
-                config.groupSize.max,
-                config.groupSize.min + Math.floor(Math.random() * 2),
-              );
-
-              for (let i = 0; i < groupSize; i++) {
-                const offsetX = (Math.random() - 0.5) * 80;
-                const offsetY = (Math.random() - 0.5) * 80;
-
-                const animal = this.createAnimal(
-                  config.type,
-                  { x: x + offsetX, y: y + offsetY },
-                  biome,
-                );
-
-                if (animal) {
-                  onSpawn(animal);
-                  spawned++;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    const duration = performance.now() - startTime;
-    logger.info(`🐰 Spawned ${spawned} animals in ${duration.toFixed(2)}ms`);
-
-    return spawned;
-  }
-
-  /**
    * Spawn animals for a specific chunk (lazy loading).
-   * This is the primary spawn method - animals are only created when chunks become visible.
+   * This is the ONLY spawn method - animals are created when chunks become visible.
    *
    * Optimizations:
    * - Deduplication via spawnedChunks Set

@@ -86,6 +86,9 @@ export class AIActionPlanner {
       case "inspect":
         return this.planInspect(agentId, goal, timestamp);
 
+      case "hunt":
+        return this.planHunt(agentId, goal, timestamp);
+
       default:
         return null;
     }
@@ -573,5 +576,67 @@ export class AIActionPlanner {
       };
     }
     return null;
+  }
+
+  private planHunt(
+    agentId: string,
+    goal: AIGoal,
+    timestamp: number,
+  ): AgentAction | null {
+    let targetId = goal.targetId;
+    let targetPosition = goal.targetPosition;
+
+    // If no target, try to find nearest animal
+    if (!targetId && this.deps.gameState.animals?.animals) {
+      const agentPos = this.deps.getAgentPosition(agentId);
+      if (agentPos) {
+        let minDist = Infinity;
+        let nearestAnimal = null;
+
+        for (const animal of this.deps.gameState.animals.animals) {
+          if (animal.isDead) continue;
+          const dist = Math.hypot(
+            agentPos.x - animal.position.x,
+            agentPos.y - animal.position.y,
+          );
+          if (dist < minDist && dist < this.EXPLORE_RANGE * 2) {
+            minDist = dist;
+            nearestAnimal = animal;
+          }
+        }
+
+        if (nearestAnimal) {
+          targetId = nearestAnimal.id;
+          targetPosition = nearestAnimal.position;
+        }
+      }
+    }
+
+    if (targetId && targetPosition) {
+      const agentPos = this.deps.getAgentPosition(agentId);
+      if (agentPos) {
+        const dist = Math.hypot(
+          agentPos.x - targetPosition.x,
+          agentPos.y - targetPosition.y,
+        );
+        if (dist < this.ATTACK_RANGE) {
+          return {
+            actionType: "attack",
+            agentId,
+            targetId,
+            timestamp,
+          };
+        }
+        return {
+          actionType: "move",
+          agentId,
+          targetPosition,
+          timestamp,
+        };
+      }
+    }
+
+    // If still no target, explore
+    return this.planExplore(agentId, goal, timestamp);
   }
 }

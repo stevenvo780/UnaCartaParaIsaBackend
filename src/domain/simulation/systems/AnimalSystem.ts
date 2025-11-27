@@ -1095,32 +1095,14 @@ export class AnimalSystem {
   }
 
   /**
-   * Spawn animals in world (for initialization)
-   */
-  public spawnAnimalsInWorld(
-    width: number,
-    height: number,
-    tileSize: number,
-    biomeMap: string[][],
-  ): void {
-    AnimalSpawning.spawnAnimalsInWorld(
-      width,
-      height,
-      tileSize,
-      biomeMap,
-      (animal) => this.addAnimal(animal),
-    );
-  }
-
-  /**
    * Spawn animals for a specific chunk
    */
   public spawnAnimalsForChunk(
     chunkCoords: { x: number; y: number },
     chunkBounds: { x: number; y: number; width: number; height: number },
     tiles?: TerrainTile[][],
-  ): void {
-    AnimalSpawning.spawnAnimalsInChunk(
+  ): number {
+    return AnimalSpawning.spawnAnimalsInChunk(
       chunkCoords,
       chunkBounds,
       (animal) => {

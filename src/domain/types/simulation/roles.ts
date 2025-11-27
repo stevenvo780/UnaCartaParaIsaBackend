@@ -5,6 +5,7 @@ export type RoleType =
   | "farmer"
   | "gatherer"
   | "guard"
+  | "hunter"
   | "craftsman"
   | "leader"
   | "idle";
@@ -17,6 +18,7 @@ export interface RoleRequirements {
     cooperation?: number;
     diligence?: number;
     curiosity?: number;
+    neuroticism?: number;
   };
   forbiddenFor?: string[];
 }
@@ -33,9 +35,10 @@ export interface RoleConfig {
       cooperation?: number;
       diligence?: number;
       curiosity?: number;
+      neuroticism?: number;
     };
   };
-  preferredZoneType: "work" | "food" | "water" | "rest";
+  preferredZoneType: "work" | "food" | "water" | "rest" | "wild";
   workShifts: WorkShift[];
 }
 

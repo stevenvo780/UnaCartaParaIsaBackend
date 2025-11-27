@@ -18,7 +18,8 @@ export type GoalType =
   | "rest"
   | "inspect"
   | "flee"
-  | "attack";
+  | "attack"
+  | "hunt";
 
 export type ActionType =
   | "move"

@@ -87,6 +87,23 @@ export function evaluateWorkOpportunities(
     });
   }
 
+  // Special handling for hunters
+  if (role.roleType === "hunter") {
+    // Hunters don't look for static resources, they look for prey.
+    // We emit a "hunt" goal which the AISystem should interpret.
+    goals.push({
+      id: `work_hunt_${aiState.entityId}_${now}`,
+      type: "hunt",
+      priority: 0.7 * aiState.personality.diligence * role.efficiency,
+      data: {
+        roleType: "hunter",
+        targetType: "prey",
+      },
+      createdAt: now,
+      expiresAt: now + 30000,
+    });
+  }
+
   return goals;
 }
 

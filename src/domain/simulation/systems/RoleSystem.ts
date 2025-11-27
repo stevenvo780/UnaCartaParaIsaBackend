@@ -110,6 +110,22 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
     preferredZoneType: "rest",
     workShifts: ["evening", "night"],
   },
+  {
+    type: "hunter" as RoleType,
+    name: "Cazador",
+    description: "Caza animales para obtener carne y pieles",
+    primaryResource: "food",
+    requirements: {
+      minAge: 18,
+      traits: { diligence: 0.4, neuroticism: 0.3 }, // Neuroticism helps with alertness
+    },
+    efficiency: {
+      base: 0.6,
+      traitBonus: { diligence: 0.3, neuroticism: 0.2 },
+    },
+    preferredZoneType: "wild",
+    workShifts: ["morning", "evening", "night"],
+  },
 ];
 
 import { injectable, inject } from "inversify";
@@ -344,6 +360,8 @@ export class RoleSystem extends EventEmitter {
       score += agent.traits.cooperation * bonus.cooperation;
     if (bonus.diligence) score += agent.traits.diligence * bonus.diligence;
     if (bonus.curiosity) score += agent.traits.curiosity * bonus.curiosity;
+    if (bonus.neuroticism)
+      score += (agent.traits.neuroticism ?? 0) * bonus.neuroticism;
     return score;
   }
 
@@ -359,6 +377,7 @@ export class RoleSystem extends EventEmitter {
       farmer: 10,
       gatherer: 15,
       guard: 8,
+      hunter: 10,
     };
     return limits[roleType] || 5;
   }

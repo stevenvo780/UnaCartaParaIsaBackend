@@ -12,6 +12,10 @@ import {
   encodeMsgPack,
   decodeMessage,
 } from "../../../../shared/MessagePackCodec";
+import { container } from "../../../../config/container";
+import { TYPES } from "../../../../config/Types";
+import type { AnimalSystem } from "../../../../domain/simulation/systems/AnimalSystem";
+import { logger } from "../../../utils/logger";
 
 interface ChunkRequestMessage {
   type: "CHUNK_REQUEST";
@@ -187,6 +191,33 @@ export class ChunkStreamServer {
         signal: controller.signal,
       })
       .then((result) => {
+        // Spawn animals for this chunk (lazy loading)
+        try {
+          const animalSystem = container.get<AnimalSystem>(TYPES.AnimalSystem);
+          const CHUNK_SIZE = 16;
+          const tileSize = message.config.tileSize ?? 16;
+          const pixelWidth = CHUNK_SIZE * tileSize;
+          const pixelHeight = CHUNK_SIZE * tileSize;
+          const worldX = message.coords.x * pixelWidth;
+          const worldY = message.coords.y * pixelHeight;
+
+          logger.info(`🌍 [ChunkStream] Chunk (${message.coords.x},${message.coords.y}) generated, spawning animals at world (${worldX},${worldY})`);
+
+          // Use the public method that handles addAnimal internally
+          const spawned = animalSystem.spawnAnimalsForChunk(
+            message.coords,
+            { x: worldX, y: worldY, width: pixelWidth, height: pixelHeight },
+            result.chunk,
+          );
+          if (spawned > 0) {
+            logger.info(`🐾 [ChunkStream] Spawned ${spawned} animals for chunk (${message.coords.x},${message.coords.y})`);
+          }
+        } catch (error) {
+          logger.error(
+            `❌ [ChunkStream] Failed to spawn animals for chunk: ${error instanceof Error ? error.stack : String(error)}`,
+          );
+        }
+
         const payload: ChunkResultPayload = {
           type: "CHUNK_RESULT",
           requestId,

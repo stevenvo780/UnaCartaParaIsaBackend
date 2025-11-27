@@ -10,6 +10,7 @@ export interface AgentTraits {
   intelligence?: number;
   charisma?: number;
   stamina?: number;
+  neuroticism?: number;
 }
 
 export interface AgentProfile {

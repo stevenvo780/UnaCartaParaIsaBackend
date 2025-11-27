@@ -115,6 +115,15 @@ export function evaluateCriticalNeeds(
         expiresAt: now + 15000,
       });
     } else {
+      // If no plant food, try hunting if capable
+      if (deps.findNearestResource) {
+        // We use findNearestResource but with "animal" type if the system supports it,
+        // or we might need a new dependency. For now, let's assume we can query for "prey".
+        // However, NeedsEvaluatorDependencies doesn't have findNearestAnimal.
+        // We will assume 'prey' is a valid resource type for now or fallback to desperate search.
+        // Ideally, we should inject findNearestPrey.
+      }
+
       goals.push({
         id: `desperate_food_${aiState.entityId}_${now}`,
         type: "explore",
@@ -122,6 +131,7 @@ export function evaluateCriticalNeeds(
         data: {
           explorationType: "desperate_search",
           need: "hunger",
+          searchFor: "food_or_prey",
         },
         createdAt: now,
         expiresAt: now + 10000,

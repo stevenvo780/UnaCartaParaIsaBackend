@@ -1035,31 +1035,69 @@ export class SimulationRunner {
     return lineageId;
   }
   public getEntityDetails(entityId: string): Record<string, unknown> | null {
+    // 1. Search Agents/Entities (Standard Logic)
     const entity = this.state.entities.find((e) => e.id === entityId);
-    if (!entity) return null;
+    if (entity) {
+      const needs = this.needsSystem.getEntityNeeds(entityId);
+      const role = this.roleSystem.getAgentRole(entityId);
+      const inventory = this.inventorySystem.getAgentInventory(entityId);
+      const social = this.socialSystem.getSocialConnections(entityId);
+      const aiState = this.aiSystem.getAIState(entityId);
 
-    const needs = this.needsSystem.getEntityNeeds(entityId);
-    const role = this.roleSystem.getAgentRole(entityId);
-    const inventory = this.inventorySystem.getAgentInventory(entityId);
-    const social = this.socialSystem.getSocialConnections(entityId);
-    const aiState = this.aiSystem.getAIState(entityId);
+      return {
+        type: "agent",
+        entity,
+        needs,
+        role,
+        inventory,
+        social,
+        ai: aiState
+          ? {
+              currentGoal: aiState.currentGoal,
+              goalQueue: aiState.goalQueue,
+              currentAction: aiState.currentAction,
+              offDuty: aiState.offDuty,
+              lastDecisionTime: aiState.lastDecisionTime,
+            }
+          : null,
+      };
+    }
 
-    return {
-      entity,
-      needs,
-      role,
-      inventory,
-      social,
-      ai: aiState
-        ? {
-            currentGoal: aiState.currentGoal,
-            goalQueue: aiState.goalQueue,
-            currentAction: aiState.currentAction,
-            offDuty: aiState.offDuty,
-            lastDecisionTime: aiState.lastDecisionTime,
-          }
-        : null,
-    };
+    // 2. Search Animals
+    if (this.state.animals?.animals) {
+      const animal = this.state.animals.animals.find((a) => a.id === entityId);
+      if (animal) {
+        return {
+          type: "animal",
+          entity: animal,
+          // Animal object already contains 'needs' property
+        };
+      }
+    }
+
+    // 3. Search Zones (Buildings)
+    if (this.state.zones) {
+      const zone = this.state.zones.find((z) => z.id === entityId);
+      if (zone) {
+        return {
+          type: "zone",
+          entity: zone,
+        };
+      }
+    }
+
+    // 4. Search World Resources
+    if (this.state.worldResources) {
+      const resource = this.state.worldResources[entityId];
+      if (resource) {
+        return {
+          type: "resource",
+          entity: resource,
+        };
+      }
+    }
+
+    return null;
   }
 
   /**
