@@ -1,5 +1,7 @@
 import type { GameState } from "../../../../types/game-types";
 import type { AIGoal, AgentAction } from "../../../../types/simulation/ai";
+import { ActionType } from "../../../../../shared/constants/AIEnums";
+import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 
 export interface AIActionPlannerDeps {
   gameState: GameState;
@@ -78,7 +80,7 @@ export class AIActionPlanner {
         return this.planConstruction(agentId, goal, timestamp);
 
       case "idle":
-        return { actionType: "idle", agentId, timestamp };
+        return { actionType: ActionType.IDLE, agentId, timestamp };
 
       case "rest":
         return this.planRest(agentId, goal, timestamp);
@@ -108,7 +110,7 @@ export class AIActionPlanner {
         );
         if (dist < this.HARVEST_RANGE) {
           return {
-            actionType: "harvest",
+            actionType: ActionType.HARVEST,
             agentId,
             targetId: goal.targetId,
             targetPosition: goal.targetPosition,
@@ -116,7 +118,7 @@ export class AIActionPlanner {
           };
         }
         return {
-          actionType: "move",
+          actionType: ActionType.MOVE,
           agentId,
           targetPosition: goal.targetPosition,
           timestamp,
@@ -125,14 +127,14 @@ export class AIActionPlanner {
     }
     if (goal.targetZoneId) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetZoneId: goal.targetZoneId,
         timestamp,
       };
     }
     if (goal.data?.need === "energy") {
-      return { actionType: "idle", agentId, timestamp };
+      return { actionType: ActionType.IDLE, agentId, timestamp };
     }
     return null;
   }
@@ -153,7 +155,7 @@ export class AIActionPlanner {
         );
         if (dist < this.HARVEST_RANGE) {
           return {
-            actionType: "harvest",
+            actionType: ActionType.HARVEST,
             agentId,
             targetId: goal.targetId,
             targetPosition: goal.targetPosition,
@@ -162,14 +164,14 @@ export class AIActionPlanner {
         }
       }
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetPosition: goal.targetPosition,
         timestamp,
       };
     }
     // No valid food target - agent should explore or wait
-    return { actionType: "idle", agentId, timestamp };
+    return { actionType: ActionType.IDLE, agentId, timestamp };
   }
 
   private planSatisfyThirst(
@@ -188,7 +190,7 @@ export class AIActionPlanner {
         );
         if (dist < this.HARVEST_RANGE) {
           return {
-            actionType: "harvest",
+            actionType: ActionType.HARVEST,
             agentId,
             targetId: goal.targetId,
             targetPosition: goal.targetPosition,
@@ -197,14 +199,14 @@ export class AIActionPlanner {
         }
       }
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetPosition: goal.targetPosition,
         timestamp,
       };
     }
     // No valid water target - agent should explore or wait
-    return { actionType: "idle", agentId, timestamp };
+    return { actionType: ActionType.IDLE, agentId, timestamp };
   }
 
   private planSatisfyEnergy(
@@ -217,10 +219,9 @@ export class AIActionPlanner {
     // Check if already in a rest zone
     const currentRestZone = this.deps.gameState.zones?.find((z) => {
       if (
-        z.type !== "rest" &&
-        z.type !== "bed" &&
-        z.type !== "shelter" &&
-        z.type !== "house"
+        z.type !== ZoneType.REST &&
+        z.type !== ZoneType.BEDROOM &&
+        z.type !== ZoneType.SHELTER
       ) {
         return false;
       }
@@ -236,7 +237,7 @@ export class AIActionPlanner {
     if (currentRestZone) {
       // Already in rest zone, sleep!
       return {
-        actionType: "sleep",
+        actionType: ActionType.SLEEP,
         agentId,
         targetZoneId: currentRestZone.id,
         timestamp,
@@ -246,7 +247,7 @@ export class AIActionPlanner {
     // Move to target zone if specified
     if (goal.targetZoneId || goal.targetPosition) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetZoneId: goal.targetZoneId,
         targetPosition: goal.targetPosition,
@@ -257,14 +258,13 @@ export class AIActionPlanner {
     // Find a rest zone to go to
     const restZone = this.deps.gameState.zones?.find(
       (z) =>
-        z.type === "rest" ||
-        z.type === "bed" ||
-        z.type === "shelter" ||
-        z.type === "house",
+        z.type === ZoneType.REST ||
+        z.type === ZoneType.BEDROOM ||
+        z.type === ZoneType.SHELTER,
     );
     if (restZone) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetZoneId: restZone.id,
         timestamp,
@@ -272,7 +272,7 @@ export class AIActionPlanner {
     }
 
     // No rest zone? Just rest in place (idle)
-    return { actionType: "idle", agentId, timestamp };
+    return { actionType: ActionType.IDLE, agentId, timestamp };
   }
 
   private planSatisfySocial(
@@ -304,7 +304,7 @@ export class AIActionPlanner {
     if (currentZone) {
       // Already in social zone, socialize!
       return {
-        actionType: "socialize",
+        actionType: ActionType.SOCIALIZE,
         agentId,
         targetZoneId: currentZone.id,
         timestamp,
@@ -314,7 +314,7 @@ export class AIActionPlanner {
     // Move to target zone if specified
     if (goal.targetZoneId || goal.targetPosition) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetZoneId: goal.targetZoneId,
         targetPosition: goal.targetPosition,
@@ -332,7 +332,7 @@ export class AIActionPlanner {
     );
     if (socialZone) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetZoneId: socialZone.id,
         timestamp,
@@ -341,7 +341,7 @@ export class AIActionPlanner {
 
     // No social zone? Try to socialize in place if there are nearby agents
     return {
-      actionType: "socialize",
+      actionType: ActionType.SOCIALIZE,
       agentId,
       timestamp,
     };
@@ -354,7 +354,7 @@ export class AIActionPlanner {
   ): AgentAction | null {
     if (goal.targetZoneId || goal.targetPosition) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetZoneId: goal.targetZoneId,
         targetPosition: goal.targetPosition,
@@ -370,7 +370,7 @@ export class AIActionPlanner {
     );
     if (funZone) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetZoneId: funZone.id,
         timestamp,
@@ -393,7 +393,7 @@ export class AIActionPlanner {
         );
         if (dist < this.HARVEST_RANGE) {
           return {
-            actionType: "harvest",
+            actionType: ActionType.HARVEST,
             agentId,
             targetId: goal.targetId,
             targetPosition: goal.targetPosition,
@@ -401,7 +401,7 @@ export class AIActionPlanner {
           };
         }
         return {
-          actionType: "move",
+          actionType: ActionType.MOVE,
           agentId,
           targetPosition: goal.targetPosition,
           timestamp,
@@ -410,7 +410,7 @@ export class AIActionPlanner {
     }
     if (goal.targetZoneId) {
       return {
-        actionType: "work",
+        actionType: ActionType.WORK,
         agentId,
         targetZoneId: goal.targetZoneId,
         timestamp,
@@ -428,7 +428,7 @@ export class AIActionPlanner {
       return null;
     }
     return {
-      actionType: "work",
+      actionType: ActionType.WORK,
       agentId,
       targetZoneId: goal.targetZoneId,
       data: goal.data,
@@ -445,7 +445,7 @@ export class AIActionPlanner {
       return null;
     }
     return {
-      actionType: "move",
+      actionType: ActionType.MOVE,
       agentId,
       targetZoneId: goal.targetZoneId,
       timestamp,
@@ -463,7 +463,7 @@ export class AIActionPlanner {
     let targetZoneId = goal.targetZoneId;
     if (!targetZoneId) {
       const storageZone = this.deps.gameState.zones?.find(
-        (z) => z.type === "storage" || z.type === "stockpile",
+        (z) => z.type === ZoneType.STORAGE,
       );
       if (!storageZone) {
         return null; // No storage zone available
@@ -484,7 +484,7 @@ export class AIActionPlanner {
       if (inZone) {
         // Agent is at stockpile, execute deposit
         return {
-          actionType: "deposit",
+          actionType: ActionType.DEPOSIT,
           agentId,
           targetZoneId,
           timestamp,
@@ -494,7 +494,7 @@ export class AIActionPlanner {
 
     // Move to stockpile zone first
     return {
-      actionType: "move",
+      actionType: ActionType.MOVE,
       agentId,
       targetZoneId,
       timestamp,
@@ -508,7 +508,7 @@ export class AIActionPlanner {
   ): AgentAction | null {
     if (goal.targetPosition) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetPosition: goal.targetPosition,
         timestamp,
@@ -531,14 +531,14 @@ export class AIActionPlanner {
         );
         if (dist < this.ATTACK_RANGE) {
           return {
-            actionType: "attack",
+            actionType: ActionType.ATTACK,
             agentId,
             targetId: goal.targetId,
             timestamp,
           };
         }
         return {
-          actionType: "move",
+          actionType: ActionType.MOVE,
           agentId,
           targetPosition: goal.targetPosition,
           timestamp,
@@ -555,7 +555,7 @@ export class AIActionPlanner {
   ): AgentAction | null {
     if (goal.targetZoneId) {
       return {
-        actionType: "socialize",
+        actionType: ActionType.SOCIALIZE,
         agentId,
         targetZoneId: goal.targetZoneId,
         targetId: goal.data?.targetAgentId as string | undefined,
@@ -598,7 +598,7 @@ export class AIActionPlanner {
     if (currentZone) {
       // Already in zone, socialize!
       return {
-        actionType: "socialize",
+        actionType: ActionType.SOCIALIZE,
         agentId,
         targetZoneId: currentZone.id,
         timestamp,
@@ -608,7 +608,7 @@ export class AIActionPlanner {
     // Move to target zone if specified
     if (goal.targetZoneId) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetZoneId: goal.targetZoneId,
         timestamp,
@@ -616,7 +616,7 @@ export class AIActionPlanner {
     }
     if (goal.targetPosition) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetPosition: goal.targetPosition,
         timestamp,
@@ -634,7 +634,7 @@ export class AIActionPlanner {
     );
     if (socialZone) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetZoneId: socialZone.id,
         timestamp,
@@ -643,7 +643,7 @@ export class AIActionPlanner {
 
     // No zone? Socialize in place
     return {
-      actionType: "socialize",
+      actionType: ActionType.SOCIALIZE,
       agentId,
       timestamp,
     };
@@ -659,7 +659,7 @@ export class AIActionPlanner {
       goal.data?.targetRegionY !== undefined
     ) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetPosition: {
           x: goal.data.targetRegionX as number,
@@ -670,7 +670,7 @@ export class AIActionPlanner {
     }
     if (goal.targetPosition) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetPosition: goal.targetPosition,
         timestamp,
@@ -697,7 +697,7 @@ export class AIActionPlanner {
       targetY = Math.max(50, Math.min(mapHeight - 50, targetY));
 
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetPosition: { x: targetX, y: targetY },
         timestamp,
@@ -712,7 +712,7 @@ export class AIActionPlanner {
     timestamp: number,
   ): AgentAction | null {
     return {
-      actionType: "work",
+      actionType: ActionType.WORK,
       agentId,
       targetZoneId: goal.targetZoneId,
       data: { ...goal.data, workType: "construction" },
@@ -727,13 +727,13 @@ export class AIActionPlanner {
   ): AgentAction | null {
     if (goal.targetZoneId) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetZoneId: goal.targetZoneId,
         timestamp,
       };
     }
-    return { actionType: "idle", agentId, timestamp };
+    return { actionType: ActionType.IDLE, agentId, timestamp };
   }
 
   private planInspect(
@@ -743,7 +743,7 @@ export class AIActionPlanner {
   ): AgentAction | null {
     if (goal.targetPosition) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetPosition: goal.targetPosition,
         timestamp,
@@ -751,7 +751,7 @@ export class AIActionPlanner {
     }
     if (goal.targetZoneId) {
       return {
-        actionType: "move",
+        actionType: ActionType.MOVE,
         agentId,
         targetZoneId: goal.targetZoneId,
         timestamp,
@@ -803,14 +803,14 @@ export class AIActionPlanner {
         );
         if (dist < this.ATTACK_RANGE) {
           return {
-            actionType: "attack",
+            actionType: ActionType.ATTACK,
             agentId,
             targetId,
             timestamp,
           };
         }
         return {
-          actionType: "move",
+          actionType: ActionType.MOVE,
           agentId,
           targetPosition,
           timestamp,

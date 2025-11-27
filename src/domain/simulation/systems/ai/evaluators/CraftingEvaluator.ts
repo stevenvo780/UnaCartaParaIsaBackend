@@ -1,5 +1,6 @@
 import { logger } from "../../../../../infrastructure/utils/logger";
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
+import { GoalType } from "../../../../../shared/constants/AIEnums";
 
 export interface CraftingContext {
   getEquipped: (id: string) => string;
@@ -35,7 +36,7 @@ export function evaluateCrafting(
     return [
       {
         id: `craft_weapon_${now}`,
-        type: "craft",
+        type: GoalType.CRAFT,
         priority: 0.6,
         targetZoneId: targetZone,
         data: {

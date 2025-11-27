@@ -1,6 +1,8 @@
 import { logger } from "../../../../../infrastructure/utils/logger";
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../../types/simulation/needs";
+import { GoalType } from "../../../../../shared/constants/AIEnums";
+import { NeedType } from "../../../../../shared/constants/AIEnums";
 
 export interface AssistContext {
   getAllActiveAgentIds: () => string[];
@@ -150,12 +152,12 @@ export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
     return [
       {
         id: `assist_${best.id}_${best.need}_${now}`,
-        type: "assist",
+        type: GoalType.ASSIST,
         priority,
         targetZoneId: targetZone,
         data: {
           targetAgentId: best.id,
-          resourceType: best.need,
+          need: best.need as NeedType,
           amount: 10,
         },
         createdAt: now,

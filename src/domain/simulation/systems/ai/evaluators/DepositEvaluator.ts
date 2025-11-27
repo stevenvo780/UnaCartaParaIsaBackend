@@ -1,6 +1,7 @@
 import { logger } from "../../../../../infrastructure/utils/logger";
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { GameState } from "../../../../types/game-types";
+import { GoalType } from "../../../../../shared/constants/AIEnums";
 
 export interface DepositContext {
   gameState: GameState;
@@ -80,7 +81,7 @@ export function evaluateDepositGoals(
     return [
       {
         id: `deposit_${now}`,
-        type: "deposit",
+        type: GoalType.DEPOSIT,
         priority: 0.65 + priorityBoost,
         targetZoneId: bestZone,
         data: {

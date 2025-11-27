@@ -5,6 +5,7 @@ import type { NeedsSystem } from "../../NeedsSystem";
 import type { AnimalSystem } from "../../AnimalSystem";
 import { isWorldResourceType } from "../../../../types/simulation/resourceMapping";
 import { getFrameTime } from "../../../../../shared/FrameTime";
+import { NeedType } from "../../../../../shared/constants/AIEnums";
 
 export interface AIGoalValidatorDeps {
   gameState: GameState;
@@ -127,7 +128,7 @@ export class AIGoalValidator {
         return false;
       }
 
-      if (goal.data.resourceType === "social" && this.deps.needsSystem) {
+      if (goal.data.need === NeedType.SOCIAL && this.deps.needsSystem) {
         const needs = this.deps.needsSystem.getNeeds(targetId);
         if (needs && (needs.social > 70 || needs.fun > 70)) {
           return true;

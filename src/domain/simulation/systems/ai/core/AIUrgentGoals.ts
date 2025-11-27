@@ -1,5 +1,11 @@
 import type { GameState } from "../../../../types/game-types";
 import type { AIGoal } from "../../../../types/simulation/ai";
+import { GoalType } from "../../../../../shared/constants/AIEnums";
+import { NeedType } from "../../../../../shared/constants/AIEnums";
+import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
+import { WorldResourceType } from "../../../../../shared/constants/ResourceEnums";
+import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
+import { toInventoryResource } from "../../../../types/simulation/resourceMapping";
 
 export interface AIUrgentGoalsDeps {
   gameState: GameState;
@@ -30,7 +36,11 @@ export class AIUrgentGoals {
 
     // Food is only obtained from world resources - no zones satisfy hunger directly
     // Zones like farms/kitchens PRODUCE food items, but agents must gather from resources
-    const foodResourceTypes = ["berry_bush", "mushroom_patch", "wheat_crop"];
+    const foodResourceTypes = [
+      WorldResourceType.BERRY_BUSH,
+      WorldResourceType.MUSHROOM_PATCH,
+      WorldResourceType.WHEAT_CROP,
+    ];
     for (const resourceType of foodResourceTypes) {
       const nearestFood = this.deps.findNearestResourceForEntity(
         agentId,
@@ -39,12 +49,15 @@ export class AIUrgentGoals {
       if (nearestFood) {
         return {
           id: `urgent-gather-${agentId}-${now}`,
-          type: "gather",
+          type: GoalType.GATHER,
           priority: 10,
           targetId: nearestFood.id,
           targetPosition: { x: nearestFood.x, y: nearestFood.y },
           createdAt: now,
-          data: { resourceType, need: "hunger" },
+          data: {
+            resourceType: toInventoryResource(resourceType) || undefined,
+            need: NeedType.HUNGER,
+          },
         };
       }
     }
@@ -63,17 +76,17 @@ export class AIUrgentGoals {
     // Zones like wells PRODUCE water items, but agents must gather from water_source resources
     const nearestWater = this.deps.findNearestResourceForEntity(
       agentId,
-      "water_source",
+      WorldResourceType.WATER_SOURCE,
     );
     if (nearestWater) {
       return {
         id: `urgent-gather-water-${agentId}-${now}`,
-        type: "gather",
+        type: GoalType.GATHER,
         priority: 10,
         targetId: nearestWater.id,
         targetPosition: { x: nearestWater.x, y: nearestWater.y },
         createdAt: now,
-        data: { resourceType: "water_source", need: "thirst" },
+        data: { resourceType: ResourceType.WATER, need: NeedType.THIRST },
       };
     }
 
@@ -89,29 +102,28 @@ export class AIUrgentGoals {
 
     const restZone = this.deps.gameState.zones?.find(
       (z) =>
-        z.type === "rest" ||
-        z.type === "bed" ||
-        z.type === "shelter" ||
-        z.type === "house",
+        z.type === ZoneType.REST ||
+        z.type === ZoneType.BEDROOM ||
+        z.type === ZoneType.SHELTER,
     );
 
     if (restZone?.bounds) {
       return {
         id: `urgent-rest-${agentId}-${now}`,
-        type: "satisfy_energy",
+        type: GoalType.SATISFY_ENERGY,
         priority: 10,
         targetZoneId: restZone.id,
         createdAt: now,
-        data: { need: "energy" },
+        data: { need: NeedType.ENERGY },
       };
     }
 
     return {
       id: `urgent-rest-idle-${agentId}-${now}`,
-      type: "satisfy_energy",
+      type: GoalType.SATISFY_ENERGY,
       priority: 9,
       createdAt: now,
-      data: { need: "energy" },
+      data: { need: NeedType.ENERGY },
     };
   }
 
@@ -124,20 +136,20 @@ export class AIUrgentGoals {
 
     const socialZone = this.deps.gameState.zones?.find(
       (z) =>
-        z.type === "social" ||
-        z.type === "gathering" ||
-        z.type === "market" ||
-        z.type === "tavern",
+        z.type === ZoneType.SOCIAL ||
+        z.type === ZoneType.GATHERING ||
+        z.type === ZoneType.MARKET ||
+        z.type === ZoneType.TAVERN,
     );
 
     if (socialZone?.bounds) {
       return {
         id: `urgent-social-${agentId}-${now}`,
-        type: "satisfy_social",
+        type: GoalType.SATISFY_SOCIAL,
         priority: 9,
         targetZoneId: socialZone.id,
         createdAt: now,
-        data: { need: "social" },
+        data: { need: NeedType.SOCIAL },
       };
     }
 
@@ -153,20 +165,20 @@ export class AIUrgentGoals {
 
     const funZone = this.deps.gameState.zones?.find(
       (z) =>
-        z.type === "entertainment" ||
-        z.type === "tavern" ||
-        z.type === "market" ||
-        z.type === "gathering",
+        z.type === ZoneType.ENTERTAINMENT ||
+        z.type === ZoneType.TAVERN ||
+        z.type === ZoneType.MARKET ||
+        z.type === ZoneType.GATHERING,
     );
 
     if (funZone?.bounds) {
       return {
         id: `urgent-fun-${agentId}-${now}`,
-        type: "satisfy_fun",
+        type: GoalType.SATISFY_FUN,
         priority: 8,
         targetZoneId: funZone.id,
         createdAt: now,
-        data: { need: "fun" },
+        data: { need: NeedType.FUN },
       };
     }
 

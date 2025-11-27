@@ -156,7 +156,7 @@ export class WorldResourceSystem {
       state: ResourceState.PRISTINE,
       harvestCount: 0,
       lastHarvestTime: 0,
-      biome,
+      biome: biome as BiomeType,
       spawnedAt: Date.now(),
     };
 
@@ -304,7 +304,7 @@ export class WorldResourceSystem {
       (c): c is NonNullable<typeof c> =>
         c !== null &&
         c !== undefined &&
-        c.suitableBiomes?.includes(biome) === true,
+        c.suitableBiomes?.includes(biome as BiomeType) === true,
     );
   }
 
@@ -324,9 +324,9 @@ export class WorldResourceSystem {
 
     let newState = resource.state;
     if (resource.harvestCount >= config.harvestsUntilDepleted) {
-      newState = "depleted";
+      newState = ResourceState.DEPLETED;
     } else if (resource.harvestCount >= config.harvestsUntilPartial) {
-      newState = "harvested_partial";
+      newState = ResourceState.HARVESTED_PARTIAL;
     }
 
     if (newState !== resource.state) {
@@ -362,7 +362,7 @@ export class WorldResourceSystem {
         const dx = resource.position.x - position.x;
         const dy = resource.position.y - position.y;
         const distSq = dx * dx + dy * dy;
-        return distSq <= radiusSq && resource.state !== "depleted";
+        return distSq <= radiusSq && resource.state !== ResourceState.DEPLETED;
       },
     );
   }
@@ -372,7 +372,7 @@ export class WorldResourceSystem {
     harvesterId: string,
   ): { success: boolean; amount: number } {
     const resource = this.state.worldResources?.[resourceId];
-    if (!resource || resource.state === "depleted") {
+    if (!resource || resource.state === ResourceState.DEPLETED) {
       return { success: false, amount: 0 };
     }
 
@@ -386,7 +386,7 @@ export class WorldResourceSystem {
 
     const maxHarvests = config.harvestsUntilDepleted || 5;
     if (resource.harvestCount >= maxHarvests) {
-      resource.state = "depleted";
+      resource.state = ResourceState.DEPLETED;
 
       if (config.canRegenerate) {
         resource.regenerationStartTime = Date.now();
@@ -402,14 +402,14 @@ export class WorldResourceSystem {
 
       simulationEvents.emit(GameEventNames.RESOURCE_STATE_CHANGE, {
         resourceId,
-        newState: "depleted",
+        newState: ResourceState.DEPLETED,
         harvesterId,
       });
     } else if (resource.harvestCount >= maxHarvests * 0.7) {
-      resource.state = "harvested_partial";
+      resource.state = ResourceState.HARVESTED_PARTIAL;
       simulationEvents.emit(GameEventNames.RESOURCE_STATE_CHANGE, {
         resourceId,
-        newState: "harvested_partial",
+        newState: ResourceState.HARVESTED_PARTIAL,
         harvesterId,
       });
     }
@@ -423,7 +423,9 @@ export class WorldResourceSystem {
 
     // Calculate actual harvest amount from config yields
     const currentState =
-      resource.state === "harvested_partial" ? "depleted" : "pristine";
+      resource.state === ResourceState.HARVESTED_PARTIAL
+        ? ResourceState.DEPLETED
+        : ResourceState.PRISTINE;
     const yields = config.yields?.[currentState];
     let harvestAmount = 1; // Default fallback
 

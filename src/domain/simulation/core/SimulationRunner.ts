@@ -1,5 +1,6 @@
 import { EventEmitter } from "node:events";
 import type { GameState } from "../../types/game-types";
+import type { ILifeCyclePort } from "../ports";
 import { cloneGameState } from "./defaultState";
 import { EntityIndex } from "./EntityIndex";
 import { SharedSpatialIndex } from "./SharedSpatialIndex";
@@ -393,7 +394,7 @@ export class SimulationRunner {
     });
 
     this.needsSystem.setDependencies({
-      lifeCyclePort: this.lifeCycleSystem,
+      lifeCyclePort: this.lifeCycleSystem as ILifeCyclePort,
       divineFavorSystem: this.divineFavorSystem,
       inventorySystem: this.inventorySystem,
       socialSystem: this.socialSystem,

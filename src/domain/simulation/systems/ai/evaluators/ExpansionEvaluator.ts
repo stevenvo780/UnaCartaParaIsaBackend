@@ -2,6 +2,8 @@ import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { GameState } from "../../../../types/game-types";
 import type { Inventory } from "../../../../types/simulation/economy";
 import { RandomUtils } from "../../../../../shared/utils/RandomUtils";
+import { GoalType } from "../../../../../shared/constants/AIEnums";
+import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 
 export interface ExpansionContext {
   gameState: GameState;
@@ -33,11 +35,11 @@ export function evaluateExpansionGoals(
     if (totalItems < capacity * GATHER_TRIGGER_THRESHOLD) {
       goals.push({
         id: `gather_expansion_${now}`,
-        type: "explore",
+        type: GoalType.EXPLORE,
         priority: 0.35 + aiState.personality.diligence * 0.2,
         data: {
           explorationType: "resource_scout",
-          targetResource: "wood", // Default to wood as it's primary building material
+          targetResource: ResourceType.WOOD, // Default to wood as it's primary building material
         },
         createdAt: now,
         expiresAt: now + GATHER_GOAL_DURATION_MS,
@@ -56,7 +58,7 @@ export function evaluateExpansionGoals(
   if (pos) {
     goals.push({
       id: `expand_territory_${now}`,
-      type: "explore",
+      type: GoalType.EXPLORE,
       priority: 0.3 + aiState.personality.curiosity * 0.3,
       data: {
         explorationType: "territory_expansion",

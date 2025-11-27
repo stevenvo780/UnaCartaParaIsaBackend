@@ -470,7 +470,7 @@ export class QuestSystem {
     }
 
     const questCopy = JSON.parse(JSON.stringify(questTemplate)) as Quest;
-    questCopy.status = "available";
+    questCopy.status = QuestStatus.AVAILABLE;
 
     if (this.checkQuestRequirements(questCopy)) {
       this.questProgress.availableQuests.set(questId, questCopy);

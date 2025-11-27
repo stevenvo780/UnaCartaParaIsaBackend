@@ -2,6 +2,9 @@ import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../../types/simulation/needs";
 import type { RoleType } from "../../../../types/simulation/roles";
 import type { Inventory } from "../../../../types/simulation/economy";
+import { GoalType } from "../../../../../shared/constants/AIEnums";
+import { NeedType } from "../../../../../shared/constants/AIEnums";
+import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 
 /**
  * Role-based threshold modifiers for individual needs.
@@ -183,13 +186,13 @@ export function evaluateCriticalNeeds(
         // Go gather water from a source
         goals.push({
           id: `gather_water_${aiState.entityId}_${now}`,
-          type: "gather",
+          type: GoalType.GATHER,
           priority: calculateNeedPriority(needs.thirst, 130),
           targetId: waterTarget.id,
           targetPosition: { x: waterTarget.x, y: waterTarget.y },
           data: {
-            need: "thirst",
-            resourceType: "water_source", // Use actual WorldResourceType for validation
+            need: NeedType.THIRST,
+            resourceType: ResourceType.WATER,
             action: "gather",
           },
           createdAt: now,
@@ -206,13 +209,13 @@ export function evaluateCriticalNeeds(
         if (tradeTarget) {
           goals.push({
             id: `trade_water_${aiState.entityId}_${now}`,
-            type: "work",
+            type: GoalType.WORK,
             priority: calculateNeedPriority(needs.thirst, 120),
             targetId: tradeTarget.agentId,
             targetPosition: { x: tradeTarget.x, y: tradeTarget.y },
             data: {
-              need: "thirst",
-              resourceType: "water",
+              need: NeedType.THIRST,
+              resourceType: ResourceType.WATER,
               action: "trade",
             },
             createdAt: now,
@@ -222,11 +225,11 @@ export function evaluateCriticalNeeds(
           // Desperate search
           goals.push({
             id: `desperate_water_${aiState.entityId}_${now}`,
-            type: "explore",
+            type: GoalType.EXPLORE,
             priority: calculateNeedPriority(needs.thirst, 140),
             data: {
               explorationType: "desperate_search",
-              need: "thirst",
+              need: NeedType.THIRST,
             },
             createdAt: now,
             expiresAt: now + 10000,
@@ -264,13 +267,13 @@ export function evaluateCriticalNeeds(
         // Go gather food from a source
         goals.push({
           id: `gather_food_${aiState.entityId}_${now}`,
-          type: "gather",
+          type: GoalType.GATHER,
           priority: calculateNeedPriority(needs.hunger, 110),
           targetId: foodTarget.id,
           targetPosition: { x: foodTarget.x, y: foodTarget.y },
           data: {
-            need: "hunger",
-            resourceType: foundResourceType, // Use actual WorldResourceType for validation
+            need: NeedType.HUNGER,
+            resourceType: ResourceType.FOOD,
             action: "gather",
           },
           createdAt: now,
@@ -287,13 +290,13 @@ export function evaluateCriticalNeeds(
         if (tradeTarget) {
           goals.push({
             id: `trade_food_${aiState.entityId}_${now}`,
-            type: "work",
+            type: GoalType.WORK,
             priority: calculateNeedPriority(needs.hunger, 100),
             targetId: tradeTarget.agentId,
             targetPosition: { x: tradeTarget.x, y: tradeTarget.y },
             data: {
-              need: "hunger",
-              resourceType: "food",
+              need: NeedType.HUNGER,
+              resourceType: ResourceType.FOOD,
               action: "trade",
             },
             createdAt: now,
@@ -305,12 +308,12 @@ export function evaluateCriticalNeeds(
           if (huntTarget) {
             goals.push({
               id: `hunt_food_${aiState.entityId}_${now}`,
-              type: "hunt",
+              type: GoalType.HUNT,
               priority: calculateNeedPriority(needs.hunger, 115),
               targetId: huntTarget.id,
               targetPosition: { x: huntTarget.x, y: huntTarget.y },
               data: {
-                need: "hunger",
+                need: NeedType.HUNGER,
                 animalType: huntTarget.type,
                 action: "hunt",
               },
@@ -321,11 +324,11 @@ export function evaluateCriticalNeeds(
             // Desperate search for food or prey
             goals.push({
               id: `desperate_food_${aiState.entityId}_${now}`,
-              type: "explore",
+              type: GoalType.EXPLORE,
               priority: calculateNeedPriority(needs.hunger, 120),
               data: {
                 explorationType: "desperate_search",
-                need: "hunger",
+                need: NeedType.HUNGER,
                 searchFor: "food_or_prey",
               },
               createdAt: now,
@@ -340,10 +343,10 @@ export function evaluateCriticalNeeds(
   if (needs.energy < energyThreshold) {
     goals.push({
       id: `energy_${aiState.entityId}_${now}`,
-      type: "satisfy_need",
+      type: GoalType.SATISFY_ENERGY,
       priority: calculateNeedPriority(needs.energy, 80),
       data: {
-        need: "energy",
+        need: NeedType.ENERGY,
         action: "rest",
       },
       createdAt: now,
@@ -361,10 +364,10 @@ export function evaluateCriticalNeeds(
   if (needs.social < socialThreshold) {
     goals.push({
       id: `social_${aiState.entityId}_${now}`,
-      type: "satisfy_social",
+      type: GoalType.SATISFY_SOCIAL,
       priority: calculateNeedPriority(needs.social, 70),
       data: {
-        need: "social",
+        need: NeedType.SOCIAL,
       },
       createdAt: now,
       expiresAt: now + 30000,
@@ -375,10 +378,10 @@ export function evaluateCriticalNeeds(
   if (needs.mentalHealth < 50) {
     goals.push({
       id: `mental_${aiState.entityId}_${now}`,
-      type: "social",
+      type: GoalType.SOCIAL,
       priority: calculateNeedPriority(needs.mentalHealth, 70),
       data: {
-        need: "mentalHealth",
+        need: NeedType.MENTAL_HEALTH,
       },
       createdAt: now,
       expiresAt: now + 30000,

@@ -9,6 +9,11 @@ import type {
 } from "../../../../types/simulation/agents";
 import { getFrameTime } from "../../../../../shared/FrameTime";
 import { logger } from "../../../../../infrastructure/utils/logger";
+import {
+  SocialPreference,
+  WorkEthic,
+  ExplorationType,
+} from "../../../../../shared/constants/AIEnums";
 
 /**
  * Manages AI state creation, retrieval, and cleanup for agents.
@@ -328,24 +333,26 @@ export class AIStateManager {
       riskTolerance:
         (traits.bravery || 0.5) * 0.7 + (traits.curiosity || 0.5) * 0.3,
       socialPreference: isChild
-        ? "extroverted"
+        ? SocialPreference.EXTROVERTED
         : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 >
             0.6
-          ? "extroverted"
+          ? SocialPreference.EXTROVERTED
           : (traits.charisma || 0.5) * 0.6 + (traits.cooperation || 0.5) * 0.4 <
               0.4
-            ? "introverted"
-            : "balanced",
+            ? SocialPreference.INTROVERTED
+            : SocialPreference.BALANCED,
       workEthic: isChild
-        ? "lazy"
+        ? WorkEthic.LAZY
         : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 > 0.7
-          ? "workaholic"
+          ? WorkEthic.WORKAHOLIC
           : (traits.diligence || 0.5) * 0.8 + (traits.stamina || 0.5) * 0.2 <
               0.3
-            ? "lazy"
-            : "balanced",
+            ? WorkEthic.LAZY
+            : WorkEthic.BALANCED,
       explorationType:
-        (traits.curiosity || 0.5) > 0.7 ? "adventurous" : "cautious",
+        (traits.curiosity || 0.5) > 0.7
+          ? ExplorationType.ADVENTUROUS
+          : ExplorationType.CAUTIOUS,
     };
   }
 
@@ -363,9 +370,9 @@ export class AIStateManager {
       agreeableness: 0.5,
       neuroticism: 0.5,
       riskTolerance: 0.5,
-      socialPreference: "balanced",
-      workEthic: "balanced",
-      explorationType: "balanced",
+      socialPreference: SocialPreference.BALANCED,
+      workEthic: WorkEthic.BALANCED,
+      explorationType: ExplorationType.BALANCED,
     };
   }
 

@@ -105,6 +105,7 @@ export class DeltaEncoder {
   ): Partial<GameState> {
     const changes: Partial<GameState> = {};
 
+    // @ts-expect-error - prevAgentMap reserved for future use
     const _prevAgentMap = previous.agents
       ? new Map(previous.agents.map((a) => [a.id, a]))
       : new Map<string, AgentProfile>();
@@ -182,6 +183,7 @@ export class DeltaEncoder {
     return changes;
   }
 
+  // @ts-expect-error - hasAgentChanged reserved for future use
   private hasAgentChanged(
     prev: AgentProfile & {
       needs?: EntityNeedsData;

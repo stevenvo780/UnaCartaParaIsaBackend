@@ -15,6 +15,8 @@ import type {
   TaskCreationParams,
   TaskType,
 } from "../../../../types/simulation/tasks";
+import { GoalType as GoalTypeEnum } from "../../../../../shared/constants/AIEnums";
+import { ResourceType as ResourceTypeEnum } from "../../../../../shared/constants/ResourceEnums";
 
 /**
  * Configuration for collective needs thresholds.
@@ -61,13 +63,13 @@ const ROLE_COLLECTIVE_MODIFIERS: Record<
     gatherPriority: 1.3,
     buildPriority: 0.8,
     depositPriority: 1.2,
-    preferredResource: "wood",
+    preferredResource: ResourceTypeEnum.WOOD,
   },
   quarryman: {
     gatherPriority: 1.3,
     buildPriority: 0.8,
     depositPriority: 1.2,
-    preferredResource: "stone",
+    preferredResource: ResourceTypeEnum.STONE,
   },
   builder: {
     gatherPriority: 0.9,
@@ -78,13 +80,13 @@ const ROLE_COLLECTIVE_MODIFIERS: Record<
     gatherPriority: 1.2,
     buildPriority: 0.7,
     depositPriority: 1.1,
-    preferredResource: "food",
+    preferredResource: ResourceTypeEnum.FOOD,
   },
   gatherer: {
     gatherPriority: 1.4,
     buildPriority: 0.6,
     depositPriority: 1.3,
-    preferredResource: "water",
+    preferredResource: ResourceTypeEnum.WATER,
   },
   guard: {
     gatherPriority: 0.5,
@@ -95,7 +97,7 @@ const ROLE_COLLECTIVE_MODIFIERS: Record<
     gatherPriority: 1.1,
     buildPriority: 0.6,
     depositPriority: 1.0,
-    preferredResource: "food",
+    preferredResource: ResourceTypeEnum.FOOD,
   },
   craftsman: {
     gatherPriority: 0.8,
@@ -207,25 +209,37 @@ function getMostNeededResource(
   // Check food per capita
   if (state.foodPerCapita < thresholds.foodPerCapita) {
     const urgency = 1 - state.foodPerCapita / thresholds.foodPerCapita;
-    needs.push({ resource: "food", urgency: Math.min(1, urgency * 1.5) });
+    needs.push({
+      resource: ResourceTypeEnum.FOOD,
+      urgency: Math.min(1, urgency * 1.5),
+    });
   }
 
   // Check water per capita
   if (state.waterPerCapita < thresholds.waterPerCapita) {
     const urgency = 1 - state.waterPerCapita / thresholds.waterPerCapita;
-    needs.push({ resource: "water", urgency: Math.min(1, urgency * 1.3) });
+    needs.push({
+      resource: ResourceTypeEnum.WATER,
+      urgency: Math.min(1, urgency * 1.3),
+    });
   }
 
   // Check wood reserves
   if (state.totalWood < thresholds.minWoodReserve) {
     const urgency = 1 - state.totalWood / thresholds.minWoodReserve;
-    needs.push({ resource: "wood", urgency: Math.min(1, urgency) });
+    needs.push({
+      resource: ResourceTypeEnum.WOOD,
+      urgency: Math.min(1, urgency),
+    });
   }
 
   // Check stone reserves
   if (state.totalStone < thresholds.minStoneReserve) {
     const urgency = 1 - state.totalStone / thresholds.minStoneReserve;
-    needs.push({ resource: "stone", urgency: Math.min(1, urgency * 0.9) });
+    needs.push({
+      resource: ResourceTypeEnum.STONE,
+      urgency: Math.min(1, urgency * 0.9),
+    });
   }
 
   // Sort by urgency descending
@@ -283,8 +297,8 @@ export function evaluateCollectiveNeeds(
 
       // Boost if there's a governance demand
       if (
-        (taskResourceType === "food" && foodDemand) ||
-        (taskResourceType === "water" && waterDemand)
+        (taskResourceType === ResourceTypeEnum.FOOD && foodDemand) ||
+        (taskResourceType === ResourceTypeEnum.WATER && waterDemand)
       ) {
         priority += 0.1;
       }
@@ -294,13 +308,13 @@ export function evaluateCollectiveNeeds(
 
       goals.push({
         id: `join_community_task_${task.id}_${now}`,
-        type: "work",
+        type: GoalTypeEnum.WORK,
         priority,
         data: {
           taskId: task.id,
           communityTask: true,
           taskType: task.type,
-          resourceType: taskResourceType,
+          resourceType: taskResourceType as ResourceTypeEnum | undefined,
         },
         createdAt: now,
         expiresAt: now + 30000,
@@ -342,8 +356,8 @@ export function evaluateCollectiveNeeds(
 
         // Boost if there's an active governance demand
         if (
-          (mostNeeded.resource === "food" && foodDemand) ||
-          (mostNeeded.resource === "water" && waterDemand)
+          (mostNeeded.resource === ResourceTypeEnum.FOOD && foodDemand) ||
+          (mostNeeded.resource === ResourceTypeEnum.WATER && waterDemand)
         ) {
           basePriority += 0.2;
         }
@@ -365,7 +379,7 @@ export function evaluateCollectiveNeeds(
 
         goals.push({
           id: `new_community_task_${newTask.id}_${now}`,
-          type: "work",
+          type: GoalTypeEnum.WORK,
           priority: finalPriority,
           data: {
             taskId: newTask.id,
@@ -386,8 +400,8 @@ export function evaluateCollectiveNeeds(
 
     // Boost if there's an active governance demand
     if (
-      (mostNeeded.resource === "food" && foodDemand) ||
-      (mostNeeded.resource === "water" && waterDemand)
+      (mostNeeded.resource === ResourceTypeEnum.FOOD && foodDemand) ||
+      (mostNeeded.resource === ResourceTypeEnum.WATER && waterDemand)
     ) {
       basePriority += 0.2;
     }
@@ -417,7 +431,7 @@ export function evaluateCollectiveNeeds(
         resourceType: mostNeeded.resource,
         collectiveNeed: "true",
         urgency: mostNeeded.urgency,
-        settlementNeed: mostNeeded.resource,
+        settlementNeed: mostNeeded.resource as string,
       },
       createdAt: now,
       expiresAt: now + 30000,
@@ -453,7 +467,7 @@ export function evaluateCollectiveNeeds(
 
       goals.push({
         id: `collective_deposit_${now}`,
-        type: "deposit",
+        type: GoalTypeEnum.DEPOSIT,
         priority: depositPriority,
         data: {
           collectiveNeed: "true",
@@ -486,7 +500,7 @@ export function evaluateCollectiveNeeds(
 
     goals.push({
       id: `collective_build_storage_${now}`,
-      type: "construction",
+      type: GoalTypeEnum.CONSTRUCTION,
       priority: buildPriority,
       data: {
         constructionType: "storage",
@@ -508,7 +522,7 @@ export function evaluateCollectiveNeeds(
 
     goals.push({
       id: `prosperity_gather_${lowestResource}_${now}`,
-      type: "gather",
+      type: GoalTypeEnum.GATHER,
       priority: prosperityPriority,
       data: {
         resourceType: lowestResource,
@@ -528,16 +542,16 @@ export function evaluateCollectiveNeeds(
  */
 function getGatherGoalType(resource: ResourceType): GoalType {
   switch (resource) {
-    case "food":
-      return "gather";
-    case "water":
-      return "gather";
-    case "wood":
-      return "work";
-    case "stone":
-      return "work";
+    case ResourceTypeEnum.FOOD:
+      return GoalTypeEnum.GATHER;
+    case ResourceTypeEnum.WATER:
+      return GoalTypeEnum.GATHER;
+    case ResourceTypeEnum.WOOD:
+      return GoalTypeEnum.WORK;
+    case ResourceTypeEnum.STONE:
+      return GoalTypeEnum.WORK;
     default:
-      return "gather";
+      return GoalTypeEnum.GATHER;
   }
 }
 
@@ -546,10 +560,16 @@ function getGatherGoalType(resource: ResourceType): GoalType {
  */
 function getLowestResource(state: CollectiveNeedsState): ResourceType {
   const ratios = [
-    { resource: "food" as ResourceType, ratio: state.foodPerCapita / 10 },
-    { resource: "water" as ResourceType, ratio: state.waterPerCapita / 15 },
-    { resource: "wood" as ResourceType, ratio: state.totalWood / 100 },
-    { resource: "stone" as ResourceType, ratio: state.totalStone / 50 },
+    {
+      resource: ResourceTypeEnum.FOOD,
+      ratio: state.foodPerCapita / 10,
+    },
+    {
+      resource: ResourceTypeEnum.WATER,
+      ratio: state.waterPerCapita / 15,
+    },
+    { resource: ResourceTypeEnum.WOOD, ratio: state.totalWood / 100 },
+    { resource: ResourceTypeEnum.STONE, ratio: state.totalStone / 50 },
   ];
 
   ratios.sort((a, b) => a.ratio - b.ratio);

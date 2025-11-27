@@ -19,6 +19,30 @@ export interface AIGoalData {
   resourceType?: ResourceType;
   amount?: number;
   itemType?: string;
+  targetRegionX?: number;
+  targetRegionY?: number;
+  explorationType?: string;
+  roleType?: string;
+  questId?: string;
+  action?: string;
+  taskId?: string;
+  workType?: string;
+  buildingType?: string;
+  communityTask?: boolean;
+  collectiveNeed?: string;
+  constructionType?: string;
+  reason?: string;
+  taskType?: string;
+  urgency?: number;
+  stockpileFillRatio?: number;
+  prosperityDrive?: string;
+  itemId?: string;
+  targetResource?: string;
+  settlementNeed?: string;
+  targetType?: string;
+  objectiveId?: string;
+  animalType?: string;
+  searchFor?: string;
 }
 
 export interface AIGoal {
@@ -91,6 +115,9 @@ export interface AgentActionData {
   resourceType?: ResourceType;
   amount?: number;
   itemId?: string;
+  taskId?: string;
+  itemType?: string;
+  workType?: string;
 }
 
 export interface AgentAction {

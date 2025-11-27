@@ -1,7 +1,7 @@
 import type { GameState } from "../../../../types/game-types";
 import type { AIGoal, AIState } from "../../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../../types/simulation/needs";
-import type { AgentRole } from "../../../../types/simulation/roles";
+import type { AgentRole, RoleType } from "../../../../types/simulation/roles";
 import type {
   Task,
   TaskCreationParams,
@@ -176,7 +176,7 @@ export function planGoals(
       findNearestHuntableAnimal: deps.findNearestHuntableAnimal,
       getCurrentTimeOfDay: deps.getCurrentTimeOfDay,
       getAgentRole: deps.getAgentRole
-        ? (id: string): { roleType: string } | undefined => {
+        ? (id: string): { roleType: RoleType } | undefined => {
             const role = deps.getAgentRole!(id);
             return role ? { roleType: role.roleType } : undefined;
           }
@@ -197,7 +197,7 @@ export function planGoals(
       gameState: deps.gameState,
       getAgentInventory: deps.getAgentInventory,
       getAgentRole: deps.getAgentRole
-        ? (id: string): { roleType: string } | undefined => {
+        ? (id: string): { roleType: RoleType } | undefined => {
             const role = deps.getAgentRole!(id);
             return role ? { roleType: role.roleType } : undefined;
           }

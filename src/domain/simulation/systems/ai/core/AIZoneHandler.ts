@@ -2,6 +2,8 @@ import type { GameState } from "../../../../types/game-types";
 import type { AIGoal, AIState } from "../../../../types/simulation/ai";
 import type { ResourceType } from "../../../../types/simulation/economy";
 import { simulationEvents, GameEventNames } from "../../../core/events";
+import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
+import { GoalType } from "../../../../../shared/constants/AIEnums";
 
 /**
  * Minimal interface for inventory operations needed by AIZoneHandler.
@@ -278,7 +280,9 @@ export class AIZoneHandler {
     const zone = this.deps.gameState.zones?.find((z) => z.id === zoneId);
     if (
       zone &&
-      (zone.type === "rest" || zone.type === "shelter" || zone.type === "house")
+      (zone.type === ZoneType.REST ||
+        zone.type === ZoneType.SHELTER ||
+        zone.type === ZoneType.BEDROOM)
     ) {
       const household =
         this.deps.householdSystem.findHouseholdForAgent(entityId);
@@ -373,7 +377,7 @@ export class AIZoneHandler {
     goal: AIGoal,
     aiState: AIState,
   ): boolean {
-    if (goal.type !== "deposit" && goal.data?.workType !== "deposit") {
+    if (goal.type !== GoalType.DEPOSIT && goal.data?.workType !== "deposit") {
       return false;
     }
 

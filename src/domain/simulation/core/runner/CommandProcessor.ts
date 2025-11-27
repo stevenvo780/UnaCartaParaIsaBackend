@@ -13,6 +13,7 @@ import type {
   ReputationCommandPayload,
   TaskCommandPayload,
 } from "../../../../shared/types/commands/SimulationCommand";
+import { SimulationCommandType } from "../../../../shared/constants/CommandEnums";
 import type { SimulationRunner } from "../SimulationRunner";
 import type { GameResources } from "../../../types/game-types";
 import type { NeedsConfig } from "../../../types/simulation/needs";
@@ -126,11 +127,15 @@ export class CommandProcessor {
     }
   }
 
-  private handleSpawnAgent(
-    command: SimulationCommand & { type: "SPAWN_AGENT" },
-  ): void {
-    logger.info("🔵 SPAWN_AGENT command received", command.payload);
-    const spawnPayload = (command.payload ?? {}) as SpawnAgentCommandPayload;
+  private handleSpawnAgent(command: SimulationCommand): void {
+    if (command.type !== SimulationCommandType.SPAWN_AGENT) return;
+    const spawnCommand = command as {
+      type: SimulationCommandType.SPAWN_AGENT;
+      payload?: SpawnAgentCommandPayload;
+    };
+    logger.info("🔵 SPAWN_AGENT command received", spawnCommand.payload);
+    const spawnPayload = (spawnCommand.payload ??
+      {}) as SpawnAgentCommandPayload;
 
     const agentPayload: Partial<
       import("../../../types/simulation/agents").AgentProfile

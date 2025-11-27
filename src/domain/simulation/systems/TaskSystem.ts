@@ -387,9 +387,9 @@ export class TaskSystem {
         return false;
       }
 
-      const maxClaims = (task.metadata.maxClaims as number | undefined) || 1;
+      const maxClaims = (task.metadata?.maxClaims as number | undefined) || 1;
       const currentClaims =
-        (task.metadata.claimCount as number | undefined) || 0;
+        (task.metadata?.claimCount as number | undefined) || 0;
 
       return currentClaims < maxClaims;
     });

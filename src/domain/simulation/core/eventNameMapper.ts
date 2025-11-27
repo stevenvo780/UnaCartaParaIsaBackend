@@ -114,7 +114,6 @@ export const eventNameMapper: Record<GameEventType, string> = {
   [GameEventType.NEED_CRITICAL]: "need:critical",
   [GameEventType.NEED_SATISFIED]: "need:satisfied",
   [GameEventType.AGENT_ACTIVITY_STARTED]: "agent:activity:started",
-  [GameEventType.RESOURCES_DEPOSITED]: "resources:deposited",
   [GameEventType.ITEM_CRAFTED]: "item:crafted",
   [GameEventType.TASK_CREATED]: "task:created",
   [GameEventType.TASK_PROGRESS]: "task:progress",

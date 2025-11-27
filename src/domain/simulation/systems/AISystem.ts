@@ -40,6 +40,7 @@ import type { EnhancedCraftingSystem } from "./EnhancedCraftingSystem";
 import type { WorldResourceSystem } from "./WorldResourceSystem";
 import type { HouseholdSystem } from "./HouseholdSystem";
 import type { TaskSystem } from "./TaskSystem";
+import type { TaskCreationParams } from "../../types/simulation/tasks";
 import type { CombatSystem } from "./CombatSystem";
 import type { AnimalSystem } from "./AnimalSystem";
 import type { MovementSystem } from "./MovementSystem";
@@ -919,7 +920,7 @@ export class AISystem extends EventEmitter {
       getTasks: () => this.taskSystem?.getActiveTasks() || [],
       taskSystem: this.taskSystem
         ? {
-            createTask: (params: unknown) =>
+            createTask: (params: TaskCreationParams) =>
               this.taskSystem!.createTask(params),
             getAvailableCommunityTasks: () =>
               this.taskSystem!.getAvailableCommunityTasks(),

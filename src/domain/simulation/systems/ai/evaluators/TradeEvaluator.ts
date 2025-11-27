@@ -1,6 +1,6 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { Inventory } from "../../../../types/simulation/economy";
-import { GoalType } from "../../../../shared/constants/AIEnums";
+import { GoalType } from "../../../../../shared/constants/AIEnums";
 
 export interface TradeEvaluatorDependencies {
   getAgentInventory: (id: string) => Inventory | undefined;

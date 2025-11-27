@@ -29,7 +29,13 @@ export interface TaskMetadata {
   claimCount?: number;
   maxClaims?: number;
   claimedBy?: string[];
-  [key: string]: string | number | boolean | string[] | ResourceType | undefined;
+  [key: string]:
+    | string
+    | number
+    | boolean
+    | string[]
+    | ResourceType
+    | undefined;
 }
 
 export interface Task {

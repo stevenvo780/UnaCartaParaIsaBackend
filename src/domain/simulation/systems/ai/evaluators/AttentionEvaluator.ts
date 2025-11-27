@@ -1,6 +1,8 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { GameState } from "../../../../types/game-types";
 import { RandomUtils } from "../../../../../shared/utils/RandomUtils";
+import { GoalType } from "../../../../../shared/constants/AIEnums";
+import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 
 export interface AttentionContext {
   gameState: GameState;
@@ -42,7 +44,7 @@ export function evaluateAttention(
   return [
     {
       id: `inspect_${now}`,
-      type: "explore",
+      type: GoalType.EXPLORE,
       priority: 0.5 * curiosityBoost,
       targetId: pick.res.id,
       targetPosition: pick.res.position,
@@ -62,7 +64,7 @@ export function evaluateDefaultExploration(
   const now = Date.now();
   const restZones =
     ctx.gameState.zones
-      ?.filter((z) => z.type === "rest" || z.type === "shelter")
+      ?.filter((z) => z.type === ZoneType.REST || z.type === ZoneType.SHELTER)
       .map((z) => z.id) || [];
 
   const allZones = ctx.gameState.zones?.map((z) => z.id) || [];
@@ -72,7 +74,7 @@ export function evaluateDefaultExploration(
     return [
       {
         id: `wander_${now}`,
-        type: "explore",
+        type: GoalType.EXPLORE,
         priority: 0.3,
         data: {
           explorationType: "wander",
@@ -93,7 +95,7 @@ export function evaluateDefaultExploration(
     return [
       {
         id: `wander_fallback_${now}`,
-        type: "explore",
+        type: GoalType.EXPLORE,
         priority: 0.3,
         data: {
           explorationType: "wander",
@@ -107,7 +109,7 @@ export function evaluateDefaultExploration(
   return [
     {
       id: `default_${now}`,
-      type: restZones.length > 0 ? "rest" : "explore",
+      type: restZones.length > 0 ? GoalType.REST : GoalType.EXPLORE,
       priority: 0.35,
       targetZoneId: best,
       data: {

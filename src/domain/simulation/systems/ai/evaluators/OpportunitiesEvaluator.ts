@@ -1,8 +1,8 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { AgentRole } from "../../../../types/simulation/roles";
 import type { GameState } from "../../../../types/game-types";
-import { GoalType } from "../../../../shared/constants/AIEnums";
-import { ResourceType } from "../../../../shared/constants/ResourceEnums";
+import { GoalType } from "../../../../../shared/constants/AIEnums";
+import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 
 export interface OpportunitiesEvaluatorDependencies {
   getAgentRole: (agentId: string) => AgentRole | undefined;
@@ -57,7 +57,7 @@ export function evaluateWorkOpportunities(
   if (!preferredResource || !deps.findNearestResource) {
     goals.push({
       id: `work_${aiState.entityId}_${now}`,
-      type: "work",
+      type: GoalType.WORK,
       priority: 0.6 * aiState.personality.diligence,
       data: {
         roleType: role.roleType,
@@ -76,7 +76,7 @@ export function evaluateWorkOpportunities(
   if (resourceTarget) {
     goals.push({
       id: `work_${aiState.entityId}_${now}`,
-      type: "work",
+      type: GoalType.WORK,
       priority: 0.7 * aiState.personality.diligence * role.efficiency,
       targetId: resourceTarget.id,
       targetPosition: { x: resourceTarget.x, y: resourceTarget.y },

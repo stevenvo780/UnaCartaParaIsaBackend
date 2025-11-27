@@ -1,6 +1,7 @@
 import { logger } from "../../../../../infrastructure/utils/logger";
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { GameState } from "../../../../types/game-types";
+import { GoalType } from "../../../../../shared/constants/AIEnums";
 
 export interface ConstructionContext {
   gameState: GameState;
@@ -82,7 +83,7 @@ export function evaluateConstructionGoals(
     return [
       {
         id: `assist_build_${best.t.id}_${now}`,
-        type: "construction",
+        type: GoalType.CONSTRUCTION,
         priority,
         targetZoneId: best.zoneId,
         data: {

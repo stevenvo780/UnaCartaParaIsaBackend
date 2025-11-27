@@ -480,7 +480,7 @@ export class RoleSystem extends EventEmitter {
     // Count current assignments
     for (const role of this.roles.values()) {
       if (distribution[role.roleType]) {
-        distribution[role.roleType].count++;
+        distribution[role.roleType]!.count++;
       }
     }
 
@@ -568,7 +568,7 @@ export class RoleSystem extends EventEmitter {
       );
     }
 
-    return needed;
+    return needed as Record<RoleType, number>;
   }
 
   /**

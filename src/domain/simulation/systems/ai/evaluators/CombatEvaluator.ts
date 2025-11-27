@@ -1,5 +1,6 @@
 import { logger } from "../../../../../infrastructure/utils/logger";
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
+import { GoalType } from "../../../../../shared/constants/AIEnums";
 
 export interface CombatContext {
   getEntityPosition: (id: string) => { x: number; y: number } | null;
@@ -74,7 +75,7 @@ export function evaluateCombatGoals(
 
             goals.push({
               id: `flee_${now}`,
-              type: "flee",
+              type: GoalType.FLEE,
               priority: morale < panicThreshold ? 0.95 : 0.85,
               targetPosition: fleePos,
               createdAt: now,
@@ -97,7 +98,7 @@ export function evaluateCombatGoals(
             if (shouldAttack) {
               goals.push({
                 id: `attack_${nearest.id}_${now}`,
-                type: "attack",
+                type: GoalType.ATTACK,
                 priority: 0.9 * Math.min(1.2, advantage),
                 targetId: nearest.id,
                 targetPosition: nearest.pos,
@@ -123,7 +124,7 @@ export function evaluateCombatGoals(
         if (canFight) {
           goals.push({
             id: `attack_animal_${predator.id}_${now}`,
-            type: "attack",
+            type: GoalType.ATTACK,
             priority: 0.95,
             targetId: predator.id,
             targetPosition: predator.position,
@@ -143,7 +144,7 @@ export function evaluateCombatGoals(
 
           goals.push({
             id: `flee_animal_${predator.id}_${now}`,
-            type: "flee",
+            type: GoalType.FLEE,
             priority: 1.0,
             targetPosition: fleePos,
             createdAt: now,

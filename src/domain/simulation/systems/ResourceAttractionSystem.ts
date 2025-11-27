@@ -10,14 +10,16 @@ import type {
 import { NeedType } from "../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
-const DESIRE_THRESHOLDS: Record<NeedType, { high: number; low?: number }> = {
-  hunger: { high: 60 },
-  thirst: { high: 60 },
-  energy: { high: 0, low: 35 },
-  hygiene: { high: 0, low: 40 },
+const DESIRE_THRESHOLDS: Partial<
+  Record<NeedType, { high: number; low?: number }>
+> = {
+  [NeedType.HUNGER]: { high: 60 },
+  [NeedType.THIRST]: { high: 60 },
+  [NeedType.ENERGY]: { high: 0, low: 35 },
+  [NeedType.HYGIENE]: { high: 0, low: 40 },
 };
 
-const RESOURCE_MAPPING: Record<NeedType, ResourceType | null> = {
+const RESOURCE_MAPPING: Partial<Record<NeedType, ResourceType | null>> = {
   [NeedType.HUNGER]: ResourceType.FOOD,
   [NeedType.THIRST]: ResourceType.WATER,
   [NeedType.ENERGY]: null, // Energy doesn't map to a resource
@@ -66,8 +68,12 @@ export class ResourceAttractionSystem {
         const value = data[needType] as number;
         if (typeof value !== "number") return;
 
-        if (needType === "energy" || needType === "hygiene") {
-          if (typeof thresholds.low === "number" && value < thresholds.low) {
+        if (needType === NeedType.ENERGY || needType === NeedType.HYGIENE) {
+          if (
+            thresholds &&
+            typeof thresholds.low === "number" &&
+            value < thresholds.low
+          ) {
             const intensity = thresholds.low - value;
             this.addDesire(
               desires,
@@ -91,7 +97,7 @@ export class ResourceAttractionSystem {
               }
             }
           }
-        } else if (value > thresholds.high) {
+        } else if (thresholds && value > thresholds.high) {
           const intensity = value - thresholds.high;
           this.addDesire(
             desires,
@@ -125,7 +131,10 @@ export class ResourceAttractionSystem {
       )
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3)
-        .map(([resourceType, intensity]) => ({ resourceType, intensity }));
+        .map(([resourceType, intensity]) => ({
+          resourceType: resourceType as ResourceType,
+          intensity,
+        }));
 
       const totalDesire = data.total;
       const spawnBias = Math.min(
@@ -183,9 +192,11 @@ export class ResourceAttractionSystem {
     const record = fieldMap.get(zoneId)!;
     record.total += intensity;
     const resourceType = RESOURCE_MAPPING[needType];
-    record.needs.set(
-      resourceType,
-      (record.needs.get(resourceType) || 0) + intensity,
-    );
+    if (resourceType) {
+      record.needs.set(
+        resourceType,
+        (record.needs.get(resourceType) || 0) + intensity,
+      );
+    }
   }
 }

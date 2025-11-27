@@ -1,5 +1,6 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { GameState } from "../../../../types/game-types";
+import { GoalType } from "../../../../../shared/constants/AIEnums";
 
 export interface BuildingContributionDependencies {
   gameState: GameState;
@@ -86,7 +87,7 @@ export function evaluateBuildingContributionGoals(
 
   goals.push({
     id: `contribute_build_${best.zone.id}_${now}`,
-    type: "work",
+    type: GoalType.WORK,
     priority: 0.5, // Medium priority
     targetZoneId: best.zone.id,
     data: {
