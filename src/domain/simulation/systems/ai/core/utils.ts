@@ -232,11 +232,15 @@ export function getRecommendedZoneIdsForNeed(
   );
 }
 
+import type { AgentRegistry } from "../../../core/AgentRegistry";
+
 export function getEntityPosition(
   entityId: string,
   gameState: GameState,
+  agentRegistry?: AgentRegistry,
 ): { x: number; y: number } | null {
-  const agent = gameState.agents?.find((a) => a.id === entityId);
+  // Try AgentRegistry first (O(1))
+  const agent = agentRegistry?.getProfile(entityId);
   if (agent?.position) {
     return { x: agent.position.x, y: agent.position.y };
   }

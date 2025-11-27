@@ -37,4 +37,3 @@ export const ALL_SYSTEM_STATUSES: readonly SystemStatus[] = Object.values(
 export function isSystemStatus(value: string): value is SystemStatus {
   return Object.values(SystemStatus).includes(value as SystemStatus);
 }
-

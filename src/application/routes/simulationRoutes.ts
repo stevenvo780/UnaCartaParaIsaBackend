@@ -3,6 +3,8 @@ import { simulationRunner } from "@/domain/simulation/core/index";
 import { storageService } from "@/infrastructure/services/storage/storageService";
 import type { SimulationCommand } from "@/shared/types/commands/SimulationCommand";
 import { logger } from "@/infrastructure/utils/logger";
+import { HttpStatusCode } from "@/shared/constants/HttpStatusCodes";
+import { ResponseStatus } from "@/shared/constants/ResponseEnums";
 
 const router = Router();
 
@@ -35,7 +37,9 @@ router.post(
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       logger.error("Error saving simulation:", errorMessage);
-      res.status(500).json({ error: "Failed to save simulation" });
+      res
+        .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
+        .json({ error: "Failed to save simulation" });
     }
   },
 );
@@ -43,12 +47,14 @@ router.post(
 router.get("/api/sim/health", (_req: Request, res: Response): void => {
   try {
     const snapshot = simulationRunner.getInitialSnapshot();
-    res.json({ status: "ok", tick: snapshot.tick });
+    res.json({ status: ResponseStatus.OK, tick: snapshot.tick });
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     logger.error("Error getting simulation health:", errorMessage);
-    res.status(500).json({ error: "Failed to get simulation health" });
+    res
+      .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ error: "Failed to get simulation health" });
   }
 });
 
@@ -60,7 +66,9 @@ router.get("/api/sim/state", (_req: Request, res: Response): void => {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     logger.error("Error getting simulation state:", errorMessage);
-    res.status(500).json({ error: "Failed to get simulation state" });
+    res
+      .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ error: "Failed to get simulation state" });
   }
 });
 
@@ -71,23 +79,29 @@ router.get("/api/sim/state", (_req: Request, res: Response): void => {
 router.post("/api/sim/command", (req: Request, res: Response): void => {
   try {
     if (!validateSimulationCommand(req.body)) {
-      res.status(400).json({ error: "Invalid command format" });
+      res
+        .status(HttpStatusCode.BAD_REQUEST)
+        .json({ error: "Invalid command format" });
       return;
     }
 
     const command = req.body as SimulationCommand;
     const accepted = simulationRunner.enqueueCommand(command);
     if (!accepted) {
-      res.status(429).json({ error: "Command queue full" });
+      res
+        .status(HttpStatusCode.TOO_MANY_REQUESTS)
+        .json({ error: "Command queue full" });
       return;
     }
 
-    res.json({ status: "queued" });
+    res.json({ status: ResponseStatus.QUEUED });
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     logger.error("Error processing command:", errorMessage);
-    res.status(500).json({ error: "Failed to process command" });
+    res
+      .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ error: "Failed to process command" });
   }
 });
 

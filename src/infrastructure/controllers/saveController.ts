@@ -3,6 +3,7 @@ import { storageService } from "../services/storage/storageService";
 import type { SaveData } from "../services/storage/storageService";
 import { logger } from "../utils/logger";
 import { HttpStatusCode } from "../../shared/constants/HttpStatusCodes";
+import { ResponseStatus } from "../../shared/constants/ResponseEnums";
 
 const MAX_SAVE_ID_LENGTH = 200;
 const SAVE_ID_PATTERN = /^save_\d+$/;
@@ -56,7 +57,7 @@ export class SaveController {
         error instanceof Error ? error.message : "Unknown error";
       logger.error("Health check failed:", errorMessage);
       res.status(HttpStatusCode.SERVICE_UNAVAILABLE).json({
-        status: "error",
+        status: ResponseStatus.ERROR,
         message: "Storage unavailable",
       });
     }

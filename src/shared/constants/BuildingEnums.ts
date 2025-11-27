@@ -62,10 +62,6 @@ export const ALL_BUILDING_CONDITIONS: readonly BuildingCondition[] =
 /**
  * Type guard to check if a string is a valid BuildingCondition.
  */
-export function isBuildingCondition(
-  value: string,
-): value is BuildingCondition {
-  return Object.values(BuildingCondition).includes(
-    value as BuildingCondition,
-  );
+export function isBuildingCondition(value: string): value is BuildingCondition {
+  return Object.values(BuildingCondition).includes(value as BuildingCondition);
 }

@@ -9,6 +9,7 @@ import worldRoutes from "./routes/worldRoutes.js";
 import simulationRoutes from "./routes/simulationRoutes.js";
 import metricsRoutes from "./routes/metricsRoutes.js";
 import { logger } from "../infrastructure/utils/logger.js";
+import { HttpStatusCode } from "../shared/constants/HttpStatusCodes";
 
 /**
  * Express application instance.
@@ -54,12 +55,14 @@ app.use(
         ? "Internal server error"
         : err.message;
     logger.error("Unhandled error:", err.message);
-    res.status(500).json({ error: errorMessage });
+    res
+      .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ error: errorMessage });
   },
 );
 
 app.use((_req: Request, res: Response): void => {
-  res.status(404).json({ error: "Route not found" });
+  res.status(HttpStatusCode.NOT_FOUND).json({ error: "Route not found" });
 });
 
 export default app;

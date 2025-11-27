@@ -262,10 +262,7 @@ export class TradeSystem {
     const now = Date.now();
 
     for (const [offerId, offer] of Array.from(this.activeOffers.entries())) {
-      if (
-        offer.expiresAt < now &&
-        offer.status === TradeOfferStatus.PENDING
-      ) {
+      if (offer.expiresAt < now && offer.status === TradeOfferStatus.PENDING) {
         offer.status = TradeOfferStatus.EXPIRED;
         this.activeOffers.delete(offerId);
       }
@@ -315,7 +312,8 @@ export class TradeSystem {
     if (!this.inventorySystem) return;
 
     // Get eligible agents using AgentRegistry (O(1) access per agent) or fallback to gameState
-    const agents: Array<{ id: string; lifeStage?: string; isDead?: boolean }> = [];
+    const agents: Array<{ id: string; lifeStage?: string; isDead?: boolean }> =
+      [];
     if (this.agentRegistry) {
       for (const profile of this.agentRegistry.getAllProfiles()) {
         if (profile.lifeStage === "adult" && !profile.isDead) {

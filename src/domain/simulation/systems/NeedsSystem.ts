@@ -556,7 +556,8 @@ export class NeedsSystem extends EventEmitter {
   private getEntityPosition(
     entityId: string,
   ): { x: number; y: number } | undefined {
-    const agent = this.gameState.agents?.find((e) => e.id === entityId);
+    // Try AgentRegistry first (O(1))
+    const agent = this.agentRegistry?.getProfile(entityId);
     if (agent?.position) return agent.position;
 
     const entity = this.gameState.entities?.find((e) => e.id === entityId);

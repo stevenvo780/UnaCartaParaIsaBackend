@@ -1,5 +1,5 @@
 import type { Item } from "../../domain/types/simulation/items";
-import { ItemTier } from "../../shared/constants/ItemEnums";
+import { ItemTier, ItemCategory } from "../../shared/constants/ItemEnums";
 
 export class BaseMaterialsCatalog {
   private static readonly materials: Item[] = [
@@ -8,7 +8,7 @@ export class BaseMaterialsCatalog {
       name: "Tronco de Madera",
       description: "Madera sin procesar, útil para crafteo básico",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       sprite: "assets/materials/wood_log.png",
       properties: {
         weight: 5,
@@ -22,7 +22,7 @@ export class BaseMaterialsCatalog {
       name: "Fibra Vegetal",
       description: "Fibras naturales para textiles y cuerdas",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 0.5,
         stackable: true,
@@ -36,7 +36,7 @@ export class BaseMaterialsCatalog {
       name: "Piedra",
       description: "Piedra común para construcción",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 8,
         stackable: true,
@@ -49,7 +49,7 @@ export class BaseMaterialsCatalog {
       name: "Mineral de Hierro",
       description: "Mineral sin procesar que contiene hierro",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 10,
         stackable: true,
@@ -62,7 +62,7 @@ export class BaseMaterialsCatalog {
       name: "Mineral de Cobre",
       description: "Mineral sin procesar que contiene cobre",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 9,
         stackable: true,
@@ -75,7 +75,7 @@ export class BaseMaterialsCatalog {
       name: "Arcilla",
       description: "Arcilla húmeda para cerámica",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 3,
         stackable: true,
@@ -89,7 +89,7 @@ export class BaseMaterialsCatalog {
       name: "Trigo",
       description: "Grano de trigo crudo",
       tier: ItemTier.RAW,
-      category: "food",
+      category: ItemCategory.FOOD,
       properties: {
         weight: 1,
         stackable: true,
@@ -104,7 +104,7 @@ export class BaseMaterialsCatalog {
       name: "Bayas",
       description: "Bayas silvestres comestibles",
       tier: ItemTier.RAW,
-      category: "food",
+      category: ItemCategory.FOOD,
       properties: {
         weight: 0.5,
         stackable: true,
@@ -119,7 +119,7 @@ export class BaseMaterialsCatalog {
       name: "Carne Cruda",
       description: "Carne fresca sin cocinar",
       tier: ItemTier.RAW,
-      category: "food",
+      category: ItemCategory.FOOD,
       properties: {
         weight: 3,
         stackable: true,
@@ -134,7 +134,7 @@ export class BaseMaterialsCatalog {
       name: "Pescado",
       description: "Pescado fresco sin procesar",
       tier: ItemTier.RAW,
-      category: "food",
+      category: ItemCategory.FOOD,
       properties: {
         weight: 2,
         stackable: true,
@@ -149,7 +149,7 @@ export class BaseMaterialsCatalog {
       name: "Agua",
       description: "Agua potable",
       tier: ItemTier.RAW,
-      category: "consumable",
+      category: ItemCategory.CONSUMABLE,
       properties: {
         weight: 1,
         stackable: true,
@@ -163,7 +163,7 @@ export class BaseMaterialsCatalog {
       name: "Cuero Sin Curtir",
       description: "Piel de animal sin procesar",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 4,
         stackable: true,
@@ -178,7 +178,7 @@ export class BaseMaterialsCatalog {
       name: "Carbón",
       description: "Combustible básico",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 2,
         stackable: true,
@@ -192,7 +192,7 @@ export class BaseMaterialsCatalog {
       name: "Champiñón Místico",
       description: "Hongo brillante con propiedades mágicas",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 0.5,
         stackable: true,
@@ -206,7 +206,7 @@ export class BaseMaterialsCatalog {
       name: "Cristal Brillante",
       description: "Cristal que emite luz propia",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 3,
         stackable: true,
@@ -220,7 +220,7 @@ export class BaseMaterialsCatalog {
       name: "Fibra Mística",
       description: "Fibra imbuida con energía mágica",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 0.3,
         stackable: true,
@@ -235,7 +235,7 @@ export class BaseMaterialsCatalog {
       name: "Hierba del Pantano",
       description: "Planta medicinal del humedal",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 0.5,
         stackable: true,
@@ -251,7 +251,7 @@ export class BaseMaterialsCatalog {
       name: "Juncos",
       description: "Plantas acuáticas para tejer",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 1,
         stackable: true,
@@ -266,7 +266,7 @@ export class BaseMaterialsCatalog {
       name: "Madera de Montaña",
       description: "Madera resistente de árboles alpinos",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 6,
         stackable: true,
@@ -280,7 +280,7 @@ export class BaseMaterialsCatalog {
       name: "Gemas Raras",
       description: "Piedras preciosas encontradas en montañas",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 1,
         stackable: true,
@@ -295,7 +295,7 @@ export class BaseMaterialsCatalog {
       name: "Hierbas Medicinales",
       description: "Plantas curativas del bosque",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 0.5,
         stackable: true,
@@ -311,7 +311,7 @@ export class BaseMaterialsCatalog {
       name: "Miel",
       description: "Miel natural de abejas del bosque",
       tier: ItemTier.RAW,
-      category: "food",
+      category: ItemCategory.FOOD,
       properties: {
         weight: 2,
         stackable: true,
@@ -325,7 +325,7 @@ export class BaseMaterialsCatalog {
       name: "Resina de Pino",
       description: "Sustancia pegajosa de los pinos",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 1,
         stackable: true,
@@ -340,7 +340,7 @@ export class BaseMaterialsCatalog {
       name: "Algodón",
       description: "Fibra suave de plantas de algodón",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 0.3,
         stackable: true,
@@ -354,7 +354,7 @@ export class BaseMaterialsCatalog {
       name: "Flores Silvestres",
       description: "Flores coloridas de la pradera",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 0.2,
         stackable: true,
@@ -371,7 +371,7 @@ export class BaseMaterialsCatalog {
       name: "Chatarra Metálica",
       description: "Restos de metal para reciclar",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 5,
         stackable: true,
@@ -385,7 +385,7 @@ export class BaseMaterialsCatalog {
       name: "Herramientas Viejas",
       description: "Herramientas desgastadas que pueden repararse",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 4,
         stackable: true,
@@ -399,7 +399,7 @@ export class BaseMaterialsCatalog {
       name: "Semillas",
       description: "Semillas para cultivar",
       tier: ItemTier.RAW,
-      category: "material",
+      category: ItemCategory.MATERIAL,
       properties: {
         weight: 0.1,
         stackable: true,

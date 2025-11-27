@@ -7,6 +7,7 @@ import { isWorldResourceType } from "../../../../types/simulation/resourceMappin
 import type { WorldResourceType } from "../../../../types/simulation/worldResources";
 import { getFrameTime } from "../../../../../shared/FrameTime";
 import { NeedType } from "../../../../../shared/constants/AIEnums";
+import type { AgentRegistry } from "../../../core/AgentRegistry";
 
 export interface AIGoalValidatorDeps {
   gameState: GameState;
@@ -14,6 +15,7 @@ export interface AIGoalValidatorDeps {
   needsSystem?: NeedsSystem;
   animalSystem?: AnimalSystem;
   getAgentPosition: (agentId: string) => { x: number; y: number } | null;
+  agentRegistry?: AgentRegistry;
 }
 
 /**
@@ -122,9 +124,7 @@ export class AIGoalValidator {
       goal.data?.targetAgentId
     ) {
       const targetId = goal.data.targetAgentId as string;
-      const targetAgent = this.deps.gameState.agents?.find(
-        (a) => a.id === targetId,
-      );
+      const targetAgent = this.deps.agentRegistry?.getProfile(targetId);
       if (!targetAgent) {
         return false;
       }
@@ -207,15 +207,13 @@ export class AIGoalValidator {
       goal.data?.targetAgentId
     ) {
       const targetId = goal.data.targetAgentId as string;
-      const targetAgent = this.deps.gameState.agents?.find(
-        (a) => a.id === targetId,
-      );
+      const targetAgent = this.deps.agentRegistry?.getProfile(targetId);
       if (!targetAgent || targetAgent.isDead) {
         return true;
       }
     }
 
-    const agent = this.deps.gameState.agents?.find((a) => a.id === agentId);
+    const agent = this.deps.agentRegistry?.getProfile(agentId);
     if (!agent || agent.isDead) {
       return true;
     }
@@ -345,9 +343,7 @@ export class AIGoalValidator {
       return null;
     }
 
-    const targetAgent = this.deps.gameState.agents?.find(
-      (a) => a.id === goal.targetId,
-    );
+    const targetAgent = this.deps.agentRegistry?.getProfile(goal.targetId);
     if (targetAgent) {
       return !targetAgent.isDead;
     }

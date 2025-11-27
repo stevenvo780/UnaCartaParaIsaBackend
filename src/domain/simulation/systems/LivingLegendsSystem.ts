@@ -136,7 +136,9 @@ export class LivingLegendsSystem {
 
   private updateTitles(): void {
     for (const [agentId, legend] of Array.from(this.legends.entries())) {
-      const agent = this.agentRegistry?.getProfile(agentId) ?? this._state.agents?.find((a) => a.id === agentId);
+      const agent =
+        this.agentRegistry?.getProfile(agentId) ??
+        this._state.agents?.find((a) => a.id === agentId);
       if (!agent) continue;
 
       const newTitles: string[] = [];
@@ -197,7 +199,9 @@ export class LivingLegendsSystem {
   }
 
   private createLegendRecord(agentId: string): LegendRecord {
-    const agent = this.agentRegistry?.getProfile(agentId) ?? this._state.agents?.find((a) => a.id === agentId);
+    const agent =
+      this.agentRegistry?.getProfile(agentId) ??
+      this._state.agents?.find((a) => a.id === agentId);
     const agentName = agent?.name || "Unknown";
 
     return {

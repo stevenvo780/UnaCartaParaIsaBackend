@@ -16,6 +16,7 @@ import { NeedType } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 import { TargetType } from "../../../../../shared/constants/EntityEnums";
 import { AnimalState } from "../../../../../shared/constants/AnimalEnums";
+import type { AgentRegistry } from "../../../core/AgentRegistry";
 
 export interface AIActionExecutorDeps {
   gameState: GameState;
@@ -27,6 +28,7 @@ export interface AIActionExecutorDeps {
   taskSystem?: TaskSystem;
   movementSystem?: MovementSystem;
   tryDepositResources: (entityId: string, zoneId: string) => void;
+  agentRegistry?: AgentRegistry;
 }
 
 /**
@@ -130,9 +132,7 @@ export class AIActionExecutor {
       return;
     }
 
-    const agent = this.deps.gameState.agents?.find(
-      (a) => a.id === action.agentId,
-    );
+    const agent = this.deps.agentRegistry?.getProfile(action.agentId);
     if (!agent?.position) {
       movement?.moveToZone(action.agentId, action.targetZoneId);
       return;

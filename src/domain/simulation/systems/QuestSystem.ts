@@ -254,7 +254,7 @@ export class QuestSystem {
 
     this.questProgress.questHistory.push({
       questId,
-      action: "completed",
+      action: QuestStatus.COMPLETED,
       timestamp: Date.now(),
     });
 
@@ -334,7 +334,7 @@ export class QuestSystem {
 
     this.questProgress.questHistory.push({
       questId,
-      action: "failed",
+      action: QuestStatus.FAILED,
       timestamp: Date.now(),
     });
 

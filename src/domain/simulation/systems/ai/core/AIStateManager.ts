@@ -15,6 +15,7 @@ import {
   AgentPriority,
 } from "../../../../../shared/constants/AIEnums";
 import { ExplorationType } from "../../../../../shared/constants/AgentEnums";
+import type { AgentRegistry } from "../../../core/AgentRegistry";
 
 /**
  * Manages AI state creation, retrieval, and cleanup for agents.
@@ -29,6 +30,7 @@ export class AIStateManager {
     string,
     "peaceful" | "tit_for_tat" | "bully"
   >;
+  private readonly agentRegistry?: AgentRegistry;
 
   private _activeAgentIdsCache: string[] | null = null;
 
@@ -38,12 +40,14 @@ export class AIStateManager {
     playerControlledAgents: Set<string>,
     agentPriorities: Map<string, AgentPriority>,
     agentStrategies: Map<string, "peaceful" | "tit_for_tat" | "bully">,
+    agentRegistry?: AgentRegistry,
   ) {
     this.gameState = gameState;
     this.aiStates = aiStates;
     this.playerControlledAgents = playerControlledAgents;
     this.agentPriorities = agentPriorities;
     this.agentStrategies = agentStrategies;
+    this.agentRegistry = agentRegistry;
   }
 
   /** Gets or sets the active agent IDs cache */
@@ -80,7 +84,7 @@ export class AIStateManager {
   public getAIState(agentId: string): AIState | undefined {
     let state = this.aiStates.get(agentId);
     if (!state) {
-      const agent = this.gameState.agents?.find((a) => a.id === agentId);
+      const agent = this.agentRegistry?.getProfile(agentId);
       if (agent) {
         state = this.createAIState(agentId);
         this.aiStates.set(agentId, state);
@@ -100,7 +104,7 @@ export class AIStateManager {
    * Creates a new AI state for an agent.
    */
   public createAIState(agentId: string): AIState {
-    const agent = this.gameState.agents?.find((a) => a.id === agentId);
+    const agent = this.agentRegistry?.getProfile(agentId);
     let personality: AgentPersonality;
 
     if (agent && agent.traits) {

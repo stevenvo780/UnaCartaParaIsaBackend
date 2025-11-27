@@ -110,7 +110,7 @@ export class MovementSystem extends EventEmitter {
   }> = [];
   private activePaths = 0;
   private readonly MAX_CONCURRENT_PATHS = 5;
-  private entityIndex?: EntityIndex;
+  private _entityIndex?: EntityIndex;
   private agentRegistry?: AgentRegistry;
 
   constructor(
@@ -121,7 +121,7 @@ export class MovementSystem extends EventEmitter {
   ) {
     super();
     this.gameState = gameState;
-    this.entityIndex = entityIndex;
+    this._entityIndex = entityIndex;
     this.agentRegistry = agentRegistry;
 
     this.pathfinder = new EasyStar.js();

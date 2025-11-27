@@ -36,4 +36,3 @@ export const ALL_RESPONSE_STATUSES: readonly ResponseStatus[] = Object.values(
 export function isResponseStatus(value: string): value is ResponseStatus {
   return Object.values(ResponseStatus).includes(value as ResponseStatus);
 }
-

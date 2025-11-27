@@ -73,7 +73,13 @@ export function isItemTier(value: string): value is ItemTier {
 export enum ItemCategory {
   MATERIAL = "material",
   FOOD = "food",
+  TOOL = "tool",
+  WEAPON = "weapon",
+  ARMOR = "armor",
+  STRUCTURE = "structure",
   CONSUMABLE = "consumable",
+  TRADE = "trade",
+  SPECIAL = "special",
 }
 
 /**
@@ -94,4 +100,3 @@ export const ALL_ITEM_CATEGORIES: readonly ItemCategory[] = Object.values(
 export function isItemCategory(value: string): value is ItemCategory {
   return Object.values(ItemCategory).includes(value as ItemCategory);
 }
-

@@ -184,7 +184,7 @@ export class AISystem extends EventEmitter {
   private questSystem?: QuestSystem;
   private timeSystem?: TimeSystem;
   private sharedKnowledgeSystem?: SharedKnowledgeSystem;
-  private entityIndex?: EntityIndex;
+  private _entityIndex?: EntityIndex;
   private gpuService?: GPUComputeService;
   private agentRegistry?: AgentRegistry;
 
@@ -293,7 +293,7 @@ export class AISystem extends EventEmitter {
   ) {
     super();
     this.gameState = gameState;
-    this.entityIndex = entityIndex;
+    this._entityIndex = entityIndex;
     this.gpuService = gpuService;
     this.agentRegistry = agentRegistry;
     this.config = {
@@ -351,6 +351,7 @@ export class AISystem extends EventEmitter {
       this.playerControlledAgents,
       this.agentPriorities,
       this.agentStrategies,
+      this.agentRegistry,
     );
 
     this.goalValidator = new AIGoalValidator({
@@ -360,6 +361,7 @@ export class AISystem extends EventEmitter {
       animalSystem: this.animalSystem,
       getAgentPosition: (agentId: string): { x: number; y: number } | null =>
         this.getAgentPosition(agentId),
+      agentRegistry: this.agentRegistry,
     });
 
     this.actionPlanner = new AIActionPlanner({
@@ -388,6 +390,7 @@ export class AISystem extends EventEmitter {
       movementSystem: this._movementSystem,
       tryDepositResources: (entityId: string, zoneId: string): void =>
         this.tryDepositResources(entityId, zoneId),
+      agentRegistry: this.agentRegistry,
     });
 
     this.urgentGoals = new AIUrgentGoals({
@@ -532,6 +535,7 @@ export class AISystem extends EventEmitter {
           }
         : null,
       goalsCompletedRef: this._goalsCompletedRef,
+      agentRegistry: this.agentRegistry,
     });
   }
 
@@ -774,9 +778,7 @@ export class AISystem extends EventEmitter {
           const targetEntity = this.gameState.entities?.find(
             (e) => e.id === action.targetId,
           );
-          const targetAgent = this.gameState.agents?.find(
-            (a) => a.id === action.targetId,
-          );
+          const targetAgent = this.agentRegistry?.getProfile(action.targetId);
           if (
             (targetEntity && targetEntity.isDead) ||
             (targetAgent && targetAgent.isDead)
@@ -1655,7 +1657,7 @@ export class AISystem extends EventEmitter {
   public getAIState(agentId: string): AIState | undefined {
     let state = this.aiStates.get(agentId);
     if (!state) {
-      const agent = this.gameState.agents?.find((a) => a.id === agentId);
+      const agent = this.agentRegistry?.getProfile(agentId);
       if (agent) {
         state = this.createAIState(agentId);
         this.aiStates.set(agentId, state);
@@ -2011,7 +2013,10 @@ export class AISystem extends EventEmitter {
     if (!myAgent?.position) return [];
 
     // Use AgentRegistry to filter active agents
-    const activeAgents: Array<{ id: string; position: { x: number; y: number } }> = [];
+    const activeAgents: Array<{
+      id: string;
+      position: { x: number; y: number };
+    }> = [];
     if (this.agentRegistry) {
       for (const a of this.agentRegistry.getAllProfiles()) {
         if (!a.isDead && a.id !== entityId && a.position) {

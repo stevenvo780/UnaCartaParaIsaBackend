@@ -91,6 +91,8 @@ export interface AIZoneNeedsPort {
   } | null;
 }
 
+import type { AgentRegistry } from "../../../core/AgentRegistry";
+
 export interface AIZoneHandlerDeps {
   gameState: GameState;
   inventorySystem: AIZoneInventoryPort | null;
@@ -101,6 +103,7 @@ export interface AIZoneHandlerDeps {
   householdSystem: AIZoneHouseholdPort | null;
   needsSystem: AIZoneNeedsPort | null;
   goalsCompletedRef: { value: number };
+  agentRegistry?: AgentRegistry;
 }
 
 import { ActivityType } from "../../../../../shared/constants/MovementEnums";
@@ -337,9 +340,7 @@ export class AIZoneHandler {
 
     const targetId = goal.data.targetAgentId as string;
 
-    const targetAgent = this.deps.gameState.agents?.find(
-      (a) => a.id === targetId,
-    );
+    const targetAgent = this.deps.agentRegistry?.getProfile(targetId);
     if (!targetAgent || targetAgent.isDead) {
       aiState.currentGoal = null;
       aiState.currentAction = null;
