@@ -7,6 +7,7 @@ import type {
   WorldGenConfig,
   TerrainTile,
 } from "../../../../domain/world/generation/types";
+import { WorkerMessageType } from "../../../../shared/constants/WebSocketEnums";
 
 interface ChunkWorkerResult {
   chunk: TerrainTile[][];
@@ -36,7 +37,7 @@ interface WorkerEnvelope {
 }
 
 interface WorkerMessage {
-  type: "result";
+  type: WorkerMessageType.RESULT;
   requestId: string;
   ok: boolean;
   chunk?: TerrainTile[][];
@@ -214,7 +215,7 @@ export class ChunkWorkerPool extends EventEmitter {
     workerEnvelope.currentJob = job;
     job.workerId = workerEnvelope.id;
     workerEnvelope.worker.postMessage({
-      type: "generate",
+      type: WorkerMessageType.GENERATE,
       requestId: job.requestId,
       coords: job.coords,
       config: job.config,

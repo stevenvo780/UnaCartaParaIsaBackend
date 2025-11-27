@@ -231,27 +231,3 @@ export function getRecommendedZoneIdsForNeed(
     []
   );
 }
-
-/**
- * Gets entity position from agent, entity, or returns fallback.
- *
- * @param entityId - Entity ID to get position for
- * @param gameState - Current game state
- * @returns Position object with x and y, or null if not found
- */
-export function getEntityPosition(
-  entityId: string,
-  gameState: GameState,
-): { x: number; y: number } | null {
-  const agent = gameState.agents?.find((a) => a.id === entityId);
-  if (agent?.position) {
-    return { x: agent.position.x, y: agent.position.y };
-  }
-
-  const entity = gameState.entities?.find((e) => e.id === entityId);
-  if (entity?.position) {
-    return { x: entity.position.x, y: entity.position.y };
-  }
-
-  return null;
-}

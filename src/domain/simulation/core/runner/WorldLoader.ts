@@ -91,7 +91,6 @@ export class WorldLoader {
     }
 
     this.runner.state.terrainTiles = allTiles;
-    // worldSize is stored in pixels (tiles × tileSize) for consistency with zone/building coordinates
     this.runner.state.worldSize = {
       width: worldConfig.width * worldConfig.tileSize,
       height: worldConfig.height * worldConfig.tileSize,
@@ -104,9 +103,6 @@ export class WorldLoader {
       ...worldConfig,
       biomeMap,
     });
-
-    // Animals are spawned per-chunk only (lazy loading via /api/world/chunk endpoint)
-    // See AnimalSpawning.spawnAnimalsInChunk() called from worldController
 
     this.generateFunctionalZones(worldConfig, biomeMap);
   }
@@ -223,7 +219,6 @@ export class WorldLoader {
     for (const agent of this.runner.state.agents) {
       try {
         if (!agent.position) {
-          // worldSize is now in pixels, use center of map
           agent.position = {
             x: (this.runner.state.worldSize?.width ?? 2048) / 2,
             y: (this.runner.state.worldSize?.height ?? 2048) / 2,
@@ -244,15 +239,15 @@ export class WorldLoader {
       }
     }
 
-    // === SPAWN INITIAL ANIMALS NEAR AGENTS ===
-    // This ensures hunters have animals to hunt even without chunk requests from frontend
     this.spawnInitialAnimals();
   }
 
   /**
    * Spawns initial animals near agent spawn points.
-   * This ensures the backend has huntable animals from the start,
-   * regardless of whether frontend requests chunks.
+   *
+   * Ensures the backend has huntable animals from the start, regardless
+   * of whether frontend requests chunks. Spawns in a 5x5 grid of chunks
+   * around the average agent position.
    */
   private spawnInitialAnimals(): void {
     const animalSystem = this.runner.animalSystem;
@@ -260,7 +255,6 @@ export class WorldLoader {
     const chunkTileSize = 16; // tiles per chunk
     const chunkPixelSize = chunkTileSize * tileSize;
 
-    // Find the average position of all agents to spawn animals near them
     const agents = this.runner.state.agents;
     if (agents.length === 0) {
       logger.warn(
@@ -280,11 +274,9 @@ export class WorldLoader {
       }
     }
 
-    // Use agent center or default to origin area
     const centerX = count > 0 ? avgX / count : 0;
     const centerY = count > 0 ? avgY / count : 0;
 
-    // Convert pixel position to chunk coordinates
     const centerChunkX = Math.max(0, Math.floor(centerX / chunkPixelSize));
     const centerChunkY = Math.max(0, Math.floor(centerY / chunkPixelSize));
 
@@ -292,7 +284,6 @@ export class WorldLoader {
       `🐾 [WorldLoader] Spawning animals around agent center: (${Math.round(centerX)}, ${Math.round(centerY)}) = chunk (${centerChunkX}, ${centerChunkY})`,
     );
 
-    // Spawn in a 5x5 grid of chunks around agent center
     const chunkRadius = 2;
     let totalSpawned = 0;
 
@@ -325,7 +316,6 @@ export class WorldLoader {
     const baseX = 100;
     const baseY = 100;
 
-    // Bioma por defecto para el pueblo inicial
     const defaultBiome = "Grassland";
 
     const houseZone: Zone = {
@@ -346,7 +336,6 @@ export class WorldLoader {
         underConstruction: false,
         buildingId: `building_house_initial_${Date.now()}`,
         builtAt: Date.now(),
-        // Metadatos para sprite por bioma
         biome: defaultBiome,
         buildingType: "house",
         spriteVariant: 0,
@@ -372,7 +361,6 @@ export class WorldLoader {
         craftingStation: true,
         buildingId: `building_workbench_initial_${Date.now()}`,
         builtAt: Date.now(),
-        // Metadatos para sprite por bioma
         biome: defaultBiome,
         buildingType: "workshop",
         spriteVariant: 0,
@@ -394,7 +382,6 @@ export class WorldLoader {
       metadata: {
         buildingId: `building_storage_initial_${Date.now()}`,
         builtAt: Date.now(),
-        // Metadatos para sprite por bioma
         biome: defaultBiome,
         buildingType: "workshop",
         spriteVariant: 1,
@@ -416,7 +403,6 @@ export class WorldLoader {
       },
       metadata: {
         parentZoneId: houseZone.id,
-        // Metadatos para sprite por bioma (usa mismo que la casa padre)
         biome: defaultBiome,
         buildingType: "house",
         spriteVariant: 1,
@@ -438,7 +424,6 @@ export class WorldLoader {
       },
       metadata: {
         parentZoneId: houseZone.id,
-        // Metadatos para sprite por bioma
         biome: defaultBiome,
         buildingType: "workshop",
         spriteVariant: 2,
@@ -500,9 +485,7 @@ export class WorldLoader {
           if (!zoneType) continue;
 
           const zoneId = `zone_${zoneType}_${x}_${y}`;
-          // Normalizar bioma para sprite (capitalizar primera letra)
           const normalizedBiome = this.normalizeBiomeForSprite(biome);
-          // Obtener variante aleatoria (0-4)
           const variantIndex = Math.floor(((x * 31 + y * 17) % 100) / 20);
 
           const zone: Zone = {
@@ -584,9 +567,14 @@ export class WorldLoader {
   }
 
   /**
-   * Normaliza el nombre del bioma para coincidir con los nombres de carpetas de assets
-   * backend: grassland, forest, desert, mountain, wetland, mystical, village
-   * assets: Grassland, Forest, Desert, Mountain, Swamp, Beach, Tundra
+   * Normalizes biome name to match asset folder names.
+   *
+   * Maps backend biome names (lowercase) to asset folder names (capitalized).
+   * Backend: grassland, forest, desert, mountain, wetland, mystical, village
+   * Assets: Grassland, Forest, Desert, Mountain, Swamp, Beach, Tundra
+   *
+   * @param biome - Backend biome name
+   * @returns Normalized biome name for sprite lookup
    */
   private normalizeBiomeForSprite(biome: string): string {
     const biomeMapping: Record<string, string> = {
@@ -597,7 +585,7 @@ export class WorldLoader {
       mountainous: "Mountain",
       wetland: "Swamp",
       swamp: "Swamp",
-      mystical: "Forest", // Usa Forest como fallback
+      mystical: "Forest",
       village: "Grassland",
       beach: "Beach",
       tundra: "Tundra",
@@ -608,12 +596,15 @@ export class WorldLoader {
   }
 
   /**
-   * Determina el tipo de edificio sprite basado en el tipo de zona
-   * Mapea tipos de zona a tipos de sprites disponibles: house, workshop, watchtower
+   * Determines building sprite type based on zone type.
+   *
+   * Maps zone types to available sprite types: house, workshop, watchtower.
+   *
+   * @param zoneType - Zone type string
+   * @returns Building sprite type
    */
   private getZoneBuildingType(zoneType: string): string {
     const buildingTypeMapping: Record<string, string> = {
-      // Casas/descanso
       rest: "house",
       shelter: "house",
       bedroom: "house",
@@ -621,7 +612,6 @@ export class WorldLoader {
       bathroom: "house",
       comfort: "house",
 
-      // Trabajo/producción
       work: "workshop",
       kitchen: "workshop",
       office: "workshop",
@@ -632,13 +622,11 @@ export class WorldLoader {
       crafting: "workshop",
       energy: "workshop",
 
-      // Torres/defensa/servicios
       defense: "watchtower",
       security: "watchtower",
       medical: "watchtower",
       spiritual: "watchtower",
 
-      // Servicios sociales/educación (usa house por defecto)
       social: "house",
       recreation: "house",
       entertainment: "house",

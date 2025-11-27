@@ -33,7 +33,20 @@ export interface AIActionExecutorDeps {
 
 /**
  * Executes AI actions by coordinating with game systems.
- * Handles movement, harvesting, combat, social interactions, crafting, etc.
+ *
+ * Translates high-level AI goals into concrete system operations:
+ * - Movement: Delegates to MovementSystem
+ * - Harvesting: Uses WorldResourceSystem to gather resources
+ * - Combat: Handles animal hunting and agent combat
+ * - Social: Registers interactions via SocialSystem
+ * - Crafting: Uses EnhancedCraftingSystem for item creation
+ * - Needs: Satisfies needs through NeedsSystem
+ *
+ * All actions emit completion events for goal tracking and quest progression.
+ *
+ * @see MovementSystem for movement operations
+ * @see WorldResourceSystem for resource harvesting
+ * @see NeedsSystem for need satisfaction
  */
 export class AIActionExecutor {
   private deps: AIActionExecutorDeps;
@@ -43,7 +56,9 @@ export class AIActionExecutor {
   }
 
   /**
-   * Updates dependencies (for circular dependency resolution).
+   * Updates dependencies for circular dependency resolution.
+   *
+   * @param deps - Partial dependencies to merge with existing ones
    */
   public updateDeps(deps: Partial<AIActionExecutorDeps>): void {
     this.deps = { ...this.deps, ...deps };
@@ -51,6 +66,11 @@ export class AIActionExecutor {
 
   /**
    * Executes an action for an agent.
+   *
+   * Routes the action to the appropriate system handler based on action type.
+   * Emits completion events for goal tracking.
+   *
+   * @param action - Action to execute
    */
   public executeAction(action: AgentAction): void {
     if (!this.deps.movementSystem) return;
@@ -197,7 +217,6 @@ export class AIActionExecutor {
     if (result.success) {
       const resource = this.deps.gameState.worldResources?.[action.targetId];
       if (resource) {
-        // Handle need satisfaction based on resource type
         if (resource.type === "water_source" && this.deps.needsSystem) {
           this.deps.needsSystem.satisfyNeed(
             action.agentId,
@@ -217,7 +236,6 @@ export class AIActionExecutor {
           );
         }
 
-        // Add all gathered items to inventory
         if (this.deps.inventorySystem) {
           for (const item of result.items) {
             const inventoryResourceType = itemToInventoryResource(item.type);
@@ -269,20 +287,16 @@ export class AIActionExecutor {
       return;
     }
 
-    // Check if target is an animal
     const animals = this.deps.gameState.animals?.animals;
     const targetAnimal = animals?.find((a) => a.id === targetId && !a.isDead);
 
     if (targetAnimal) {
-      // Get animal config to determine food value
       const config = getAnimalConfig(targetAnimal.type);
       const foodValue = config?.foodValue ?? 15;
 
-      // Mark animal as dead
       targetAnimal.isDead = true;
       targetAnimal.state = AnimalState.DEAD;
 
-      // Add food to hunter's inventory
       if (this.deps.inventorySystem) {
         this.deps.inventorySystem.addResource(
           action.agentId,
@@ -294,7 +308,6 @@ export class AIActionExecutor {
         );
       }
 
-      // Satisfy hunger immediately with some of the kill
       if (this.deps.needsSystem) {
         this.deps.needsSystem.satisfyNeed(
           action.agentId,
@@ -303,7 +316,6 @@ export class AIActionExecutor {
         );
       }
 
-      // Emit hunt success event
       simulationEvents.emit(GameEventNames.ANIMAL_HUNTED, {
         animalId: targetId,
         hunterId: action.agentId,
@@ -318,7 +330,6 @@ export class AIActionExecutor {
         data: { targetId, targetType: "animal", foodValue },
       });
     } else {
-      // Target is not an animal (could be another agent - combat)
       simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
         agentId: action.agentId,
         actionType: ActionType.ATTACK,
@@ -329,7 +340,6 @@ export class AIActionExecutor {
   }
 
   private executeSocialize(action: AgentAction): void {
-    // If we have a target agent, interact with them specifically
     if (action.targetId && this.deps.socialSystem) {
       this.deps.socialSystem.registerFriendlyInteraction(
         action.agentId,
@@ -348,9 +358,7 @@ export class AIActionExecutor {
       return;
     }
 
-    // Socializing in a zone or in general - satisfy social need
     if (this.deps.needsSystem) {
-      // More social satisfaction in designated zones, less elsewhere
       const socialBoost = action.targetZoneId ? 12 : 5;
       const funBoost = action.targetZoneId ? 8 : 3;
       this.deps.needsSystem.satisfyNeed(

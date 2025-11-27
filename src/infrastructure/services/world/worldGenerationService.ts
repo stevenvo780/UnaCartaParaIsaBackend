@@ -14,6 +14,7 @@ import seedrandom from "seedrandom";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types.js";
 import { VoronoiGenerator } from "../../../domain/world/generation/VoronoiGenerator.js";
+import { WorldGenerationStatus } from "../../../shared/constants/StatusEnums";
 
 /**
  * Service for generating world terrain chunks.
@@ -217,11 +218,11 @@ export class WorldGenerationService {
 
   async generateWorld(config: WorldGenConfig): Promise<{
     config: WorldGenConfig;
-    status: string;
+    status: WorldGenerationStatus;
   }> {
     return {
       config,
-      status: "generating",
+      status: WorldGenerationStatus.GENERATING,
     };
   }
 

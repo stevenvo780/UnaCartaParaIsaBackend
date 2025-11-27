@@ -5,6 +5,7 @@ import { DeltaEncoder } from "../DeltaEncoder";
 import type { SimulationRunner } from "../SimulationRunner";
 import { cloneGameState } from "../defaultState";
 import type { SimulationSnapshot } from "../../../../shared/types/commands/SimulationCommand";
+import { WorkerMessageType } from "../../../../shared/constants/WebSocketEnums";
 
 export class SnapshotManager {
   private stateCache: StateCache;
@@ -22,20 +23,24 @@ export class SnapshotManager {
 
   private initializeSnapshotWorker(): void {
     try {
+      const readyType = WorkerMessageType.READY;
+      const snapshotType = WorkerMessageType.SNAPSHOT;
+      const shutdownType = WorkerMessageType.SHUTDOWN;
+      const errorType = WorkerMessageType.ERROR;
       const workerCode = `
         const { parentPort } = require('worker_threads');
         if (!parentPort) throw new Error('SnapshotWorker inline requires parentPort');
-        parentPort.postMessage({ type: 'ready' });
+        parentPort.postMessage({ type: '${readyType}' });
         parentPort.on('message', (msg) => {
           try {
-            if (msg && msg.type === 'snapshot' && msg.data) {
+            if (msg && msg.type === '${snapshotType}' && msg.data) {
               const serialized = JSON.stringify(msg.data);
               parentPort.postMessage({ type: 'snapshot-ready', data: serialized, size: serialized.length });
-            } else if (msg && msg.type === 'shutdown') {
+            } else if (msg && msg.type === '${shutdownType}') {
               process.exit(0);
             }
           } catch (err) {
-            parentPort.postMessage({ type: 'error', error: (err && err.message) || String(err) });
+            parentPort.postMessage({ type: '${errorType}', error: (err && err.message) || String(err) });
           }
         });
       `;
@@ -48,7 +53,7 @@ export class SnapshotManager {
           data?: string;
           error?: string;
         };
-        if (message.type === "ready") {
+        if (message.type === WorkerMessageType.READY) {
           this.snapshotWorkerReady = true;
           logger.info("🧵 Snapshot worker thread ready");
         } else if (message.type === "snapshot-ready" && message.data) {
@@ -58,7 +63,7 @@ export class SnapshotManager {
           } catch (err) {
             logger.error("Failed to parse snapshot from worker:", err);
           }
-        } else if (message.type === "error") {
+        } else if (message.type === WorkerMessageType.ERROR) {
           logger.error("Snapshot worker error:", message.error);
         }
       });
@@ -97,16 +102,10 @@ export class SnapshotManager {
       currentTick,
     );
 
-    logger.info(
-      `[SNAPSHOT DEBUG] Before enrichment: agents=${stateSnapshot.agents?.length ?? "undefined"}, tick=${currentTick}`,
-    );
-
-    // Enrich agents with AI state data before sending to frontend
     if (stateSnapshot.agents) {
       stateSnapshot.agents = stateSnapshot.agents.map((agent) => {
         const aiState = this.runner.aiSystem.getAIState(agent.id);
 
-        // Serialize AI state for frontend
         const ai = aiState
           ? {
               currentGoal: aiState.currentGoal || undefined,
@@ -124,11 +123,6 @@ export class SnapshotManager {
       });
     }
 
-    logger.info(
-      `[SNAPSHOT DEBUG] After enrichment: agents=${stateSnapshot.agents?.length ?? "undefined"}, tick=${currentTick}`,
-    );
-
-    // We need to construct a SimulationSnapshot to pass to encodeDelta
     const events =
       this.runner.capturedEvents.length > 0
         ? [...this.runner.capturedEvents]
@@ -154,7 +148,7 @@ export class SnapshotManager {
     };
 
     this.snapshotWorker.postMessage({
-      type: "snapshot",
+      type: WorkerMessageType.SNAPSHOT,
       data: snapshotData,
     });
   }
@@ -175,7 +169,6 @@ export class SnapshotManager {
       activeLegends,
     };
 
-    // Ensure social graph is populated even before first tick
     if (!snapshotState.socialGraph) {
       snapshotState.socialGraph = this.runner.socialSystem.getGraphSnapshot();
     }
@@ -186,7 +179,6 @@ export class SnapshotManager {
         const role = this.runner.roleSystem.getAgentRole(agent.id);
         const aiState = this.runner.aiSystem.getAIState(agent.id);
 
-        // Serialize AI state for frontend
         const ai = aiState
           ? {
               currentGoal: aiState.currentGoal || undefined,
@@ -224,7 +216,7 @@ export class SnapshotManager {
 
   public cleanup(): void {
     if (this.snapshotWorker) {
-      this.snapshotWorker.postMessage({ type: "shutdown" });
+      this.snapshotWorker.postMessage({ type: WorkerMessageType.SHUTDOWN });
       this.snapshotWorker.terminate();
       this.snapshotWorker = undefined;
       this.snapshotWorkerReady = false;

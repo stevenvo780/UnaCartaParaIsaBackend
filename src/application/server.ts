@@ -10,9 +10,12 @@ import { encodeMsgPack, decodeMessage } from "../shared/MessagePackCodec";
 import type {
   SimulationCommand,
   SimulationRequest,
+  SimulationSnapshot,
 } from "../shared/types/commands/SimulationCommand";
 import { ChunkStreamServer } from "../infrastructure/services/chunk/chunk/ChunkStreamServer";
 import { logger } from "../infrastructure/utils/logger.js";
+import { WebSocketMessageType } from "../shared/constants/WebSocketEnums";
+import { SimulationRequestType } from "../shared/constants/CommandEnums";
 
 /**
  * Main server entry point.
@@ -185,7 +188,7 @@ simulationWss.on("connection", (ws: WebSocket) => {
   const snapshot = simulationRunner.getInitialSnapshot();
   ws.send(
     encodeMsgPack({
-      type: "SNAPSHOT",
+      type: WebSocketMessageType.SNAPSHOT,
       payload: snapshot,
     }),
   );
@@ -213,7 +216,7 @@ simulationWss.on("connection", (ws: WebSocket) => {
       ) {
         ws.send(
           encodeMsgPack({
-            type: "ERROR",
+            type: WebSocketMessageType.ERROR,
             message: "Invalid command format",
           }),
         );
@@ -224,25 +227,27 @@ simulationWss.on("connection", (ws: WebSocket) => {
 
       if (command.type.startsWith("REQUEST_")) {
         const request = command as SimulationRequest;
-        let responsePayload: unknown = null;
+        let responsePayload: SimulationSnapshot | Record<string, unknown> | null =
+          null;
 
         switch (request.type) {
-          case "REQUEST_FULL_STATE":
+          case SimulationRequestType.REQUEST_FULL_STATE:
             responsePayload = simulationRunner.getInitialSnapshot();
             break;
-          case "REQUEST_ENTITY_DETAILS":
-            responsePayload = simulationRunner.getEntityDetails(
-              request.entityId,
-            );
+          case SimulationRequestType.REQUEST_ENTITY_DETAILS:
+            responsePayload =
+              (simulationRunner.getEntityDetails(
+                request.entityId,
+              ) as Record<string, unknown>) || null;
             break;
-          case "REQUEST_PLAYER_ID":
+          case SimulationRequestType.REQUEST_PLAYER_ID:
             responsePayload = { playerId: simulationRunner.getPlayerId() };
             break;
         }
 
         ws.send(
           encodeMsgPack({
-            type: "RESPONSE",
+            type: WebSocketMessageType.RESPONSE,
             requestId: request.requestId,
             payload: responsePayload,
           }),
@@ -257,7 +262,10 @@ simulationWss.on("connection", (ws: WebSocket) => {
       if (!accepted) {
         logger.warn(`⚠️ Command rejected (queue full): ${command.type}`);
         ws.send(
-          encodeMsgPack({ type: "ERROR", message: "Command queue full" }),
+          encodeMsgPack({
+            type: WebSocketMessageType.ERROR,
+            message: "Command queue full",
+          }),
         );
       } else {
         logger.info(`✅ Command enqueued successfully: ${command.type}`);
@@ -267,7 +275,7 @@ simulationWss.on("connection", (ws: WebSocket) => {
       logger.error("Failed to parse command:", errorMessage);
       ws.send(
         encodeMsgPack({
-          type: "ERROR",
+          type: WebSocketMessageType.ERROR,
           message: "Failed to parse command",
         }),
       );
@@ -289,7 +297,7 @@ simulationRunner.on("tick", (snapshot: unknown) => {
   const currentTick = (snapshot as { tick?: number }).tick ?? 0;
   if (currentTick !== cachedTickNumber || !cachedTickBuffer) {
     cachedTickBuffer = encodeMsgPack({
-      type: "TICK",
+      type: WebSocketMessageType.TICK,
       payload: snapshot,
     });
     cachedTickNumber = currentTick;

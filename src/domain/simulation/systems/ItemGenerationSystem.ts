@@ -19,14 +19,17 @@ import { injectable, inject, unmanaged } from "inversify";
 import { TYPES } from "../../../config/Types";
 
 /**
- * Genera reglas de spawn basadas en el catálogo de materiales base.
- * Los materiales con metadata.biome se generan en zonas específicas.
+ * Generates spawn rules based on the base materials catalog.
+ *
+ * Materials with metadata.biome are generated in specific zones.
+ * Higher value materials have longer respawn times to maintain rarity.
+ *
+ * @returns Array of generation rules for item spawning
  */
 function generateDefaultRulesFromCatalog(): GenerationRule[] {
   const rules: GenerationRule[] = [];
   const materials = BaseMaterialsCatalog.getAllMaterials();
 
-  // Mapeo de biomas a tipos de zona
   const biomeToZoneType: Record<string, string> = {
     mystical: "mystical",
     wetland: "water",
@@ -36,7 +39,6 @@ function generateDefaultRulesFromCatalog(): GenerationRule[] {
     village: "storage",
   };
 
-  // Generar reglas para materiales con bioma específico
   for (const material of materials) {
     const biome = material.metadata?.biome as string | undefined;
     if (biome && biomeToZoneType[biome]) {
@@ -49,12 +51,11 @@ function generateDefaultRulesFromCatalog(): GenerationRule[] {
         spawnChance: Math.min(0.8, rarity),
         minQuantity: 1,
         maxQuantity: Math.max(1, Math.floor(10 / value)),
-        respawnTime: 30000 + value * 5000, // Mayor valor = más tiempo de respawn
+        respawnTime: 30000 + value * 5000,
       });
     }
   }
 
-  // Materiales básicos universales (sin bioma específico)
   const basicMaterials = ["wood_log", "stone", "fiber", "water"];
   for (const itemId of basicMaterials) {
     rules.push({
@@ -78,6 +79,18 @@ function generateDefaultRulesFromCatalog(): GenerationRule[] {
   return rules;
 }
 
+/**
+ * System for automatically generating items in zones based on biome and rules.
+ *
+ * Features:
+ * - Automatic item generation at configurable intervals
+ * - Biome-based spawn rules from BaseMaterialsCatalog
+ * - Respawn mechanics for collected items
+ * - Zone capacity limits to prevent overcrowding
+ * - Support for custom generation rules
+ *
+ * @see BaseMaterialsCatalog for material definitions
+ */
 @injectable()
 export class ItemGenerationSystem {
   private gameState: GameState;
@@ -93,7 +106,6 @@ export class ItemGenerationSystem {
   ) {
     this.gameState = gameState;
     this.config = { ...DEFAULT_CONFIG, ...config };
-    // Inicializar con reglas del catálogo
     this.generationRules = generateDefaultRulesFromCatalog();
     logger.info(
       `🎁 ItemGenerationSystem initialized with ${this.generationRules.length} rules from BaseMaterialsCatalog`,
@@ -216,7 +228,12 @@ export class ItemGenerationSystem {
   }
 
   /**
-   * Force spawn a specific item in a zone
+   * Forces spawning of a specific item in a zone.
+   *
+   * @param zoneId - Target zone ID
+   * @param itemId - Item ID to spawn
+   * @param quantity - Quantity to spawn
+   * @returns True if spawn was successful, false if zone not found
    */
   public forceSpawnItem(
     zoneId: string,
@@ -251,7 +268,9 @@ export class ItemGenerationSystem {
   }
 
   /**
-   * Add a generation rule
+   * Adds a custom generation rule to the system.
+   *
+   * @param rule - Generation rule to add
    */
   public addGenerationRule(rule: GenerationRule): void {
     this.generationRules.push(rule);
@@ -261,14 +280,18 @@ export class ItemGenerationSystem {
   }
 
   /**
-   * Clear items from a zone
+   * Clears all items from a zone.
+   *
+   * @param zoneId - Zone ID to clear
    */
   public clearZoneItems(zoneId: string): void {
     this.zoneItems.delete(zoneId);
   }
 
   /**
-   * Get generation statistics
+   * Gets generation statistics across all zones.
+   *
+   * @returns Statistics including total zones with items, total items, and items by type
    */
   public getGenerationStats(): {
     totalZonesWithItems: number;
@@ -296,7 +319,10 @@ export class ItemGenerationSystem {
   }
 
   /**
-   * Get items in a specific zone
+   * Gets all uncollected items in a specific zone.
+   *
+   * @param zoneId - Zone ID to query
+   * @returns Array of uncollected generated items
    */
   public getZoneItems(zoneId: string): GeneratedItem[] {
     const zoneMap = this.zoneItems.get(zoneId);
@@ -306,21 +332,29 @@ export class ItemGenerationSystem {
   }
 
   /**
-   * Get material info from catalog
+   * Gets material information from the catalog.
+   *
+   * @param itemId - Item ID to look up
+   * @returns Item definition or null if not found
    */
   public getMaterialInfo(itemId: string): Item | null {
     return BaseMaterialsCatalog.getMaterialById(itemId);
   }
 
   /**
-   * Get all materials by category
+   * Gets all materials in a specific category.
+   *
+   * @param category - Category name to filter by
+   * @returns Array of items in the category
    */
   public getMaterialsByCategory(category: string): Item[] {
     return BaseMaterialsCatalog.getMaterialsByCategory(category);
   }
 
   /**
-   * Get current generation rules count
+   * Gets the current number of generation rules.
+   *
+   * @returns Number of active generation rules
    */
   public getRulesCount(): number {
     return this.generationRules.length;

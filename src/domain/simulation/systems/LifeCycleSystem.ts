@@ -123,8 +123,6 @@ export class LifeCycleSystem extends EventEmitter {
         const agentId = data.agentId || data.entityId;
         if (!agentId) return;
 
-        // Check if this is a needs-based death (starvation, dehydration, exhaustion)
-        // that hasn't been cleaned up yet
         const agentStillExists = this.agentRegistry?.getProfile(agentId);
         if (agentStillExists) {
           logger.debug(
@@ -233,7 +231,6 @@ export class LifeCycleSystem extends EventEmitter {
     this.tryBreeding(Date.now());
     this.processHousingAssignments();
 
-    // Periodic role rebalancing
     const now = Date.now();
     const ROLE_REBALANCE_INTERVAL = 120000; // Every 2 minutes
     if (!this.lastRoleRebalance) {
@@ -248,10 +245,16 @@ export class LifeCycleSystem extends EventEmitter {
     }
   }
 
+  /**
+   * Rebalances agent roles based on collective resource state.
+   *
+   * Analyzes total resources across all stockpiles and population size
+   * to determine if role adjustments are needed (e.g., more gatherers
+   * if resources are low).
+   */
   private rebalanceRolesIfNeeded(): void {
     if (!this._roleSystem || !this.inventorySystem) return;
 
-    // Calculate collective state
     type StockpileItem = {
       inventory: {
         food?: number;
@@ -260,7 +263,6 @@ export class LifeCycleSystem extends EventEmitter {
         stone?: number;
       };
     };
-    // Call getAllStockpiles directly on the object to preserve 'this' context
     const invSystem = this.inventorySystem as {
       getAllStockpiles?: () => StockpileItem[];
     };
@@ -342,7 +344,6 @@ export class LifeCycleSystem extends EventEmitter {
           water: 1,
         });
 
-        // Connect consumption to needs satisfaction
         if (foodConsumed && this.needsSystem) {
           const needs = this.needsSystem.getNeeds(agent.id);
           if (needs) {
@@ -430,7 +431,6 @@ export class LifeCycleSystem extends EventEmitter {
       return;
     }
 
-    // Verify needs before reproduction
     if (this.needsSystem) {
       const motherNeeds = this.needsSystem.getNeeds(motherId);
       const fatherNeeds = this.needsSystem.getNeeds(fatherId);
@@ -534,7 +534,6 @@ export class LifeCycleSystem extends EventEmitter {
     if (!this.gameState.agents) this.gameState.agents = [];
     this.gameState.agents.push(profile);
 
-    // Invalidate AgentRegistry profile index
     this.agentRegistry?.invalidateProfileIndex();
 
     if (profile.position) {
@@ -562,14 +561,12 @@ export class LifeCycleSystem extends EventEmitter {
         };
         this.gameState.entities.push(entity);
 
-        // Update EntityIndex immediately so listeners can find the new agent/entity
         if (this.entityIndex) {
           this.entityIndex.setAgent(profile);
           this.entityIndex.setEntity(entity);
         }
       }
     } else if (this.entityIndex) {
-      // Even if no position (unlikely), register agent
       this.entityIndex.setAgent(profile);
     }
 
@@ -658,12 +655,19 @@ export class LifeCycleSystem extends EventEmitter {
     };
   }
 
+  /**
+   * Retrieves an agent profile by ID.
+   *
+   * Uses AgentRegistry for O(1) lookup when available, otherwise falls back
+   * to linear search in gameState.agents (primarily for tests).
+   *
+   * @param id - Agent ID to retrieve
+   * @returns Agent profile or undefined if not found
+   */
   public getAgent(id: string): AgentProfile | undefined {
-    // Use AgentRegistry as primary source (O(1))
     if (this.agentRegistry) {
       return this.agentRegistry.getProfile(id);
     }
-    // Fallback for tests without AgentRegistry
     return this.gameState.agents?.find((a) => a.id === id);
   }
 
@@ -678,7 +682,6 @@ export class LifeCycleSystem extends EventEmitter {
     if (index !== -1) {
       this.gameState.agents.splice(index, 1);
 
-      // Invalidate AgentRegistry profile index
       this.agentRegistry?.invalidateProfileIndex();
 
       if (this.gameState.entities) {
@@ -768,7 +771,6 @@ export class LifeCycleSystem extends EventEmitter {
 
     this.gameState.agents.splice(index, 1);
 
-    // Invalidate AgentRegistry profile index
     this.agentRegistry?.invalidateProfileIndex();
 
     this.cleanupAgentState(id);

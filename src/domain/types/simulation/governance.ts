@@ -1,8 +1,12 @@
 import type { ResourceCost } from "./economy";
-import { DemandType } from "../../../shared/constants/GovernanceEnums";
+import {
+  DemandType,
+  GovernanceEventType,
+  GovernanceProjectType,
+} from "../../../shared/constants/GovernanceEnums";
 
-// Re-export DemandType enum for convenience
-export type { DemandType };
+// Re-export enums for convenience
+export type { DemandType, GovernanceEventType, GovernanceProjectType };
 
 export interface SettlementDemand {
   id: string;
@@ -12,7 +16,7 @@ export interface SettlementDemand {
   resolvedAt?: number;
   reason: string;
   metrics?: Record<string, number>;
-  suggestedProject?: string;
+  suggestedProject?: GovernanceProjectType;
   pendingReservationId?: string;
 }
 
@@ -56,15 +60,7 @@ export interface GovernanceEventDetails {
 
 export interface GovernanceEvent {
   timestamp: number;
-  type:
-    | "demand_created"
-    | "demand_resolved"
-    | "policy_changed"
-    | "project_started"
-    | "project_failed"
-    | "production_generated"
-    | "production_worker_lost"
-    | "role_reassigned";
+  type: GovernanceEventType;
   details: GovernanceEventDetails;
 }
 

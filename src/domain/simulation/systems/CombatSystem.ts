@@ -641,18 +641,16 @@ export class CombatSystem {
     );
   }
 
+  /**
+   * Handles entity death from combat.
+   * Delegates actual death handling to LifeCycleSystem.
+   */
   private handleKill(
     attacker: SimulationEntity,
     target: SimulationEntity,
     weaponId: WeaponId,
   ): void {
-    target.isDead = true;
-    const entityList = this.state.entities as SimulationEntity[];
-    const idx = entityList.findIndex((entity) => entity.id === target.id);
-    if (idx >= 0) {
-      entityList[idx] = target;
-    }
-
+    // LifeCycleSystem owns the isDead state - let it handle the death
     this.lifeCycleSystem.removeAgent(target.id);
 
     this.equippedWeapons.delete(target.id);

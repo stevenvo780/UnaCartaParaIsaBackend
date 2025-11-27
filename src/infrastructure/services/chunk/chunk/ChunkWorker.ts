@@ -5,16 +5,17 @@ import type {
   WorldGenConfig,
   TerrainTile,
 } from "../../../../domain/world/generation/types";
+import { WorkerMessageType } from "../../../../shared/constants/WebSocketEnums";
 
 interface ChunkWorkerRequest {
-  type: "generate";
+  type: WorkerMessageType.GENERATE;
   requestId: string;
   coords: { x: number; y: number };
   config: WorldGenConfig;
 }
 
 interface ChunkWorkerResponse {
-  type: "result";
+  type: WorkerMessageType.RESULT;
   requestId: string;
   ok: boolean;
   chunk?: TerrainTile[][];
@@ -38,7 +39,7 @@ const voronoiGenerator = new VoronoiGenerator();
 const generator = new WorldGenerationService(voronoiGenerator);
 
 parentPort?.on("message", async (message: ChunkWorkerRequest) => {
-  if (message.type !== "generate") return;
+  if (message.type !== WorkerMessageType.GENERATE) return;
 
   const start = performance.now();
   try {
@@ -49,7 +50,7 @@ parentPort?.on("message", async (message: ChunkWorkerRequest) => {
     );
     const elapsed = performance.now() - start;
     const response: ChunkWorkerResponse = {
-      type: "result",
+      type: WorkerMessageType.RESULT,
       requestId: message.requestId,
       ok: true,
       chunk,
@@ -60,7 +61,7 @@ parentPort?.on("message", async (message: ChunkWorkerRequest) => {
     parentPort?.postMessage(response);
   } catch (error) {
     const response: ChunkWorkerResponse = {
-      type: "result",
+      type: WorkerMessageType.RESULT,
       requestId: message.requestId,
       ok: false,
       error: error instanceof Error ? error.message : String(error),

@@ -22,6 +22,17 @@ export interface DepositContext {
   ) => string | null;
 }
 
+/**
+ * Evaluates deposit goals based on inventory capacity and agent personality.
+ *
+ * Generates deposit goals when agent inventory exceeds threshold (30% by default,
+ * adjusted by conscientiousness). Prioritizes storage zones but falls back to
+ * other zone types if no storage zones exist.
+ *
+ * @param ctx - Deposit evaluation context with game state and helper functions
+ * @param aiState - Current AI state for the agent
+ * @returns Array of deposit goals (empty if no deposit needed)
+ */
 export function evaluateDepositGoals(
   ctx: DepositContext,
   aiState: AIState,
@@ -63,13 +74,11 @@ export function evaluateDepositGoals(
 
     if (load <= 0 || loadRatio < depositThreshold * 0.75) return [];
 
-    // Prioritize storage zones for deposits
     const storageZones =
       ctx.gameState.zones
         ?.filter((z) => z.type === "storage")
         .map((z) => z.id) || [];
 
-    // If no storage zones, fall back to other zone types
     const depositZones =
       storageZones.length > 0
         ? storageZones

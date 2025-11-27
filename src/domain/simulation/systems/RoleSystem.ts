@@ -269,8 +269,8 @@ export class RoleSystem extends EventEmitter {
     const agents = this.getAdultAgents();
     const pop = agents.length;
     const minHunters = Math.max(1, Math.ceil(pop * 0.1));
-    const minLoggers = Math.max(1, Math.ceil(pop * 0.15)); // 15% para madera
-    const minQuarrymen = Math.max(1, Math.ceil(pop * 0.1)); // 10% para piedra
+    const minLoggers = Math.max(1, Math.ceil(pop * 0.15));
+    const minQuarrymen = Math.max(1, Math.ceil(pop * 0.1));
 
     // Helper to count roles
     const countRole = (roleType: string): number =>
@@ -424,7 +424,7 @@ export class RoleSystem extends EventEmitter {
       return {
         success: false,
         agentId: agent.id,
-        reason: "No cumple requisitos de ningún rol o todos llenos",
+        reason: "No role requirements met or all roles full",
       };
     }
 
@@ -444,7 +444,7 @@ export class RoleSystem extends EventEmitter {
     this.rebuildSchedule();
 
     logger.info(
-      `👷 Rol asignado: ${agent.name || agent.id} → ${selectedRole.name}`,
+      `👷 Role assigned: ${agent.name || agent.id} → ${selectedRole.name}`,
     );
 
     simulationEvents.emit(GameEventNames.ROLE_ASSIGNED, {
@@ -540,12 +540,12 @@ export class RoleSystem extends EventEmitter {
     const agents = this.getAdultAgents();
     const agent = agents.find((a) => a.id === agentId);
     if (!agent)
-      return { success: false, agentId, reason: "Agente no encontrado" };
+      return { success: false, agentId, reason: "Agent not found" };
 
     const roleDef = ROLE_DEFINITIONS.find((r) => r.type === newRole);
-    if (!roleDef) return { success: false, agentId, reason: "Rol no válido" };
+    if (!roleDef) return { success: false, agentId, reason: "Invalid role" };
     if (!this.meetsRequirements(agent, roleDef)) {
-      return { success: false, agentId, reason: "No cumple requisitos" };
+      return { success: false, agentId, reason: "Requirements not met" };
     }
 
     const efficiency = this.calculateEfficiency(agent, roleDef);
@@ -563,7 +563,7 @@ export class RoleSystem extends EventEmitter {
     this.roles.set(agentId, role);
     this.rebuildSchedule();
 
-    logger.info(`👷 Rol reasignado: ${agentId} → ${roleDef.name}`);
+    logger.info(`👷 Role reassigned: ${agentId} → ${roleDef.name}`);
 
     simulationEvents.emit(GameEventNames.ROLE_REASSIGNED, {
       agentId,

@@ -3,6 +3,7 @@ import { GameState } from "../../types/game-types";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { injectable, inject, unmanaged } from "inversify";
 import { TYPES } from "../../../config/Types";
+import { InteractionStatus } from "../../../shared/constants/StatusEnums";
 
 export interface InteractionConfig {
   interactionCooldownMs: number;
@@ -39,9 +40,9 @@ export class InteractionGameSystem {
         simulationEvents.emit(GameEventNames.INTERACTION_GAME_PLAYED, {
           interactionId: id,
           ...interaction,
-          result: "expired",
+          result: InteractionStatus.EXPIRED,
           timestamp: now,
-          status: "expired",
+          status: InteractionStatus.EXPIRED,
         });
         logger.info(`🎲 Interaction expired: ${id}`);
       }
@@ -85,7 +86,7 @@ export class InteractionGameSystem {
       ...interaction,
       result,
       timestamp: Date.now(),
-      status: "completed",
+      status: InteractionStatus.COMPLETED,
     });
 
     this.activeInteractions.delete(interactionId);

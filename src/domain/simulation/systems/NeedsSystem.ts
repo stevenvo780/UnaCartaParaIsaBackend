@@ -624,6 +624,11 @@ export class NeedsSystem extends EventEmitter {
     return false;
   }
 
+  /**
+   * Handles entity death from needs depletion.
+   * Emits AGENT_DEATH event for LifeCycleSystem to handle the actual death.
+   * NeedsSystem should NOT modify isDead directly - that's LifeCycleSystem's domain.
+   */
   private handleEntityDeath(
     entityId: string,
     needs: EntityNeedsData,
@@ -631,31 +636,8 @@ export class NeedsSystem extends EventEmitter {
   ): void {
     logger.info(`💀 Entity ${entityId} died from ${cause}`);
 
-    let entityMarked = false;
-    if (this.gameState.entities) {
-      const entity =
-        this.entityIndex?.getEntity(entityId) ??
-        this.gameState.entities.find((e) => e.id === entityId);
-      if (entity) {
-        entity.isDead = true;
-        entityMarked = true;
-      }
-    }
-
-    if (this.gameState.agents) {
-      const agent = this.agentRegistry?.getProfile(entityId);
-      if (agent) {
-        agent.isDead = true;
-        entityMarked = true;
-      }
-    }
-
-    if (!entityMarked) {
-      logger.warn(
-        `⚠️ [NEEDS] Could not mark entity ${entityId} as dead - not found in state`,
-      );
-    }
-
+    // Emit event for LifeCycleSystem to handle the death
+    // LifeCycleSystem owns the isDead state modification
     simulationEvents.emit(GameEventNames.AGENT_DEATH, {
       agentId: entityId,
       cause,

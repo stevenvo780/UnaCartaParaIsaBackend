@@ -16,16 +16,18 @@ import { container } from "../../../../config/container";
 import { TYPES } from "../../../../config/Types";
 import type { AnimalSystem } from "../../../../domain/simulation/systems/AnimalSystem";
 import { logger } from "../../../utils/logger";
+import { ChunkMessageType } from "../../../../shared/constants/WebSocketEnums";
+import { UNKNOWN_VALUE as COMMON_UNKNOWN } from "../../../../shared/constants/CommonConstants";
 
 interface ChunkRequestMessage {
-  type: "CHUNK_REQUEST";
+  type: ChunkMessageType.CHUNK_REQUEST;
   requestId?: string;
   coords: { x: number; y: number };
   config: WorldGenConfig;
 }
 
 interface ChunkCancelMessage {
-  type: "CHUNK_CANCEL";
+  type: ChunkMessageType.CHUNK_CANCEL;
   requestId: string;
 }
 
@@ -40,7 +42,7 @@ interface ClientContext {
 }
 
 interface ChunkResultPayload {
-  type: "CHUNK_RESULT";
+  type: ChunkMessageType.CHUNK_RESULT;
   requestId: string;
   coords: { x: number; y: number };
   chunk: TerrainTile[][];
@@ -50,19 +52,19 @@ interface ChunkResultPayload {
 }
 
 interface ChunkErrorPayload {
-  type: "CHUNK_ERROR";
+  type: ChunkMessageType.CHUNK_ERROR;
   requestId: string;
   error: string;
 }
 
 interface ChunkAcceptedPayload {
-  type: "CHUNK_ACCEPTED";
+  type: ChunkMessageType.CHUNK_ACCEPTED;
   requestId: string;
   queueSize: number;
 }
 
 interface ChunkServerHello {
-  type: "CHUNK_STREAM_READY";
+  type: ChunkMessageType.CHUNK_STREAM_READY;
   stats: ChunkPoolStats;
 }
 
@@ -112,7 +114,7 @@ export class ChunkStreamServer {
     ws.on("error", () => this.handleDisconnect(ctx));
 
     const hello: ChunkServerHello = {
-      type: "CHUNK_STREAM_READY",
+      type: ChunkMessageType.CHUNK_STREAM_READY,
       stats: this.pool.getStats(),
     };
     ws.send(encodeMsgPack(hello));
@@ -128,8 +130,8 @@ export class ChunkStreamServer {
     } catch (error) {
       ctx.ws.send(
         encodeMsgPack({
-          type: "CHUNK_ERROR",
-          requestId: "unknown",
+          type: ChunkMessageType.CHUNK_ERROR,
+          requestId: COMMON_UNKNOWN,
           error: `Invalid message: ${error instanceof Error ? error.message : error}`,
         }),
       );
@@ -149,10 +151,10 @@ export class ChunkStreamServer {
     const fallbackId =
       typeof (json as { requestId?: unknown }).requestId === "string"
         ? ((json as { requestId?: string }).requestId as string)
-        : "unknown";
+        : COMMON_UNKNOWN;
     ctx.ws.send(
       encodeMsgPack({
-        type: "CHUNK_ERROR",
+        type: ChunkMessageType.CHUNK_ERROR,
         requestId: fallbackId,
         error: "Unsupported chunk message type",
       }),
@@ -165,8 +167,8 @@ export class ChunkStreamServer {
   ): void {
     if (ctx.inflight.size >= this.maxInflightPerClient) {
       const payload: ChunkErrorPayload = {
-        type: "CHUNK_ERROR",
-        requestId: message.requestId ?? "unknown",
+        type: ChunkMessageType.CHUNK_ERROR,
+        requestId: message.requestId ?? COMMON_UNKNOWN,
         error: `Too many inflight chunk requests (max ${this.maxInflightPerClient})`,
       };
       ctx.ws.send(encodeMsgPack(payload));
@@ -180,7 +182,7 @@ export class ChunkStreamServer {
     });
 
     const accepted: ChunkAcceptedPayload = {
-      type: "CHUNK_ACCEPTED",
+      type: ChunkMessageType.CHUNK_ACCEPTED,
       requestId,
       queueSize: this.pool.getStats().queueSize,
     };
@@ -223,7 +225,7 @@ export class ChunkStreamServer {
         }
 
         const payload: ChunkResultPayload = {
-          type: "CHUNK_RESULT",
+          type: ChunkMessageType.CHUNK_RESULT,
           requestId,
           coords: message.coords,
           chunk: result.chunk,
@@ -233,7 +235,7 @@ export class ChunkStreamServer {
       })
       .catch((error: Error) => {
         const payload: ChunkErrorPayload = {
-          type: "CHUNK_ERROR",
+          type: ChunkMessageType.CHUNK_ERROR,
           requestId,
           error: error.message,
         };
@@ -252,7 +254,7 @@ export class ChunkStreamServer {
     if (!entry) {
       ctx.ws.send(
         encodeMsgPack({
-          type: "CHUNK_ERROR",
+          type: ChunkMessageType.CHUNK_ERROR,
           requestId: message.requestId,
           error: "Request not found or already completed",
         }),
@@ -263,7 +265,7 @@ export class ChunkStreamServer {
     ctx.inflight.delete(message.requestId);
     ctx.ws.send(
       encodeMsgPack({
-        type: "CHUNK_CANCELLED",
+        type: ChunkMessageType.CHUNK_CANCELLED,
         requestId: message.requestId,
       }),
     );
@@ -279,7 +281,7 @@ export class ChunkStreamServer {
   private isChunkRequestMessage(value: unknown): value is ChunkRequestMessage {
     if (!value || typeof value !== "object") return false;
     const message = value as Record<string, unknown>;
-    if (message.type !== "CHUNK_REQUEST") return false;
+    if (message.type !== ChunkMessageType.CHUNK_REQUEST) return false;
     if (
       !message.coords ||
       typeof message.coords !== "object" ||
@@ -295,7 +297,8 @@ export class ChunkStreamServer {
     if (!value || typeof value !== "object") return false;
     const message = value as Record<string, unknown>;
     return (
-      message.type === "CHUNK_CANCEL" && typeof message.requestId === "string"
+      message.type === ChunkMessageType.CHUNK_CANCEL &&
+      typeof message.requestId === "string"
     );
   }
 }

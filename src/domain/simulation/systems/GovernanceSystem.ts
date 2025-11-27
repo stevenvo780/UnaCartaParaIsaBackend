@@ -9,7 +9,12 @@ import type {
 import type { ResourceCost } from "../../types/simulation/economy";
 import type { RoleType } from "../../types/simulation/roles";
 import { RoleType as RoleTypeEnum } from "../../../shared/constants/RoleEnums";
-import { DemandType } from "../../../shared/constants/GovernanceEnums";
+import {
+  DemandType,
+  GovernancePolicyId,
+  GovernanceProjectType,
+  GovernanceEventType,
+} from "../../../shared/constants/GovernanceEnums";
 import { CrisisPredictionType } from "../../../shared/constants/AmbientEnums";
 import { EntityStatus } from "../../../shared/constants/EntityStatusEnums";
 import { GameEventNames, simulationEvents } from "../core/events";
@@ -20,6 +25,7 @@ import { ResourceReservationSystem } from "./ResourceReservationSystem";
 import { RoleSystem } from "./RoleSystem";
 import { logger } from "../../../infrastructure/utils/logger";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
+import { DEFAULT_LINEAGE } from "../../../shared/constants/CommonConstants";
 
 /**
  * Configuration for governance system behavior.
@@ -32,7 +38,7 @@ interface GovernanceConfig {
 
 const DEFAULT_POLICIES: GovernancePolicy[] = [
   {
-    id: "food_security",
+    id: GovernancePolicyId.FOOD_SECURITY,
     name: "Seguridad Alimentaria",
     description: "Construir infraestructura cuando la comida es escasa",
     enabled: true,
@@ -40,7 +46,7 @@ const DEFAULT_POLICIES: GovernancePolicy[] = [
     autoResolve: true,
   },
   {
-    id: "water_supply",
+    id: GovernancePolicyId.WATER_SUPPLY,
     name: "Suministro de Agua",
     description: "Refuerza pozos al detectar escasez",
     enabled: true,
@@ -48,7 +54,7 @@ const DEFAULT_POLICIES: GovernancePolicy[] = [
     autoResolve: true,
   },
   {
-    id: "housing_expansion",
+    id: GovernancePolicyId.HOUSING_EXPANSION,
     name: "Expansión de Vivienda",
     description: "Aumenta capacidad habitacional",
     enabled: true,
@@ -61,7 +67,7 @@ const DEMAND_SOLUTIONS: Partial<
   Record<
     DemandType,
     {
-      project: string;
+      project: GovernanceProjectType;
       cost: ResourceCost;
       resourceBoost?: { food?: number; water?: number };
       roleAssignment?: { role: RoleType; count: number };
@@ -69,25 +75,23 @@ const DEMAND_SOLUTIONS: Partial<
   >
 > = {
   [DemandType.HOUSING_FULL]: {
-    project: "build_house",
+    project: GovernanceProjectType.BUILD_HOUSE,
     cost: { wood: 40, stone: 20 },
     roleAssignment: { role: RoleTypeEnum.BUILDER, count: 2 },
   },
   [DemandType.FOOD_SHORTAGE]: {
-    project: "assign_hunters",
+    project: GovernanceProjectType.ASSIGN_HUNTERS,
     cost: { wood: 0, stone: 0 },
     resourceBoost: { food: 40 },
     roleAssignment: { role: RoleTypeEnum.HUNTER, count: 3 },
   },
   [DemandType.WATER_SHORTAGE]: {
-    project: "gather_water",
+    project: GovernanceProjectType.GATHER_WATER,
     cost: { wood: 0, stone: 0 },
     resourceBoost: { water: 30 },
     roleAssignment: { role: RoleTypeEnum.GATHERER, count: 2 },
   },
 };
-
-const DEFAULT_LINEAGE = "community";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -215,7 +219,7 @@ export class GovernanceSystem {
       }) => {
         this.recordEvent({
           timestamp: Date.now(),
-          type: "production_generated",
+          type: GovernanceEventType.PRODUCTION_GENERATED,
           details: {
             zoneId: data.zoneId,
             resource: data.resource,
@@ -249,7 +253,7 @@ export class GovernanceSystem {
       }) => {
         this.recordEvent({
           timestamp: Date.now(),
-          type: "production_worker_lost",
+          type: GovernanceEventType.PRODUCTION_WORKER_LOST,
           details: {
             zoneId: data.zoneId,
             agentId: data.agentId,
@@ -258,7 +262,7 @@ export class GovernanceSystem {
         });
         const recentLosses = this.history.filter(
           (e) =>
-            e.type === "production_worker_lost" &&
+            e.type === GovernanceEventType.PRODUCTION_WORKER_LOST &&
             Date.now() - e.timestamp < 60000,
         );
         if (recentLosses.length >= 3) {
@@ -303,7 +307,7 @@ export class GovernanceSystem {
     policy.enabled = enabled;
     this.recordEvent({
       timestamp: Date.now(),
-      type: "policy_changed",
+      type: GovernanceEventType.POLICY_CHANGED,
       details: { policyId, enabled },
     });
     this.pushSnapshot();
@@ -322,7 +326,7 @@ export class GovernanceSystem {
 
   private checkSettlementNeeds(): void {
     const stats = this.getSettlementStats();
-    const foodPolicy = this.policies.get("food_security");
+    const foodPolicy = this.policies.get(GovernancePolicyId.FOOD_SECURITY);
     if (foodPolicy?.enabled) {
       if (stats.foodPerCapita < (foodPolicy.threshold.foodPerCapita ?? 5)) {
         this.createDemand(
@@ -337,7 +341,7 @@ export class GovernanceSystem {
       }
     }
 
-    const waterPolicy = this.policies.get("water_supply");
+    const waterPolicy = this.policies.get(GovernancePolicyId.WATER_SUPPLY);
     if (waterPolicy?.enabled) {
       if (stats.waterPerCapita < (waterPolicy.threshold.waterPerCapita ?? 8)) {
         this.createDemand(
@@ -352,7 +356,9 @@ export class GovernanceSystem {
       }
     }
 
-    const housingPolicy = this.policies.get("housing_expansion");
+    const housingPolicy = this.policies.get(
+      GovernancePolicyId.HOUSING_EXPANSION,
+    );
     if (housingPolicy?.enabled) {
       if (
         stats.housingOccupancy >
@@ -393,7 +399,7 @@ export class GovernanceSystem {
     this.demands.set(demand.id, demand);
     this.recordEvent({
       timestamp: Date.now(),
-      type: "demand_created",
+      type: GovernanceEventType.DEMAND_CREATED,
       details: {
         demandId: demand.id,
         demandType: type,
@@ -423,7 +429,7 @@ export class GovernanceSystem {
       if (!reserved) {
         this.recordEvent({
           timestamp: Date.now(),
-          type: "project_failed",
+          type: GovernanceEventType.PROJECT_FAILED,
           details: { demandId: demand.id, reason: "insufficient_resources" },
         });
         return;
@@ -452,7 +458,7 @@ export class GovernanceSystem {
     demand.resolvedAt = Date.now();
     this.recordEvent({
       timestamp: demand.resolvedAt,
-      type: "demand_resolved",
+      type: GovernanceEventType.DEMAND_RESOLVED,
       details: { demandId: demand.id, action: solution.project },
     });
 
@@ -461,6 +467,11 @@ export class GovernanceSystem {
       action: solution.project,
       cost: solution.cost,
       timestamp: Date.now(),
+    } as {
+      demandId: string;
+      action: GovernanceProjectType;
+      cost: ResourceCost;
+      timestamp: number;
     });
   }
 
@@ -543,7 +554,7 @@ export class GovernanceSystem {
         assignedCount++;
         this.recordEvent({
           timestamp: Date.now(),
-          type: "role_reassigned",
+          type: GovernanceEventType.ROLE_REASSIGNED,
           details: {
             agentId: agent.id,
             role: targetRole,

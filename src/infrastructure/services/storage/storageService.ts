@@ -4,6 +4,10 @@ import fs from "fs/promises";
 import path from "path";
 import { CONFIG } from "../../../config/config.js";
 import { logger } from "@/infrastructure/utils/logger";
+import {
+  StorageStatus,
+  StorageType,
+} from "../../../shared/constants/StatusEnums";
 
 /**
  * Game statistics for save metadata.
@@ -84,16 +88,24 @@ export class StorageService {
    * Used by health check endpoints.
    */
   async isHealthy(): Promise<{
-    status: string;
+    status: StorageStatus;
     timestamp: number;
-    storage: string;
+    storage: StorageType;
   }> {
     if (this.useGCS && this.bucket) {
       await this.bucket.exists();
-      return { status: "ok", timestamp: Date.now(), storage: "gcs" };
+      return {
+        status: StorageStatus.OK,
+        timestamp: Date.now(),
+        storage: StorageType.GCS,
+      };
     } else {
       await this.ensureLocalDir();
-      return { status: "ok", timestamp: Date.now(), storage: "local" };
+      return {
+        status: StorageStatus.OK,
+        timestamp: Date.now(),
+        storage: StorageType.LOCAL,
+      };
     }
   }
 

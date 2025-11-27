@@ -200,6 +200,8 @@ import {
   ReputationCommandType,
   TaskCommandType,
   TimeCommandType,
+  AgentCommandType,
+  AnimalCommandType,
 } from "../../constants/CommandEnums";
 import type { TaskType } from "../../../domain/types/simulation/tasks";
 import type { TaskMetadata } from "../../../domain/types/simulation/tasks";

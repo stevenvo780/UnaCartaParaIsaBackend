@@ -6,6 +6,22 @@ import { ResourceType } from "../../../../shared/constants/ResourceEnums";
 import { GameEventType } from "../../../../shared/constants/EventEnums";
 import { RoleType } from "../../../../shared/constants/RoleEnums";
 
+/**
+ * Central registry for simulation event listeners.
+ *
+ * Manages all event subscriptions and ensures proper cleanup. Handles cross-system
+ * coordination when events occur (e.g., agent death triggers inventory drop, role
+ * removal, genealogy updates). Captures events for snapshot inclusion.
+ *
+ * Features:
+ * - Automatic cleanup of all registered listeners
+ * - Event capture for snapshot serialization
+ * - Cross-system coordination (genealogy, inventory, roles, AI, etc.)
+ * - Reputation updates based on agent actions
+ *
+ * @see SimulationRunner for event emission
+ * @see simulationEvents for the global event emitter
+ */
 export class EventRegistry {
   private eventCleanups: (() => void)[] = [];
   private eventCaptureListener?: (eventName: string, payload: unknown) => void;

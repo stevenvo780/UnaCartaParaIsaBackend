@@ -199,15 +199,11 @@ export function evaluateCriticalNeeds(
   );
 
   if (needs.thirst < thirstThreshold) {
-    // Check inventory first - if we have water, NeedsSystem will consume it automatically
     const inventory = deps.getAgentInventory?.(aiState.entityId);
     const hasWater = inventory && inventory.water > 0;
 
     if (hasWater) {
-      // Agent has water in inventory, it will be consumed automatically
-      // No goal needed - just idle or continue current task
     } else {
-      // Need to acquire water - either gather or trade
       let waterTarget = null;
       if (deps.findNearestResource) {
         waterTarget = deps.findNearestResource(
@@ -217,7 +213,6 @@ export function evaluateCriticalNeeds(
       }
 
       if (waterTarget) {
-        // Go gather water from a source
         goals.push({
           id: `gather_water_${aiState.entityId}_${now}`,
           type: GoalType.GATHER,
@@ -231,10 +226,9 @@ export function evaluateCriticalNeeds(
           },
           createdAt: now,
           expiresAt: now + 15000,
-        });
-      } else {
-        // Try to trade for water
-        const tradeTarget = deps.findAgentWithResource?.(
+          });
+        } else {
+          const tradeTarget = deps.findAgentWithResource?.(
           aiState.entityId,
           "water",
           3,
@@ -256,7 +250,6 @@ export function evaluateCriticalNeeds(
             expiresAt: now + 15000,
           });
         } else {
-          // Desperate search
           goals.push({
             id: `desperate_water_${aiState.entityId}_${now}`,
             type: GoalType.EXPLORE,
@@ -274,19 +267,14 @@ export function evaluateCriticalNeeds(
   }
 
   if (needs.hunger < hungerThreshold) {
-    // Check inventory first - if we have food, NeedsSystem will consume it automatically
     const inventory = deps.getAgentInventory?.(aiState.entityId);
     const hasFood = inventory && inventory.food > 0;
 
     if (hasFood) {
-      // Agent has food in inventory, it will be consumed automatically
-      // No goal needed - just idle or continue current task
     } else {
-      // Need to acquire food - either gather or trade
       let foodTarget = null;
       let foundResourceType: string | null = null;
       if (deps.findNearestResource) {
-        // Valid WorldResourceType values for food
         const foodTypes = ["wheat_crop", "berry_bush", "mushroom_patch"];
         for (const foodType of foodTypes) {
           foodTarget = deps.findNearestResource(aiState.entityId, foodType);
@@ -298,7 +286,6 @@ export function evaluateCriticalNeeds(
       }
 
       if (foodTarget && foundResourceType) {
-        // Go gather food from a source
         goals.push({
           id: `gather_food_${aiState.entityId}_${now}`,
           type: GoalType.GATHER,
@@ -312,10 +299,9 @@ export function evaluateCriticalNeeds(
           },
           createdAt: now,
           expiresAt: now + 15000,
-        });
-      } else {
-        // Try to trade for food
-        const tradeTarget = deps.findAgentWithResource?.(
+          });
+        } else {
+          const tradeTarget = deps.findAgentWithResource?.(
           aiState.entityId,
           "food",
           3,
@@ -337,7 +323,6 @@ export function evaluateCriticalNeeds(
             expiresAt: now + 15000,
           });
         } else {
-          // Try to hunt an animal for food
           const huntTarget = deps.findNearestHuntableAnimal?.(aiState.entityId);
           if (huntTarget) {
             goals.push({
@@ -355,7 +340,6 @@ export function evaluateCriticalNeeds(
               expiresAt: now + 20000,
             });
           } else {
-            // Desperate search for food or prey
             goals.push({
               id: `desperate_food_${aiState.entityId}_${now}`,
               type: GoalType.EXPLORE,
@@ -388,7 +372,6 @@ export function evaluateCriticalNeeds(
     });
   }
 
-  // Social need - seek out other agents or social zones
   const socialThreshold = adjustThreshold(
     50,
     "social",

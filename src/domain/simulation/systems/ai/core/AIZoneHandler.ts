@@ -110,7 +110,19 @@ import { ActivityType } from "../../../../../shared/constants/MovementEnums";
 
 /**
  * Handles zone arrival notifications and resource deposits for AI agents.
- * Extracted from AISystem to improve modularity.
+ *
+ * Manages goal completion, zone-based actions (crafting, deposit, trade),
+ * and activity tracking when agents arrive at zones. Extracted from AISystem
+ * to improve modularity and separation of concerns.
+ *
+ * Features:
+ * - Goal completion detection on zone arrival
+ * - Automatic resource deposits to stockpiles
+ * - Zone-specific action handling (crafting, building contribution)
+ * - Activity duration estimation based on zone type and needs
+ * - Home zone tracking for agents
+ *
+ * @see AISystem for goal planning and evaluation
  */
 export class AIZoneHandler {
   private readonly deps: AIZoneHandlerDeps;
@@ -185,6 +197,13 @@ export class AIZoneHandler {
 
   /**
    * Attempts to deposit resources from agent inventory to a stockpile in the zone.
+   *
+   * Creates a stockpile if none exists in the zone. Transfers all available
+   * resources (wood, stone, food, water, metal, rare_materials) to the stockpile.
+   * Emits RESOURCES_DEPOSITED event on successful transfer.
+   *
+   * @param entityId - Agent ID attempting deposit
+   * @param zoneId - Zone ID where deposit should occur
    */
   public tryDepositResources(entityId: string, zoneId: string): void {
     const inventorySystem = this.deps.inventorySystem;
@@ -245,7 +264,11 @@ export class AIZoneHandler {
   }
 
   /**
-   * Picks the appropriate activity type for a zone.
+   * Picks the appropriate activity type for a zone based on zone type.
+   *
+   * @param zoneType - Type of zone (food, water, rest, work, etc.)
+   * @param _goal - Current AI goal (unused but kept for API compatibility)
+   * @returns Activity type matching the zone
    */
   public pickActivityForZone(zoneType: string, _goal: AIGoal): ActivityType {
     switch (zoneType) {
@@ -268,6 +291,14 @@ export class AIZoneHandler {
 
   /**
    * Estimates the duration of an activity based on zone type and agent needs.
+   *
+   * Base durations vary by zone type. Duration is extended if agent needs
+   * are critical (below 30) or low (below 50) to allow more time for satisfaction.
+   *
+   * @param entityId - Agent ID
+   * @param zoneType - Type of zone
+   * @param goal - Current AI goal
+   * @returns Estimated activity duration in milliseconds
    */
   public estimateActivityDuration(
     entityId: string,
