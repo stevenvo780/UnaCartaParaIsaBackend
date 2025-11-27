@@ -15,7 +15,8 @@
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
     "docs": "typedoc",
-    "clean:comments": "tsx scripts/clean-comments.ts src"
+    "clean:comments": "tsx scripts/clean-comments.ts src",
+    "validate:enums": "tsx scripts/validate-string-to-enum.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.7.0",

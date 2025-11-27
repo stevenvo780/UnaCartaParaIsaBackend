@@ -14,6 +14,8 @@ export enum BuildingType {
   MINE = "mine",
   WORKBENCH = "workbench",
   FARM = "farm",
+  WORKSHOP = "workshop",
+  WATCHTOWER = "watchtower",
 }
 
 /**

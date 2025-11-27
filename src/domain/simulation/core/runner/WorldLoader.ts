@@ -605,42 +605,42 @@ export class WorldLoader {
    * @param zoneType - Zone type string
    * @returns Building sprite type
    */
-  private getZoneBuildingType(zoneType: string): string {
-    const buildingTypeMapping: Record<string, string> = {
-      rest: "house",
-      shelter: "house",
-      bedroom: "house",
-      living: "house",
-      bathroom: "house",
-      comfort: "house",
+  private getZoneBuildingType(zoneType: string): BuildingType {
+    const buildingTypeMapping: Record<string, BuildingType> = {
+      rest: BuildingType.HOUSE,
+      shelter: BuildingType.HOUSE,
+      bedroom: BuildingType.HOUSE,
+      living: BuildingType.HOUSE,
+      bathroom: BuildingType.HOUSE,
+      comfort: BuildingType.HOUSE,
 
-      work: "workshop",
-      kitchen: "workshop",
-      office: "workshop",
-      storage: "workshop",
-      market: "workshop",
-      food: "workshop",
-      water: "workshop",
-      crafting: "workshop",
-      energy: "workshop",
+      work: BuildingType.WORKSHOP,
+      kitchen: BuildingType.WORKSHOP,
+      office: BuildingType.WORKSHOP,
+      storage: BuildingType.WORKSHOP,
+      market: BuildingType.WORKSHOP,
+      food: BuildingType.WORKSHOP,
+      water: BuildingType.WORKSHOP,
+      crafting: BuildingType.WORKSHOP,
+      energy: BuildingType.WORKSHOP,
 
-      defense: "watchtower",
-      security: "watchtower",
-      medical: "watchtower",
-      spiritual: "watchtower",
+      defense: BuildingType.WATCHTOWER,
+      security: BuildingType.WATCHTOWER,
+      medical: BuildingType.WATCHTOWER,
+      spiritual: BuildingType.WATCHTOWER,
 
-      social: "house",
-      recreation: "house",
-      entertainment: "house",
-      fun: "house",
-      play: "house",
-      library: "workshop",
-      education: "workshop",
-      training: "workshop",
-      knowledge: "workshop",
-      gym: "workshop",
-      hygiene: "house",
+      social: BuildingType.HOUSE,
+      recreation: BuildingType.HOUSE,
+      entertainment: BuildingType.HOUSE,
+      fun: BuildingType.HOUSE,
+      play: BuildingType.HOUSE,
+      library: BuildingType.WORKSHOP,
+      education: BuildingType.WORKSHOP,
+      training: BuildingType.WORKSHOP,
+      knowledge: BuildingType.WORKSHOP,
+      gym: BuildingType.WORKSHOP,
+      hygiene: BuildingType.HOUSE,
     };
-    return buildingTypeMapping[zoneType] || "house";
+    return buildingTypeMapping[zoneType] || BuildingType.HOUSE;
   }
 }
