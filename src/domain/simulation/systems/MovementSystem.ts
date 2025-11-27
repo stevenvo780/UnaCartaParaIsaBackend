@@ -11,6 +11,7 @@ import type { EntityIndex } from "../core/EntityIndex";
 import type { GPUComputeService } from "../core/GPUComputeService";
 import type { AgentRegistry } from "../core/AgentRegistry";
 import { getFrameTime } from "../../../shared/FrameTime";
+import { WORLD_CONFIG } from "../../../shared/constants/WorldConfig";
 import {
   estimateTravelTime,
   assessRouteDifficultyByDistance,
@@ -110,7 +111,6 @@ export class MovementSystem extends EventEmitter {
   }> = [];
   private activePaths = 0;
   private readonly MAX_CONCURRENT_PATHS = 5;
-  private _entityIndex?: EntityIndex;
   private agentRegistry?: AgentRegistry;
 
   constructor(
@@ -121,7 +121,7 @@ export class MovementSystem extends EventEmitter {
   ) {
     super();
     this.gameState = gameState;
-    this._entityIndex = entityIndex;
+    void entityIndex;
     this.agentRegistry = agentRegistry;
 
     this.pathfinder = new EasyStar.js();
@@ -132,9 +132,9 @@ export class MovementSystem extends EventEmitter {
     );
 
     const worldWidthPx =
-      this.gameState.worldSize?.width ?? SIM_CONSTANTS.WORLD_DEFAULT_WIDTH;
+      this.gameState.worldSize?.width ?? WORLD_CONFIG.WORLD_WIDTH;
     const worldHeightPx =
-      this.gameState.worldSize?.height ?? SIM_CONSTANTS.WORLD_DEFAULT_HEIGHT;
+      this.gameState.worldSize?.height ?? WORLD_CONFIG.WORLD_HEIGHT;
     this.gridWidth = Math.max(1, Math.ceil(worldWidthPx / this.gridSize));
     this.gridHeight = Math.max(1, Math.ceil(worldHeightPx / this.gridSize));
 
@@ -147,9 +147,7 @@ export class MovementSystem extends EventEmitter {
       );
     }
 
-    // Register movementStates Map in AgentRegistry for unified access
     if (this.agentRegistry) {
-      // Cast needed because MovementState has additional properties
       this.agentRegistry.registerMovement(
         this.movementStates as Map<
           string,
@@ -263,7 +261,6 @@ export class MovementSystem extends EventEmitter {
 
   private updateBatch(deltaMs: number, now: number): void {
     this.batchProcessor.rebuildBuffers(this.movementStates);
-    // Ensure target buffer is synced with current state targets
     this.batchProcessor.syncTargetsFromStates(this.movementStates);
 
     const entityIdArray = this.batchProcessor.getEntityIdArray();
@@ -581,7 +578,6 @@ export class MovementSystem extends EventEmitter {
     state.currentActivity = ActivityType.MOVING;
     state.lastArrivalTime = undefined; // Clear arrival time when starting new movement
 
-    // Update batch processor target buffer immediately
     this.batchProcessor.updateEntityTarget(entityId, tx, ty);
 
     simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
@@ -710,7 +706,6 @@ export class MovementSystem extends EventEmitter {
             this.pathCache.set(pathKey, { result, timestamp: now });
             resolve(result);
           } else {
-            // Intentar encontrar una posición accesible cercana al destino
             const grid = this.getOptimizedGrid();
             const accessiblePos = findAccessibleDestination(
               grid,
@@ -718,15 +713,13 @@ export class MovementSystem extends EventEmitter {
               endGrid.y,
               this.gridWidth,
               this.gridHeight,
-              5, // radio máximo de búsqueda
+              5,
             );
 
-            // Si encontramos una posición alternativa, recalcular
             if (
               accessiblePos.x !== endGrid.x ||
               accessiblePos.y !== endGrid.y
             ) {
-              // Intentar pathfinding hacia la posición alternativa
               this.pathfinder.findPath(
                 startGrid.x,
                 startGrid.y,
@@ -761,7 +754,6 @@ export class MovementSystem extends EventEmitter {
                     return;
                   }
 
-                  // Si aún falla, devolver resultado fallido
                   const distance = Math.hypot(to.x - from.x, to.y - from.y);
                   resolve({
                     success: false,
@@ -909,12 +901,11 @@ export class MovementSystem extends EventEmitter {
   }
 
   /** Grace period after arrival before idle wander can start (allows AI to plan next action) */
-  private readonly ARRIVAL_GRACE_PERIOD_MS = 2000; // Increased to give AI more time
+  private readonly ARRIVAL_GRACE_PERIOD_MS = 2000;
 
   private maybeStartIdleWander(state: EntityMovementState, now: number): void {
     if (state.isMoving || state.currentActivity !== "idle") return;
 
-    // Don't start idle wander if agent just arrived - give AI time to plan next action
     if (
       state.lastArrivalTime &&
       now - state.lastArrivalTime < this.ARRIVAL_GRACE_PERIOD_MS

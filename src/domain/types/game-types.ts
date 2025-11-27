@@ -29,6 +29,10 @@ import { ResourceType } from "../../shared/constants/ResourceEnums";
 import { TileType } from "../../shared/constants/TileTypeEnums";
 import { StockpileType } from "../../shared/constants/ZoneEnums";
 import type { TaskType } from "./simulation/tasks";
+import { InteractionType } from "../../shared/constants/InteractionEnums";
+import { WeatherType } from "../../shared/constants/AmbientEnums";
+import { TimeOfDayPhase } from "../../shared/constants/TimeEnums";
+import { BiomeType } from "../../shared/constants/BiomeEnums";
 /**
  * Economy system state tracking work actions and resource production.
  */
@@ -112,14 +116,11 @@ export interface Size {
  */
 export interface Rect extends Position, Size {}
 
-export type InteractionType =
-  | "NOURISH"
-  | "FEED"
-  | "PLAY"
-  | "COMFORT"
-  | "DISTURB"
-  | "WAKE_UP"
-  | "LET_SLEEP";
+/**
+ * Re-export InteractionType enum for backward compatibility.
+ * @deprecated Import directly from InteractionEnums instead.
+ */
+export { InteractionType } from "../../shared/constants/InteractionEnums";
 
 export interface DialogueEntry {
   speaker: string;
@@ -151,7 +152,7 @@ export interface GameResources {
 }
 
 export interface WeatherState {
-  current: string;
+  current: WeatherType;
   temperature: number;
   humidity: number;
   windSpeed: number;
@@ -446,7 +447,7 @@ export interface GameState {
   togetherTime: number;
   cycles: number;
   weather: WeatherState;
-  timeOfDay?: string;
+  timeOfDay?: TimeOfDayPhase;
   worldResources?: Record<string, WorldResourceInstance>;
   socialGraph?: SocialGraphState;
   market?: MarketState;
@@ -499,6 +500,6 @@ export interface GameState {
   worldSize?: Size;
   generatorVersion?: string;
   playerLevel?: number;
-  exploredBiomes?: string[];
+  exploredBiomes?: BiomeType[];
   unlockedAssets?: string[];
 }

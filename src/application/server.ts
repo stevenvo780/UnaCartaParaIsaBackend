@@ -91,6 +91,15 @@ simulationRunner
     process.exit(1);
   });
 
+/**
+ * Initializes a fresh world with default dimensions and starts the simulation.
+ *
+ * Creates a new world with 128x128 tiles at 32px per tile and no predefined biomes.
+ * After initialization, starts the simulation runner.
+ *
+ * @remarks
+ * Side effects: Initializes world resources and starts simulation tick loop.
+ */
 async function initializeFreshWorld(): Promise<void> {
   return simulationRunner
     .initializeWorldResources({
@@ -106,6 +115,19 @@ async function initializeFreshWorld(): Promise<void> {
     });
 }
 
+/**
+ * Sets up WebSocket upgrade handlers for HTTP server.
+ *
+ * Routes WebSocket upgrade requests to appropriate handlers:
+ * - `/ws/sim` - Real-time simulation state streaming (50Hz snapshots)
+ * - `/ws/chunks` - Asynchronous terrain chunk generation streaming
+ *
+ * Invalid URLs result in socket destruction.
+ *
+ * @remarks
+ * Side effects: Registers upgrade event handlers on HTTP server.
+ * Handles WebSocket protocol upgrade from HTTP.
+ */
 function setupServerUpgrades(): void {
   server.on("upgrade", (request, socket, head) => {
     const host = request.headers.host ?? "localhost";
@@ -139,6 +161,24 @@ function setupServerUpgrades(): void {
   });
 }
 
+/**
+ * Handles new WebSocket connections to simulation stream.
+ *
+ * On connection:
+ * 1. Sends initial full snapshot to client
+ * 2. Registers tick handler to broadcast updates (50Hz)
+ * 3. Sets up command message handler for client commands
+ * 4. Handles cleanup on disconnect
+ *
+ * Supports two message types:
+ * - Commands: SimulationCommand objects that modify game state
+ * - Requests: SimulationRequest objects that query state (REQUEST_FULL_STATE, etc.)
+ *
+ * @remarks
+ * Side effects: Registers event listeners on SimulationRunner.
+ * Broadcasts game state snapshots at 50Hz to all connected clients.
+ * Processes commands that modify simulation state.
+ */
 simulationWss.on("connection", (ws: WebSocket) => {
   logger.info("Client connected to simulation");
 
@@ -235,6 +275,16 @@ simulationWss.on("connection", (ws: WebSocket) => {
   });
 });
 
+/**
+ * Broadcasts simulation tick snapshots to all connected WebSocket clients.
+ *
+ * Caches encoded snapshot per tick to avoid re-encoding for multiple clients.
+ * Only re-encodes when tick number changes. Broadcasts to all open connections.
+ *
+ * @remarks
+ * Performance: Uses cached buffer to minimize MessagePack encoding overhead.
+ * Side effects: Sends network messages to all connected clients (50Hz).
+ */
 simulationRunner.on("tick", (snapshot: unknown) => {
   const currentTick = (snapshot as { tick?: number }).tick ?? 0;
   if (currentTick !== cachedTickNumber || !cachedTickBuffer) {

@@ -3,6 +3,7 @@ import type { EntityNeedsData } from "../../../../types/simulation/needs";
 import { GoalType, NeedType } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 import type { Inventory } from "../../../../types/simulation/economy";
+import type { AgentRegistry } from "../../../core/AgentRegistry";
 
 export interface BiologicalDriveDeps {
   getEntityNeeds: (entityId: string) => EntityNeedsData | undefined;
@@ -19,7 +20,7 @@ export interface BiologicalDriveDeps {
     resourceType: ResourceType.FOOD | ResourceType.WATER,
     minAmount: number,
   ) => { agentId: string; x: number; y: number } | null;
-  getAgentPosition?: (entityId: string) => { x: number; y: number } | null;
+  agentRegistry?: AgentRegistry;
   getFailedTargets?: (entityId: string) => Map<string, number> | undefined;
 }
 
@@ -98,7 +99,7 @@ export function evaluateBiologicalDrives(
   if (!needs) return goals;
 
   const now = Date.now();
-  const agentPos = deps.getAgentPosition?.(aiState.entityId) ?? null;
+  const agentPos = deps.agentRegistry?.getPosition(aiState.entityId) ?? null;
   const failedTargets = deps.getFailedTargets?.(aiState.entityId);
 
   const thirstUtility = calculateDriveUtility(needs.thirst);

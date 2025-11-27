@@ -76,6 +76,9 @@ export enum WeatherType {
   CLEAR = "clear",
   CLOUDY = "cloudy",
   STORMY = "stormy",
+  RAINY = "rainy",
+  FOGGY = "foggy",
+  SNOWY = "snowy",
 }
 
 /**

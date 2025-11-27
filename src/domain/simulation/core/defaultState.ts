@@ -3,6 +3,8 @@ import type {
   GameResources,
   GameState,
 } from "../../types/game-types";
+import { InteractionType } from "../../../shared/constants/InteractionEnums";
+import { WeatherType } from "../../../shared/constants/AmbientEnums";
 
 /**
  * Default resource values for new game states.
@@ -58,7 +60,7 @@ export function createInitialGameState(): GameState {
     connectionAnimation: {
       active: false,
       startTime: 0,
-      type: "NOURISH",
+      type: InteractionType.NOURISH,
     },
     zones: [],
     mapElements: [],
@@ -83,7 +85,7 @@ export function createInitialGameState(): GameState {
     unlockedAssets: [],
     combatLog: [],
     weather: {
-      current: "sunny",
+      current: WeatherType.CLEAR,
       temperature: 24,
       humidity: 0.4,
       windSpeed: 2,

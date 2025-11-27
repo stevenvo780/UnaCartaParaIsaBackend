@@ -6,10 +6,11 @@ import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 import { WorldResourceType } from "../../../../../shared/constants/ResourceEnums";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 import { toInventoryResource } from "../../../../types/simulation/resourceMapping";
+import type { AgentRegistry } from "../../../core/AgentRegistry";
 
 export interface AIUrgentGoalsDeps {
   gameState: GameState;
-  getAgentPosition: (agentId: string) => { x: number; y: number } | null;
+  agentRegistry: AgentRegistry;
   findNearestResourceForEntity: (
     entityId: string,
     resourceType: string,
@@ -31,7 +32,7 @@ export class AIUrgentGoals {
    * Creates urgent food goal when hunger is critical.
    */
   public createUrgentFoodGoal(agentId: string, now: number): AIGoal | null {
-    const position = this.deps.getAgentPosition(agentId);
+    const position = this.deps.agentRegistry.getPosition(agentId) ?? null;
     if (!position) return null;
 
     // Food is only obtained from world resources - no zones satisfy hunger directly
@@ -69,7 +70,7 @@ export class AIUrgentGoals {
    * Creates urgent water goal when thirst is critical.
    */
   public createUrgentWaterGoal(agentId: string, now: number): AIGoal | null {
-    const position = this.deps.getAgentPosition(agentId);
+    const position = this.deps.agentRegistry.getPosition(agentId) ?? null;
     if (!position) return null;
 
     // Water is only obtained from world resources - no zones satisfy thirst directly
@@ -97,7 +98,7 @@ export class AIUrgentGoals {
    * Creates urgent rest goal when energy is critical.
    */
   public createUrgentRestGoal(agentId: string, now: number): AIGoal | null {
-    const position = this.deps.getAgentPosition(agentId);
+    const position = this.deps.agentRegistry.getPosition(agentId) ?? null;
     if (!position) return null;
 
     const restZone = this.deps.gameState.zones?.find(
@@ -131,7 +132,7 @@ export class AIUrgentGoals {
    * Creates urgent social goal when social need is critical.
    */
   public createUrgentSocialGoal(agentId: string, now: number): AIGoal | null {
-    const position = this.deps.getAgentPosition(agentId);
+    const position = this.deps.agentRegistry.getPosition(agentId) ?? null;
     if (!position) return null;
 
     const socialZone = this.deps.gameState.zones?.find(
@@ -160,7 +161,7 @@ export class AIUrgentGoals {
    * Creates urgent fun goal when fun need is critical.
    */
   public createUrgentFunGoal(agentId: string, now: number): AIGoal | null {
-    const position = this.deps.getAgentPosition(agentId);
+    const position = this.deps.agentRegistry.getPosition(agentId) ?? null;
     if (!position) return null;
 
     const funZone = this.deps.gameState.zones?.find(

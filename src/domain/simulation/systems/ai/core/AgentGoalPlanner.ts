@@ -37,14 +37,10 @@ import {
   evaluateCollectiveNeeds,
   type CollectiveNeedsContext,
 } from "../evaluators/CollectiveNeedsEvaluator";
-import {
-  selectBestZone,
-  getUnexploredZones,
-  prioritizeGoals,
-  getEntityPosition,
-} from "./utils";
+import { selectBestZone, getUnexploredZones, prioritizeGoals } from "./utils";
 import type { Quest } from "../../../../types/simulation/quests";
 import { evaluateExpansionGoals } from "../evaluators/ExpansionEvaluator";
+import type { AgentRegistry } from "../../../core/AgentRegistry";
 
 /**
  * Dependencies interface for goal planning.
@@ -53,6 +49,7 @@ import { evaluateExpansionGoals } from "../evaluators/ExpansionEvaluator";
 export interface AgentGoalPlannerDeps {
   gameState: GameState;
   priorityManager: PriorityManager;
+  agentRegistry: AgentRegistry;
   getEntityNeeds: (entityId: string) => EntityNeedsData | undefined;
   findNearestResource?: (
     entityId: string,
@@ -110,7 +107,6 @@ export interface AgentGoalPlannerDeps {
     | "dusk"
     | "night"
     | "deep_night";
-  getEntityPosition?: (id: string) => { x: number; y: number } | null;
   getNearbyAgentsWithDistances?: (
     entityId: string,
     radius: number,
@@ -173,7 +169,7 @@ export function planGoals(
   const goals: AIGoal[] = [];
   const entityNeeds = deps.getEntityNeeds(aiState.entityId);
   const positionFor = (id: string): { x: number; y: number } =>
-    getEntityPosition(id, deps.gameState) ?? { x: 0, y: 0 };
+    deps.agentRegistry.getPosition(id) ?? { x: 0, y: 0 };
   const defaultStats = (): Record<string, number> | null => null;
   const selectZone = (
     state: AIState,
@@ -196,7 +192,7 @@ export function planGoals(
       findNearestResource: deps.findNearestResource,
       findNearestHuntableAnimal: deps.findNearestHuntableAnimal,
       findAgentWithResource: deps.findAgentWithResource,
-      getAgentPosition: deps.getEntityPosition,
+      agentRegistry: deps.agentRegistry,
       getFailedTargets: (): Map<string, number> | undefined => failedTargetsMap,
     };
     const bioGoals = evaluateBiologicalDrives(bioDeps, aiState);
@@ -360,7 +356,7 @@ export function planGoals(
     goals.push(...tradeGoals);
   }
 
-  if (deps.getAgentInventory && deps.getEntityPosition) {
+  if (deps.getAgentInventory) {
     const buildingDeps = {
       gameState: deps.gameState,
       getEntityPosition: positionFor,
@@ -408,7 +404,7 @@ export function planGoals(
     goals.push(...opportunityGoals);
   }
 
-  if (deps.getAgentInventory && deps.getEntityPosition) {
+  if (deps.getAgentInventory) {
     const expansionDeps = {
       gameState: deps.gameState,
       getAgentInventory: deps.getAgentInventory,

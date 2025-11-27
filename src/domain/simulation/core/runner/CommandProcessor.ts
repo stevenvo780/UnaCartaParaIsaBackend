@@ -1,5 +1,6 @@
 import { logger } from "../../../../infrastructure/utils/logger";
 import { GameEventNames, simulationEvents } from "../events";
+import { WeatherType } from "../../../../shared/constants/AmbientEnums";
 import type {
   SimulationCommand,
   SpawnAgentCommandPayload,
@@ -177,7 +178,7 @@ export class CommandProcessor {
     const payload = command.payload;
 
     switch (command.command) {
-      case "MOVE_TO": // TODO: Create AgentCommandType enum
+      case "MOVE_TO":
         if (
           payload &&
           typeof payload.x === "number" &&
@@ -195,7 +196,7 @@ export class CommandProcessor {
           });
         }
         break;
-      case "STOP_MOVEMENT": // TODO: Create AgentCommandType enum
+      case "STOP_MOVEMENT":
         this.runner.movementSystem.stopMovement(command.agentId);
         break;
       default:
@@ -578,15 +579,7 @@ export class CommandProcessor {
         "setWeather" in this.runner.timeSystem &&
         typeof this.runner.timeSystem.setWeather === "function"
       ) {
-        this.runner.timeSystem.setWeather(
-          weatherType as
-            | "clear"
-            | "cloudy"
-            | "rainy"
-            | "stormy"
-            | "foggy"
-            | "snowy",
-        );
+        this.runner.timeSystem.setWeather(weatherType as WeatherType);
         logger.info(`Weather set to ${weatherType} via TIME_COMMAND`);
       } else {
         logger.warn("TimeSystem.setWeather not available");

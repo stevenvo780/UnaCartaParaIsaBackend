@@ -163,7 +163,7 @@ export class CombatSystem {
         const animalY = animal.position.y;
         const animalEntity: SimulationEntity = {
           id: animalId,
-          type: "animal",
+          type: EntityType.ANIMAL,
           x: animalX,
           y: animalY,
           position: { x: animalX, y: animalY },
@@ -384,7 +384,7 @@ export class CombatSystem {
       (entity): entity is SimulationEntity =>
         entity.id === agentId &&
         Boolean(entity.position) &&
-        (entity.type === "agent" || entity.type === "humanoid"),
+        entity.type === EntityType.AGENT,
     );
     if (!agent || !agent.position) return [];
 

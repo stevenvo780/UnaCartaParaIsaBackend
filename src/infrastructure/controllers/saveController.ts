@@ -5,8 +5,14 @@ import { logger } from "../utils/logger";
 import { HttpStatusCode } from "../../shared/constants/HttpStatusCodes";
 import { ResponseStatus } from "../../shared/constants/ResponseEnums";
 
-const MAX_SAVE_ID_LENGTH = 200;
-const SAVE_ID_PATTERN = /^save_\d+$/;
+/**
+ * Save operation constants.
+ * Centralized to ensure consistency and prevent magic numbers.
+ */
+const SAVE_CONSTANTS = {
+  MAX_SAVE_ID_LENGTH: 200,
+  SAVE_ID_PATTERN: /^save_\d+$/,
+} as const;
 
 /**
  * Sanitizes and validates a save ID.
@@ -16,8 +22,8 @@ function sanitizeSaveId(id: string): string | null {
   const sanitized = id
     .replace(/\.\./g, "")
     .replace(/\//g, "")
-    .slice(0, MAX_SAVE_ID_LENGTH);
-  if (!SAVE_ID_PATTERN.test(sanitized)) {
+    .slice(0, SAVE_CONSTANTS.MAX_SAVE_ID_LENGTH);
+  if (!SAVE_CONSTANTS.SAVE_ID_PATTERN.test(sanitized)) {
     return null;
   }
   return sanitized;

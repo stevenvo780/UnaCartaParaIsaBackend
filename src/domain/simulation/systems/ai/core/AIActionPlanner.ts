@@ -2,16 +2,15 @@ import type { GameState } from "../../../../types/game-types";
 import type { AIGoal, AgentAction } from "../../../../types/simulation/ai";
 import { ActionType, GoalType } from "../../../../../shared/constants/AIEnums";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
+import type { AgentRegistry } from "../../../core/AgentRegistry";
 
 export interface AIActionPlannerDeps {
   gameState: GameState;
-  getAgentPosition: (agentId: string) => { x: number; y: number } | null;
-  /** Find nearest resource of a given type */
+  agentRegistry: AgentRegistry;
   findNearestResource?: (
     entityId: string,
     resourceType: string,
   ) => { id: string; x: number; y: number } | null;
-  /** Find nearest huntable animal */
   findNearestHuntableAnimal?: (
     entityId: string,
   ) => { id: string; x: number; y: number; type: string } | null;
@@ -26,12 +25,17 @@ import { logger } from "../../../../../infrastructure/utils/logger";
 export class AIActionPlanner {
   private readonly deps: AIActionPlannerDeps;
 
-  private readonly HARVEST_RANGE = 80; // Increased from 60 for more reliable harvesting
-  private readonly ATTACK_RANGE = 50; // Increased from 40
+  private readonly HARVEST_RANGE = 80;
+  private readonly ATTACK_RANGE = 50;
   private readonly EXPLORE_RANGE = 200;
 
   constructor(deps: AIActionPlannerDeps) {
     this.deps = deps;
+  }
+
+  /** O(1) position lookup via AgentRegistry */
+  private getPosition(agentId: string): { x: number; y: number } | null {
+    return this.deps.agentRegistry.getPosition(agentId) ?? null;
   }
 
   /**
@@ -113,7 +117,7 @@ export class AIActionPlanner {
     timestamp: number,
   ): AgentAction | null {
     if (goal.targetId && goal.targetPosition) {
-      const agentPos = this.deps.getAgentPosition(agentId);
+      const agentPos = this.getPosition(agentId);
       if (agentPos) {
         const dist = Math.hypot(
           agentPos.x - goal.targetPosition.x,
@@ -156,7 +160,7 @@ export class AIActionPlanner {
     timestamp: number,
   ): AgentAction | null {
     if (goal.targetId && goal.targetPosition) {
-      const agentPos = this.deps.getAgentPosition(agentId);
+      const agentPos = this.getPosition(agentId);
       if (agentPos) {
         const dist = Math.hypot(
           agentPos.x - goal.targetPosition.x,
@@ -188,7 +192,7 @@ export class AIActionPlanner {
     timestamp: number,
   ): AgentAction | null {
     if (goal.targetId && goal.targetPosition) {
-      const agentPos = this.deps.getAgentPosition(agentId);
+      const agentPos = this.getPosition(agentId);
       if (agentPos) {
         const dist = Math.hypot(
           agentPos.x - goal.targetPosition.x,
@@ -219,7 +223,7 @@ export class AIActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
-    const agentPos = this.deps.getAgentPosition(agentId);
+    const agentPos = this.getPosition(agentId);
 
     const currentRestZone = this.deps.gameState.zones?.find((z) => {
       if (
@@ -281,7 +285,7 @@ export class AIActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
-    const agentPos = this.deps.getAgentPosition(agentId);
+    const agentPos = this.getPosition(agentId);
 
     const currentZone = this.deps.gameState.zones?.find((z) => {
       if (
@@ -382,7 +386,7 @@ export class AIActionPlanner {
     timestamp: number,
   ): AgentAction | null {
     if (goal.targetId && goal.targetPosition) {
-      const agentPos = this.deps.getAgentPosition(agentId);
+      const agentPos = this.getPosition(agentId);
       if (agentPos) {
         const dist = Math.hypot(
           agentPos.x - goal.targetPosition.x,
@@ -429,7 +433,7 @@ export class AIActionPlanner {
     const resourceType = goal.data?.resourceType as string | undefined;
 
     if (goal.targetId && goal.targetPosition) {
-      const agentPos = this.deps.getAgentPosition(agentId);
+      const agentPos = this.getPosition(agentId);
       if (agentPos) {
         const dist = Math.hypot(
           agentPos.x - goal.targetPosition.x,
@@ -477,7 +481,7 @@ export class AIActionPlanner {
         for (const foodType of foodTypes) {
           const resource = this.deps.findNearestResource(agentId, foodType);
           if (resource) {
-            const agentPos = this.deps.getAgentPosition(agentId);
+            const agentPos = this.getPosition(agentId);
             if (agentPos) {
               const dist = Math.hypot(
                 agentPos.x - resource.x,
@@ -506,7 +510,7 @@ export class AIActionPlanner {
       if (this.deps.findNearestHuntableAnimal) {
         const animal = this.deps.findNearestHuntableAnimal(agentId);
         if (animal) {
-          const agentPos = this.deps.getAgentPosition(agentId);
+          const agentPos = this.getPosition(agentId);
           if (agentPos) {
             const dist = Math.hypot(
               agentPos.x - animal.x,
@@ -541,7 +545,7 @@ export class AIActionPlanner {
           "water_source",
         );
         if (waterSource) {
-          const agentPos = this.deps.getAgentPosition(agentId);
+          const agentPos = this.getPosition(agentId);
           if (agentPos) {
             const dist = Math.hypot(
               agentPos.x - waterSource.x,
@@ -571,7 +575,7 @@ export class AIActionPlanner {
       if (this.deps.findNearestResource) {
         const tree = this.deps.findNearestResource(agentId, "tree");
         if (tree) {
-          const agentPos = this.deps.getAgentPosition(agentId);
+          const agentPos = this.getPosition(agentId);
           if (agentPos) {
             const dist = Math.hypot(agentPos.x - tree.x, agentPos.y - tree.y);
             if (dist < this.HARVEST_RANGE) {
@@ -598,7 +602,7 @@ export class AIActionPlanner {
       if (this.deps.findNearestResource) {
         const rock = this.deps.findNearestResource(agentId, "rock");
         if (rock) {
-          const agentPos = this.deps.getAgentPosition(agentId);
+          const agentPos = this.getPosition(agentId);
           if (agentPos) {
             const dist = Math.hypot(agentPos.x - rock.x, agentPos.y - rock.y);
             if (dist < this.HARVEST_RANGE) {
@@ -645,7 +649,7 @@ export class AIActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
-    const agentPos = this.deps.getAgentPosition(agentId);
+    const agentPos = this.getPosition(agentId);
 
     let targetZoneId = goal.targetZoneId;
     if (!targetZoneId) {
@@ -710,7 +714,7 @@ export class AIActionPlanner {
     timestamp: number,
   ): AgentAction | null {
     if (goal.targetId && goal.targetPosition) {
-      const agentPos = this.deps.getAgentPosition(agentId);
+      const agentPos = this.getPosition(agentId);
       if (agentPos) {
         const dist = Math.hypot(
           agentPos.x - goal.targetPosition.x,
@@ -757,7 +761,7 @@ export class AIActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
-    const agentPos = this.deps.getAgentPosition(agentId);
+    const agentPos = this.getPosition(agentId);
 
     const currentZone = this.deps.gameState.zones?.find((z) => {
       if (
@@ -857,7 +861,7 @@ export class AIActionPlanner {
         timestamp,
       };
     }
-    const currentPos = this.deps.getAgentPosition(agentId);
+    const currentPos = this.getPosition(agentId);
     if (currentPos) {
       const mapWidth = this.deps.gameState.worldSize?.width || 2000;
       const mapHeight = this.deps.gameState.worldSize?.height || 2000;
@@ -959,7 +963,7 @@ export class AIActionPlanner {
     }
 
     if (targetId && targetPosition) {
-      const agentPos = this.deps.getAgentPosition(agentId);
+      const agentPos = this.getPosition(agentId);
       if (agentPos) {
         const dist = Math.hypot(
           agentPos.x - targetPosition.x,

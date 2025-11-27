@@ -184,6 +184,7 @@ export class AISystem extends EventEmitter {
   private questSystem?: QuestSystem;
   private timeSystem?: TimeSystem;
   private sharedKnowledgeSystem?: SharedKnowledgeSystem;
+  // @ts-expect-error - Reserved for future use
   private _entityIndex?: EntityIndex;
   private gpuService?: GPUComputeService;
   private agentRegistry?: AgentRegistry;
@@ -213,9 +214,7 @@ export class AISystem extends EventEmitter {
   private readonly RESOURCE_CACHE_TTL = 2000; // 2s cache for resource searches
   private readonly MAX_RESOURCE_SEARCH_RADIUS = 2000; // Increased to cover most of the map
 
-  // Resource reservation: tracks which agent is targeting which resource
-  // Prevents multiple agents from going to the same resource
-  private resourceReservations = new Map<string, string>(); // resourceId -> agentId
+  private resourceReservations = new Map<string, string>();
 
   private readonly MAX_DECISION_TIME_MS = 5;
 
@@ -305,7 +304,6 @@ export class AISystem extends EventEmitter {
 
     this.aiStates = new Map();
 
-    // Register aiStates Map in AgentRegistry for unified access
     if (this.agentRegistry) {
       this.agentRegistry.registerAIStates(this.aiStates);
     }
@@ -333,7 +331,6 @@ export class AISystem extends EventEmitter {
     this.initializeSubsystems();
 
     this.boundHandleActionComplete = this.handleActionComplete.bind(this);
-    // Listen only to AGENT_ACTION_COMPLETE - it handles all action types including move
     simulationEvents.on(
       GameEventNames.AGENT_ACTION_COMPLETE,
       this.boundHandleActionComplete,
@@ -359,15 +356,12 @@ export class AISystem extends EventEmitter {
       worldResourceSystem: this.worldResourceSystem,
       needsSystem: this.needsSystem,
       animalSystem: this.animalSystem,
-      getAgentPosition: (agentId: string): { x: number; y: number } | null =>
-        this.getAgentPosition(agentId),
-      agentRegistry: this.agentRegistry,
+      agentRegistry: this.agentRegistry!,
     });
 
     this.actionPlanner = new AIActionPlanner({
       gameState: this.gameState,
-      getAgentPosition: (agentId: string): { x: number; y: number } | null =>
-        this.getAgentPosition(agentId),
+      agentRegistry: this.agentRegistry!,
       findNearestResource: (
         entityId: string,
         resourceType: string,
@@ -395,8 +389,7 @@ export class AISystem extends EventEmitter {
 
     this.urgentGoals = new AIUrgentGoals({
       gameState: this.gameState,
-      getAgentPosition: (agentId: string): { x: number; y: number } | null =>
-        this.getAgentPosition(agentId),
+      agentRegistry: this.agentRegistry!,
       findNearestResourceForEntity: (
         entityId: string,
         resourceType: string,
@@ -608,7 +601,6 @@ export class AISystem extends EventEmitter {
   public update(_deltaTimeMs: number): void {
     const now = getFrameTime();
 
-    // Only update if enough time has passed according to config
     if (now - this.lastUpdate < this.config.updateIntervalMs) {
       return;
     }
@@ -702,7 +694,6 @@ export class AISystem extends EventEmitter {
     }
 
     if (!aiState.currentGoal) {
-      // Try to get goal from queue first
       if (aiState.goalQueue.length > 0) {
         aiState.currentGoal = aiState.goalQueue.shift() ?? null;
         aiState.lastDecisionTime = now;
@@ -717,8 +708,6 @@ export class AISystem extends EventEmitter {
           });
         }
       }
-
-      // If still no goal, make a new decision
       if (!aiState.currentGoal) {
         const startTime = performance.now();
         const newGoal = this.makeDecision(agentId, aiState, now);
@@ -760,12 +749,10 @@ export class AISystem extends EventEmitter {
         return;
       }
 
-      // Skip if already has an action in progress
       if (aiState.currentAction) {
         return;
       }
 
-      // Skip if agent is moving - wait until they arrive
       const isMoving = this._movementSystem?.isMoving(agentId);
       if (isMoving) {
         return;
@@ -830,7 +817,7 @@ export class AISystem extends EventEmitter {
 
     if (!inventoryEmpty && !needsSatisfied) return;
 
-    const pos = this.getAgentPosition(agentId);
+    const pos = this.agentRegistry?.getPosition(agentId);
     if (!pos) return;
 
     const radius = 400 + Math.random() * 600; // encourage broader exploration
@@ -861,13 +848,10 @@ export class AISystem extends EventEmitter {
     now: number,
     maxGoals: number,
   ): void {
-    // Don't pre-plan if agent has urgent needs or is in combat
     if (aiState.isInCombat) return;
 
     const needs = this.needsSystem?.getNeeds(agentId);
 
-    // Check if urgent needs can actually be satisfied
-    // Only block for thirst if agent can FIND a water_source nearby
     const canFindWater = this.findNearestResourceForEntity(
       agentId,
       "water_source",
@@ -878,10 +862,9 @@ export class AISystem extends EventEmitter {
     const energyBlocks = needs && needs.energy < 30;
 
     if (hungerBlocks || thirstBlocks || energyBlocks) {
-      return; // Agent needs to address urgent needs first
+      return;
     }
 
-    // Collect already-targeted resources
     const excludedIds = new Set<string>();
     if (aiState.currentGoal?.targetId) {
       excludedIds.add(aiState.currentGoal.targetId);
@@ -902,7 +885,7 @@ export class AISystem extends EventEmitter {
       );
       if (workGoal && workGoal.targetId) {
         aiState.goalQueue.push(workGoal);
-        excludedIds.add(workGoal.targetId); // Prevent same target in next iteration
+        excludedIds.add(workGoal.targetId);
       } else {
         break; // No more unique work goals available
       }
@@ -932,7 +915,6 @@ export class AISystem extends EventEmitter {
       if (g.targetId) excluded.add(g.targetId);
     }
 
-    // Hunters prioritize hunting
     if (role === RoleType.HUNTER) {
       // Find nearest huntable animal
       const animal = this.findNearestHuntableAnimal(agentId);
@@ -958,7 +940,6 @@ export class AISystem extends EventEmitter {
           `⚠️ [AI] ${agentId}: Animal ${animal.id} already excluded`,
         );
       }
-      // Fallback to gathering food if no animals nearby
       for (const foodType of foodTypes) {
         const resource = this.findNearestResourceForEntity(agentId, foodType);
         if (resource && !excluded.has(resource.id)) {
@@ -1004,7 +985,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Quarrymen (Canteros) gather stone
     if (role === RoleType.QUARRYMAN) {
       for (const stoneType of stoneTypes) {
         const resource = this.findNearestResourceForEntity(agentId, stoneType);
@@ -1031,7 +1011,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Gatherers focus on food
     if (role === RoleType.GATHERER) {
       for (const foodType of foodTypes) {
         const resource = this.findNearestResourceForEntity(agentId, foodType);
@@ -1052,7 +1031,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Builders gather wood/stone
     if (role === RoleType.BUILDER) {
       for (const woodType of woodTypes) {
         const resource = this.findNearestResourceForEntity(agentId, woodType);
@@ -1169,7 +1147,7 @@ export class AISystem extends EventEmitter {
     agentId: string,
     _aiState: AIState,
   ): AIGoal | null {
-    const pos = this.getAgentPosition(agentId);
+    const pos = this.agentRegistry?.getPosition(agentId);
     if (!pos) return null;
 
     const mapWidth = this.gameState.worldSize?.width || 2000;
@@ -1223,6 +1201,7 @@ export class AISystem extends EventEmitter {
     const deps: AgentGoalPlannerDeps = {
       gameState: this.gameState,
       priorityManager: this.priorityManager,
+      agentRegistry: this.agentRegistry!,
       getEntityNeeds: (id: string) => this.needsSystem?.getNeeds(id),
       findNearestResource: (id: string, resourceType: string) => {
         return this.findNearestResourceForEntity(id, resourceType);
@@ -1349,7 +1328,6 @@ export class AISystem extends EventEmitter {
         return (this.timeSystem?.getCurrentTime().phase ||
           "morning") as TimeOfDay["phase"];
       },
-      getEntityPosition: (id: string) => this.getAgentPosition(id) || null,
       getNearbyAgentsWithDistances: (entityId: string, radius: number) =>
         this.getNearbyAgentsWithDistancesGPU(entityId, radius),
 
@@ -1602,7 +1580,6 @@ export class AISystem extends EventEmitter {
     // Release resource reservation when goal completes
     this.releaseResourceReservation(agentId);
 
-    // Check if there's a queued goal to process next
     if (aiState.goalQueue.length > 0) {
       aiState.currentGoal = aiState.goalQueue.shift() ?? null;
       aiState.currentAction = null;
@@ -1638,14 +1615,6 @@ export class AISystem extends EventEmitter {
 
   private planAction(agentId: string, goal: AIGoal): AgentAction | null {
     return this.actionPlanner.planAction(agentId, goal);
-  }
-
-  private getAgentPosition(agentId: string): { x: number; y: number } | null {
-    const agent = this.agentRegistry?.getProfile(agentId);
-    if (agent?.position) {
-      return { x: agent.position.x, y: agent.position.y };
-    }
-    return null;
   }
 
   /**
@@ -1721,7 +1690,6 @@ export class AISystem extends EventEmitter {
     const cached = this.nearestResourceCache.get(cacheKey);
     const now = Date.now();
     if (cached && now - cached.timestamp < this.RESOURCE_CACHE_TTL) {
-      // Check if our cached resource is still reserved by us
       const reservedBy = this.resourceReservations.get(
         cached.resource?.id ?? "",
       );
@@ -1874,7 +1842,6 @@ export class AISystem extends EventEmitter {
       if (other.id === entityId || other.isDead) continue;
       if (!other.position) continue;
 
-      // Basic check: opposite sex and adult
       if (agent.sex && other.sex && agent.sex !== other.sex) {
         if (other.ageYears >= 18) {
           const dx = other.position.x - agent.position.x;
@@ -1942,7 +1909,7 @@ export class AISystem extends EventEmitter {
   private findNearestHuntableAnimal(
     entityId: string,
   ): { id: string; x: number; y: number; type: string } | null {
-    const agentPos = this.getAgentPosition(entityId);
+    const agentPos = this.agentRegistry?.getPosition(entityId);
     if (!agentPos) return null;
 
     // Use AnimalSystem directly - this is the source of truth for animals
@@ -2115,7 +2082,6 @@ export class AISystem extends EventEmitter {
     }
 
     // Don't complete goal on MOVE actions - the agent just arrived somewhere
-    // The goal should only complete when the actual work is done (harvest, eat, etc.)
     if (payload.actionType === "move") {
       // Agent arrived at destination, next tick will plan the actual action
       logger.debug(
@@ -2124,13 +2090,11 @@ export class AISystem extends EventEmitter {
       return;
     }
 
-    // Harvest/Attack actions complete the goal immediately when successful
     if (payload.actionType === "harvest" || payload.actionType === "attack") {
       this.completeGoal(aiState, payload.agentId);
       return;
     }
 
-    // For work tasks, check if task is actually completed
     if (
       payload.actionType === "work" &&
       payload.data &&
@@ -2142,7 +2106,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // For satisfy_* goals, check if the need is actually satisfied
     if (aiState.currentGoal) {
       const goalType = aiState.currentGoal.type;
 
@@ -2152,9 +2115,8 @@ export class AISystem extends EventEmitter {
           const needs = this.needsSystem.getNeeds(payload.agentId);
           if (needs) {
             const needValue = needs[needType as keyof typeof needs] as number;
-            // Only complete if need is reasonably satisfied (> 50)
             if (needValue <= 50) {
-              return; // Need not satisfied yet, keep the goal
+              return;
             }
           }
         }

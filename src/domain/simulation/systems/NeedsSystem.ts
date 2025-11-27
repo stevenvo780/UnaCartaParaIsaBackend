@@ -194,7 +194,6 @@ export class NeedsSystem extends EventEmitter {
     let syncCount = 0;
     let reinitCount = 0;
 
-    // Debug: log current entityNeeds state and list all entities (periodic)
     if (this.entityNeeds.size > 0 && this._tickCounter === 0) {
       const entityIds = Array.from(this.entityNeeds.keys()).join(", ");
       logger.debug(
@@ -391,8 +390,8 @@ export class NeedsSystem extends EventEmitter {
     const inv = this.inventorySystem.getAgentInventory(entityId);
     if (!inv) return;
 
-    // Get position for zone bonuses
-    const position = this.getEntityPosition(entityId);
+    // Get position for zone bonuses - use AgentRegistry O(1)
+    const position = this.agentRegistry?.getPosition(entityId);
     const nearbyZones = position
       ? this.findZonesNearPosition(position, 50)
       : [];
@@ -548,20 +547,6 @@ export class NeedsSystem extends EventEmitter {
         }
       }
     }
-  }
-
-  /**
-   * Gets an entity's position from gameState.
-   */
-  private getEntityPosition(
-    entityId: string,
-  ): { x: number; y: number } | undefined {
-    // Try AgentRegistry first (O(1))
-    const agent = this.agentRegistry?.getProfile(entityId);
-    if (agent?.position) return agent.position;
-
-    const entity = this.gameState.entities?.find((e) => e.id === entityId);
-    return entity?.position;
   }
 
   /**

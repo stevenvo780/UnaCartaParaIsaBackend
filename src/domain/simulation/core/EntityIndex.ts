@@ -2,6 +2,7 @@ import type { AgentProfile } from "../../types/simulation/agents";
 import type { SimulationEntity, EntityTraits } from "./schema";
 import type { GameState } from "../../types/game-types";
 import { injectable } from "inversify";
+import { EntityType } from "../../../shared/constants/EntityEnums";
 
 /**
  * Centralized service for O(1) entity and agent indexing.
@@ -204,7 +205,7 @@ export class EntityIndex {
           y: agent.position.y,
           position: { ...agent.position },
           isDead: false,
-          type: "agent",
+          type: EntityType.AGENT,
           traits: agent.traits as EntityTraits,
           immortal: agent.immortal,
           stats: {
@@ -408,7 +409,7 @@ export class EntityIndex {
       y: agent.position.y,
       position: { ...agent.position },
       isDead: false,
-      type: "agent",
+      type: EntityType.AGENT,
       traits: agent.traits as EntityTraits,
       immortal: agent.immortal,
       stats: {

@@ -348,7 +348,6 @@ export class WorldResourceSystem {
     const results = Object.values(this.state.worldResources).filter(
       (r) => r.type === type,
     );
-    // Debug water_source searches
     if (type === WorldResourceType.WATER_SOURCE && results.length > 0) {
       const states = results.map((r) => r.state).join(", ");
       logger.debug(

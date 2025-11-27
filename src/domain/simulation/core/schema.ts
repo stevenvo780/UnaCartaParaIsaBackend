@@ -15,6 +15,12 @@ import type {
   ObjectLayer,
 } from "../../types/game-types";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
+import { EntityStatus } from "../../../shared/constants/EntityStatusEnums";
+import { EntityType } from "../../../shared/constants/EntityEnums";
+import { InteractionType } from "../../../shared/constants/InteractionEnums";
+import { WeatherType } from "../../../shared/constants/AmbientEnums";
+import { DialogueTone } from "../../../shared/constants/AmbientEnums";
+import { ActivityType } from "../../../shared/constants/MovementEnums";
 
 /**
  * MaterialType is now ResourceType - use ResourceType instead.
@@ -49,8 +55,8 @@ export interface ResourcesState {
 export interface DialogueEntry {
   speaker: string;
   text: string;
-  emotion: string;
-  activity: string;
+  emotion: DialogueTone;
+  activity: ActivityType;
 }
 
 /**
@@ -70,7 +76,7 @@ export interface ConversationState {
 export interface ConnectionAnimationState {
   active: boolean;
   startTime: number;
-  type: string;
+  type: InteractionType;
   entityId?: string;
 }
 
@@ -126,12 +132,12 @@ export interface SimulationEntity {
   name?: string;
   x: number;
   y: number;
-  state?: string;
+  state?: EntityStatus;
   position?: { x: number; y: number };
   isDead?: boolean;
   stats?: EntityStats;
   tags?: string[];
-  type?: string;
+  type?: EntityType;
   traits?: EntityTraits;
   immortal?: boolean;
 }
@@ -165,7 +171,7 @@ export interface SimulationGameState {
   generatorVersion: string;
   dayTime: number;
   weather: {
-    current: string;
+    current: WeatherType;
     temperature: number;
     humidity: number;
     windSpeed: number;

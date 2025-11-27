@@ -1,18 +1,8 @@
-import { ItemTier } from "../../../shared/constants/ItemEnums";
+import { ItemTier, ItemCategory } from "../../../shared/constants/ItemEnums";
 
-// Re-export ItemTier enum for convenience
+// Re-export ItemTier and ItemCategory enums for convenience
 export type { ItemTier };
-
-export type ItemCategory =
-  | "material"
-  | "food"
-  | "tool"
-  | "weapon"
-  | "armor"
-  | "structure"
-  | "consumable"
-  | "trade"
-  | "special";
+export { ItemCategory };
 
 export interface ItemProperties {
   weight?: number;

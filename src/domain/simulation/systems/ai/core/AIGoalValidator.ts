@@ -14,8 +14,7 @@ export interface AIGoalValidatorDeps {
   worldResourceSystem?: WorldResourceSystem;
   needsSystem?: NeedsSystem;
   animalSystem?: AnimalSystem;
-  getAgentPosition: (agentId: string) => { x: number; y: number } | null;
-  agentRegistry?: AgentRegistry;
+  agentRegistry: AgentRegistry;
 }
 
 /**
@@ -81,7 +80,7 @@ export class AIGoalValidator {
     }
 
     if (goal.targetPosition) {
-      const agentPos = this.deps.getAgentPosition(agentId);
+      const agentPos = this.deps.agentRegistry.getPosition(agentId) ?? null;
       if (!agentPos) return false;
 
       const dist = Math.hypot(
@@ -94,7 +93,7 @@ export class AIGoalValidator {
     }
 
     if (goal.targetZoneId) {
-      const agentPos = this.deps.getAgentPosition(agentId);
+      const agentPos = this.deps.agentRegistry.getPosition(agentId) ?? null;
       if (!agentPos) return false;
 
       const zone = this.deps.gameState.zones?.find(
@@ -147,7 +146,7 @@ export class AIGoalValidator {
       }
       // Work goals with zone but no specific resource - check if agent arrived and did work
       if (goal.targetZoneId) {
-        const agentPos = this.deps.getAgentPosition(agentId);
+        const agentPos = this.deps.agentRegistry.getPosition(agentId) ?? null;
         if (!agentPos) return false;
 
         const zone = this.deps.gameState.zones?.find(

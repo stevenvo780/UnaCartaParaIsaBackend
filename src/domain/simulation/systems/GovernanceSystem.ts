@@ -11,7 +11,7 @@ import type { RoleType } from "../../types/simulation/roles";
 import { RoleType as RoleTypeEnum } from "../../../shared/constants/RoleEnums";
 import { DemandType } from "../../../shared/constants/GovernanceEnums";
 import { CrisisPredictionType } from "../../../shared/constants/AmbientEnums";
-import { ActivityType } from "../../../shared/constants/MovementEnums";
+import { EntityStatus } from "../../../shared/constants/EntityStatusEnums";
 import { GameEventNames, simulationEvents } from "../core/events";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 import { InventorySystem } from "./InventorySystem";
@@ -434,7 +434,6 @@ export class GovernanceSystem {
       }
     }
 
-    // Generic role assignment based on demand solution
     if (solution.roleAssignment) {
       const assignedCount = this.assignRolesForDemand(
         solution.roleAssignment.role,
@@ -479,35 +478,29 @@ export class GovernanceSystem {
     count: number,
     demandType: DemandType,
   ): number {
-    // Get all living agents
     const agents = (this.state.agents ?? []).filter(
       (a) => !a.isDead && a.ageYears >= 16,
     );
 
     if (agents.length === 0) return 0;
 
-    // Score agents for the target role
     const scoredAgents = agents.map((agent) => {
       const currentRole = this.roleSystem.getAgentRole(agent.id);
 
-      // Skip if already has the target role
       if (currentRole?.roleType === targetRole) {
         return { agent, score: -1 };
       }
 
       let score = 0;
 
-      // Prefer idle agents
       if (!currentRole || currentRole.roleType === RoleTypeEnum.IDLE) {
         score += 50;
       }
 
-      // Prefer agents with low satisfaction in current role
       if (currentRole && currentRole.satisfaction < 0.4) {
         score += 20;
       }
 
-      // Role-specific trait preferences
       switch (targetRole) {
         case RoleTypeEnum.HUNTER:
           score += (agent.traits.diligence ?? 0.5) * 30;
@@ -538,7 +531,6 @@ export class GovernanceSystem {
       return { agent, score };
     });
 
-    // Sort by score descending, filter out those already in role
     scoredAgents.sort((a, b) => b.score - a.score);
 
     let assignedCount = 0;
@@ -647,19 +639,9 @@ export class GovernanceSystem {
     const avgHealth = this.averageEntityStat("health");
 
     const idleAgents = entities.filter((entity) => {
-      const activity = entity.state;
-      if (typeof activity === "string") {
-        return activity === ActivityType.IDLE;
-      }
-      if (
-        typeof activity === "object" &&
-        activity !== null &&
-        "status" in activity
-      ) {
-        const status = (activity as { status?: string }).status;
-        return status === "idle";
-      }
-      return false;
+      const status = entity.state;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      return status === EntityStatus.INACTIVE || status === undefined;
     }).length;
     const workersAvailable = Math.max(0, population - idleAgents);
 

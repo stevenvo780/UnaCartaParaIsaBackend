@@ -3,6 +3,9 @@ import { Request, Response } from "express";
 import { logger } from "../utils/logger";
 import { HttpStatusCode } from "../../shared/constants/HttpStatusCodes";
 
+/**
+ * Request payload for chunk generation endpoint.
+ */
 interface ChunkRequest {
   x?: number;
   y?: number;
@@ -12,13 +15,20 @@ interface ChunkRequest {
   tileSize?: number;
 }
 
-const DEFAULT_CHUNK_SIZE = 100;
-const DEFAULT_TILE_SIZE = 64;
-const MAX_CHUNK_SIZE = 1000;
-const MIN_CHUNK_SIZE = 16;
-const MIN_TILE_SIZE = 16;
-const MAX_TILE_SIZE = 256;
-const MAX_SEED_LENGTH = 100;
+/**
+ * Chunk generation constants.
+ * Centralized to ensure consistency and prevent magic numbers.
+ */
+const CHUNK_CONSTANTS = {
+  DEFAULT_CHUNK_SIZE: 100,
+  DEFAULT_TILE_SIZE: 64,
+  MAX_CHUNK_SIZE: 1000,
+  MIN_CHUNK_SIZE: 16,
+  MIN_TILE_SIZE: 16,
+  MAX_TILE_SIZE: 256,
+  MAX_SEED_LENGTH: 100,
+  CHUNK_SIZE: 16, // Used for pixel calculations
+} as const;
 
 import { container } from "../../config/container";
 import { TYPES } from "../../config/Types";
@@ -70,21 +80,30 @@ export class WorldController {
       }
 
       const validatedWidth = Math.max(
-        MIN_CHUNK_SIZE,
-        Math.min(MAX_CHUNK_SIZE, width ?? DEFAULT_CHUNK_SIZE),
+        CHUNK_CONSTANTS.MIN_CHUNK_SIZE,
+        Math.min(
+          CHUNK_CONSTANTS.MAX_CHUNK_SIZE,
+          width ?? CHUNK_CONSTANTS.DEFAULT_CHUNK_SIZE,
+        ),
       );
       const validatedHeight = Math.max(
-        MIN_CHUNK_SIZE,
-        Math.min(MAX_CHUNK_SIZE, height ?? DEFAULT_CHUNK_SIZE),
+        CHUNK_CONSTANTS.MIN_CHUNK_SIZE,
+        Math.min(
+          CHUNK_CONSTANTS.MAX_CHUNK_SIZE,
+          height ?? CHUNK_CONSTANTS.DEFAULT_CHUNK_SIZE,
+        ),
       );
       const validatedTileSize = Math.max(
-        MIN_TILE_SIZE,
-        Math.min(MAX_TILE_SIZE, tileSize ?? DEFAULT_TILE_SIZE),
+        CHUNK_CONSTANTS.MIN_TILE_SIZE,
+        Math.min(
+          CHUNK_CONSTANTS.MAX_TILE_SIZE,
+          tileSize ?? CHUNK_CONSTANTS.DEFAULT_TILE_SIZE,
+        ),
       );
 
       const validatedSeed =
         typeof seed === "string" && seed.length > 0
-          ? seed.slice(0, MAX_SEED_LENGTH)
+          ? seed.slice(0, CHUNK_CONSTANTS.MAX_SEED_LENGTH)
           : typeof seed === "number"
             ? seed
             : "default";
@@ -118,9 +137,8 @@ export class WorldController {
 
       try {
         const animalSystem = container.get<AnimalSystem>(TYPES.AnimalSystem);
-        const CHUNK_SIZE = 16;
-        const pixelWidth = CHUNK_SIZE * validatedTileSize;
-        const pixelHeight = CHUNK_SIZE * validatedTileSize;
+        const pixelWidth = CHUNK_CONSTANTS.CHUNK_SIZE * validatedTileSize;
+        const pixelHeight = CHUNK_CONSTANTS.CHUNK_SIZE * validatedTileSize;
         const worldX = x * pixelWidth;
         const worldY = y * pixelHeight;
 

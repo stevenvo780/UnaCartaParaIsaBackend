@@ -78,5 +78,4 @@ export {
   prioritizeGoals,
   getGoalTier,
   getRecommendedZoneIdsForNeed,
-  getEntityPosition,
 } from "./core/utils";

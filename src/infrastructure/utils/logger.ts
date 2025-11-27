@@ -60,14 +60,12 @@ class Logger {
     this.ensureLogDir();
     this.logFilePath = path.join(this.config.logDir, "logs.json");
 
-    // Escribir periódicamente cada 5 segundos para poder observar con watch
     const writeIntervalMs = Number(process.env.LOG_WRITE_INTERVAL_MS ?? 5000);
     this.evacuationInterval = setInterval(
       () => this.checkEvacuation(),
       writeIntervalMs,
     );
 
-    // Crear archivo inicial vacío si no existe para que watch lo detecte
     if (!fs.existsSync(this.logFilePath)) {
       try {
         fs.writeFileSync(this.logFilePath, "[]", "utf-8");
@@ -157,7 +155,6 @@ class Logger {
   private async doEvacuate(): Promise<void> {
     if (this.isEvacuating) return;
 
-    // Si no hay logs, no escribir nada (pero no retornar si hay logs pendientes)
     if (this.memoryBuffer.length === 0) return;
 
     this.isEvacuating = true;
@@ -165,7 +162,6 @@ class Logger {
     this.memoryBuffer = [];
 
     try {
-      // Leer logs existentes si el archivo existe
       let existingLogs: LogEntry[] = [];
       try {
         if (fs.existsSync(this.logFilePath)) {
@@ -178,15 +174,11 @@ class Logger {
           }
         }
       } catch (parseError) {
-        // Si el archivo está corrupto, empezar de nuevo
         console.warn("Log file corrupted, starting fresh:", parseError);
         existingLogs = [];
       }
 
-      // Combinar logs existentes con los nuevos
       const allLogs = [...existingLogs, ...logsToWrite];
-
-      // Limitar el tamaño total del archivo (mantener solo los últimos N logs)
       const maxLogsInFile = this.config.maxMemoryLogs * 2;
       const logsToKeep = allLogs.slice(-maxLogsInFile);
 
@@ -199,7 +191,6 @@ class Logger {
 
       this.lastEvacuation = Date.now();
     } catch (error) {
-      // Si falla, restaurar los logs al buffer
       this.memoryBuffer = [...logsToWrite, ...this.memoryBuffer].slice(
         0,
         this.config.maxMemoryLogs,
@@ -218,11 +209,8 @@ class Logger {
 
   private checkEvacuation(): void {
     const timeSinceLastEvacuation = Date.now() - this.lastEvacuation;
-    const minWriteIntervalMs = 3000; // 3 segundos mínimo
+    const minWriteIntervalMs = 3000;
 
-    // Escribir si hay logs y:
-    // 1. Se alcanzó el umbral
-    // 2. Han pasado más de 3 segundos desde la última escritura
     if (
       this.memoryBuffer.length >= this.config.evacuationThreshold ||
       (this.memoryBuffer.length > 0 &&
@@ -254,7 +242,6 @@ class Logger {
 
     this.addToMemory(entry);
 
-    // También enviar a consola para visibilidad
     if (args.length > 0) {
       console.log(this.formatConsoleMessage(LogLevel.DEBUG, message), ...args);
     } else {
@@ -277,7 +264,6 @@ class Logger {
 
     this.addToMemory(entry);
 
-    // También enviar a consola para visibilidad
     if (args.length > 0) {
       console.info(this.formatConsoleMessage(LogLevel.INFO, message), ...args);
     } else {
@@ -346,7 +332,10 @@ class Logger {
   }
 
   /**
-   * Get recent logs from memory (for debugging)
+   * Retrieves recent logs from memory buffer.
+   *
+   * @param count - Number of recent logs to retrieve (default: 100)
+   * @returns Array of recent log entries, most recent last
    */
   getRecentLogs(count: number = 100): LogEntry[] {
     return this.memoryBuffer.slice(-count);

@@ -89,7 +89,7 @@ export function detectGPUAvailability(): GPUInfo {
 
     const backend = tf.getBackend();
     info.backend = backend;
-    logger.info(`📦 Backend de TensorFlow: ${backend}`);
+    logger.info(`📦 TensorFlow backend: ${backend}`);
 
     if (backend === "tensorflow") {
       info.usingGPU = true;
@@ -102,24 +102,24 @@ export function detectGPUAvailability(): GPUInfo {
         if (deviceInfo) {
           info.deviceName = deviceInfo.deviceName;
           info.vendor = deviceInfo.vendor;
-          logger.info("🎮 GPU detectada y en uso", {
+          logger.info("🎮 GPU detected and in use", {
             backend: backend,
             deviceName: deviceInfo.deviceName,
             vendor: deviceInfo.vendor,
           });
         } else {
-          logger.info("🎮 GPU en uso (TensorFlow.js)", { backend });
+          logger.info("🎮 GPU in use (TensorFlow.js)", { backend });
         }
       } catch (err) {
         logger.debug("Error getting GPU device info, assuming GPU available", {
           error: err instanceof Error ? err.message : String(err),
           backend,
         });
-        logger.info("🎮 GPU en uso (TensorFlow.js)", { backend });
+        logger.info("🎮 GPU in use (TensorFlow.js)", { backend });
       }
     } else {
       info.libraries!.tensorflowGpu = false;
-      logger.info("⚠️ TensorFlow.js usando backend CPU", { backend });
+      logger.info("⚠️ TensorFlow.js using CPU backend", { backend });
     }
   } else {
     info.libraries!.tensorflow = false;

@@ -8,6 +8,12 @@ import { ResponseStatus } from "@/shared/constants/ResponseEnums";
 
 const router = Router();
 
+/**
+ * Validates that the request body is a valid SimulationCommand.
+ *
+ * @param body - Unknown request body to validate
+ * @returns True if body is a valid SimulationCommand with non-empty type
+ */
 function validateSimulationCommand(body: unknown): body is SimulationCommand {
   if (!body || typeof body !== "object") {
     return false;
@@ -16,6 +22,18 @@ function validateSimulationCommand(body: unknown): body is SimulationCommand {
   return typeof command.type === "string" && command.type.length > 0;
 }
 
+/**
+ * Saves the current simulation state to persistent storage.
+ *
+ * Creates a save file with current game state, timestamp, and statistics.
+ * The save can be loaded later to resume the simulation.
+ *
+ * @returns JSON response with success status and saveId
+ *
+ * @remarks
+ * Side effects: Writes to storage (GCS or local filesystem).
+ * Uses current simulation snapshot state.
+ */
 router.post(
   "/api/sim/save",
   async (_req: Request, res: Response): Promise<void> => {
@@ -44,6 +62,13 @@ router.post(
   },
 );
 
+/**
+ * Health check endpoint for simulation runner.
+ *
+ * Returns current simulation status and tick number.
+ *
+ * @returns JSON response with status OK and current tick number
+ */
 router.get("/api/sim/health", (_req: Request, res: Response): void => {
   try {
     const snapshot = simulationRunner.getInitialSnapshot();
@@ -58,6 +83,14 @@ router.get("/api/sim/health", (_req: Request, res: Response): void => {
   }
 });
 
+/**
+ * Retrieves the current full simulation state snapshot.
+ *
+ * Returns a complete snapshot of the game state including all entities,
+ * resources, and simulation metadata.
+ *
+ * @returns JSON response with full SimulationSnapshot
+ */
 router.get("/api/sim/state", (_req: Request, res: Response): void => {
   try {
     const snapshot = simulationRunner.getInitialSnapshot();
@@ -74,7 +107,16 @@ router.get("/api/sim/state", (_req: Request, res: Response): void => {
 
 /**
  * Enqueues a simulation command for execution.
- * Returns 429 if command queue is full.
+ *
+ * Validates command format and adds it to the simulation runner's command queue.
+ * Returns 429 (Too Many Requests) if the command queue is full.
+ *
+ * @param req.body - SimulationCommand object with type and optional payload
+ * @returns JSON response with status QUEUED on success, or error message
+ *
+ * @remarks
+ * Side effects: Modifies simulation state through command queue.
+ * Commands are processed asynchronously by SimulationRunner.
  */
 router.post("/api/sim/command", (req: Request, res: Response): void => {
   try {

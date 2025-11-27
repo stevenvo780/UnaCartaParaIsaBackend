@@ -7,7 +7,6 @@ import {
   prioritizeGoals,
   getGoalTier,
   getRecommendedZoneIdsForNeed,
-  getEntityPosition,
   getUnexploredZones,
 } from "../../../src/domain/simulation/systems/ai/core/utils";
 import type {
@@ -219,17 +218,6 @@ describe("AI utils", () => {
     const zones = getRecommendedZoneIdsForNeed("hunger", gameState);
     expect(zones).toContain("food-zone");
     expect(zones).not.toContain("rest-zone");
-  });
-
-  it("getEntityPosition obtiene posición de agente, entidad o fallback", () => {
-    const posAgent = getEntityPosition("agent-1", gameState);
-    expect(posAgent).toEqual({ x: 10, y: 10 });
-
-    const posEntity = getEntityPosition("entity-1", gameState);
-    expect(posEntity).toEqual({ x: 50, y: 50 });
-
-    const fallback = getEntityPosition("missing", gameState);
-    expect(fallback).toEqual({ x: 0, y: 0 });
   });
 
   it("getUnexploredZones retorna solo zonas no visitadas", () => {

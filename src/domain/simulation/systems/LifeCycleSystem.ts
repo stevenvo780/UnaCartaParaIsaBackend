@@ -10,6 +10,7 @@ import {
 } from "../../types/simulation/agents";
 import { simulationEvents, GameEventNames } from "../core/events";
 import type { SimulationEntity, EntityTraits } from "../core/schema";
+import { EntityType } from "../../../shared/constants/EntityEnums";
 import type {
   INeedsPort,
   IAIPort,
@@ -551,7 +552,7 @@ export class LifeCycleSystem extends EventEmitter {
           y: profile.position.y,
           position: { ...profile.position },
           isDead: false,
-          type: "agent",
+          type: EntityType.AGENT,
           traits: profile.traits as EntityTraits,
           immortal: profile.immortal,
           stats: {
