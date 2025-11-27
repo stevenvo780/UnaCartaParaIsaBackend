@@ -1,10 +1,10 @@
 /**
  * Constantes centralizadas para el sistema de simulación.
  * Elimina valores mágicos dispersos en el código.
- * 
+ *
  * MIGRACIÓN GRADUAL: Los sistemas individuales (MovementSystem, AnimalSystem, etc.)
  * tienen sus propias constantes locales que eventualmente deberían migrar aquí.
- * 
+ *
  * Uso:
  * import { SIM_CONSTANTS } from '../core/SimulationConstants';
  * const interval = SIM_CONSTANTS.TICK_INTERVAL_MS;

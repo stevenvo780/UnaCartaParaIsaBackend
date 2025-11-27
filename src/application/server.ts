@@ -32,6 +32,7 @@ const simulationRunner = container.get<SimulationRunner>(
   TYPES.SimulationRunner,
 );
 
+console.log("🚀 [SERVER] Backend starting...");
 logger.info("🚀 Backend: Starting simulation initialization process...");
 
 import { storageService } from "../infrastructure/services/storage/storageService";
@@ -44,40 +45,52 @@ const chunkStreamServer = new ChunkStreamServer({ maxInflight: 128 });
 let cachedTickBuffer: Buffer | null = null;
 let cachedTickNumber = -1;
 
+console.log("🚀 [SERVER] Starting simulation initialization...");
 simulationRunner
   .initialize()
   .then(async () => {
+    console.log("🚀 [SERVER] SimulationRunner.initialize() completed");
     logger.info("✅ Backend: SimulationRunner initialized successfully");
 
     const saves = await storageService.listSaves();
+    console.log(`🚀 [SERVER] Found ${saves.length} saves`);
     if (saves.length > 0) {
       const latestSaveId = saves[0].id;
+      console.log(`🚀 [SERVER] Loading save: ${latestSaveId}`);
       logger.info(`💾 Found existing save: ${latestSaveId}. Loading...`);
       const saveData = await storageService.getSave(latestSaveId);
 
       if (saveData && saveData.state) {
+        console.log("🚀 [SERVER] Save data loaded, restoring state...");
         const gameState = container.get<GameState>(TYPES.GameState);
         Object.assign(gameState, saveData.state);
 
         await simulationRunner.ensureInitialFamily();
 
+        console.log("🚀 [SERVER] State restored, starting simulation...");
         logger.info("✅ Backend: State loaded and family verified");
         simulationRunner.start();
+        console.log("🚀 [SERVER] Simulation STARTED from save");
         logger.info("✅ Backend: Simulation started from save");
       } else {
         // Fallback if save is corrupted
+        console.log("🚀 [SERVER] Save invalid, initializing fresh world...");
         logger.warn("⚠️ Saved state invalid. Falling back to fresh world.");
         await initializeFreshWorld();
       }
     } else {
+      console.log("🚀 [SERVER] No saves found, initializing fresh world...");
       logger.info("🆕 No valid save found. Initializing fresh world...");
       await initializeFreshWorld();
     }
 
     // Initialize hardware and start server ONLY after simulation is ready
+    console.log("🚀 [SERVER] Detecting GPU availability...");
     detectGPUAvailability();
 
+    console.log(`🚀 [SERVER] Starting HTTP server on port ${CONFIG.PORT}...`);
     server = app.listen(CONFIG.PORT, () => {
+      console.log(`🚀 [SERVER] HTTP server listening on port ${CONFIG.PORT}`);
       logger.info(`Save server running on http://localhost:${CONFIG.PORT}`);
       if (!CONFIG.USE_LOCAL_STORAGE) {
         logger.info(`Using GCS bucket: ${CONFIG.BUCKET_NAME}`);
@@ -86,9 +99,12 @@ simulationRunner
       }
     });
 
+    console.log("🚀 [SERVER] Setting up WebSocket upgrades...");
     setupServerUpgrades();
+    console.log("🚀 [SERVER] === SERVER FULLY STARTED ===");
   })
   .catch((err) => {
+    console.error("❌ [SERVER] FATAL: Failed to initialize simulation:", err);
     logger.error("❌ Backend: Failed to initialize simulation:", err);
     process.exit(1); // Exit if critical initialization fails
   });
@@ -142,12 +158,15 @@ function setupServerUpgrades() {
 }
 
 simulationWss.on("connection", (ws: WebSocket) => {
+  console.log("📡 [WS] New client connected to /ws/sim");
   logger.info("Client connected to simulation");
 
+  const snapshot = simulationRunner.getInitialSnapshot();
+  console.log(`📡 [WS] Sending initial SNAPSHOT: tick=${snapshot.tick}`);
   ws.send(
     encodeMsgPack({
       type: "SNAPSHOT",
-      payload: simulationRunner.getInitialSnapshot(),
+      payload: snapshot,
     }),
   );
 
@@ -160,6 +179,7 @@ simulationWss.on("connection", (ws: WebSocket) => {
   simulationRunner.on("tick", tickHandler);
 
   ws.on("close", () => {
+    console.log("📡 [WS] Client disconnected from /ws/sim");
     simulationRunner.off("tick", tickHandler);
   });
 

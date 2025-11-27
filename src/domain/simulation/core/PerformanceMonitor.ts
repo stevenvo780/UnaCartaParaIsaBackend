@@ -11,7 +11,7 @@ interface SimpleStats {
 
 interface OperationStats {
   count: number;
-  skipped: number; // Optimizations that avoided work
+  skipped: number;
   entitiesProcessed: number;
   totalMs: number;
   maxMs: number;

@@ -92,11 +92,14 @@ export class GPUComputeService {
         : "❌ GPU NOT AVAILABLE (CPU fallback)";
       console.log(`🚀 [GPUComputeService] ${status} - Backend: ${backend}`);
 
+      console.log("🔍 [GPUComputeService] About to call logger.info...");
       logger.info(
         `🚀 GPUComputeService initialized - Backend: ${backend} (GPU: ${this.gpuAvailable ? "available" : "unavailable, using CPU"})`,
       );
+      console.log("🔍 [GPUComputeService] logger.info completed!");
 
       this.initialized = true;
+      console.log("🔍 [GPUComputeService] initialize() complete!");
     } catch (error) {
       console.error(
         `❌ [GPUComputeService] Error initializing TensorFlow:`,

@@ -62,7 +62,10 @@ class Logger {
 
     // Escribir periódicamente cada 5 segundos para poder observar con watch
     const writeIntervalMs = Number(process.env.LOG_WRITE_INTERVAL_MS ?? 5000);
-    this.evacuationInterval = setInterval(() => this.checkEvacuation(), writeIntervalMs);
+    this.evacuationInterval = setInterval(
+      () => this.checkEvacuation(),
+      writeIntervalMs,
+    );
 
     // Crear archivo inicial vacío si no existe para que watch lo detecte
     if (!fs.existsSync(this.logFilePath)) {
@@ -166,7 +169,10 @@ class Logger {
       let existingLogs: LogEntry[] = [];
       try {
         if (fs.existsSync(this.logFilePath)) {
-          const fileContent = await fs.promises.readFile(this.logFilePath, "utf-8");
+          const fileContent = await fs.promises.readFile(
+            this.logFilePath,
+            "utf-8",
+          );
           if (fileContent.trim()) {
             existingLogs = JSON.parse(fileContent) as LogEntry[];
           }
@@ -216,13 +222,14 @@ class Logger {
   private checkEvacuation(): void {
     const timeSinceLastEvacuation = Date.now() - this.lastEvacuation;
     const minWriteIntervalMs = 3000; // 3 segundos mínimo
-    
+
     // Escribir si hay logs y:
     // 1. Se alcanzó el umbral
     // 2. Han pasado más de 3 segundos desde la última escritura
     if (
       this.memoryBuffer.length >= this.config.evacuationThreshold ||
-      (this.memoryBuffer.length > 0 && timeSinceLastEvacuation > minWriteIntervalMs)
+      (this.memoryBuffer.length > 0 &&
+        timeSinceLastEvacuation > minWriteIntervalMs)
     ) {
       void this.evacuateToFile();
     }
@@ -236,7 +243,7 @@ class Logger {
   }
 
   /**
-   * Debug level - stored in memory only, not shown in console
+   * Debug level - shown in console AND stored in memory
    */
   debug(message: string, ...args: unknown[]): void {
     if (this.shouldThrottle(message)) return;
@@ -249,10 +256,17 @@ class Logger {
     };
 
     this.addToMemory(entry);
+
+    // También enviar a consola para visibilidad
+    if (args.length > 0) {
+      console.log(this.formatConsoleMessage("debug", message), ...args);
+    } else {
+      console.log(this.formatConsoleMessage("debug", message));
+    }
   }
 
   /**
-   * Info level - stored in memory only, not shown in console
+   * Info level - shown in console AND stored in memory
    */
   info(message: string, ...args: unknown[]): void {
     if (this.shouldThrottle(message)) return;
@@ -265,6 +279,13 @@ class Logger {
     };
 
     this.addToMemory(entry);
+
+    // También enviar a consola para visibilidad
+    if (args.length > 0) {
+      console.info(this.formatConsoleMessage("info", message), ...args);
+    } else {
+      console.info(this.formatConsoleMessage("info", message));
+    }
   }
 
   /**

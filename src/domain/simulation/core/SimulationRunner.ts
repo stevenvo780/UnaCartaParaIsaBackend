@@ -358,18 +358,27 @@ export class SimulationRunner {
    * @throws {Error} If GPU initialization fails (falls back to CPU)
    */
   public async initialize(): Promise<void> {
+    console.log("🔧 [INIT] SimulationRunner.initialize() STARTED");
+    
+    console.log("🔧 [INIT] Step 1: Initializing GPU Compute Service...");
     await this.gpuComputeService.initialize();
     const gpuStats = this.gpuComputeService.getPerformanceStats();
+    console.log(`🔧 [INIT] Step 1 DONE: GPU=${gpuStats.gpuAvailable ? "ACTIVE" : "CPU_FALLBACK"}`);
     logger.info(
       `🚀 GPU Compute Service: ${gpuStats.gpuAvailable ? "GPU active" : "CPU fallback"}`,
     );
 
+    console.log("🔧 [INIT] Step 2: Rebuilding entity index...");
     this.entityIndex.rebuild(this.state);
+    console.log(`🔧 [INIT] Step 2 DONE: EntityIndex rebuilt, agents=${this.state.agents.length}`);
 
     if (this.buildingSystem) {
+      console.log("🔧 [INIT] Step 3: Setting TaskSystem on BuildingSystem...");
       this.buildingSystem.setTaskSystem(this.taskSystem);
+      console.log("🔧 [INIT] Step 3 DONE");
     }
 
+    console.log("🔧 [INIT] Step 4: Setting LifeCycleSystem dependencies...");
     this.lifeCycleSystem.setDependencies({
       needsSystem: this.needsSystem,
       inventorySystem: this.inventorySystem,
@@ -383,14 +392,18 @@ export class SimulationRunner {
       roleSystem: this.roleSystem,
       taskSystem: this.taskSystem,
     });
+    console.log("🔧 [INIT] Step 4 DONE");
 
+    console.log("🔧 [INIT] Step 5: Setting NeedsSystem dependencies...");
     this.needsSystem.setDependencies({
       lifeCyclePort: this.lifeCycleSystem,
       divineFavorSystem: this.divineFavorSystem,
       inventorySystem: this.inventorySystem,
       socialSystem: this.socialSystem,
     });
+    console.log("🔧 [INIT] Step 5 DONE");
 
+    console.log("🔧 [INIT] Step 6: Setting AISystem dependencies...");
     this.aiSystem.setDependencies({
       needsSystem: this.needsSystem,
       roleSystem: this.roleSystem,
@@ -406,23 +419,36 @@ export class SimulationRunner {
       questSystem: this.questSystem,
       timeSystem: this.timeSystem,
     });
+    console.log("🔧 [INIT] Step 6 DONE");
 
+    console.log("🔧 [INIT] Step 7: Setting EconomySystem dependencies...");
     this.economySystem.setDependencies({
       roleSystem: this.roleSystem,
       divineFavorSystem: this.divineFavorSystem,
       genealogySystem: this._genealogySystem,
     });
+    console.log("🔧 [INIT] Step 7 DONE");
 
+    console.log("🔧 [INIT] Step 7 DONE");
+
+    console.log("🔧 [INIT] Step 8: Setting up event listeners...");
     logger.info("🔗 SimulationRunner: System dependencies configured");
 
     this.eventRegistry.setupEventListeners();
+    console.log("🔧 [INIT] Step 8 DONE");
 
+    console.log("🔧 [INIT] Step 9: Ensuring initial family...");
     await this.ensureInitialFamily();
+    console.log(`🔧 [INIT] Step 9 DONE: Total agents=${this.state.agents.length}`);
 
+    console.log("🔧 [INIT] Step 10: Registering systems in scheduler...");
     logger.info("📅 SimulationRunner: Registering systems in scheduler...");
     this.registerSystemsInScheduler();
     this.configureSchedulerHooks();
+    console.log("🔧 [INIT] Step 10 DONE");
 
+    console.log("🔧 [INIT] === INITIALIZATION COMPLETE ===");
+    console.log(`🔧 [INIT] Final stats: agents=${this.state.agents.length}, zones=${this.state.zones?.length ?? 0}, entities=${this.state.entities?.length ?? 0}, tick=${this.tickCounter}`);
     logger.info("✅ SimulationRunner: Initialization completed successfully", {
       agentsCount: this.state.agents.length,
       zonesCount: this.state.zones?.length ?? 0,

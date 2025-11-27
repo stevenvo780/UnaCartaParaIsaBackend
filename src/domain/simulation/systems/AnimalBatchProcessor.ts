@@ -123,12 +123,6 @@ export class AnimalBatchProcessor {
   // Reusable work buffer for CPU fallback to avoid allocations
   private workBuffer: Float32Array | null = null;
 
-
-
-  // ... (imports)
-
-  // ... (class definition)
-
   public updateNeedsBatch(
     hungerDecayRates: Float32Array,
     thirstDecayRates: Float32Array,
