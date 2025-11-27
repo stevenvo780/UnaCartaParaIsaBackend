@@ -1,7 +1,7 @@
 import type { GameState, Zone } from "../../types/game-types";
 import type { Inventory } from "../../types/simulation/economy";
 import type { InventorySystem } from "./InventorySystem";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import {
   BuildingMaintenanceConfig,
   BuildingState,
@@ -56,7 +56,7 @@ export class BuildingMaintenanceSystem {
 
     this.bootstrapExistingZones();
     simulationEvents.on(
-      GameEventNames.BUILDING_CONSTRUCTED,
+      GameEventType.BUILDING_CONSTRUCTED,
       (payload: { zoneId: string }): void =>
         this.initializeBuildingState(payload.zoneId),
     );
@@ -128,7 +128,7 @@ export class BuildingMaintenanceSystem {
     state.condition = getBuildingCondition(state.durability);
     state.lastMaintenanceTime = this.now();
 
-    simulationEvents.emit(GameEventNames.BUILDING_REPAIRED, {
+    simulationEvents.emit(GameEventType.BUILDING_REPAIRED, {
       zoneId,
       agentId,
       previousDurability,
@@ -201,7 +201,7 @@ export class BuildingMaintenanceSystem {
     state.condition = getBuildingCondition(state.durability);
 
     if (state.durability !== previous) {
-      simulationEvents.emit(GameEventNames.BUILDING_DAMAGED, {
+      simulationEvents.emit(GameEventType.BUILDING_DAMAGED, {
         zoneId: state.zoneId,
         previousDurability: previous,
         newDurability: state.durability,

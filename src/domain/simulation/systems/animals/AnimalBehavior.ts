@@ -3,7 +3,7 @@ import type { Animal } from "../../../types/simulation/animals";
 import { getAnimalConfig } from "../../../../infrastructure/services/world/config/AnimalConfigs";
 import { AnimalNeeds } from "./AnimalNeeds";
 import { AnimalGenetics } from "./AnimalGenetics";
-import { simulationEvents, GameEventNames } from "../../core/events";
+import { simulationEvents, GameEventType } from "../../core/events";
 import {
   AnimalState,
   AnimalTargetType,
@@ -138,7 +138,7 @@ export class AnimalBehavior {
           onConsume(animal.currentTarget.id);
         }
 
-        simulationEvents.emit(GameEventNames.ANIMAL_CONSUMED_RESOURCE, {
+        simulationEvents.emit(GameEventType.ANIMAL_CONSUMED_RESOURCE, {
           animalId: animal.id,
           resourceType: "vegetation",
           amount: consumed,
@@ -211,7 +211,7 @@ export class AnimalBehavior {
 
         onKill(prey.id);
 
-        simulationEvents.emit(GameEventNames.ANIMAL_CONSUMED_RESOURCE, {
+        simulationEvents.emit(GameEventType.ANIMAL_CONSUMED_RESOURCE, {
           animalId: animal.id,
           resourceType: "meat",
           amount: consumed,
@@ -276,7 +276,7 @@ export class AnimalBehavior {
           onConsume(animal.currentTarget.id);
         }
 
-        simulationEvents.emit(GameEventNames.ANIMAL_CONSUMED_RESOURCE, {
+        simulationEvents.emit(GameEventType.ANIMAL_CONSUMED_RESOURCE, {
           animalId: animal.id,
           resourceType: "water",
           amount: consumed,
@@ -372,7 +372,7 @@ export class AnimalBehavior {
           AnimalNeeds.satisfyReproductiveUrge(animal);
           AnimalNeeds.satisfyReproductiveUrge(nearbyMate);
 
-          simulationEvents.emit(GameEventNames.ANIMAL_REPRODUCED, {
+          simulationEvents.emit(GameEventType.ANIMAL_REPRODUCED, {
             parentId: animal.id,
             partnerId: nearbyMate.id,
             offspringId: offspring.id,

@@ -16,7 +16,7 @@ import {
 } from "../../../shared/constants/RoleEnums";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import type { AgentRegistry } from "../core/AgentRegistry";
 
 const ROLE_DEFINITIONS: RoleConfig[] = [
@@ -230,7 +230,7 @@ export class RoleSystem extends EventEmitter {
         current: this.currentShift,
       });
 
-      simulationEvents.emit(GameEventNames.ROLE_SHIFT_CHANGED, {
+      simulationEvents.emit(GameEventType.ROLE_SHIFT_CHANGED, {
         previousShift,
         currentShift: this.currentShift,
         agentsInShift: this.schedule[this.currentShift],
@@ -455,7 +455,7 @@ export class RoleSystem extends EventEmitter {
       `👷 Role assigned: ${agent.name || agent.id} → ${selectedRole.name}`,
     );
 
-    simulationEvents.emit(GameEventNames.ROLE_ASSIGNED, {
+    simulationEvents.emit(GameEventType.ROLE_ASSIGNED, {
       agentId: agent.id,
       roleType: selectedRole.type,
       roleName: selectedRole.name,
@@ -577,7 +577,7 @@ export class RoleSystem extends EventEmitter {
 
     logger.info(`👷 Role reassigned: ${agentId} → ${roleDef.name}`);
 
-    simulationEvents.emit(GameEventNames.ROLE_REASSIGNED, {
+    simulationEvents.emit(GameEventType.ROLE_REASSIGNED, {
       agentId,
       previousRole: existing?.roleType,
       newRole: newRole,
@@ -777,7 +777,7 @@ export class RoleSystem extends EventEmitter {
         `🔄 Rebalanced role: ${change.agentId} ${change.currentRole} -> ${change.newRole} (score: ${change.score.toFixed(2)})`,
       );
 
-      simulationEvents.emit(GameEventNames.ROLE_REBALANCED, {
+      simulationEvents.emit(GameEventType.ROLE_REBALANCED, {
         agentId: change.agentId,
         previousRole: change.currentRole,
         newRole: change.newRole,

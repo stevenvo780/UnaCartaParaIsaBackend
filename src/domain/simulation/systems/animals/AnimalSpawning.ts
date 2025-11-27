@@ -10,7 +10,7 @@ import {
   getAnimalsForBiome,
 } from "../../../../infrastructure/services/world/config/AnimalConfigs";
 import { AnimalGenetics } from "./AnimalGenetics";
-import { simulationEvents, GameEventNames } from "../../core/events";
+import { simulationEvents, GameEventType } from "../../core/events";
 import { AnimalState } from "../../../../shared/constants/AnimalEnums";
 
 export class AnimalSpawning {
@@ -170,7 +170,7 @@ export class AnimalSpawning {
       isDead: false,
     };
 
-    simulationEvents.emit(GameEventNames.ANIMAL_SPAWNED, {
+    simulationEvents.emit(GameEventType.ANIMAL_SPAWNED, {
       animalId: id,
       type,
       position,

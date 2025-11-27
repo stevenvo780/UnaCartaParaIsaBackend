@@ -6,7 +6,7 @@ import type {
   CraftingJob,
 } from "../../types/simulation/crafting";
 import { RecipesCatalog } from "../../../simulation/data/RecipesCatalog";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import type { ResourceType } from "../../types/simulation/economy";
 import { itemToInventoryResource } from "../../types/simulation/resourceMapping";
 
@@ -110,7 +110,7 @@ export class EnhancedCraftingSystem {
 
     this.activeJobs.set(agentId, job);
 
-    simulationEvents.emit(GameEventNames.CRAFTING_JOB_STARTED, {
+    simulationEvents.emit(GameEventType.CRAFTING_JOB_STARTED, {
       agentId,
       recipeId,
       duration: recipe.craftingTime,
@@ -137,7 +137,7 @@ export class EnhancedCraftingSystem {
 
     this.registerRecipeUsage(job.agentId, recipe.id, success);
 
-    simulationEvents.emit(GameEventNames.CRAFTING_JOB_COMPLETED, {
+    simulationEvents.emit(GameEventType.CRAFTING_JOB_COMPLETED, {
       agentId: job.agentId,
       recipeId: recipe.id,
       success,

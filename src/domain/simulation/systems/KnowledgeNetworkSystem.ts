@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/utils/logger";
 import { GameState } from "../../types/game-types";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 import {
@@ -97,7 +97,7 @@ export class KnowledgeNetworkSystem {
       this.learnKnowledge(discovererId, id);
     }
 
-    simulationEvents.emit(GameEventNames.KNOWLEDGE_ADDED, { node });
+    simulationEvents.emit(GameEventType.KNOWLEDGE_ADDED, { node });
   }
 
   public learnKnowledge(agentId: string, nodeId: string): boolean {
@@ -118,7 +118,7 @@ export class KnowledgeNetworkSystem {
       node.discoveredBy.push(agentId);
     }
 
-    simulationEvents.emit(GameEventNames.KNOWLEDGE_LEARNED, {
+    simulationEvents.emit(GameEventType.KNOWLEDGE_LEARNED, {
       agentId,
       nodeId,
       timestamp: Date.now(),
@@ -138,7 +138,7 @@ export class KnowledgeNetworkSystem {
     const learned = this.learnKnowledge(toAgentId, nodeId);
 
     if (learned) {
-      simulationEvents.emit(GameEventNames.KNOWLEDGE_SHARED, {
+      simulationEvents.emit(GameEventType.KNOWLEDGE_SHARED, {
         fromAgentId,
         toAgentId,
         nodeId,

@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import type { GameState } from "../../types/game-types";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { SharedSpatialIndex } from "../core/SharedSpatialIndex";
@@ -99,7 +99,7 @@ export class SharedKnowledgeSystem extends EventEmitter {
 
     this.propagateResourceAlert(alert);
 
-    simulationEvents.emit(GameEventNames.RESOURCE_DISCOVERED, {
+    simulationEvents.emit(GameEventType.RESOURCE_DISCOVERED, {
       agentId,
       resourceId,
       resourceType,
@@ -140,7 +140,7 @@ export class SharedKnowledgeSystem extends EventEmitter {
 
     this.propagateThreatAlert(alert);
 
-    simulationEvents.emit(GameEventNames.THREAT_DETECTED, {
+    simulationEvents.emit(GameEventType.THREAT_DETECTED, {
       agentId,
       threatId,
       threatType,

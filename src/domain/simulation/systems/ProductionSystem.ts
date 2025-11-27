@@ -4,7 +4,7 @@ import { InventorySystem } from "./InventorySystem";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 import { WorldResourceSystem } from "./WorldResourceSystem";
 import { TerrainSystem } from "./TerrainSystem";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
 import { ResourceType as ResourceTypeEnum } from "../../../shared/constants/ResourceEnums";
@@ -82,7 +82,7 @@ export class ProductionSystem {
 
   private setupEventListeners(): void {
     simulationEvents.on(
-      GameEventNames.AGENT_DEATH,
+      GameEventType.AGENT_DEATH,
       this.handleAgentDeath.bind(this),
     );
   }
@@ -97,7 +97,7 @@ export class ProductionSystem {
     for (const [zoneId, workers] of this.assignments.entries()) {
       if (workers.has(entityId)) {
         workers.delete(entityId);
-        simulationEvents.emit(GameEventNames.PRODUCTION_WORKER_REMOVED, {
+        simulationEvents.emit(GameEventType.PRODUCTION_WORKER_REMOVED, {
           zoneId,
           workerId: entityId,
           reason: "death",
@@ -224,10 +224,17 @@ export class ProductionSystem {
     if (!resource) return;
 
     const amount = workers.size * this.config.baseYieldPerWorker;
+
+    // Check building durability if applicable
+    if (zone.durability !== undefined && zone.durability <= 0) {
+      // Building is ruined, production halted
+      return;
+    }
+
     this.depositToZoneStockpile(zone.id, resource, amount);
     this.lastProduction.set(zone.id, now);
 
-    simulationEvents.emit(GameEventNames.PRODUCTION_OUTPUT_GENERATED, {
+    simulationEvents.emit(GameEventType.PRODUCTION_OUTPUT_GENERATED, {
       zoneId: zone.id,
       resource,
       amount,

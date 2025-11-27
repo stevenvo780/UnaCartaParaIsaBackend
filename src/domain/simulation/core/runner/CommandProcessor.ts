@@ -1,5 +1,5 @@
 import { logger } from "../../../../infrastructure/utils/logger";
-import { GameEventNames, simulationEvents } from "../events";
+import { GameEventType, simulationEvents } from "../events";
 import { WeatherType } from "../../../../shared/constants/AmbientEnums";
 import type {
   SimulationCommand,
@@ -10,7 +10,9 @@ import type {
   WorldResourceCommandPayload,
   BuildingCommandPayload,
   ReputationCommandPayload,
+  ReputationCommandPayload,
   TaskCommandPayload,
+  ConflictCommandPayload,
 } from "../../../../shared/types/commands/SimulationCommand";
 import {
   SimulationCommandType,
@@ -21,6 +23,7 @@ import {
   BuildingCommandType,
   ReputationCommandType,
   TaskCommandType,
+  ConflictCommandType,
   TimeCommandType,
   AgentCommandType,
   AnimalCommandType,
@@ -61,7 +64,7 @@ export class CommandProcessor {
         this.applyResourceDelta(command.delta);
         break;
       case SimulationCommandType.GATHER_RESOURCE:
-        simulationEvents.emit(GameEventNames.RESOURCE_GATHERED, {
+        simulationEvents.emit(GameEventType.RESOURCE_GATHERED, {
           resourceId: command.resourceId,
           amount: command.amount,
         });
@@ -119,6 +122,9 @@ export class CommandProcessor {
         break;
       case SimulationCommandType.TASK_COMMAND:
         this.handleTaskCommand(command);
+        break;
+      case SimulationCommandType.CONFLICT_COMMAND:
+        this.handleConflictCommand(command);
         break;
       case SimulationCommandType.TIME_COMMAND:
         this.handleTimeCommand(command);
@@ -189,7 +195,7 @@ export class CommandProcessor {
             payload.x,
             payload.y,
           );
-          simulationEvents.emit(GameEventNames.AGENT_ACTION_COMMANDED, {
+          simulationEvents.emit(GameEventType.AGENT_ACTION_COMMANDED, {
             agentId: command.agentId,
             action: "move",
             payload,
@@ -565,6 +571,22 @@ export class CommandProcessor {
     for (const [key, value] of Object.entries(delta)) {
       const current = typedMaterials[key] ?? 0;
       typedMaterials[key] = current + (value ?? 0);
+    }
+  }
+
+  private handleConflictCommand(
+    command: Extract<SimulationCommand, { type: "CONFLICT_COMMAND" }>,
+  ): void {
+    const payload = command.payload ?? ({} as ConflictCommandPayload);
+    switch (command.command) {
+      case ConflictCommandType.RESOLVE_CONFLICT:
+        if (payload.cardId && payload.choice) {
+          this.runner.conflictResolutionSystem.resolveConflict(
+            payload.cardId,
+            payload.choice,
+          );
+        }
+        break;
     }
   }
 }

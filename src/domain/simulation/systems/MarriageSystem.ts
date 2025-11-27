@@ -6,7 +6,7 @@ import {
   MarriageConfig,
   MarriageStats,
 } from "../../types/simulation/marriage";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { logger } from "../../../infrastructure/utils/logger";
 
 import { injectable, inject } from "inversify";
@@ -42,7 +42,7 @@ export class MarriageSystem {
    */
   private setupDeathListener(): void {
     simulationEvents.on(
-      GameEventNames.AGENT_DEATH,
+      GameEventType.AGENT_DEATH,
       (data: { agentId?: string; entityId?: string }) => {
         const agentId = data.agentId || data.entityId;
         if (!agentId) return;
@@ -107,7 +107,7 @@ export class MarriageSystem {
 
     logger.debug(`💍 [MARRIAGE] Proposal: ${proposerId} -> ${targetId}`);
 
-    simulationEvents.emit(GameEventNames.MARRIAGE_PROPOSED, {
+    simulationEvents.emit(GameEventType.MARRIAGE_PROPOSED, {
       proposerId,
       targetId,
       groupId: proposerGroup?.id,
@@ -138,7 +138,7 @@ export class MarriageSystem {
 
       this.addHistoryEvent("joined", targetId, group.id, proposal.proposerId);
 
-      simulationEvents.emit(GameEventNames.MARRIAGE_MEMBER_JOINED, {
+      simulationEvents.emit(GameEventType.MARRIAGE_MEMBER_JOINED, {
         agentId: targetId,
         groupId: group.id,
         proposerId: proposal.proposerId,
@@ -148,7 +148,7 @@ export class MarriageSystem {
       group = this.createMarriageGroup([proposal.proposerId, targetId]);
       this.addHistoryEvent("formed", targetId, group.id, proposal.proposerId);
 
-      simulationEvents.emit(GameEventNames.MARRIAGE_GROUP_FORMED, {
+      simulationEvents.emit(GameEventType.MARRIAGE_GROUP_FORMED, {
         groupId: group.id,
         members: group.members,
         proposerId: proposal.proposerId,
@@ -159,7 +159,7 @@ export class MarriageSystem {
 
     this.pendingProposals.delete(targetId);
 
-    simulationEvents.emit(GameEventNames.MARRIAGE_ACCEPTED, {
+    simulationEvents.emit(GameEventType.MARRIAGE_ACCEPTED, {
       proposerId: proposal.proposerId,
       targetId,
       groupId: group.id,
@@ -176,7 +176,7 @@ export class MarriageSystem {
     this.addHistoryEvent("rejected", targetId, undefined, proposal.proposerId);
     this.pendingProposals.delete(targetId);
 
-    simulationEvents.emit(GameEventNames.MARRIAGE_REJECTED, {
+    simulationEvents.emit(GameEventType.MARRIAGE_REJECTED, {
       proposerId: proposal.proposerId,
       targetId,
       timestamp: Date.now(),
@@ -193,7 +193,7 @@ export class MarriageSystem {
     const group = this.marriageGroups.get(groupId);
     if (!group) return false;
 
-    simulationEvents.emit(GameEventNames.DIVORCE_INITIATED, {
+    simulationEvents.emit(GameEventType.DIVORCE_INITIATED, {
       agentId,
       groupId,
       reason,
@@ -202,7 +202,7 @@ export class MarriageSystem {
 
     const remainingMembers = group.members.filter((id) => id !== agentId);
 
-    simulationEvents.emit(GameEventNames.MARRIAGE_MEMBER_LEFT, {
+    simulationEvents.emit(GameEventType.MARRIAGE_MEMBER_LEFT, {
       agentId,
       groupId,
       reason,
@@ -218,7 +218,7 @@ export class MarriageSystem {
 
     this.addHistoryEvent("dissolved", agentId, groupId, undefined, reason);
 
-    simulationEvents.emit(GameEventNames.DIVORCE_COMPLETED, {
+    simulationEvents.emit(GameEventType.DIVORCE_COMPLETED, {
       agentId,
       groupId,
       reason,
@@ -238,7 +238,7 @@ export class MarriageSystem {
     for (const memberId of group.members) {
       this.addHistoryEvent("widowed", memberId, groupId, deceasedId, "death");
 
-      simulationEvents.emit(GameEventNames.WIDOWHOOD_REGISTERED, {
+      simulationEvents.emit(GameEventType.WIDOWHOOD_REGISTERED, {
         agentId: memberId,
         deceasedId,
         groupId,

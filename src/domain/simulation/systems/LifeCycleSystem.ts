@@ -8,7 +8,7 @@ import {
   Sex,
   SocialStatus,
 } from "../../types/simulation/agents";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import type { SimulationEntity, EntityTraits } from "../core/schema";
 import { EntityType } from "../../../shared/constants/EntityEnums";
 import { TileType } from "../../../shared/constants/TileTypeEnums";
@@ -119,7 +119,7 @@ export class LifeCycleSystem extends EventEmitter {
    */
   private setupDeathListener(): void {
     simulationEvents.on(
-      GameEventNames.AGENT_DEATH,
+      GameEventType.AGENT_DEATH,
       (data: { agentId?: string; entityId?: string; cause?: string }) => {
         const agentId = data.agentId || data.entityId;
         if (!agentId) return;
@@ -208,7 +208,7 @@ export class LifeCycleSystem extends EventEmitter {
       agent.lifeStage = this.getLifeStage(agent.ageYears);
 
       if (previousStage !== agent.lifeStage) {
-        simulationEvents.emit(GameEventNames.AGENT_AGED, {
+        simulationEvents.emit(GameEventType.AGENT_AGED, {
           entityId: agent.id,
           newAge: agent.ageYears,
           previousStage,
@@ -410,8 +410,8 @@ export class LifeCycleSystem extends EventEmitter {
 
       logger.debug(
         `🍼 [tryCouple] ${father.name}+${mother.name} needs: ` +
-        `father(hunger=${fatherNeeds?.hunger?.toFixed(0)}, energy=${fatherNeeds?.energy?.toFixed(0)}) ` +
-        `mother(hunger=${motherNeeds?.hunger?.toFixed(0)}, energy=${motherNeeds?.energy?.toFixed(0)})`,
+          `father(hunger=${fatherNeeds?.hunger?.toFixed(0)}, energy=${fatherNeeds?.energy?.toFixed(0)}) ` +
+          `mother(hunger=${motherNeeds?.hunger?.toFixed(0)}, energy=${motherNeeds?.energy?.toFixed(0)})`,
       );
 
       if (
@@ -431,7 +431,7 @@ export class LifeCycleSystem extends EventEmitter {
 
     logger.info(`🍼 [tryCouple] ${father.name}+${mother.name} REPRODUCING!`);
 
-    simulationEvents.emit(GameEventNames.REPRODUCTION_ATTEMPT, {
+    simulationEvents.emit(GameEventType.REPRODUCTION_ATTEMPT, {
       parent1: fatherId,
       parent2: motherId,
       timestamp: now,
@@ -448,7 +448,7 @@ export class LifeCycleSystem extends EventEmitter {
       now + this.config.reproductionCooldownSec * 1000,
     );
 
-    simulationEvents.emit(GameEventNames.REPRODUCTION_SUCCESS, {
+    simulationEvents.emit(GameEventType.REPRODUCTION_SUCCESS, {
       childId,
       parent1: fatherId,
       parent2: motherId,
@@ -459,15 +459,15 @@ export class LifeCycleSystem extends EventEmitter {
     spec:
       | Partial<AgentProfile>
       | {
-        id?: string;
-        name?: string;
-        sex: Sex;
-        ageYears: number;
-        lifeStage: LifeStage;
-        generation: number;
-        immortal?: boolean;
-        traits?: Partial<AgentTraits>;
-      } = {},
+          id?: string;
+          name?: string;
+          sex: Sex;
+          ageYears: number;
+          lifeStage: LifeStage;
+          generation: number;
+          immortal?: boolean;
+          traits?: Partial<AgentTraits>;
+        } = {},
   ): AgentProfile {
     const partial = spec as Partial<AgentProfile>;
     const id = partial.id ?? `agent_${++this.spawnCounter}`;
@@ -577,7 +577,7 @@ export class LifeCycleSystem extends EventEmitter {
       }
     }
 
-    simulationEvents.emit(GameEventNames.AGENT_BIRTH, {
+    simulationEvents.emit(GameEventType.AGENT_BIRTH, {
       entityId: id,
       parentIds: profile.parents
         ? [profile.parents.father, profile.parents.mother]
@@ -659,13 +659,13 @@ export class LifeCycleSystem extends EventEmitter {
     const removed = this.agentRegistry
       ? this.agentRegistry.removeAgent(id)
       : ((): boolean => {
-        const index = this.gameState.agents!.findIndex((a) => a.id === id);
-        if (index !== -1) {
-          this.gameState.agents!.splice(index, 1);
-          return true;
-        }
-        return false;
-      })();
+          const index = this.gameState.agents!.findIndex((a) => a.id === id);
+          if (index !== -1) {
+            this.gameState.agents!.splice(index, 1);
+            return true;
+          }
+          return false;
+        })();
 
     if (removed) {
       if (this.gameState.entities) {
@@ -679,7 +679,7 @@ export class LifeCycleSystem extends EventEmitter {
 
       this.cleanupAgentState(id);
 
-      simulationEvents.emit(GameEventNames.AGENT_DEATH, {
+      simulationEvents.emit(GameEventType.AGENT_DEATH, {
         entityId: id,
         reason: "removed",
       });
@@ -700,7 +700,7 @@ export class LifeCycleSystem extends EventEmitter {
         inv &&
         (inv.wood > 0 || inv.stone > 0 || inv.food > 0 || inv.water > 0)
       ) {
-        simulationEvents.emit(GameEventNames.INVENTORY_DROPPED, {
+        simulationEvents.emit(GameEventType.INVENTORY_DROPPED, {
           agentId,
           position: agent?.position,
           inventory: {
@@ -754,19 +754,19 @@ export class LifeCycleSystem extends EventEmitter {
     const removed = this.agentRegistry
       ? this.agentRegistry.removeAgent(id)
       : ((): boolean => {
-        const index = this.gameState.agents!.findIndex((a) => a.id === id);
-        if (index !== -1) {
-          this.gameState.agents!.splice(index, 1);
-          return true;
-        }
-        return false;
-      })();
+          const index = this.gameState.agents!.findIndex((a) => a.id === id);
+          if (index !== -1) {
+            this.gameState.agents!.splice(index, 1);
+            return true;
+          }
+          return false;
+        })();
 
     if (!removed) return false;
 
     this.cleanupAgentState(id);
 
-    simulationEvents.emit(GameEventNames.AGENT_DEATH, {
+    simulationEvents.emit(GameEventType.AGENT_DEATH, {
       entityId: id,
       reason: "killed",
     });

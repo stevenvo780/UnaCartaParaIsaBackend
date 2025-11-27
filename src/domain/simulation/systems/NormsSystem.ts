@@ -5,7 +5,7 @@ import {
   GuardDispatch,
   NormComplianceStats,
 } from "../../types/simulation/norms";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -85,7 +85,7 @@ export class NormsSystem {
       this.sanctionHistory.shift();
     }
 
-    simulationEvents.emit(GameEventNames.NORM_VIOLATED, {
+    simulationEvents.emit(GameEventType.NORM_VIOLATED, {
       violationId: violation.id,
       attackerId,
       targetId,
@@ -94,7 +94,7 @@ export class NormsSystem {
       timestamp: Date.now(),
     });
 
-    simulationEvents.emit(GameEventNames.NORM_SANCTION_APPLIED, {
+    simulationEvents.emit(GameEventType.NORM_SANCTION_APPLIED, {
       agentId: attackerId,
       violationType: sanction.violationType,
       reputationPenalty: sanction.reputationPenalty,

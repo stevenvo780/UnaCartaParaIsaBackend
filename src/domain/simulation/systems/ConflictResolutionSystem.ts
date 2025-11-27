@@ -6,7 +6,7 @@ import {
   MediationAttempt,
   ConflictStats,
 } from "../../types/simulation/conflict";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import {
   ConflictResolutionChoice,
   ConflictResolution,
@@ -106,7 +106,7 @@ export class ConflictResolutionSystem {
       this.mediationAttempts.shift();
     }
 
-    simulationEvents.emit(GameEventNames.CONFLICT_TRUCE_PROPOSED, {
+    simulationEvents.emit(GameEventType.CONFLICT_TRUCE_PROPOSED, {
       cardId,
       attackerId: data.attackerId,
       targetId: data.targetId,
@@ -171,7 +171,7 @@ export class ConflictResolutionSystem {
     }
 
     if (choice === ConflictResolutionChoice.TRUCE_ACCEPT) {
-      simulationEvents.emit(GameEventNames.CONFLICT_TRUCE_ACCEPTED, {
+      simulationEvents.emit(GameEventType.CONFLICT_TRUCE_ACCEPTED, {
         cardId,
         attackerId: aId,
         targetId: bId,
@@ -179,7 +179,7 @@ export class ConflictResolutionSystem {
         timestamp: Date.now(),
       });
     } else if (choice === ConflictResolutionChoice.CONTINUE) {
-      simulationEvents.emit(GameEventNames.CONFLICT_TRUCE_REJECTED, {
+      simulationEvents.emit(GameEventType.CONFLICT_TRUCE_REJECTED, {
         cardId,
         attackerId: aId,
         targetId: bId,

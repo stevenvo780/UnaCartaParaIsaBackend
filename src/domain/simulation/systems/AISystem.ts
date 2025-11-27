@@ -106,7 +106,7 @@ import { AIActionPlanner } from "./ai/core/AIActionPlanner";
 import { AIActionExecutor } from "./ai/core/AIActionExecutor";
 import { AIUrgentGoals } from "./ai/core/AIUrgentGoals";
 import { AIZoneHandler } from "./ai/core/AIZoneHandler";
-import { GameEventNames } from "../core/events";
+import { GameEventType } from "../core/events";
 import { simulationEvents } from "../core/events";
 import type { NeedsSystem } from "./NeedsSystem";
 import { RoleSystem } from "./RoleSystem";
@@ -343,7 +343,7 @@ export class AISystem extends EventEmitter {
 
     this.boundHandleActionComplete = this.handleActionComplete.bind(this);
     simulationEvents.on(
-      GameEventNames.AGENT_ACTION_COMPLETE,
+      GameEventType.AGENT_ACTION_COMPLETE,
       this.boundHandleActionComplete,
     );
   }
@@ -712,7 +712,7 @@ export class AISystem extends EventEmitter {
           logger.debug(
             `🎯 [AI] ${agentId}: ${describeGoal(aiState.currentGoal)} (from queue)`,
           );
-          simulationEvents.emit(GameEventNames.AGENT_GOAL_CHANGED, {
+          simulationEvents.emit(GameEventType.AGENT_GOAL_CHANGED, {
             agentId,
             newGoal: aiState.currentGoal,
             timestamp: now,
@@ -739,7 +739,7 @@ export class AISystem extends EventEmitter {
           aiState.currentGoal = newGoal;
           aiState.lastDecisionTime = now;
           logger.debug(`🎯 [AI] ${agentId}: ${describeGoal(newGoal)}`);
-          simulationEvents.emit(GameEventNames.AGENT_GOAL_CHANGED, {
+          simulationEvents.emit(GameEventType.AGENT_GOAL_CHANGED, {
             agentId,
             newGoal,
             timestamp: now,
@@ -791,7 +791,7 @@ export class AISystem extends EventEmitter {
 
         logger.debug(`🏃 [AI] ${agentId}: ${describeAction(action)}`);
         this.executeAction(action);
-        simulationEvents.emit(GameEventNames.AGENT_ACTION_COMMANDED, {
+        simulationEvents.emit(GameEventType.AGENT_ACTION_COMMANDED, {
           agentId,
           action,
           timestamp: now,
@@ -1572,7 +1572,7 @@ export class AISystem extends EventEmitter {
     this._decisionCount = 0;
     this._decisionTimeTotalMs = 0;
     simulationEvents.off(
-      GameEventNames.AGENT_ACTION_COMPLETE,
+      GameEventType.AGENT_ACTION_COMPLETE,
       this.boundHandleActionComplete,
     );
     this.removeAllListeners();
@@ -2172,7 +2172,7 @@ export class AISystem extends EventEmitter {
         expiresAt: Date.now() + 60000,
       };
       aiState.currentGoal = newGoal;
-      simulationEvents.emit(GameEventNames.AGENT_GOAL_CHANGED, {
+      simulationEvents.emit(GameEventType.AGENT_GOAL_CHANGED, {
         agentId,
         newGoal,
         timestamp: Date.now(),

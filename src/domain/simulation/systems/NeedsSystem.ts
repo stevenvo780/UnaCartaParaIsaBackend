@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import { GameState } from "../../types/game-types";
 import { EntityNeedsData, NeedsConfig } from "../../types/simulation/needs";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { logger } from "@/infrastructure/utils/logger";
 import type { ILifeCyclePort } from "../ports";
 
@@ -414,7 +414,7 @@ export class NeedsSystem extends EventEmitter {
           `🍖 ${entityId} ate ${removed} food → hunger: ${needs.hunger.toFixed(1)}`,
         );
 
-        simulationEvents.emit(GameEventNames.RESOURCE_CONSUMED, {
+        simulationEvents.emit(GameEventType.RESOURCE_CONSUMED, {
           agentId: entityId,
           resourceType: ResourceType.FOOD,
           amount: removed,
@@ -442,7 +442,7 @@ export class NeedsSystem extends EventEmitter {
           `💧 ${entityId} drank ${removed} water → thirst: ${needs.thirst.toFixed(1)}`,
         );
 
-        simulationEvents.emit(GameEventNames.RESOURCE_CONSUMED, {
+        simulationEvents.emit(GameEventType.RESOURCE_CONSUMED, {
           agentId: entityId,
           resourceType: ResourceType.WATER,
           amount: removed,
@@ -618,7 +618,7 @@ export class NeedsSystem extends EventEmitter {
   ): void {
     logger.info(`💀 Entity ${entityId} died from ${cause}`);
 
-    simulationEvents.emit(GameEventNames.AGENT_DEATH, {
+    simulationEvents.emit(GameEventType.AGENT_DEATH, {
       agentId: entityId,
       cause,
       needs: { ...needs },
@@ -670,7 +670,7 @@ export class NeedsSystem extends EventEmitter {
 
     logger.info(`✨ Entity ${entityId} respawned`);
 
-    simulationEvents.emit(GameEventNames.AGENT_RESPAWNED, {
+    simulationEvents.emit(GameEventType.AGENT_RESPAWNED, {
       agentId: entityId,
       timestamp: Date.now(),
     });
@@ -1019,7 +1019,7 @@ export class NeedsSystem extends EventEmitter {
 
     for (const [need, value] of Object.entries(needs)) {
       if (typeof value === "number" && value < CRITICAL) {
-        simulationEvents.emit(GameEventNames.NEED_CRITICAL, {
+        simulationEvents.emit(GameEventType.NEED_CRITICAL, {
           agentId: entityId,
           need,
           value,
@@ -1029,7 +1029,7 @@ export class NeedsSystem extends EventEmitter {
     }
 
     if (needs.hunger > 90) {
-      simulationEvents.emit(GameEventNames.NEED_SATISFIED, {
+      simulationEvents.emit(GameEventType.NEED_SATISFIED, {
         agentId: entityId,
         need: NeedType.HUNGER,
         value: needs.hunger,

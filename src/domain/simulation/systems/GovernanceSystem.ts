@@ -17,7 +17,7 @@ import {
 } from "../../../shared/constants/GovernanceEnums";
 import { CrisisPredictionType } from "../../../shared/constants/AmbientEnums";
 import { EntityStatus } from "../../../shared/constants/EntityStatusEnums";
-import { GameEventNames, simulationEvents } from "../core/events";
+import { GameEventType, simulationEvents } from "../core/events";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 import { InventorySystem } from "./InventorySystem";
 
@@ -171,20 +171,20 @@ export class GovernanceSystem {
     );
 
     simulationEvents.on(
-      GameEventNames.HOUSEHOLD_HIGH_OCCUPANCY,
+      GameEventType.HOUSEHOLD_HIGH_OCCUPANCY,
       this.handleHighOccupancy,
     );
     simulationEvents.on(
-      GameEventNames.HOUSEHOLD_AGENTS_HOMELESS,
+      GameEventType.HOUSEHOLD_AGENTS_HOMELESS,
       this.handleHomeless,
     );
     simulationEvents.on(
-      GameEventNames.HOUSEHOLD_NO_FREE_HOUSES,
+      GameEventType.HOUSEHOLD_NO_FREE_HOUSES,
       this.handleNoHouses,
     );
 
     simulationEvents.on(
-      GameEventNames.CRISIS_IMMEDIATE_WARNING,
+      GameEventType.CRISIS_IMMEDIATE_WARNING,
       (data: {
         prediction: {
           type: string;
@@ -214,7 +214,7 @@ export class GovernanceSystem {
     );
 
     simulationEvents.on(
-      GameEventNames.PRODUCTION_OUTPUT_GENERATED,
+      GameEventType.PRODUCTION_OUTPUT_GENERATED,
       (data: {
         zoneId: string;
         resource: string;
@@ -249,7 +249,7 @@ export class GovernanceSystem {
     );
 
     simulationEvents.on(
-      GameEventNames.PRODUCTION_WORKER_REMOVED,
+      GameEventType.PRODUCTION_WORKER_REMOVED,
       (data: {
         zoneId: string;
         agentId: string;
@@ -467,7 +467,7 @@ export class GovernanceSystem {
       details: { demandId: demand.id, action: solution.project },
     });
 
-    simulationEvents.emit(GameEventNames.GOVERNANCE_ACTION, {
+    simulationEvents.emit(GameEventType.GOVERNANCE_ACTION, {
       demandId: demand.id,
       action: solution.project,
       cost: solution.cost,
@@ -735,6 +735,6 @@ export class GovernanceSystem {
   private pushSnapshot(): void {
     const snapshot = this.getSnapshot();
     this.state.governance = snapshot;
-    simulationEvents.emit(GameEventNames.GOVERNANCE_UPDATE, snapshot);
+    simulationEvents.emit(GameEventType.GOVERNANCE_UPDATE, snapshot);
   }
 }

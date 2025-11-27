@@ -1,11 +1,11 @@
 {
   "summary": {
-    "totalEnums": 131,
-    "totalEnumValues": 838,
-    "totalStringOccurrences": 1717,
-    "missingEnumStrings": 341,
-    "missingEnumOccurrences": 472,
-    "filesAffected": 106
+    "totalEnums": 141,
+    "totalEnumValues": 881,
+    "totalStringOccurrences": 1665,
+    "missingEnumStrings": 299,
+    "missingEnumOccurrences": 391,
+    "filesAffected": 96
   },
   "enums": [
     {
@@ -51,7 +51,9 @@
         "build",
         "idle",
         "birth",
-        "death"
+        "death",
+        "contribute_resources",
+        "start_quest"
       ],
       "file": "src/shared/constants/AIEnums.ts"
     },
@@ -126,6 +128,17 @@
       "file": "src/shared/constants/AIEnums.ts"
     },
     {
+      "name": "ExplorationType",
+      "values": [
+        "cautious",
+        "balanced",
+        "adventurous",
+        "desperate_search",
+        "default"
+      ],
+      "file": "src/shared/constants/AgentEnums.ts"
+    },
+    {
       "name": "Sex",
       "values": [
         "male",
@@ -148,17 +161,6 @@
         "noble",
         "commoner",
         "warrior"
-      ],
-      "file": "src/shared/constants/AgentEnums.ts"
-    },
-    {
-      "name": "ExplorationType",
-      "values": [
-        "cautious",
-        "balanced",
-        "adventurous",
-        "desperate_search",
-        "default"
       ],
       "file": "src/shared/constants/AgentEnums.ts"
     },
@@ -1066,6 +1068,25 @@
       "file": "src/shared/constants/ItemEnums.ts"
     },
     {
+      "name": "KnowledgeNodeType",
+      "values": [
+        "fact",
+        "recipe",
+        "location",
+        "person"
+      ],
+      "file": "src/shared/constants/KnowledgeEnums.ts"
+    },
+    {
+      "name": "KnowledgeEdgeType",
+      "values": [
+        "related",
+        "prerequisite",
+        "derived"
+      ],
+      "file": "src/shared/constants/KnowledgeEnums.ts"
+    },
+    {
       "name": "LegendTrend",
       "values": [
         "rising",
@@ -1279,6 +1300,64 @@
       "file": "src/shared/constants/ResourceEnums.ts"
     },
     {
+      "name": "TreeVariant",
+      "values": [
+        "tree_full",
+        "tree_damaged",
+        "tree_stump"
+      ],
+      "file": "src/shared/constants/ResourceVariantEnums.ts"
+    },
+    {
+      "name": "RockVariant",
+      "values": [
+        "rock_intact",
+        "rock_cracked",
+        "rock_rubble"
+      ],
+      "file": "src/shared/constants/ResourceVariantEnums.ts"
+    },
+    {
+      "name": "WaterSourceVariant",
+      "values": [
+        "water_source",
+        "water_source_dry"
+      ],
+      "file": "src/shared/constants/ResourceVariantEnums.ts"
+    },
+    {
+      "name": "BerryBushVariant",
+      "values": [
+        "berry_bush_full",
+        "berry_bush_empty"
+      ],
+      "file": "src/shared/constants/ResourceVariantEnums.ts"
+    },
+    {
+      "name": "MushroomVariant",
+      "values": [
+        "mushrooms",
+        "mushrooms_picked"
+      ],
+      "file": "src/shared/constants/ResourceVariantEnums.ts"
+    },
+    {
+      "name": "WheatVariant",
+      "values": [
+        "wheat_full",
+        "wheat_harvested"
+      ],
+      "file": "src/shared/constants/ResourceVariantEnums.ts"
+    },
+    {
+      "name": "TrashVariant",
+      "values": [
+        "trash_pile",
+        "trash_pile_cleared"
+      ],
+      "file": "src/shared/constants/ResourceVariantEnums.ts"
+    },
+    {
       "name": "ResponseStatus",
       "values": [
         "ok",
@@ -1400,7 +1479,8 @@
         "trend",
         "traits",
         "sex",
-        "resolution"
+        "resolution",
+        "assets"
       ],
       "file": "src/shared/constants/SystemEnums.ts"
     },
@@ -1552,6 +1632,31 @@
         "general",
         "food",
         "materials"
+      ],
+      "file": "src/shared/constants/ZoneEnums.ts"
+    },
+    {
+      "name": "ZoneID",
+      "values": [
+        "food_zone_central",
+        "water_zone_north",
+        "rest_zone_south",
+        "work_zone_logging",
+        "work_zone_quarry",
+        "storage_granary_01",
+        "water_well_central",
+        "food_zone_orchard_east",
+        "food_zone_farm_west",
+        "food_zone_garden_south",
+        "water_zone_lake_east",
+        "water_zone_spring_west",
+        "defense_tower_north",
+        "divine_temple_center",
+        "medical_zone_hospital",
+        "training_zone_gym",
+        "knowledge_zone_library",
+        "spiritual_zone_temple",
+        "market_zone_plaza"
       ],
       "file": "src/shared/constants/ZoneEnums.ts"
     },
@@ -2133,182 +2238,22 @@
       ]
     },
     {
-      "stringLiteral": "fact",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/KnowledgeNetworkSystem.ts",
-          "line": 8,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "| { type: \"fact\"; content: string; category?: string }"
-        },
-        {
-          "file": "src/domain/types/game-types.ts",
-          "line": 377,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "| { type: \"fact\"; content: string; category?: string }"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "recipe",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/KnowledgeNetworkSystem.ts",
-          "line": 9,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "| { type: \"recipe\"; recipeId: string; ingredients: string[] }"
-        },
-        {
-          "file": "src/domain/types/game-types.ts",
-          "line": 378,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "| { type: \"recipe\"; recipeId: string; ingredients: string[] }"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "location",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/KnowledgeNetworkSystem.ts",
-          "line": 10,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "| { type: \"location\"; x: number; y: number; zoneId?: string }"
-        },
-        {
-          "file": "src/domain/types/game-types.ts",
-          "line": 379,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "| { type: \"location\"; x: number; y: number; zoneId?: string }"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "person",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/KnowledgeNetworkSystem.ts",
-          "line": 11,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "| { type: \"person\"; agentId: string; relationship?: string };"
-        },
-        {
-          "file": "src/domain/types/game-types.ts",
-          "line": 380,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "| { type: \"person\"; agentId: string; relationship?: string };"
-        }
-      ]
-    },
-    {
       "stringLiteral": "obj_1",
       "count": 2,
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 31,
+          "line": 30,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"obj_1\","
         },
         {
           "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 76,
+          "line": 75,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"obj_1\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "assets",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/TerrainSystem.ts",
-          "line": 44,
-          "column": 47,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "| { assets: Partial<SimulationTerrainTile[\"assets\"]> },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/utils/LoadingProgressManager.ts",
-          "line": 37,
-          "column": 15,
-          "pattern": "Operaciones Set/Map",
-          "lineContent": "this.phases.set(\"assets\", {"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "contribute_resources",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/ai/core/AIZoneHandler.ts",
-          "line": 484,
-          "column": 26,
-          "pattern": "Comparaciones",
-          "lineContent": "if (goal.data?.action !== \"contribute_resources\") {"
-        },
-        {
-          "file": "src/domain/simulation/systems/ai/evaluators/BuildingContributionEvaluator.ts",
-          "line": 96,
-          "column": 12,
-          "pattern": "Asignaciones",
-          "lineContent": "action: \"contribute_resources\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "start_quest",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/ai/core/AIZoneHandler.ts",
-          "line": 523,
-          "column": 26,
-          "pattern": "Comparaciones",
-          "lineContent": "if (goal.data?.action !== \"start_quest\" || !goal.data?.questId) {"
-        },
-        {
-          "file": "src/domain/simulation/systems/ai/evaluators/QuestEvaluator.ts",
-          "line": 76,
-          "column": 16,
-          "pattern": "Asignaciones",
-          "lineContent": "action: \"start_quest\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "wander",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/ai/evaluators/AttentionEvaluator.ts",
-          "line": 81,
-          "column": 25,
-          "pattern": "Asignaciones",
-          "lineContent": "explorationType: \"wander\","
-        },
-        {
-          "file": "src/domain/simulation/systems/ai/evaluators/AttentionEvaluator.ts",
-          "line": 102,
-          "column": 25,
-          "pattern": "Asignaciones",
-          "lineContent": "explorationType: \"wander\","
         }
       ]
     },
@@ -2318,7 +2263,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/ai/evaluators/BiologicalDriveEvaluator.ts",
-          "line": 207,
+          "line": 210,
           "column": 23,
           "pattern": "Asignaciones",
           "lineContent": "searchFor: \"food_or_prey\","
@@ -2338,637 +2283,17 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator.ts",
-          "line": 71,
+          "line": 74,
           "column": 16,
           "pattern": "Asignaciones",
           "lineContent": "reason: \"reproduction_drive\","
         },
         {
           "file": "src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator.ts",
-          "line": 84,
+          "line": 87,
           "column": 16,
           "pattern": "Asignaciones",
           "lineContent": "reason: \"reproduction_drive\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "mushrooms",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/types/simulation/resourceMapping.ts",
-          "line": 236,
-          "column": 6,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "if ([\"mushrooms\"].includes(itemId)) {"
-        },
-        {
-          "file": "src/infrastructure/services/world/config/WorldResourceConfigs.ts",
-          "line": 272,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "pristine: \"mushrooms\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "tree_full",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/infrastructure/services/world/config/WorldResourceConfigs.ts",
-          "line": 41,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "pristine: \"tree_full\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 40,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "pristine: \"tree_full\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "tree_damaged",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/infrastructure/services/world/config/WorldResourceConfigs.ts",
-          "line": 42,
-          "column": 23,
-          "pattern": "Asignaciones",
-          "lineContent": "harvested_partial: \"tree_damaged\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 41,
-          "column": 23,
-          "pattern": "Asignaciones",
-          "lineContent": "harvested_partial: \"tree_damaged\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "tree_stump",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/infrastructure/services/world/config/WorldResourceConfigs.ts",
-          "line": 43,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "depleted: \"tree_stump\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 42,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "depleted: \"tree_stump\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "rock_intact",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/infrastructure/services/world/config/WorldResourceConfigs.ts",
-          "line": 116,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "pristine: \"rock_intact\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 85,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "pristine: \"rock_intact\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "rock_cracked",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/infrastructure/services/world/config/WorldResourceConfigs.ts",
-          "line": 117,
-          "column": 23,
-          "pattern": "Asignaciones",
-          "lineContent": "harvested_partial: \"rock_cracked\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 86,
-          "column": 23,
-          "pattern": "Asignaciones",
-          "lineContent": "harvested_partial: \"rock_cracked\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "rock_rubble",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/infrastructure/services/world/config/WorldResourceConfigs.ts",
-          "line": 118,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "depleted: \"rock_rubble\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 87,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "depleted: \"rock_rubble\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "water_source_dry",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/infrastructure/services/world/config/WorldResourceConfigs.ts",
-          "line": 196,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "depleted: \"water_source_dry\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 163,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "depleted: \"water_source_dry\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "berry_bush_full",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/infrastructure/services/world/config/WorldResourceConfigs.ts",
-          "line": 236,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "pristine: \"berry_bush_full\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 203,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "pristine: \"berry_bush_full\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "berry_bush_empty",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/infrastructure/services/world/config/WorldResourceConfigs.ts",
-          "line": 237,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "depleted: \"berry_bush_empty\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 205,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "depleted: \"berry_bush_empty\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "wheat_full",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/infrastructure/services/world/config/WorldResourceConfigs.ts",
-          "line": 313,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "pristine: \"wheat_full\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 284,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "pristine: \"wheat_full\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "food_zone_central",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 103,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"food_zone_central\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 124,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"food_zone_central\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "water_zone_north",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 111,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"water_zone_north\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 132,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"water_zone_north\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "rest_zone_south",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 119,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"rest_zone_south\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 140,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"rest_zone_south\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "work_zone_logging",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 127,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"work_zone_logging\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 148,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"work_zone_logging\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "work_zone_quarry",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 136,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"work_zone_quarry\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 157,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"work_zone_quarry\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "storage_granary_01",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 145,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"storage_granary_01\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 166,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"storage_granary_01\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "granary_01",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 152,
-          "column": 17,
-          "pattern": "Asignaciones",
-          "lineContent": "stockpileId: \"granary_01\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 173,
-          "column": 17,
-          "pattern": "Asignaciones",
-          "lineContent": "stockpileId: \"granary_01\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "water_well_central",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 158,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"water_well_central\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 179,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"water_well_central\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "food_zone_orchard_east",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 167,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"food_zone_orchard_east\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 188,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"food_zone_orchard_east\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "food_zone_farm_west",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 175,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"food_zone_farm_west\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 196,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"food_zone_farm_west\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "food_zone_garden_south",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 183,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"food_zone_garden_south\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 204,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"food_zone_garden_south\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "water_zone_lake_east",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 191,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"water_zone_lake_east\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 212,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"water_zone_lake_east\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "water_zone_spring_west",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 200,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"water_zone_spring_west\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 221,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"water_zone_spring_west\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "defense_tower_north",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 209,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"defense_tower_north\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 230,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"defense_tower_north\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "divine_temple_center",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 218,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"divine_temple_center\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 239,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"divine_temple_center\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "medical_zone_hospital",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 227,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"medical_zone_hospital\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 248,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"medical_zone_hospital\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "training_zone_gym",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 235,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"training_zone_gym\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 256,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"training_zone_gym\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "knowledge_zone_library",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 243,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"knowledge_zone_library\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 264,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"knowledge_zone_library\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "spiritual_zone_temple",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 251,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"spiritual_zone_temple\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 272,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"spiritual_zone_temple\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "market_zone_plaza",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 259,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"market_zone_plaza\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 280,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"market_zone_plaza\","
         }
       ]
     },
@@ -4432,7 +3757,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 40,
+          "line": 39,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "id: \"obj_2\","
@@ -4445,7 +3770,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 89,
+          "line": 88,
           "column": 16,
           "pattern": "Asignaciones",
           "lineContent": "unlockId: \"advanced_building\","
@@ -4458,7 +3783,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 240,
+          "line": 239,
           "column": 19,
           "pattern": "Acceso a propiedades",
           "lineContent": "rewards?: Quest[\"rewards\"];"
@@ -4770,23 +4095,10 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator.ts",
-          "line": 70,
+          "line": 73,
           "column": 16,
           "pattern": "Asignaciones",
           "lineContent": "action: \"find_mate\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "social_search",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator.ts",
-          "line": 82,
-          "column": 25,
-          "pattern": "Asignaciones",
-          "lineContent": "explorationType: \"social_search\","
         }
       ]
     },
@@ -4813,45 +4125,6 @@
           "column": 22,
           "pattern": "Asignaciones",
           "lineContent": "resourceType: \"meat\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "trash_pile_cleared",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/infrastructure/services/world/config/WorldResourceConfigs.ts",
-          "line": 160,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "depleted: \"trash_pile_cleared\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "mushrooms_picked",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/infrastructure/services/world/config/WorldResourceConfigs.ts",
-          "line": 273,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "depleted: \"mushrooms_picked\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "wheat_harvested",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/infrastructure/services/world/config/WorldResourceConfigs.ts",
-          "line": 314,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "depleted: \"wheat_harvested\","
         }
       ]
     },
@@ -5398,6 +4671,19 @@
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "SAVE: \"save\","
+        }
+      ]
+    },
+    {
+      "stringLiteral": "granary_01",
+      "count": 1,
+      "occurrences": [
+        {
+          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
+          "line": 173,
+          "column": 17,
+          "pattern": "Asignaciones",
+          "lineContent": "stockpileId: \"granary_01\","
         }
       ]
     },
@@ -7196,26 +6482,6 @@
       ]
     },
     {
-      "file": "src/domain/simulation/systems/KnowledgeNetworkSystem.ts",
-      "count": 4,
-      "uniqueStrings": [
-        "fact",
-        "recipe",
-        "location",
-        "person"
-      ]
-    },
-    {
-      "file": "src/domain/types/game-types.ts",
-      "count": 4,
-      "uniqueStrings": [
-        "fact",
-        "recipe",
-        "location",
-        "person"
-      ]
-    },
-    {
       "file": "src/domain/simulation/systems/LifeCycleSystem.ts",
       "count": 2,
       "uniqueStrings": [
@@ -7270,28 +6536,6 @@
       ]
     },
     {
-      "file": "src/domain/simulation/systems/TerrainSystem.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "assets"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/utils/LoadingProgressManager.ts",
-      "count": 12,
-      "uniqueStrings": [
-        "assets",
-        "entities",
-        "bold",
-        "loading",
-        "boot",
-        "chunk_initialization",
-        "world_generation",
-        "world_composition",
-        "world_rendering"
-      ]
-    },
-    {
       "file": "src/domain/simulation/systems/WorldResourceSystem.ts",
       "count": 4,
       "uniqueStrings": [
@@ -7310,39 +6554,10 @@
       ]
     },
     {
-      "file": "src/domain/simulation/systems/ai/core/AIZoneHandler.ts",
-      "count": 2,
-      "uniqueStrings": [
-        "contribute_resources",
-        "start_quest"
-      ]
-    },
-    {
-      "file": "src/domain/simulation/systems/ai/evaluators/BuildingContributionEvaluator.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "contribute_resources"
-      ]
-    },
-    {
-      "file": "src/domain/simulation/systems/ai/evaluators/QuestEvaluator.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "start_quest"
-      ]
-    },
-    {
       "file": "src/domain/simulation/systems/ai/core/utils.ts",
       "count": 1,
       "uniqueStrings": [
         "craft_weapon"
-      ]
-    },
-    {
-      "file": "src/domain/simulation/systems/ai/evaluators/AttentionEvaluator.ts",
-      "count": 2,
-      "uniqueStrings": [
-        "wander"
       ]
     },
     {
@@ -7397,11 +6612,10 @@
     },
     {
       "file": "src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator.ts",
-      "count": 4,
+      "count": 3,
       "uniqueStrings": [
         "find_mate",
-        "reproduction_drive",
-        "social_search"
+        "reproduction_drive"
       ]
     },
     {
@@ -7419,115 +6633,11 @@
       ]
     },
     {
-      "file": "src/domain/types/simulation/resourceMapping.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "mushrooms"
-      ]
-    },
-    {
-      "file": "src/infrastructure/services/world/config/WorldResourceConfigs.ts",
-      "count": 14,
-      "uniqueStrings": [
-        "mushrooms",
-        "tree_full",
-        "tree_damaged",
-        "tree_stump",
-        "rock_intact",
-        "rock_cracked",
-        "rock_rubble",
-        "trash_pile_cleared",
-        "water_source_dry",
-        "berry_bush_full",
-        "berry_bush_empty",
-        "mushrooms_picked",
-        "wheat_full",
-        "wheat_harvested"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-      "count": 20,
-      "uniqueStrings": [
-        "tree_full",
-        "tree_damaged",
-        "tree_stump",
-        "rock_intact",
-        "rock_cracked",
-        "rock_rubble",
-        "water_source_dry",
-        "berry_bush_full",
-        "berry_bush_empty",
-        "wheat_full",
-        "rare_materials",
-        "trash_pile_full",
-        "trash_pile_empty",
-        "water_source_full",
-        "berry_bush_partial",
-        "mushroom_patch_full",
-        "mushroom_patch_empty",
-        "wheat_partial",
-        "wheat_empty"
-      ]
-    },
-    {
       "file": "src/infrastructure/utils/gpuDetector.ts",
       "count": 2,
       "uniqueStrings": [
         "tensorflow",
         "utf8"
-      ]
-    },
-    {
-      "file": "src/shared/constants/WorldConfig.ts",
-      "count": 20,
-      "uniqueStrings": [
-        "food_zone_central",
-        "water_zone_north",
-        "rest_zone_south",
-        "work_zone_logging",
-        "work_zone_quarry",
-        "storage_granary_01",
-        "granary_01",
-        "water_well_central",
-        "food_zone_orchard_east",
-        "food_zone_farm_west",
-        "food_zone_garden_south",
-        "water_zone_lake_east",
-        "water_zone_spring_west",
-        "defense_tower_north",
-        "divine_temple_center",
-        "medical_zone_hospital",
-        "training_zone_gym",
-        "knowledge_zone_library",
-        "spiritual_zone_temple",
-        "market_zone_plaza"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-      "count": 20,
-      "uniqueStrings": [
-        "food_zone_central",
-        "water_zone_north",
-        "rest_zone_south",
-        "work_zone_logging",
-        "work_zone_quarry",
-        "storage_granary_01",
-        "granary_01",
-        "water_well_central",
-        "food_zone_orchard_east",
-        "food_zone_farm_west",
-        "food_zone_garden_south",
-        "water_zone_lake_east",
-        "water_zone_spring_west",
-        "defense_tower_north",
-        "divine_temple_center",
-        "medical_zone_hospital",
-        "training_zone_gym",
-        "knowledge_zone_library",
-        "spiritual_zone_temple",
-        "market_zone_plaza"
       ]
     },
     {
@@ -7732,6 +6842,21 @@
       ]
     },
     {
+      "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
+      "count": 10,
+      "uniqueStrings": [
+        "rare_materials",
+        "trash_pile_full",
+        "trash_pile_empty",
+        "water_source_full",
+        "berry_bush_partial",
+        "mushroom_patch_full",
+        "mushroom_patch_empty",
+        "wheat_partial",
+        "wheat_empty"
+      ]
+    },
+    {
       "file": "../UnaCartaParaIsa/src/constants/DomEventNames.ts",
       "count": 18,
       "uniqueStrings": [
@@ -7770,6 +6895,13 @@
       "count": 2,
       "uniqueStrings": [
         "tick"
+      ]
+    },
+    {
+      "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
+      "count": 1,
+      "uniqueStrings": [
+        "granary_01"
       ]
     },
     {
@@ -7959,6 +7091,20 @@
         "structures",
         "entities",
         "decals"
+      ]
+    },
+    {
+      "file": "../UnaCartaParaIsa/src/utils/LoadingProgressManager.ts",
+      "count": 11,
+      "uniqueStrings": [
+        "entities",
+        "bold",
+        "loading",
+        "boot",
+        "chunk_initialization",
+        "world_generation",
+        "world_composition",
+        "world_rendering"
       ]
     },
     {

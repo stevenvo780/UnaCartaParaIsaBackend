@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/utils/logger";
 import { GameState } from "../../types/game-types";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { injectable, inject, unmanaged } from "inversify";
 import { TYPES } from "../../../config/Types";
 import { InteractionStatus } from "../../../shared/constants/StatusEnums";
@@ -37,7 +37,7 @@ export class InteractionGameSystem {
     for (const [id, interaction] of this.activeInteractions.entries()) {
       if (now - interaction.startTime > TIMEOUT_MS) {
         this.activeInteractions.delete(id);
-        simulationEvents.emit(GameEventNames.INTERACTION_GAME_PLAYED, {
+        simulationEvents.emit(GameEventType.INTERACTION_GAME_PLAYED, {
           interactionId: id,
           ...interaction,
           result: InteractionStatus.EXPIRED,
@@ -62,7 +62,7 @@ export class InteractionGameSystem {
       startTime: Date.now(),
     });
 
-    simulationEvents.emit(GameEventNames.INTERACTION_GAME_PLAYED, {
+    simulationEvents.emit(GameEventType.INTERACTION_GAME_PLAYED, {
       interactionId,
       initiatorId,
       targetId,
@@ -81,7 +81,7 @@ export class InteractionGameSystem {
     const interaction = this.activeInteractions.get(interactionId);
     if (!interaction) return;
 
-    simulationEvents.emit(GameEventNames.INTERACTION_GAME_PLAYED, {
+    simulationEvents.emit(GameEventType.INTERACTION_GAME_PLAYED, {
       interactionId,
       ...interaction,
       result,

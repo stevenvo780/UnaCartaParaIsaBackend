@@ -1,7 +1,7 @@
 import type { GameState } from "../../../../types/game-types";
 import type { AIGoal, AIState } from "../../../../types/simulation/ai";
 import type { ResourceType } from "../../../../types/simulation/economy";
-import { simulationEvents, GameEventNames } from "../../../core/events";
+import { simulationEvents, GameEventType } from "../../../core/events";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 import { GoalType, ActionType } from "../../../../../shared/constants/AIEnums";
 import { ItemCategory } from "../../../../../shared/constants/ItemEnums";
@@ -143,7 +143,7 @@ export class AIZoneHandler {
     aiState: AIState,
   ): void {
     if (aiState.currentAction?.actionType === ActionType.MOVE) {
-      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
         agentId: entityId,
         success: true,
         actionType: ActionType.MOVE,
@@ -256,7 +256,7 @@ export class AIZoneHandler {
       (transferred.rare_materials || 0);
 
     if (totalTransferred > 0) {
-      simulationEvents.emit(GameEventNames.RESOURCES_DEPOSITED, {
+      simulationEvents.emit(GameEventType.RESOURCES_DEPOSITED, {
         agentId: entityId,
         zoneId,
         stockpileId: stockpile.id,
@@ -425,7 +425,7 @@ export class AIZoneHandler {
     if (this.deps.craftingSystem) {
       const weaponId = this.deps.craftingSystem.craftBestWeapon(entityId);
       if (weaponId) {
-        simulationEvents.emit(GameEventNames.ITEM_CRAFTED, {
+        simulationEvents.emit(GameEventType.ITEM_CRAFTED, {
           agentId: entityId,
           itemId: weaponId,
         });
@@ -463,7 +463,7 @@ export class AIZoneHandler {
       return false;
     }
 
-    simulationEvents.emit(GameEventNames.AGENT_ACTIVITY_STARTED, {
+    simulationEvents.emit(GameEventType.AGENT_ACTIVITY_STARTED, {
       agentId: entityId,
       zoneId,
       activity: "working",
@@ -481,7 +481,7 @@ export class AIZoneHandler {
     goal: AIGoal,
     aiState: AIState,
   ): boolean {
-    if (goal.data?.action !== "contribute_resources") {
+    if (goal.data?.action !== ActionType.CONTRIBUTE_RESOURCES) {
       return false;
     }
 
@@ -506,7 +506,7 @@ export class AIZoneHandler {
             transferred.stone,
           );
         }
-        simulationEvents.emit(GameEventNames.RESOURCES_DEPOSITED, {
+        simulationEvents.emit(GameEventType.RESOURCES_DEPOSITED, {
           agentId: entityId,
           zoneId,
           resources: transferred,
@@ -520,7 +520,7 @@ export class AIZoneHandler {
   }
 
   private handleQuestStart(goal: AIGoal, aiState: AIState): boolean {
-    if (goal.data?.action !== "start_quest" || !goal.data?.questId) {
+    if (goal.data?.action !== ActionType.START_QUEST || !goal.data?.questId) {
       return false;
     }
 
@@ -558,7 +558,7 @@ export class AIZoneHandler {
     const activity = this.pickActivityForZone(zone.type, goal);
     const duration = this.estimateActivityDuration(entityId, zone.type, goal);
 
-    simulationEvents.emit(GameEventNames.AGENT_ACTIVITY_STARTED, {
+    simulationEvents.emit(GameEventType.AGENT_ACTIVITY_STARTED, {
       agentId: entityId,
       zoneId,
       activity,

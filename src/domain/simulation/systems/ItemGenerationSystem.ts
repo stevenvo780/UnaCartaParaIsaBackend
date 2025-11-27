@@ -5,7 +5,7 @@ import type {
   GeneratedItem,
   ItemGenerationConfig,
 } from "../../types/simulation/itemGeneration";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { BaseMaterialsCatalog } from "../../../simulation/data/BaseMaterialsCatalog";
 import type { Item } from "../../types/simulation/items";
 
@@ -181,7 +181,7 @@ export class ItemGenerationSystem {
     }
     this.zoneItems.get(zone.id)!.set(rule.itemId, item);
 
-    simulationEvents.emit(GameEventNames.ITEM_GENERATED, {
+    simulationEvents.emit(GameEventType.ITEM_GENERATED, {
       itemId: item.id,
       type: item.itemId,
       quantity: item.quantity,
@@ -214,7 +214,7 @@ export class ItemGenerationSystem {
           quantity: item.quantity,
         });
 
-        simulationEvents.emit(GameEventNames.ITEM_COLLECTED, {
+        simulationEvents.emit(GameEventType.ITEM_COLLECTED, {
           itemId: item.id,
           type: item.itemId,
           quantity: item.quantity,
@@ -256,7 +256,7 @@ export class ItemGenerationSystem {
     }
     this.zoneItems.get(zoneId)!.set(itemId, item);
 
-    simulationEvents.emit(GameEventNames.ITEM_GENERATED, {
+    simulationEvents.emit(GameEventType.ITEM_GENERATED, {
       itemId: item.id,
       type: itemId,
       quantity,

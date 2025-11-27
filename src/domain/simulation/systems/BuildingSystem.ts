@@ -1,5 +1,5 @@
 import type { GameState, Zone } from "../../types/game-types";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { ResourceReservationSystem } from "./ResourceReservationSystem";
 import { WorldResourceSystem } from "./WorldResourceSystem";
 import {
@@ -267,7 +267,7 @@ export class BuildingSystem {
       `🏗️ [BUILDING] Construction started: ${label} at (${validatedPosition.x}, ${validatedPosition.y}) - completes in ${cost.time}ms`,
     );
 
-    simulationEvents.emit(GameEventNames.BUILDING_CONSTRUCTION_STARTED, {
+    simulationEvents.emit(GameEventType.BUILDING_CONSTRUCTION_STARTED, {
       jobId: job.id,
       zoneId: job.zoneId,
       label: job.label,
@@ -403,7 +403,7 @@ export class BuildingSystem {
       `🏠 [BUILDING] Construction completed: ${job.label} (zone: ${job.zoneId})`,
     );
 
-    simulationEvents.emit(GameEventNames.BUILDING_CONSTRUCTED, {
+    simulationEvents.emit(GameEventType.BUILDING_CONSTRUCTED, {
       jobId: job.id,
       zoneId: job.zoneId,
       label: job.label,

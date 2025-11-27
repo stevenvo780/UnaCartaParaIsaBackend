@@ -1,6 +1,6 @@
 import { GameState, type TaskState } from "../../types/game-types";
 import { Task, TaskCreationParams } from "../../types/simulation/tasks";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { getFrameTime } from "../../../shared/FrameTime";
 
 import { injectable, inject } from "inversify";
@@ -59,7 +59,7 @@ export class TaskSystem {
         if (timeSinceLastContribution > MAX_STALLED_AGE) {
           this.cancelStalledTask(task.id, "timeout");
         } else if (timeSinceLastContribution > STALLED_THRESHOLD) {
-          simulationEvents.emit(GameEventNames.TASK_STALLED, {
+          simulationEvents.emit(GameEventType.TASK_STALLED, {
             taskId: task.id,
             taskType: task.type,
             zoneId: task.zoneId,
@@ -128,7 +128,7 @@ export class TaskSystem {
 
     this.tasks.set(task.id, task);
 
-    simulationEvents.emit(GameEventNames.TASK_CREATED, {
+    simulationEvents.emit(GameEventType.TASK_CREATED, {
       taskId: task.id,
       taskType: task.type,
       zoneId: task.zoneId,
@@ -193,7 +193,7 @@ export class TaskSystem {
 
     this.tasksDirty = true;
 
-    simulationEvents.emit(GameEventNames.TASK_PROGRESS, {
+    simulationEvents.emit(GameEventType.TASK_PROGRESS, {
       taskId,
       agentId,
       progress: task.progress,
@@ -204,7 +204,7 @@ export class TaskSystem {
     });
 
     if (completed) {
-      simulationEvents.emit(GameEventNames.TASK_COMPLETED, {
+      simulationEvents.emit(GameEventType.TASK_COMPLETED, {
         taskId,
         completedBy: Array.from(task.contributors.keys()),
         completedAt: Date.now(),
@@ -431,7 +431,7 @@ export class TaskSystem {
     task.cancelled = true;
     task.cancellationReason = reason;
 
-    simulationEvents.emit(GameEventNames.TASK_COMPLETED, {
+    simulationEvents.emit(GameEventType.TASK_COMPLETED, {
       taskId,
       completedBy: task.contributors
         ? Array.from(task.contributors.keys())

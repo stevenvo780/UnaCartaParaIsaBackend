@@ -6,7 +6,7 @@ import type {
   HouseholdSystemConfig,
 } from "../../types/simulation/household";
 import type { ResourceType } from "../../types/simulation/economy";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
@@ -59,7 +59,7 @@ export class HouseholdSystem {
     const stats = this.getSystemStats();
 
     if (stats.occupancy > this.config.highOccupancyThreshold) {
-      simulationEvents.emit(GameEventNames.HOUSEHOLD_HIGH_OCCUPANCY, {
+      simulationEvents.emit(GameEventType.HOUSEHOLD_HIGH_OCCUPANCY, {
         occupancy: stats.occupancy,
         free: stats.free,
         totalCapacity: stats.capacity,
@@ -68,7 +68,7 @@ export class HouseholdSystem {
 
     const homeless = this.checkAgentsWithoutHome();
     if (homeless.length > 0) {
-      simulationEvents.emit(GameEventNames.HOUSEHOLD_AGENTS_HOMELESS, {
+      simulationEvents.emit(GameEventType.HOUSEHOLD_AGENTS_HOMELESS, {
         count: homeless.length,
         agents: homeless,
       });
@@ -160,7 +160,7 @@ export class HouseholdSystem {
 
     const free = this.findFreeHouse();
     if (!free) {
-      simulationEvents.emit(GameEventNames.HOUSEHOLD_NO_FREE_HOUSES, {
+      simulationEvents.emit(GameEventType.HOUSEHOLD_NO_FREE_HOUSES, {
         agentId,
       });
       return null;
@@ -172,7 +172,7 @@ export class HouseholdSystem {
       joinedDate: Date.now(),
     });
 
-    simulationEvents.emit(GameEventNames.HOUSEHOLD_AGENT_ASSIGNED, {
+    simulationEvents.emit(GameEventType.HOUSEHOLD_AGENT_ASSIGNED, {
       agentId,
       zoneId: free.zoneId,
       occupancy: free.members.length / free.capacity,
@@ -199,7 +199,7 @@ export class HouseholdSystem {
           `🏠 Agent ${agentId} removed from household ${household.zoneId}`,
         );
 
-        simulationEvents.emit(GameEventNames.HOUSEHOLD_AGENT_LEFT, {
+        simulationEvents.emit(GameEventType.HOUSEHOLD_AGENT_LEFT, {
           agentId,
           zoneId: household.zoneId,
           occupancy: household.members.length / household.capacity,
@@ -316,7 +316,7 @@ export class HouseholdSystem {
 
       household.sharedInventory[resource] += amount;
 
-      simulationEvents.emit(GameEventNames.HOUSEHOLD_RESOURCE_DEPOSITED, {
+      simulationEvents.emit(GameEventType.HOUSEHOLD_RESOURCE_DEPOSITED, {
         householdId,
         resource,
         amount,
@@ -357,7 +357,7 @@ export class HouseholdSystem {
 
       if (household.sharedInventory[resource] >= amount) {
         household.sharedInventory[resource] -= amount;
-        simulationEvents.emit(GameEventNames.HOUSEHOLD_RESOURCE_WITHDRAWN, {
+        simulationEvents.emit(GameEventType.HOUSEHOLD_RESOURCE_WITHDRAWN, {
           agentId: "system",
           householdId,
           resource,

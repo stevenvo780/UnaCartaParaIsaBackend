@@ -1,4 +1,5 @@
 import { EntityStat } from "./EntityEnums";
+import { ZoneID } from "./ZoneEnums";
 
 export const WORLD_CONFIG = {
   WORLD_WIDTH: 4096,
@@ -100,7 +101,7 @@ export const WorldUtils = {
 };
 export const ZONE_DEFINITIONS = [
   {
-    id: "food_zone_central",
+    id: ZoneID.FOOD_ZONE_CENTRAL,
     name: "Zona de Alimentación Central",
     type: "food",
     size: ZONE_CONFIG.LARGE,
@@ -108,7 +109,7 @@ export const ZONE_DEFINITIONS = [
     effects: { energy: 10, happiness: 5 },
   },
   {
-    id: "water_zone_north",
+    id: ZoneID.WATER_ZONE_NORTH,
     name: "Fuente de Agua Norte",
     type: "water",
     size: ZONE_CONFIG.MEDIUM,
@@ -116,7 +117,7 @@ export const ZONE_DEFINITIONS = [
     effects: { energy: 8, comfort: 6 },
   },
   {
-    id: "rest_zone_south",
+    id: ZoneID.REST_ZONE_SOUTH,
     name: "Área de Descanso Sur",
     type: "rest",
     size: ZONE_CONFIG.LARGE,
@@ -124,7 +125,7 @@ export const ZONE_DEFINITIONS = [
     effects: { energy: 15, comfort: 10, happiness: 8 },
   },
   {
-    id: "work_zone_logging",
+    id: ZoneID.WORK_ZONE_LOGGING,
     name: "Campamento Maderero",
     type: "work",
     size: ZONE_CONFIG.MEDIUM,
@@ -133,7 +134,7 @@ export const ZONE_DEFINITIONS = [
     properties: { resource: "wood" },
   },
   {
-    id: "work_zone_quarry",
+    id: ZoneID.WORK_ZONE_QUARRY,
     name: "Cantera de Piedra",
     type: "work",
     size: ZONE_CONFIG.MEDIUM,
@@ -142,20 +143,20 @@ export const ZONE_DEFINITIONS = [
     properties: { resource: "stone" },
   },
   {
-    id: "storage_granary_01",
+    id: ZoneID.STORAGE_GRANARY_01,
     name: "Granero Principal",
     type: "storage",
     size: ZONE_CONFIG.MEDIUM,
     color: "#D2691E",
     effects: { comfort: 5 },
     properties: {
-      stockpileId: "granary_01",
+      stockpileId: ZoneID.STORAGE_GRANARY_01,
       capacity: 500,
       resourceTypes: ["food", "water"],
     },
   },
   {
-    id: "water_well_central",
+    id: ZoneID.WATER_WELL_CENTRAL,
     name: "Pozo Central",
     type: "water",
     size: ZONE_CONFIG.SMALL,
@@ -164,7 +165,7 @@ export const ZONE_DEFINITIONS = [
     properties: { infinite: true, renewalRate: 20 },
   },
   {
-    id: "food_zone_orchard_east",
+    id: ZoneID.FOOD_ZONE_ORCHARD_EAST,
     name: "Huerto del Este",
     type: "food",
     size: ZONE_CONFIG.MEDIUM,
@@ -172,7 +173,7 @@ export const ZONE_DEFINITIONS = [
     effects: { energy: 12, happiness: 6 },
   },
   {
-    id: "food_zone_farm_west",
+    id: ZoneID.FOOD_ZONE_FARM_WEST,
     name: "Granja del Oeste",
     type: "food",
     size: ZONE_CONFIG.LARGE,
@@ -180,7 +181,7 @@ export const ZONE_DEFINITIONS = [
     effects: { energy: 15, comfort: 5 },
   },
   {
-    id: "food_zone_garden_south",
+    id: ZoneID.FOOD_ZONE_GARDEN_SOUTH,
     name: "Jardín del Sur",
     type: "food",
     size: ZONE_CONFIG.MEDIUM,
@@ -188,7 +189,7 @@ export const ZONE_DEFINITIONS = [
     effects: { energy: 10, mentalHealth: 8 },
   },
   {
-    id: "water_zone_lake_east",
+    id: ZoneID.WATER_ZONE_LAKE_EAST,
     name: "Lago del Este",
     type: "water",
     size: ZONE_CONFIG.MEDIUM,
@@ -197,7 +198,7 @@ export const ZONE_DEFINITIONS = [
     properties: { infinite: true },
   },
   {
-    id: "water_zone_spring_west",
+    id: ZoneID.WATER_ZONE_SPRING_WEST,
     name: "Manantial del Oeste",
     type: "water",
     size: ZONE_CONFIG.SMALL,
@@ -206,7 +207,7 @@ export const ZONE_DEFINITIONS = [
     properties: { infinite: true, renewalRate: 15 },
   },
   {
-    id: "defense_tower_north",
+    id: ZoneID.DEFENSE_TOWER_NORTH,
     name: "Torre de Vigilancia Norte",
     type: "defense",
     size: ZONE_CONFIG.SMALL,
@@ -215,7 +216,7 @@ export const ZONE_DEFINITIONS = [
     properties: { range: 400, guardCapacity: 2 },
   },
   {
-    id: "divine_temple_center",
+    id: ZoneID.DIVINE_TEMPLE_CENTER,
     name: "Templo de la Resonancia",
     type: "spiritual",
     size: ZONE_CONFIG.LARGE,
@@ -224,7 +225,7 @@ export const ZONE_DEFINITIONS = [
     properties: { divineFavorBonus: 1.5, prayerCapacity: 10 },
   },
   {
-    id: "medical_zone_hospital",
+    id: ZoneID.MEDICAL_ZONE_HOSPITAL,
     name: "Hospital Central",
     type: "medical",
     size: ZONE_CONFIG.MEDIUM,
@@ -232,7 +233,7 @@ export const ZONE_DEFINITIONS = [
     effects: { [EntityStat.HEALTH]: 20, comfort: 8, mentalHealth: 5 },
   },
   {
-    id: "training_zone_gym",
+    id: ZoneID.TRAINING_ZONE_GYM,
     name: "Gimnasio de Entrenamiento",
     type: "training",
     size: ZONE_CONFIG.MEDIUM,
@@ -240,7 +241,7 @@ export const ZONE_DEFINITIONS = [
     effects: { stamina: 15, energy: -5, [EntityStat.HEALTH]: 10 },
   },
   {
-    id: "knowledge_zone_library",
+    id: ZoneID.KNOWLEDGE_ZONE_LIBRARY,
     name: "Gran Biblioteca",
     type: "knowledge",
     size: ZONE_CONFIG.MEDIUM,
@@ -248,7 +249,7 @@ export const ZONE_DEFINITIONS = [
     effects: { intelligence: 12, mentalHealth: 8, boredom: -10 },
   },
   {
-    id: "spiritual_zone_temple",
+    id: ZoneID.SPIRITUAL_ZONE_TEMPLE,
     name: "Templo de Serenidad",
     type: "spiritual",
     size: ZONE_CONFIG.SMALL,
@@ -256,7 +257,7 @@ export const ZONE_DEFINITIONS = [
     effects: { mentalHealth: 18, stress: -15, socialSkills: 8 },
   },
   {
-    id: "market_zone_plaza",
+    id: ZoneID.MARKET_ZONE_PLAZA,
     name: "Plaza del Mercado",
     type: "market",
     size: ZONE_CONFIG.LARGE,

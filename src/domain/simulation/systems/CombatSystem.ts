@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { GameState } from "../../types/game-types";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { WeaponId } from "../../../shared/constants/CraftingEnums";
 import { EntityType } from "../../../shared/constants/EntityEnums";
 import { CombatEventType } from "../../../shared/constants/CombatEnums";
@@ -118,7 +118,7 @@ export class CombatSystem {
     this.state.combatLog = this.combatLog;
 
     simulationEvents.on(
-      GameEventNames.AGENT_BIRTH,
+      GameEventType.AGENT_BIRTH,
       this.handleAgentBirth.bind(this),
     );
   }
@@ -399,7 +399,7 @@ export class CombatSystem {
 
   public equip(agentId: string, weaponId: WeaponId): void {
     this.equippedWeapons.set(agentId, weaponId);
-    simulationEvents.emit(GameEventNames.COMBAT_WEAPON_EQUIPPED, {
+    simulationEvents.emit(GameEventType.COMBAT_WEAPON_EQUIPPED, {
       agentId,
       weapon: weaponId,
     });
@@ -439,7 +439,7 @@ export class CombatSystem {
     }
 
     this.equip(agentId, weaponId);
-    simulationEvents.emit(GameEventNames.COMBAT_WEAPON_CRAFTED, {
+    simulationEvents.emit(GameEventType.COMBAT_WEAPON_CRAFTED, {
       agentId,
       weapon: weaponId,
     });
@@ -548,7 +548,7 @@ export class CombatSystem {
 
     const newHealth = Math.max(0, (targetStats.health ?? 100) - damage);
 
-    simulationEvents.emit(GameEventNames.COMBAT_ENGAGED, {
+    simulationEvents.emit(GameEventType.COMBAT_ENGAGED, {
       attackerId: attacker.id,
       targetId: target.id,
       weapon: weaponId,
@@ -578,7 +578,7 @@ export class CombatSystem {
     this.applyStatChanges(targetStats, damage);
     targetStats.health = newHealth;
 
-    simulationEvents.emit(GameEventNames.COMBAT_HIT, {
+    simulationEvents.emit(GameEventType.COMBAT_HIT, {
       attackerId: attacker.id,
       targetId: target.id,
       damage,
@@ -637,7 +637,7 @@ export class CombatSystem {
 
     this.equippedWeapons.delete(target.id);
 
-    simulationEvents.emit(GameEventNames.COMBAT_KILL, {
+    simulationEvents.emit(GameEventType.COMBAT_KILL, {
       attackerId: attacker.id,
       targetId: target.id,
       weapon: weaponId,
@@ -652,7 +652,7 @@ export class CombatSystem {
     );
 
     if (target.tags?.includes("animal") || target.type === EntityType.ANIMAL) {
-      simulationEvents.emit(GameEventNames.ANIMAL_HUNTED, {
+      simulationEvents.emit(GameEventType.ANIMAL_HUNTED, {
         animalId: target.id,
         hunterId: attacker.id,
       });

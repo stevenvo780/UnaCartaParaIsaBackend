@@ -122,9 +122,9 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     canRegenerate: true,
 
     sprites: {
-      pristine: "rock_intact",
-      harvested_partial: "rock_cracked",
-      depleted: "rock_rubble",
+      pristine: RockVariant.INTACT,
+      harvested_partial: RockVariant.CRACKED,
+      depleted: RockVariant.RUBBLE,
     },
 
     spawnProbability: 0.12,
@@ -165,8 +165,8 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     canRegenerate: true,
 
     sprites: {
-      pristine: "trash_pile",
-      depleted: "trash_pile_cleared",
+      pristine: TrashVariant.FULL,
+      depleted: TrashVariant.CLEARED,
     },
 
     spawnProbability: 0.08,
@@ -201,8 +201,8 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     canRegenerate: true,
 
     sprites: {
-      pristine: "water_source",
-      depleted: "water_source_dry",
+      pristine: WaterSourceVariant.FULL,
+      depleted: WaterSourceVariant.DRY,
     },
 
     spawnProbability: 0.4,
@@ -242,8 +242,8 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     canRegenerate: true,
 
     sprites: {
-      pristine: "berry_bush_full",
-      depleted: "berry_bush_empty",
+      pristine: BerryBushVariant.FULL,
+      depleted: BerryBushVariant.EMPTY,
     },
 
     spawnProbability: 0.03,
@@ -278,8 +278,8 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     canRegenerate: true,
 
     sprites: {
-      pristine: "mushrooms",
-      depleted: "mushrooms_picked",
+      pristine: MushroomVariant.FULL,
+      depleted: MushroomVariant.PICKED,
     },
 
     spawnProbability: 0.05,
@@ -319,8 +319,8 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     canRegenerate: true,
 
     sprites: {
-      pristine: "wheat_full",
-      depleted: "wheat_harvested",
+      pristine: WheatVariant.FULL,
+      depleted: WheatVariant.HARVESTED,
     },
 
     spawnProbability: 0.1,

@@ -1,9 +1,12 @@
-import { GameEventNames, simulationEvents } from "../events";
+import {
+  simulationEvents,
+  ALL_GAME_EVENT_TYPES,
+  GameEventType,
+} from "../events";
 import type { SimulationEventPayload } from "../../../../shared/types/commands/SimulationCommand";
 import { logger } from "../../../../infrastructure/utils/logger";
 import type { SimulationRunner } from "../SimulationRunner";
 import { ResourceType } from "../../../../shared/constants/ResourceEnums";
-import { GameEventType } from "../../../../shared/constants/EventEnums";
 import { RoleType } from "../../../../shared/constants/RoleEnums";
 import { TaskType } from "../../../../shared/constants/TaskEnums";
 import { LifeStage } from "../../../../shared/constants/AgentEnums";
@@ -42,7 +45,7 @@ export class EventRegistry {
 
   public setupEventListeners(): void {
     this.registerEvent(
-      GameEventNames.AGENT_ACTION_COMPLETE,
+      GameEventType.AGENT_ACTION_COMPLETE,
       (data: { agentId: string; action: string }) => {
         if (data.action === ActionType.BIRTH) {
           const agent = this.runner.entityIndex.getAgent(data.agentId);
@@ -58,7 +61,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.AGENT_BIRTH,
+      GameEventType.AGENT_BIRTH,
       (data: { entityId: string; parentIds: [string, string] | null }) => {
         // AppearanceGenerationSystem removed - appearance generation disabled
         // Previously generated appearance based on parent genetics
@@ -69,14 +72,14 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.COMBAT_KILL,
+      GameEventType.COMBAT_KILL,
       (data: { targetId: string }) => {
         this.runner._genealogySystem.recordDeath(data.targetId);
       },
     );
 
     this.registerEvent(
-      GameEventNames.AGENT_DEATH,
+      GameEventType.AGENT_DEATH,
       (data: { entityId: string; reason?: string }) => {
         this.runner.entityIndex.markEntityDead(data.entityId);
         this.runner._genealogySystem.recordDeath(data.entityId);
@@ -85,7 +88,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.INVENTORY_DROPPED,
+      GameEventType.INVENTORY_DROPPED,
       (data: {
         agentId: string;
         position?: { x: number; y: number };
@@ -123,7 +126,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.AGENT_RESPAWNED,
+      GameEventType.AGENT_RESPAWNED,
       (data: { agentId: string; timestamp: number }) => {
         this.runner.aiSystem.setAgentOffDuty(data.agentId, false);
 
@@ -141,7 +144,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.ANIMAL_HUNTED,
+      GameEventType.ANIMAL_HUNTED,
       (data: { animalId: string; hunterId: string; foodValue?: number }) => {
         if (data.hunterId && data.foodValue) {
           const inventory = this.runner.inventorySystem.getAgentInventory(
@@ -160,7 +163,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.RESOURCE_GATHERED,
+      GameEventType.RESOURCE_GATHERED,
       (data: {
         resourceId: string;
         resourceType: string;
@@ -182,7 +185,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.BUILDING_CONSTRUCTED,
+      GameEventType.BUILDING_CONSTRUCTED,
       (data: {
         jobId: string;
         zoneId: string;
@@ -209,7 +212,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.DIALOGUE_CARD_RESPONDED,
+      GameEventType.DIALOGUE_CARD_RESPONDED,
       (data: { cardId: string; choiceId: string }) => {
         const dialogueState = this.runner.state.dialogueState;
         if (dialogueState?.active) {
@@ -229,7 +232,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.NEED_CRITICAL,
+      GameEventType.NEED_CRITICAL,
       (data: { agentId: string; need: string; value: number }) => {
         const aiState = this.runner.aiSystem.getAIState(data.agentId);
         if (aiState && !aiState.currentGoal) {
@@ -239,7 +242,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.PATHFINDING_FAILED,
+      GameEventType.PATHFINDING_FAILED,
       (data: {
         entityId: string;
         targetZoneId: string;
@@ -254,7 +257,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.TASK_STALLED,
+      GameEventType.TASK_STALLED,
       (data: {
         taskId: string;
         taskType: string;
@@ -275,14 +278,14 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.MOVEMENT_ARRIVED_AT_ZONE,
+      GameEventType.MOVEMENT_ARRIVED_AT_ZONE,
       (data: { entityId: string; zoneId: string }) => {
         this.runner.aiSystem.notifyEntityArrived(data.entityId, data.zoneId);
       },
     );
 
     this.registerEvent(
-      GameEventNames.CRISIS_IMMEDIATE_WARNING,
+      GameEventType.CRISIS_IMMEDIATE_WARNING,
       (_data: {
         prediction: {
           type: string;
@@ -299,7 +302,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.CRISIS_PREDICTION,
+      GameEventType.CRISIS_PREDICTION,
       (data: {
         prediction: {
           type: string;
@@ -335,7 +338,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.BUILDING_CONSTRUCTION_STARTED,
+      GameEventType.BUILDING_CONSTRUCTION_STARTED,
       (data: {
         jobId: string;
         zoneId: string;
@@ -363,7 +366,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.AGENT_AGED,
+      GameEventType.AGENT_AGED,
       (data: {
         entityId: string;
         newAge: number;
@@ -410,7 +413,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.TIME_CHANGED,
+      GameEventType.TIME_CHANGED,
       (data: {
         time: {
           phase: string;
@@ -435,7 +438,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.TASK_COMPLETED,
+      GameEventType.TASK_COMPLETED,
       (data: {
         taskId: string;
         completedBy: string[];
@@ -466,7 +469,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.KNOWLEDGE_LEARNED,
+      GameEventType.KNOWLEDGE_LEARNED,
       (data: {
         agentId: string;
         knowledgeId: string;
@@ -485,7 +488,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.ROLE_ASSIGNED,
+      GameEventType.ROLE_ASSIGNED,
       (data: {
         agentId: string;
         roleType: string;
@@ -506,7 +509,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.NORM_SANCTION_APPLIED,
+      GameEventType.NORM_SANCTION_APPLIED,
       (data: {
         agentId: string;
         violationType: string;
@@ -524,7 +527,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.CONFLICT_TRUCE_ACCEPTED,
+      GameEventType.CONFLICT_TRUCE_ACCEPTED,
       (data: {
         cardId: string;
         attackerId: string;
@@ -546,7 +549,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.CONFLICT_TRUCE_REJECTED,
+      GameEventType.CONFLICT_TRUCE_REJECTED,
       (data: {
         cardId: string;
         attackerId: string;
@@ -562,7 +565,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.COMBAT_HIT,
+      GameEventType.COMBAT_HIT,
       (data: {
         attackerId: string;
         targetId: string;
@@ -580,7 +583,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.TASK_CREATED,
+      GameEventType.TASK_CREATED,
       (data: {
         taskId: string;
         taskType: string;
@@ -603,7 +606,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.TASK_PROGRESS,
+      GameEventType.TASK_PROGRESS,
       (data: {
         taskId: string;
         agentId: string;
@@ -626,7 +629,7 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventNames.BUILDING_REPAIRED,
+      GameEventType.BUILDING_REPAIRED,
       (data: {
         zoneId: string;
         buildingType: string;
@@ -651,7 +654,7 @@ export class EventRegistry {
       });
     };
 
-    Object.values(GameEventNames).forEach((eventName) => {
+    ALL_GAME_EVENT_TYPES.forEach((eventName) => {
       simulationEvents.on(eventName, (payload: unknown) => {
         if (this.eventCaptureListener) {
           this.eventCaptureListener(eventName, payload);

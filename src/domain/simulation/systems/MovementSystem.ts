@@ -4,7 +4,7 @@ import { performanceMonitor } from "../core/PerformanceMonitor";
 import EasyStar from "easystarjs";
 import { GameState, MapElement } from "../../types/game-types";
 import { logger } from "../../../infrastructure/utils/logger";
-import { GameEventNames, simulationEvents } from "../core/events";
+import { GameEventType, simulationEvents } from "../core/events";
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
@@ -423,13 +423,13 @@ export class MovementSystem extends EventEmitter {
     state.currentPath = [];
 
     if (arrivedZone) {
-      simulationEvents.emit(GameEventNames.MOVEMENT_ARRIVED_AT_ZONE, {
+      simulationEvents.emit(GameEventType.MOVEMENT_ARRIVED_AT_ZONE, {
         entityId: state.entityId,
         zoneId: arrivedZone,
       });
     }
 
-    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+    simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
       agentId: state.entityId,
       actionType: ActionType.MOVE,
       success: true,
@@ -437,7 +437,7 @@ export class MovementSystem extends EventEmitter {
       targetZone: arrivedZone,
     });
 
-    simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_COMPLETED, {
+    simulationEvents.emit(GameEventType.MOVEMENT_ACTIVITY_COMPLETED, {
       entityId: state.entityId,
       activity: "moving",
       position: { ...state.currentPosition },
@@ -450,7 +450,7 @@ export class MovementSystem extends EventEmitter {
     state.activityStartTime = undefined;
     state.activityDuration = undefined;
 
-    simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_COMPLETED, {
+    simulationEvents.emit(GameEventType.MOVEMENT_ACTIVITY_COMPLETED, {
       entityId: state.entityId,
       activity: previousActivity,
       position: state.currentPosition,
@@ -506,14 +506,14 @@ export class MovementSystem extends EventEmitter {
             `Pathfinding failed for ${entityId} to zone ${targetZoneId}`,
           );
 
-          simulationEvents.emit(GameEventNames.PATHFINDING_FAILED, {
+          simulationEvents.emit(GameEventType.PATHFINDING_FAILED, {
             entityId,
             targetZoneId,
             reason: "no_path_found",
             timestamp: Date.now(),
           });
 
-          simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+          simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
             agentId: entityId,
             actionType: ActionType.MOVE,
             success: false,
@@ -539,7 +539,7 @@ export class MovementSystem extends EventEmitter {
         state.estimatedArrivalTime = now + travelTime;
         state.currentActivity = ActivityType.MOVING;
 
-        simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
+        simulationEvents.emit(GameEventType.MOVEMENT_ACTIVITY_STARTED, {
           entityId,
           activityType: ActivityType.MOVING,
           destination: state.targetPosition,
@@ -584,7 +584,7 @@ export class MovementSystem extends EventEmitter {
 
     this.batchProcessor.updateEntityTarget(entityId, tx, ty);
 
-    simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
+    simulationEvents.emit(GameEventType.MOVEMENT_ACTIVITY_STARTED, {
       entityId,
       activityType: ActivityType.MOVING,
       destination: { x: tx, y: ty },

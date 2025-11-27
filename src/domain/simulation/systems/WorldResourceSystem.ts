@@ -1,5 +1,5 @@
 import { logger } from "@/infrastructure/utils/logger";
-import { GameEventNames, simulationEvents } from "../core/events";
+import { GameEventType, simulationEvents } from "../core/events";
 import { getResourceConfig } from "../../../infrastructure/services/world/config/WorldResourceConfigs";
 import type {
   WorldResourceInstance,
@@ -29,7 +29,7 @@ export class WorldResourceSystem {
     }
 
     simulationEvents.on(
-      GameEventNames.RESOURCE_GATHERED,
+      GameEventType.RESOURCE_GATHERED,
       this.handleResourceGathered.bind(this),
     );
   }
@@ -69,7 +69,7 @@ export class WorldResourceSystem {
         resource.regenerationStartTime = undefined;
         this.regenerationTimers.delete(resourceId);
 
-        simulationEvents.emit(GameEventNames.RESOURCE_STATE_CHANGE, {
+        simulationEvents.emit(GameEventType.RESOURCE_STATE_CHANGE, {
           resourceId,
           newState: ResourceState.PRISTINE,
         });
@@ -162,7 +162,7 @@ export class WorldResourceSystem {
 
     this.state.worldResources![id] = resource;
 
-    simulationEvents.emit(GameEventNames.RESOURCE_SPAWNED, { resource });
+    simulationEvents.emit(GameEventType.RESOURCE_SPAWNED, { resource });
 
     return resource;
   }
@@ -321,7 +321,7 @@ export class WorldResourceSystem {
 
     if (newState !== resource.state) {
       resource.state = newState;
-      simulationEvents.emit(GameEventNames.RESOURCE_STATE_CHANGE, {
+      simulationEvents.emit(GameEventType.RESOURCE_STATE_CHANGE, {
         resourceId: resource.id,
         newState,
       });
@@ -392,28 +392,28 @@ export class WorldResourceSystem {
         this.regenerationTimers.set(resourceId, Date.now());
       } else {
         delete this.state.worldResources![resourceId];
-        simulationEvents.emit(GameEventNames.RESOURCE_DEPLETED, {
+        simulationEvents.emit(GameEventType.RESOURCE_DEPLETED, {
           resourceId,
           resourceType: resource.type,
           position: resource.position,
         });
       }
 
-      simulationEvents.emit(GameEventNames.RESOURCE_STATE_CHANGE, {
+      simulationEvents.emit(GameEventType.RESOURCE_STATE_CHANGE, {
         resourceId,
         newState: ResourceState.DEPLETED,
         harvesterId,
       });
     } else if (resource.harvestCount >= maxHarvests * 0.7) {
       resource.state = ResourceState.HARVESTED_PARTIAL;
-      simulationEvents.emit(GameEventNames.RESOURCE_STATE_CHANGE, {
+      simulationEvents.emit(GameEventType.RESOURCE_STATE_CHANGE, {
         resourceId,
         newState: ResourceState.HARVESTED_PARTIAL,
         harvesterId,
       });
     }
 
-    simulationEvents.emit(GameEventNames.RESOURCE_GATHERED, {
+    simulationEvents.emit(GameEventType.RESOURCE_GATHERED, {
       resourceId,
       resourceType: resource.type,
       harvesterId,
@@ -458,7 +458,7 @@ export class WorldResourceSystem {
           if (amount > 0) {
             items.push({ type: secondary.resourceType, amount });
 
-            simulationEvents.emit(GameEventNames.RESOURCE_GATHERED, {
+            simulationEvents.emit(GameEventType.RESOURCE_GATHERED, {
               resourceId,
               resourceType: secondary.resourceType,
               harvesterId,
@@ -503,7 +503,7 @@ export class WorldResourceSystem {
       delete this.state.worldResources[id];
       this.regenerationTimers.delete(id);
 
-      simulationEvents.emit(GameEventNames.RESOURCE_DEPLETED, {
+      simulationEvents.emit(GameEventType.RESOURCE_DEPLETED, {
         resourceId: id,
         resourceType: resource.type,
         position: resource.position,

@@ -10,7 +10,7 @@ import { getAnimalConfig } from "../../../infrastructure/services/world/config/A
 import { AnimalNeeds } from "./animals/AnimalNeeds";
 import { AnimalBehavior } from "./animals/AnimalBehavior";
 import { AnimalSpawning } from "./animals/AnimalSpawning";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import type { WorldResourceSystem } from "./WorldResourceSystem";
 import type { TerrainSystem } from "./TerrainSystem";
 import { AnimalBatchProcessor } from "./AnimalBatchProcessor";
@@ -133,7 +133,7 @@ export class AnimalSystem {
 
   private setupEventListeners(): void {
     simulationEvents.on(
-      GameEventNames.ANIMAL_HUNTED,
+      GameEventType.ANIMAL_HUNTED,
       (data: { animalId: string; hunterId: string }) => {
         this.handleAnimalHunted(data.animalId, data.hunterId);
       },
@@ -881,7 +881,7 @@ export class AnimalSystem {
 
     this.addAnimal(animal);
 
-    simulationEvents.emit(GameEventNames.ANIMAL_SPAWNED, {
+    simulationEvents.emit(GameEventType.ANIMAL_SPAWNED, {
       animalId: animal.id,
       type: animal.type,
       position: animal.position,
@@ -940,7 +940,7 @@ export class AnimalSystem {
 
     this.animalRegistry.markDead(animalId);
 
-    simulationEvents.emit(GameEventNames.ANIMAL_DIED, {
+    simulationEvents.emit(GameEventType.ANIMAL_DIED, {
       animalId,
       type: animal.type,
       position: animal.position,

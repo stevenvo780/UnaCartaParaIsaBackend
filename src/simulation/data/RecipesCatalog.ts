@@ -9,6 +9,7 @@
 
 import type { CraftingRecipe } from "../../domain/types/simulation/crafting";
 import { ItemId } from "../../shared/constants/ItemEnums";
+import { RecipeId } from "../../shared/constants/RecipeEnums";
 import {
   WorkstationType,
   ToolType,
@@ -21,7 +22,7 @@ import {
 export class RecipesCatalog {
   private static readonly recipes: CraftingRecipe[] = [
     {
-      id: "wood_to_plank",
+      id: RecipeId.WOOD_TO_PLANK,
       name: "Madera a Tablón",
       description: "Procesar troncos en tablones",
       output: { itemId: ItemId.PLANK, quantity: 4 },
@@ -31,7 +32,7 @@ export class RecipesCatalog {
       successRate: 1.0,
     },
     {
-      id: "smelt_iron",
+      id: RecipeId.SMELT_IRON,
       name: "Fundir Hierro",
       description: "Fundir mineral de hierro en lingotes",
       output: { itemId: ItemId.IRON_INGOT, quantity: 1 },
@@ -47,7 +48,7 @@ export class RecipesCatalog {
       successRate: 0.95,
     },
     {
-      id: "smelt_copper",
+      id: RecipeId.SMELT_COPPER,
       name: "Fundir Cobre",
       description: "Fundir mineral de cobre en lingotes",
       output: { itemId: ItemId.COPPER_INGOT, quantity: 1 },
@@ -63,7 +64,7 @@ export class RecipesCatalog {
       successRate: 0.95,
     },
     {
-      id: "tan_leather",
+      id: RecipeId.TAN_LEATHER,
       name: "Curtir Cuero",
       description: "Procesar piel en cuero",
       output: { itemId: ItemId.LEATHER, quantity: 1 },
@@ -76,7 +77,7 @@ export class RecipesCatalog {
       successRate: 0.9,
     },
     {
-      id: "weave_cloth",
+      id: RecipeId.WEAVE_CLOTH,
       name: "Tejer Tela",
       description: "Tejer fibras en tela",
       output: { itemId: ItemId.CLOTH, quantity: 1 },
@@ -89,7 +90,7 @@ export class RecipesCatalog {
       successRate: 0.92,
     },
     {
-      id: "make_rope",
+      id: RecipeId.MAKE_ROPE,
       name: "Hacer Cuerda",
       description: "Trenzar fibras en cuerda",
       output: { itemId: ItemId.ROPE, quantity: 1 },
@@ -99,7 +100,7 @@ export class RecipesCatalog {
       successRate: 0.95,
     },
     {
-      id: "fire_brick",
+      id: RecipeId.FIRE_BRICK,
       name: "Cocer Ladrillos",
       description: "Cocinar arcilla para hacer ladrillos",
       output: { itemId: ItemId.BRICK, quantity: 4 },
@@ -116,7 +117,7 @@ export class RecipesCatalog {
     },
 
     {
-      id: "grind_wheat",
+      id: RecipeId.GRIND_WHEAT,
       name: "Moler Trigo",
       description: "Moler trigo en harina",
       output: { itemId: ItemId.FLOUR, quantity: 2 },
@@ -129,7 +130,7 @@ export class RecipesCatalog {
       successRate: 1.0,
     },
     {
-      id: "bake_bread",
+      id: RecipeId.BAKE_BREAD,
       name: "Hornear Pan",
       description: "Hornear pan con harina",
       output: { itemId: ItemId.BREAD, quantity: 2 },
@@ -145,7 +146,7 @@ export class RecipesCatalog {
       successRate: 0.9,
     },
     {
-      id: "cook_meat",
+      id: RecipeId.COOK_MEAT,
       name: "Cocinar Carne",
       description: "Cocinar carne cruda",
       output: { itemId: ItemId.COOKED_MEAT, quantity: 1 },
@@ -158,7 +159,7 @@ export class RecipesCatalog {
       successRate: 0.95,
     },
     {
-      id: "cook_fish",
+      id: RecipeId.COOK_FISH,
       name: "Cocinar Pescado",
       description: "Cocinar pescado",
       output: { itemId: ItemId.COOKED_FISH, quantity: 1 },
@@ -171,7 +172,7 @@ export class RecipesCatalog {
       successRate: 0.95,
     },
     {
-      id: "make_stew",
+      id: RecipeId.MAKE_STEW,
       name: "Hacer Estofado",
       description: "Combinar ingredientes en estofado",
       output: { itemId: ItemId.MEAT_STEW, quantity: 1 },
@@ -189,7 +190,7 @@ export class RecipesCatalog {
     },
 
     {
-      id: "stone_axe",
+      id: RecipeId.STONE_AXE,
       name: "Hacer Hacha de Piedra",
       description: "Fabricar hacha básica",
       output: { itemId: ItemId.STONE_AXE, quantity: 1 },
@@ -203,7 +204,7 @@ export class RecipesCatalog {
       successRate: 0.9,
     },
     {
-      id: "stone_pickaxe",
+      id: RecipeId.STONE_PICKAXE,
       name: "Hacer Pico de Piedra",
       description: "Fabricar pico básico",
       output: { itemId: ItemId.STONE_PICKAXE, quantity: 1 },
@@ -217,7 +218,7 @@ export class RecipesCatalog {
       successRate: 0.9,
     },
     {
-      id: "iron_axe",
+      id: RecipeId.IRON_AXE,
       name: "Forjar Hacha de Hierro",
       description: "Forjar hacha avanzada",
       output: { itemId: ItemId.IRON_AXE, quantity: 1 },
@@ -235,7 +236,7 @@ export class RecipesCatalog {
       successRate: 0.8,
     },
     {
-      id: "iron_pickaxe",
+      id: RecipeId.IRON_PICKAXE,
       name: "Forjar Pico de Hierro",
       description: "Forjar pico avanzado",
       output: { itemId: ItemId.IRON_PICKAXE, quantity: 1 },
@@ -254,7 +255,7 @@ export class RecipesCatalog {
     },
 
     {
-      id: "wooden_club",
+      id: RecipeId.WOODEN_CLUB,
       name: "Hacer Garrote",
       description: "Fabricar arma básica",
       output: { itemId: ItemId.WOODEN_CLUB, quantity: 1 },
@@ -267,7 +268,7 @@ export class RecipesCatalog {
       successRate: 0.95,
     },
     {
-      id: "stone_dagger",
+      id: RecipeId.STONE_DAGGER,
       name: "Hacer Daga de Piedra",
       description: "Fabricar daga básica",
       output: { itemId: ItemId.STONE_DAGGER, quantity: 1 },
@@ -281,7 +282,7 @@ export class RecipesCatalog {
       successRate: 0.9,
     },
     {
-      id: "iron_sword",
+      id: RecipeId.IRON_SWORD,
       name: "Forjar Espada de Hierro",
       description: "Forjar espada de calidad",
       output: { itemId: ItemId.IRON_SWORD, quantity: 1 },
@@ -299,7 +300,7 @@ export class RecipesCatalog {
       successRate: 0.75,
     },
     {
-      id: "bow",
+      id: RecipeId.BOW,
       name: "Hacer Arco",
       description: "Fabricar arco de madera",
       output: { itemId: ItemId.BOW, quantity: 1 },
@@ -317,7 +318,7 @@ export class RecipesCatalog {
     },
 
     {
-      id: "cloth_shirt",
+      id: RecipeId.CLOTH_SHIRT,
       name: "Coser Camisa",
       description: "Coser ropa básica",
       output: { itemId: ItemId.CLOTH_SHIRT, quantity: 1 },
@@ -333,7 +334,7 @@ export class RecipesCatalog {
       successRate: 0.9,
     },
     {
-      id: "leather_vest",
+      id: RecipeId.LEATHER_VEST,
       name: "Hacer Chaleco de Cuero",
       description: "Fabricar armadura ligera",
       output: { itemId: ItemId.LEATHER_VEST, quantity: 1 },

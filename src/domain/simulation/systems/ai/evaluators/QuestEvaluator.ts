@@ -1,6 +1,9 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { Quest } from "../../../../types/simulation/quests";
-import { GoalType } from "../../../../../shared/constants/AIEnums";
+import {
+  GoalType,
+  ActionType,
+} from "../../../../../shared/constants/AIEnums";
 import {
   QuestObjectiveType,
   QuestStatus,
@@ -73,7 +76,7 @@ export function evaluateQuestGoals(
         priority: 0.5,
         data: {
           questId: quest.id,
-          action: "start_quest",
+          action: ActionType.START_QUEST,
         },
         createdAt: now,
         expiresAt: now + 10000,

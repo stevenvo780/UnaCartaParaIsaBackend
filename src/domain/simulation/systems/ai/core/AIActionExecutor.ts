@@ -10,7 +10,7 @@ import type { EnhancedCraftingSystem } from "../../EnhancedCraftingSystem";
 import type { WorldResourceSystem } from "../../WorldResourceSystem";
 import type { TaskSystem } from "../../TaskSystem";
 import type { MovementSystem } from "../../MovementSystem";
-import { GameEventNames, simulationEvents } from "../../../core/events";
+import { GameEventType, simulationEvents } from "../../../core/events";
 import { ActionType } from "../../../../../shared/constants/AIEnums";
 import { NeedType } from "../../../../../shared/constants/AIEnums";
 import {
@@ -196,7 +196,7 @@ export class AIActionExecutor {
         1.0,
       );
 
-      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
         agentId: action.agentId,
         actionType: ActionType.WORK,
         success: true,
@@ -265,7 +265,7 @@ export class AIActionExecutor {
       }
     }
 
-    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+    simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
       agentId: action.agentId,
       actionType: ActionType.HARVEST,
       success: result.success,
@@ -277,7 +277,7 @@ export class AIActionExecutor {
     if (this.deps.needsSystem) {
       this.deps.needsSystem.satisfyNeed(action.agentId, NeedType.ENERGY, 5);
     }
-    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+    simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
       agentId: action.agentId,
       actionType: ActionType.IDLE,
       success: true,
@@ -287,7 +287,7 @@ export class AIActionExecutor {
   private executeAttack(action: AgentAction): void {
     const targetId = action.targetId;
     if (!targetId) {
-      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
         agentId: action.agentId,
         actionType: ActionType.ATTACK,
         success: false,
@@ -303,7 +303,7 @@ export class AIActionExecutor {
     }
 
     if (!targetAnimal || targetAnimal.isDead) {
-      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
         agentId: action.agentId,
         actionType: ActionType.ATTACK,
         success: false,
@@ -338,14 +338,14 @@ export class AIActionExecutor {
       );
     }
 
-    simulationEvents.emit(GameEventNames.ANIMAL_HUNTED, {
+    simulationEvents.emit(GameEventType.ANIMAL_HUNTED, {
       animalId: targetId,
       hunterId: action.agentId,
       foodValue,
       animalType: targetAnimal.type,
     });
 
-    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+    simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
       agentId: action.agentId,
       actionType: ActionType.ATTACK,
       success: true,
@@ -363,7 +363,7 @@ export class AIActionExecutor {
         this.deps.needsSystem.satisfyNeed(action.agentId, NeedType.SOCIAL, 15);
         this.deps.needsSystem.satisfyNeed(action.agentId, NeedType.FUN, 5);
       }
-      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
         agentId: action.agentId,
         actionType: ActionType.SOCIALIZE,
         success: true,
@@ -383,7 +383,7 @@ export class AIActionExecutor {
       this.deps.needsSystem.satisfyNeed(action.agentId, NeedType.FUN, funBoost);
     }
 
-    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+    simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
       agentId: action.agentId,
       actionType: ActionType.SOCIALIZE,
       success: true,
@@ -395,7 +395,7 @@ export class AIActionExecutor {
     if (this.deps.needsSystem) {
       this.deps.needsSystem.satisfyNeed(action.agentId, NeedType.HUNGER, 30);
     }
-    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+    simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
       agentId: action.agentId,
       actionType: ActionType.EAT,
       success: true,
@@ -406,7 +406,7 @@ export class AIActionExecutor {
     if (this.deps.needsSystem) {
       this.deps.needsSystem.satisfyNeed(action.agentId, NeedType.THIRST, 30);
     }
-    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+    simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
       agentId: action.agentId,
       actionType: ActionType.DRINK,
       success: true,
@@ -417,7 +417,7 @@ export class AIActionExecutor {
     if (this.deps.needsSystem) {
       this.deps.needsSystem.satisfyNeed(action.agentId, NeedType.ENERGY, 50);
     }
-    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+    simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
       agentId: action.agentId,
       actionType: ActionType.SLEEP,
       success: true,
@@ -430,14 +430,14 @@ export class AIActionExecutor {
       action.data?.itemType === ItemCategory.WEAPON
     ) {
       const weaponId = this.deps.craftingSystem.craftBestWeapon(action.agentId);
-      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
         agentId: action.agentId,
         actionType: ActionType.CRAFT,
         success: !!weaponId,
         data: { weaponId },
       });
     } else {
-      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
         agentId: action.agentId,
         actionType: ActionType.CRAFT,
         success: false,
@@ -449,7 +449,7 @@ export class AIActionExecutor {
     if (action.targetZoneId) {
       this.deps.tryDepositResources(action.agentId, action.targetZoneId);
     }
-    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+    simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
       agentId: action.agentId,
       actionType: ActionType.DEPOSIT,
       success: true,
@@ -471,7 +471,7 @@ export class AIActionExecutor {
           10,
           1.0,
         );
-        simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+        simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
           agentId: action.agentId,
           actionType: ActionType.BUILD,
           success: true,
@@ -484,7 +484,7 @@ export class AIActionExecutor {
         return;
       }
     }
-    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+    simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
       agentId: action.agentId,
       actionType: ActionType.BUILD,
       success: false,

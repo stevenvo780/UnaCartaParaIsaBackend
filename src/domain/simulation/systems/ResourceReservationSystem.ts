@@ -1,7 +1,7 @@
 import type { GameState } from "../../types/game-types";
 import type { ResourceCost } from "../../types/simulation/economy";
 import { InventorySystem } from "./InventorySystem";
-import { GameEventNames, simulationEvents } from "../core/events";
+import { GameEventType, simulationEvents } from "../core/events";
 import { logger } from "../../../infrastructure/utils/logger";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
 import { NeedType } from "../../../shared/constants/AIEnums";
@@ -33,7 +33,7 @@ export class ResourceReservationSystem {
 
   private setupEventListeners(): void {
     simulationEvents.on(
-      GameEventNames.NEED_SATISFIED,
+      GameEventType.NEED_SATISFIED,
       (data: { agentId: string; need: string; value: number }) => {
         if (data.need === NeedType.HUNGER || data.need === NeedType.THIRST) {
           this.cleanupStaleReservations(2 * 60 * 1000);
@@ -272,7 +272,7 @@ export class ResourceReservationSystem {
   }
 
   private broadcastUpdate(): void {
-    simulationEvents.emit(GameEventNames.ECONOMY_RESERVATIONS_UPDATE, {
+    simulationEvents.emit(GameEventType.ECONOMY_RESERVATIONS_UPDATE, {
       reservations: Array.from(this.reservations.values()),
       totalReserved: this.getTotalReserved(),
       available: this.getAvailableResources(false),

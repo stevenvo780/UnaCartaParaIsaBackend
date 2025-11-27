@@ -1,6 +1,9 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { GameState } from "../../../../types/game-types";
-import { GoalType } from "../../../../../shared/constants/AIEnums";
+import {
+  GoalType,
+  ActionType,
+} from "../../../../../shared/constants/AIEnums";
 import { BuildingType } from "../../../../../shared/constants/BuildingEnums";
 
 export interface BuildingContributionDependencies {
@@ -93,7 +96,7 @@ export function evaluateBuildingContributionGoals(
     priority: 0.5,
     targetZoneId: best.zone.id,
     data: {
-      action: "contribute_resources",
+      action: ActionType.CONTRIBUTE_RESOURCES,
       buildingType:
         best.zone.metadata &&
         typeof best.zone.metadata === "object" &&

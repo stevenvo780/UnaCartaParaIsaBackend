@@ -54,6 +54,8 @@ export enum ActionType {
   IDLE = "idle",
   BIRTH = "birth",
   DEATH = "death",
+  CONTRIBUTE_RESOURCES = "contribute_resources",
+  START_QUEST = "start_quest",
 }
 
 /**

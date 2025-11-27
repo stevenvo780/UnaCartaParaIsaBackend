@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 import { GameState, SimulationTerrainTile } from "../../types/game-types";
 import { TerrainTile } from "../../world/generation/types";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { logger } from "@/infrastructure/utils/logger";
 import { SystemProperty } from "../../../shared/constants/SystemEnums";
 
@@ -65,7 +65,7 @@ export class TerrainSystem {
         }
 
         if (modified) {
-          simulationEvents.emit(GameEventNames.TERRAIN_MODIFIED, {
+          simulationEvents.emit(GameEventType.TERRAIN_MODIFIED, {
             x,
             y,
             updates,

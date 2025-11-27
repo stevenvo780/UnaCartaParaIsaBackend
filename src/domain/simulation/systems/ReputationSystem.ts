@@ -7,7 +7,7 @@ import {
   ReputationChange,
   SerializedReputationData,
 } from "../../types/simulation/reputation";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { logger } from "../../../infrastructure/utils/logger";
 
 const REPUTATION_CONFIG = {
@@ -135,7 +135,7 @@ export class ReputationSystem {
       }
       this.reputationHistory.set(agentId, history);
 
-      simulationEvents.emit(GameEventNames.REPUTATION_UPDATED, {
+      simulationEvents.emit(GameEventType.REPUTATION_UPDATED, {
         agentId,
         oldValue,
         newValue: r.value,
@@ -278,7 +278,7 @@ export class ReputationSystem {
     const pb = evt.payoffs[b] || 0;
     const scale = REPUTATION_CONFIG.impacts.interactionGame.scale;
 
-    simulationEvents.emit(GameEventNames.INTERACTION_GAME_PLAYED, {
+    simulationEvents.emit(GameEventType.INTERACTION_GAME_PLAYED, {
       game: evt.game,
       agentA: a,
       agentB: b,

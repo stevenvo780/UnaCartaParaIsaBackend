@@ -38,16 +38,14 @@ export type KnowledgeEdgeTypeValue = `${KnowledgeEdgeType}`;
 /**
  * Array of all knowledge node types for iteration.
  */
-export const ALL_KNOWLEDGE_NODE_TYPES: readonly KnowledgeNodeType[] = Object.values(
-  KnowledgeNodeType,
-) as KnowledgeNodeType[];
+export const ALL_KNOWLEDGE_NODE_TYPES: readonly KnowledgeNodeType[] =
+  Object.values(KnowledgeNodeType) as KnowledgeNodeType[];
 
 /**
  * Array of all knowledge edge types for iteration.
  */
-export const ALL_KNOWLEDGE_EDGE_TYPES: readonly KnowledgeEdgeType[] = Object.values(
-  KnowledgeEdgeType,
-) as KnowledgeEdgeType[];
+export const ALL_KNOWLEDGE_EDGE_TYPES: readonly KnowledgeEdgeType[] =
+  Object.values(KnowledgeEdgeType) as KnowledgeEdgeType[];
 
 /**
  * Type guard to check if a string is a valid KnowledgeNodeType.

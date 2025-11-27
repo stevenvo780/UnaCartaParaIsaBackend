@@ -4,7 +4,7 @@ import {
   QuestProgress,
   QuestEvent,
 } from "../../types/simulation/quests";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import {
   QuestStatus,
   QuestRewardType,
@@ -18,7 +18,6 @@ import {
   DialogueSpeaker,
   DialogueTone,
 } from "../../../shared/constants/AmbientEnums";
-import { GameEventType } from "../../../shared/constants/EventEnums";
 
 const QUEST_CATALOG: Quest[] = [
   {
@@ -226,7 +225,7 @@ export class QuestSystem {
       timestamp: Date.now(),
     };
 
-    simulationEvents.emit(GameEventNames.QUEST_STARTED, {
+    simulationEvents.emit(GameEventType.QUEST_STARTED, {
       questId,
       questTitle: quest.title,
       timestamp: Date.now(),
@@ -276,7 +275,7 @@ export class QuestSystem {
       timestamp: Date.now(),
     };
 
-    simulationEvents.emit(GameEventNames.QUEST_COMPLETED, {
+    simulationEvents.emit(GameEventType.QUEST_COMPLETED, {
       questId,
       questTitle: quest.title,
       rewards: quest.rewards,
@@ -354,7 +353,7 @@ export class QuestSystem {
       timestamp: Date.now(),
     };
 
-    simulationEvents.emit(GameEventNames.QUEST_FAILED, {
+    simulationEvents.emit(GameEventType.QUEST_FAILED, {
       questId,
       questTitle: quest.title,
       reason: _reason,

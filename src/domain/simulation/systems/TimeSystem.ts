@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events";
 import type { GameState } from "../../types/game-types.js";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { injectable, inject, unmanaged } from "inversify";
 import { TYPES } from "../../../config/Types";
 import { TimeOfDayPhase } from "../../../shared/constants/TimeEnums";
@@ -158,7 +158,7 @@ export class TimeSystem extends EventEmitter {
         this.gameState.weather.duration = this.currentWeather.duration;
       }
 
-      simulationEvents.emit(GameEventNames.TIME_CHANGED, {
+      simulationEvents.emit(GameEventType.TIME_CHANGED, {
         time: { ...this.currentTime },
         timestamp: Date.now(),
       });
@@ -253,7 +253,7 @@ export class TimeSystem extends EventEmitter {
     }
 
     const effects = this.calculateEnvironmentalEffects();
-    simulationEvents.emit(GameEventNames.TIME_WEATHER_CHANGED, {
+    simulationEvents.emit(GameEventType.TIME_WEATHER_CHANGED, {
       weather: { ...this.currentWeather },
       time: { ...this.currentTime },
       effects,

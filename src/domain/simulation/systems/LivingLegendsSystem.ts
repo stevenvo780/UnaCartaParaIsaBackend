@@ -1,4 +1,4 @@
-import { GameEventNames, simulationEvents } from "../core/events";
+import { GameEventType, simulationEvents } from "../core/events";
 import type { GameState } from "../../types/game-types";
 import type {
   LegendRecord,
@@ -40,11 +40,11 @@ export class LivingLegendsSystem {
 
   private setupEventListeners(): void {
     simulationEvents.on(
-      GameEventNames.REPUTATION_UPDATED,
+      GameEventType.REPUTATION_UPDATED,
       this.handleReputationChange.bind(this),
     );
     simulationEvents.on(
-      GameEventNames.AGENT_ACTION_COMPLETE,
+      GameEventType.AGENT_ACTION_COMPLETE,
       this.recordDeed.bind(this),
     );
   }
@@ -104,7 +104,7 @@ export class LivingLegendsSystem {
           : LegendTrend.STABLE;
     legend.lastUpdate = Date.now();
 
-    simulationEvents.emit(GameEventNames.LEGEND_UPDATE, { legend });
+    simulationEvents.emit(GameEventType.LEGEND_UPDATE, { legend });
   }
 
   private recordDeed(data: {

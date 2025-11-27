@@ -2,7 +2,7 @@ import { GameState } from "../../types/game-types";
 import { TradeOffer, TradeRecord } from "../../types/simulation/trade";
 import type { InventorySystem } from "./InventorySystem";
 import type { NeedsSystem } from "./NeedsSystem";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
 import { TradeOfferStatus } from "../../../shared/constants/EconomyEnums";
 import { LifeStage } from "../../../shared/constants/AgentEnums";
@@ -52,7 +52,7 @@ export class TradeSystem {
    */
   private setupDeathListener(): void {
     simulationEvents.on(
-      GameEventNames.AGENT_DEATH,
+      GameEventType.AGENT_DEATH,
       (data: { agentId?: string; entityId?: string }) => {
         const agentId = data.agentId || data.entityId;
         if (!agentId) return;
@@ -97,7 +97,7 @@ export class TradeSystem {
 
     this.activeOffers.set(offerId, offer);
 
-    simulationEvents.emit(GameEventNames.TRADE_OFFER_CREATED, {
+    simulationEvents.emit(GameEventType.TRADE_OFFER_CREATED, {
       offerId,
       sellerId,
       offering,
@@ -135,7 +135,7 @@ export class TradeSystem {
     };
     this.tradeHistory.push(tradeRecord);
 
-    simulationEvents.emit(GameEventNames.TRADE_COMPLETED, {
+    simulationEvents.emit(GameEventType.TRADE_COMPLETED, {
       offerId: offer.id,
       sellerId: offer.sellerId,
       buyerId,
@@ -155,7 +155,7 @@ export class TradeSystem {
     offer.status = TradeOfferStatus.REJECTED;
     offer.buyerId = buyerId;
 
-    simulationEvents.emit(GameEventNames.TRADE_REJECTED, {
+    simulationEvents.emit(GameEventType.TRADE_REJECTED, {
       offerId,
       sellerId: offer.sellerId,
       buyerId,
@@ -408,7 +408,7 @@ export class TradeSystem {
         this.updateReputation(seller.id, 1);
         this.updateReputation(buyer.id, 0.5);
 
-        simulationEvents.emit(GameEventNames.TRADE_COMPLETED, {
+        simulationEvents.emit(GameEventType.TRADE_COMPLETED, {
           offerId: `need_trade_${Date.now()}`,
           sellerId: seller.id,
           buyerId: buyer.id,
@@ -476,7 +476,7 @@ export class TradeSystem {
         this.updateReputation(seller.id, 1);
         this.updateReputation(buyer.id, 0.5);
 
-        simulationEvents.emit(GameEventNames.TRADE_COMPLETED, {
+        simulationEvents.emit(GameEventType.TRADE_COMPLETED, {
           offerId: `inventory_trade_${Date.now()}`,
           sellerId: seller.id,
           buyerId: buyer.id,

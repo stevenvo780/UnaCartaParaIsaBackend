@@ -1,7 +1,7 @@
 import { BatchedEventEmitter } from "./BatchedEventEmitter";
 import {
-  GameEventNames,
   GameEventType,
+  ALL_GAME_EVENT_TYPES,
 } from "../../../shared/constants/EventEnums";
 
 /**
@@ -13,10 +13,7 @@ import {
 export const simulationEvents = new BatchedEventEmitter();
 
 /**
- * Game event name constants.
+ * Game event type enum.
  * All simulation systems emit and listen to these events for coordination.
- *
- * @deprecated Use GameEventType enum from EventEnums.ts instead
- * This is kept for backward compatibility during migration.
  */
-export { GameEventNames, GameEventType };
+export { GameEventType, ALL_GAME_EVENT_TYPES };

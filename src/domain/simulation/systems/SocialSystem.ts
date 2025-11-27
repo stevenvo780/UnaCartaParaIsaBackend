@@ -1,7 +1,7 @@
 import { GameState } from "../../types/game-types";
 import { SocialConfig } from "../../types/simulation/social";
 import { SocialGroup } from "../../../shared/types/simulation/agents";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { logger } from "../../../infrastructure/utils/logger";
 import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "node:perf_hooks";
@@ -80,7 +80,7 @@ export class SocialSystem {
 
   private setupMarriageListeners(): void {
     simulationEvents.on(
-      GameEventNames.MARRIAGE_ACCEPTED,
+      GameEventType.MARRIAGE_ACCEPTED,
       (data: {
         proposerId: string;
         targetId: string;
@@ -92,7 +92,7 @@ export class SocialSystem {
     );
 
     simulationEvents.on(
-      GameEventNames.DIVORCE_COMPLETED,
+      GameEventType.DIVORCE_COMPLETED,
       (data: {
         agentId: string;
         groupId: string;
@@ -370,7 +370,7 @@ export class SocialSystem {
 
     if (newAffinityA !== currentA || newAffinityB !== currentB) {
       this.edgesModified = true;
-      simulationEvents.emit(GameEventNames.SOCIAL_RELATION_CHANGED, {
+      simulationEvents.emit(GameEventType.SOCIAL_RELATION_CHANGED, {
         agentA: a,
         agentB: b,
         oldAffinity: currentA,
@@ -398,7 +398,7 @@ export class SocialSystem {
       `🤝 [SOCIAL] Truce imposed: ${aId} <-> ${bId} for ${durationMs}ms`,
     );
 
-    simulationEvents.emit(GameEventNames.SOCIAL_TRUCE_IMPOSED, {
+    simulationEvents.emit(GameEventType.SOCIAL_TRUCE_IMPOSED, {
       aId,
       bId,
       durationMs,
@@ -414,7 +414,7 @@ export class SocialSystem {
       if (now >= expiresAt) {
         this.truces.delete(key);
         const [a, b] = key.split("::");
-        simulationEvents.emit(GameEventNames.SOCIAL_TRUCE_EXPIRED, {
+        simulationEvents.emit(GameEventType.SOCIAL_TRUCE_EXPIRED, {
           aId: a,
           bId: b,
         });
@@ -458,7 +458,7 @@ export class SocialSystem {
 
   public registerFriendlyInteraction(aId: string, bId: string): void {
     this.addEdge(aId, bId, 0.15);
-    simulationEvents.emit(GameEventNames.SOCIAL_INTERACTION, {
+    simulationEvents.emit(GameEventType.SOCIAL_INTERACTION, {
       agentA: aId,
       agentB: bId,
       type: "friendly",
@@ -512,7 +512,7 @@ export class SocialSystem {
       `💕 [SOCIAL] Permanent bond: ${type} between ${aId} and ${bId}`,
     );
 
-    simulationEvents.emit(GameEventNames.FRIENDSHIP_FORMED, {
+    simulationEvents.emit(GameEventType.FRIENDSHIP_FORMED, {
       agentA: aId,
       agentB: bId,
       bondType: type,
@@ -613,7 +613,7 @@ export class SocialSystem {
         });
 
         if (cohesion > 0.7 && groupMembers.length >= 3) {
-          simulationEvents.emit(GameEventNames.SOCIAL_RALLY, {
+          simulationEvents.emit(GameEventType.SOCIAL_RALLY, {
             groupId: `group_${groupMembers[0]}`,
             leaderId: bestLeader.id,
             members: groupMembers,
@@ -626,7 +626,7 @@ export class SocialSystem {
 
     this.groups = newGroups;
 
-    simulationEvents.emit(GameEventNames.SOCIAL_GROUPS_UPDATE, {
+    simulationEvents.emit(GameEventType.SOCIAL_GROUPS_UPDATE, {
       groups: this.groups,
       count: this.groups.length,
     });

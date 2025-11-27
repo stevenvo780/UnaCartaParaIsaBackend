@@ -11,7 +11,7 @@ import { SocialSystem } from "./SocialSystem";
 import { RoleSystem } from "./RoleSystem";
 
 import { GenealogySystem } from "./GenealogySystem";
-import { simulationEvents, GameEventNames } from "../core/events";
+import { simulationEvents, GameEventType } from "../core/events";
 import { logger } from "../../../infrastructure/utils/logger";
 
 const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
@@ -162,7 +162,7 @@ export class EconomySystem {
       this.state.economy.activeWorkers = activeWorkers;
     }
 
-    simulationEvents.emit(GameEventNames.ECONOMY_RESERVATIONS_UPDATE, {
+    simulationEvents.emit(GameEventType.ECONOMY_RESERVATIONS_UPDATE, {
       economy: this.state.economy,
       timestamp: Date.now(),
     });
@@ -211,7 +211,7 @@ export class EconomySystem {
       if (this.addMoney(agent.id, baseSalary)) {
         totalSalaries += baseSalary;
 
-        simulationEvents.emit(GameEventNames.SALARY_PAID, {
+        simulationEvents.emit(GameEventType.SALARY_PAID, {
           agentId: agent.id,
           amount: baseSalary,
           role: role.roleType,
@@ -414,7 +414,7 @@ export class EconomySystem {
       typeof entity.stats.money === "number" ? entity.stats.money : 0;
     entity.stats.money = currentMoney + amount;
 
-    simulationEvents.emit(GameEventNames.MONEY_CHANGED, {
+    simulationEvents.emit(GameEventType.MONEY_CHANGED, {
       agentId,
       amount,
       newBalance: entity.stats.money,
@@ -450,7 +450,7 @@ export class EconomySystem {
 
     entity.stats.money = currentMoney - amount;
 
-    simulationEvents.emit(GameEventNames.MONEY_CHANGED, {
+    simulationEvents.emit(GameEventType.MONEY_CHANGED, {
       agentId,
       amount: -amount,
       newBalance: entity.stats.money,
@@ -482,7 +482,7 @@ export class EconomySystem {
       return false;
     }
 
-    simulationEvents.emit(GameEventNames.MONEY_TRANSFERRED, {
+    simulationEvents.emit(GameEventType.MONEY_TRANSFERRED, {
       fromId,
       toId,
       amount,
