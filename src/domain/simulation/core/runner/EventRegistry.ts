@@ -313,7 +313,6 @@ export class EventRegistry {
         timestamp: number;
       }) => {
         if (data.prediction.probability >= 0.6) {
-          // Use AgentRegistry for O(1) iteration
           const relevantAgents: Array<{ id: string }> = [];
           for (const agent of this.runner.agentRegistry.getAllProfiles()) {
             const role = this.runner.roleSystem.getAgentRole(agent.id);

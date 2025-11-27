@@ -531,7 +531,6 @@ export class SimulationRunner {
           totalBuildings: this.state.zones ? this.state.zones.length : 0,
         });
 
-        // Recopilar métricas de rendimiento (muy ligero, cada 5 seg)
         this.metricsCollector.tryCollect(
           this.scheduler,
           this.gpuComputeService,
@@ -882,18 +881,14 @@ export class SimulationRunner {
     for (const agent of agents) {
       if (agent.isDead) continue;
 
-      // Initialize needs if missing
       if (!this.needsSystem.getNeeds(agent.id)) {
         this.needsSystem.initializeEntityNeeds(agent.id);
         initialized++;
       }
 
-      // Initialize inventory if missing
       if (!this.inventorySystem.getAgentInventory(agent.id)) {
         this.inventorySystem.initializeAgentInventory(agent.id);
       }
-
-      // AI state is lazy-initialized in AIStateManager.getAIState()
     }
 
     if (initialized > 0) {
@@ -918,7 +913,6 @@ export class SimulationRunner {
   }): Promise<void> {
     await this.worldLoader.initializeWorldResources(worldConfig);
 
-    // Initialize ChunkLoadingSystem with world config
     this.chunkLoadingSystem.initialize({
       width: worldConfig.width,
       height: worldConfig.height,
@@ -1070,7 +1064,6 @@ export class SimulationRunner {
     }
 
     if (!agent.position) {
-      // worldSize is in pixels, use center of map
       agent.position = {
         x: (this.state.worldSize?.width ?? 2048) / 2,
         y: (this.state.worldSize?.height ?? 2048) / 2,
@@ -1100,8 +1093,18 @@ export class SimulationRunner {
     }
     return lineageId;
   }
+
+  /**
+   * Retrieves detailed information about an entity by ID.
+   *
+   * Searches across multiple entity types: agents, animals, zones (buildings),
+   * and world resources. Returns comprehensive data including needs, inventory,
+   * social connections, and AI state for agents.
+   *
+   * @param entityId - ID of the entity to retrieve
+   * @returns Entity details object or null if not found
+   */
   public getEntityDetails(entityId: string): Record<string, unknown> | null {
-    // 1. Search Agents/Entities (Standard Logic)
     const entity = this.state.entities.find((e) => e.id === entityId);
     if (entity) {
       const needs = this.needsSystem.getEntityNeeds(entityId);
@@ -1129,19 +1132,16 @@ export class SimulationRunner {
       };
     }
 
-    // 2. Search Animals
     if (this.state.animals?.animals) {
       const animal = this.state.animals.animals.find((a) => a.id === entityId);
       if (animal) {
         return {
           type: "animal",
           entity: animal,
-          // Animal object already contains 'needs' property
         };
       }
     }
 
-    // 3. Search Zones (Buildings)
     if (this.state.zones) {
       const zone = this.state.zones.find((z) => z.id === entityId);
       if (zone) {
@@ -1152,7 +1152,6 @@ export class SimulationRunner {
       }
     }
 
-    // 4. Search World Resources
     if (this.state.worldResources) {
       const resource = this.state.worldResources[entityId];
       if (resource) {

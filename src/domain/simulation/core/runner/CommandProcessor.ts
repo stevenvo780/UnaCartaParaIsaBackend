@@ -26,6 +26,8 @@ import {
   ReputationCommandType,
   TaskCommandType,
   TimeCommandType,
+  AgentCommandType,
+  AnimalCommandType,
 } from "../../../../shared/constants/CommandEnums";
 import type { SimulationRunner } from "../SimulationRunner";
 import type { GameResources } from "../../../types/game-types";
@@ -55,9 +57,6 @@ export class CommandProcessor {
   private dispatchCommand(command: SimulationCommand): void {
     switch (command.type) {
       case SimulationCommandType.SET_TIME_SCALE:
-        // Accessing private timeScale via a setter or public property would be ideal,
-        // but for now we might need to add a setter to Runner or just access it if we make it public.
-        // Assuming we will add setTimeScale to Runner.
         this.runner.setTimeScale(
           Math.max(0.1, Math.min(10, command.multiplier)),
         );
@@ -178,7 +177,7 @@ export class CommandProcessor {
     const payload = command.payload;
 
     switch (command.command) {
-      case "MOVE_TO":
+      case AgentCommandType.MOVE_TO:
         if (
           payload &&
           typeof payload.x === "number" &&
@@ -196,7 +195,7 @@ export class CommandProcessor {
           });
         }
         break;
-      case "STOP_MOVEMENT":
+      case AgentCommandType.STOP_MOVEMENT:
         this.runner.movementSystem.stopMovement(command.agentId);
         break;
       default:
@@ -207,7 +206,7 @@ export class CommandProcessor {
   private handleAnimalCommand(
     command: Extract<SimulationCommand, { type: "ANIMAL_COMMAND" }>,
   ): void {
-    if (command.command !== "SPAWN_ANIMAL") return;
+    if (command.command !== AnimalCommandType.SPAWN_ANIMAL) return;
     const payload = command.payload;
     if (
       !payload ||
@@ -592,7 +591,6 @@ export class CommandProcessor {
       return;
     }
     const materials = this.runner.state.resources.materials;
-    // Ensure materials is typed as record for index access or cast key
     const typedMaterials = materials as Record<string, number>;
 
     for (const [key, value] of Object.entries(delta)) {

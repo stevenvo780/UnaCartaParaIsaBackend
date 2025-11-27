@@ -651,7 +651,7 @@ export class GovernanceSystem {
 
     const idleAgents = entities.filter((entity) => {
       const status = entity.state;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
       return status === EntityStatus.INACTIVE || status === undefined;
     }).length;
     const workersAvailable = Math.max(0, population - idleAgents);

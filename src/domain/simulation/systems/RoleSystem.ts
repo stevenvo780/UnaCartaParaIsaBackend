@@ -539,8 +539,7 @@ export class RoleSystem extends EventEmitter {
   public reassignRole(agentId: string, newRole: RoleType): RoleAssignment {
     const agents = this.getAdultAgents();
     const agent = agents.find((a) => a.id === agentId);
-    if (!agent)
-      return { success: false, agentId, reason: "Agent not found" };
+    if (!agent) return { success: false, agentId, reason: "Agent not found" };
 
     const roleDef = ROLE_DEFINITIONS.find((r) => r.type === newRole);
     if (!roleDef) return { success: false, agentId, reason: "Invalid role" };

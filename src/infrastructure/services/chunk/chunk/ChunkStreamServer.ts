@@ -193,7 +193,6 @@ export class ChunkStreamServer {
         signal: controller.signal,
       })
       .then((result) => {
-        // Spawn animals for this chunk (lazy loading)
         try {
           const animalSystem = container.get<AnimalSystem>(TYPES.AnimalSystem);
           const CHUNK_SIZE = 16;
@@ -207,7 +206,6 @@ export class ChunkStreamServer {
             `🌍 [ChunkStream] Chunk (${message.coords.x},${message.coords.y}) generated, spawning animals at world (${worldX},${worldY})`,
           );
 
-          // Use the public method that handles addAnimal internally
           const spawned = animalSystem.spawnAnimalsForChunk(
             message.coords,
             { x: worldX, y: worldY, width: pixelWidth, height: pixelHeight },

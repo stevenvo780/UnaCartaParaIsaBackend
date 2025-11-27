@@ -106,7 +106,11 @@ describe("AgentGoalPlanner", () => {
       currentGoal: null,
       memory: {},
       needs: {},
-    };
+      personality: {
+        workEthic: "balanced",
+        explorationType: "curious",
+      },
+    } as AIState;
     vi.mocked(evaluateCriticalNeeds).mockReturnValue([]);
     vi.mocked(evaluateWorkOpportunities).mockReturnValue([]);
     vi.mocked(evaluateExplorationOpportunities).mockReturnValue([]);

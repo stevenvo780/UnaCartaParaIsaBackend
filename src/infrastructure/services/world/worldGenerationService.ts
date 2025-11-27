@@ -178,20 +178,16 @@ export class WorldGenerationService {
       assets.vegetation.push(`plant_${biomeConfig.id}`);
     }
 
-    // Decals - increased probability for better visual variety
-    // Props-based decals (flowers, leaves, moss, etc.)
     if (
       biomeConfig.density.props &&
       tileRng() < biomeConfig.density.props * 0.4
     ) {
       assets.decals.push(`decal_${biomeConfig.id}`);
-      // Add second decal sometimes for more variety
       if (tileRng() < 0.3) {
         assets.decals.push(`decal_${biomeConfig.id}`);
       }
     }
 
-    // Rock-based decals (small stones, pebbles)
     if (
       biomeConfig.density.rocks &&
       tileRng() < biomeConfig.density.rocks * 0.35
@@ -199,7 +195,6 @@ export class WorldGenerationService {
       assets.decals.push(`decal_rock_${biomeConfig.id}`);
     }
 
-    // Plants density also contributes to decals for biomes without props
     if (
       !biomeConfig.density.props &&
       biomeConfig.density.plants &&

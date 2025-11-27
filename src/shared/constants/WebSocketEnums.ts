@@ -99,4 +99,3 @@ export function isChunkMessageType(value: string): value is ChunkMessageType {
 export function isWorkerMessageType(value: string): value is WorkerMessageType {
   return Object.values(WorkerMessageType).includes(value as WorkerMessageType);
 }
-

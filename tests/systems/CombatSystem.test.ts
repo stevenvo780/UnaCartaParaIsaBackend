@@ -41,6 +41,7 @@ class MockInventorySystem {
 
 class MockLifeCycleSystem {
   private profiles = new Map<string, { traits?: { aggression?: number } }>();
+  private entityList: Array<{ id: string; isDead: boolean }> = [];
 
   constructor(profiles: Record<string, { traits?: { aggression?: number } }>) {
     Object.entries(profiles).forEach(([id, profile]) => {
@@ -48,8 +49,18 @@ class MockLifeCycleSystem {
     });
   }
 
+  public setEntityList(entities: Array<{ id: string; isDead: boolean }>): void {
+    this.entityList = entities;
+  }
+
   public getAgent = vi.fn((id: string) => this.profiles.get(id));
-  public removeAgent = vi.fn();
+  public removeAgent = vi.fn((agentId: string) => {
+    // Simula el comportamiento real de LifeCycleSystem
+    const entity = this.entityList.find((e) => e.id === agentId);
+    if (entity) {
+      entity.isDead = true;
+    }
+  });
 }
 
 class MockSocialSystem {
@@ -113,6 +124,7 @@ describe("CombatSystem", () => {
       attacker: { traits: { aggression: 1 } },
       target: { traits: { aggression: 0.2 } },
     });
+    lifeCycleSystem.setEntityList(gameState.entities as Array<{ id: string; isDead: boolean }>);
     socialSystem = new MockSocialSystem();
     socialSystem.setAffinity("attacker", "target", -0.8);
 

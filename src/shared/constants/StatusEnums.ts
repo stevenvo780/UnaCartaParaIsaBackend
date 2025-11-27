@@ -123,9 +123,7 @@ export function isStorageType(value: string): value is StorageType {
  * Type guard to check if a string is a valid InteractionStatus.
  */
 export function isInteractionStatus(value: string): value is InteractionStatus {
-  return Object.values(InteractionStatus).includes(
-    value as InteractionStatus,
-  );
+  return Object.values(InteractionStatus).includes(value as InteractionStatus);
 }
 
 /**
@@ -149,4 +147,3 @@ export function isSnapshotWorkerStatus(
     value as SnapshotWorkerStatus,
   );
 }
-

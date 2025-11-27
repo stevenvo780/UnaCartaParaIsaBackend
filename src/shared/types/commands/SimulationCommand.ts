@@ -9,15 +9,19 @@ import { BiomeType } from "../../constants/BiomeEnums";
 import { NeedType } from "../../constants/AIEnums";
 import { Sex } from "../../constants/AgentEnums";
 import { WeatherType } from "../../constants/AmbientEnums";
+import { ActivityType } from "../../constants/MovementEnums";
+import { AnimalType } from "../../constants/AnimalEnums";
+import { BuildingType } from "../../constants/BuildingEnums";
 
 export type ResourcesState = NonNullable<GameState["resources"]>;
 
 /**
  * Base interface for all event payloads.
+ * Note: Specific event payloads should extend this with their own properties
+ * rather than using the index signature.
  */
 export interface BaseEventPayload {
   type: GameEventType;
-  [key: string]: string | number | boolean | undefined | GameEventType;
 }
 
 /**
@@ -69,7 +73,7 @@ export interface SimulationSnapshot {
 export interface SpawnAgentCommandPayload {
   requestId?: string;
   name?: string;
-  sex?: Sex | "unknown";
+  sex?: Sex;
   generation?: number;
   immortal?: boolean;
   parents?: {
@@ -128,7 +132,7 @@ export interface DialogueCommandPayload {
 export interface BuildingCommandPayload {
   zoneId?: string;
   agentId?: string;
-  buildingType?: string;
+  buildingType?: BuildingType;
   position?: { x: number; y: number };
 }
 
@@ -170,11 +174,11 @@ export interface AgentCommandPayload {
   x?: number;
   y?: number;
   speed?: number;
-  activity?: string;
+  activity?: ActivityType;
 }
 
 export interface AnimalCommandPayload {
-  type?: string;
+  type?: AnimalType;
   position?: { x: number; y: number };
   biome?: BiomeType;
 }
@@ -230,12 +234,12 @@ export type SimulationCommand =
   | {
       type: SimulationCommandType.AGENT_COMMAND;
       agentId: string;
-      command: string;
+      command: AgentCommandType;
       payload?: AgentCommandPayload;
     }
   | {
       type: SimulationCommandType.ANIMAL_COMMAND;
-      command: string;
+      command: AnimalCommandType;
       payload?: AnimalCommandPayload;
     }
   | {

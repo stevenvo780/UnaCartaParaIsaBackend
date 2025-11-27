@@ -227,8 +227,10 @@ simulationWss.on("connection", (ws: WebSocket) => {
 
       if (command.type.startsWith("REQUEST_")) {
         const request = command as SimulationRequest;
-        let responsePayload: SimulationSnapshot | Record<string, unknown> | null =
-          null;
+        let responsePayload:
+          | SimulationSnapshot
+          | Record<string, unknown>
+          | null = null;
 
         switch (request.type) {
           case SimulationRequestType.REQUEST_FULL_STATE:
@@ -236,9 +238,10 @@ simulationWss.on("connection", (ws: WebSocket) => {
             break;
           case SimulationRequestType.REQUEST_ENTITY_DETAILS:
             responsePayload =
-              (simulationRunner.getEntityDetails(
-                request.entityId,
-              ) as Record<string, unknown>) || null;
+              (simulationRunner.getEntityDetails(request.entityId) as Record<
+                string,
+                unknown
+              >) || null;
             break;
           case SimulationRequestType.REQUEST_PLAYER_ID:
             responsePayload = { playerId: simulationRunner.getPlayerId() };

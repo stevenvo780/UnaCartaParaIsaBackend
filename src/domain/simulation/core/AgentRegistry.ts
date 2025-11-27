@@ -55,14 +55,11 @@ type SystemMap<T> = Map<string, T> | (() => Map<string, T>);
  */
 @injectable()
 export class AgentRegistry {
-  // Reference to gameState for profile lookups
   private gameState: GameState;
 
-  // Profile index for O(1) lookups (built from gameState.agents)
   private profileIndex = new Map<string, AgentProfile>();
   private profileIndexDirty = true;
 
-  // References to system Maps (lazy or direct)
   private aiStatesRef?: SystemMap<AIState>;
   private needsRef?: SystemMap<EntityNeedsData>;
   private movementRef?: SystemMap<MovementState>;
@@ -72,10 +69,6 @@ export class AgentRegistry {
     this.gameState = gameState;
     logger.debug("📋 AgentRegistry v2: Initialized as unified access layer");
   }
-
-  // ============================================================
-  // SYSTEM REGISTRATION - Systems register their Maps here
-  // ============================================================
 
   /**
    * Register AISystem's aiStates Map
@@ -108,10 +101,6 @@ export class AgentRegistry {
     this.inventoryRef = map;
     logger.debug("📋 AgentRegistry: Inventory registered");
   }
-
-  // ============================================================
-  // PROFILE ACCESS - O(1) lookup instead of gameState.agents.find()
-  // ============================================================
 
   /**
    * Rebuilds the profile index from gameState.agents

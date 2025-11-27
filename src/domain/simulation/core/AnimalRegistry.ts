@@ -40,9 +40,8 @@ export class AnimalRegistry {
   private spatialGrid = new Map<string, Set<string>>();
   private dirtyAnimals = new Set<string>();
   private lastCleanup = 0;
-  private readonly CLEANUP_INTERVAL = 30000; // 30 seconds
+  private readonly CLEANUP_INTERVAL = 30000;
 
-  // Stats cache for quick access
   private statsCache: {
     total: number;
     byType: Record<string, number>;
@@ -101,14 +100,11 @@ export class AnimalRegistry {
     const animal = this.animals.get(animalId);
     if (!animal) return;
 
-    // Remove from old grid cell
     this.removeFromSpatialGrid(animal);
 
-    // Update position
     animal.position.x = x;
     animal.position.y = y;
 
-    // Add to new grid cell
     this.addToSpatialGrid(animal);
     this.markDirty(animalId);
   }
@@ -235,8 +231,6 @@ export class AnimalRegistry {
   public clearAllDirty(): void {
     this.dirtyAnimals.clear();
   }
-
-  // ==================== Spatial Queries ====================
 
   /**
    * Gets grid cell key for a position
@@ -370,8 +364,6 @@ export class AnimalRegistry {
     return this.animals;
   }
 
-  // ==================== Stats & Sync ====================
-
   /**
    * Gets statistics about the registry
    */
@@ -444,8 +436,6 @@ export class AnimalRegistry {
       `🐾 AnimalRegistry: Imported ${animals.length} animals from gameState`,
     );
   }
-
-  // ==================== Cleanup ====================
 
   /**
    * Removes dead animals and cleans up spatial grid

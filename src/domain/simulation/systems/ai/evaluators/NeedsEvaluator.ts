@@ -202,8 +202,7 @@ export function evaluateCriticalNeeds(
     const inventory = deps.getAgentInventory?.(aiState.entityId);
     const hasWater = inventory && inventory.water > 0;
 
-    if (hasWater) {
-    } else {
+    if (!hasWater) {
       let waterTarget = null;
       if (deps.findNearestResource) {
         waterTarget = deps.findNearestResource(
@@ -226,9 +225,9 @@ export function evaluateCriticalNeeds(
           },
           createdAt: now,
           expiresAt: now + 15000,
-          });
-        } else {
-          const tradeTarget = deps.findAgentWithResource?.(
+        });
+      } else {
+        const tradeTarget = deps.findAgentWithResource?.(
           aiState.entityId,
           "water",
           3,
@@ -270,8 +269,7 @@ export function evaluateCriticalNeeds(
     const inventory = deps.getAgentInventory?.(aiState.entityId);
     const hasFood = inventory && inventory.food > 0;
 
-    if (hasFood) {
-    } else {
+    if (!hasFood) {
       let foodTarget = null;
       let foundResourceType: string | null = null;
       if (deps.findNearestResource) {
@@ -299,9 +297,9 @@ export function evaluateCriticalNeeds(
           },
           createdAt: now,
           expiresAt: now + 15000,
-          });
-        } else {
-          const tradeTarget = deps.findAgentWithResource?.(
+        });
+      } else {
+        const tradeTarget = deps.findAgentWithResource?.(
           aiState.entityId,
           "food",
           3,
