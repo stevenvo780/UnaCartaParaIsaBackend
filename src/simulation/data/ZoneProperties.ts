@@ -283,6 +283,70 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     spriteKey: "agent_built_comfort",
     capacity: 6,
   },
+
+  bath: {
+    name: "Bath",
+    color: "#87CEEB",
+    attractiveness: 7,
+    effects: { hygiene: 10, comfort: 4 },
+    spriteKey: "agent_built_bathroom",
+    capacity: 2,
+  },
+
+  well: {
+    name: "Well",
+    color: "#4682B4",
+    attractiveness: 6,
+    effects: { hygiene: 8, thirst: 5 },
+    spriteKey: "agent_built_well",
+    capacity: 1,
+  },
+
+  gathering: {
+    name: "Gathering Place",
+    color: "#9370DB",
+    attractiveness: 8,
+    effects: { social: 6, happiness: 4, resonance: 3 },
+    spriteKey: "agent_built_social",
+    capacity: 12,
+  },
+
+  tavern: {
+    name: "Tavern",
+    color: "#8B4513",
+    attractiveness: 9,
+    effects: { social: 8, happiness: 6, fun: 4 },
+    spriteKey: "agent_built_tavern",
+    capacity: 15,
+    stockpileCapacity: 200,
+  },
+
+  festival: {
+    name: "Festival Grounds",
+    color: "#FFD700",
+    attractiveness: 10,
+    effects: { happiness: 10, fun: 9, resonance: 5 },
+    spriteKey: "agent_built_entertainment",
+    capacity: 20,
+  },
+
+  temple: {
+    name: "Temple",
+    color: "#7E57C2",
+    attractiveness: 9,
+    effects: { resonance: 10, happiness: 5, comfort: 4 },
+    spriteKey: "agent_built_spiritual",
+    capacity: 12,
+  },
+
+  sanctuary: {
+    name: "Sanctuary",
+    color: "#9C27B0",
+    attractiveness: 9,
+    effects: { resonance: 9, mentalHealth: 8, comfort: 5 },
+    spriteKey: "agent_built_spiritual",
+    capacity: 8,
+  },
 };
 
 export function getZoneProperties(zoneType: ZoneType): ZonePropertyConfig {

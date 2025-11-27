@@ -3,10 +3,14 @@ import { GameEventNames, simulationEvents } from "../core/events";
 import { getResourceConfig } from "../../../infrastructure/services/world/config/WorldResourceConfigs";
 import type {
   WorldResourceInstance,
-  WorldResourceType,
   WorldResourceConfig,
 } from "../../types/simulation/worldResources";
 import type { GameState, Zone } from "../../types/game-types";
+import {
+  WorldResourceType,
+  ResourceState,
+} from "../../../shared/constants/ResourceEnums";
+import { BiomeType } from "../../../shared/constants/BiomeEnums";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -60,14 +64,14 @@ export class WorldResourceSystem {
 
       const elapsed = now - startTime;
       if (elapsed >= config.regenerationTime) {
-        resource.state = "pristine";
+        resource.state = ResourceState.PRISTINE;
         resource.harvestCount = 0;
         resource.regenerationStartTime = undefined;
         this.regenerationTimers.delete(resourceId);
 
         simulationEvents.emit(GameEventNames.RESOURCE_STATE_CHANGE, {
           resourceId,
-          newState: "pristine",
+          newState: ResourceState.PRISTINE,
         });
       }
     }
@@ -131,13 +135,13 @@ export class WorldResourceSystem {
     if (!config) return null;
 
     const validTypes: WorldResourceType[] = [
-      "tree",
-      "rock",
-      "trash_pile",
-      "water_source",
-      "berry_bush",
-      "mushroom_patch",
-      "wheat_crop",
+      WorldResourceType.TREE,
+      WorldResourceType.ROCK,
+      WorldResourceType.TRASH_PILE,
+      WorldResourceType.WATER_SOURCE,
+      WorldResourceType.BERRY_BUSH,
+      WorldResourceType.MUSHROOM_PATCH,
+      WorldResourceType.WHEAT_CROP,
     ];
     if (!validTypes.includes(type as WorldResourceType)) {
       return null;
@@ -149,7 +153,7 @@ export class WorldResourceSystem {
       id,
       type: type as WorldResourceType,
       position,
-      state: "pristine",
+      state: ResourceState.PRISTINE,
       harvestCount: 0,
       lastHarvestTime: 0,
       biome,
@@ -254,15 +258,15 @@ export class WorldResourceSystem {
   }
 
   private mapAssetToResource(asset: string): WorldResourceType | null {
-    if (asset.startsWith("tree_")) return "tree";
-    if (asset.startsWith("plant_")) return "berry_bush";
-    if (asset.startsWith("prop_rock")) return "rock";
+    if (asset.startsWith("tree_")) return WorldResourceType.TREE;
+    if (asset.startsWith("plant_")) return WorldResourceType.BERRY_BUSH;
+    if (asset.startsWith("prop_rock")) return WorldResourceType.ROCK;
     return null;
   }
 
   private mapDecalToResource(_decal: string): WorldResourceType | null {
     // Rock decals are always mineable
-    if (_decal.startsWith("decal_rock_")) return "rock";
+    if (_decal.startsWith("decal_rock_")) return WorldResourceType.ROCK;
 
     // Most decals are purely decorative (flowers, leaves, moss, branches)
     // Only a small percentage become interactive resources
@@ -274,27 +278,27 @@ export class WorldResourceSystem {
     const resourceRand = Math.random();
 
     // 40% of resources are rocks/stones
-    if (resourceRand < 0.4) return "rock";
+    if (resourceRand < 0.4) return WorldResourceType.ROCK;
 
     // 35% are berry bushes (food)
-    if (resourceRand < 0.75) return "berry_bush";
+    if (resourceRand < 0.75) return WorldResourceType.BERRY_BUSH;
 
     // 20% are mushroom patches (food)
-    if (resourceRand < 0.95) return "mushroom_patch";
+    if (resourceRand < 0.95) return WorldResourceType.MUSHROOM_PATCH;
 
     // 5% are trash piles (crafting materials)
-    return "trash_pile";
+    return WorldResourceType.TRASH_PILE;
   }
 
   private getResourcesForBiome(biome: string): WorldResourceConfig[] {
     const configs = [
-      getResourceConfig("tree"),
-      getResourceConfig("rock"),
-      getResourceConfig("berry_bush"),
-      getResourceConfig("water_source"),
-      getResourceConfig("mushroom_patch"),
-      getResourceConfig("wheat_crop"),
-      getResourceConfig("trash_pile"),
+      getResourceConfig(WorldResourceType.TREE),
+      getResourceConfig(WorldResourceType.ROCK),
+      getResourceConfig(WorldResourceType.BERRY_BUSH),
+      getResourceConfig(WorldResourceType.WATER_SOURCE),
+      getResourceConfig(WorldResourceType.MUSHROOM_PATCH),
+      getResourceConfig(WorldResourceType.WHEAT_CROP),
+      getResourceConfig(WorldResourceType.TRASH_PILE),
     ];
     return configs.filter(
       (c): c is NonNullable<typeof c> =>

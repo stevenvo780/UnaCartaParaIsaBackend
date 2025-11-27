@@ -142,11 +142,22 @@ export interface TaskCommandPayload {
   taskId?: string;
   agentId?: string;
   zoneId?: string;
-  type?: string;
+  type?: TaskType;
   requiredWork?: number;
   bounds?: { x: number; y: number; width: number; height: number };
   contribution?: number;
   socialSynergyMultiplier?: number;
+  requirements?: {
+    resources?: {
+      wood?: number;
+      stone?: number;
+      food?: number;
+      water?: number;
+    };
+    minWorkers?: number;
+  };
+  metadata?: TaskMetadata;
+  targetAnimalId?: string;
 }
 
 export interface PingPayload {
@@ -187,6 +198,8 @@ import {
   TaskCommandType,
   TimeCommandType,
 } from "../../constants/CommandEnums";
+import type { TaskType } from "../../../domain/types/simulation/tasks";
+import type { TaskMetadata } from "../../../domain/types/simulation/tasks";
 
 export type SimulationCommand =
   | { type: SimulationCommandType.SET_TIME_SCALE; multiplier: number }

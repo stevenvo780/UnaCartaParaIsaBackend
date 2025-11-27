@@ -4,6 +4,8 @@ import { BiomeType } from "../../../world/generation/types";
 import type { BuildingLabel } from "../../../types/simulation/buildings";
 import type { SimulationRunner } from "../SimulationRunner";
 import { LifeStage, Sex } from "../../../types/simulation/agents";
+import { TileType } from "../../../../shared/constants/TileTypeEnums";
+import { ZoneType } from "../../../../shared/constants/ZoneEnums";
 
 export class WorldLoader {
   constructor(private runner: SimulationRunner) {}
@@ -25,7 +27,7 @@ export class WorldLoader {
       x: number;
       y: number;
       assetId: string;
-      type: "grass" | "stone" | "water" | "path";
+      type: TileType;
       biome: string;
       isWalkable: boolean;
     }> = [];
@@ -69,8 +71,10 @@ export class WorldLoader {
         for (const row of chunkTiles) {
           for (const tile of row) {
             if (tile.x < worldConfig.width && tile.y < worldConfig.height) {
-              const tileType: "grass" | "stone" | "water" | "path" =
-                tile.biome === BiomeType.OCEAN ? "water" : "grass";
+              const tileType: TileType =
+                tile.biome === BiomeType.OCEAN
+                  ? TileType.WATER
+                  : TileType.GRASS;
               allTiles.push({
                 x: tile.x,
                 y: tile.y,
@@ -255,7 +259,7 @@ export class WorldLoader {
 
     const houseZone: Zone = {
       id: `zone_house_initial_${Date.now()}`,
-      type: "shelter",
+      type: ZoneType.SHELTER,
       bounds: {
         x: baseX,
         y: baseY,
@@ -280,7 +284,7 @@ export class WorldLoader {
 
     const workbenchZone: Zone = {
       id: `zone_workbench_initial_${Date.now()}`,
-      type: "work",
+      type: ZoneType.WORK,
       bounds: {
         x: baseX + 100,
         y: baseY,
@@ -306,7 +310,7 @@ export class WorldLoader {
 
     const storageZone: Zone = {
       id: `zone_storage_initial_${Date.now()}`,
-      type: "storage",
+      type: ZoneType.STORAGE,
       bounds: {
         x: baseX + 100,
         y: baseY + 50,
@@ -328,7 +332,7 @@ export class WorldLoader {
 
     const restZone: Zone = {
       id: `zone_rest_initial_${Date.now()}`,
-      type: "rest",
+      type: ZoneType.REST,
       bounds: {
         x: baseX + 10,
         y: baseY + 10,
@@ -350,7 +354,7 @@ export class WorldLoader {
 
     const kitchenZone: Zone = {
       id: `zone_kitchen_initial_${Date.now()}`,
-      type: "kitchen",
+      type: ZoneType.KITCHEN,
       bounds: {
         x: baseX + 45,
         y: baseY + 10,
@@ -461,7 +465,7 @@ export class WorldLoader {
     x: number,
     y: number,
     worldConfig: { width: number; height: number },
-  ): string | null {
+  ): ZoneType | null {
     const seed = x * 1000 + y;
     const rng = (): number => {
       const x = Math.sin(seed) * 10000;
@@ -474,23 +478,23 @@ export class WorldLoader {
     const isNearCenter = distFromCenter < worldConfig.width * 0.3;
 
     if (isNearCenter && rng() < 0.3) {
-      return "social";
+      return ZoneType.SOCIAL;
     }
 
     if (biome === "forest" && rng() < 0.4) {
-      return "rest";
+      return ZoneType.REST;
     }
 
     if (biome === "grassland" && rng() < 0.3) {
-      return "work";
+      return ZoneType.WORK;
     }
 
     const rand = rng();
-    if (rand < 0.25) return "rest";
-    if (rand < 0.5) return "work";
-    if (rand < 0.7) return "food";
-    if (rand < 0.85) return "water";
-    return "social";
+    if (rand < 0.25) return ZoneType.REST;
+    if (rand < 0.5) return ZoneType.WORK;
+    if (rand < 0.7) return ZoneType.FOOD;
+    if (rand < 0.85) return ZoneType.WATER;
+    return ZoneType.SOCIAL;
   }
 
   private getZoneColor(zoneType: string): string {

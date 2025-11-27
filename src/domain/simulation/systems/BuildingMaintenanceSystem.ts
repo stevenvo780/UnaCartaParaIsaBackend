@@ -8,6 +8,8 @@ import {
   calculateRepairCost,
   getBuildingCondition,
 } from "../../types/simulation/buildings";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
+import { ZoneType } from "../../../shared/constants/ZoneEnums";
 
 const DEFAULT_CONFIG: BuildingMaintenanceConfig = {
   usageDegradationRate: 0.4,
@@ -140,7 +142,7 @@ export class BuildingMaintenanceSystem {
 
   private bootstrapExistingZones(): void {
     for (const zone of (this.state.zones || []) as MutableZone[]) {
-      if (zone.type === "rest" || zone.metadata?.building) {
+      if (zone.type === ZoneType.REST || zone.metadata?.building) {
         this.initializeBuildingState(zone.id);
       }
     }
@@ -257,11 +259,11 @@ export class BuildingMaintenanceSystem {
 
   private consumeResources(
     agentId: string,
-    cost: Partial<Record<"wood" | "stone", number>>,
+    cost: Partial<Record<ResourceType, number>>,
   ): void {
     for (const [resource, amount] of Object.entries(cost)) {
       if (!amount) continue;
-      const key = resource as "wood" | "stone";
+      const key = resource as ResourceType;
       this.inventorySystem.removeFromAgent(agentId, key, amount);
     }
   }

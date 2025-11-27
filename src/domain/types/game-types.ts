@@ -24,6 +24,11 @@ import type { AgentRole } from "./simulation/roles";
 import type { LegendRecord } from "./simulation/legends";
 import type { FamilyTree, SerializedFamilyTree } from "./simulation/genealogy";
 import type { Inventory } from "./simulation/economy";
+import { ZoneType } from "../../shared/constants/ZoneEnums";
+import { ResourceType } from "../../shared/constants/ResourceEnums";
+import { TileType } from "../../shared/constants/TileTypeEnums";
+import { StockpileType } from "../../shared/constants/ZoneEnums";
+import type { TaskType } from "./simulation/tasks";
 /**
  * Economy system state tracking work actions and resource production.
  */
@@ -80,18 +85,18 @@ export interface GameMap {
 }
 
 export interface ZoneProps {
-  resource?: "wood" | "stone" | "food" | "water";
+  resource?: ResourceType;
   capacity?: number;
   efficiency?: number;
   quality?: number;
   ownerId?: string;
   accessLevel?: "public" | "private" | "restricted";
-  [key: string]: string | number | undefined;
+  [key: string]: string | number | ResourceType | undefined;
 }
 
 export interface Zone {
   id: string;
-  type: string;
+  type: ZoneType;
   bounds: { x: number; y: number; width: number; height: number };
   props?: ZoneProps;
   metadata?: Record<string, unknown>;
@@ -158,7 +163,7 @@ export interface TerrainTile {
   x: number;
   y: number;
   assetId: string;
-  type: "grass" | "stone" | "water" | "path";
+  type: TileType;
   variant?: number;
   isWalkable?: boolean;
   biome?: string;
@@ -187,9 +192,9 @@ export interface MapObjectProperties {
   name?: string;
   description?: string;
   interactable?: boolean;
-  resourceType?: string;
+  resourceType?: ResourceType;
   capacity?: number;
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | ResourceType | undefined;
 }
 
 export interface MapObject {
@@ -232,7 +237,7 @@ export interface LegendsState {
 export interface StockpileSnapshot {
   inventory: Inventory;
   capacity: number;
-  type: "general" | "food" | "materials";
+  type: StockpileType;
   zoneId: string;
 }
 
@@ -392,7 +397,7 @@ export interface KnowledgeGraphState {
 export interface TaskState {
   tasks: Array<{
     id: string;
-    type: string;
+    type: TaskType;
     progress: number;
     requiredWork: number;
     completed: boolean;

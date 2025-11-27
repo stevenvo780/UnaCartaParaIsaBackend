@@ -5,13 +5,20 @@ import {
   QuestEvent,
 } from "../../types/simulation/quests";
 import { simulationEvents, GameEventNames } from "../core/events";
+import {
+  QuestStatus,
+  QuestRewardType,
+  QuestRequirementType,
+  QuestDialogueStage,
+} from "../../../shared/constants/QuestEnums";
+import { GameEventType } from "../../../shared/constants/EventEnums";
 
 const QUEST_CATALOG: Quest[] = [
   {
     id: "tutorial_survival",
     title: "First Steps",
     description: "Learn the basics of survival",
-    status: "available",
+    status: QuestStatus.AVAILABLE,
     objectives: [
       {
         id: "obj_1",
@@ -33,19 +40,19 @@ const QUEST_CATALOG: Quest[] = [
       },
     ],
     rewards: [
-      { type: "experience", amount: 50 },
-      { type: "title", title: "Survivor" },
+      { type: QuestRewardType.EXPERIENCE, amount: 50 },
+      { type: QuestRewardType.TITLE, title: "Survivor" },
     ],
     requirements: [],
     dialogues: [
       {
-        stage: "intro",
+        stage: QuestDialogueStage.INTRO,
         speaker: "Guide",
         text: "Welcome! Let's start by gathering some basic resources.",
         mood: "friendly",
       },
       {
-        stage: "completion",
+        stage: QuestDialogueStage.COMPLETION,
         speaker: "Guide",
         text: "Well done! You've learned the basics of survival.",
         mood: "happy",
@@ -56,7 +63,7 @@ const QUEST_CATALOG: Quest[] = [
     id: "build_shelter",
     title: "A Place to Rest",
     description: "Build your first shelter",
-    status: "available",
+    status: QuestStatus.AVAILABLE,
     objectives: [
       {
         id: "obj_1",
@@ -69,19 +76,27 @@ const QUEST_CATALOG: Quest[] = [
       },
     ],
     rewards: [
-      { type: "experience", amount: 100 },
-      { type: "unlock_feature", unlockId: "advanced_building" },
+      { type: QuestRewardType.EXPERIENCE, amount: 100 },
+      {
+        type: QuestRewardType.UNLOCK_FEATURE,
+        unlockId: "advanced_building",
+      },
     ],
-    requirements: [{ type: "quest_completed", questId: "tutorial_survival" }],
+    requirements: [
+      {
+        type: QuestRequirementType.QUEST_COMPLETED,
+        questId: "tutorial_survival",
+      },
+    ],
     dialogues: [
       {
-        stage: "intro",
+        stage: QuestDialogueStage.INTRO,
         speaker: "Guide",
         text: "Now that you can gather resources, let's build a shelter.",
         mood: "encouraging",
       },
       {
-        stage: "completion",
+        stage: QuestDialogueStage.COMPLETION,
         speaker: "Guide",
         text: "Excellent! Your shelter will protect you from the elements.",
         mood: "proud",
@@ -185,7 +200,7 @@ export class QuestSystem {
     }
 
     this.questProgress.availableQuests.delete(questId);
-    quest.status = "active";
+    quest.status = QuestStatus.ACTIVE;
     quest.startedAt = Date.now();
     this.questProgress.activeQuests.set(questId, quest);
 
@@ -196,7 +211,7 @@ export class QuestSystem {
     });
 
     const event: QuestEvent = {
-      type: "QUEST_STARTED",
+      type: GameEventType.QUEST_STARTED,
       questId,
       timestamp: Date.now(),
     };
@@ -217,7 +232,7 @@ export class QuestSystem {
     unlockedFeatures?: string[];
   } {
     const quest = this.questProgress.activeQuests.get(questId);
-    if (!quest || quest.status !== "active") {
+    if (!quest || quest.status !== QuestStatus.ACTIVE) {
       return { success: false };
     }
 
@@ -229,7 +244,7 @@ export class QuestSystem {
       return { success: false };
     }
 
-    quest.status = "completed";
+    quest.status = QuestStatus.COMPLETED;
     quest.completedAt = Date.now();
     this.questProgress.activeQuests.delete(questId);
     this.questProgress.completedQuests.set(questId, quest);
@@ -246,7 +261,7 @@ export class QuestSystem {
     this.checkForNewAvailableQuests();
 
     const event: QuestEvent = {
-      type: "QUEST_COMPLETED",
+      type: GameEventType.QUEST_COMPLETED,
       questId,
       timestamp: Date.now(),
     };
@@ -292,7 +307,7 @@ export class QuestSystem {
 
     if (objective.isCompleted) {
       const event: QuestEvent = {
-        type: "QUEST_OBJECTIVE_COMPLETED",
+        type: GameEventType.QUEST_COMPLETED,
         questId,
         objectiveId,
         timestamp: Date.now(),
@@ -311,7 +326,7 @@ export class QuestSystem {
     const quest = this.questProgress.activeQuests.get(questId);
     if (!quest) return null;
 
-    quest.status = "failed";
+    quest.status = QuestStatus.FAILED;
     quest.completedAt = Date.now();
 
     this.questProgress.activeQuests.delete(questId);
@@ -324,7 +339,7 @@ export class QuestSystem {
     });
 
     const event: QuestEvent = {
-      type: "QUEST_FAILED",
+      type: GameEventType.QUEST_FAILED,
       questId,
       timestamp: Date.now(),
     };
@@ -388,7 +403,7 @@ export class QuestSystem {
       ) {
         if (this.checkQuestRequirements(quest)) {
           const questCopy = JSON.parse(JSON.stringify(quest)) as Quest;
-          questCopy.status = "available";
+          questCopy.status = QuestStatus.AVAILABLE;
           this.questProgress.availableQuests.set(quest.id, questCopy);
         }
       }

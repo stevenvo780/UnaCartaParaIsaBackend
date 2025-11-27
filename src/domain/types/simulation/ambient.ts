@@ -1,4 +1,5 @@
-export type NeedType = "hunger" | "thirst" | "energy" | "hygiene";
+import { NeedType } from "../../../shared/constants/AIEnums";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
 export interface NeedDesireSnapshot {
   agentId: string;
@@ -10,7 +11,7 @@ export interface NeedDesireSnapshot {
 }
 
 export interface ResourceBiasSnapshot {
-  resourceType: string;
+  resourceType: ResourceType;
   intensity: number;
 }
 
@@ -24,7 +25,7 @@ export interface ResourceAttractionFieldSnapshot {
 
 export interface ResourceEmergencyRequest {
   agentId: string;
-  resourceType: string;
+  resourceType: ResourceType;
   urgency: number;
   zoneId?: string;
   timestamp: number;

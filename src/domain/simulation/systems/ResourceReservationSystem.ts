@@ -3,6 +3,7 @@ import type { ResourceCost } from "../../types/simulation/economy";
 import { InventorySystem } from "./InventorySystem";
 import { GameEventNames, simulationEvents } from "../core/events";
 import { logger } from "../../../infrastructure/utils/logger";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
 interface Reservation {
   taskId: string;
@@ -255,14 +256,14 @@ export class ResourceReservationSystem {
       if (entry.wood > 0) {
         this.inventorySystem.addToStockpile(
           entry.stockpileId,
-          "wood",
+          ResourceType.WOOD,
           entry.wood,
         );
       }
       if (entry.stone > 0) {
         this.inventorySystem.addToStockpile(
           entry.stockpileId,
-          "stone",
+          ResourceType.STONE,
           entry.stone,
         );
       }

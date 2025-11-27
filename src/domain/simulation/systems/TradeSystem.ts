@@ -3,6 +3,7 @@ import { TradeOffer, TradeRecord } from "../../types/simulation/trade";
 import type { InventorySystem } from "./InventorySystem";
 import type { NeedsSystem } from "./NeedsSystem";
 import { simulationEvents, GameEventNames } from "../core/events";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -305,12 +306,12 @@ export class TradeSystem {
     if (agents.length < 2) return;
 
     // Priority 1: Trade food/water based on NEEDS (survival-driven economy)
-    this.processNeedBasedTrades(agents, "food", "hunger", 50);
-    this.processNeedBasedTrades(agents, "water", "thirst", 50);
+    this.processNeedBasedTrades(agents, ResourceType.FOOD, "hunger", 50);
+    this.processNeedBasedTrades(agents, ResourceType.WATER, "thirst", 50);
 
     // Priority 2: Trade other resources based on inventory levels
-    this.processInventoryBasedTrades(agents, "wood");
-    this.processInventoryBasedTrades(agents, "stone");
+    this.processInventoryBasedTrades(agents, ResourceType.WOOD);
+    this.processInventoryBasedTrades(agents, ResourceType.STONE);
   }
 
   /**
@@ -320,7 +321,7 @@ export class TradeSystem {
    */
   private processNeedBasedTrades(
     agents: Array<{ id: string; isDead?: boolean }>,
-    resourceType: "food" | "water",
+    resourceType: ResourceType,
     needType: "hunger" | "thirst",
     needThreshold: number,
   ): void {
@@ -422,7 +423,7 @@ export class TradeSystem {
    */
   private processInventoryBasedTrades(
     agents: Array<{ id: string }>,
-    resourceType: "wood" | "stone",
+    resourceType: ResourceType,
   ): void {
     const seller = agents.find((agent) => {
       const inv = this.inventorySystem!.getAgentInventory(agent.id);
@@ -488,7 +489,7 @@ export class TradeSystem {
    */
   public findAgentWithResource(
     buyerId: string,
-    resourceType: "food" | "water",
+    resourceType: ResourceType,
     minAmount: number,
   ): { agentId: string; x: number; y: number } | null {
     if (!this.gameState.agents || !this.inventorySystem) return null;

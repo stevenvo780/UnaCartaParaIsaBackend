@@ -1,6 +1,8 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { AgentRole } from "../../../../types/simulation/roles";
 import type { GameState } from "../../../../types/game-types";
+import { GoalType } from "../../../../shared/constants/AIEnums";
+import { ResourceType } from "../../../../shared/constants/ResourceEnums";
 
 export interface OpportunitiesEvaluatorDependencies {
   getAgentRole: (agentId: string) => AgentRole | undefined;
@@ -80,7 +82,7 @@ export function evaluateWorkOpportunities(
       targetPosition: { x: resourceTarget.x, y: resourceTarget.y },
       data: {
         roleType: role.roleType,
-        resourceType: preferredResource,
+        resourceType: preferredResource as ResourceType | undefined,
       },
       createdAt: now,
       expiresAt: now + 30000,
@@ -91,10 +93,9 @@ export function evaluateWorkOpportunities(
     const priority = 0.7 * aiState.personality.diligence * role.efficiency;
     goals.push({
       id: `work_hunt_${aiState.entityId}_${now}`,
-      type: "hunt",
+      type: GoalType.HUNT,
       priority: priority,
       data: {
-        roleType: "hunter",
         targetType: "prey",
       },
       createdAt: now,
@@ -132,7 +133,7 @@ export function evaluateExplorationOpportunities(
         if (zone) {
           goals.push({
             id: `explore_${targetZoneId}_${now}`,
-            type: "explore",
+            type: GoalType.EXPLORE,
             priority: 0.4 + personality.openness * 0.3,
             targetZoneId: targetZoneId,
             targetPosition: {

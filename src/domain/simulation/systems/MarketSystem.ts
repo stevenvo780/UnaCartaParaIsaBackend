@@ -1,10 +1,8 @@
 import type { GameState } from "../../types/game-types";
-import type {
-  MarketConfig,
-  ResourceType,
-} from "../../types/simulation/economy";
+import type { MarketConfig } from "../../types/simulation/economy";
 import { InventorySystem } from "./InventorySystem";
 import { logger } from "../../../infrastructure/utils/logger";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
 const DEFAULT_MARKET_CONFIG: MarketConfig = {
   scarcityThresholds: { low: 20, high: 100 },
@@ -61,11 +59,11 @@ export class MarketSystem {
     }
 
     const prices: Record<string, number> = {};
-    const resourceTypes: Array<"wood" | "stone" | "food" | "water"> = [
-      "wood",
-      "stone",
-      "food",
-      "water",
+    const resourceTypes = [
+      ResourceType.WOOD,
+      ResourceType.STONE,
+      ResourceType.FOOD,
+      ResourceType.WATER,
     ];
     for (const resource of resourceTypes) {
       prices[resource] = this.getResourcePrice(resource);

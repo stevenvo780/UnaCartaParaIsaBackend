@@ -1,5 +1,6 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { Quest } from "../../../../types/simulation/quests";
+import { GoalType } from "../../../../shared/constants/AIEnums";
 
 export interface QuestEvaluatorDependencies {
   getActiveQuests: () => Quest[];
@@ -64,7 +65,7 @@ export function evaluateQuestGoals(
       const quest = availableQuests[0];
       goals.push({
         id: `start_quest_${quest.id}_${now}`,
-        type: "social", // Quest acceptance is a social action
+        type: GoalType.SOCIAL, // Quest acceptance is a social action
         priority: 0.5,
         data: {
           questId: quest.id,

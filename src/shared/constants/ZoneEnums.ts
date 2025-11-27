@@ -40,6 +40,13 @@ export enum ZoneType {
   SECURITY = "security",
   STORAGE = "storage",
   DEFENSE = "defense",
+  BATH = "bath",
+  WELL = "well",
+  GATHERING = "gathering",
+  TAVERN = "tavern",
+  FESTIVAL = "festival",
+  TEMPLE = "temple",
+  SANCTUARY = "sanctuary",
 }
 
 /**

@@ -6,8 +6,9 @@ import type {
   ResourceAttractionSnapshot,
   ResourceEmergencyRequest,
   ResourceBiasSnapshot,
-  NeedType,
 } from "../../types/simulation/ambient";
+import { NeedType } from "../../../shared/constants/AIEnums";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
 const DESIRE_THRESHOLDS: Record<NeedType, { high: number; low?: number }> = {
   hunger: { high: 60 },
@@ -16,11 +17,11 @@ const DESIRE_THRESHOLDS: Record<NeedType, { high: number; low?: number }> = {
   hygiene: { high: 0, low: 40 },
 };
 
-const RESOURCE_MAPPING: Record<NeedType, string> = {
-  hunger: "food",
-  thirst: "water",
-  energy: "rest",
-  hygiene: "water",
+const RESOURCE_MAPPING: Record<NeedType, ResourceType | null> = {
+  [NeedType.HUNGER]: ResourceType.FOOD,
+  [NeedType.THIRST]: ResourceType.WATER,
+  [NeedType.ENERGY]: null, // Energy doesn't map to a resource
+  [NeedType.HYGIENE]: ResourceType.WATER,
 };
 
 import { injectable, inject } from "inversify";
@@ -78,13 +79,16 @@ export class ResourceAttractionSystem {
               now,
             );
             if (value < 10) {
-              emergencies.push({
-                agentId: entityId,
-                resourceType: RESOURCE_MAPPING[needType],
-                urgency: 1 - value / 100,
-                zoneId,
-                timestamp: now,
-              });
+              const resourceType = RESOURCE_MAPPING[needType];
+              if (resourceType) {
+                emergencies.push({
+                  agentId: entityId,
+                  resourceType,
+                  urgency: 1 - value / 100,
+                  zoneId,
+                  timestamp: now,
+                });
+              }
             }
           }
         } else if (value > thresholds.high) {
@@ -99,13 +103,16 @@ export class ResourceAttractionSystem {
             now,
           );
           if (value > 95) {
-            emergencies.push({
-              agentId: entityId,
-              resourceType: RESOURCE_MAPPING[needType],
-              urgency: value / 100,
-              zoneId,
-              timestamp: now,
-            });
+            const resourceType = RESOURCE_MAPPING[needType];
+            if (resourceType) {
+              emergencies.push({
+                agentId: entityId,
+                resourceType,
+                urgency: value / 100,
+                zoneId,
+                timestamp: now,
+              });
+            }
           }
         }
       });

@@ -10,6 +10,8 @@ import {
   GoalType,
 } from "../../types/simulation/ai";
 import type { WorldResourceType } from "../../types/simulation/worldResources";
+import { StockpileType } from "../../../shared/constants/ZoneEnums";
+import { ZoneType } from "../../../shared/constants/ZoneEnums";
 import { getAnimalConfig } from "../../../infrastructure/services/world/config/AnimalConfigs";
 import type { WeaponId as CraftingWeaponId } from "../../types/simulation/crafting";
 import {
@@ -319,7 +321,7 @@ export class AISystem extends EventEmitter {
             createStockpile: (zoneId: string, type: string) =>
               this.inventorySystem!.createStockpile(
                 zoneId,
-                type as "general" | "food" | "materials",
+                type as StockpileType,
               ),
             transferToStockpile: (
               agentId: string,
@@ -857,7 +859,9 @@ export class AISystem extends EventEmitter {
         if (this.craftingZoneCache !== null) {
           return this.craftingZoneCache;
         }
-        const zone = this.gameState.zones?.find((z) => z.type === "crafting");
+        const zone = this.gameState.zones?.find(
+          (z) => z.type === ZoneType.WORK || z.type === ZoneType.STORAGE,
+        );
         this.craftingZoneCache = zone?.id;
         return this.craftingZoneCache;
       },

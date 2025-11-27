@@ -1,5 +1,6 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { Inventory } from "../../../../types/simulation/economy";
+import { GoalType } from "../../../../shared/constants/AIEnums";
 
 export interface TradeEvaluatorDependencies {
   getAgentInventory: (id: string) => Inventory | undefined;
@@ -58,12 +59,11 @@ export function evaluateTradeGoals(
   if (nearestMarket) {
     goals.push({
       id: `trade_${aiState.entityId}_${now}`,
-      type: "work",
+      type: GoalType.WORK,
       priority: 0.4, // Lower priority than critical needs
       targetZoneId: nearestMarket.id,
       data: {
         action: "trade",
-        resourceType: "excess",
       },
       createdAt: now,
       expiresAt: now + 20000,

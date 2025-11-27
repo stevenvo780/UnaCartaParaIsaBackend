@@ -9,6 +9,10 @@
 
 import type { ResourceType } from "./economy";
 import type { WorldResourceType } from "./worldResources";
+import {
+  ResourceType as ResourceTypeEnum,
+  WorldResourceType as WorldResourceTypeEnum,
+} from "../../../shared/constants/ResourceEnums";
 
 /**
  * Mapping from world resources to inventory resources.
@@ -21,13 +25,13 @@ export const WORLD_TO_INVENTORY: Record<
   WorldResourceType,
   ResourceType | null
 > = {
-  tree: "wood",
-  rock: "stone",
-  water_source: "water",
-  berry_bush: "food",
-  mushroom_patch: "food",
-  wheat_crop: "food",
-  trash_pile: null,
+  [WorldResourceTypeEnum.TREE]: ResourceTypeEnum.WOOD,
+  [WorldResourceTypeEnum.ROCK]: ResourceTypeEnum.STONE,
+  [WorldResourceTypeEnum.WATER_SOURCE]: ResourceTypeEnum.WATER,
+  [WorldResourceTypeEnum.BERRY_BUSH]: ResourceTypeEnum.FOOD,
+  [WorldResourceTypeEnum.MUSHROOM_PATCH]: ResourceTypeEnum.FOOD,
+  [WorldResourceTypeEnum.WHEAT_CROP]: ResourceTypeEnum.FOOD,
+  [WorldResourceTypeEnum.TRASH_PILE]: null,
 } as const;
 
 /**
@@ -38,11 +42,15 @@ export const WORLD_TO_INVENTORY: Record<
  * INVENTORY_TO_WORLD.food // ["berry_bush", "mushroom_patch", "wheat_crop"]
  */
 export const INVENTORY_TO_WORLD: Record<ResourceType, WorldResourceType[]> = {
-  wood: ["tree"] as WorldResourceType[],
-  stone: ["rock"] as WorldResourceType[],
-  water: ["water_source"] as WorldResourceType[],
-  food: ["berry_bush", "mushroom_patch", "wheat_crop"] as WorldResourceType[],
-  rare_materials: [] as WorldResourceType[],
+  [ResourceTypeEnum.WOOD]: [WorldResourceTypeEnum.TREE],
+  [ResourceTypeEnum.STONE]: [WorldResourceTypeEnum.ROCK],
+  [ResourceTypeEnum.WATER]: [WorldResourceTypeEnum.WATER_SOURCE],
+  [ResourceTypeEnum.FOOD]: [
+    WorldResourceTypeEnum.BERRY_BUSH,
+    WorldResourceTypeEnum.MUSHROOM_PATCH,
+    WorldResourceTypeEnum.WHEAT_CROP,
+  ],
+  [ResourceTypeEnum.RARE_MATERIALS]: [],
 };
 
 /**
@@ -53,13 +61,13 @@ export const INVENTORY_TO_WORLD: Record<ResourceType, WorldResourceType[]> = {
  */
 export function isWorldResourceType(value: string): value is WorldResourceType {
   const validTypes: WorldResourceType[] = [
-    "tree",
-    "rock",
-    "trash_pile",
-    "water_source",
-    "berry_bush",
-    "mushroom_patch",
-    "wheat_crop",
+    WorldResourceTypeEnum.TREE,
+    WorldResourceTypeEnum.ROCK,
+    WorldResourceTypeEnum.TRASH_PILE,
+    WorldResourceTypeEnum.WATER_SOURCE,
+    WorldResourceTypeEnum.BERRY_BUSH,
+    WorldResourceTypeEnum.MUSHROOM_PATCH,
+    WorldResourceTypeEnum.WHEAT_CROP,
   ];
   return validTypes.includes(value as WorldResourceType);
 }
@@ -72,11 +80,11 @@ export function isWorldResourceType(value: string): value is WorldResourceType {
  */
 export function isResourceType(value: string): value is ResourceType {
   const validTypes: ResourceType[] = [
-    "wood",
-    "stone",
-    "food",
-    "water",
-    "rare_materials",
+    ResourceTypeEnum.WOOD,
+    ResourceTypeEnum.STONE,
+    ResourceTypeEnum.FOOD,
+    ResourceTypeEnum.WATER,
+    ResourceTypeEnum.RARE_MATERIALS,
   ];
   return validTypes.includes(value as ResourceType);
 }

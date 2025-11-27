@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 
-import { logger } from "../utils/logger.js";
+import { logger } from "../utils/logger";
+import { HttpStatusCode } from "../../shared/constants/HttpStatusCodes";
 
 interface ChunkRequest {
   x?: number;
@@ -15,6 +16,9 @@ const DEFAULT_CHUNK_SIZE = 100;
 const DEFAULT_TILE_SIZE = 64;
 const MAX_CHUNK_SIZE = 1000;
 const MIN_CHUNK_SIZE = 16;
+const MIN_TILE_SIZE = 16;
+const MAX_TILE_SIZE = 256;
+const MAX_SEED_LENGTH = 100;
 
 import { container } from "../../config/container";
 import { TYPES } from "../../config/Types";
@@ -55,7 +59,7 @@ export class WorldController {
       const { x, y, seed, width, height, tileSize } = body;
 
       if (typeof x !== "number" || typeof y !== "number") {
-        res.status(400).json({
+        res.status(HttpStatusCode.BAD_REQUEST).json({
           error: "Invalid request: x and y must be numbers",
         });
         return;
@@ -70,13 +74,13 @@ export class WorldController {
         Math.min(MAX_CHUNK_SIZE, height ?? DEFAULT_CHUNK_SIZE),
       );
       const validatedTileSize = Math.max(
-        16,
-        Math.min(256, tileSize ?? DEFAULT_TILE_SIZE),
+        MIN_TILE_SIZE,
+        Math.min(MAX_TILE_SIZE, tileSize ?? DEFAULT_TILE_SIZE),
       );
 
       const validatedSeed =
         typeof seed === "string" && seed.length > 0
-          ? seed.slice(0, 100) // Limit seed length
+          ? seed.slice(0, MAX_SEED_LENGTH)
           : typeof seed === "number"
             ? seed
             : "default";
@@ -151,7 +155,9 @@ export class WorldController {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       logger.error("Error generating chunk:", errorMessage);
-      res.status(500).json({ error: "Failed to generate chunk" });
+      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
+        error: "Failed to generate chunk",
+      });
     }
   }
 }

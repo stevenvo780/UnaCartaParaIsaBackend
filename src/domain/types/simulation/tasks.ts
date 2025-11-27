@@ -1,3 +1,5 @@
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
+
 export type TaskType =
   | "build_house"
   | "gather_wood"
@@ -19,7 +21,7 @@ export interface TaskMetadata {
   assignedAgentId?: string;
   buildingType?: string;
   itemType?: string;
-  resourceType?: string;
+  resourceType?: ResourceType;
   quality?: number;
   // Community task coordination fields
   communityTask?: boolean;
@@ -27,7 +29,7 @@ export interface TaskMetadata {
   claimCount?: number;
   maxClaims?: number;
   claimedBy?: string[];
-  [key: string]: string | number | boolean | string[] | undefined;
+  [key: string]: string | number | boolean | string[] | ResourceType | undefined;
 }
 
 export interface Task {

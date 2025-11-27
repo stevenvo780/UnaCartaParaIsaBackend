@@ -7,6 +7,9 @@ import { TerrainSystem } from "./TerrainSystem";
 import { simulationEvents, GameEventNames } from "../core/events";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
+import { ResourceType as ResourceTypeEnum } from "../../../shared/constants/ResourceEnums";
+import { ZoneType } from "../../../shared/constants/ZoneEnums";
+import { StockpileType } from "../../../shared/constants/ZoneEnums";
 
 interface ProductionConfig {
   updateIntervalMs: number;
@@ -141,14 +144,17 @@ export class ProductionSystem {
    * @returns Resource type or null if zone doesn't produce anything
    */
   private getProductionResource(zone: MutableZone): ResourceType | null {
-    if (zone.type === "food" || zone.metadata?.productionResource === "food") {
-      return "food";
+    if (
+      zone.type === ZoneType.FOOD ||
+      zone.metadata?.productionResource === ResourceTypeEnum.FOOD
+    ) {
+      return ResourceTypeEnum.FOOD;
     }
     if (
-      zone.type === "water" ||
-      zone.metadata?.productionResource === "water"
+      zone.type === ZoneType.WATER ||
+      zone.metadata?.productionResource === ResourceTypeEnum.WATER
     ) {
-      return "water";
+      return ResourceTypeEnum.WATER;
     }
     return (zone.metadata?.productionResource as ResourceType) || null;
   }
@@ -287,7 +293,11 @@ export class ProductionSystem {
   ): void {
     let stockpile = this.inventorySystem.getStockpilesInZone(zoneId)[0];
     if (!stockpile) {
-      stockpile = this.inventorySystem.createStockpile(zoneId, "general", 150);
+      stockpile = this.inventorySystem.createStockpile(
+        zoneId,
+        StockpileType.GENERAL,
+        150,
+      );
     }
     this.inventorySystem.addToStockpile(stockpile.id, resource, amount);
   }

@@ -8,6 +8,7 @@ import type {
 import { RecipesCatalog } from "../../../simulation/data/RecipesCatalog";
 import { simulationEvents, GameEventNames } from "../core/events";
 import type { ResourceType } from "../../types/simulation/economy";
+import { ResourceType as ResourceTypeEnum } from "../../../shared/constants/ResourceEnums";
 
 interface EnhancedCraftingConfig {
   requireWorkstation: boolean;
@@ -199,14 +200,20 @@ export class EnhancedCraftingSystem {
    */
   private mapToResourceKey(itemId: string): ResourceType | null {
     // Direct resource types
-    if (
-      itemId === "wood" ||
-      itemId === "stone" ||
-      itemId === "food" ||
-      itemId === "water" ||
-      itemId === "rare_materials"
-    ) {
-      return itemId;
+    if (itemId === ResourceTypeEnum.WOOD) {
+      return ResourceTypeEnum.WOOD;
+    }
+    if (itemId === ResourceTypeEnum.STONE) {
+      return ResourceTypeEnum.STONE;
+    }
+    if (itemId === ResourceTypeEnum.FOOD) {
+      return ResourceTypeEnum.FOOD;
+    }
+    if (itemId === ResourceTypeEnum.WATER) {
+      return ResourceTypeEnum.WATER;
+    }
+    if (itemId === ResourceTypeEnum.RARE_MATERIALS) {
+      return ResourceTypeEnum.RARE_MATERIALS;
     }
 
     const woodItems = [
@@ -219,7 +226,7 @@ export class EnhancedCraftingSystem {
       "cloth",
     ];
     if (woodItems.includes(itemId)) {
-      return "wood";
+      return ResourceTypeEnum.WOOD;
     }
 
     const stoneItems = [
@@ -234,7 +241,7 @@ export class EnhancedCraftingSystem {
       "flint",
     ];
     if (stoneItems.includes(itemId)) {
-      return "stone";
+      return ResourceTypeEnum.STONE;
     }
 
     const foodItems = [
@@ -253,7 +260,7 @@ export class EnhancedCraftingSystem {
       "honey",
     ];
     if (foodItems.includes(itemId)) {
-      return "food";
+      return ResourceTypeEnum.FOOD;
     }
 
     const rareItems = [
@@ -264,7 +271,7 @@ export class EnhancedCraftingSystem {
       "silver_nugget",
     ];
     if (rareItems.includes(itemId)) {
-      return "rare_materials";
+      return ResourceTypeEnum.RARE_MATERIALS;
     }
 
     return null;

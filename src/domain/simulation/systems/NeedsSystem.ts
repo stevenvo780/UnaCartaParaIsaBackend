@@ -18,6 +18,10 @@ import { performance } from "perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
 import { FoodCatalog } from "../../../simulation/data/FoodCatalog";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
+import { ZoneType } from "../../../shared/constants/ZoneEnums";
+import { NeedType } from "../../../shared/constants/AIEnums";
+import { LifeStage } from "../../../shared/constants/AgentEnums";
+import { ActionType } from "../../../shared/constants/AIEnums";
 
 /**
  * System for managing entity needs (hunger, thirst, energy, hygiene, social, fun, mental health).
@@ -105,22 +109,22 @@ export class NeedsSystem extends EventEmitter {
     this.gpuService = gpuService;
     this.config = {
       decayRates: {
-        hunger: 0.2,
-        thirst: 0.3,
-        energy: 0.15,
-        hygiene: 0.1,
-        social: 0.15,
-        fun: 0.15,
-        mentalHealth: 0.08,
+        [NeedType.HUNGER]: 0.2,
+        [NeedType.THIRST]: 0.3,
+        [NeedType.ENERGY]: 0.15,
+        [NeedType.HYGIENE]: 0.1,
+        [NeedType.SOCIAL]: 0.15,
+        [NeedType.FUN]: 0.15,
+        [NeedType.MENTAL_HEALTH]: 0.08,
       },
       criticalThreshold: 20,
       emergencyThreshold: 10,
       updateIntervalMs: 1000,
       allowRespawn: true,
       deathThresholds: {
-        hunger: 0,
-        thirst: 0,
-        energy: 0,
+        [NeedType.HUNGER]: 0,
+        [NeedType.THIRST]: 0,
+        [NeedType.ENERGY]: 0,
       },
       zoneBonusMultiplier: 1.0,
       crossEffectsEnabled: true,
@@ -201,7 +205,7 @@ export class NeedsSystem extends EventEmitter {
     const startTime = performance.now();
     for (const [entityId, needs] of this.entityNeeds.entries()) {
       const entityStartTime = performance.now();
-      const action = this.entityActions.get(entityId) || "idle";
+      const action = this.entityActions.get(entityId) || ActionType.IDLE;
       this.applyNeedDecay(needs, dtSeconds, entityId, action);
       this.consumeResourcesForNeeds(entityId, needs);
       this.applySocialMoraleBoost(entityId, needs);
@@ -392,24 +396,19 @@ export class NeedsSystem extends EventEmitter {
     }
 
     // Energy recovery based on action and ZONE BONUSES
-    const action = this.entityActions.get(entityId) || "idle";
+    const action = this.entityActions.get(entityId) || ActionType.IDLE;
     let baseEnergyRecovery = 0;
 
-    if (action === "sleep") {
+    if (action === ActionType.SLEEP) {
       baseEnergyRecovery = 3;
-    } else if (action === "rest" || action === "idle") {
+    } else if (action === ActionType.IDLE) {
       baseEnergyRecovery = 1;
     }
 
     // Zone multipliers for rest - resting in a house/bed is much better
     let restMultiplier = 1.0;
     for (const zone of nearbyZones) {
-      if (
-        zone.type === "house" ||
-        zone.type === "shelter" ||
-        zone.type === "bed" ||
-        zone.type === "rest"
-      ) {
+      if (zone.type === ZoneType.SHELTER || zone.type === ZoneType.REST) {
         restMultiplier = 3.0; // 3x faster rest in proper shelter
         break;
       }
@@ -438,19 +437,19 @@ export class NeedsSystem extends EventEmitter {
     for (const zone of zones) {
       switch (zone.type) {
         // Hygiene zones
-        case "hygiene":
-        case "bath":
-        case "well": {
+        case ZoneType.HYGIENE:
+        case ZoneType.BATH:
+        case ZoneType.WELL: {
           const hygieneBonus = 2 * multiplier;
           needs.hygiene = Math.min(100, needs.hygiene + hygieneBonus);
           break;
         }
 
         // Social zones - gain social and fun by being here
-        case "social":
-        case "market":
-        case "gathering":
-        case "tavern": {
+        case ZoneType.SOCIAL:
+        case ZoneType.MARKET:
+        case ZoneType.GATHERING:
+        case ZoneType.TAVERN: {
           const socialBonus = 1.5 * multiplier;
           const funBonus = 1.0 * multiplier;
           needs.social = Math.min(100, needs.social + socialBonus);
@@ -459,8 +458,8 @@ export class NeedsSystem extends EventEmitter {
         }
 
         // Entertainment zones
-        case "entertainment":
-        case "festival": {
+        case ZoneType.ENTERTAINMENT:
+        case ZoneType.FESTIVAL: {
           const funBonus = 2.5 * multiplier;
           const mentalBonus = 1.0 * multiplier;
           needs.fun = Math.min(100, needs.fun + funBonus);
@@ -469,8 +468,8 @@ export class NeedsSystem extends EventEmitter {
         }
 
         // Spiritual zones
-        case "temple":
-        case "sanctuary": {
+        case ZoneType.TEMPLE:
+        case ZoneType.SANCTUARY: {
           const mentalBonus = 2.0 * multiplier;
           const socialBonus = 0.5 * multiplier;
           needs.mentalHealth = Math.min(100, needs.mentalHealth + mentalBonus);
@@ -554,15 +553,15 @@ export class NeedsSystem extends EventEmitter {
       return false;
     }
 
-    if (needs.hunger <= (this.config.deathThresholds?.hunger ?? 0)) {
+    if (needs.hunger <= (this.config.deathThresholds?.[NeedType.HUNGER] ?? 0)) {
       this.handleEntityDeath(entityId, needs, "starvation");
       return true;
     }
-    if (needs.thirst <= (this.config.deathThresholds?.thirst ?? 0)) {
+    if (needs.thirst <= (this.config.deathThresholds?.[NeedType.THIRST] ?? 0)) {
       this.handleEntityDeath(entityId, needs, "dehydration");
       return true;
     }
-    if (needs.energy <= (this.config.deathThresholds?.energy ?? 0)) {
+    if (needs.energy <= (this.config.deathThresholds?.[NeedType.ENERGY] ?? 0)) {
       this.handleEntityDeath(entityId, needs, "exhaustion");
       return true;
     }
@@ -684,7 +683,11 @@ export class NeedsSystem extends EventEmitter {
       const inv = this.inventorySystem.getAgentInventory(entityId);
       if (inv && inv.food > 0) {
         const consumed = Math.min(5, inv.food);
-        this.inventorySystem.removeFromAgent(entityId, "food", consumed);
+        this.inventorySystem.removeFromAgent(
+          entityId,
+          ResourceType.FOOD,
+          consumed,
+        );
         needs.hunger = Math.min(100, needs.hunger + consumed * 10);
         return true;
       }
@@ -697,7 +700,11 @@ export class NeedsSystem extends EventEmitter {
       const inv = this.inventorySystem.getAgentInventory(entityId);
       if (inv && inv.water > 0) {
         const consumed = Math.min(5, inv.water);
-        this.inventorySystem.removeFromAgent(entityId, "water", consumed);
+        this.inventorySystem.removeFromAgent(
+          entityId,
+          ResourceType.WATER,
+          consumed,
+        );
         needs.thirst = Math.min(100, needs.thirst + consumed * 10);
         return true;
       }
@@ -714,7 +721,7 @@ export class NeedsSystem extends EventEmitter {
     needs: EntityNeedsData,
     deltaSeconds: number,
     entityId: string,
-    action: string = "idle",
+    action: string = ActionType.IDLE,
   ): void {
     const ageMultiplier = this.getAgeDecayMultiplier(entityId);
     const divineModifiers = this.applyDivineFavorModifiers(
@@ -725,16 +732,14 @@ export class NeedsSystem extends EventEmitter {
     for (const [need, rate] of Object.entries(divineModifiers)) {
       let finalRate = rate * ageMultiplier;
 
-      if (need === "energy") {
-        if (action === "sleep")
+      if (need === NeedType.ENERGY) {
+        if (action === ActionType.SLEEP)
           finalRate = -5.0; // Recover energy fast
-        else if (action === "rest")
-          finalRate = -2.0; // Recover energy
-        else if (action === "idle")
+        else if (action === ActionType.IDLE)
           finalRate = -0.5; // Recover energy slowly
-        else if (action === "work")
+        else if (action === ActionType.WORK)
           finalRate *= 1.5; // Work consumes more energy
-        else if (action === "run") finalRate *= 2.0;
+        else if (action === ActionType.MOVE) finalRate *= 2.0;
       }
 
       const key = need as keyof EntityNeedsData;
@@ -753,11 +758,11 @@ export class NeedsSystem extends EventEmitter {
     if (!agent) return 1.0;
 
     switch (agent.lifeStage) {
-      case "child":
+      case LifeStage.CHILD:
         return 0.7;
-      case "adult":
+      case LifeStage.ADULT:
         return 1.0;
-      case "elder":
+      case LifeStage.ELDER:
         return 1.4;
       default:
         return 1.0;
@@ -1017,7 +1022,7 @@ export class NeedsSystem extends EventEmitter {
     if (needs.hunger > 90) {
       simulationEvents.emit(GameEventNames.NEED_SATISFIED, {
         agentId: entityId,
-        need: "hunger",
+        need: NeedType.HUNGER,
         value: needs.hunger,
       });
     }

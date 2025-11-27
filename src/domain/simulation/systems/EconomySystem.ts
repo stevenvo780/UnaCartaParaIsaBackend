@@ -3,14 +3,15 @@ import type {
   EconomyConfig,
   ResourceType,
 } from "../../types/simulation/economy";
-import { ResourceType as ResourceTypeEnum } from "../../../shared/constants/ResourceEnums.js";
-import { InventorySystem } from "./InventorySystem.js";
-import { SocialSystem } from "./SocialSystem.js";
-import { RoleSystem } from "./RoleSystem.js";
-import { DivineFavorSystem } from "./DivineFavorSystem.js";
-import { GenealogySystem } from "./GenealogySystem.js";
-import { simulationEvents, GameEventNames } from "../core/events.js";
-import { logger } from "../../../infrastructure/utils/logger.js";
+import { ResourceType as ResourceTypeEnum } from "../../../shared/constants/ResourceEnums";
+import { ZoneType } from "../../../shared/constants/ZoneEnums";
+import { InventorySystem } from "./InventorySystem";
+import { SocialSystem } from "./SocialSystem";
+import { RoleSystem } from "./RoleSystem";
+import { DivineFavorSystem } from "./DivineFavorSystem";
+import { GenealogySystem } from "./GenealogySystem";
+import { simulationEvents, GameEventNames } from "../core/events";
+import { logger } from "../../../infrastructure/utils/logger";
 
 const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
   workDurationMs: 5000,
@@ -221,22 +222,22 @@ export class EconomySystem {
     let baseYield = 0;
 
     switch (zone.type) {
-      case "work": {
+      case ZoneType.WORK: {
         const res = zone.props?.resource;
-        if (res === "wood") {
+        if (res === ResourceTypeEnum.WOOD) {
           resourceType = ResourceTypeEnum.WOOD;
           baseYield = this.config.baseYield.wood;
-        } else if (res === "stone") {
+        } else if (res === ResourceTypeEnum.STONE) {
           resourceType = ResourceTypeEnum.STONE;
           baseYield = this.config.baseYield.stone;
         }
         break;
       }
-      case "food":
+      case ZoneType.FOOD:
         resourceType = ResourceTypeEnum.FOOD;
         baseYield = this.config.baseYield.food;
         break;
-      case "water":
+      case ZoneType.WATER:
         resourceType = ResourceTypeEnum.WATER;
         baseYield = this.config.baseYield.water;
         break;
@@ -249,11 +250,20 @@ export class EconomySystem {
     if (this.roleSystem) {
       const role = this.roleSystem.getAgentRole(agentId);
       if (role?.roleType) {
-        if (role.roleType === "farmer" && resourceType === "food")
+        if (
+          role.roleType === "farmer" &&
+          resourceType === ResourceTypeEnum.FOOD
+        )
           teamBonus += 0.5;
-        if (role.roleType === "quarryman" && resourceType === "stone")
+        if (
+          role.roleType === "quarryman" &&
+          resourceType === ResourceTypeEnum.STONE
+        )
           teamBonus += 0.8;
-        if (role.roleType === "logger" && resourceType === "wood")
+        if (
+          role.roleType === "logger" &&
+          resourceType === ResourceTypeEnum.WOOD
+        )
           teamBonus += 0.6;
         if (
           role.roleType === "gatherer" &&

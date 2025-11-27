@@ -1,27 +1,31 @@
 import type { WorldResourceConfig } from "../../../../domain/types/simulation/worldResources";
-import { ResourceType } from "../../../../shared/constants/ResourceEnums";
+import {
+  ResourceType,
+  WorldResourceType,
+  ResourceInteractionType,
+} from "../../../../shared/constants/ResourceEnums";
 import { BiomeType } from "../../../../shared/constants/BiomeEnums";
 
 export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
-  tree: {
-    type: "tree",
+  [WorldResourceType.TREE]: {
+    type: WorldResourceType.TREE,
     displayName: "Árbol",
-    interactionType: "chop",
+    interactionType: ResourceInteractionType.CHOP,
     interactionDuration: 3000,
 
     yields: {
       pristine: {
-        resourceType: "wood",
+        resourceType: ResourceType.WOOD,
         amountMin: 8,
         amountMax: 15,
       },
       harvested_partial: {
-        resourceType: "wood",
+        resourceType: ResourceType.WOOD,
         amountMin: 3,
         amountMax: 7,
       },
       depleted: {
-        resourceType: "wood",
+        resourceType: ResourceType.WOOD,
         amountMin: 0,
         amountMax: 0,
       },
@@ -50,25 +54,25 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     minDistanceBetweenClusters: 200,
   },
 
-  rock: {
-    type: "rock",
+  [WorldResourceType.ROCK]: {
+    type: WorldResourceType.ROCK,
     displayName: "Roca",
-    interactionType: "mine",
+    interactionType: ResourceInteractionType.MINE,
     interactionDuration: 4000,
 
     yields: {
       pristine: {
-        resourceType: "stone",
+        resourceType: ResourceType.STONE,
         amountMin: 10,
         amountMax: 20,
       },
       harvested_partial: {
-        resourceType: "stone",
+        resourceType: ResourceType.STONE,
         amountMin: 4,
         amountMax: 10,
       },
       depleted: {
-        resourceType: "stone",
+        resourceType: ResourceType.STONE,
         amountMin: 0,
         amountMax: 0,
       },
@@ -97,10 +101,10 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     minDistanceBetweenClusters: 150,
   },
 
-  trash_pile: {
-    type: "trash_pile",
+  [WorldResourceType.TRASH_PILE]: {
+    type: WorldResourceType.TRASH_PILE,
     displayName: "Basura",
-    interactionType: "search",
+    interactionType: ResourceInteractionType.SEARCH,
     interactionDuration: 5000,
 
     yields: {
@@ -129,25 +133,25 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     },
 
     spawnProbability: 0.08,
-    suitableBiomes: ["wasteland", "urban_ruins"],
+    suitableBiomes: [],
     clusterSize: { min: 1, max: 3 },
     minDistanceBetweenClusters: 300,
   },
 
-  water_source: {
-    type: "water_source",
+  [WorldResourceType.WATER_SOURCE]: {
+    type: WorldResourceType.WATER_SOURCE,
     displayName: "Fuente de Agua",
-    interactionType: "collect",
+    interactionType: ResourceInteractionType.COLLECT,
     interactionDuration: 2000,
 
     yields: {
       pristine: {
-        resourceType: "water",
+        resourceType: ResourceType.WATER,
         amountMin: 5,
         amountMax: 10,
       },
       depleted: {
-        resourceType: "water",
+        resourceType: ResourceType.WATER,
         amountMin: 1,
         amountMax: 2,
       },
@@ -175,10 +179,10 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     minDistanceBetweenClusters: 500,
   },
 
-  berry_bush: {
-    type: "berry_bush",
+  [WorldResourceType.BERRY_BUSH]: {
+    type: WorldResourceType.BERRY_BUSH,
     displayName: "Arbusto de Bayas",
-    interactionType: "gather",
+    interactionType: ResourceInteractionType.GATHER,
     interactionDuration: 1500,
 
     yields: {
@@ -211,10 +215,10 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     minDistanceBetweenClusters: 100,
   },
 
-  mushroom_patch: {
-    type: "mushroom_patch",
+  [WorldResourceType.MUSHROOM_PATCH]: {
+    type: WorldResourceType.MUSHROOM_PATCH,
     displayName: "Setas",
-    interactionType: "gather",
+    interactionType: ResourceInteractionType.GATHER,
     interactionDuration: 1500,
 
     yields: {
@@ -252,10 +256,10 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     minDistanceBetweenClusters: 150,
   },
 
-  wheat_crop: {
-    type: "wheat_crop",
+  [WorldResourceType.WHEAT_CROP]: {
+    type: WorldResourceType.WHEAT_CROP,
     displayName: "Trigo Silvestre",
-    interactionType: "gather",
+    interactionType: ResourceInteractionType.GATHER,
     interactionDuration: 2000,
 
     yields: {

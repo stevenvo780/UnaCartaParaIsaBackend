@@ -64,6 +64,10 @@ export enum NeedType {
   SOCIAL = "social",
   FUN = "fun",
   MENTAL_HEALTH = "mentalHealth",
+  HYGIENE = "hygiene",
+  COMFORT = "comfort",
+  SAFETY = "safety",
+  RECREATION = "recreation",
 }
 
 /**

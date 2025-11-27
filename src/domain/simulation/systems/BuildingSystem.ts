@@ -8,6 +8,7 @@ import {
 } from "../../types/simulation/buildings";
 import type { TaskType } from "../../types/simulation/tasks";
 import { logger } from "../../../infrastructure/utils/logger";
+import { ZoneType } from "../../../shared/constants/ZoneEnums";
 
 import { TaskSystem } from "./TaskSystem";
 import { TerrainSystem } from "./TerrainSystem";
@@ -338,7 +339,7 @@ export class BuildingSystem {
     zone.metadata.underConstruction = false;
     zone.metadata.building = job.label === "mine" ? "mine" : job.label;
     zone.metadata.craftingStation = job.label === "workbench";
-    zone.type = job.label === "house" ? "rest" : "work";
+    zone.type = job.label === "house" ? ZoneType.REST : ZoneType.WORK;
     zone.props = {
       ...(zone.props || {}),
       status: "ready",

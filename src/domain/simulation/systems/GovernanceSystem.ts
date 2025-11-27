@@ -16,6 +16,7 @@ import { DivineFavorSystem } from "./DivineFavorSystem";
 import { ResourceReservationSystem } from "./ResourceReservationSystem";
 import { RoleSystem } from "./RoleSystem";
 import { logger } from "../../../infrastructure/utils/logger";
+import { ZoneType } from "../../../shared/constants/ZoneEnums";
 
 /**
  * Configuration for governance system behavior.
@@ -598,7 +599,8 @@ export class GovernanceSystem {
     const zones = this.state.zones ?? [];
     const housingZones = zones.filter(
       (zone) =>
-        zone.type === "house" ||
+        zone.type === ZoneType.SHELTER ||
+        zone.type === ZoneType.BEDROOM ||
         (zone.props &&
           "subtype" in zone.props &&
           zone.props.subtype === "housing"),
