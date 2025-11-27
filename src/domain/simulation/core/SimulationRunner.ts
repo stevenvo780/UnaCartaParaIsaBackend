@@ -50,6 +50,7 @@ import { KnowledgeNetworkSystem } from "../systems/KnowledgeNetworkSystem";
 import { MovementSystem } from "../systems/MovementSystem";
 import { AppearanceGenerationSystem } from "../systems/AppearanceGenerationSystem";
 import { ChunkLoadingSystem } from "../systems/ChunkLoadingSystem";
+import { SharedKnowledgeSystem } from "../systems/SharedKnowledgeSystem";
 import { GPUComputeService } from "./GPUComputeService";
 import { MultiRateScheduler } from "./MultiRateScheduler";
 import { performanceMonitor } from "./PerformanceMonitor";
@@ -251,6 +252,10 @@ export class SimulationRunner {
 
   @inject(TYPES.ChunkLoadingSystem)
   public readonly chunkLoadingSystem!: ChunkLoadingSystem;
+
+  @inject(TYPES.SharedKnowledgeSystem)
+  public readonly sharedKnowledgeSystem!: SharedKnowledgeSystem;
+
 
   private readonly INDEX_REBUILD_INTERVAL_FAST = 5;
 
@@ -847,6 +852,13 @@ export class SimulationRunner {
     });
 
     this.scheduler.registerSystem({
+      name: "SharedKnowledgeSystem",
+      rate: "SLOW",
+      update: () => this.sharedKnowledgeSystem.update(),
+      enabled: true,
+    });
+
+    this.scheduler.registerSystem({
       name: "EmergenceSystem",
       rate: "SLOW",
       update: (delta: number) => this.emergenceSystem.update(delta),
@@ -1101,12 +1113,12 @@ export class SimulationRunner {
         social,
         ai: aiState
           ? {
-              currentGoal: aiState.currentGoal,
-              goalQueue: aiState.goalQueue,
-              currentAction: aiState.currentAction,
-              offDuty: aiState.offDuty,
-              lastDecisionTime: aiState.lastDecisionTime,
-            }
+            currentGoal: aiState.currentGoal,
+            goalQueue: aiState.goalQueue,
+            currentAction: aiState.currentAction,
+            offDuty: aiState.offDuty,
+            lastDecisionTime: aiState.lastDecisionTime,
+          }
           : null,
       };
     }

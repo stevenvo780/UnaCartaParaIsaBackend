@@ -61,4 +61,5 @@ export const TYPES = {
   GPUBatchQueryService: Symbol.for("GPUBatchQueryService"),
   TerrainSystem: Symbol.for("TerrainSystem"),
   ChunkLoadingSystem: Symbol.for("ChunkLoadingSystem"),
+  SharedKnowledgeSystem: Symbol.for("SharedKnowledgeSystem"),
 };

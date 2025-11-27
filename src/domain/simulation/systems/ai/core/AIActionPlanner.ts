@@ -142,27 +142,34 @@ export class AIActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
-    if (goal.targetZoneId || goal.targetPosition) {
+    // Hunger is satisfied by gathering food resources, not by visiting zones
+    // If goal has targetPosition (from gather goal), move there then harvest
+    if (goal.targetId && goal.targetPosition) {
+      const agentPos = this.deps.getAgentPosition(agentId);
+      if (agentPos) {
+        const dist = Math.hypot(
+          agentPos.x - goal.targetPosition.x,
+          agentPos.y - goal.targetPosition.y,
+        );
+        if (dist < this.HARVEST_RANGE) {
+          return {
+            actionType: "harvest",
+            agentId,
+            targetId: goal.targetId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+          };
+        }
+      }
       return {
         actionType: "move",
         agentId,
-        targetZoneId: goal.targetZoneId,
         targetPosition: goal.targetPosition,
         timestamp,
       };
     }
-    const foodZone = this.deps.gameState.zones?.find(
-      (z) => z.type === "food" || z.type === "kitchen",
-    );
-    if (foodZone) {
-      return {
-        actionType: "move",
-        agentId,
-        targetZoneId: foodZone.id,
-        timestamp,
-      };
-    }
-    return null;
+    // No valid food target - agent should explore or wait
+    return { actionType: "idle", agentId, timestamp };
   }
 
   private planSatisfyThirst(
@@ -170,27 +177,34 @@ export class AIActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
-    if (goal.targetZoneId || goal.targetPosition) {
+    // Thirst is satisfied by gathering water resources, not by visiting zones
+    // If goal has targetPosition (from gather goal), move there then harvest
+    if (goal.targetId && goal.targetPosition) {
+      const agentPos = this.deps.getAgentPosition(agentId);
+      if (agentPos) {
+        const dist = Math.hypot(
+          agentPos.x - goal.targetPosition.x,
+          agentPos.y - goal.targetPosition.y,
+        );
+        if (dist < this.HARVEST_RANGE) {
+          return {
+            actionType: "harvest",
+            agentId,
+            targetId: goal.targetId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+          };
+        }
+      }
       return {
         actionType: "move",
         agentId,
-        targetZoneId: goal.targetZoneId,
         targetPosition: goal.targetPosition,
         timestamp,
       };
     }
-    const waterZone = this.deps.gameState.zones?.find(
-      (z) => z.type === "water" || z.type === "well",
-    );
-    if (waterZone) {
-      return {
-        actionType: "move",
-        agentId,
-        targetZoneId: waterZone.id,
-        timestamp,
-      };
-    }
-    return null;
+    // No valid water target - agent should explore or wait
+    return { actionType: "idle", agentId, timestamp };
   }
 
   private planSatisfyEnergy(
@@ -198,6 +212,38 @@ export class AIActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
+    const agentPos = this.deps.getAgentPosition(agentId);
+
+    // Check if already in a rest zone
+    const currentRestZone = this.deps.gameState.zones?.find((z) => {
+      if (
+        z.type !== "rest" &&
+        z.type !== "bed" &&
+        z.type !== "shelter" &&
+        z.type !== "house"
+      ) {
+        return false;
+      }
+      if (!agentPos || !z.bounds) return false;
+      return (
+        agentPos.x >= z.bounds.x &&
+        agentPos.x <= z.bounds.x + z.bounds.width &&
+        agentPos.y >= z.bounds.y &&
+        agentPos.y <= z.bounds.y + z.bounds.height
+      );
+    });
+
+    if (currentRestZone) {
+      // Already in rest zone, sleep!
+      return {
+        actionType: "sleep",
+        agentId,
+        targetZoneId: currentRestZone.id,
+        timestamp,
+      };
+    }
+
+    // Move to target zone if specified
     if (goal.targetZoneId || goal.targetPosition) {
       return {
         actionType: "move",
@@ -207,6 +253,8 @@ export class AIActionPlanner {
         timestamp,
       };
     }
+
+    // Find a rest zone to go to
     const restZone = this.deps.gameState.zones?.find(
       (z) =>
         z.type === "rest" ||
@@ -222,6 +270,8 @@ export class AIActionPlanner {
         timestamp,
       };
     }
+
+    // No rest zone? Just rest in place (idle)
     return { actionType: "idle", agentId, timestamp };
   }
 
@@ -230,6 +280,38 @@ export class AIActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
+    const agentPos = this.deps.getAgentPosition(agentId);
+
+    // Check if already in a social zone
+    const currentZone = this.deps.gameState.zones?.find((z) => {
+      if (
+        z.type !== "social" &&
+        z.type !== "gathering" &&
+        z.type !== "market" &&
+        z.type !== "tavern"
+      ) {
+        return false;
+      }
+      if (!agentPos || !z.bounds) return false;
+      return (
+        agentPos.x >= z.bounds.x &&
+        agentPos.x <= z.bounds.x + z.bounds.width &&
+        agentPos.y >= z.bounds.y &&
+        agentPos.y <= z.bounds.y + z.bounds.height
+      );
+    });
+
+    if (currentZone) {
+      // Already in social zone, socialize!
+      return {
+        actionType: "socialize",
+        agentId,
+        targetZoneId: currentZone.id,
+        timestamp,
+      };
+    }
+
+    // Move to target zone if specified
     if (goal.targetZoneId || goal.targetPosition) {
       return {
         actionType: "move",
@@ -239,6 +321,8 @@ export class AIActionPlanner {
         timestamp,
       };
     }
+
+    // Find a social zone to go to
     const socialZone = this.deps.gameState.zones?.find(
       (z) =>
         z.type === "social" ||
@@ -254,7 +338,13 @@ export class AIActionPlanner {
         timestamp,
       };
     }
-    return null;
+
+    // No social zone? Try to socialize in place if there are nearby agents
+    return {
+      actionType: "socialize",
+      agentId,
+      timestamp,
+    };
   }
 
   private planSatisfyFun(
@@ -367,13 +457,46 @@ export class AIActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
-    if (!goal.targetZoneId) {
-      return null;
+    const agentPos = this.deps.getAgentPosition(agentId);
+
+    // Find target zone - use goal's targetZoneId or find nearest storage zone
+    let targetZoneId = goal.targetZoneId;
+    if (!targetZoneId) {
+      const storageZone = this.deps.gameState.zones?.find(
+        (z) => z.type === "storage" || z.type === "stockpile",
+      );
+      if (!storageZone) {
+        return null; // No storage zone available
+      }
+      targetZoneId = storageZone.id;
     }
+
+    const zone = this.deps.gameState.zones?.find((z) => z.id === targetZoneId);
+
+    // Check if agent is already at the stockpile zone
+    if (agentPos && zone?.bounds) {
+      const inZone =
+        agentPos.x >= zone.bounds.x &&
+        agentPos.x <= zone.bounds.x + zone.bounds.width &&
+        agentPos.y >= zone.bounds.y &&
+        agentPos.y <= zone.bounds.y + zone.bounds.height;
+
+      if (inZone) {
+        // Agent is at stockpile, execute deposit
+        return {
+          actionType: "deposit",
+          agentId,
+          targetZoneId,
+          timestamp,
+        };
+      }
+    }
+
+    // Move to stockpile zone first
     return {
       actionType: "move",
       agentId,
-      targetZoneId: goal.targetZoneId,
+      targetZoneId,
       timestamp,
     };
   }
@@ -447,6 +570,42 @@ export class AIActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
+    // For mental health / social goals, use same logic as planSatisfySocial
+    // but also include temple/sanctuary zones
+    const agentPos = this.deps.getAgentPosition(agentId);
+
+    // Check if already in a social/temple zone
+    const currentZone = this.deps.gameState.zones?.find((z) => {
+      if (
+        z.type !== "social" &&
+        z.type !== "gathering" &&
+        z.type !== "market" &&
+        z.type !== "tavern" &&
+        z.type !== "temple" &&
+        z.type !== "sanctuary"
+      ) {
+        return false;
+      }
+      if (!agentPos || !z.bounds) return false;
+      return (
+        agentPos.x >= z.bounds.x &&
+        agentPos.x <= z.bounds.x + z.bounds.width &&
+        agentPos.y >= z.bounds.y &&
+        agentPos.y <= z.bounds.y + z.bounds.height
+      );
+    });
+
+    if (currentZone) {
+      // Already in zone, socialize!
+      return {
+        actionType: "socialize",
+        agentId,
+        targetZoneId: currentZone.id,
+        timestamp,
+      };
+    }
+
+    // Move to target zone if specified
     if (goal.targetZoneId) {
       return {
         actionType: "move",
@@ -463,9 +622,15 @@ export class AIActionPlanner {
         timestamp,
       };
     }
+
+    // Find a social zone to go to
     const socialZone = this.deps.gameState.zones?.find(
       (z) =>
-        z.type === "social" || z.type === "gathering" || z.type === "market",
+        z.type === "social" ||
+        z.type === "gathering" ||
+        z.type === "market" ||
+        z.type === "temple" ||
+        z.type === "sanctuary",
     );
     if (socialZone) {
       return {
@@ -475,7 +640,13 @@ export class AIActionPlanner {
         timestamp,
       };
     }
-    return null;
+
+    // No zone? Socialize in place
+    return {
+      actionType: "socialize",
+      agentId,
+      timestamp,
+    };
   }
 
   private planExplore(

@@ -2,7 +2,7 @@ import type { GameState } from "../../../../types/game-types";
 import type { AIGoal, AIState } from "../../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../../types/simulation/needs";
 import type { AgentRole } from "../../../../types/simulation/roles";
-import type { Task } from "../../../../types/simulation/tasks";
+import type { Task, TaskCreationParams } from "../../../../types/simulation/tasks";
 import type {
   Inventory,
   Stockpile,
@@ -51,10 +51,34 @@ export interface AgentGoalPlannerDeps {
     entityId: string,
     resourceType: string,
   ) => { id: string; x: number; y: number } | null;
+  findNearestHuntableAnimal?: (
+    entityId: string,
+  ) => { id: string; x: number; y: number; type: string } | null;
   getAgentRole?: (agentId: string) => AgentRole | undefined;
   getPreferredResourceForRole?: (roleType: string) => string | undefined;
 
   getTasks?: () => Task[];
+  taskSystem?: {
+    createTask: (params: TaskCreationParams) => Task | null;
+    getAvailableCommunityTasks: () => Task[];
+    claimTask: (taskId: string, agentId: string) => boolean;
+    releaseTaskClaim: (taskId: string, agentId: string) => void;
+  };
+  sharedKnowledgeSystem?: {
+    getKnownResourceAlerts: (agentId: string) => Array<{
+      id: string;
+      resourceId: string;
+      resourceType: string;
+      position: { x: number; y: number };
+    }>;
+    getKnownThreatAlerts: (agentId: string) => Array<{
+      id: string;
+      threatId: string;
+      threatType: "predator" | "hostile_agent" | "danger_zone";
+      position: { x: number; y: number };
+      severity: number;
+    }>;
+  };
   getAgentInventory?: (id: string) => Inventory | undefined;
   getCurrentZone?: (id: string) => string | undefined;
   getEquipped?: (id: string) => string;
@@ -144,13 +168,15 @@ export function planGoals(
   if (entityNeeds) {
     const needsDeps = {
       getEntityNeeds: deps.getEntityNeeds,
+      getAgentInventory: deps.getAgentInventory,
       findNearestResource: deps.findNearestResource,
+      findNearestHuntableAnimal: deps.findNearestHuntableAnimal,
       getCurrentTimeOfDay: deps.getCurrentTimeOfDay,
       getAgentRole: deps.getAgentRole
         ? (id: string) => {
-            const role = deps.getAgentRole!(id);
-            return role ? { roleType: role.roleType } : undefined;
-          }
+          const role = deps.getAgentRole!(id);
+          return role ? { roleType: role.roleType } : undefined;
+        }
         : undefined,
       getCollectiveResourceState: deps.getCollectiveResourceState,
     };
@@ -169,9 +195,9 @@ export function planGoals(
       getAgentInventory: deps.getAgentInventory,
       getAgentRole: deps.getAgentRole
         ? (id: string) => {
-            const role = deps.getAgentRole!(id);
-            return role ? { roleType: role.roleType } : undefined;
-          }
+          const role = deps.getAgentRole!(id);
+          return role ? { roleType: role.roleType } : undefined;
+        }
         : () => undefined,
       getEntityPosition: positionFor,
       getAllStockpiles: () =>
@@ -183,6 +209,7 @@ export function planGoals(
         })),
       getActiveDemands: deps.getActiveDemands,
       getPopulation: deps.getPopulation,
+      taskSystem: deps.taskSystem,
     };
     const collectiveGoals = evaluateCollectiveNeeds(
       collectiveDeps,

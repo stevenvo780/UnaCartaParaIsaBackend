@@ -121,23 +121,6 @@ export class WorldGenerationService {
       tiles.push(row);
     }
 
-    // Log decal statistics for debugging
-    let totalDecals = 0;
-    let tilesWithDecals = 0;
-    for (const row of tiles) {
-      for (const tile of row) {
-        if (tile.assets.decals && tile.assets.decals.length > 0) {
-          totalDecals += tile.assets.decals.length;
-          tilesWithDecals++;
-        }
-      }
-    }
-    if (totalDecals > 0) {
-      console.log(
-        `📦 Chunk (${x},${y}): ${totalDecals} decals in ${tilesWithDecals} tiles`,
-      );
-    }
-
     return tiles;
   }
 

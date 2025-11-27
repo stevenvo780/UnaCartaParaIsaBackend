@@ -112,16 +112,8 @@ export class DeltaEncoder {
       ? new Map(previous.entities.map((e) => [e.id, e]))
       : new Map<string, SimulationEntity>();
 
-    if (current.agents && previous.agents) {
-      const changedAgents = current.agents.filter((agent) => {
-        const prevAgent = prevAgentMap.get(agent.id);
-        return !prevAgent || this.hasAgentChanged(prevAgent, agent);
-      });
-
-      if (changedAgents.length > 0) {
-        changes.agents = changedAgents;
-      }
-    } else if (current.agents) {
+    // Always include agents to ensure AI data is sent
+    if (current.agents) {
       changes.agents = current.agents;
     }
 
@@ -191,8 +183,8 @@ export class DeltaEncoder {
   }
 
   private hasAgentChanged(
-    prev: AgentProfile & { needs?: EntityNeedsData; health?: number },
-    current: AgentProfile & { needs?: EntityNeedsData; health?: number },
+    prev: AgentProfile & { needs?: EntityNeedsData; health?: number; ai?: unknown },
+    current: AgentProfile & { needs?: EntityNeedsData; health?: number; ai?: unknown },
   ): boolean {
     if (
       prev.position?.x !== current.position?.x ||
@@ -213,6 +205,11 @@ export class DeltaEncoder {
     }
 
     if (prev.health !== current.health) {
+      return true;
+    }
+
+    // Check if AI state changed (goals, actions, etc.)
+    if (prev.ai !== current.ai) {
       return true;
     }
 

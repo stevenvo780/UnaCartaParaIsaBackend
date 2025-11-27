@@ -97,6 +97,7 @@ export class AISystem extends EventEmitter {
   private _movementSystem?: MovementSystem;
   private questSystem?: QuestSystem;
   private timeSystem?: TimeSystem;
+  private sharedKnowledgeSystem?: SharedKnowledgeSystem;
   private entityIndex?: EntityIndex;
   private gpuService?: GPUComputeService;
 
@@ -287,107 +288,107 @@ export class AISystem extends EventEmitter {
       gameState: this.gameState,
       inventorySystem: this.inventorySystem
         ? {
-            getAgentInventory: (agentId: string) => {
-              const inv = this.inventorySystem!.getAgentInventory(agentId);
-              return inv
-                ? {
-                    wood: inv.wood,
-                    stone: inv.stone,
-                    food: inv.food,
-                    water: inv.water,
-                  }
-                : null;
+          getAgentInventory: (agentId: string) => {
+            const inv = this.inventorySystem!.getAgentInventory(agentId);
+            return inv
+              ? {
+                wood: inv.wood,
+                stone: inv.stone,
+                food: inv.food,
+                water: inv.water,
+              }
+              : null;
+          },
+          removeFromAgent: (
+            agentId: string,
+            type: ResourceType,
+            amount: number,
+          ) => this.inventorySystem!.removeFromAgent(agentId, type, amount),
+          addResource: (
+            agentId: string,
+            type: ResourceType,
+            amount: number,
+          ) => this.inventorySystem!.addResource(agentId, type, amount),
+          getStockpilesInZone: (zoneId: string) =>
+            this.inventorySystem!.getStockpilesInZone(zoneId),
+          createStockpile: (zoneId: string, type: string) =>
+            this.inventorySystem!.createStockpile(
+              zoneId,
+              type as "general" | "food" | "materials",
+            ),
+          transferToStockpile: (
+            agentId: string,
+            stockpileId: string,
+            resources: {
+              wood: number;
+              stone: number;
+              food: number;
+              water: number;
             },
-            removeFromAgent: (
-              agentId: string,
-              type: ResourceType,
-              amount: number,
-            ) => this.inventorySystem!.removeFromAgent(agentId, type, amount),
-            addResource: (
-              agentId: string,
-              type: ResourceType,
-              amount: number,
-            ) => this.inventorySystem!.addResource(agentId, type, amount),
-            getStockpilesInZone: (zoneId: string) =>
-              this.inventorySystem!.getStockpilesInZone(zoneId),
-            createStockpile: (zoneId: string, type: string) =>
-              this.inventorySystem!.createStockpile(
-                zoneId,
-                type as "general" | "food" | "materials",
-              ),
-            transferToStockpile: (
-              agentId: string,
-              stockpileId: string,
-              resources: {
-                wood: number;
-                stone: number;
-                food: number;
-                water: number;
-              },
-            ) =>
-              this.inventorySystem!.transferToStockpile(
-                agentId,
-                stockpileId,
-                resources,
-              ),
-          }
+          ) =>
+            this.inventorySystem!.transferToStockpile(
+              agentId,
+              stockpileId,
+              resources,
+            ),
+        }
         : null,
       craftingSystem: this.craftingSystem
         ? {
-            craftBestWeapon: (agentId: string) =>
-              this.craftingSystem!.craftBestWeapon(agentId),
-          }
+          craftBestWeapon: (agentId: string) =>
+            this.craftingSystem!.craftBestWeapon(agentId),
+        }
         : null,
       questSystem: this.questSystem
         ? {
-            startQuest: (questId: string) =>
-              this.questSystem!.startQuest(questId),
-          }
+          startQuest: (questId: string) =>
+            this.questSystem!.startQuest(questId),
+        }
         : null,
       roleSystem: this.roleSystem
         ? {
-            getAgentRole: (agentId: string) => {
-              const role = this.roleSystem!.getAgentRole(agentId);
-              return role ? { roleType: role.roleType } : null;
-            },
-          }
+          getAgentRole: (agentId: string) => {
+            const role = this.roleSystem!.getAgentRole(agentId);
+            return role ? { roleType: role.roleType } : null;
+          },
+        }
         : null,
       socialSystem: this.socialSystem
         ? {
-            registerFriendlyInteraction: (agentId: string, targetId: string) =>
-              this.socialSystem!.registerFriendlyInteraction(agentId, targetId),
-            imposeLocalTruces: (
-              agentId: string,
-              radius: number,
-              duration: number,
-            ) =>
-              this.socialSystem!.imposeLocalTruces(agentId, radius, duration),
-          }
+          registerFriendlyInteraction: (agentId: string, targetId: string) =>
+            this.socialSystem!.registerFriendlyInteraction(agentId, targetId),
+          imposeLocalTruces: (
+            agentId: string,
+            radius: number,
+            duration: number,
+          ) =>
+            this.socialSystem!.imposeLocalTruces(agentId, radius, duration),
+        }
         : null,
       householdSystem: this.householdSystem
         ? {
-            findHouseholdForAgent: (agentId: string) => {
-              const household =
-                this.householdSystem!.findHouseholdForAgent(agentId);
-              return household ? { zoneId: household.zoneId } : null;
-            },
-          }
+          findHouseholdForAgent: (agentId: string) => {
+            const household =
+              this.householdSystem!.findHouseholdForAgent(agentId);
+            return household ? { zoneId: household.zoneId } : null;
+          },
+        }
         : null,
       needsSystem: this.needsSystem
         ? {
-            getNeeds: (entityId: string) => {
-              const needs = this.needsSystem!.getNeeds(entityId);
-              return needs
-                ? {
-                    hunger: needs.hunger,
-                    thirst: needs.thirst,
-                    energy: needs.energy,
-                    social: needs.social,
-                    fun: needs.fun,
-                  }
-                : null;
-            },
-          }
+          getNeeds: (entityId: string) => {
+            const needs = this.needsSystem!.getNeeds(entityId);
+            return needs
+              ? {
+                hunger: needs.hunger,
+                thirst: needs.thirst,
+                energy: needs.energy,
+                social: needs.social,
+                fun: needs.fun,
+              }
+              : null;
+          },
+        }
         : null,
       goalsCompletedRef: this._goalsCompletedRef,
     });
@@ -645,10 +646,10 @@ export class AISystem extends EventEmitter {
 
     const inventoryEmpty = inventory
       ? (inventory.food || 0) +
-          (inventory.water || 0) +
-          (inventory.wood || 0) +
-          (inventory.stone || 0) ===
-        0
+      (inventory.water || 0) +
+      (inventory.wood || 0) +
+      (inventory.stone || 0) ===
+      0
       : true;
     const needsSatisfied = needs
       ? needs.hunger > 70 && needs.thirst > 70 && needs.energy > 70
@@ -787,6 +788,35 @@ export class AISystem extends EventEmitter {
       findNearestResource: (id: string, resourceType: string) => {
         return this.findNearestResourceForEntity(id, resourceType);
       },
+      findNearestHuntableAnimal: (entityId: string) => {
+        const agentPos = this.getAgentPosition(entityId);
+        if (!agentPos || !this.gameState.animals?.animals) return null;
+
+        const HUNT_SEARCH_RANGE = 150;
+        let nearest: { id: string; x: number; y: number; type: string } | null = null;
+        let minDist = Infinity;
+
+        for (const animal of this.gameState.animals.animals) {
+          if (animal.isDead) continue;
+          const config = getAnimalConfig(animal.type);
+          if (!config?.canBeHunted) continue;
+
+          const dist = Math.hypot(
+            agentPos.x - animal.position.x,
+            agentPos.y - animal.position.y
+          );
+          if (dist < minDist && dist < HUNT_SEARCH_RANGE) {
+            minDist = dist;
+            nearest = {
+              id: animal.id,
+              x: animal.position.x,
+              y: animal.position.y,
+              type: animal.type,
+            };
+          }
+        }
+        return nearest;
+      },
       getAgentRole: (id: string) => this.roleSystem?.getAgentRole(id),
       getAgentInventory: (id: string) =>
         this.inventorySystem?.getAgentInventory(id),
@@ -854,11 +884,11 @@ export class AISystem extends EventEmitter {
         const entity = this.gameState.entities?.find((e) => e.id === id);
         return entity?.stats
           ? {
-              health: entity.stats.health ?? 100,
-              stamina: entity.stats.stamina ?? 100,
-              attack: entity.stats.attack ?? 10,
-              defense: entity.stats.defense ?? 0,
-            }
+            health: entity.stats.health ?? 100,
+            stamina: entity.stats.stamina ?? 100,
+            attack: entity.stats.attack ?? 10,
+            defense: entity.stats.defense ?? 0,
+          }
           : null;
       },
       getPreferredResourceForRole: (role: string) =>
@@ -877,6 +907,25 @@ export class AISystem extends EventEmitter {
       getEnemiesForAgent: (id, threshold) =>
         this.combatSystem?.getNearbyEnemies(id, threshold) || [],
       getTasks: () => this.taskSystem?.getActiveTasks() || [],
+      taskSystem: this.taskSystem
+        ? {
+          createTask: (params: unknown) => this.taskSystem!.createTask(params),
+          getAvailableCommunityTasks: () =>
+            this.taskSystem!.getAvailableCommunityTasks(),
+          claimTask: (taskId: string, agentId: string) =>
+            this.taskSystem!.claimTask(taskId, agentId),
+          releaseTaskClaim: (taskId: string, agentId: string) =>
+            this.taskSystem!.releaseTaskClaim(taskId, agentId),
+        }
+        : undefined,
+      sharedKnowledgeSystem: this.sharedKnowledgeSystem
+        ? {
+          getKnownResourceAlerts: (agentId: string) =>
+            this.sharedKnowledgeSystem!.getKnownResourceAlerts(agentId),
+          getKnownThreatAlerts: (agentId: string) =>
+            this.sharedKnowledgeSystem!.getKnownThreatAlerts(agentId),
+        }
+        : undefined,
       getActiveQuests: () => this.questSystem?.getActiveQuests() || [],
       getAvailableQuests: () => this.questSystem?.getAvailableQuests() || [],
       getCurrentTimeOfDay: () => {
@@ -1187,7 +1236,7 @@ export class AISystem extends EventEmitter {
   public setAgentOffDuty(agentId: string, offDuty: boolean): void {
     const stopMovement =
       this._movementSystem &&
-      typeof this._movementSystem.stopMovement === "function"
+        typeof this._movementSystem.stopMovement === "function"
         ? (id: string) => this._movementSystem!.stopMovement(id)
         : undefined;
     this.stateManager.setAgentOffDuty(agentId, offDuty, stopMovement);
@@ -1408,13 +1457,13 @@ export class AISystem extends EventEmitter {
       const goalType = goal.type as GoalType;
       const goalData: AIGoalData | undefined = goal.data
         ? {
-            ...Object.fromEntries(
-              Object.entries(goal.data).map(([k, v]) => [
-                k,
-                typeof v === "string" || typeof v === "number" ? v : undefined,
-              ]),
-            ),
-          }
+          ...Object.fromEntries(
+            Object.entries(goal.data).map(([k, v]) => [
+              k,
+              typeof v === "string" || typeof v === "number" ? v : undefined,
+            ]),
+          ),
+        }
         : undefined;
 
       const newGoal: AIGoal = {

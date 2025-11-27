@@ -134,9 +134,9 @@ describe("NeedsEvaluator", () => {
       });
       const goals = evaluateCriticalNeeds(deps, aiState);
       expect(goals.length).toBe(1);
-      expect(goals[0].type).toBe("satisfy_need");
+      expect(goals[0].type).toBe("gather");
       expect(goals[0].data?.need).toBe("thirst");
-      expect(goals[0].data?.resourceType).toBe("water");
+      expect(goals[0].data?.resourceType).toBe("water_source");
       expect(goals[0].targetId).toBe("water-1");
       expect(goals[0].targetPosition).toEqual({ x: 100, y: 100 });
     });
@@ -153,9 +153,9 @@ describe("NeedsEvaluator", () => {
       });
       const goals = evaluateCriticalNeeds(deps, aiState);
       expect(goals.length).toBe(1);
-      expect(goals[0].type).toBe("satisfy_need");
+      expect(goals[0].type).toBe("gather");
       expect(goals[0].data?.need).toBe("hunger");
-      expect(goals[0].data?.resourceType).toBe("food");
+      expect(goals[0].data?.resourceType).toBe("wheat_crop");
       expect(goals[0].targetId).toBe("wheat-1");
       expect(goals[0].targetPosition).toEqual({ x: 200, y: 200 });
     });

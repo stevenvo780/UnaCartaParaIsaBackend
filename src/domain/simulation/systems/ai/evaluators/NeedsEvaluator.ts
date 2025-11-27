@@ -35,6 +35,10 @@ export interface NeedsEvaluatorDependencies {
     entityId: string,
     resourceType: string,
   ) => { id: string; x: number; y: number } | null;
+  /** Find nearest huntable animal for desperate food situations */
+  findNearestHuntableAnimal?: (
+    entityId: string,
+  ) => { id: string; x: number; y: number; type: string } | null;
   /** Find agents who have excess resources to trade */
   findAgentWithResource?: (
     entityId: string,
@@ -169,7 +173,10 @@ export function evaluateCriticalNeeds(
       // Need to acquire water - either gather or trade
       let waterTarget = null;
       if (deps.findNearestResource) {
-        waterTarget = deps.findNearestResource(aiState.entityId, "water_source");
+        waterTarget = deps.findNearestResource(
+          aiState.entityId,
+          "water_source",
+        );
       }
 
       if (waterTarget) {
@@ -182,7 +189,7 @@ export function evaluateCriticalNeeds(
           targetPosition: { x: waterTarget.x, y: waterTarget.y },
           data: {
             need: "thirst",
-            resourceType: "water",
+            resourceType: "water_source", // Use actual WorldResourceType for validation
             action: "gather",
           },
           createdAt: now,
@@ -240,15 +247,20 @@ export function evaluateCriticalNeeds(
     } else {
       // Need to acquire food - either gather or trade
       let foodTarget = null;
+      let foundResourceType: string | null = null;
       if (deps.findNearestResource) {
-        const foodTypes = ["wheat_crop", "berry_bush", "mushroom_patch", "food_zone"];
+        // Valid WorldResourceType values for food
+        const foodTypes = ["wheat_crop", "berry_bush", "mushroom_patch"];
         for (const foodType of foodTypes) {
           foodTarget = deps.findNearestResource(aiState.entityId, foodType);
-          if (foodTarget) break;
+          if (foodTarget) {
+            foundResourceType = foodType;
+            break;
+          }
         }
       }
 
-      if (foodTarget) {
+      if (foodTarget && foundResourceType) {
         // Go gather food from a source
         goals.push({
           id: `gather_food_${aiState.entityId}_${now}`,
@@ -258,7 +270,7 @@ export function evaluateCriticalNeeds(
           targetPosition: { x: foodTarget.x, y: foodTarget.y },
           data: {
             need: "hunger",
-            resourceType: "food",
+            resourceType: foundResourceType, // Use actual WorldResourceType for validation
             action: "gather",
           },
           createdAt: now,
@@ -288,19 +300,38 @@ export function evaluateCriticalNeeds(
             expiresAt: now + 15000,
           });
         } else {
-          // Desperate search for food or prey
-          goals.push({
-            id: `desperate_food_${aiState.entityId}_${now}`,
-            type: "explore",
-            priority: calculateNeedPriority(needs.hunger, 120),
-            data: {
-              explorationType: "desperate_search",
-              need: "hunger",
-              searchFor: "food_or_prey",
-            },
-            createdAt: now,
-            expiresAt: now + 10000,
-          });
+          // Try to hunt an animal for food
+          const huntTarget = deps.findNearestHuntableAnimal?.(aiState.entityId);
+          if (huntTarget) {
+            goals.push({
+              id: `hunt_food_${aiState.entityId}_${now}`,
+              type: "hunt",
+              priority: calculateNeedPriority(needs.hunger, 115),
+              targetId: huntTarget.id,
+              targetPosition: { x: huntTarget.x, y: huntTarget.y },
+              data: {
+                need: "hunger",
+                animalType: huntTarget.type,
+                action: "hunt",
+              },
+              createdAt: now,
+              expiresAt: now + 20000,
+            });
+          } else {
+            // Desperate search for food or prey
+            goals.push({
+              id: `desperate_food_${aiState.entityId}_${now}`,
+              type: "explore",
+              priority: calculateNeedPriority(needs.hunger, 120),
+              data: {
+                explorationType: "desperate_search",
+                need: "hunger",
+                searchFor: "food_or_prey",
+              },
+              createdAt: now,
+              expiresAt: now + 10000,
+            });
+          }
         }
       }
     }
@@ -320,9 +351,30 @@ export function evaluateCriticalNeeds(
     });
   }
 
-  if (needs.mentalHealth < 50) {
+  // Social need - seek out other agents or social zones
+  const socialThreshold = adjustThreshold(
+    50,
+    "social",
+    roleType,
+    communityState,
+  );
+  if (needs.social < socialThreshold) {
     goals.push({
       id: `social_${aiState.entityId}_${now}`,
+      type: "satisfy_social",
+      priority: calculateNeedPriority(needs.social, 70),
+      data: {
+        need: "social",
+      },
+      createdAt: now,
+      expiresAt: now + 30000,
+    });
+  }
+
+  // Mental health - seek temples, sanctuaries, or social interaction
+  if (needs.mentalHealth < 50) {
+    goals.push({
+      id: `mental_${aiState.entityId}_${now}`,
       type: "social",
       priority: calculateNeedPriority(needs.mentalHealth, 70),
       data: {

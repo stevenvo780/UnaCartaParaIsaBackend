@@ -145,11 +145,7 @@ export function cloneGameStateDelta(
   const cloned: GameState = { ...state };
 
   if (dirtyFlags.agents) {
-    if (state.agents !== previousSnapshot.agents) {
-      cloned.agents = structuredClone(state.agents);
-    } else {
-      cloned.agents = previousSnapshot.agents;
-    }
+    cloned.agents = structuredClone(state.agents);
   } else if (previousSnapshot.agents) {
     cloned.agents = previousSnapshot.agents;
   }

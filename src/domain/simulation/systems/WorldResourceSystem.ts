@@ -261,22 +261,29 @@ export class WorldResourceSystem {
   }
 
   private mapDecalToResource(_decal: string): WorldResourceType | null {
-    // Specific mapping for rocks
+    // Rock decals are always mineable
     if (_decal.startsWith("decal_rock_")) return "rock";
 
-    // Random loot generation from generic decals
+    // Most decals are purely decorative (flowers, leaves, moss, branches)
+    // Only a small percentage become interactive resources
     const rand = Math.random();
 
-    // 40% chance for small rock/stone
-    if (rand < 0.4) return "rock";
+    // 85% of decals are purely decorative - not harvestable
+    if (rand < 0.85) return null;
 
-    // 30% chance for berry bush (food)
-    if (rand < 0.7) return "berry_bush";
+    // 15% chance to spawn a resource:
+    const resourceRand = Math.random();
 
-    // 20% chance for mushroom (food)
-    if (rand < 0.9) return "mushroom_patch";
+    // 40% of resources are rocks/stones
+    if (resourceRand < 0.4) return "rock";
 
-    // 10% chance for trash pile (crafting materials)
+    // 35% are berry bushes (food)
+    if (resourceRand < 0.75) return "berry_bush";
+
+    // 20% are mushroom patches (food)
+    if (resourceRand < 0.95) return "mushroom_patch";
+
+    // 5% are trash piles (crafting materials)
     return "trash_pile";
   }
 

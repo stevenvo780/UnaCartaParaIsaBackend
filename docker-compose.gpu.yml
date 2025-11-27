@@ -11,7 +11,7 @@ services:
       - 8.8.4.4
     volumes:
       # Montar código para desarrollo (hot reload)
-      - ./src:/app/src:ro
+      - ./src:/app/src
       - ./saves:/app/saves
       # No montar node_modules para usar los del contenedor
     deploy:
@@ -20,7 +20,7 @@ services:
           devices:
             - driver: nvidia
               count: 1
-              capabilities: [gpu]
+              capabilities: [ gpu ]
     environment:
       - NODE_ENV=development
       - TF_FORCE_GPU_ALLOW_GROWTH=true
@@ -28,7 +28,7 @@ services:
       - CUDA_VISIBLE_DEVICES=0
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/sim/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/api/sim/health" ]
       interval: 30s
       timeout: 10s
       retries: 3

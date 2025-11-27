@@ -28,23 +28,8 @@ export class AIUrgentGoals {
     const position = this.deps.getAgentPosition(agentId);
     if (!position) return null;
 
-    // Find nearest food zone
-    const foodZone = this.deps.gameState.zones?.find(
-      (z) => z.type === "food" || z.type === "kitchen",
-    );
-
-    if (foodZone?.bounds) {
-      return {
-        id: `urgent-food-${agentId}-${now}`,
-        type: "satisfy_hunger",
-        priority: 10,
-        targetZoneId: foodZone.id,
-        createdAt: now,
-        data: { need: "hunger" },
-      };
-    }
-
-    // Fallback: look for nearest food resource
+    // Food is only obtained from world resources - no zones satisfy hunger directly
+    // Zones like farms/kitchens PRODUCE food items, but agents must gather from resources
     const foodResourceTypes = ["berry_bush", "mushroom_patch", "wheat_crop"];
     for (const resourceType of foodResourceTypes) {
       const nearestFood = this.deps.findNearestResourceForEntity(
@@ -56,9 +41,10 @@ export class AIUrgentGoals {
           id: `urgent-gather-${agentId}-${now}`,
           type: "gather",
           priority: 10,
-          targetPosition: nearestFood,
+          targetId: nearestFood.id,
+          targetPosition: { x: nearestFood.x, y: nearestFood.y },
           createdAt: now,
-          data: { resourceType },
+          data: { resourceType, need: "hunger" },
         };
       }
     }
@@ -73,21 +59,8 @@ export class AIUrgentGoals {
     const position = this.deps.getAgentPosition(agentId);
     if (!position) return null;
 
-    const waterZone = this.deps.gameState.zones?.find(
-      (z) => z.type === "water" || z.type === "well",
-    );
-
-    if (waterZone?.bounds) {
-      return {
-        id: `urgent-water-${agentId}-${now}`,
-        type: "satisfy_thirst",
-        priority: 10,
-        targetZoneId: waterZone.id,
-        createdAt: now,
-        data: { need: "thirst" },
-      };
-    }
-
+    // Water is only obtained from world resources - no zones satisfy thirst directly
+    // Zones like wells PRODUCE water items, but agents must gather from water_source resources
     const nearestWater = this.deps.findNearestResourceForEntity(
       agentId,
       "water_source",
@@ -97,7 +70,8 @@ export class AIUrgentGoals {
         id: `urgent-gather-water-${agentId}-${now}`,
         type: "gather",
         priority: 10,
-        targetPosition: nearestWater,
+        targetId: nearestWater.id,
+        targetPosition: { x: nearestWater.x, y: nearestWater.y },
         createdAt: now,
         data: { resourceType: "water_source", need: "thirst" },
       };

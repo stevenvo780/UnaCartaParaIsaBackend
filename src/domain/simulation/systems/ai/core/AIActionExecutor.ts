@@ -1,4 +1,5 @@
 import { logger } from "../../../../../infrastructure/utils/logger";
+import { getAnimalConfig } from "../../../../../infrastructure/services/world/config/AnimalConfigs";
 import type { GameState } from "../../../../types/game-types";
 import type { AgentAction } from "../../../../types/simulation/ai";
 import { toInventoryResource } from "../../../../types/simulation/resourceMapping";
@@ -238,24 +239,82 @@ export class AIActionExecutor {
   }
 
   private executeAttack(action: AgentAction): void {
-    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
-      agentId: action.agentId,
-      actionType: "attack",
-      success: true,
-      data: { targetId: action.targetId },
-    });
+    const targetId = action.targetId;
+    if (!targetId) {
+      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+        agentId: action.agentId,
+        actionType: "attack",
+        success: false,
+        data: { reason: "no_target" },
+      });
+      return;
+    }
+
+    // Check if target is an animal
+    const animals = this.deps.gameState.animals?.animals;
+    const targetAnimal = animals?.find((a) => a.id === targetId && !a.isDead);
+
+    if (targetAnimal) {
+      // Get animal config to determine food value
+      const config = getAnimalConfig(targetAnimal.type);
+      const foodValue = config?.foodValue ?? 15;
+
+      // Mark animal as dead
+      targetAnimal.isDead = true;
+      targetAnimal.state = "dead";
+
+      // Add food to hunter's inventory
+      if (this.deps.inventorySystem) {
+        this.deps.inventorySystem.addResource(action.agentId, "food", foodValue);
+        logger.info(
+          `🏹 Agent ${action.agentId} hunted ${targetAnimal.type} and gained ${foodValue} food`,
+        );
+      }
+
+      // Satisfy hunger immediately with some of the kill
+      if (this.deps.needsSystem) {
+        this.deps.needsSystem.satisfyNeed(
+          action.agentId,
+          "hunger",
+          Math.min(foodValue * 0.3, 25),
+        );
+      }
+
+      // Emit hunt success event
+      simulationEvents.emit(GameEventNames.ANIMAL_HUNTED, {
+        animalId: targetId,
+        hunterId: action.agentId,
+        foodValue,
+        animalType: targetAnimal.type,
+      });
+
+      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+        agentId: action.agentId,
+        actionType: "attack",
+        success: true,
+        data: { targetId, targetType: "animal", foodValue },
+      });
+    } else {
+      // Target is not an animal (could be another agent - combat)
+      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+        agentId: action.agentId,
+        actionType: "attack",
+        success: true,
+        data: { targetId, targetType: "unknown" },
+      });
+    }
   }
 
   private executeSocialize(action: AgentAction): void {
-    if (action.targetZoneId) {
-      this.deps.movementSystem?.moveToZone(action.agentId, action.targetZoneId);
-    } else if (action.targetId && this.deps.socialSystem) {
+    // If we have a target agent, interact with them specifically
+    if (action.targetId && this.deps.socialSystem) {
       this.deps.socialSystem.registerFriendlyInteraction(
         action.agentId,
         action.targetId,
       );
       if (this.deps.needsSystem) {
         this.deps.needsSystem.satisfyNeed(action.agentId, "social", 15);
+        this.deps.needsSystem.satisfyNeed(action.agentId, "fun", 5);
       }
       simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
         agentId: action.agentId,
@@ -263,16 +322,24 @@ export class AIActionExecutor {
         success: true,
         data: { targetId: action.targetId },
       });
-    } else {
-      if (this.deps.needsSystem) {
-        this.deps.needsSystem.satisfyNeed(action.agentId, "social", 5);
-      }
-      simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
-        agentId: action.agentId,
-        actionType: "socialize",
-        success: true,
-      });
+      return;
     }
+
+    // Socializing in a zone or in general - satisfy social need
+    if (this.deps.needsSystem) {
+      // More social satisfaction in designated zones, less elsewhere
+      const socialBoost = action.targetZoneId ? 12 : 5;
+      const funBoost = action.targetZoneId ? 8 : 3;
+      this.deps.needsSystem.satisfyNeed(action.agentId, "social", socialBoost);
+      this.deps.needsSystem.satisfyNeed(action.agentId, "fun", funBoost);
+    }
+
+    simulationEvents.emit(GameEventNames.AGENT_ACTION_COMPLETE, {
+      agentId: action.agentId,
+      actionType: "socialize",
+      success: true,
+      data: action.targetZoneId ? { zoneId: action.targetZoneId } : undefined,
+    });
   }
 
   private executeEat(action: AgentAction): void {
