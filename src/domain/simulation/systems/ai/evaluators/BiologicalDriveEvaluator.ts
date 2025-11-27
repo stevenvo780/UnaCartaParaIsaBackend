@@ -19,6 +19,41 @@ export interface BiologicalDriveDeps {
     resourceType: "food" | "water",
     minAmount: number,
   ) => { agentId: string; x: number; y: number } | null;
+  getAgentPosition?: (entityId: string) => { x: number; y: number } | null;
+  getFailedTargets?: (entityId: string) => Map<string, number> | undefined;
+}
+
+/** Max distance for priority adjustment (beyond this, no bonus) */
+const MAX_PRIORITY_DISTANCE = 600;
+/** Cooldown for failed targets in ms */
+const FAILED_TARGET_COOLDOWN_MS = 30000;
+
+/**
+ * Adjusts priority based on distance - closer targets get higher priority.
+ * Returns multiplier between 0.6 and 1.0
+ */
+function distancePriorityMultiplier(
+  agentPos: { x: number; y: number } | null,
+  targetPos: { x: number; y: number },
+): number {
+  if (!agentPos) return 1.0;
+  const dist = Math.hypot(targetPos.x - agentPos.x, targetPos.y - agentPos.y);
+  // Closer = higher multiplier (1.0), farther = lower (0.6 minimum)
+  return Math.max(0.6, 1.0 - (dist / MAX_PRIORITY_DISTANCE) * 0.4);
+}
+
+/**
+ * Checks if a target is on cooldown from a previous failure.
+ */
+function isTargetOnCooldown(
+  failedTargets: Map<string, number> | undefined,
+  targetId: string,
+  now: number,
+): boolean {
+  if (!failedTargets) return false;
+  const failedAt = failedTargets.get(targetId);
+  if (!failedAt) return false;
+  return now - failedAt < FAILED_TARGET_COOLDOWN_MS;
 }
 
 /**
@@ -31,24 +66,15 @@ function calculateDriveUtility(
   value: number,
   urgencyExponent: number = 2,
 ): number {
-  // Normalize value to 0-1 (1 is satisfied)
-  const normalized = Math.max(0, Math.min(100, value)) / 100;
-  // Invert: 0 is satisfied, 1 is empty
-  const deficit = 1 - normalized;
-
-  // Apply curve
-  // If exponent is 2: 0.5 deficit -> 0.25 utility. 0.9 deficit -> 0.81 utility.
-  // If exponent is 0.5: 0.5 deficit -> 0.7 utility. (Urgent sooner)
   // For survival needs, we want them to become urgent reasonably fast but not dominate when high.
-  // Let's use a custom curve that stays low until ~50, then spikes.
-
-  if (value > 60) return 0; // Not interested
+  // Uses a custom curve that stays low until ~50, then spikes.
+  if (value > 60) return 0; // Not interested when need is well satisfied
 
   // Use the exponent to shape the curve for the remaining range (0-60)
   // Remap 60->0 to 0->1 deficit relative to threshold
   const relativeDeficit = (60 - value) / 60;
 
-  // Apply exponent
+  // Apply exponent: higher exponent = more urgent only when very low
   return Math.pow(relativeDeficit, 1 / urgencyExponent);
 }
 
@@ -62,6 +88,8 @@ export function evaluateBiologicalDrives(
   if (!needs) return goals;
 
   const now = Date.now();
+  const agentPos = deps.getAgentPosition?.(aiState.entityId) ?? null;
+  const failedTargets = deps.getFailedTargets?.(aiState.entityId);
 
   // --- Thirst Drive ---
   const thirstUtility = calculateDriveUtility(needs.thirst);
@@ -76,11 +104,15 @@ export function evaluateBiologicalDrives(
         "water_source",
       );
 
-      if (waterTarget) {
+      if (
+        waterTarget &&
+        !isTargetOnCooldown(failedTargets, waterTarget.id, now)
+      ) {
+        const distMult = distancePriorityMultiplier(agentPos, waterTarget);
         goals.push({
           id: `drive_thirst_gather_${aiState.entityId}_${now}`,
           type: GoalType.GATHER,
-          priority: thirstUtility,
+          priority: thirstUtility * distMult,
           targetId: waterTarget.id,
           targetPosition: { x: waterTarget.x, y: waterTarget.y },
           data: {
@@ -116,66 +148,74 @@ export function evaluateBiologicalDrives(
     const hasFood = inventory && inventory.food > 0;
 
     if (!hasFood) {
-      // 1. Check for gatherable food
-      const foodTypes = ["wheat_crop", "berry_bush", "mushroom_patch"];
-      let foodTarget = null;
-
-      if (deps.findNearestResource) {
-        for (const type of foodTypes) {
-          const target = deps.findNearestResource(aiState.entityId, type);
-          if (target) {
-            foodTarget = target;
-            break;
-          }
-        }
-      }
-
-      if (foodTarget) {
+      // 1. Try to hunt first (more reliable than sparse berry bushes)
+      const huntTarget = deps.findNearestHuntableAnimal?.(aiState.entityId);
+      if (
+        huntTarget &&
+        !isTargetOnCooldown(failedTargets, huntTarget.id, now)
+      ) {
+        const distMult = distancePriorityMultiplier(agentPos, huntTarget);
         goals.push({
-          id: `drive_hunger_gather_${aiState.entityId}_${now}`,
-          type: GoalType.GATHER,
-          priority: hungerUtility,
-          targetId: foodTarget.id,
-          targetPosition: { x: foodTarget.x, y: foodTarget.y },
+          id: `drive_hunger_hunt_${aiState.entityId}_${now}`,
+          type: GoalType.HUNT,
+          priority: hungerUtility * distMult,
+          targetId: huntTarget.id,
+          targetPosition: { x: huntTarget.x, y: huntTarget.y },
           data: {
             need: NeedType.HUNGER,
-            resourceType: ResourceType.FOOD,
-            action: "gather",
+            animalType: huntTarget.type,
+            action: "hunt",
           },
           createdAt: now,
-          expiresAt: now + 15000,
+          expiresAt: now + 60000, // 60 seconds to complete hunt
         });
       } else {
-        // 2. Hunt
-        const huntTarget = deps.findNearestHuntableAnimal?.(aiState.entityId);
-        if (huntTarget) {
+        // 2. If no animals, check for gatherable food
+        const foodTypes = ["berry_bush", "mushroom_patch", "wheat_crop"];
+        let foodTarget = null;
+
+        if (deps.findNearestResource) {
+          for (const type of foodTypes) {
+            const target = deps.findNearestResource(aiState.entityId, type);
+            if (target) {
+              foodTarget = target;
+              break;
+            }
+          }
+        }
+
+        if (
+          foodTarget &&
+          !isTargetOnCooldown(failedTargets, foodTarget.id, now)
+        ) {
+          const distMult = distancePriorityMultiplier(agentPos, foodTarget);
           goals.push({
-            id: `drive_hunger_hunt_${aiState.entityId}_${now}`,
-            type: GoalType.HUNT,
-            priority: hungerUtility, // Hunting is as good as gathering if hungry
-            targetId: huntTarget.id,
-            targetPosition: { x: huntTarget.x, y: huntTarget.y },
+            id: `drive_hunger_gather_${aiState.entityId}_${now}`,
+            type: GoalType.GATHER,
+            priority: hungerUtility * 0.9 * distMult, // Slightly lower than hunting
+            targetId: foodTarget.id,
+            targetPosition: { x: foodTarget.x, y: foodTarget.y },
             data: {
               need: NeedType.HUNGER,
-              animalType: huntTarget.type,
-              action: "hunt",
+              resourceType: ResourceType.FOOD,
+              action: "gather",
             },
             createdAt: now,
-            expiresAt: now + 20000,
+            expiresAt: now + 45000, // 45 seconds to reach and harvest
           });
         } else {
-          // 3. Explore
+          // 3. Explore to find food
           goals.push({
             id: `drive_hunger_explore_${aiState.entityId}_${now}`,
             type: GoalType.EXPLORE,
-            priority: hungerUtility * 0.9,
+            priority: hungerUtility * 0.7,
             data: {
               explorationType: "desperate_search",
               need: NeedType.HUNGER,
               searchFor: "food_or_prey",
             },
             createdAt: now,
-            expiresAt: now + 10000,
+            expiresAt: now + 30000,
           });
         }
       }

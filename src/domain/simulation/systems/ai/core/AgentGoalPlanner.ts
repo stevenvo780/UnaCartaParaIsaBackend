@@ -187,12 +187,17 @@ export function planGoals(
 
   // --- 1. Biological Drives (Survival) ---
   if (entityNeeds) {
+    // Get failedTargets with fallback for backwards compatibility
+    const failedTargetsMap: Map<string, number> =
+      aiState.memory.failedTargets ?? new Map();
     const bioDeps = {
       getEntityNeeds: deps.getEntityNeeds,
       getAgentInventory: deps.getAgentInventory,
       findNearestResource: deps.findNearestResource,
       findNearestHuntableAnimal: deps.findNearestHuntableAnimal,
       findAgentWithResource: deps.findAgentWithResource,
+      getAgentPosition: deps.getEntityPosition,
+      getFailedTargets: (): Map<string, number> | undefined => failedTargetsMap,
     };
     const bioGoals = evaluateBiologicalDrives(bioDeps, aiState);
     goals.push(...bioGoals);

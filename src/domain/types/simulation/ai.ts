@@ -106,6 +106,8 @@ export interface AgentMemory {
   homeZoneId?: string;
   successfulActivities: Map<string, number>;
   failedAttempts: Map<string, number>;
+  /** Targets that recently failed - agent won't retry for FAILED_TARGET_COOLDOWN_MS */
+  failedTargets?: Map<string, number>;
 
   lastExplorationTime?: number;
   lastMemoryCleanup?: number;

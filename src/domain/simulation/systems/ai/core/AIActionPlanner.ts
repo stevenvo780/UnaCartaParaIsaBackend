@@ -17,6 +17,8 @@ export interface AIActionPlannerDeps {
   ) => { id: string; x: number; y: number; type: string } | null;
 }
 
+import { logger } from "../../../../../infrastructure/utils/logger";
+
 /**
  * Plans concrete actions for AI goals.
  * Converts high-level goals into executable actions (move, harvest, attack, etc.).
@@ -24,8 +26,8 @@ export interface AIActionPlannerDeps {
 export class AIActionPlanner {
   private readonly deps: AIActionPlannerDeps;
 
-  private readonly HARVEST_RANGE = 60;
-  private readonly ATTACK_RANGE = 40;
+  private readonly HARVEST_RANGE = 80; // Increased from 60 for more reliable harvesting
+  private readonly ATTACK_RANGE = 50; // Increased from 40
   private readonly EXPLORE_RANGE = 200;
 
   constructor(deps: AIActionPlannerDeps) {
@@ -400,7 +402,11 @@ export class AIActionPlanner {
           agentPos.x - goal.targetPosition.x,
           agentPos.y - goal.targetPosition.y,
         );
+        
         if (dist < this.HARVEST_RANGE) {
+          logger.debug(
+            `🌾 [ActionPlanner] ${agentId}: HARVEST (dist=${dist.toFixed(0)} < ${this.HARVEST_RANGE})`,
+          );
           return {
             actionType: ActionType.HARVEST,
             agentId,
@@ -408,6 +414,13 @@ export class AIActionPlanner {
             targetPosition: goal.targetPosition,
             timestamp,
           };
+        }
+        
+        // Only log occasionally to avoid spam
+        if (Math.random() < 0.05) {
+          logger.debug(
+            `🚶 [ActionPlanner] ${agentId}: MOVE to target (dist=${dist.toFixed(0)} >= ${this.HARVEST_RANGE})`,
+          );
         }
         return {
           actionType: ActionType.MOVE,
@@ -433,11 +446,52 @@ export class AIActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
-    // If the work goal has taskType "gather_food", "gather_water", etc.
-    // try to find actual resources to harvest
     const taskType = goal.data?.taskType as string | undefined;
     const resourceType = goal.data?.resourceType as string | undefined;
 
+    // PRIORITY 1: If goal already has a specific target, use it directly
+    // This prevents searching for new resources every tick
+    if (goal.targetId && goal.targetPosition) {
+      const agentPos = this.deps.getAgentPosition(agentId);
+      if (agentPos) {
+        const dist = Math.hypot(
+          agentPos.x - goal.targetPosition.x,
+          agentPos.y - goal.targetPosition.y,
+        );
+        
+        if (dist < this.HARVEST_RANGE) {
+          logger.debug(
+            `🌾 [Work] ${agentId}: HARVEST goal target (dist=${dist.toFixed(0)})`,
+          );
+          return {
+            actionType: ActionType.HARVEST,
+            agentId,
+            targetId: goal.targetId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+          };
+        }
+        return {
+          actionType: ActionType.MOVE,
+          agentId,
+          targetPosition: goal.targetPosition,
+          timestamp,
+        };
+      }
+    }
+
+    // PRIORITY 2: If goal has target zone, go there
+    if (goal.targetZoneId) {
+      return {
+        actionType: ActionType.WORK,
+        agentId,
+        targetZoneId: goal.targetZoneId,
+        data: goal.data,
+        timestamp,
+      };
+    }
+
+    // PRIORITY 3: Find new resources based on task type (fallback)
     // For food gathering tasks, try to find food resources or huntable animals
     if (
       taskType === "gather_food" ||
@@ -597,43 +651,7 @@ export class AIActionPlanner {
       }
     }
 
-    // Fallback: if goal has target zone, go work there
-    if (goal.targetZoneId) {
-      return {
-        actionType: ActionType.WORK,
-        agentId,
-        targetZoneId: goal.targetZoneId,
-        data: goal.data,
-        timestamp,
-      };
-    }
-
-    // If goal has direct targetId and targetPosition (e.g., from gather or hunt conversion)
-    if (goal.targetId && goal.targetPosition) {
-      const agentPos = this.deps.getAgentPosition(agentId);
-      if (agentPos) {
-        const dist = Math.hypot(
-          agentPos.x - goal.targetPosition.x,
-          agentPos.y - goal.targetPosition.y,
-        );
-        if (dist < this.HARVEST_RANGE) {
-          return {
-            actionType: ActionType.HARVEST,
-            agentId,
-            targetId: goal.targetId,
-            targetPosition: goal.targetPosition,
-            timestamp,
-          };
-        }
-        return {
-          actionType: ActionType.MOVE,
-          agentId,
-          targetPosition: goal.targetPosition,
-          timestamp,
-        };
-      }
-    }
-
+    // No suitable resource or zone found
     return null;
   }
 

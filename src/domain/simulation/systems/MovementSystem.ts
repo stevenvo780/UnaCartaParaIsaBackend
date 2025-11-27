@@ -72,6 +72,8 @@ export interface EntityMovementState {
   fatigue: number;
   lastIdleWander?: number;
   isPathfinding?: boolean;
+  /** Timestamp when the agent arrived at destination - used to prevent immediate idle wander */
+  lastArrivalTime?: number;
 }
 
 export interface PathfindingResult {
@@ -413,8 +415,10 @@ export class MovementSystem extends EventEmitter {
   }
 
   private completeMovement(state: EntityMovementState): void {
+    const now = getFrameTime();
     state.isMoving = false;
     state.currentActivity = "idle";
+    state.lastArrivalTime = now; // Mark arrival time to prevent immediate idle wander
 
     if (state.targetPosition) {
       state.currentPosition.x = state.targetPosition.x;
@@ -601,6 +605,7 @@ export class MovementSystem extends EventEmitter {
     state.movementStartTime = now;
     state.estimatedArrivalTime = now + travelTime;
     state.currentActivity = "moving";
+    state.lastArrivalTime = undefined; // Clear arrival time when starting new movement
 
     simulationEvents.emit(GameEventNames.MOVEMENT_ACTIVITY_STARTED, {
       entityId,
@@ -925,8 +930,16 @@ export class MovementSystem extends EventEmitter {
     }
   }
 
+  /** Grace period after arrival before idle wander can start (allows AI to plan next action) */
+  private readonly ARRIVAL_GRACE_PERIOD_MS = 500;
+
   private maybeStartIdleWander(state: EntityMovementState, now: number): void {
     if (state.isMoving || state.currentActivity !== "idle") return;
+
+    // Don't start idle wander if agent just arrived - give AI time to plan next action
+    if (state.lastArrivalTime && (now - state.lastArrivalTime) < this.ARRIVAL_GRACE_PERIOD_MS) {
+      return;
+    }
 
     if (
       (state.lastIdleWander || 0) + MOVEMENT_CONSTANTS.IDLE_WANDER.COOLDOWN_MS >

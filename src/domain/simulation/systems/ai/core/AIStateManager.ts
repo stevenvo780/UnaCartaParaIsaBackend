@@ -125,6 +125,7 @@ export class AIStateManager {
         homeZoneId: undefined,
         successfulActivities: new Map(),
         failedAttempts: new Map(),
+        failedTargets: new Map(),
         lastExplorationTime: 0,
         lastMemoryCleanup: getFrameTime(),
       },

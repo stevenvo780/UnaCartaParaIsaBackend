@@ -314,6 +314,7 @@ export class AISystem extends EventEmitter {
     this.initializeSubsystems();
 
     this.boundHandleActionComplete = this.handleActionComplete.bind(this);
+    // Listen only to AGENT_ACTION_COMPLETE - it handles all action types including move
     simulationEvents.on(
       GameEventNames.AGENT_ACTION_COMPLETE,
       this.boundHandleActionComplete,
@@ -701,7 +702,41 @@ export class AISystem extends EventEmitter {
         return;
       }
 
+      // Skip if already has an action in progress
+      if (aiState.currentAction) {
+        return;
+      }
+      
+      // Skip if agent is moving - wait until they arrive
+      const isMoving = this._movementSystem?.isMoving(agentId);
+      if (isMoving) {
+        // Log every 5 seconds approximately (random to avoid spam)
+        if (Math.random() < 0.02) {
+          logger.debug(`⏳ [AI] ${agentId}: waiting for movement to complete`);
+        }
+        return;
+      }
+
+      // Debug: log the current goal and position
+      if (aiState.currentGoal) {
+        const agentPos = this.getAgentPosition(agentId);
+        const goalPos = aiState.currentGoal.targetPosition;
+        if (agentPos && goalPos) {
+          const dist = Math.hypot(agentPos.x - goalPos.x, agentPos.y - goalPos.y);
+          logger.debug(
+            `🎯 [AI] ${agentId}: goal=${aiState.currentGoal.type} target=${aiState.currentGoal.targetId ?? "none"} dist=${dist.toFixed(0)}`,
+          );
+        }
+      }
+
       const action = this.planAction(agentId, aiState.currentGoal);
+      
+      // Log when we plan a non-MOVE action (like HARVEST)
+      if (action && action.actionType !== "move") {
+        logger.debug(
+          `🔧 [AI] ${agentId}: Planning ${action.actionType} action`,
+        );
+      }
       if (action) {
         if (action.targetId) {
           const targetEntity = this.gameState.entities?.find(
@@ -867,10 +902,13 @@ export class AISystem extends EventEmitter {
         `🐺 [AI] ${agentId}: hunter findNearestHuntableAnimal -> ${animal?.id ?? "none"} (type: ${animal?.type ?? "N/A"})`,
       );
       if (animal && !excluded.has(animal.id)) {
+        logger.debug(
+          `🎯 [AI] ${agentId}: Creating HUNT goal for ${animal.id}`,
+        );
         return {
           id: `hunt_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
           type: "hunt" as GoalType,
-          priority: 60,
+          priority: 0.6,
           targetId: animal.id,
           targetPosition: { x: animal.x, y: animal.y },
           data: {
@@ -879,6 +917,10 @@ export class AISystem extends EventEmitter {
           },
           createdAt: now,
         };
+      } else if (animal) {
+        logger.debug(
+          `⚠️ [AI] ${agentId}: Animal ${animal.id} already excluded`,
+        );
       }
       // Fallback to gathering food if no animals nearby
       for (const foodType of foodTypes) {
@@ -887,12 +929,54 @@ export class AISystem extends EventEmitter {
           return {
             id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
             type: "work" as GoalType,
-            priority: 50,
+            priority: 0.5,
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
               taskType: "gather_food",
               resourceType: "food" as ResourceType,
+            },
+            createdAt: now,
+          };
+        }
+      }
+    }
+
+    // Loggers (Leñadores) gather wood
+    if (role === "logger") {
+      for (const woodType of woodTypes) {
+        const resource = this.findNearestResourceForEntity(agentId, woodType);
+        if (resource && !excluded.has(resource.id)) {
+          return {
+            id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
+            type: "work" as GoalType,
+            priority: 0.6,
+            targetId: resource.id,
+            targetPosition: { x: resource.x, y: resource.y },
+            data: {
+              taskType: "gather_wood",
+              resourceType: "wood" as ResourceType,
+            },
+            createdAt: now,
+          };
+        }
+      }
+    }
+
+    // Quarrymen (Canteros) gather stone
+    if (role === "quarryman") {
+      for (const stoneType of stoneTypes) {
+        const resource = this.findNearestResourceForEntity(agentId, stoneType);
+        if (resource && !excluded.has(resource.id)) {
+          return {
+            id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
+            type: "work" as GoalType,
+            priority: 0.6,
+            targetId: resource.id,
+            targetPosition: { x: resource.x, y: resource.y },
+            data: {
+              taskType: "gather_stone",
+              resourceType: "stone" as ResourceType,
             },
             createdAt: now,
           };
@@ -908,7 +992,7 @@ export class AISystem extends EventEmitter {
           return {
             id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
             type: "work" as GoalType,
-            priority: 50,
+            priority: 0.5,
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
@@ -929,7 +1013,7 @@ export class AISystem extends EventEmitter {
           return {
             id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
             type: "work" as GoalType,
-            priority: 50,
+            priority: 0.5,
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
@@ -946,7 +1030,7 @@ export class AISystem extends EventEmitter {
           return {
             id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
             type: "work" as GoalType,
-            priority: 50,
+            priority: 0.5,
             targetId: resource.id,
             targetPosition: { x: resource.x, y: resource.y },
             data: {
@@ -966,7 +1050,7 @@ export class AISystem extends EventEmitter {
         return {
           id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
           type: "work" as GoalType,
-          priority: 40,
+          priority: 0.4,
           targetId: resource.id,
           targetPosition: { x: resource.x, y: resource.y },
           data: {
@@ -1488,6 +1572,23 @@ export class AISystem extends EventEmitter {
   }
 
   private failGoal(aiState: AIState, agentId: string): void {
+    // Record failed target in memory to avoid immediate retry
+    const targetId = aiState.currentGoal?.targetId;
+    if (targetId) {
+      if (!aiState.memory.failedTargets) {
+        aiState.memory.failedTargets = new Map<string, number>();
+      }
+      aiState.memory.failedTargets.set(targetId, Date.now());
+      // Clean old entries (keep last 20)
+      if (aiState.memory.failedTargets.size > 20) {
+        const entries = [...aiState.memory.failedTargets.entries()];
+        entries.sort((a, b) => a[1] - b[1]);
+        for (let i = 0; i < entries.length - 20; i++) {
+          aiState.memory.failedTargets.delete(entries[i][0]);
+        }
+      }
+    }
+
     // Release resource reservation when goal fails
     this.releaseResourceReservation(agentId);
     this.goalValidator.failGoal(aiState);
@@ -1930,60 +2031,70 @@ export class AISystem extends EventEmitter {
     data?: Record<string, unknown>;
   }): void {
     const aiState = this.aiStates.get(payload.agentId);
-    if (aiState) {
-      aiState.currentAction = null;
+    if (!aiState) return;
+    
+    // Ignore movement complete events if we didn't have a move action
+    // (e.g., idle wander from MovementSystem)
+    if (payload.actionType === "move" && aiState.currentAction?.actionType !== "move") {
+      return;
+    }
+    
+    const prevAction = aiState.currentAction?.actionType;
+    aiState.currentAction = null;
 
-      if (!payload.success) {
-        this.failGoal(aiState, payload.agentId);
+    if (!payload.success) {
+      this.failGoal(aiState, payload.agentId);
+      return;
+    }
+
+    // Don't complete goal on MOVE actions - the agent just arrived somewhere
+    // The goal should only complete when the actual work is done (harvest, eat, etc.)
+    if (payload.actionType === "move") {
+      // Agent arrived at destination, next tick will plan the actual action
+      logger.debug(
+        `📍 [AI] ${payload.agentId}: arrived (prev=${prevAction ?? "none"}), ready for harvest`,
+      );
+      return;
+    }
+
+    // Harvest/Attack actions complete the goal immediately when successful
+    if (payload.actionType === "harvest" || payload.actionType === "attack") {
+      this.completeGoal(aiState, payload.agentId);
+      return;
+    }
+
+    // For work tasks, check if task is actually completed
+    if (
+      payload.actionType === "work" &&
+      payload.data &&
+      typeof payload.data.taskId === "string"
+    ) {
+      const task = this.taskSystem?.getTask(payload.data.taskId);
+      if (task && !task.completed) {
         return;
       }
+    }
 
-      // Don't complete goal on MOVE actions - the agent just arrived somewhere
-      // The goal should only complete when the actual work is done (harvest, eat, etc.)
-      if (payload.actionType === "move") {
-        // Agent arrived at destination, next tick will plan the actual action
-        return;
-      }
+    // For satisfy_* goals, check if the need is actually satisfied
+    if (aiState.currentGoal) {
+      const goalType = aiState.currentGoal.type;
 
-      // Harvest/Attack actions complete the goal immediately when successful
-      if (payload.actionType === "harvest" || payload.actionType === "attack") {
-        this.completeGoal(aiState, payload.agentId);
-        return;
-      }
-
-      // For work tasks, check if task is actually completed
-      if (
-        payload.actionType === "work" &&
-        payload.data &&
-        typeof payload.data.taskId === "string"
-      ) {
-        const task = this.taskSystem?.getTask(payload.data.taskId);
-        if (task && !task.completed) {
-          return;
-        }
-      }
-
-      // For satisfy_* goals, check if the need is actually satisfied
-      if (aiState.currentGoal) {
-        const goalType = aiState.currentGoal.type;
-
-        if (goalType.startsWith("satisfy_")) {
-          const needType = aiState.currentGoal.data?.need as string;
-          if (needType && this.needsSystem) {
-            const needs = this.needsSystem.getNeeds(payload.agentId);
-            if (needs) {
-              const needValue = needs[needType as keyof typeof needs] as number;
-              // Only complete if need is reasonably satisfied (> 50)
-              if (needValue <= 50) {
-                return; // Need not satisfied yet, keep the goal
-              }
+      if (goalType.startsWith("satisfy_")) {
+        const needType = aiState.currentGoal.data?.need as string;
+        if (needType && this.needsSystem) {
+          const needs = this.needsSystem.getNeeds(payload.agentId);
+          if (needs) {
+            const needValue = needs[needType as keyof typeof needs] as number;
+            // Only complete if need is reasonably satisfied (> 50)
+            if (needValue <= 50) {
+              return; // Need not satisfied yet, keep the goal
             }
           }
         }
       }
-
-      this.completeGoal(aiState, payload.agentId);
     }
+
+    this.completeGoal(aiState, payload.agentId);
   }
 
   private executeAction(action: AgentAction): void {

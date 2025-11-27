@@ -155,13 +155,8 @@ export class AIGoalValidator {
         );
         if (!zone || !zone.bounds) return false;
 
-        const inZone =
-          agentPos.x >= zone.bounds.x &&
-          agentPos.x <= zone.bounds.x + zone.bounds.width &&
-          agentPos.y >= zone.bounds.y &&
-          agentPos.y <= zone.bounds.y + zone.bounds.height;
-
         // Don't auto-complete work goals - they complete via task system or action
+        // Agent position check could be used for zone validation if needed in future
         return false;
       }
     }
