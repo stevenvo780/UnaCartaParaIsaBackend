@@ -272,20 +272,16 @@ export class RoleSystem extends EventEmitter {
     const minLoggers = Math.max(1, Math.ceil(pop * 0.15));
     const minQuarrymen = Math.max(1, Math.ceil(pop * 0.1));
 
-    // Helper to count roles
     const countRole = (roleType: string): number =>
       Array.from(this.roles.values()).filter((r) => r.roleType === roleType)
         .length;
 
-    // First, assign roles to agents without any role
     agents.forEach((agent) => {
       if (!this.roles.has(agent.id)) {
-        // Check resource gatherer needs first
         const currentLoggers = countRole(RoleTypeEnum.LOGGER);
         const currentQuarrymen = countRole(RoleTypeEnum.QUARRYMAN);
         const currentHunters = countRole(RoleTypeEnum.HUNTER);
 
-        // Priority: logger > quarryman > hunter > best role
         if (currentLoggers < minLoggers) {
           const loggerConfig = ROLE_DEFINITIONS.find(
             (r) => r.type === RoleTypeEnum.LOGGER,
@@ -332,7 +328,6 @@ export class RoleSystem extends EventEmitter {
       }
     });
 
-    // Second pass: ensure minimum resource gatherers
     this.ensureMinimumRole(
       RoleTypeEnum.LOGGER,
       minLoggers,
@@ -374,7 +369,6 @@ export class RoleSystem extends EventEmitter {
       const currentRole = this.roles.get(agent.id);
       if (currentRole?.roleType === roleType) continue;
 
-      // Don't steal from other essential roles
       if (
         currentRole?.roleType === RoleTypeEnum.LOGGER ||
         currentRole?.roleType === RoleTypeEnum.QUARRYMAN
@@ -589,24 +583,20 @@ export class RoleSystem extends EventEmitter {
     > = {} as Partial<Record<RoleType, { count: number; percentage: number }>>;
     const totalAgents = this.roles.size;
 
-    // Initialize all role types
     for (const roleConfig of ROLE_DEFINITIONS) {
       distribution[roleConfig.type] = { count: 0, percentage: 0 };
     }
 
-    // Add idle type
     distribution.idle = { count: 0, percentage: 0 };
     distribution.craftsman = { count: 0, percentage: 0 };
     distribution.leader = { count: 0, percentage: 0 };
 
-    // Count current assignments
     for (const role of this.roles.values()) {
       if (distribution[role.roleType]) {
         distribution[role.roleType]!.count++;
       }
     }
 
-    // Calculate percentages
     const result: Record<RoleType, { count: number; percentage: number }> =
       {} as Record<RoleType, { count: number; percentage: number }>;
     for (const roleType in distribution) {
@@ -656,7 +646,6 @@ export class RoleSystem extends EventEmitter {
       [RoleTypeEnum.IDLE]: 0.02,
     };
 
-    // Adjust based on needs
     if (collectiveState.foodPerCapita < 8) {
       baseDistribution[RoleTypeEnum.FARMER] += 0.1;
       baseDistribution[RoleTypeEnum.HUNTER] += 0.05;
@@ -683,7 +672,6 @@ export class RoleSystem extends EventEmitter {
       baseDistribution[RoleTypeEnum.HUNTER] -= 0.05;
     }
 
-    // Convert to absolute numbers
     for (const roleType in baseDistribution) {
       needed[roleType as RoleType] = Math.ceil(
         pop * baseDistribution[roleType as RoleType],
@@ -734,14 +722,12 @@ export class RoleSystem extends EventEmitter {
 
     if (rolesNeedingMore.length === 0) return;
 
-    // Find agents in surplus roles who could switch
     for (const [agentId, role] of this.roles.entries()) {
       if (!rolesWithExtra.includes(role.roleType)) continue;
 
       const agent = this.gameState.agents?.find((a) => a.id === agentId);
       if (!agent) continue;
 
-      // Evaluate fit for needed roles
       for (const neededRole of rolesNeedingMore) {
         const roleConfig = ROLE_DEFINITIONS.find((r) => r.type === neededRole);
         if (!roleConfig || !this.meetsRequirements(agent, roleConfig)) continue;
@@ -757,7 +743,6 @@ export class RoleSystem extends EventEmitter {
       }
     }
 
-    // Sort by score descending and apply top changes
     changes.sort((a, b) => b.score - a.score);
 
     const MAX_CHANGES_PER_REBALANCE = 3; // Don't change too many at once

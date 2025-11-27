@@ -180,10 +180,6 @@ export class AgentRegistry {
     return alive;
   }
 
-  // ============================================================
-  // COMPONENT ACCESS - Delegates to registered system Maps
-  // ============================================================
-
   private resolveMap<T>(ref?: SystemMap<T>): Map<string, T> | undefined {
     if (!ref) return undefined;
     return typeof ref === "function" ? ref() : ref;
@@ -220,10 +216,6 @@ export class AgentRegistry {
     const map = this.resolveMap(this.inventoryRef);
     return map?.get(agentId);
   }
-
-  // ============================================================
-  // UNIFIED ACCESS - Get all data for an agent in one call
-  // ============================================================
 
   /**
    * Get complete agent data snapshot - useful for debugging/serialization

@@ -650,7 +650,6 @@ export class CombatSystem {
     target: SimulationEntity,
     weaponId: WeaponId,
   ): void {
-    // LifeCycleSystem owns the isDead state - let it handle the death
     this.lifeCycleSystem.removeAgent(target.id);
 
     this.equippedWeapons.delete(target.id);

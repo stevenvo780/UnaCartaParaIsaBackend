@@ -2,10 +2,25 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { planGoals } from "../../../src/domain/simulation/systems/ai/core/AgentGoalPlanner";
 import { createMockGameState } from "../../setup";
 import type { GameState } from "../../../src/domain/types/game-types";
-import type { AIState } from "../../../src/domain/types/simulation/ai";
+import type { AIState, AIGoal } from "../../../src/domain/types/simulation/ai";
+import { WorkEthic, ExplorationType } from "../../../src/shared/constants/AgentEnums";
+import { GoalType } from "../../../src/shared/constants/AIEnums";
 
-vi.mock("../../../src/domain/simulation/systems/ai/evaluators/NeedsEvaluator", () => ({
-  evaluateCriticalNeeds: vi.fn(() => []),
+// Mock the new evaluators
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/BiologicalDriveEvaluator", () => ({
+  evaluateBiologicalDrives: vi.fn(() => []),
+}));
+
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator", () => ({
+  evaluateReproductionDrive: vi.fn(() => []),
+}));
+
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/SocialDriveEvaluator", () => ({
+  evaluateSocialDrives: vi.fn(() => []),
+}));
+
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/CognitiveDriveEvaluator", () => ({
+  evaluateCognitiveDrives: vi.fn(() => []),
 }));
 
 vi.mock("../../../src/domain/simulation/systems/ai/evaluators/OpportunitiesEvaluator", () => ({
@@ -35,9 +50,7 @@ vi.mock("../../../src/domain/simulation/systems/ai/evaluators/CraftingEvaluator"
 
 vi.mock("../../../src/domain/simulation/systems/ai/evaluators/AttentionEvaluator", () => ({
   evaluateAttention: vi.fn(() => []),
-  evaluateDefaultExploration: vi.fn(() => [
-    { id: "default", description: "default", priority: 0.5, type: "explore" },
-  ]),
+  evaluateDefaultExploration: vi.fn(() => []),
 }));
 
 vi.mock("../../../src/domain/simulation/systems/ai/evaluators/QuestEvaluator", () => ({
@@ -48,50 +61,64 @@ vi.mock("../../../src/domain/simulation/systems/ai/evaluators/TradeEvaluator", (
   evaluateTradeGoals: vi.fn(() => []),
 }));
 
-vi.mock(
-  "../../../src/domain/simulation/systems/ai/evaluators/BuildingContributionEvaluator",
-  () => ({
-    evaluateBuildingContributionGoals: vi.fn(() => []),
-  }),
-);
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/BuildingContributionEvaluator", () => ({
+  evaluateBuildingContributionGoals: vi.fn(() => []),
+}));
+
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/CollectiveNeedsEvaluator", () => ({
+  evaluateCollectiveNeeds: vi.fn(() => []),
+}));
+
+vi.mock("../../../src/domain/simulation/systems/ai/evaluators/ExpansionEvaluator", () => ({
+  evaluateExpansionGoals: vi.fn(() => []),
+}));
 
 vi.mock("../../../src/domain/simulation/systems/ai/core/utils", () => ({
   selectBestZone: vi.fn(() => null),
   getUnexploredZones: vi.fn(() => []),
-  prioritizeGoals: vi
-    .fn()
-    .mockImplementation(
-      (
-        goals,
-        _aiState,
-        _priorityManager,
-        minPriority: number,
-      ) => goals.filter((goal) => goal.priority >= minPriority),
-    ),
-  getEntityPosition: vi.fn(() => ({ x: 0, y: 0 })),
+  prioritizeGoals: vi.fn().mockImplementation(
+    (goals: AIGoal[], _aiState: AIState, _priorityManager: unknown, minPriority: number) =>
+      goals.filter((goal) => goal.priority >= minPriority),
+  ),
 }));
 
-import { evaluateCriticalNeeds } from "../../../src/domain/simulation/systems/ai/evaluators/NeedsEvaluator";
-import {
-  evaluateWorkOpportunities,
-  evaluateExplorationOpportunities,
-} from "../../../src/domain/simulation/systems/ai/evaluators/OpportunitiesEvaluator";
-import { evaluateAttention, evaluateDefaultExploration } from "../../../src/domain/simulation/systems/ai/evaluators/AttentionEvaluator";
+import { evaluateBiologicalDrives } from "../../../src/domain/simulation/systems/ai/evaluators/BiologicalDriveEvaluator";
+import { evaluateCognitiveDrives } from "../../../src/domain/simulation/systems/ai/evaluators/CognitiveDriveEvaluator";
+import { evaluateDefaultExploration } from "../../../src/domain/simulation/systems/ai/evaluators/AttentionEvaluator";
 import { prioritizeGoals } from "../../../src/domain/simulation/systems/ai/core/utils";
+
+function createTestGoal(overrides: Partial<AIGoal> & { id: string; type: GoalType; priority: number }): AIGoal {
+  return {
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 60000,
+    ...overrides,
+  };
+}
 
 describe("AgentGoalPlanner", () => {
   let gameState: GameState;
   let aiState: AIState;
 
+  const createMockAgentRegistry = () => ({
+    getPosition: vi.fn(() => ({ x: 0, y: 0 })),
+    getProfile: vi.fn(() => null),
+    getAllProfiles: vi.fn(() => []),
+  });
+
   const baseDeps = () => ({
     gameState,
     priorityManager: {
       adjust: vi.fn((_agentId: string, _domain: string, priority: number) => priority),
-    } as any,
+    } as unknown,
+    agentRegistry: createMockAgentRegistry() as unknown,
     getEntityNeeds: vi.fn(() => ({
       hunger: 50,
       thirst: 50,
       energy: 50,
+      hygiene: 50,
+      social: 50,
+      fun: 50,
+      mentalHealth: 50,
     })),
   });
 
@@ -100,104 +127,87 @@ describe("AgentGoalPlanner", () => {
     gameState = createMockGameState();
     aiState = {
       entityId: "agent-1",
-      agentId: "agent-1",
       position: { x: 0, y: 0 },
       zoneId: null,
       currentGoal: null,
       memory: {},
       needs: {},
       personality: {
-        workEthic: "balanced",
-        explorationType: "curious",
+        workEthic: WorkEthic.BALANCED,
+        explorationType: ExplorationType.ADVENTUROUS,
+        cooperation: 0.5,
+        diligence: 0.5,
+        curiosity: 0.5,
+        aggression: 0.1,
+        sociability: 0.5,
       },
-    } as AIState;
-    vi.mocked(evaluateCriticalNeeds).mockReturnValue([]);
-    vi.mocked(evaluateWorkOpportunities).mockReturnValue([]);
-    vi.mocked(evaluateExplorationOpportunities).mockReturnValue([]);
-    vi.mocked(evaluateAttention).mockReturnValue([]);
+      goalQueue: [],
+      lastDecisionTime: 0,
+      offDuty: false,
+    } as unknown as AIState;
+
+    vi.mocked(evaluateBiologicalDrives).mockReturnValue([]);
+    vi.mocked(evaluateCognitiveDrives).mockReturnValue([]);
     vi.mocked(evaluateDefaultExploration).mockReturnValue([
-      { id: "default", description: "default", priority: 0.6, type: "explore" },
+      createTestGoal({ id: "default", type: GoalType.EXPLORE, priority: 0.6 }),
     ]);
     vi.mocked(prioritizeGoals).mockImplementation(
-      (goals, _ai, _manager, minPriority) =>
+      (goals: AIGoal[], _ai, _manager, minPriority) =>
         goals.filter((goal) => goal.priority >= minPriority),
     );
   });
 
-  it("debe agregar objetivos críticos de necesidades", () => {
-    vi.mocked(evaluateCriticalNeeds).mockReturnValue([
-      { id: "critical", description: "critical", priority: 0.9, type: "need" },
+  it("debe evaluar necesidades biológicas críticas", () => {
+    vi.mocked(evaluateBiologicalDrives).mockReturnValue([
+      createTestGoal({ id: "critical_hunger", type: GoalType.SATISFY_HUNGER, priority: 0.95 }),
     ]);
 
     const deps = baseDeps();
-    const goals = planGoals(deps, aiState, Date.now());
+    const goals = planGoals(deps as any, aiState, Date.now());
 
-    expect(evaluateCriticalNeeds).toHaveBeenCalled();
-    expect(goals.some((goal) => goal.id === "critical")).toBe(true);
+    expect(evaluateBiologicalDrives).toHaveBeenCalled();
+    // Cuando hay un goal crítico (>0.9), debe retornar solo ese
+    expect(goals.length).toBe(1);
+    expect(goals[0].id).toBe("critical_hunger");
   });
 
-  it("debe incluir work opportunities cuando no hay críticos altos", () => {
-    vi.mocked(evaluateCriticalNeeds).mockReturnValue([
-      { id: "low-critical", description: "low", priority: 0.5, type: "need" },
-    ]);
-    vi.mocked(evaluateWorkOpportunities).mockReturnValue([
-      { id: "work", description: "work", priority: 0.6, type: "work" },
-    ]);
-    vi.mocked(evaluateExplorationOpportunities).mockReturnValue([
-      { id: "explore", description: "explore", priority: 0.5, type: "explore" },
-    ]);
-
-    const deps = {
-      ...baseDeps(),
-      getAgentRole: vi.fn(() => ({ roleType: "worker" })),
-      getPreferredResourceForRole: vi.fn(() => "wood"),
-      findNearestResource: vi.fn(() => ({ id: "resource", x: 10, y: 10 })),
-      getCurrentTimeOfDay: vi.fn(() => "morning"),
-    };
-
-    const goals = planGoals(deps, aiState, Date.now(), 0.3);
-
-    expect(evaluateWorkOpportunities).toHaveBeenCalled();
-    expect(goals.some((goal) => goal.id === "work")).toBe(true);
-  });
-
-  it("debe respetar minPriority al priorizar objetivos", () => {
-    vi.mocked(evaluateCriticalNeeds).mockReturnValue([
-      { id: "below", description: "below", priority: 0.2, type: "need" },
-      { id: "above", description: "above", priority: 0.8, type: "need" },
+  it("debe evaluar impulsos cognitivos", () => {
+    vi.mocked(evaluateCognitiveDrives).mockReturnValue([
+      createTestGoal({ id: "work_drive", type: GoalType.WORK, priority: 0.6 }),
     ]);
 
     const deps = baseDeps();
-    const goals = planGoals(deps, aiState, Date.now(), 0.5);
+    const goals = planGoals(deps as any, aiState, Date.now(), 0.3);
 
-    expect(prioritizeGoals).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({ id: "below" }),
-        expect.objectContaining({ id: "above" }),
-      ]),
-      aiState,
-      deps.priorityManager,
-      0.5,
-      0.1,
-    );
-    expect(goals.some((goal) => goal.id === "above")).toBe(true);
-    expect(goals.some((goal) => goal.id === "below")).toBe(false);
+    expect(evaluateCognitiveDrives).toHaveBeenCalled();
+    expect(goals.some((goal) => goal.id === "work_drive")).toBe(true);
   });
 
-  it("debe retornar default goals cuando no hay otros", () => {
-    vi.mocked(evaluateCriticalNeeds).mockReturnValue([]);
-    vi.mocked(evaluateAttention).mockReturnValue([]);
+  it("debe respetar minPriority al filtrar objetivos", () => {
+    vi.mocked(evaluateCognitiveDrives).mockReturnValue([
+      createTestGoal({ id: "low_priority", type: GoalType.WORK, priority: 0.2 }),
+      createTestGoal({ id: "high_priority", type: GoalType.WORK, priority: 0.8 }),
+    ]);
+
+    const deps = baseDeps();
+    const goals = planGoals(deps as any, aiState, Date.now(), 0.5);
+
+    expect(prioritizeGoals).toHaveBeenCalled();
+    expect(goals.some((goal) => goal.id === "high_priority")).toBe(true);
+    expect(goals.some((goal) => goal.id === "low_priority")).toBe(false);
+  });
+
+  it("debe retornar default exploration cuando no hay otros objetivos", () => {
+    vi.mocked(evaluateBiologicalDrives).mockReturnValue([]);
+    vi.mocked(evaluateCognitiveDrives).mockReturnValue([]);
     vi.mocked(evaluateDefaultExploration).mockReturnValue([
-      { id: "default", description: "default", priority: 0.6, type: "explore" },
+      createTestGoal({ id: "default", type: GoalType.EXPLORE, priority: 0.6 }),
     ]);
 
-    const deps = {
-      ...baseDeps(),
-      getEntityNeeds: vi.fn(() => undefined),
-    };
+    const deps = baseDeps();
+    const goals = planGoals(deps as any, aiState, Date.now(), 0.3);
 
-    const goals = planGoals(deps, aiState, Date.now());
-
+    expect(evaluateDefaultExploration).toHaveBeenCalled();
     expect(goals.some((goal) => goal.id === "default")).toBe(true);
   });
 });

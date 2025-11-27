@@ -280,7 +280,6 @@ export class AnimalRegistry {
     const results: Animal[] = [];
     const radiusSq = radius * radius;
 
-    // Calculate cell range to check
     const minCellX = Math.floor((x - radius) / GRID_CELL_SIZE);
     const maxCellX = Math.floor((x + radius) / GRID_CELL_SIZE);
     const minCellY = Math.floor((y - radius) / GRID_CELL_SIZE);

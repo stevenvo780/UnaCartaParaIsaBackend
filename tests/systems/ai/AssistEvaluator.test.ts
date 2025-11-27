@@ -19,14 +19,21 @@ describe("AssistEvaluator", () => {
         extraversion: 0.7,
         agreeableness: 0.8, // Alta empatía
         neuroticism: 0.3,
+        cooperation: 0.5,
+        diligence: 0.5,
+        curiosity: 0.5,
+        aggression: 0.1,
+        sociability: 0.5,
       },
       memory: {
         successfulActivities: [],
         failedAttempts: [],
       },
       currentGoal: null,
-      strategy: "peaceful",
-    };
+      goalQueue: [],
+      lastDecisionTime: 0,
+      offDuty: false,
+    } as unknown as AIState;
 
     context = {
       getAllActiveAgentIds: () => ["agent-1", "agent-2", "agent-3"],
@@ -97,7 +104,7 @@ describe("AssistEvaluator", () => {
         expect(goals[0].type).toBe("assist");
         expect(goals[0].targetZoneId).toBe("food-zone-1");
         expect(goals[0].data?.targetAgentId).toBe("agent-2");
-        expect(goals[0].data?.resourceType).toBe("food");
+        expect(goals[0].data?.need).toBe("food");
       }
     });
 
@@ -117,7 +124,7 @@ describe("AssistEvaluator", () => {
       };
       const goals = evaluateAssist(context, aiState);
       if (goals.length > 0) {
-        expect(goals[0].data?.resourceType).toBe("water");
+        expect(goals[0].data?.need).toBe("water");
         expect(goals[0].targetZoneId).toBe("water-zone-1");
       }
     });
@@ -138,7 +145,7 @@ describe("AssistEvaluator", () => {
       };
       const goals = evaluateAssist(context, aiState);
       if (goals.length > 0) {
-        expect(goals[0].data?.resourceType).toBe("medical");
+        expect(goals[0].data?.need).toBe("medical");
         expect(goals[0].targetZoneId).toBe("medical-zone-1");
       }
     });
@@ -156,7 +163,7 @@ describe("AssistEvaluator", () => {
       context.getEntityStats = () => ({ morale: 80, wounds: 0 });
       const goals = evaluateAssist(context, aiState);
       if (goals.length > 0) {
-        expect(goals[0].data?.resourceType).toBe("rest");
+        expect(goals[0].data?.need).toBe("rest");
         expect(goals[0].targetZoneId).toBe("rest-zone-1");
       }
     });

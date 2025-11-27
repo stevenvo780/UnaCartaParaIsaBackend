@@ -262,7 +262,7 @@ describe("RoleSystem", () => {
     it("debe retornar false para agente inexistente", () => {
       const result = roleSystem.reassignRole("nonexistent", "logger");
       expect(result.success).toBe(false);
-      expect(result.reason).toContain("no encontrado");
+      expect(result.reason).toContain("not found");
     });
 
     it("puede reasignar agente inmortal", () => {

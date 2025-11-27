@@ -5,7 +5,6 @@ import {
   GovernanceProjectType,
 } from "../../../shared/constants/GovernanceEnums";
 
-// Re-export enums for convenience
 export type { DemandType, GovernanceEventType, GovernanceProjectType };
 
 export interface SettlementDemand {

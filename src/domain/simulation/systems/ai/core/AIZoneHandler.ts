@@ -333,8 +333,6 @@ export class AIZoneHandler {
     return baseDuration;
   }
 
-  // Private helper methods
-
   private updateHomeZoneIfNeeded(
     entityId: string,
     zoneId: string,

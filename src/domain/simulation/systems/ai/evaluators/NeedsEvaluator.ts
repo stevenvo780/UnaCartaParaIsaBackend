@@ -130,16 +130,13 @@ function adjustThreshold(
 ): number {
   let modifier = ROLE_NEED_MODIFIERS[roleType]?.[needType] ?? 1.0;
 
-  // Community state affects individual tolerance
   if (communityState) {
-    // When community is struggling, workers are more tolerant of personal needs
     if (needType === "hunger" && communityState.foodPerCapita < 5) {
       modifier *= 0.85; // More tolerant when food is scarce (help gather more)
     }
     if (needType === "thirst" && communityState.waterPerCapita < 8) {
       modifier *= 0.9;
     }
-    // When stockpiles are very full, agents can be less tolerant (relax more)
     if (communityState.stockpileFillRatio > 0.8) {
       modifier *= 1.1;
     }
@@ -175,10 +172,9 @@ export function evaluateCriticalNeeds(
     baseHungerThreshold = 35; // Less critical at night
   } else if (timeOfDay === "morning" || timeOfDay === "dawn") {
     baseHungerThreshold = 50; // More critical in morning
-    baseEnergyThreshold = 40; // Less critical after rest
+    baseEnergyThreshold = 40;
   }
 
-  // Apply role and community state adjustments
   const hungerThreshold = adjustThreshold(
     baseHungerThreshold,
     "hunger",
