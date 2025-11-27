@@ -590,7 +590,6 @@ export class AIActionPlanner {
     // If no target, try to find nearest animal
     if (!targetId && this.deps.gameState.animals?.animals) {
       const agentPos = this.deps.getAgentPosition(agentId);
-      logger.info(`[AIActionPlanner] planHunt: animals=${this.deps.gameState.animals.animals.length}`);
       if (agentPos) {
         let minDist = Infinity;
         let nearestAnimal = null;
@@ -610,9 +609,6 @@ export class AIActionPlanner {
         if (nearestAnimal) {
           targetId = nearestAnimal.id;
           targetPosition = nearestAnimal.position;
-          logger.info(`[AIActionPlanner] Found prey ${targetId} at dist ${minDist}`);
-        } else {
-          logger.info(`[AIActionPlanner] No prey found within range`);
         }
       }
     }
@@ -624,7 +620,6 @@ export class AIActionPlanner {
           agentPos.x - targetPosition.x,
           agentPos.y - targetPosition.y,
         );
-        logger.info(`[AIActionPlanner] Dist to prey: ${dist}, AttackRange: ${this.ATTACK_RANGE}`);
         if (dist < this.ATTACK_RANGE) {
           return {
             actionType: "attack",

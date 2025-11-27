@@ -249,10 +249,6 @@ export function planGoals(
   goals.push(...attentionGoals);
 
   const criticalCount = goals.filter((g) => g.priority > 0.7).length;
-  logger.info(`[AgentGoalPlanner] Agent ${aiState.entityId}: criticalCount=${criticalCount}, goals=${goals.length}`);
-  if (goals.length > 0) {
-    logger.info(`[AgentGoalPlanner] Goals: ${goals.map(g => `${g.type}(${g.priority.toFixed(2)})`).join(", ")}`);
-  }
 
   if (criticalCount === 0) {
     if (deps.getAgentRole && deps.getPreferredResourceForRole) {
