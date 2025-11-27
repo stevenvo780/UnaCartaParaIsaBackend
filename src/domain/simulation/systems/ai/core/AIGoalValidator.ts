@@ -4,6 +4,7 @@ import type { WorldResourceSystem } from "../../WorldResourceSystem";
 import type { NeedsSystem } from "../../NeedsSystem";
 import type { AnimalSystem } from "../../AnimalSystem";
 import { isWorldResourceType } from "../../../../types/simulation/resourceMapping";
+import type { WorldResourceType } from "../../../../types/simulation/worldResources";
 import { getFrameTime } from "../../../../../shared/FrameTime";
 import { NeedType } from "../../../../../shared/constants/AIEnums";
 
@@ -137,6 +138,35 @@ export class AIGoalValidator {
       return false;
     }
 
+    // For gather/work goals with a target resource, don't complete just by arriving
+    // The goal completes when the resource is actually harvested (handled by action completion)
+    if (goal.type === "gather" || goal.type === "work") {
+      if (goal.targetId && goal.data?.resourceType) {
+        // Resource-based goal - only complete via handleActionComplete after harvest
+        return false;
+      }
+      // Work goals with zone but no specific resource - check if agent arrived and did work
+      if (goal.targetZoneId) {
+        const agentPos = this.deps.getAgentPosition(agentId);
+        if (!agentPos) return false;
+
+        const zone = this.deps.gameState.zones?.find(
+          (z) => z.id === goal.targetZoneId,
+        );
+        if (!zone || !zone.bounds) return false;
+
+        const inZone =
+          agentPos.x >= zone.bounds.x &&
+          agentPos.x <= zone.bounds.x + zone.bounds.width &&
+          agentPos.y >= zone.bounds.y &&
+          agentPos.y <= zone.bounds.y + zone.bounds.height;
+
+        // Don't auto-complete work goals - they complete via task system or action
+        return false;
+      }
+    }
+
+    // For other goal types (explore, social, etc.), arriving at destination completes the goal
     if (goal.targetPosition || goal.targetZoneId) {
       return true;
     }
@@ -225,30 +255,82 @@ export class AIGoalValidator {
 
   /**
    * Validates if a resource target is still valid.
+   * Returns true if valid, false if invalid, null if not applicable.
    */
   private isResourceTargetValid(goal: AIGoal): boolean | null {
-    if (!goal.targetId || !goal.data?.resourceType) {
+    if (!goal.targetId) {
       return null;
     }
 
-    const resourceTypeStr = goal.data.resourceType as string;
+    // If we have a targetId, check if that specific resource exists and is harvestable
+    // First check in worldResources by ID directly
+    if (this.deps.gameState.worldResources) {
+      const resource = this.deps.gameState.worldResources[goal.targetId];
+      if (resource) {
+        // Resource is valid if it exists and is not fully depleted
+        return resource.state !== "depleted";
+      }
+    }
 
+    // Also check via worldResourceSystem if available
     if (this.deps.worldResourceSystem) {
-      if (isWorldResourceType(resourceTypeStr)) {
+      const resourceTypeStr = goal.data?.resourceType as string | undefined;
+
+      // If we have a specific world resource type, search by type
+      if (resourceTypeStr && isWorldResourceType(resourceTypeStr)) {
         const resources =
           this.deps.worldResourceSystem.getResourcesByType(resourceTypeStr);
         const targetResource = resources.find((r) => r.id === goal.targetId);
-        return !!(targetResource && targetResource.state === "pristine");
+        if (targetResource) {
+          return targetResource.state !== "depleted";
+        }
       }
-      return false;
+
+      // For generic types like "food", search across all possible world resource types
+      if (resourceTypeStr === "food") {
+        const foodTypes = ["berry_bush", "mushroom_patch", "wheat_crop"];
+        for (const foodType of foodTypes) {
+          if (isWorldResourceType(foodType)) {
+            const resources =
+              this.deps.worldResourceSystem.getResourcesByType(foodType);
+            const targetResource = resources.find((r) => r.id === goal.targetId);
+            if (targetResource) {
+              return targetResource.state !== "depleted";
+            }
+          }
+        }
+      }
+
+      if (resourceTypeStr === "water") {
+        const resources =
+          this.deps.worldResourceSystem.getResourcesByType("water_source" as WorldResourceType);
+        const targetResource = resources.find((r) => r.id === goal.targetId);
+        if (targetResource) {
+          return targetResource.state !== "depleted";
+        }
+      }
+
+      if (resourceTypeStr === "wood") {
+        const resources =
+          this.deps.worldResourceSystem.getResourcesByType("tree" as WorldResourceType);
+        const targetResource = resources.find((r) => r.id === goal.targetId);
+        if (targetResource) {
+          return targetResource.state !== "depleted";
+        }
+      }
+
+      if (resourceTypeStr === "stone") {
+        const resources =
+          this.deps.worldResourceSystem.getResourcesByType("rock" as WorldResourceType);
+        const targetResource = resources.find((r) => r.id === goal.targetId);
+        if (targetResource) {
+          return targetResource.state !== "depleted";
+        }
+      }
     }
 
-    if (this.deps.gameState.worldResources) {
-      const resource = this.deps.gameState.worldResources[goal.targetId];
-      return !!(resource && resource.state === "pristine");
-    }
-
-    return null;
+    // If we couldn't find the resource, it might have been removed - mark as invalid
+    return false;
   }
 
   /**

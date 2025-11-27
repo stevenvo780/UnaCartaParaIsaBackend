@@ -14,6 +14,76 @@ import { StockpileType } from "../../../shared/constants/ZoneEnums";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
 import { getAnimalConfig } from "../../../infrastructure/services/world/config/AnimalConfigs";
 import type { WeaponId as CraftingWeaponId } from "../../types/simulation/crafting";
+
+/**
+ * Generates a human-readable description of an AI goal.
+ * @param goal - The AI goal to describe
+ * @returns A descriptive string of what the agent is doing
+ */
+function describeGoal(goal: AIGoal): string {
+  const { type, targetId, targetZoneId, data } = goal;
+  const parts: string[] = [type];
+  if (data?.workType) {
+    parts.push(`(${data.workType})`);
+  }
+
+  if (data?.taskType) {
+    parts.push(`task:${data.taskType}`);
+  }
+
+  if (data?.resourceType) {
+    parts.push(`resource:${data.resourceType}`);
+  }
+
+  if (data?.buildingType) {
+    parts.push(`building:${data.buildingType}`);
+  }
+
+  if (data?.need) {
+    parts.push(`need:${data.need}`);
+  }
+
+  if (data?.reason) {
+    parts.push(`reason:${data.reason}`);
+  }
+
+  if (targetId) {
+    const readableTarget = targetId
+      .replace(/^resource_/, "")
+      .replace(/_\d+_\w+$/, "")
+      .replace(/_/g, " ");
+    parts.push(`-> ${readableTarget}`);
+  } else if (targetZoneId) {
+    parts.push(`-> zone:${targetZoneId}`);
+  }
+
+  return parts.join(" ");
+}
+
+/**
+ * Generates a human-readable description of an AI action.
+ * @param action - The agent action to describe
+ * @returns A descriptive string of the action
+ */
+function describeAction(action: AgentAction): string {
+  const parts: string[] = [action.actionType];
+
+  if (action.targetId) {
+    const readableTarget = action.targetId
+      .replace(/^resource_/, "")
+      .replace(/_\d+_\w+$/, "")
+      .replace(/_/g, " ");
+    parts.push(`-> ${readableTarget}`);
+  } else if (action.targetPosition) {
+    parts.push(
+      `-> (${Math.round(action.targetPosition.x)}, ${Math.round(action.targetPosition.y)})`,
+    );
+  } else if (action.targetZoneId) {
+    parts.push(`-> zone:${action.targetZoneId}`);
+  }
+
+  return parts.join(" ");
+}
 import {
   planGoals,
   type AgentGoalPlannerDeps,
@@ -133,6 +203,10 @@ export class AISystem extends EventEmitter {
   >();
   private readonly RESOURCE_CACHE_TTL = 2000; // 2s cache for resource searches
   private readonly MAX_RESOURCE_SEARCH_RADIUS = 2000; // Increased to cover most of the map
+
+  // Resource reservation: tracks which agent is targeting which resource
+  // Prevents multiple agents from going to the same resource
+  private resourceReservations = new Map<string, string>(); // resourceId -> agentId
 
   private readonly MAX_DECISION_TIME_MS = 5;
 
@@ -270,6 +344,38 @@ export class AISystem extends EventEmitter {
     this.actionPlanner = new AIActionPlanner({
       gameState: this.gameState,
       getAgentPosition: (agentId: string) => this.getAgentPosition(agentId),
+      findNearestResource: (entityId: string, resourceType: string) =>
+        this.findNearestResourceForEntity(entityId, resourceType),
+      findNearestHuntableAnimal: (entityId: string) => {
+        const agentPos = this.getAgentPosition(entityId);
+        if (!agentPos || !this.gameState.animals?.animals) return null;
+
+        const HUNT_SEARCH_RANGE = 800;
+        let nearest: { id: string; x: number; y: number; type: string } | null =
+          null;
+        let minDist = Infinity;
+
+        for (const animal of this.gameState.animals.animals) {
+          if (animal.isDead) continue;
+          const config = getAnimalConfig(animal.type);
+          if (!config?.canBeHunted) continue;
+
+          const dist = Math.hypot(
+            agentPos.x - animal.position.x,
+            agentPos.y - animal.position.y,
+          );
+          if (dist < minDist && dist < HUNT_SEARCH_RANGE) {
+            minDist = dist;
+            nearest = {
+              id: animal.id,
+              x: animal.position.x,
+              y: animal.position.y,
+              type: animal.type,
+            };
+          }
+        }
+        return nearest;
+      },
     });
 
     this.actionExecutor = new AIActionExecutor({
@@ -558,35 +664,56 @@ export class AISystem extends EventEmitter {
       }
     }
 
+    // Pre-plan goals to fill queue (up to 3 goals ahead)
+    const MAX_QUEUED_GOALS = 3;
+    if (aiState.goalQueue.length < MAX_QUEUED_GOALS) {
+      this.prePlanGoals(agentId, aiState, now, MAX_QUEUED_GOALS);
+    }
+
     if (!aiState.currentGoal) {
-      const startTime = performance.now();
-      const newGoal = this.makeDecision(agentId, aiState, now);
-      const duration = performance.now() - startTime;
-
-      this._decisionTimeTotalMs += duration;
-      this._decisionCount++;
-
-      performanceMonitor.recordSubsystemExecution(
-        "AISystem",
-        "makeDecision",
-        duration,
-        agentId,
-      );
-      performanceMonitor.recordOperation("ai_decision", duration, 1, 0);
-
-      if (newGoal) {
-        aiState.currentGoal = newGoal;
+      // Try to get goal from queue first
+      if (aiState.goalQueue.length > 0) {
+        aiState.currentGoal = aiState.goalQueue.shift() ?? null;
         aiState.lastDecisionTime = now;
-        logger.debug(
-          `🎯 [AI] Agent ${agentId} new goal: ${newGoal.type} target=${newGoal.targetId || newGoal.targetZoneId || "none"}`,
-        );
-        simulationEvents.emit(GameEventNames.AGENT_GOAL_CHANGED, {
+        if (aiState.currentGoal) {
+          logger.debug(`🎯 [AI] ${agentId}: ${describeGoal(aiState.currentGoal)} (from queue)`);
+          simulationEvents.emit(GameEventNames.AGENT_GOAL_CHANGED, {
+            agentId,
+            newGoal: aiState.currentGoal,
+            timestamp: now,
+          });
+        }
+      }
+
+      // If still no goal, make a new decision
+      if (!aiState.currentGoal) {
+        const startTime = performance.now();
+        const newGoal = this.makeDecision(agentId, aiState, now);
+        const duration = performance.now() - startTime;
+
+        this._decisionTimeTotalMs += duration;
+        this._decisionCount++;
+
+        performanceMonitor.recordSubsystemExecution(
+          "AISystem",
+          "makeDecision",
+          duration,
           agentId,
-          newGoal,
-          timestamp: now,
-        });
-      } else {
-        this.maybeFallbackExplore(agentId, aiState);
+        );
+        performanceMonitor.recordOperation("ai_decision", duration, 1, 0);
+
+        if (newGoal) {
+          aiState.currentGoal = newGoal;
+          aiState.lastDecisionTime = now;
+          logger.debug(`🎯 [AI] ${agentId}: ${describeGoal(newGoal)}`);
+          simulationEvents.emit(GameEventNames.AGENT_GOAL_CHANGED, {
+            agentId,
+            newGoal,
+            timestamp: now,
+          });
+        } else {
+          this.maybeFallbackExplore(agentId, aiState);
+        }
       }
     }
 
@@ -624,9 +751,7 @@ export class AISystem extends EventEmitter {
 
         aiState.currentAction = action;
 
-        logger.debug(
-          `🏃 [AI] Agent ${agentId} action: ${action.actionType} -> ${action.targetId || JSON.stringify(action.targetPosition) || action.targetZoneId || "none"}`,
-        );
+        logger.debug(`🏃 [AI] ${agentId}: ${describeAction(action)}`);
         this.executeAction(action);
         simulationEvents.emit(GameEventNames.AGENT_ACTION_COMMANDED, {
           agentId,
@@ -679,6 +804,196 @@ export class AISystem extends EventEmitter {
 
     this._movementSystem.moveToPoint(agentId, targetX, targetY);
     logger.debug(`🚶 [AI] Fallback explore triggered for ${agentId}`);
+  }
+
+  /**
+   * Pre-plans goals to fill the goal queue for smoother transitions.
+   * Generates low-priority goals ahead of time so agents have tasks ready.
+   *
+   * @param agentId - Agent identifier
+   * @param aiState - Agent's AI state
+   * @param now - Current timestamp
+   * @param maxGoals - Maximum goals to keep in queue
+   */
+  private prePlanGoals(
+    agentId: string,
+    aiState: AIState,
+    now: number,
+    maxGoals: number,
+  ): void {
+    // Don't pre-plan if agent has urgent needs or is in combat
+    if (aiState.isInCombat) return;
+
+    const needs = this.needsSystem?.getNeeds(agentId);
+    if (needs && (needs.hunger < 40 || needs.thirst < 40 || needs.energy < 30)) {
+      return; // Agent needs to address urgent needs first
+    }
+
+    // Collect already-targeted resources
+    const excludedIds = new Set<string>();
+    if (aiState.currentGoal?.targetId) {
+      excludedIds.add(aiState.currentGoal.targetId);
+    }
+    for (const g of aiState.goalQueue) {
+      if (g.targetId) excludedIds.add(g.targetId);
+    }
+
+    // Add work/gather goals to the queue
+    let attempts = 0;
+    while (aiState.goalQueue.length < maxGoals && attempts < 10) {
+      attempts++;
+      const workGoal = this.generateWorkGoal(agentId, aiState, now, excludedIds);
+      if (workGoal && workGoal.targetId) {
+        aiState.goalQueue.push(workGoal);
+        excludedIds.add(workGoal.targetId); // Prevent same target in next iteration
+      } else {
+        break; // No more unique work goals available
+      }
+    }
+  }
+
+  /**
+   * Generates a work goal based on agent's role and colony needs.
+   * @param excludeTargetIds - Resource IDs to exclude (already in queue)
+   */
+  private generateWorkGoal(
+    agentId: string,
+    aiState: AIState,
+    now: number,
+    excludeTargetIds: Set<string> = new Set(),
+  ): AIGoal | null {
+    const agentRole = this.roleSystem?.getAgentRole(agentId);
+    const role = agentRole?.role;
+    const foodTypes = ["berry_bush", "mushroom_patch", "wheat_crop"];
+    const woodTypes = ["tree"];
+    const stoneTypes = ["rock"];
+
+    // Collect all already-targeted resources (current goal + queue)
+    const excluded = new Set(excludeTargetIds);
+    if (aiState.currentGoal?.targetId) {
+      excluded.add(aiState.currentGoal.targetId);
+    }
+    for (const g of aiState.goalQueue) {
+      if (g.targetId) excluded.add(g.targetId);
+    }
+
+    // Hunters prioritize hunting
+    if (role === "hunter") {
+      // Find nearest huntable animal
+      const animal = this.findNearestHuntableAnimal(agentId);
+      if (animal && !excluded.has(animal.id)) {
+        return {
+          id: `hunt_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
+          type: "hunt" as GoalType,
+          priority: 60,
+          targetId: animal.id,
+          targetPosition: { x: animal.x, y: animal.y },
+          data: {
+            taskType: "hunt",
+            animalType: animal.type,
+          },
+          createdAt: now,
+        };
+      }
+      // Fallback to gathering food if no animals nearby
+      for (const foodType of foodTypes) {
+        const resource = this.findNearestResourceForEntity(agentId, foodType);
+        if (resource && !excluded.has(resource.id)) {
+          return {
+            id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
+            type: "work" as GoalType,
+            priority: 50,
+            targetId: resource.id,
+            targetPosition: { x: resource.x, y: resource.y },
+            data: {
+              taskType: "gather_food",
+              resourceType: "food" as ResourceType,
+            },
+            createdAt: now,
+          };
+        }
+      }
+    }
+
+    // Gatherers focus on food
+    if (role === "gatherer") {
+      for (const foodType of foodTypes) {
+        const resource = this.findNearestResourceForEntity(agentId, foodType);
+        if (resource && !excluded.has(resource.id)) {
+          return {
+            id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
+            type: "work" as GoalType,
+            priority: 50,
+            targetId: resource.id,
+            targetPosition: { x: resource.x, y: resource.y },
+            data: {
+              taskType: "gather_food",
+              resourceType: "food" as ResourceType,
+            },
+            createdAt: now,
+          };
+        }
+      }
+    }
+
+    // Builders gather wood/stone
+    if (role === "builder") {
+      for (const woodType of woodTypes) {
+        const resource = this.findNearestResourceForEntity(agentId, woodType);
+        if (resource && !excluded.has(resource.id)) {
+          return {
+            id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
+            type: "work" as GoalType,
+            priority: 50,
+            targetId: resource.id,
+            targetPosition: { x: resource.x, y: resource.y },
+            data: {
+              taskType: "gather_wood",
+              resourceType: "wood" as ResourceType,
+            },
+            createdAt: now,
+          };
+        }
+      }
+      for (const stoneType of stoneTypes) {
+        const resource = this.findNearestResourceForEntity(agentId, stoneType);
+        if (resource && !excluded.has(resource.id)) {
+          return {
+            id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
+            type: "work" as GoalType,
+            priority: 50,
+            targetId: resource.id,
+            targetPosition: { x: resource.x, y: resource.y },
+            data: {
+              taskType: "gather_stone",
+              resourceType: "stone" as ResourceType,
+            },
+            createdAt: now,
+          };
+        }
+      }
+    }
+
+    // Default: gather food (everyone needs to eat)
+    for (const foodType of foodTypes) {
+      const resource = this.findNearestResourceForEntity(agentId, foodType);
+      if (resource && !excluded.has(resource.id)) {
+        return {
+          id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
+          type: "work" as GoalType,
+          priority: 40,
+          targetId: resource.id,
+          targetPosition: { x: resource.x, y: resource.y },
+          data: {
+            taskType: "gather_food",
+            resourceType: "food" as ResourceType,
+          },
+          createdAt: now,
+        };
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -800,7 +1115,7 @@ export class AISystem extends EventEmitter {
         const agentPos = this.getAgentPosition(entityId);
         if (!agentPos || !this.gameState.animals?.animals) return null;
 
-        const HUNT_SEARCH_RANGE = 150;
+        const HUNT_SEARCH_RANGE = 1050;
         let nearest: { id: string; x: number; y: number; type: string } | null =
           null;
         let minDist = Infinity;
@@ -1193,11 +1508,24 @@ export class AISystem extends EventEmitter {
     return this.goalValidator.isGoalInvalid(goal, agentId);
   }
 
-  private completeGoal(aiState: AIState, _agentId: string): void {
-    this.goalValidator.completeGoal(aiState);
+  private completeGoal(aiState: AIState, agentId: string): void {
+    // Release resource reservation when goal completes
+    this.releaseResourceReservation(agentId);
+
+    // Check if there's a queued goal to process next
+    if (aiState.goalQueue.length > 0) {
+      aiState.currentGoal = aiState.goalQueue.shift() ?? null;
+      aiState.currentAction = null;
+      aiState.lastDecisionTime = Date.now();
+      this._goalsCompletedRef.value++;
+    } else {
+      this.goalValidator.completeGoal(aiState);
+    }
   }
 
-  private failGoal(aiState: AIState, _agentId: string): void {
+  private failGoal(aiState: AIState, agentId: string): void {
+    // Release resource reservation when goal fails
+    this.releaseResourceReservation(agentId);
     this.goalValidator.failGoal(aiState);
   }
 
@@ -1288,7 +1616,11 @@ export class AISystem extends EventEmitter {
     const cached = this.nearestResourceCache.get(cacheKey);
     const now = Date.now();
     if (cached && now - cached.timestamp < this.RESOURCE_CACHE_TTL) {
-      return cached.resource;
+      // Check if our cached resource is still reserved by us
+      const reservedBy = this.resourceReservations.get(cached.resource?.id ?? "");
+      if (cached.resource && reservedBy === entityId) {
+        return cached.resource;
+      }
     }
 
     const agent =
@@ -1301,13 +1633,20 @@ export class AISystem extends EventEmitter {
     let nearest: { id: string; x: number; y: number } | null = null;
     let minDistance = maxRadiusSq; // Start with max radius as threshold
 
+    // Harvestable states: pristine and harvested_partial still have resources
+    const harvestableStates = ["pristine", "harvested_partial"];
+
     if (this.worldResourceSystem) {
       const resources = this.worldResourceSystem.getResourcesByType(
         resourceType as WorldResourceType,
       );
 
       for (const resource of resources) {
-        if (resource.state !== "pristine") continue;
+        if (!harvestableStates.includes(resource.state)) continue;
+
+        // Skip resources already reserved by other agents
+        const reservedBy = this.resourceReservations.get(resource.id);
+        if (reservedBy && reservedBy !== entityId) continue;
 
         const dx = resource.position.x - agent.position.x;
         const dy = resource.position.y - agent.position.y;
@@ -1324,8 +1663,15 @@ export class AISystem extends EventEmitter {
       }
     } else if (this.gameState.worldResources) {
       for (const resource of Object.values(this.gameState.worldResources)) {
-        if (resource.type !== resourceType || resource.state !== "pristine")
+        if (
+          resource.type !== resourceType ||
+          !harvestableStates.includes(resource.state)
+        )
           continue;
+
+        // Skip resources already reserved by other agents
+        const reservedBy = this.resourceReservations.get(resource.id);
+        if (reservedBy && reservedBy !== entityId) continue;
 
         const dx = resource.position.x - agent.position.x;
         const dy = resource.position.y - agent.position.y;
@@ -1342,10 +1688,68 @@ export class AISystem extends EventEmitter {
       }
     }
 
+    // Reserve the resource for this agent
+    if (nearest) {
+      // Release any previous reservation by this agent
+      for (const [resId, agentId] of this.resourceReservations) {
+        if (agentId === entityId && resId !== nearest.id) {
+          this.resourceReservations.delete(resId);
+        }
+      }
+      this.resourceReservations.set(nearest.id, entityId);
+    }
+
     this.nearestResourceCache.set(cacheKey, {
       resource: nearest,
       timestamp: now,
     });
+    return nearest;
+  }
+
+  /**
+   * Releases resource reservation when goal completes or fails.
+   */
+  private releaseResourceReservation(agentId: string): void {
+    for (const [resId, reservedBy] of this.resourceReservations) {
+      if (reservedBy === agentId) {
+        this.resourceReservations.delete(resId);
+      }
+    }
+  }
+
+  /**
+   * Finds the nearest huntable animal for an agent.
+   */
+  private findNearestHuntableAnimal(
+    entityId: string,
+  ): { id: string; x: number; y: number; type: string } | null {
+    const agentPos = this.getAgentPosition(entityId);
+    if (!agentPos || !this.gameState.animals?.animals) return null;
+
+    const HUNT_SEARCH_RANGE = 800;
+    let nearest: { id: string; x: number; y: number; type: string } | null =
+      null;
+    let minDist = Infinity;
+
+    for (const animal of this.gameState.animals.animals) {
+      if (animal.isDead) continue;
+      const config = getAnimalConfig(animal.type);
+      if (!config?.canBeHunted) continue;
+
+      const dist = Math.hypot(
+        agentPos.x - animal.position.x,
+        agentPos.y - animal.position.y,
+      );
+      if (dist < minDist && dist < HUNT_SEARCH_RANGE) {
+        minDist = dist;
+        nearest = {
+          id: animal.id,
+          x: animal.position.x,
+          y: animal.position.y,
+          type: animal.type,
+        };
+      }
+    }
     return nearest;
   }
 
@@ -1436,21 +1840,57 @@ export class AISystem extends EventEmitter {
     const aiState = this.aiStates.get(payload.agentId);
     if (aiState) {
       aiState.currentAction = null;
-      if (payload.success) {
-        if (
-          payload.actionType === "work" &&
-          payload.data &&
-          typeof payload.data.taskId === "string"
-        ) {
-          const task = this.taskSystem?.getTask(payload.data.taskId);
-          if (task && !task.completed) {
-            return;
+
+      if (!payload.success) {
+        this.failGoal(aiState, payload.agentId);
+        return;
+      }
+
+      // Don't complete goal on MOVE actions - the agent just arrived somewhere
+      // The goal should only complete when the actual work is done (harvest, eat, etc.)
+      if (payload.actionType === "move") {
+        // Agent arrived at destination, next tick will plan the actual action
+        return;
+      }
+
+      // Harvest/Attack actions complete the goal immediately when successful
+      if (payload.actionType === "harvest" || payload.actionType === "attack") {
+        this.completeGoal(aiState, payload.agentId);
+        return;
+      }
+
+      // For work tasks, check if task is actually completed
+      if (
+        payload.actionType === "work" &&
+        payload.data &&
+        typeof payload.data.taskId === "string"
+      ) {
+        const task = this.taskSystem?.getTask(payload.data.taskId);
+        if (task && !task.completed) {
+          return;
+        }
+      }
+
+      // For satisfy_* goals, check if the need is actually satisfied
+      if (aiState.currentGoal) {
+        const goalType = aiState.currentGoal.type;
+
+        if (goalType.startsWith("satisfy_")) {
+          const needType = aiState.currentGoal.data?.need as string;
+          if (needType && this.needsSystem) {
+            const needs = this.needsSystem.getNeeds(payload.agentId);
+            if (needs) {
+              const needValue = needs[needType as keyof typeof needs] as number;
+              // Only complete if need is reasonably satisfied (> 50)
+              if (needValue <= 50) {
+                return; // Need not satisfied yet, keep the goal
+              }
+            }
           }
         }
-        this.completeGoal(aiState, payload.agentId);
-      } else {
-        this.failGoal(aiState, payload.agentId);
       }
+
+      this.completeGoal(aiState, payload.agentId);
     }
   }
 

@@ -6,6 +6,15 @@ import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 export interface AIActionPlannerDeps {
   gameState: GameState;
   getAgentPosition: (agentId: string) => { x: number; y: number } | null;
+  /** Find nearest resource of a given type */
+  findNearestResource?: (
+    entityId: string,
+    resourceType: string,
+  ) => { id: string; x: number; y: number } | null;
+  /** Find nearest huntable animal */
+  findNearestHuntableAnimal?: (
+    entityId: string,
+  ) => { id: string; x: number; y: number; type: string } | null;
 }
 
 /**
@@ -424,16 +433,208 @@ export class AIActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
-    if (!goal.targetZoneId) {
-      return null;
+    // If the work goal has taskType "gather_food", "gather_water", etc.
+    // try to find actual resources to harvest
+    const taskType = goal.data?.taskType as string | undefined;
+    const resourceType = goal.data?.resourceType as string | undefined;
+
+    // For food gathering tasks, try to find food resources or huntable animals
+    if (
+      taskType === "gather_food" ||
+      (resourceType === "food" && !goal.targetId)
+    ) {
+      // First try to find food resources (berry_bush, mushroom_patch, wheat_crop)
+      const foodTypes = ["berry_bush", "mushroom_patch", "wheat_crop"];
+
+      if (this.deps.findNearestResource) {
+        for (const foodType of foodTypes) {
+          const resource = this.deps.findNearestResource(agentId, foodType);
+          if (resource) {
+            const agentPos = this.deps.getAgentPosition(agentId);
+            if (agentPos) {
+              const dist = Math.hypot(
+                agentPos.x - resource.x,
+                agentPos.y - resource.y,
+              );
+              if (dist < this.HARVEST_RANGE) {
+                return {
+                  actionType: ActionType.HARVEST,
+                  agentId,
+                  targetId: resource.id,
+                  targetPosition: { x: resource.x, y: resource.y },
+                  timestamp,
+                };
+              }
+              return {
+                actionType: ActionType.MOVE,
+                agentId,
+                targetPosition: { x: resource.x, y: resource.y },
+                timestamp,
+              };
+            }
+          }
+        }
+      }
+
+      // If no food resources found, try to hunt an animal
+      if (this.deps.findNearestHuntableAnimal) {
+        const animal = this.deps.findNearestHuntableAnimal(agentId);
+        if (animal) {
+          const agentPos = this.deps.getAgentPosition(agentId);
+          if (agentPos) {
+            const dist = Math.hypot(
+              agentPos.x - animal.x,
+              agentPos.y - animal.y,
+            );
+            if (dist < this.ATTACK_RANGE) {
+              return {
+                actionType: ActionType.ATTACK,
+                agentId,
+                targetId: animal.id,
+                timestamp,
+              };
+            }
+            return {
+              actionType: ActionType.MOVE,
+              agentId,
+              targetPosition: { x: animal.x, y: animal.y },
+              timestamp,
+            };
+          }
+        }
+      }
     }
-    return {
-      actionType: ActionType.WORK,
-      agentId,
-      targetZoneId: goal.targetZoneId,
-      data: goal.data,
-      timestamp,
-    };
+
+    // For water gathering tasks
+    if (
+      taskType === "gather_water" ||
+      (resourceType === "water" && !goal.targetId)
+    ) {
+      if (this.deps.findNearestResource) {
+        const waterSource = this.deps.findNearestResource(
+          agentId,
+          "water_source",
+        );
+        if (waterSource) {
+          const agentPos = this.deps.getAgentPosition(agentId);
+          if (agentPos) {
+            const dist = Math.hypot(
+              agentPos.x - waterSource.x,
+              agentPos.y - waterSource.y,
+            );
+            if (dist < this.HARVEST_RANGE) {
+              return {
+                actionType: ActionType.HARVEST,
+                agentId,
+                targetId: waterSource.id,
+                targetPosition: { x: waterSource.x, y: waterSource.y },
+                timestamp,
+              };
+            }
+            return {
+              actionType: ActionType.MOVE,
+              agentId,
+              targetPosition: { x: waterSource.x, y: waterSource.y },
+              timestamp,
+            };
+          }
+        }
+      }
+    }
+
+    // For wood/stone gathering, find the appropriate resource
+    if (taskType === "gather_wood" || resourceType === "wood") {
+      if (this.deps.findNearestResource) {
+        const tree = this.deps.findNearestResource(agentId, "tree");
+        if (tree) {
+          const agentPos = this.deps.getAgentPosition(agentId);
+          if (agentPos) {
+            const dist = Math.hypot(agentPos.x - tree.x, agentPos.y - tree.y);
+            if (dist < this.HARVEST_RANGE) {
+              return {
+                actionType: ActionType.HARVEST,
+                agentId,
+                targetId: tree.id,
+                targetPosition: { x: tree.x, y: tree.y },
+                timestamp,
+              };
+            }
+            return {
+              actionType: ActionType.MOVE,
+              agentId,
+              targetPosition: { x: tree.x, y: tree.y },
+              timestamp,
+            };
+          }
+        }
+      }
+    }
+
+    if (taskType === "gather_stone" || resourceType === "stone") {
+      if (this.deps.findNearestResource) {
+        const rock = this.deps.findNearestResource(agentId, "rock");
+        if (rock) {
+          const agentPos = this.deps.getAgentPosition(agentId);
+          if (agentPos) {
+            const dist = Math.hypot(agentPos.x - rock.x, agentPos.y - rock.y);
+            if (dist < this.HARVEST_RANGE) {
+              return {
+                actionType: ActionType.HARVEST,
+                agentId,
+                targetId: rock.id,
+                targetPosition: { x: rock.x, y: rock.y },
+                timestamp,
+              };
+            }
+            return {
+              actionType: ActionType.MOVE,
+              agentId,
+              targetPosition: { x: rock.x, y: rock.y },
+              timestamp,
+            };
+          }
+        }
+      }
+    }
+
+    // Fallback: if goal has target zone, go work there
+    if (goal.targetZoneId) {
+      return {
+        actionType: ActionType.WORK,
+        agentId,
+        targetZoneId: goal.targetZoneId,
+        data: goal.data,
+        timestamp,
+      };
+    }
+
+    // If goal has direct targetId and targetPosition (e.g., from gather or hunt conversion)
+    if (goal.targetId && goal.targetPosition) {
+      const agentPos = this.deps.getAgentPosition(agentId);
+      if (agentPos) {
+        const dist = Math.hypot(
+          agentPos.x - goal.targetPosition.x,
+          agentPos.y - goal.targetPosition.y,
+        );
+        if (dist < this.HARVEST_RANGE) {
+          return {
+            actionType: ActionType.HARVEST,
+            agentId,
+            targetId: goal.targetId,
+            targetPosition: goal.targetPosition,
+            timestamp,
+          };
+        }
+        return {
+          actionType: ActionType.MOVE,
+          agentId,
+          targetPosition: goal.targetPosition,
+          timestamp,
+        };
+      }
+    }
+
+    return null;
   }
 
   private planCraft(
