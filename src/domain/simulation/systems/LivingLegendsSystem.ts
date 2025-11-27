@@ -5,7 +5,7 @@ import type {
   ReputationEvent,
   LegendDeed,
 } from "../../types/simulation/legends";
-import { LegendTrend } from "../../../shared/constants/LegendEnums";
+import { LegendTrend, LegendTier } from "../../../shared/constants/LegendEnums";
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -142,25 +142,25 @@ export class LivingLegendsSystem {
       if (!agent) continue;
 
       const newTitles: string[] = [];
-      let newTier: LegendRecord["legendTier"] = "unknown";
+      let newTier: LegendRecord["legendTier"] = LegendTier.UNKNOWN;
 
       if (legend.reputation >= 0.9) {
-        newTier = "mythical";
+        newTier = LegendTier.MYTHICAL;
         newTitles.push("Mythical Being");
       } else if (legend.reputation >= 0.8) {
-        newTier = "legendary";
+        newTier = LegendTier.LEGENDARY;
         newTitles.push("Legend");
       } else if (legend.reputation >= 0.7) {
-        newTier = "renowned";
+        newTier = LegendTier.RENOWNED;
         newTitles.push("Renowned");
       } else if (legend.reputation >= 0.5) {
-        newTier = "respected";
+        newTier = LegendTier.RESPECTED;
         newTitles.push("Respected");
       } else if (legend.reputation >= 0.2) {
-        newTier = "known";
+        newTier = LegendTier.KNOWN;
         newTitles.push("Known");
       } else if (legend.reputation <= -0.5) {
-        newTier = "unknown";
+        newTier = LegendTier.UNKNOWN;
         newTitles.push("Villain");
       }
 
@@ -218,7 +218,7 @@ export class LivingLegendsSystem {
       auraIntensity: 0,
       glowRadius: 0,
       stories: [],
-      legendTier: "unknown",
+      legendTier: LegendTier.UNKNOWN,
       firstSeen: Date.now(),
       lastUpdate: Date.now(),
     };

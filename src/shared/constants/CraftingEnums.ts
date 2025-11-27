@@ -64,4 +64,3 @@ export enum ToolType {
   NEEDLE = "needle",
   MORTAR = "mortar",
 }
-

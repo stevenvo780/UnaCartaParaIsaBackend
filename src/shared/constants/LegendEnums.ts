@@ -17,6 +17,18 @@ export enum LegendTrend {
 }
 
 /**
+ * Enumeration of legend tiers.
+ */
+export enum LegendTier {
+  MYTHICAL = "mythical",
+  LEGENDARY = "legendary",
+  RENOWNED = "renowned",
+  RESPECTED = "respected",
+  KNOWN = "known",
+  UNKNOWN = "unknown",
+}
+
+/**
  * Type representing all possible legend trend values.
  */
 export type LegendTrendValue = `${LegendTrend}`;

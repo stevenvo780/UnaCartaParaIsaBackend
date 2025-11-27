@@ -69,4 +69,3 @@ export enum BuildingSpriteId {
   AGENT_BUILT_TAVERN = "agent_built_tavern",
   AGENT_BUILT_MINE = "agent_built_mine",
 }
-

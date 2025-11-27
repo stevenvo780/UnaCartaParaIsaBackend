@@ -135,7 +135,8 @@ export class ConflictResolutionSystem {
       };
 
     const { aId: aId, bId: bId } = meta;
-    let resolution: ConflictRecord[SystemProperty.RESOLUTION] = ConflictResolution.CONTINUED;
+    let resolution: ConflictRecord[SystemProperty.RESOLUTION] =
+      ConflictResolution.CONTINUED;
     let truceBonus: number | undefined;
 
     if (choice === ConflictResolutionChoice.TRUCE_ACCEPT) {
@@ -188,7 +189,11 @@ export class ConflictResolutionSystem {
 
     this.activeCards.delete(cardId);
 
-    return { resolved: resolution !== "continued", [SystemProperty.RESOLUTION]: resolution, truceBonus };
+    return {
+      resolved: resolution !== "continued",
+      [SystemProperty.RESOLUTION]: resolution,
+      truceBonus,
+    };
   }
 
   public update(): void {

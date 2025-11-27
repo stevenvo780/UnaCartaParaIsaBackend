@@ -105,13 +105,15 @@ export class CommandProcessor {
         this.handleSocialCommand(command);
         break;
       case SimulationCommandType.RESEARCH_COMMAND:
-        this.handleResearchCommand(command);
+        // ResearchSystem removed - command handling disabled
+        logger.warn("RESEARCH_COMMAND ignored - system removed");
         break;
       case SimulationCommandType.WORLD_RESOURCE_COMMAND:
         this.handleWorldResourceCommand(command);
         break;
       case SimulationCommandType.DIALOGUE_COMMAND:
-        this.handleDialogueCommand(command);
+        // CardDialogueSystem removed - command handling disabled
+        logger.warn("DIALOGUE_COMMAND ignored - system removed");
         break;
       case SimulationCommandType.BUILDING_COMMAND:
         this.handleBuildingCommand(command);
@@ -126,7 +128,10 @@ export class CommandProcessor {
         this.handleTimeCommand(command);
         break;
       case SimulationCommandType.FORCE_EMERGENCE_EVALUATION:
-        this.runner.emergenceSystem.forcePatternEvaluation();
+        // EmergenceSystem removed - command disabled
+        logger.warn(
+          "FORCE_EMERGENCE_EVALUATION command ignored - system removed",
+        );
         break;
       case SimulationCommandType.SAVE_GAME:
         this.runner.saveSimulation().catch((err) => {
@@ -382,35 +387,12 @@ export class CommandProcessor {
     }
   }
 
-  private handleResearchCommand(
-    command: Extract<SimulationCommand, { type: "RESEARCH_COMMAND" }>,
-  ): void {
-    const payload = command.payload ?? ({} as ResearchCommandPayload);
-    switch (command.command) {
-      case ResearchCommandType.INITIALIZE_LINEAGE:
-        if (payload.lineageId) {
-          this.runner._researchSystem.initializeLineage(
-            payload.lineageId as string,
-          );
-        }
-        break;
-      case ResearchCommandType.RECIPE_DISCOVERED:
-        if (payload.recipeId) {
-          const lineageId = this.runner.resolveLineageId(
-            payload.lineageId as string | undefined,
-          );
-          const discoveredBy =
-            (payload.discoveredBy as string | undefined) || "unknown";
-
-          this.runner._researchSystem.onRecipeDiscovered(
-            lineageId,
-            payload.recipeId as string,
-            discoveredBy,
-          );
-        }
-        break;
-    }
-  }
+  // ResearchSystem removed - handler disabled
+  // private handleResearchCommand(
+  //   command: Extract<SimulationCommand, { type: "RESEARCH_COMMAND" }>,
+  // ): void {
+  //   // Implementation removed
+  // }
 
   private handleWorldResourceCommand(
     command: Extract<SimulationCommand, { type: "WORLD_RESOURCE_COMMAND" }>,
@@ -437,21 +419,12 @@ export class CommandProcessor {
     }
   }
 
-  private handleDialogueCommand(
-    command: Extract<SimulationCommand, { type: "DIALOGUE_COMMAND" }>,
-  ): void {
-    const payload = command.payload ?? ({} as DialogueCommandPayload);
-    switch (command.command) {
-      case DialogueCommandType.RESPOND_TO_CARD:
-        if (payload.cardId && payload.choiceId) {
-          this.runner.cardDialogueSystem.respondToCard(
-            payload.cardId as string,
-            payload.choiceId as string,
-          );
-        }
-        break;
-    }
-  }
+  // CardDialogueSystem removed - handler disabled
+  // private handleDialogueCommand(
+  //   command: Extract<SimulationCommand, { type: "DIALOGUE_COMMAND" }>,
+  // ): void {
+  //   // Implementation removed
+  // }
 
   private handleBuildingCommand(
     command: Extract<SimulationCommand, { type: "BUILDING_COMMAND" }>,

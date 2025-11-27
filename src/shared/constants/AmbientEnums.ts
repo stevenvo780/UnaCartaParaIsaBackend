@@ -114,4 +114,3 @@ export enum DialogueSpeaker {
   NARRATOR = "narrator",
   SYSTEM = "system",
 }
-

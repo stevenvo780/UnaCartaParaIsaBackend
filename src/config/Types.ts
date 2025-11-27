@@ -46,7 +46,6 @@ export const TYPES = {
 
   AmbientAwarenessSystem: Symbol.for("AmbientAwarenessSystem"),
 
-
   TimeSystem: Symbol.for("TimeSystem"),
   InteractionGameSystem: Symbol.for("InteractionGameSystem"),
   KnowledgeNetworkSystem: Symbol.for("KnowledgeNetworkSystem"),

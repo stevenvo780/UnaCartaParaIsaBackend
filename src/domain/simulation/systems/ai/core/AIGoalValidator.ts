@@ -125,7 +125,8 @@ export class AIGoalValidator {
     }
 
     if (
-      (goal.type === GoalType.ASSIST || goal.type.startsWith(GoalPrefix.ASSIST)) &&
+      (goal.type === GoalType.ASSIST ||
+        goal.type.startsWith(GoalPrefix.ASSIST)) &&
       goal.data?.targetAgentId
     ) {
       const targetId = goal.data.targetAgentId as string;
@@ -202,7 +203,8 @@ export class AIGoalValidator {
     }
 
     if (
-      (goal.type === GoalType.ASSIST || goal.type.startsWith(GoalPrefix.ASSIST)) &&
+      (goal.type === GoalType.ASSIST ||
+        goal.type.startsWith(GoalPrefix.ASSIST)) &&
       goal.data?.targetAgentId
     ) {
       const targetId = goal.data.targetAgentId as string;

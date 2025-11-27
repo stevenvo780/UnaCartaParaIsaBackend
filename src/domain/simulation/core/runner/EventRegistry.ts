@@ -60,17 +60,11 @@ export class EventRegistry {
     this.registerEvent(
       GameEventNames.AGENT_BIRTH,
       (data: { entityId: string; parentIds: [string, string] | null }) => {
-        const agent = this.runner.entityIndex.getAgent(data.entityId);
-        if (agent) {
-          const fatherId = data.parentIds ? data.parentIds[0] : undefined;
-          const motherId = data.parentIds ? data.parentIds[1] : undefined;
-          this.runner.appearanceGenerationSystem.generateAppearance(
-            agent.id,
-            agent,
-            fatherId,
-            motherId,
-          );
-        }
+        // AppearanceGenerationSystem removed - appearance generation disabled
+        // Previously generated appearance based on parent genetics
+        logger.debug(
+          `Agent birth event for ${data.entityId} - appearance generation skipped`,
+        );
       },
     );
 

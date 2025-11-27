@@ -43,4 +43,3 @@ export enum AnimalTargetType {
   WATER = "water",
   MATE = "mate",
 }
-

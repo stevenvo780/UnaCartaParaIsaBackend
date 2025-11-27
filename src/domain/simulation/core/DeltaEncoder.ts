@@ -187,7 +187,10 @@ export class DeltaEncoder {
       const prevInventory = previous[SystemProperty.INVENTORY];
       if (
         !prevInventory ||
-        this.hasInventoryChanged(prevInventory, current[SystemProperty.INVENTORY])
+        this.hasInventoryChanged(
+          prevInventory,
+          current[SystemProperty.INVENTORY],
+        )
       ) {
         changes[SystemProperty.INVENTORY] = current[SystemProperty.INVENTORY];
       }

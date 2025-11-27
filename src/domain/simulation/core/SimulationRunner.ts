@@ -44,7 +44,6 @@ import { ResourceAttractionSystem } from "../systems/ResourceAttractionSystem";
 
 import { AmbientAwarenessSystem } from "../systems/AmbientAwarenessSystem";
 
-
 import { TimeSystem } from "../systems/TimeSystem";
 import { InteractionGameSystem } from "../systems/InteractionGameSystem";
 import { KnowledgeNetworkSystem } from "../systems/KnowledgeNetworkSystem";
@@ -166,8 +165,6 @@ export class SimulationRunner {
   @inject(TYPES.GovernanceSystem)
   public readonly governanceSystem!: GovernanceSystem;
 
-
-
   @inject(TYPES.HouseholdSystem)
   public readonly householdSystem!: HouseholdSystem;
 
@@ -192,8 +189,6 @@ export class SimulationRunner {
   @inject(TYPES.ReputationSystem)
   public readonly reputationSystem!: ReputationSystem;
 
-
-
   @inject(TYPES.RecipeDiscoverySystem)
   public readonly _recipeDiscoverySystem!: RecipeDiscoverySystem;
 
@@ -213,17 +208,11 @@ export class SimulationRunner {
   @inject(TYPES.ResourceAttractionSystem)
   public readonly resourceAttractionSystem!: ResourceAttractionSystem;
 
-
-
   @inject(TYPES.WorldGenerationService)
   public readonly worldGenerationService!: WorldGenerationService;
 
   @inject(TYPES.AmbientAwarenessSystem)
   public readonly ambientAwarenessSystem!: AmbientAwarenessSystem;
-
-
-
-
 
   @inject(TYPES.TimeSystem) public readonly timeSystem!: TimeSystem;
 
@@ -234,8 +223,6 @@ export class SimulationRunner {
   public readonly knowledgeNetworkSystem!: KnowledgeNetworkSystem;
 
   @inject(TYPES.MovementSystem) public readonly movementSystem!: MovementSystem;
-
-
 
   @inject(TYPES.GPUComputeService)
   public readonly gpuComputeService!: GPUComputeService;
@@ -638,8 +625,6 @@ export class SimulationRunner {
       minEntities: 10,
     });
 
-
-
     this.scheduler.registerSystem({
       name: "ReputationSystem",
       rate: TickRate.SLOW,
@@ -711,8 +696,6 @@ export class SimulationRunner {
       enabled: true,
     });
 
-
-
     this.scheduler.registerSystem({
       name: "QuestSystem",
       rate: TickRate.SLOW,
@@ -750,16 +733,12 @@ export class SimulationRunner {
       enabled: true,
     });
 
-
-
     this.scheduler.registerSystem({
       name: "AmbientAwarenessSystem",
       rate: TickRate.SLOW,
       update: (delta: number) => this.ambientAwarenessSystem.update(delta),
       enabled: true,
     });
-
-
 
     this.scheduler.registerSystem({
       name: "InteractionGameSystem",
@@ -802,8 +781,6 @@ export class SimulationRunner {
       update: () => this.sharedKnowledgeSystem.update(),
       enabled: true,
     });
-
-
 
     this.scheduler.registerSystem({
       name: "KnowledgeNetworkSystem",
@@ -1089,12 +1066,12 @@ export class SimulationRunner {
         social,
         ai: aiState
           ? {
-            currentGoal: aiState.currentGoal,
-            goalQueue: aiState.goalQueue,
-            currentAction: aiState.currentAction,
-            offDuty: aiState.offDuty,
-            lastDecisionTime: aiState.lastDecisionTime,
-          }
+              currentGoal: aiState.currentGoal,
+              goalQueue: aiState.goalQueue,
+              currentAction: aiState.currentAction,
+              offDuty: aiState.offDuty,
+              lastDecisionTime: aiState.lastDecisionTime,
+            }
           : null,
       };
     }
