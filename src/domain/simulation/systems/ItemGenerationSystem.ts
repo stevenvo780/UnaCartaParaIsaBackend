@@ -307,14 +307,14 @@ export class ItemGenerationSystem {
   /**
    * Get material info from catalog
    */
-  public getMaterialInfo(itemId: string) {
+  public getMaterialInfo(itemId: string): Item | null {
     return BaseMaterialsCatalog.getMaterialById(itemId);
   }
 
   /**
    * Get all materials by category
    */
-  public getMaterialsByCategory(category: string) {
+  public getMaterialsByCategory(category: string): Item[] {
     return BaseMaterialsCatalog.getMaterialsByCategory(category);
   }
 

@@ -111,7 +111,7 @@ export function evaluateBiologicalDrives(
         aiState.entityId,
         "water_source",
       );
-      
+
       // Debug: Log water search result
       if (!waterTarget) {
         logger.warn(

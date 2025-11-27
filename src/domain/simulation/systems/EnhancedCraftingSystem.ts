@@ -8,7 +8,7 @@ import type {
 import { RecipesCatalog } from "../../../simulation/data/RecipesCatalog";
 import { simulationEvents, GameEventNames } from "../core/events";
 import type { ResourceType } from "../../types/simulation/economy";
-import { ResourceType as ResourceTypeEnum } from "../../../shared/constants/ResourceEnums";
+import { itemToInventoryResource } from "../../types/simulation/resourceMapping";
 
 interface EnhancedCraftingConfig {
   requireWorkstation: boolean;
@@ -199,82 +199,7 @@ export class EnhancedCraftingSystem {
    * Items are collapsed into their closest resource category.
    */
   private mapToResourceKey(itemId: string): ResourceType | null {
-    // Direct resource types
-    if (itemId === ResourceTypeEnum.WOOD) {
-      return ResourceTypeEnum.WOOD;
-    }
-    if (itemId === ResourceTypeEnum.STONE) {
-      return ResourceTypeEnum.STONE;
-    }
-    if (itemId === ResourceTypeEnum.FOOD) {
-      return ResourceTypeEnum.FOOD;
-    }
-    if (itemId === ResourceTypeEnum.WATER) {
-      return ResourceTypeEnum.WATER;
-    }
-    if (itemId === ResourceTypeEnum.RARE_MATERIALS) {
-      return ResourceTypeEnum.RARE_MATERIALS;
-    }
-
-    const woodItems = [
-      "wood_log",
-      "plank",
-      "fiber",
-      "rope",
-      "leather",
-      "leather_hide",
-      "cloth",
-    ];
-    if (woodItems.includes(itemId)) {
-      return ResourceTypeEnum.WOOD;
-    }
-
-    const stoneItems = [
-      "iron_ore",
-      "copper_ore",
-      "coal",
-      "clay",
-      "brick",
-      "iron_ingot",
-      "copper_ingot",
-      "obsidian",
-      "flint",
-    ];
-    if (stoneItems.includes(itemId)) {
-      return ResourceTypeEnum.STONE;
-    }
-
-    const foodItems = [
-      "wheat",
-      "flour",
-      "bread",
-      "berries",
-      "mushrooms",
-      "raw_meat",
-      "cooked_meat",
-      "fish",
-      "cooked_fish",
-      "meat_stew",
-      "fruit",
-      "vegetables",
-      "honey",
-    ];
-    if (foodItems.includes(itemId)) {
-      return ResourceTypeEnum.FOOD;
-    }
-
-    const rareItems = [
-      "crystal",
-      "gem",
-      "diamond",
-      "gold_nugget",
-      "silver_nugget",
-    ];
-    if (rareItems.includes(itemId)) {
-      return ResourceTypeEnum.RARE_MATERIALS;
-    }
-
-    return null;
+    return itemToInventoryResource(itemId);
   }
 
   private registerRecipeUsage(

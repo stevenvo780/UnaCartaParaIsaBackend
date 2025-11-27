@@ -9,6 +9,9 @@ import {
   AgentAction,
   GoalType,
 } from "../../types/simulation/ai";
+import {
+  itemToWorldResources,
+} from "../../types/simulation/resourceMapping";
 import type { WorldResourceType } from "../../types/simulation/worldResources";
 import { StockpileType } from "../../../shared/constants/ZoneEnums";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
@@ -339,15 +342,22 @@ export class AISystem extends EventEmitter {
       worldResourceSystem: this.worldResourceSystem,
       needsSystem: this.needsSystem,
       animalSystem: this.animalSystem,
-      getAgentPosition: (agentId: string) => this.getAgentPosition(agentId),
+      getAgentPosition: (agentId: string): { x: number; y: number } | null =>
+        this.getAgentPosition(agentId),
     });
 
     this.actionPlanner = new AIActionPlanner({
       gameState: this.gameState,
-      getAgentPosition: (agentId: string) => this.getAgentPosition(agentId),
-      findNearestResource: (entityId: string, resourceType: string) =>
+      getAgentPosition: (agentId: string): { x: number; y: number } | null =>
+        this.getAgentPosition(agentId),
+      findNearestResource: (
+        entityId: string,
+        resourceType: string,
+      ): { id: string; x: number; y: number } | null =>
         this.findNearestResourceForEntity(entityId, resourceType),
-      findNearestHuntableAnimal: (entityId: string) =>
+      findNearestHuntableAnimal: (
+        entityId: string,
+      ): { id: string; x: number; y: number; type: string } | null =>
         this.findNearestHuntableAnimal(entityId),
     });
 
@@ -360,14 +370,18 @@ export class AISystem extends EventEmitter {
       worldResourceSystem: this.worldResourceSystem,
       taskSystem: this.taskSystem,
       movementSystem: this._movementSystem,
-      tryDepositResources: (entityId: string, zoneId: string) =>
+      tryDepositResources: (entityId: string, zoneId: string): void =>
         this.tryDepositResources(entityId, zoneId),
     });
 
     this.urgentGoals = new AIUrgentGoals({
       gameState: this.gameState,
-      getAgentPosition: (agentId: string) => this.getAgentPosition(agentId),
-      findNearestResourceForEntity: (entityId: string, resourceType: string) =>
+      getAgentPosition: (agentId: string): { x: number; y: number } | null =>
+        this.getAgentPosition(agentId),
+      findNearestResourceForEntity: (
+        entityId: string,
+        resourceType: string,
+      ): { id: string; x: number; y: number } | null =>
         this.findNearestResourceForEntity(entityId, resourceType),
     });
 
@@ -375,107 +389,131 @@ export class AISystem extends EventEmitter {
       gameState: this.gameState,
       inventorySystem: this.inventorySystem
         ? {
-            getAgentInventory: (agentId: string) => {
-              const inv = this.inventorySystem!.getAgentInventory(agentId);
-              return inv
-                ? {
-                    wood: inv.wood,
-                    stone: inv.stone,
-                    food: inv.food,
-                    water: inv.water,
-                  }
-                : null;
+          getAgentInventory: (
+            agentId: string,
+          ): {
+            wood: number;
+            stone: number;
+            food: number;
+            water: number;
+          } | null => {
+            const inv = this.inventorySystem!.getAgentInventory(agentId);
+            return inv
+              ? {
+                wood: inv.wood,
+                stone: inv.stone,
+                food: inv.food,
+                water: inv.water,
+              }
+              : null;
+          },
+          removeFromAgent: (
+            agentId: string,
+            type: ResourceType,
+            amount: number,
+          ): number =>
+            this.inventorySystem!.removeFromAgent(agentId, type, amount),
+          addResource: (
+            agentId: string,
+            type: ResourceType,
+            amount: number,
+          ): boolean =>
+            this.inventorySystem!.addResource(agentId, type, amount),
+          getStockpilesInZone: (zoneId: string): Stockpile[] =>
+            this.inventorySystem!.getStockpilesInZone(zoneId),
+          createStockpile: (zoneId: string, type: string): Stockpile =>
+            this.inventorySystem!.createStockpile(
+              zoneId,
+              type as StockpileType,
+            ),
+          transferToStockpile: (
+            agentId: string,
+            stockpileId: string,
+            resources: {
+              wood: number;
+              stone: number;
+              food: number;
+              water: number;
             },
-            removeFromAgent: (
-              agentId: string,
-              type: ResourceType,
-              amount: number,
-            ) => this.inventorySystem!.removeFromAgent(agentId, type, amount),
-            addResource: (
-              agentId: string,
-              type: ResourceType,
-              amount: number,
-            ) => this.inventorySystem!.addResource(agentId, type, amount),
-            getStockpilesInZone: (zoneId: string) =>
-              this.inventorySystem!.getStockpilesInZone(zoneId),
-            createStockpile: (zoneId: string, type: string) =>
-              this.inventorySystem!.createStockpile(
-                zoneId,
-                type as StockpileType,
-              ),
-            transferToStockpile: (
-              agentId: string,
-              stockpileId: string,
-              resources: {
-                wood: number;
-                stone: number;
-                food: number;
-                water: number;
-              },
-            ) =>
-              this.inventorySystem!.transferToStockpile(
-                agentId,
-                stockpileId,
-                resources,
-              ),
-          }
+          ): Record<ResourceType, number> =>
+            this.inventorySystem!.transferToStockpile(
+              agentId,
+              stockpileId,
+              resources,
+            ),
+        }
         : null,
       craftingSystem: this.craftingSystem
         ? {
-            craftBestWeapon: (agentId: string) =>
-              this.craftingSystem!.craftBestWeapon(agentId),
-          }
+          craftBestWeapon: (agentId: string): string | null =>
+            this.craftingSystem!.craftBestWeapon(agentId),
+        }
         : null,
       questSystem: this.questSystem
         ? {
-            startQuest: (questId: string) =>
-              this.questSystem!.startQuest(questId),
-          }
+          startQuest: (
+            questId: string,
+          ): { success: boolean; event?: QuestEvent } =>
+            this.questSystem!.startQuest(questId),
+        }
         : null,
       roleSystem: this.roleSystem
         ? {
-            getAgentRole: (agentId: string) => {
-              const role = this.roleSystem!.getAgentRole(agentId);
-              return role ? { roleType: role.roleType } : null;
-            },
-          }
+          getAgentRole: (agentId: string): { roleType: string } | null => {
+            const role = this.roleSystem!.getAgentRole(agentId);
+            return role ? { roleType: role.roleType } : null;
+          },
+        }
         : null,
       socialSystem: this.socialSystem
         ? {
-            registerFriendlyInteraction: (agentId: string, targetId: string) =>
-              this.socialSystem!.registerFriendlyInteraction(agentId, targetId),
-            imposeLocalTruces: (
-              agentId: string,
-              radius: number,
-              duration: number,
-            ) =>
-              this.socialSystem!.imposeLocalTruces(agentId, radius, duration),
-          }
+          registerFriendlyInteraction: (
+            agentId: string,
+            targetId: string,
+          ): void =>
+            this.socialSystem!.registerFriendlyInteraction(agentId, targetId),
+          imposeLocalTruces: (
+            agentId: string,
+            radius: number,
+            duration: number,
+          ): void =>
+            this.socialSystem!.imposeLocalTruces(agentId, radius, duration),
+        }
         : null,
       householdSystem: this.householdSystem
         ? {
-            findHouseholdForAgent: (agentId: string) => {
-              const household =
-                this.householdSystem!.findHouseholdForAgent(agentId);
-              return household ? { zoneId: household.zoneId } : null;
-            },
-          }
+          findHouseholdForAgent: (
+            agentId: string,
+          ): { zoneId: string } | null => {
+            const household =
+              this.householdSystem!.findHouseholdForAgent(agentId);
+            return household ? { zoneId: household.zoneId } : null;
+          },
+        }
         : null,
       needsSystem: this.needsSystem
         ? {
-            getNeeds: (entityId: string) => {
-              const needs = this.needsSystem!.getNeeds(entityId);
-              return needs
-                ? {
-                    hunger: needs.hunger,
-                    thirst: needs.thirst,
-                    energy: needs.energy,
-                    social: needs.social,
-                    fun: needs.fun,
-                  }
-                : null;
-            },
-          }
+          getNeeds: (
+            entityId: string,
+          ): {
+            hunger: number;
+            thirst: number;
+            energy: number;
+            social: number;
+            fun: number;
+          } | null => {
+            const needs = this.needsSystem!.getNeeds(entityId);
+            return needs
+              ? {
+                hunger: needs.hunger,
+                thirst: needs.thirst,
+                energy: needs.energy,
+                social: needs.social,
+                fun: needs.fun,
+              }
+              : null;
+          },
+        }
         : null,
       goalsCompletedRef: this._goalsCompletedRef,
     });
@@ -791,10 +829,10 @@ export class AISystem extends EventEmitter {
 
     const inventoryEmpty = inventory
       ? (inventory.food || 0) +
-          (inventory.water || 0) +
-          (inventory.wood || 0) +
-          (inventory.stone || 0) ===
-        0
+      (inventory.water || 0) +
+      (inventory.wood || 0) +
+      (inventory.stone || 0) ===
+      0
       : true;
     const needsSatisfied = needs
       ? needs.hunger > 70 && needs.thirst > 70 && needs.energy > 70
@@ -837,18 +875,18 @@ export class AISystem extends EventEmitter {
     if (aiState.isInCombat) return;
 
     const needs = this.needsSystem?.getNeeds(agentId);
-    
+
     // Check if urgent needs can actually be satisfied
     // Only block for thirst if agent can FIND a water_source nearby
     const canFindWater = this.findNearestResourceForEntity(
       agentId,
       "water_source",
     );
-    
+
     const thirstBlocks = needs && needs.thirst < 40 && canFindWater !== null;
     const hungerBlocks = needs && needs.hunger < 40;
     const energyBlocks = needs && needs.energy < 30;
-    
+
     if (hungerBlocks || thirstBlocks || energyBlocks) {
       return; // Agent needs to address urgent needs first
     }
@@ -901,7 +939,7 @@ export class AISystem extends EventEmitter {
     logger.debug(
       `🎭 [AI] ${agentId}: generateWorkGoal called, role=${role ?? "none"}`,
     );
-    
+
     // Log role for debugging
     if (!role) {
       logger.debug(`🎭 [AI] ${agentId}: No role assigned, defaulting to food`);
@@ -968,7 +1006,13 @@ export class AISystem extends EventEmitter {
     if (role === "logger") {
       for (const woodType of woodTypes) {
         const resource = this.findNearestResourceForEntity(agentId, woodType);
+        if (!resource) {
+          logger.debug(`🪵 [AI] ${agentId}: No ${woodType} resources found`);
+        }
         if (resource && !excluded.has(resource.id)) {
+          logger.debug(
+            `🎯 [AI] ${agentId}: Logger found ${woodType} at (${resource.x}, ${resource.y})`,
+          );
           return {
             id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
             type: "work" as GoalType,
@@ -989,7 +1033,13 @@ export class AISystem extends EventEmitter {
     if (role === "quarryman") {
       for (const stoneType of stoneTypes) {
         const resource = this.findNearestResourceForEntity(agentId, stoneType);
+        if (!resource) {
+          logger.debug(`🪨 [AI] ${agentId}: No ${stoneType} resources found`);
+        }
         if (resource && !excluded.has(resource.id)) {
+          logger.debug(
+            `🎯 [AI] ${agentId}: Quarryman found ${stoneType} at (${resource.x}, ${resource.y})`,
+          );
           return {
             id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
             type: "work" as GoalType,
@@ -1273,11 +1323,11 @@ export class AISystem extends EventEmitter {
         const entity = this.gameState.entities?.find((e) => e.id === id);
         return entity?.stats
           ? {
-              health: entity.stats.health ?? 100,
-              stamina: entity.stats.stamina ?? 100,
-              attack: entity.stats.attack ?? 10,
-              defense: entity.stats.defense ?? 0,
-            }
+            health: entity.stats.health ?? 100,
+            stamina: entity.stats.stamina ?? 100,
+            attack: entity.stats.attack ?? 10,
+            defense: entity.stats.defense ?? 0,
+          }
           : null;
       },
       getPreferredResourceForRole: (role: string) =>
@@ -1298,27 +1348,27 @@ export class AISystem extends EventEmitter {
       getTasks: () => this.taskSystem?.getActiveTasks() || [],
       taskSystem: this.taskSystem
         ? {
-            createTask: (params: TaskCreationParams) =>
-              this.taskSystem!.createTask(params),
-            getAvailableCommunityTasks: () =>
-              this.taskSystem!.getAvailableCommunityTasks(),
-            claimTask: (taskId: string, agentId: string) =>
-              this.taskSystem!.claimTask(taskId, agentId),
-            releaseTaskClaim: (taskId: string, agentId: string) =>
-              this.taskSystem!.releaseTaskClaim(taskId, agentId),
-          }
+          createTask: (params: TaskCreationParams) =>
+            this.taskSystem!.createTask(params),
+          getAvailableCommunityTasks: () =>
+            this.taskSystem!.getAvailableCommunityTasks(),
+          claimTask: (taskId: string, agentId: string) =>
+            this.taskSystem!.claimTask(taskId, agentId),
+          releaseTaskClaim: (taskId: string, agentId: string) =>
+            this.taskSystem!.releaseTaskClaim(taskId, agentId),
+        }
         : undefined,
       sharedKnowledgeSystem: this.sharedKnowledgeSystem
         ? {
-            getKnownResourceAlerts: (agentId: string): ResourceAlert[] => {
-              if (!this.sharedKnowledgeSystem) return [];
-              return this.sharedKnowledgeSystem.getKnownResourceAlerts(agentId);
-            },
-            getKnownThreatAlerts: (agentId: string): ThreatAlert[] => {
-              if (!this.sharedKnowledgeSystem) return [];
-              return this.sharedKnowledgeSystem.getKnownThreatAlerts(agentId);
-            },
-          }
+          getKnownResourceAlerts: (agentId: string): ResourceAlert[] => {
+            if (!this.sharedKnowledgeSystem) return [];
+            return this.sharedKnowledgeSystem.getKnownResourceAlerts(agentId);
+          },
+          getKnownThreatAlerts: (agentId: string): ThreatAlert[] => {
+            if (!this.sharedKnowledgeSystem) return [];
+            return this.sharedKnowledgeSystem.getKnownThreatAlerts(agentId);
+          },
+        }
         : undefined,
       getActiveQuests: () => this.questSystem?.getActiveQuests() || [],
       getAvailableQuests: () => this.questSystem?.getAvailableQuests() || [],
@@ -1667,8 +1717,8 @@ export class AISystem extends EventEmitter {
   public setAgentOffDuty(agentId: string, offDuty: boolean): void {
     const stopMovement =
       this._movementSystem &&
-      typeof this._movementSystem.stopMovement === "function"
-        ? (id: string) => this._movementSystem!.stopMovement(id)
+        typeof this._movementSystem.stopMovement === "function"
+        ? (id: string): boolean => this._movementSystem!.stopMovement(id)
         : undefined;
     this.stateManager.setAgentOffDuty(agentId, offDuty, stopMovement);
   }
@@ -1724,43 +1774,59 @@ export class AISystem extends EventEmitter {
 
     // Harvestable states: pristine and harvested_partial still have resources
     const harvestableStates = ["pristine", "harvested_partial"];
-    
+
+    // Get target world resource types (e.g. "stone" -> ["rock"], "iron_ore" -> ["rock"])
+    const targetWorldTypes = itemToWorldResources(resourceType);
+
+    // If no mapping found, try using the resourceType directly if it's a valid world type
+    // This handles cases where resourceType is already "rock" or "tree"
+    if (targetWorldTypes.length === 0) {
+      // We can't easily validate if it is a WorldResourceType here without importing the enum values or type guard
+      // But we can just try to use it as is.
+      targetWorldTypes.push(resourceType as WorldResourceType);
+    }
+
     // Debug: Check if worldResourceSystem is available
-    if (resourceType === "water_source") {
+    if (
+      resourceType === "water_source" ||
+      resourceType === "tree" ||
+      resourceType === "rock"
+    ) {
       logger.debug(
-        `[findNearest] ${entityId}: worldResourceSystem=${!!this.worldResourceSystem}`,
+        `[findNearest] ${entityId}: worldResourceSystem=${!!this.worldResourceSystem}, type=${resourceType}, mappedTo=${targetWorldTypes.join(",")}`,
       );
     }
 
     if (this.worldResourceSystem) {
-      const resources = this.worldResourceSystem.getResourcesByType(
-        resourceType as WorldResourceType,
-      );
+      // Search across all mapped world resource types
+      for (const worldType of targetWorldTypes) {
+        const resources = this.worldResourceSystem.getResourcesByType(worldType);
 
-      for (const resource of resources) {
-        if (!harvestableStates.includes(resource.state)) continue;
+        for (const resource of resources) {
+          if (!harvestableStates.includes(resource.state)) continue;
 
-        // Skip resources already reserved by other agents
-        const reservedBy = this.resourceReservations.get(resource.id);
-        if (reservedBy && reservedBy !== entityId) continue;
+          // Skip resources already reserved by other agents
+          const reservedBy = this.resourceReservations.get(resource.id);
+          if (reservedBy && reservedBy !== entityId) continue;
 
-        const dx = resource.position.x - agent.position.x;
-        const dy = resource.position.y - agent.position.y;
-        const dist = dx * dx + dy * dy;
+          const dx = resource.position.x - agent.position.x;
+          const dy = resource.position.y - agent.position.y;
+          const dist = dx * dx + dy * dy;
 
-        if (dist < minDistance) {
-          minDistance = dist;
-          nearest = {
-            id: resource.id,
-            x: resource.position.x,
-            y: resource.position.y,
-          };
+          if (dist < minDistance) {
+            minDistance = dist;
+            nearest = {
+              id: resource.id,
+              x: resource.position.x,
+              y: resource.position.y,
+            };
+          }
         }
       }
     } else if (this.gameState.worldResources) {
       for (const resource of Object.values(this.gameState.worldResources)) {
         if (
-          resource.type !== resourceType ||
+          !targetWorldTypes.includes(resource.type) ||
           !harvestableStates.includes(resource.state)
         )
           continue;
@@ -2148,13 +2214,13 @@ export class AISystem extends EventEmitter {
       const goalType = goal.type as GoalType;
       const goalData: AIGoalData | undefined = goal.data
         ? {
-            ...Object.fromEntries(
-              Object.entries(goal.data).map(([k, v]) => [
-                k,
-                typeof v === "string" || typeof v === "number" ? v : undefined,
-              ]),
-            ),
-          }
+          ...Object.fromEntries(
+            Object.entries(goal.data).map(([k, v]) => [
+              k,
+              typeof v === "string" || typeof v === "number" ? v : undefined,
+            ]),
+          ),
+        }
         : undefined;
 
       const newGoal: AIGoal = {

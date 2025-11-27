@@ -12,6 +12,7 @@ import type {
 } from "../../../../types/simulation/economy";
 import type { SettlementDemand } from "../../../../types/simulation/governance";
 import type { PriorityManager } from "./PriorityManager";
+import { logger } from "../../../../../infrastructure/utils/logger";
 import { evaluateBiologicalDrives } from "../evaluators/BiologicalDriveEvaluator";
 import { evaluateReproductionDrive } from "../evaluators/ReproductionEvaluator";
 import { evaluateSocialDrives } from "../evaluators/SocialDriveEvaluator";
@@ -189,7 +190,8 @@ export function planGoals(
   if (entityNeeds) {
     // Get failedTargets with fallback for backwards compatibility
     const failedTargetsMap: Map<string, number> =
-      aiState.memory.failedTargets ?? new Map();
+      (aiState.memory.failedTargets as Map<string, number> | undefined) ??
+      new Map<string, number>();
     const bioDeps = {
       getEntityNeeds: deps.getEntityNeeds,
       getAgentInventory: deps.getAgentInventory,
@@ -205,6 +207,10 @@ export function planGoals(
     // If survival is critical, return immediately
     const criticalSurvivalGoal = bioGoals.find((g) => g.priority > 0.9);
     if (criticalSurvivalGoal) {
+      // Log critical goal for debugging
+      logger.debug(
+        `🚨 [PLANNER] ${aiState.entityId}: Critical survival goal (priority ${criticalSurvivalGoal.priority.toFixed(2)}) type=${criticalSurvivalGoal.type}`,
+      );
       return [criticalSurvivalGoal];
     }
   }

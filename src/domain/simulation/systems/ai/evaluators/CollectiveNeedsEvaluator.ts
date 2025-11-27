@@ -291,7 +291,10 @@ export function evaluateCollectiveNeeds(
       // This ensures wood/stone gatherers actually gather their assigned resources
       if (modifiers.preferredResource) {
         // Skip tasks that don't match the specialized role
-        if (taskResourceType && taskResourceType !== modifiers.preferredResource) {
+        if (
+          taskResourceType &&
+          taskResourceType !== modifiers.preferredResource
+        ) {
           continue; // Skip this task - role mismatch
         }
       }

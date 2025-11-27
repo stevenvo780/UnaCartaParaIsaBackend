@@ -13,6 +13,7 @@ export default tseslint.config(
       "vitest.config.ts",
       "coverage/**",
       "scripts/**",
+      ".claude/**",
     ],
   },
   eslint.configs.recommended,

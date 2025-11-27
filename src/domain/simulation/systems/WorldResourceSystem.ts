@@ -378,15 +378,15 @@ export class WorldResourceSystem {
   public harvestResource(
     resourceId: string,
     harvesterId: string,
-  ): { success: boolean; amount: number } {
+  ): { success: boolean; items: { type: string; amount: number }[] } {
     const resource = this.state.worldResources?.[resourceId];
     if (!resource || resource.state === ResourceState.DEPLETED) {
-      return { success: false, amount: 0 };
+      return { success: false, items: [] };
     }
 
     const config = getResourceConfig(resource.type);
     if (!config) {
-      return { success: false, amount: 0 };
+      return { success: false, items: [] };
     }
 
     resource.harvestCount = (resource.harvestCount || 0) + 1;
@@ -437,6 +437,9 @@ export class WorldResourceSystem {
     const yields = config.yields?.[currentState];
     let harvestAmount = 1; // Default fallback
 
+    const items: { type: string; amount: number }[] = [];
+
+    // Primary yield
     if (
       yields &&
       yields.amountMin !== undefined &&
@@ -446,9 +449,40 @@ export class WorldResourceSystem {
         Math.random() * (yields.amountMax - yields.amountMin + 1) +
           yields.amountMin,
       );
+      if (harvestAmount > 0) {
+        items.push({ type: yields.resourceType, amount: harvestAmount });
+      }
     }
 
-    return { success: true, amount: harvestAmount };
+    // Secondary yields
+    if (yields?.secondaryYields) {
+      for (const secondary of yields.secondaryYields) {
+        if (
+          secondary.rareMaterialsChance &&
+          Math.random() > secondary.rareMaterialsChance
+        ) {
+          continue;
+        }
+
+        const amount = Math.floor(
+          Math.random() * (secondary.amountMax - secondary.amountMin + 1) +
+            secondary.amountMin,
+        );
+
+        if (amount > 0) {
+          items.push({ type: secondary.resourceType, amount });
+
+          simulationEvents.emit(GameEventNames.RESOURCE_GATHERED, {
+            resourceId,
+            resourceType: secondary.resourceType, // This might be an item ID now
+            harvesterId,
+            position: resource.position,
+          });
+        }
+      }
+    }
+
+    return { success: true, items };
   }
 
   public removeResourcesInArea(bounds: {

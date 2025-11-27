@@ -15,6 +15,76 @@ import {
 } from "../../../shared/constants/ResourceEnums";
 
 /**
+ * Maps item IDs to base resource types.
+ * This is a workaround for the architectural mismatch between:
+ * - RecipesCatalog (uses specific item IDs like "fiber", "iron_ore", "wheat")
+ * - Inventory system (uses only ResourceType: wood|stone|food|water|rare_materials)
+ *
+ * Items are collapsed into their closest resource category.
+ */
+export function itemToInventoryResource(itemId: string): ResourceType | null {
+  // Direct resource types
+  if (itemId === ResourceTypeEnum.WOOD) return ResourceTypeEnum.WOOD;
+  if (itemId === ResourceTypeEnum.STONE) return ResourceTypeEnum.STONE;
+  if (itemId === ResourceTypeEnum.FOOD) return ResourceTypeEnum.FOOD;
+  if (itemId === ResourceTypeEnum.WATER) return ResourceTypeEnum.WATER;
+  if (itemId === ResourceTypeEnum.RARE_MATERIALS)
+    return ResourceTypeEnum.RARE_MATERIALS;
+
+  const woodItems = [
+    "wood_log",
+    "plank",
+    "fiber",
+    "rope",
+    "leather",
+    "leather_hide",
+    "cloth",
+  ];
+  if (woodItems.includes(itemId)) return ResourceTypeEnum.WOOD;
+
+  const stoneItems = [
+    "iron_ore",
+    "copper_ore",
+    "coal",
+    "clay",
+    "brick",
+    "iron_ingot",
+    "copper_ingot",
+    "obsidian",
+    "flint",
+  ];
+  if (stoneItems.includes(itemId)) return ResourceTypeEnum.STONE;
+
+  const foodItems = [
+    "wheat",
+    "flour",
+    "bread",
+    "berries",
+    "mushrooms",
+    "raw_meat",
+    "cooked_meat",
+    "fish",
+    "cooked_fish",
+    "meat_stew",
+    "fruit",
+    "vegetables",
+    "honey",
+  ];
+  if (foodItems.includes(itemId)) return ResourceTypeEnum.FOOD;
+
+  const rareItems = [
+    "crystal",
+    "gem",
+    "diamond",
+    "gold_nugget",
+    "silver_nugget",
+  ];
+  if (rareItems.includes(itemId)) return ResourceTypeEnum.RARE_MATERIALS;
+
+  return null;
+}
+
+/**
  * Mapping from world resources to inventory resources.
  *
  * @example
@@ -119,6 +189,58 @@ export function toWorldResources(
   inventoryType: ResourceType,
 ): WorldResourceType[] {
   return INVENTORY_TO_WORLD[inventoryType] || [];
+}
+
+/**
+ * Maps an item ID or ResourceType to possible WorldResourceTypes that yield it.
+ * Handles both direct resource types (wood, stone) and specific items (iron_ore).
+ */
+export function itemToWorldResources(itemId: string): WorldResourceType[] {
+  // First check if it's a direct ResourceType
+  if (isResourceType(itemId)) {
+    return toWorldResources(itemId);
+  }
+
+  // Check specific items
+  const stoneItems = [
+    "iron_ore",
+    "copper_ore",
+    "coal",
+    "clay",
+    "brick",
+    "iron_ingot",
+    "copper_ingot",
+    "obsidian",
+    "flint",
+  ];
+  if (stoneItems.includes(itemId)) {
+    return [WorldResourceTypeEnum.ROCK];
+  }
+
+  const woodItems = [
+    "wood_log",
+    "plank",
+    "fiber", // Fiber often comes from trees or bushes, let's assume trees for now or add bushes
+    "rope",
+  ];
+  if (woodItems.includes(itemId)) {
+    return [WorldResourceTypeEnum.TREE];
+  }
+
+  const foodItems = ["wheat", "flour", "bread"];
+  if (foodItems.includes(itemId)) {
+    return [WorldResourceTypeEnum.WHEAT_CROP];
+  }
+
+  if (["berries", "fruit"].includes(itemId)) {
+    return [WorldResourceTypeEnum.BERRY_BUSH];
+  }
+
+  if (["mushrooms"].includes(itemId)) {
+    return [WorldResourceTypeEnum.MUSHROOM_PATCH];
+  }
+
+  return [];
 }
 
 /**

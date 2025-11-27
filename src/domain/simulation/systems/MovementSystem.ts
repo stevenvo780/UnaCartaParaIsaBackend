@@ -942,7 +942,10 @@ export class MovementSystem extends EventEmitter {
     if (state.isMoving || state.currentActivity !== "idle") return;
 
     // Don't start idle wander if agent just arrived - give AI time to plan next action
-    if (state.lastArrivalTime && (now - state.lastArrivalTime) < this.ARRIVAL_GRACE_PERIOD_MS) {
+    if (
+      state.lastArrivalTime &&
+      now - state.lastArrivalTime < this.ARRIVAL_GRACE_PERIOD_MS
+    ) {
       return;
     }
 

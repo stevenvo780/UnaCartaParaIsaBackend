@@ -65,11 +65,39 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
         resourceType: ResourceType.STONE,
         amountMin: 10,
         amountMax: 20,
+        secondaryYields: [
+          {
+            resourceType: "iron_ore" as ResourceType,
+            amountMin: 1,
+            amountMax: 3,
+            rareMaterialsChance: 0.15,
+          },
+          {
+            resourceType: "copper_ore" as ResourceType,
+            amountMin: 1,
+            amountMax: 3,
+            rareMaterialsChance: 0.15,
+          },
+        ],
       },
       harvested_partial: {
         resourceType: ResourceType.STONE,
         amountMin: 4,
         amountMax: 10,
+        secondaryYields: [
+          {
+            resourceType: "iron_ore" as ResourceType,
+            amountMin: 0,
+            amountMax: 1,
+            rareMaterialsChance: 0.1,
+          },
+          {
+            resourceType: "copper_ore" as ResourceType,
+            amountMin: 0,
+            amountMax: 1,
+            rareMaterialsChance: 0.1,
+          },
+        ],
       },
       depleted: {
         resourceType: ResourceType.STONE,

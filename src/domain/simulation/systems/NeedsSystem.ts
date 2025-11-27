@@ -178,7 +178,7 @@ export class NeedsSystem extends EventEmitter {
     const agents = this.gameState.agents || [];
     let syncCount = 0;
     let reinitCount = 0;
-    
+
     // Debug: log current entityNeeds state and list all entities (periodic)
     if (this.entityNeeds.size > 0 && this._tickCounter === 0) {
       const entityIds = Array.from(this.entityNeeds.keys()).join(", ");
@@ -186,10 +186,10 @@ export class NeedsSystem extends EventEmitter {
         `🔍 NeedsSystem state: ${this.entityNeeds.size} entities: [${entityIds}]`,
       );
     }
-    
+
     for (const agent of agents) {
       if (agent.isDead) continue;
-      
+
       if (!this.entityNeeds.has(agent.id)) {
         this.initializeEntityNeeds(agent.id);
         syncCount++;
@@ -214,7 +214,7 @@ export class NeedsSystem extends EventEmitter {
         }
       }
     }
-    
+
     if (syncCount > 0 || reinitCount > 0) {
       logger.info(
         `🔄 NeedsSystem: synced=${syncCount}, reinit=${reinitCount}, total=${agents.length}`,
@@ -1302,7 +1302,7 @@ export class NeedsSystem extends EventEmitter {
   public getRecommendedFoodForEntity(
     entityId: string,
     availableMoney: number = 100,
-  ) {
+  ): FoodItem[] {
     const data = this.entityNeeds.get(entityId);
     if (!data) return [];
 
@@ -1318,7 +1318,7 @@ export class NeedsSystem extends EventEmitter {
    */
   public getFoodsByCategory(
     category: "healthy" | "junk" | "dessert" | "drink" | "snack",
-  ) {
+  ): FoodItem[] {
     return FoodCatalog.getFoodsByCategory(category);
   }
 }

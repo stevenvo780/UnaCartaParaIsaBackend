@@ -2,7 +2,9 @@ import { logger } from "../../../../../infrastructure/utils/logger";
 import { getAnimalConfig } from "../../../../../infrastructure/services/world/config/AnimalConfigs";
 import type { GameState } from "../../../../types/game-types";
 import type { AgentAction } from "../../../../types/simulation/ai";
-import { toInventoryResource } from "../../../../types/simulation/resourceMapping";
+import {
+  itemToInventoryResource,
+} from "../../../../types/simulation/resourceMapping";
 import type { NeedsSystem } from "../../NeedsSystem";
 import type { InventorySystem } from "../../InventorySystem";
 import type { SocialSystem } from "../../SocialSystem";
@@ -195,8 +197,7 @@ export class AIActionExecutor {
     if (result.success) {
       const resource = this.deps.gameState.worldResources?.[action.targetId];
       if (resource) {
-        const inventoryResourceType = toInventoryResource(resource.type);
-
+        // Handle need satisfaction based on resource type
         if (resource.type === "water_source" && this.deps.needsSystem) {
           this.deps.needsSystem.satisfyNeed(
             action.agentId,
@@ -216,16 +217,22 @@ export class AIActionExecutor {
           );
         }
 
-        if (inventoryResourceType && this.deps.inventorySystem) {
-          const added = this.deps.inventorySystem.addResource(
-            action.agentId,
-            inventoryResourceType,
-            result.amount,
-          );
-          if (added) {
-            logger.debug(
-              `🎒 [AI] Agent ${action.agentId} added ${result.amount} ${inventoryResourceType} to inventory`,
-            );
+        // Add all gathered items to inventory
+        if (this.deps.inventorySystem) {
+          for (const item of result.items) {
+            const inventoryResourceType = itemToInventoryResource(item.type);
+            if (inventoryResourceType) {
+              const added = this.deps.inventorySystem.addResource(
+                action.agentId,
+                inventoryResourceType,
+                item.amount,
+              );
+              if (added) {
+                logger.debug(
+                  `🎒 [AI] Agent ${action.agentId} added ${item.amount} ${inventoryResourceType} (${item.type}) to inventory`,
+                );
+              }
+            }
           }
         }
       }
@@ -235,7 +242,7 @@ export class AIActionExecutor {
       agentId: action.agentId,
       actionType: ActionType.HARVEST,
       success: result.success,
-      data: { amount: result.amount },
+      data: { items: result.items },
     });
   }
 

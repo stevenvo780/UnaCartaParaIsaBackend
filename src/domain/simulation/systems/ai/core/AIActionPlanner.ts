@@ -402,7 +402,7 @@ export class AIActionPlanner {
           agentPos.x - goal.targetPosition.x,
           agentPos.y - goal.targetPosition.y,
         );
-        
+
         if (dist < this.HARVEST_RANGE) {
           logger.debug(
             `🌾 [ActionPlanner] ${agentId}: HARVEST (dist=${dist.toFixed(0)} < ${this.HARVEST_RANGE})`,
@@ -415,7 +415,7 @@ export class AIActionPlanner {
             timestamp,
           };
         }
-        
+
         // Only log occasionally to avoid spam
         if (Math.random() < 0.05) {
           logger.debug(
@@ -458,7 +458,7 @@ export class AIActionPlanner {
           agentPos.x - goal.targetPosition.x,
           agentPos.y - goal.targetPosition.y,
         );
-        
+
         if (dist < this.HARVEST_RANGE) {
           logger.debug(
             `🌾 [Work] ${agentId}: HARVEST goal target (dist=${dist.toFixed(0)})`,
@@ -681,13 +681,17 @@ export class AIActionPlanner {
     // Find target zone - use goal's targetZoneId or find nearest storage zone
     let targetZoneId = goal.targetZoneId;
     if (!targetZoneId) {
+      // Prefer storage zones, fall back to work zones
       const storageZone = this.deps.gameState.zones?.find(
         (z) => z.type === ZoneType.STORAGE,
       );
-      if (!storageZone) {
-        return null; // No storage zone available
+      const workZone = this.deps.gameState.zones?.find(
+        (z) => z.type === ZoneType.WORK,
+      );
+      targetZoneId = storageZone?.id ?? workZone?.id;
+      if (!targetZoneId) {
+        return null; // No suitable zone available
       }
-      targetZoneId = storageZone.id;
     }
 
     const zone = this.deps.gameState.zones?.find((z) => z.id === targetZoneId);

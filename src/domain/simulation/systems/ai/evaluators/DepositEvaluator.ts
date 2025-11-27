@@ -31,14 +31,26 @@ export function evaluateDepositGoals(
     const now = Date.now();
 
     const agentInv = ctx.getAgentInventory(aiState.entityId);
-    if (!agentInv) return [];
+    if (!agentInv) {
+      logger.debug(`📦 [DEPOSIT] ${aiState.entityId}: No inventory found`);
+      return [];
+    }
 
     const load =
       agentInv.wood + agentInv.stone + agentInv.food + agentInv.water;
-    const cap = agentInv.capacity || 1;
+    const cap = agentInv.capacity || 50; // Default capacity 50
     const loadRatio = load / cap;
 
-    const depositThreshold = 0.8 - personality.conscientiousness * 0.3;
+    // Debug: Log agent inventory and load
+    logger.debug(
+      `📦 [DEPOSIT] ${aiState.entityId}: wood=${agentInv.wood}, stone=${agentInv.stone}, food=${agentInv.food}, load=${load}/${cap} (${(loadRatio * 100).toFixed(0)}%)`,
+    );
+
+    // Lower threshold for resource workers (loggers, quarrymen) - they should deposit sooner
+    // Base threshold: 0.3 (15 items) instead of 0.8 (40 items)
+    const baseThreshold = 0.3;
+    const depositThreshold =
+      baseThreshold - personality.conscientiousness * 0.1;
 
     if (loadRatio >= depositThreshold) {
       const currentZoneId = ctx.getCurrentZone(aiState.entityId);
@@ -58,17 +70,25 @@ export function evaluateDepositGoals(
 
     if (load <= 0 || loadRatio < depositThreshold * 0.75) return [];
 
-    const depositZones =
+    // Prioritize storage zones for deposits
+    const storageZones =
       ctx.gameState.zones
-        ?.filter((z) => {
-          if (z.type === "storage") return true;
-          if (z.type === "rest") return true;
-          if (z.type === "food" && agentInv.food > 0) return true;
-          if (z.type === "water" && agentInv.water > 0) return true;
-          if (z.type === "work") return true;
-          return false;
-        })
+        ?.filter((z) => z.type === "storage")
         .map((z) => z.id) || [];
+
+    // If no storage zones, fall back to other zone types
+    const depositZones =
+      storageZones.length > 0
+        ? storageZones
+        : ctx.gameState.zones
+            ?.filter((z) => {
+              if (z.type === "rest") return true;
+              if (z.type === "food" && agentInv.food > 0) return true;
+              if (z.type === "water" && agentInv.water > 0) return true;
+              if (z.type === "work") return true;
+              return false;
+            })
+            .map((z) => z.id) || [];
 
     if (depositZones.length === 0) return [];
 

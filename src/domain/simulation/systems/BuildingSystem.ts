@@ -416,8 +416,14 @@ export class BuildingSystem {
     buildingType: BuildingLabel,
   ): { x: number; y: number } | null {
     // Scale building size based on world size (10% of world dimension, min 8, max 120)
-    const BUILDING_WIDTH = Math.min(120, Math.max(8, Math.floor(worldSize.width * 0.1)));
-    const BUILDING_HEIGHT = Math.min(80, Math.max(6, Math.floor(worldSize.height * 0.1)));
+    const BUILDING_WIDTH = Math.min(
+      120,
+      Math.max(8, Math.floor(worldSize.width * 0.1)),
+    );
+    const BUILDING_HEIGHT = Math.min(
+      80,
+      Math.max(6, Math.floor(worldSize.height * 0.1)),
+    );
     const MAX_ATTEMPTS = 100;
 
     // Diagnóstico: log inicial
@@ -465,12 +471,17 @@ export class BuildingSystem {
         continue;
       }
 
+      // Check for nearby water tiles - terrainTiles use tile indices, convert to pixels
       if (this.state.terrainTiles) {
+        const TILE_SIZE = 64; // Pixel size of each tile
         const centerX = testX + BUILDING_WIDTH / 2;
         const centerY = testY + BUILDING_HEIGHT / 2;
         const nearbyWater = this.state.terrainTiles.some((tile) => {
-          const dx = tile.x - centerX;
-          const dy = tile.y - centerY;
+          // Convert tile indices to pixel coordinates (center of tile)
+          const tilePixelX = (tile.x + 0.5) * TILE_SIZE;
+          const tilePixelY = (tile.y + 0.5) * TILE_SIZE;
+          const dx = tilePixelX - centerX;
+          const dy = tilePixelY - centerY;
           const dist = Math.hypot(dx, dy);
           return dist < 60 && tile.type === "water";
         });

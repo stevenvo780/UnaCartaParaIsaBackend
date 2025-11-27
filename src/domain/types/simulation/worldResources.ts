@@ -21,6 +21,7 @@ export interface ResourceYield {
   amountMin: number;
   amountMax: number;
   rareMaterialsChance?: number;
+  secondaryYields?: ResourceYield[];
 }
 
 export interface WorldResourceConfig {
