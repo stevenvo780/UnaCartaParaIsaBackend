@@ -120,7 +120,6 @@ class PerformanceMonitor {
   private batchProcessingStats = new Map<string, BatchProcessingStats>();
   private spatialIndexStats = new Map<string, SpatialIndexStats>();
 
-  // Métricas de throughput (rolling window de 10 segundos)
   private throughputWindow = new Map<
     string,
     { timestamp: number; count: number }[]

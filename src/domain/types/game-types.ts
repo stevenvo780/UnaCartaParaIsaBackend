@@ -229,9 +229,16 @@ export interface LegendsState {
   activeLegends: string[];
 }
 
+export interface StockpileSnapshot {
+  inventory: Inventory;
+  capacity: number;
+  type: "general" | "food" | "materials";
+  zoneId: string;
+}
+
 export interface InventoryState {
   global: Inventory;
-  stockpiles: Record<string, Inventory>;
+  stockpiles: Record<string, StockpileSnapshot>;
   agents: Record<string, Inventory>;
 }
 

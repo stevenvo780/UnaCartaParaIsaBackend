@@ -429,7 +429,6 @@ export class AISystem extends EventEmitter {
     if (systems.questSystem) this.questSystem = systems.questSystem;
     if (systems.timeSystem) this.timeSystem = systems.timeSystem;
 
-    // Reinitialize subsystems with updated dependencies
     this.initializeSubsystems();
   }
 
@@ -594,7 +593,6 @@ export class AISystem extends EventEmitter {
 
       const action = this.planAction(agentId, aiState.currentGoal);
       if (action) {
-        // Additional validation: if action has a target entity, verify it's alive
         if (action.targetId) {
           const targetEntity = this.gameState.entities?.find(
             (e) => e.id === action.targetId,
@@ -665,8 +663,6 @@ export class AISystem extends EventEmitter {
     const angle = Math.random() * Math.PI * 2;
     let targetX = pos.x + Math.cos(angle) * radius;
     let targetY = pos.y + Math.sin(angle) * radius;
-
-    // Clamp to world bounds
     const mapWidth = this.gameState.worldSize?.width || 2000;
     const mapHeight = this.gameState.worldSize?.height || 2000;
     targetX = Math.max(50, Math.min(mapWidth - 50, targetX));
@@ -708,7 +704,6 @@ export class AISystem extends EventEmitter {
     );
     performanceMonitor.recordOperation("ai_process_goals", d0, 1, 0);
 
-    // Warn if decision took too long
     if (d0 > this.MAX_DECISION_TIME_MS) {
       logger.debug(
         `⚠️ [AI] Decision for agent ${agentId} took ${d0.toFixed(2)}ms (>${this.MAX_DECISION_TIME_MS}ms threshold)`,
@@ -891,6 +886,46 @@ export class AISystem extends EventEmitter {
       getEntityPosition: (id: string) => this.getAgentPosition(id) || null,
       getNearbyAgentsWithDistances: (entityId: string, radius: number) =>
         this.getNearbyAgentsWithDistancesGPU(entityId, radius),
+
+      getAllStockpiles: () => this.inventorySystem?.getAllStockpiles() || [],
+      getActiveDemands: () => {
+        const governance = this.gameState.governance;
+        if (!governance || !governance.demands) return [];
+        return governance.demands.filter(
+          (d: { resolvedAt?: number }) => !d.resolvedAt,
+        );
+      },
+      getPopulation: () => {
+        return this.gameState.agents?.filter((a) => !a.isDead).length || 0;
+      },
+      getCollectiveResourceState: () => {
+        const stockpiles = this.inventorySystem?.getAllStockpiles() || [];
+        const population =
+          this.gameState.agents?.filter((a) => !a.isDead).length || 1;
+
+        let totalFood = 0;
+        let totalWater = 0;
+        let totalCapacity = 0;
+        let usedCapacity = 0;
+
+        for (const sp of stockpiles) {
+          totalFood += sp.inventory.food || 0;
+          totalWater += sp.inventory.water || 0;
+          totalCapacity += sp.capacity;
+          usedCapacity +=
+            (sp.inventory.food || 0) +
+            (sp.inventory.water || 0) +
+            (sp.inventory.wood || 0) +
+            (sp.inventory.stone || 0);
+        }
+
+        return {
+          foodPerCapita: totalFood / Math.max(1, population),
+          waterPerCapita: totalWater / Math.max(1, population),
+          stockpileFillRatio:
+            totalCapacity > 0 ? usedCapacity / totalCapacity : 0,
+        };
+      },
     };
 
     const goals = planGoals(deps, aiState, now);
@@ -952,7 +987,6 @@ export class AISystem extends EventEmitter {
     if (!aiState) return;
 
     this.zoneHandler.notifyEntityArrived(entityId, zoneId, aiState);
-    // Counter is automatically updated via shared _goalsCompletedRef
   }
 
   private tryDepositResources(entityId: string, zoneId: string): void {
@@ -1075,7 +1109,6 @@ export class AISystem extends EventEmitter {
     this.zoneCache.clear();
     this.craftingZoneCache = null;
     this.nearestResourceCache.clear();
-    // Reset counters
     this._goalsCompletedRef.value = 0;
     this.goalValidator.resetMetrics();
     this._decisionCount = 0;
@@ -1186,7 +1219,6 @@ export class AISystem extends EventEmitter {
     entityId: string,
     resourceType: string,
   ): { id: string; x: number; y: number } | null {
-    // Check cache first
     const cacheKey = `${entityId}_${resourceType}`;
     const cached = this.nearestResourceCache.get(cacheKey);
     const now = Date.now();
@@ -1216,7 +1248,6 @@ export class AISystem extends EventEmitter {
         const dy = resource.position.y - agent.position.y;
         const dist = dx * dx + dy * dy;
 
-        // Early exit if we find something close enough (within 100 units)
         if (dist < 10000) {
           nearest = {
             id: resource.id,
@@ -1297,12 +1328,10 @@ export class AISystem extends EventEmitter {
     const GPU_THRESHOLD = 30; // Use GPU when checking 30+ agents
     const radiusSq = radius * radius;
 
-    // Use GPU for large agent counts
     if (
       this.gpuService?.isGPUAvailable() &&
       activeAgents.length >= GPU_THRESHOLD
     ) {
-      // Prepare position data for GPU
       const positions = new Float32Array(activeAgents.length * 2);
 
       for (let i = 0; i < activeAgents.length; i++) {
@@ -1394,7 +1423,6 @@ export class AISystem extends EventEmitter {
   ): void {
     const aiState = this.aiStates.get(agentId);
     if (aiState) {
-      // Convert goal.type to GoalType and validate
       const goalType = goal.type as GoalType;
       const goalData: AIGoalData | undefined = goal.data
         ? {

@@ -1,4 +1,3 @@
-import { logger } from "../../../../../infrastructure/utils/logger";
 import type { GameState } from "../../../../types/game-types";
 import type { AIGoal, AgentAction } from "../../../../types/simulation/ai";
 

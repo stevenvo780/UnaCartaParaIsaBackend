@@ -20,6 +20,7 @@ import { container } from "../../config/container";
 import { TYPES } from "../../config/Types";
 import { WorldGenerationService } from "../services/world/worldGenerationService";
 import { AnimalSystem } from "../../domain/simulation/systems/AnimalSystem";
+import { WorldResourceSystem } from "../../domain/simulation/systems/WorldResourceSystem";
 
 /**
  * Controller for world generation operations.
@@ -106,9 +107,23 @@ export class WorldController {
           },
           chunk,
         );
+
+        const worldResourceSystem = container.get<WorldResourceSystem>(
+          TYPES.WorldResourceSystem,
+        );
+        worldResourceSystem.spawnResourcesForChunk(
+          { x, y },
+          {
+            x: worldX,
+            y: worldY,
+            width: pixelWidth,
+            height: pixelHeight,
+          },
+          chunk,
+        );
       } catch (error) {
         logger.warn(
-          `Failed to spawn animals for chunk ${x},${y}: ${error instanceof Error ? error.message : String(error)}`,
+          `Failed to spawn entities for chunk ${x},${y}: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
 

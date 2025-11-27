@@ -8,7 +8,7 @@ import type {
   DemandType,
 } from "../../types/simulation/governance";
 import type { ResourceCost } from "../../types/simulation/economy";
-import type { AgentProfile } from "../../types/simulation/agents";
+import type { RoleType } from "../../types/simulation/roles";
 import { GameEventNames, simulationEvents } from "../core/events";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 import { InventorySystem } from "./InventorySystem";
@@ -60,19 +60,26 @@ const DEMAND_SOLUTIONS: Partial<
       project: string;
       cost: ResourceCost;
       resourceBoost?: { food?: number; water?: number };
+      roleAssignment?: { role: RoleType; count: number };
     }
   >
 > = {
-  housing_full: { project: "build_house", cost: { wood: 40, stone: 20 } },
+  housing_full: {
+    project: "build_house",
+    cost: { wood: 40, stone: 20 },
+    roleAssignment: { role: "builder", count: 2 },
+  },
   food_shortage: {
     project: "assign_hunters",
     cost: { wood: 0, stone: 0 },
     resourceBoost: { food: 40 },
+    roleAssignment: { role: "hunter", count: 3 },
   },
   water_shortage: {
     project: "gather_water",
     cost: { wood: 0, stone: 0 },
     resourceBoost: { water: 30 },
+    roleAssignment: { role: "gatherer", count: 2 },
   },
 };
 
@@ -408,32 +415,18 @@ export class GovernanceSystem {
       }
     }
 
-    if (solution.project === "assign_hunters") {
-      // Find agents suitable for hunting who are not already hunters
-      const agents = (this.state.entities as unknown as AgentProfile[])?.filter(
-        (e) => !e.isDead && e.ageYears >= 18,
+    // Generic role assignment based on demand solution
+    if (solution.roleAssignment) {
+      const assignedCount = this.assignRolesForDemand(
+        solution.roleAssignment.role,
+        solution.roleAssignment.count,
+        demand.type,
       );
-      if (agents) {
-        let assignedCount = 0;
-        for (const agent of agents) {
-          if (assignedCount >= 3) break; // Assign max 3 hunters per demand
-          const currentRole = this.roleSystem.getAgentRole(agent.id);
-          if (currentRole?.roleType !== "hunter") {
-            const result = this.roleSystem.reassignRole(agent.id, "hunter");
-            if (result.success) {
-              assignedCount++;
-              this.recordEvent({
-                timestamp: Date.now(),
-                type: "role_reassigned",
-                details: {
-                  agentId: agent.id,
-                  role: "hunter",
-                  reason: "food_shortage_demand",
-                },
-              });
-            }
-          }
-        }
+
+      if (assignedCount > 0) {
+        logger.info(
+          `🏛️ [GOVERNANCE] Assigned ${assignedCount} agents to role ${solution.roleAssignment.role} for demand ${demand.type}`,
+        );
       }
     }
 
@@ -451,6 +444,106 @@ export class GovernanceSystem {
       cost: solution.cost,
       timestamp: Date.now(),
     });
+  }
+
+  /**
+   * Assigns agents to a specific role based on a community demand.
+   * Prioritizes idle agents and those with matching traits.
+   *
+   * @param targetRole - The role to assign
+   * @param count - Maximum number of agents to assign
+   * @param demandType - The type of demand triggering this assignment
+   * @returns Number of agents successfully assigned
+   */
+  private assignRolesForDemand(
+    targetRole: RoleType,
+    count: number,
+    demandType: DemandType,
+  ): number {
+    // Get all living agents
+    const agents = (this.state.agents ?? []).filter(
+      (a) => !a.isDead && a.ageYears >= 16,
+    );
+
+    if (agents.length === 0) return 0;
+
+    // Score agents for the target role
+    const scoredAgents = agents.map((agent) => {
+      const currentRole = this.roleSystem.getAgentRole(agent.id);
+
+      // Skip if already has the target role
+      if (currentRole?.roleType === targetRole) {
+        return { agent, score: -1 };
+      }
+
+      let score = 0;
+
+      // Prefer idle agents
+      if (!currentRole || currentRole.roleType === "idle") {
+        score += 50;
+      }
+
+      // Prefer agents with low satisfaction in current role
+      if (currentRole && currentRole.satisfaction < 0.4) {
+        score += 20;
+      }
+
+      // Role-specific trait preferences
+      switch (targetRole) {
+        case "hunter":
+          score += (agent.traits.diligence ?? 0.5) * 30;
+          score += (agent.traits.neuroticism ?? 0.3) * 15; // Alertness
+          break;
+        case "gatherer":
+          score += (agent.traits.curiosity ?? 0.5) * 25;
+          score += (agent.traits.cooperation ?? 0.5) * 15;
+          break;
+        case "builder":
+          score += (agent.traits.diligence ?? 0.5) * 25;
+          score += (agent.traits.cooperation ?? 0.5) * 25;
+          break;
+        case "farmer":
+          score += (agent.traits.diligence ?? 0.5) * 30;
+          score += (agent.traits.curiosity ?? 0.5) * 10;
+          break;
+        case "logger":
+        case "quarryman":
+          score += (agent.traits.diligence ?? 0.5) * 35;
+          break;
+        case "guard":
+          score += (agent.traits.cooperation ?? 0.5) * 25;
+          score += (agent.traits.diligence ?? 0.5) * 20;
+          break;
+      }
+
+      return { agent, score };
+    });
+
+    // Sort by score descending, filter out those already in role
+    scoredAgents.sort((a, b) => b.score - a.score);
+
+    let assignedCount = 0;
+    for (const { agent, score } of scoredAgents) {
+      if (assignedCount >= count) break;
+      if (score < 0) continue; // Already has target role
+
+      const result = this.roleSystem.reassignRole(agent.id, targetRole);
+      if (result.success) {
+        assignedCount++;
+        this.recordEvent({
+          timestamp: Date.now(),
+          type: "role_reassigned",
+          details: {
+            agentId: agent.id,
+            role: targetRole,
+            reason: `${demandType}_demand`,
+            score,
+          },
+        });
+      }
+    }
+
+    return assignedCount;
   }
 
   private applyDemandEffect(

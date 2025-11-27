@@ -3,7 +3,7 @@ import {
   Stockpile,
   ResourceType,
 } from "../../types/simulation/economy";
-import type { GameState } from "../../types/game-types";
+import type { GameState, StockpileSnapshot } from "../../types/game-types";
 import { logger } from "../../../infrastructure/utils/logger";
 
 import { injectable, inject } from "inversify";
@@ -336,6 +336,8 @@ export class InventorySystem {
 
   public update(): void {
     const now = Date.now();
+
+    this.syncToGameState(now);
     if (now - this.lastDeprecationCheck < this.DEPRECATION_INTERVAL) return;
     this.lastDeprecationCheck = now;
 
@@ -364,48 +366,59 @@ export class InventorySystem {
       if (foodLoss > 0) inv.food = Math.max(0, inv.food - foodLoss);
       if (waterLoss > 0) inv.water = Math.max(0, inv.water - waterLoss);
     }
+  }
 
-    if (this.gameState) {
-      if (!this.gameState.inventory) {
-        this.gameState.inventory = {
-          global: {
-            wood: 0,
-            stone: 0,
-            food: 0,
-            water: 0,
-            rare_materials: 0,
-            capacity: 0,
-            lastUpdateTime: now,
-          },
-          stockpiles: {},
-          agents: {},
-        };
-      }
+  /**
+   * Syncs internal inventory state to gameState for snapshot broadcasting.
+   * Called every tick to ensure clients receive up-to-date inventory data.
+   */
+  private syncToGameState(now: number): void {
+    if (!this.gameState) return;
 
-      const stockpilesObj: Record<string, Inventory> = {};
-      for (const stockpile of this.stockpiles.values()) {
-        stockpilesObj[stockpile.id] = stockpile.inventory;
-      }
-      this.gameState.inventory!.stockpiles = stockpilesObj;
-
-      const agentsObj: Record<string, Inventory> = {};
-      for (const [agentId, inv] of this.agentInventories) {
-        agentsObj[agentId] = inv;
-      }
-      this.gameState.inventory!.agents = agentsObj;
-
-      const stats = this.getSystemStats();
-      this.gameState.inventory!.global = {
-        wood: stats.stockpiled.wood + stats.inAgents.wood,
-        stone: stats.stockpiled.stone + stats.inAgents.stone,
-        food: stats.stockpiled.food + stats.inAgents.food,
-        water: stats.stockpiled.water + stats.inAgents.water,
-        rare_materials:
-          stats.stockpiled.rare_materials + stats.inAgents.rare_materials,
-        capacity: 0,
-        lastUpdateTime: now,
+    if (!this.gameState.inventory) {
+      this.gameState.inventory = {
+        global: {
+          wood: 0,
+          stone: 0,
+          food: 0,
+          water: 0,
+          rare_materials: 0,
+          capacity: 0,
+          lastUpdateTime: now,
+        },
+        stockpiles: {},
+        agents: {},
       };
     }
+
+    const stockpilesObj: Record<string, StockpileSnapshot> = {};
+    for (const stockpile of this.stockpiles.values()) {
+      stockpilesObj[stockpile.id] = {
+        inventory: stockpile.inventory,
+        capacity: stockpile.capacity,
+        type: stockpile.type,
+        zoneId: stockpile.zoneId,
+      };
+    }
+    this.gameState.inventory!.stockpiles = stockpilesObj;
+
+    const agentsObj: Record<string, Inventory> = {};
+    for (const [agentId, inv] of this.agentInventories) {
+      agentsObj[agentId] = inv;
+    }
+    this.gameState.inventory!.agents = agentsObj;
+
+    const stats = this.getSystemStats();
+    this.gameState.inventory!.global = {
+      wood: stats.stockpiled.wood + stats.inAgents.wood,
+      stone: stats.stockpiled.stone + stats.inAgents.stone,
+      food: stats.stockpiled.food + stats.inAgents.food,
+      water: stats.stockpiled.water + stats.inAgents.water,
+      rare_materials:
+        stats.stockpiled.rare_materials + stats.inAgents.rare_materials,
+      capacity: 0,
+      lastUpdateTime: now,
+    };
   }
 
   public getSystemStats(): {

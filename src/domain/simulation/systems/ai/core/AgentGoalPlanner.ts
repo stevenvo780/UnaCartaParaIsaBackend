@@ -1,10 +1,13 @@
-import { logger } from "../../../../../infrastructure/utils/logger";
 import type { GameState } from "../../../../types/game-types";
 import type { AIGoal, AIState } from "../../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../../types/simulation/needs";
 import type { AgentRole } from "../../../../types/simulation/roles";
 import type { Task } from "../../../../types/simulation/tasks";
-import type { Inventory } from "../../../../types/simulation/economy";
+import type {
+  Inventory,
+  Stockpile,
+} from "../../../../types/simulation/economy";
+import type { SettlementDemand } from "../../../../types/simulation/governance";
 import type { PriorityManager } from "./PriorityManager";
 import { evaluateCriticalNeeds } from "../evaluators/NeedsEvaluator";
 import {
@@ -23,6 +26,10 @@ import {
 import { evaluateQuestGoals } from "../evaluators/QuestEvaluator";
 import { evaluateTradeGoals } from "../evaluators/TradeEvaluator";
 import { evaluateBuildingContributionGoals } from "../evaluators/BuildingContributionEvaluator";
+import {
+  evaluateCollectiveNeeds,
+  type CollectiveNeedsContext,
+} from "../evaluators/CollectiveNeedsEvaluator";
 import {
   selectBestZone,
   getUnexploredZones,
@@ -77,6 +84,16 @@ export interface AgentGoalPlannerDeps {
     entityId: string,
     radius: number,
   ) => Array<{ id: string; distance: number }>;
+
+  getAllStockpiles?: () => Stockpile[];
+  getActiveDemands?: () => SettlementDemand[];
+  getPopulation?: () => number;
+  /** Gets collective resource state for threshold adjustments */
+  getCollectiveResourceState?: () => {
+    foodPerCapita: number;
+    waterPerCapita: number;
+    stockpileFillRatio: number;
+  } | null;
 }
 
 /**
@@ -84,6 +101,7 @@ export interface AgentGoalPlannerDeps {
  *
  * Evaluates multiple goal categories:
  * - Critical needs (hunger, thirst, energy)
+ * - Collective/community needs (stockpile filling, resource shortages)
  * - Combat and defense
  * - Assistance to other agents
  * - Construction and building
@@ -128,6 +146,13 @@ export function planGoals(
       getEntityNeeds: deps.getEntityNeeds,
       findNearestResource: deps.findNearestResource,
       getCurrentTimeOfDay: deps.getCurrentTimeOfDay,
+      getAgentRole: deps.getAgentRole
+        ? (id: string) => {
+            const role = deps.getAgentRole!(id);
+            return role ? { roleType: role.roleType } : undefined;
+          }
+        : undefined,
+      getCollectiveResourceState: deps.getCollectiveResourceState,
     };
     const criticalGoals = evaluateCriticalNeeds(needsDeps, aiState);
     goals.push(...criticalGoals);
@@ -136,6 +161,35 @@ export function planGoals(
     if (criticalSurvivalGoal) {
       return [criticalSurvivalGoal];
     }
+  }
+
+  if (deps.getAgentInventory && deps.getAllStockpiles && deps.getPopulation) {
+    const collectiveDeps: CollectiveNeedsContext = {
+      gameState: deps.gameState,
+      getAgentInventory: deps.getAgentInventory,
+      getAgentRole: deps.getAgentRole
+        ? (id: string) => {
+            const role = deps.getAgentRole!(id);
+            return role ? { roleType: role.roleType } : undefined;
+          }
+        : () => undefined,
+      getEntityPosition: positionFor,
+      getAllStockpiles: () =>
+        deps.getAllStockpiles!().map((sp) => ({
+          id: sp.id,
+          zoneId: sp.zoneId,
+          inventory: sp.inventory,
+          capacity: sp.capacity,
+        })),
+      getActiveDemands: deps.getActiveDemands,
+      getPopulation: deps.getPopulation,
+    };
+    const collectiveGoals = evaluateCollectiveNeeds(
+      collectiveDeps,
+      aiState,
+      now,
+    );
+    goals.push(...collectiveGoals);
   }
 
   if (

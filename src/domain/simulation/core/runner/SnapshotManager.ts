@@ -144,6 +144,11 @@ export class SnapshotManager {
       activeLegends,
     };
 
+    // Ensure social graph is populated even before first tick
+    if (!snapshotState.socialGraph) {
+      snapshotState.socialGraph = this.runner.socialSystem.getGraphSnapshot();
+    }
+
     if (snapshotState.agents) {
       snapshotState.agents = snapshotState.agents.map((agent) => {
         const needs = this.runner.needsSystem.getNeeds(agent.id);

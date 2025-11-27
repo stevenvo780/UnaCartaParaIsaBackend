@@ -177,8 +177,8 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
       },
     },
 
-    harvestsUntilPartial: 1,
-    harvestsUntilDepleted: 1,
+    harvestsUntilPartial: 2,
+    harvestsUntilDepleted: 3,
 
     regenerationTime: 120000, // 2 minutos
     canRegenerate: true,
@@ -214,7 +214,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
     },
 
     harvestsUntilPartial: 1,
-    harvestsUntilDepleted: 1,
+    harvestsUntilDepleted: 2,
 
     regenerationTime: 180000, // 3 minutos
     canRegenerate: true,
@@ -249,8 +249,8 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
       },
     },
 
-    harvestsUntilPartial: 1,
-    harvestsUntilDepleted: 1,
+    harvestsUntilPartial: 3,
+    harvestsUntilDepleted: 5,
 
     regenerationTime: 600000, // 10 minutos
     canRegenerate: true,

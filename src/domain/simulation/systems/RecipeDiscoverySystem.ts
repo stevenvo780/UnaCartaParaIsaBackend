@@ -62,15 +62,12 @@ export class RecipeDiscoverySystem {
     const recipe =
       unknownRecipes[Math.floor(this.random() * unknownRecipes.length)];
 
-    // Registrar en RecipesCatalog para que esté disponible globalmente
     RecipesCatalog.registerBiomeRecipe(recipe);
 
-    // Enseñar la receta al agente
     const event = this.teachRecipe(agentId, recipe.id);
     if (event) {
       event.method = "exploration";
 
-      // Registrar descubrimiento de bioma
       if (!this.biomeDiscoveries.has(agentId)) {
         this.biomeDiscoveries.set(agentId, new Set());
       }

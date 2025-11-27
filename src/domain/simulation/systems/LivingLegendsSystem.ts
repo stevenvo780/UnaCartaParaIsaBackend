@@ -49,7 +49,6 @@ export class LivingLegendsSystem {
       this.updateTitles();
     }
 
-    // Sync to GameState for frontend
     if (!this._state.legends) {
       this._state.legends = {
         records: new Map(),

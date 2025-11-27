@@ -301,7 +301,12 @@ export class AnimalBehavior {
       (other) =>
         other.type === animal.type &&
         other.id !== animal.id &&
-        other.needs.reproductiveUrge > 70,
+        other.needs.reproductiveUrge > 70 &&
+        // Ensure both animals are healthy enough to reproduce
+        animal.needs.hunger > 50 &&
+        animal.needs.thirst > 50 &&
+        other.needs.hunger > 50 &&
+        other.needs.thirst > 50,
     );
 
     if (nearbyMate) {

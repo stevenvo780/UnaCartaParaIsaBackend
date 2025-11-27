@@ -171,7 +171,8 @@ export class WorldGenerationService {
       biomeConfig.density.props &&
       tileRng() < biomeConfig.density.props * 0.05
     ) {
-      assets.props.push(`prop_${biomeConfig.id}`);
+      // Use decals for generic ground items instead of props
+      assets.decals.push(`decal_${biomeConfig.id}`);
     }
 
     const structureNoise = this.noiseGen.noise2D(x * 0.005, y * 0.005);

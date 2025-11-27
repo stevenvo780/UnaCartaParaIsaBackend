@@ -1,5 +1,30 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../../types/simulation/needs";
+import type { RoleType } from "../../../../types/simulation/roles";
+
+/**
+ * Role-based threshold modifiers for individual needs.
+ * Each role has different tolerances based on their work type.
+ */
+interface RoleNeedModifiers {
+  hunger: number;
+  thirst: number;
+  energy: number;
+  social: number;
+}
+
+const ROLE_NEED_MODIFIERS: Record<RoleType, RoleNeedModifiers> = {
+  logger: { hunger: 0.9, thirst: 0.95, energy: 0.85, social: 1.0 },
+  quarryman: { hunger: 0.9, thirst: 0.9, energy: 0.8, social: 1.0 },
+  builder: { hunger: 0.95, thirst: 0.95, energy: 0.85, social: 1.1 },
+  farmer: { hunger: 0.85, thirst: 0.9, energy: 0.9, social: 0.95 },
+  gatherer: { hunger: 0.9, thirst: 0.85, energy: 0.95, social: 0.9 },
+  guard: { hunger: 1.1, thirst: 1.1, energy: 1.2, social: 0.8 },
+  hunter: { hunger: 0.85, thirst: 0.95, energy: 1.1, social: 0.85 },
+  craftsman: { hunger: 0.95, thirst: 0.95, energy: 0.9, social: 1.0 },
+  leader: { hunger: 1.0, thirst: 1.0, energy: 1.0, social: 1.2 },
+  idle: { hunger: 1.0, thirst: 1.0, energy: 1.0, social: 1.0 },
+};
 
 export interface NeedsEvaluatorDependencies {
   getEntityNeeds: (entityId: string) => EntityNeedsData | undefined;
@@ -15,6 +40,14 @@ export interface NeedsEvaluatorDependencies {
     | "dusk"
     | "night"
     | "deep_night";
+  /** Agent's current role for threshold adjustment */
+  getAgentRole?: (entityId: string) => { roleType: RoleType } | undefined;
+  /** Community resource state for collective need awareness */
+  getCollectiveResourceState?: () => {
+    foodPerCapita: number;
+    waterPerCapita: number;
+    stockpileFillRatio: number;
+  } | null;
 }
 
 export function calculateNeedPriority(
@@ -26,6 +59,41 @@ export function calculateNeedPriority(
   if (currentValue >= 40) return 0.5;
   if (currentValue >= 20) return 0.8;
   return 1.0 * (urgencyMultiplier / 100);
+}
+
+/**
+ * Adjusts a need threshold based on role, time of day, and community state.
+ * Lower modifier = agent waits longer before satisfying the need (more tolerant)
+ * Higher modifier = agent acts sooner (less tolerant)
+ */
+function adjustThreshold(
+  baseThreshold: number,
+  needType: keyof RoleNeedModifiers,
+  roleType: RoleType,
+  communityState: {
+    foodPerCapita: number;
+    waterPerCapita: number;
+    stockpileFillRatio: number;
+  } | null,
+): number {
+  let modifier = ROLE_NEED_MODIFIERS[roleType]?.[needType] ?? 1.0;
+
+  // Community state affects individual tolerance
+  if (communityState) {
+    // When community is struggling, workers are more tolerant of personal needs
+    if (needType === "hunger" && communityState.foodPerCapita < 5) {
+      modifier *= 0.85; // More tolerant when food is scarce (help gather more)
+    }
+    if (needType === "thirst" && communityState.waterPerCapita < 8) {
+      modifier *= 0.9;
+    }
+    // When stockpiles are very full, agents can be less tolerant (relax more)
+    if (communityState.stockpileFillRatio > 0.8) {
+      modifier *= 1.1;
+    }
+  }
+
+  return Math.max(15, Math.min(70, baseThreshold * modifier));
 }
 
 export function evaluateCriticalNeeds(
@@ -42,18 +110,43 @@ export function evaluateCriticalNeeds(
   const needs = entityNeeds;
   const now = Date.now();
   const timeOfDay = deps.getCurrentTimeOfDay?.() || "midday";
+  const role = deps.getAgentRole?.(aiState.entityId);
+  const roleType = role?.roleType ?? "idle";
+  const communityState = deps.getCollectiveResourceState?.() ?? null;
 
-  let hungerThreshold = 45;
-  const thirstThreshold = 40;
-  let energyThreshold = 35;
+  // Base thresholds
+  let baseHungerThreshold = 45;
+  const baseThirstThreshold = 40;
+  let baseEnergyThreshold = 35;
 
+  // Time of day adjustments to base thresholds
   if (timeOfDay === "night" || timeOfDay === "deep_night") {
-    energyThreshold = 50; // More critical at night
-    hungerThreshold = 35; // Less critical at night
+    baseEnergyThreshold = 50; // More critical at night
+    baseHungerThreshold = 35; // Less critical at night
   } else if (timeOfDay === "morning" || timeOfDay === "dawn") {
-    hungerThreshold = 50; // More critical in morning
-    energyThreshold = 40; // Less critical after rest
+    baseHungerThreshold = 50; // More critical in morning
+    baseEnergyThreshold = 40; // Less critical after rest
   }
+
+  // Apply role and community state adjustments
+  const hungerThreshold = adjustThreshold(
+    baseHungerThreshold,
+    "hunger",
+    roleType,
+    communityState,
+  );
+  const thirstThreshold = adjustThreshold(
+    baseThirstThreshold,
+    "thirst",
+    roleType,
+    communityState,
+  );
+  const energyThreshold = adjustThreshold(
+    baseEnergyThreshold,
+    "energy",
+    roleType,
+    communityState,
+  );
 
   if (needs.thirst < thirstThreshold) {
     let waterTarget = null;

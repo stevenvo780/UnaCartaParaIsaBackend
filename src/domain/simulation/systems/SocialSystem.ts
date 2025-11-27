@@ -140,7 +140,6 @@ export class SocialSystem {
 
     this.updateTruces(now);
 
-    // Sync state for frontend
     if (!this.gameState.socialGraph) {
       this.gameState.socialGraph = {
         groups: this.groups,
@@ -480,7 +479,6 @@ export class SocialSystem {
       }
     }
 
-    // Clean up spatial tracking to prevent stale references
     this.spatialGrid.remove(agentId);
     this.positionCache.delete(agentId);
   }
@@ -686,6 +684,16 @@ export class SocialSystem {
       }
     }
     return friends;
+  }
+
+  public getGraphSnapshot(): {
+    groups: SocialGroup[];
+    relationships: Map<string, Map<string, number>>;
+  } {
+    return {
+      groups: this.groups,
+      relationships: this.edges,
+    };
   }
 
   public addSocialMemory(

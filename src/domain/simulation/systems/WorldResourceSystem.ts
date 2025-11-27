@@ -163,6 +163,120 @@ export class WorldResourceSystem {
     return resource;
   }
 
+  private spawnedChunks = new Set<string>();
+
+  /**
+   * Spawns resources for a specific chunk based on generated tiles and assets.
+   * This ensures that visual assets (like trees) are interactive resources.
+   */
+  public spawnResourcesForChunk(
+    chunkCoords: { x: number; y: number },
+    _chunkBounds: { x: number; y: number; width: number; height: number },
+    tiles: {
+      x: number;
+      y: number;
+      assets: {
+        terrain: string;
+        vegetation?: string[];
+        props?: string[];
+        decals?: string[];
+      };
+    }[][],
+  ): number {
+    const chunkKey = `${chunkCoords.x},${chunkCoords.y}`;
+    if (this.spawnedChunks.has(chunkKey)) {
+      return 0;
+    }
+    this.spawnedChunks.add(chunkKey);
+
+    let spawnedCount = 0;
+    const tileSize = 64;
+
+    for (const row of tiles) {
+      for (const tile of row) {
+        // Check for vegetation assets
+        if (tile.assets.vegetation) {
+          for (const asset of tile.assets.vegetation) {
+            const resourceType = this.mapAssetToResource(asset);
+            if (resourceType) {
+              const offsetX = (Math.random() - 0.5) * (tileSize * 0.6);
+              const offsetY = (Math.random() - 0.5) * (tileSize * 0.6);
+              const pixelX = tile.x * tileSize;
+              const pixelY = tile.y * tileSize;
+
+              const resource = this.spawnResource(
+                resourceType,
+                {
+                  x: pixelX + tileSize / 2 + offsetX,
+                  y: pixelY + tileSize / 2 + offsetY,
+                },
+                tile.assets.terrain.replace("terrain_", ""),
+              );
+
+              if (resource) spawnedCount++;
+            }
+          }
+        }
+
+        // Check for decal assets (random loot)
+        if (tile.assets.decals) {
+          for (const decal of tile.assets.decals) {
+            const resourceType = this.mapDecalToResource(decal);
+            if (resourceType) {
+              const offsetX = (Math.random() - 0.5) * (tileSize * 0.8);
+              const offsetY = (Math.random() - 0.5) * (tileSize * 0.8);
+              const pixelX = tile.x * tileSize;
+              const pixelY = tile.y * tileSize;
+
+              const resource = this.spawnResource(
+                resourceType,
+                {
+                  x: pixelX + tileSize / 2 + offsetX,
+                  y: pixelY + tileSize / 2 + offsetY,
+                },
+                tile.assets.terrain.replace("terrain_", ""),
+              );
+
+              if (resource) spawnedCount++;
+            }
+          }
+        }
+      }
+    }
+
+    if (spawnedCount > 0) {
+      logger.info(
+        `[WorldResourceSystem] Spawned ${spawnedCount} resources for chunk ${chunkKey}`,
+      );
+    }
+
+    return spawnedCount;
+  }
+
+  private mapAssetToResource(asset: string): WorldResourceType | null {
+    if (asset.startsWith("tree_")) return "tree";
+    if (asset.startsWith("plant_")) return "berry_bush";
+    if (asset.startsWith("prop_rock")) return "rock";
+    return null;
+  }
+
+  private mapDecalToResource(_decal: string): WorldResourceType | null {
+    // Random loot generation from decals
+    const rand = Math.random();
+
+    // 40% chance for small rock/stone
+    if (rand < 0.4) return "rock";
+
+    // 30% chance for berry bush (food)
+    if (rand < 0.7) return "berry_bush";
+
+    // 20% chance for mushroom (food)
+    if (rand < 0.9) return "mushroom_patch";
+
+    // 10% chance for trash pile (crafting materials)
+    return "trash_pile";
+  }
+
   private getResourcesForBiome(biome: string): WorldResourceConfig[] {
     const configs = [
       getResourceConfig("tree"),
@@ -294,7 +408,24 @@ export class WorldResourceSystem {
       position: resource.position,
     });
 
-    return { success: true, amount: 1 };
+    // Calculate actual harvest amount from config yields
+    const currentState =
+      resource.state === "harvested_partial" ? "depleted" : "pristine";
+    const yields = config.yields?.[currentState];
+    let harvestAmount = 1; // Default fallback
+
+    if (
+      yields &&
+      yields.amountMin !== undefined &&
+      yields.amountMax !== undefined
+    ) {
+      harvestAmount = Math.floor(
+        Math.random() * (yields.amountMax - yields.amountMin + 1) +
+        yields.amountMin,
+      );
+    }
+
+    return { success: true, amount: harvestAmount };
   }
 
   public removeResourcesInArea(bounds: {
