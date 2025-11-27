@@ -29,44 +29,6 @@ export enum ItemTier {
 }
 
 /**
- * Type representing all possible item rarity values.
- */
-export type ItemRarityValue = `${ItemRarity}`;
-
-/**
- * Type representing all possible item tier values.
- */
-export type ItemTierValue = `${ItemTier}`;
-
-/**
- * Array of all item rarities for iteration.
- */
-export const ALL_ITEM_RARITIES: readonly ItemRarity[] = Object.values(
-  ItemRarity,
-) as ItemRarity[];
-
-/**
- * Array of all item tiers for iteration.
- */
-export const ALL_ITEM_TIERS: readonly ItemTier[] = Object.values(
-  ItemTier,
-) as ItemTier[];
-
-/**
- * Type guard to check if a string is a valid ItemRarity.
- */
-export function isItemRarity(value: string): value is ItemRarity {
-  return Object.values(ItemRarity).includes(value as ItemRarity);
-}
-
-/**
- * Type guard to check if a string is a valid ItemTier.
- */
-export function isItemTier(value: string): value is ItemTier {
-  return Object.values(ItemTier).includes(value as ItemTier);
-}
-
-/**
  * Enumeration of item categories.
  * Defines the broad category classification of items.
  */
@@ -83,9 +45,126 @@ export enum ItemCategory {
 }
 
 /**
+ * Enumeration of all item IDs used in the simulation.
+ * This is the single source of truth for all item identifiers.
+ */
+export enum ItemId {
+  // Raw Materials
+  WOOD_LOG = "wood_log",
+  FIBER = "fiber",
+  STONE = "stone",
+  IRON_ORE = "iron_ore",
+  COPPER_ORE = "copper_ore",
+  CLAY = "clay",
+  WHEAT = "wheat",
+  BERRIES = "berries",
+  RAW_MEAT = "raw_meat",
+  FISH = "fish",
+  WATER = "water",
+  LEATHER_HIDE = "leather_hide",
+  COAL = "coal",
+  MUSHROOM_MYSTICAL = "mushroom_mystical",
+  GLOWING_CRYSTAL = "glowing_crystal",
+  MYSTICAL_FIBER = "mystical_fiber",
+  SWAMP_HERB = "swamp_herb",
+  REEDS = "reeds",
+  MOUNTAIN_WOOD = "mountain_wood",
+  RARE_GEMS = "rare_gems",
+  MEDICINAL_HERBS = "medicinal_herbs",
+  HONEY = "honey",
+  PINE_RESIN = "pine_resin",
+  COTTON = "cotton",
+  WILDFLOWERS = "wildflowers",
+  SCRAP_METAL = "scrap_metal",
+  OLD_TOOLS = "old_tools",
+  SEEDS = "seeds",
+
+  // Processed Materials
+  PLANK = "plank",
+  IRON_INGOT = "iron_ingot",
+  COPPER_INGOT = "copper_ingot",
+  LEATHER = "leather",
+  CLOTH = "cloth",
+  ROPE = "rope",
+  BRICK = "brick",
+  FLOUR = "flour",
+  BREAD = "bread",
+  COOKED_MEAT = "cooked_meat",
+  COOKED_FISH = "cooked_fish",
+  MEAT_STEW = "meat_stew",
+
+  // Tools & Weapons
+  STONE_AXE = "stone_axe",
+  STONE_PICKAXE = "stone_pickaxe",
+  IRON_AXE = "iron_axe",
+  IRON_PICKAXE = "iron_pickaxe",
+  WOODEN_CLUB = "wooden_club",
+  STONE_DAGGER = "stone_dagger",
+  IRON_SWORD = "iron_sword",
+  BOW = "bow",
+
+  // Armor
+  CLOTH_SHIRT = "cloth_shirt",
+  LEATHER_VEST = "leather_vest",
+  IRON_HELMET = "iron_helmet",
+
+  // Structures
+  WOODEN_FRAME = "wooden_frame",
+  STONE_FOUNDATION = "stone_foundation",
+  DOOR = "door",
+
+  // Tools & Equipment
+  ANVIL = "anvil",
+  SMITHING = "smithing",
+  STONE_AXE = "stone_axe",
+  STONE_PICKAXE = "stone_pickaxe",
+  IRON_AXE = "iron_axe",
+  IRON_PICKAXE = "iron_pickaxe",
+  WOODEN_CLUB = "wooden_club",
+  STONE_DAGGER = "stone_dagger",
+  IRON_SWORD = "iron_sword",
+  BOW = "bow",
+  CLOTH_SHIRT = "cloth_shirt",
+  LEATHER_VEST = "leather_vest",
+  IRON_HELMET = "iron_helmet",
+  WOODEN_FRAME = "wooden_frame",
+  STONE_FOUNDATION = "stone_foundation",
+  DOOR = "door",
+}
+
+/**
+ * Type representing all possible item rarity values.
+ */
+export type ItemRarityValue = `${ItemRarity}`;
+
+/**
+ * Type representing all possible item tier values.
+ */
+export type ItemTierValue = `${ItemTier}`;
+
+/**
  * Type representing all possible item category values.
  */
 export type ItemCategoryValue = `${ItemCategory}`;
+
+/**
+ * Type representing all possible item ID values.
+ */
+export type ItemIdValue = `${ItemId}`;
+
+/**
+ * Array of all item rarities for iteration.
+ */
+export const ALL_ITEM_RARITIES: readonly ItemRarity[] = Object.values(
+  ItemRarity,
+) as ItemRarity[];
+
+/**
+ * Array of all item tiers for iteration.
+ */
+export const ALL_ITEM_TIERS: readonly ItemTier[] = Object.values(
+  ItemTier,
+) as ItemTier[];
 
 /**
  * Array of all item categories for iteration.
@@ -95,8 +174,36 @@ export const ALL_ITEM_CATEGORIES: readonly ItemCategory[] = Object.values(
 ) as ItemCategory[];
 
 /**
+ * Array of all item IDs for iteration.
+ */
+export const ALL_ITEM_IDS: readonly ItemId[] = Object.values(
+  ItemId,
+) as ItemId[];
+
+/**
+ * Type guard to check if a string is a valid ItemRarity.
+ */
+export function isItemRarity(value: string): value is ItemRarity {
+  return Object.values(ItemRarity).includes(value as ItemRarity);
+}
+
+/**
+ * Type guard to check if a string is a valid ItemTier.
+ */
+export function isItemTier(value: string): value is ItemTier {
+  return Object.values(ItemTier).includes(value as ItemTier);
+}
+
+/**
  * Type guard to check if a string is a valid ItemCategory.
  */
 export function isItemCategory(value: string): value is ItemCategory {
   return Object.values(ItemCategory).includes(value as ItemCategory);
+}
+
+/**
+ * Type guard to check if a string is a valid ItemId.
+ */
+export function isItemId(value: string): value is ItemId {
+  return Object.values(ItemId).includes(value as ItemId);
 }

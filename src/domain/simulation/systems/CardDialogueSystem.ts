@@ -16,6 +16,7 @@ import {
 } from "../../../shared/constants/AmbientEnums";
 import { TimeOfDayPhase } from "../../../shared/constants/TimeEnums";
 import { NeedType } from "../../../shared/constants/AIEnums";
+import { ComparisonOperator } from "../../../shared/constants/ComparisonEnums";
 
 interface EmotionalContext {
   overallMood: number;
@@ -31,7 +32,7 @@ interface CardTemplate {
     needsBased?: Array<{
       need: keyof EntityNeedsData;
       threshold: number;
-      operator: "below" | "above";
+      operator: ComparisonOperator;
     }>;
     timeBased?: Array<{
       time: TimeOfDayPhase;
@@ -214,7 +215,7 @@ export class CardDialogueSystem {
       const satisfied = template.triggers.needsBased.every((trigger) => {
         const value = needs[trigger.need];
         if (value === undefined) return false;
-        return trigger.operator === "below"
+        return trigger.operator === ComparisonOperator.BELOW
           ? value <= trigger.threshold
           : value >= trigger.threshold;
       });
@@ -374,7 +375,7 @@ export class CardDialogueSystem {
         ],
         triggers: {
           needsBased: [
-            { need: NeedType.ENERGY, threshold: 50, operator: "above" },
+            { need: NeedType.ENERGY, threshold: 50, operator: ComparisonOperator.ABOVE },
           ],
         },
         emotionalTone: DialogueTone.EXCITED,
@@ -389,8 +390,8 @@ export class CardDialogueSystem {
         ],
         triggers: {
           needsBased: [
-            { need: NeedType.HUNGER, threshold: 60, operator: "above" },
-            { need: NeedType.ENERGY, threshold: 40, operator: "above" },
+            { need: NeedType.HUNGER, threshold: 60, operator: ComparisonOperator.ABOVE },
+            { need: NeedType.ENERGY, threshold: 40, operator: ComparisonOperator.ABOVE },
           ],
         },
         emotionalTone: DialogueTone.HAPPY,
@@ -405,7 +406,7 @@ export class CardDialogueSystem {
         ],
         triggers: {
           needsBased: [
-            { need: NeedType.HUNGER, threshold: 25, operator: "below" },
+            { need: NeedType.HUNGER, threshold: 25, operator: ComparisonOperator.BELOW },
           ],
         },
         emotionalTone: DialogueTone.WORRIED,
@@ -420,7 +421,7 @@ export class CardDialogueSystem {
         ],
         triggers: {
           needsBased: [
-            { need: NeedType.ENERGY, threshold: 30, operator: "below" },
+            { need: NeedType.ENERGY, threshold: 30, operator: ComparisonOperator.BELOW },
           ],
         },
         emotionalTone: DialogueTone.CONTEMPLATIVE,

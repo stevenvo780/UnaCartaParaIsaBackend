@@ -1,4 +1,5 @@
 import type { CraftingRecipe } from "../../domain/types/simulation/crafting";
+import { ItemId } from "../../shared/constants/ItemEnums";
 
 export class BiomeRecipesCatalog {
   private static readonly biomeRecipes: Record<string, CraftingRecipe[]> = {
@@ -7,11 +8,11 @@ export class BiomeRecipesCatalog {
         id: "mystical_potion",
         name: "Poción Mística",
         description: "Una poción brillante con propiedades místicas",
-        output: { itemId: "mystical_potion", quantity: 1 },
+        output: { itemId: ItemId.MYSTICAL_POTION, quantity: 1 },
         ingredients: [
-          { itemId: "mushroom_mystical", quantity: 3 },
-          { itemId: "glowing_crystal", quantity: 1 },
-          { itemId: "water", quantity: 2 },
+          { itemId: ItemId.MUSHROOM_MYSTICAL, quantity: 3 },
+          { itemId: ItemId.GLOWING_CRYSTAL, quantity: 1 },
+          { itemId: ItemId.WATER, quantity: 2 },
         ],
         requirements: {
           workstation: "alchemy_table",
@@ -24,11 +25,11 @@ export class BiomeRecipesCatalog {
         id: "crystal_tool",
         name: "Herramienta de Cristal",
         description: "Una herramienta mística que nunca se desgasta",
-        output: { itemId: "crystal_pickaxe", quantity: 1 },
+        output: { itemId: ItemId.CRYSTAL_PICKAXE, quantity: 1 },
         ingredients: [
-          { itemId: "glowing_crystal", quantity: 5 },
-          { itemId: "mystical_fiber", quantity: 3 },
-          { itemId: "plank", quantity: 2 },
+          { itemId: ItemId.GLOWING_CRYSTAL, quantity: 5 },
+          { itemId: ItemId.MYSTICAL_FIBER, quantity: 3 },
+          { itemId: ItemId.PLANK, quantity: 2 },
         ],
         requirements: {
           skill: "mysticism",
@@ -42,10 +43,10 @@ export class BiomeRecipesCatalog {
         id: "energy_crystal",
         name: "Cristal Energético",
         description: "Cristal procesado que almacena energía mística",
-        output: { itemId: "energy_crystal", quantity: 1 },
+        output: { itemId: ItemId.ENERGY_CRYSTAL, quantity: 1 },
         ingredients: [
-          { itemId: "glowing_crystal", quantity: 3 },
-          { itemId: "mushroom_mystical", quantity: 2 },
+          { itemId: ItemId.GLOWING_CRYSTAL, quantity: 3 },
+          { itemId: ItemId.MUSHROOM_MYSTICAL, quantity: 2 },
         ],
         craftingTime: 10000,
         difficulty: 5,
@@ -58,11 +59,11 @@ export class BiomeRecipesCatalog {
         id: "swamp_antidote",
         name: "Antídoto Pantanoso",
         description: "Cura envenenamiento y enfermedades",
-        output: { itemId: "swamp_antidote", quantity: 2 },
+        output: { itemId: ItemId.SWAMP_ANTIDOTE, quantity: 2 },
         ingredients: [
-          { itemId: "swamp_herb", quantity: 3 },
-          { itemId: "clay", quantity: 1 },
-          { itemId: "water", quantity: 2 },
+          { itemId: ItemId.SWAMP_HERB, quantity: 3 },
+          { itemId: ItemId.CLAY, quantity: 1 },
+          { itemId: ItemId.WATER, quantity: 2 },
         ],
         requirements: {
           skill: "herbalism",
@@ -76,10 +77,10 @@ export class BiomeRecipesCatalog {
         id: "reed_basket",
         name: "Cesta de Juncos",
         description: "Cesta ligera que aumenta capacidad de inventario",
-        output: { itemId: "reed_basket", quantity: 1 },
+        output: { itemId: ItemId.REED_BASKET, quantity: 1 },
         ingredients: [
-          { itemId: "reeds", quantity: 10 },
-          { itemId: "fiber", quantity: 5 },
+          { itemId: ItemId.REEDS, quantity: 10 },
+          { itemId: ItemId.FIBER, quantity: 5 },
         ],
         craftingTime: 12000,
         difficulty: 3,
@@ -89,10 +90,10 @@ export class BiomeRecipesCatalog {
         id: "clay_pottery",
         name: "Cerámica de Arcilla",
         description: "Vasija para almacenar agua y alimentos",
-        output: { itemId: "clay_pot", quantity: 1 },
+        output: { itemId: ItemId.CLAY_POT, quantity: 1 },
         ingredients: [
-          { itemId: "clay", quantity: 5 },
-          { itemId: "water", quantity: 2 },
+          { itemId: ItemId.CLAY, quantity: 5 },
+          { itemId: ItemId.WATER, quantity: 2 },
         ],
         requirements: {
           workstation: "kiln",
@@ -146,7 +147,7 @@ export class BiomeRecipesCatalog {
         description: "Cuerda extra fuerte para escalada",
         output: { itemId: "climbing_rope", quantity: 1 },
         ingredients: [
-          { itemId: "fiber", quantity: 8 },
+          { itemId: ItemId.FIBER, quantity: 8 },
           { itemId: "mountain_wood", quantity: 2 },
         ],
         craftingTime: 8000,
@@ -182,7 +183,7 @@ export class BiomeRecipesCatalog {
         ingredients: [
           { itemId: "flour", quantity: 3 },
           { itemId: "honey", quantity: 2 },
-          { itemId: "water", quantity: 1 },
+          { itemId: ItemId.WATER, quantity: 1 },
         ],
         requirements: {
           workstation: "oven",
@@ -199,7 +200,7 @@ export class BiomeRecipesCatalog {
         ingredients: [
           { itemId: "wood_log", quantity: 2 },
           { itemId: "pine_resin", quantity: 1 },
-          { itemId: "fiber", quantity: 1 },
+          { itemId: ItemId.FIBER, quantity: 1 },
         ],
         craftingTime: 5000,
         difficulty: 2,
@@ -228,7 +229,7 @@ export class BiomeRecipesCatalog {
         output: { itemId: "flower_dye", quantity: 3 },
         ingredients: [
           { itemId: "wildflowers", quantity: 10 },
-          { itemId: "water", quantity: 2 },
+          { itemId: ItemId.WATER, quantity: 2 },
         ],
         craftingTime: 6000,
         difficulty: 2,
@@ -241,7 +242,7 @@ export class BiomeRecipesCatalog {
         output: { itemId: "wheat_beer", quantity: 2 },
         ingredients: [
           { itemId: "wheat", quantity: 5 },
-          { itemId: "water", quantity: 3 },
+          { itemId: ItemId.WATER, quantity: 3 },
           { itemId: "honey", quantity: 1 },
         ],
         requirements: {
@@ -262,7 +263,7 @@ export class BiomeRecipesCatalog {
         ingredients: [
           { itemId: "scrap_metal", quantity: 5 },
           { itemId: "old_tools", quantity: 2 },
-          { itemId: "fiber", quantity: 3 },
+          { itemId: ItemId.FIBER, quantity: 3 },
         ],
         craftingTime: 8000,
         difficulty: 3,
