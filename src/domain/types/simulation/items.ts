@@ -1,4 +1,7 @@
-export type ItemTier = "raw" | "processed" | "craftable" | "special";
+import { ItemTier } from "../../../shared/constants/ItemEnums";
+
+// Re-export ItemTier enum for convenience
+export type { ItemTier };
 
 export type ItemCategory =
   | "material"

@@ -287,16 +287,16 @@ export class CrisisPredictorSystem {
 
   private suggestActions(type: CrisisPrediction["type"]): string[] {
     switch (type) {
-      case "resource_shortage":
+      case CrisisPredictionType.RESOURCE_SHORTAGE:
         return [
           "Priorizar construcción de graneros",
           "Aumentar raciones de emergencia",
         ];
-      case "mass_starvation":
+      case CrisisPredictionType.MASS_STARVATION:
         return ["Distribuir reservas", "Activar mercados de intercambio"];
-      case "population_crisis":
+      case CrisisPredictionType.POPULATION_CRISIS:
         return ["Reducir cargas de trabajo", "Abrir refugios temporales"];
-      case "system_collapse":
+      case CrisisPredictionType.SYSTEM_COLLAPSE:
       default:
         return ["Convocar consejo", "Activar protocolo de resiliencia"];
     }

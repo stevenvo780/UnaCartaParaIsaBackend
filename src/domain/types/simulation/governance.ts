@@ -1,12 +1,8 @@
 import type { ResourceCost } from "./economy";
+import { DemandType } from "../../../shared/constants/GovernanceEnums";
 
-export type DemandType =
-  | "food_shortage"
-  | "water_shortage"
-  | "housing_full"
-  | "defense_needed"
-  | "storage_needed"
-  | "infrastructure";
+// Re-export DemandType enum for convenience
+export type { DemandType };
 
 export interface SettlementDemand {
   id: string;

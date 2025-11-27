@@ -246,20 +246,17 @@ export class AIZoneHandler {
    */
   public pickActivityForZone(zoneType: string, _goal: AIGoal): ActivityType {
     switch (zoneType) {
-      case "food":
-      case "water":
+      case ZoneType.FOOD:
+      case ZoneType.WATER:
         return ActivityType.EATING;
-      case "rest":
-      case "shelter":
-      case "house":
+      case ZoneType.REST:
+      case ZoneType.SHELTER:
         return ActivityType.RESTING;
-      case "social":
-      case "market":
-      case "gathering":
+      case ZoneType.SOCIAL:
+      case ZoneType.MARKET:
+      case ZoneType.GATHERING:
         return ActivityType.SOCIALIZING;
-      case "work":
-      case "production":
-      case "crafting":
+      case ZoneType.WORK:
         return ActivityType.WORKING;
       default:
         return ActivityType.IDLE;

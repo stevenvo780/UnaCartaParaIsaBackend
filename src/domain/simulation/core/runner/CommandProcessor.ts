@@ -13,7 +13,19 @@ import type {
   ReputationCommandPayload,
   TaskCommandPayload,
 } from "../../../../shared/types/commands/SimulationCommand";
-import { SimulationCommandType } from "../../../../shared/constants/CommandEnums";
+import {
+  SimulationCommandType,
+  NeedsCommandType,
+  RecipeCommandType,
+  SocialCommandType,
+  ResearchCommandType,
+  WorldResourceCommandType,
+  DialogueCommandType,
+  BuildingCommandType,
+  ReputationCommandType,
+  TaskCommandType,
+  TimeCommandType,
+} from "../../../../shared/constants/CommandEnums";
 import type { SimulationRunner } from "../SimulationRunner";
 import type { GameResources } from "../../../types/game-types";
 import type { NeedsConfig } from "../../../types/simulation/needs";
@@ -41,7 +53,7 @@ export class CommandProcessor {
 
   private dispatchCommand(command: SimulationCommand): void {
     switch (command.type) {
-      case "SET_TIME_SCALE":
+      case SimulationCommandType.SET_TIME_SCALE:
         // Accessing private timeScale via a setter or public property would be ideal,
         // but for now we might need to add a setter to Runner or just access it if we make it public.
         // Assuming we will add setTimeScale to Runner.
@@ -49,16 +61,16 @@ export class CommandProcessor {
           Math.max(0.1, Math.min(10, command.multiplier)),
         );
         break;
-      case "APPLY_RESOURCE_DELTA":
+      case SimulationCommandType.APPLY_RESOURCE_DELTA:
         this.applyResourceDelta(command.delta);
         break;
-      case "GATHER_RESOURCE":
+      case SimulationCommandType.GATHER_RESOURCE:
         simulationEvents.emit(GameEventNames.RESOURCE_GATHERED, {
           resourceId: command.resourceId,
           amount: command.amount,
         });
         break;
-      case "GIVE_RESOURCE":
+      case SimulationCommandType.GIVE_RESOURCE:
         if (
           command.payload.agentId &&
           command.payload.resource &&
@@ -71,57 +83,57 @@ export class CommandProcessor {
           );
         }
         break;
-      case "SPAWN_AGENT":
+      case SimulationCommandType.SPAWN_AGENT:
         this.handleSpawnAgent(command);
         break;
-      case "KILL_AGENT":
+      case SimulationCommandType.KILL_AGENT:
         this.runner.lifeCycleSystem.removeAgent(command.agentId);
         break;
-      case "AGENT_COMMAND":
+      case SimulationCommandType.AGENT_COMMAND:
         this.handleAgentCommand(command);
         break;
-      case "ANIMAL_COMMAND":
+      case SimulationCommandType.ANIMAL_COMMAND:
         this.handleAnimalCommand(command);
         break;
-      case "NEEDS_COMMAND":
+      case SimulationCommandType.NEEDS_COMMAND:
         this.handleNeedsCommand(command);
         break;
-      case "RECIPE_COMMAND":
+      case SimulationCommandType.RECIPE_COMMAND:
         this.handleRecipeCommand(command);
         break;
-      case "SOCIAL_COMMAND":
+      case SimulationCommandType.SOCIAL_COMMAND:
         this.handleSocialCommand(command);
         break;
-      case "RESEARCH_COMMAND":
+      case SimulationCommandType.RESEARCH_COMMAND:
         this.handleResearchCommand(command);
         break;
-      case "WORLD_RESOURCE_COMMAND":
+      case SimulationCommandType.WORLD_RESOURCE_COMMAND:
         this.handleWorldResourceCommand(command);
         break;
-      case "DIALOGUE_COMMAND":
+      case SimulationCommandType.DIALOGUE_COMMAND:
         this.handleDialogueCommand(command);
         break;
-      case "BUILDING_COMMAND":
+      case SimulationCommandType.BUILDING_COMMAND:
         this.handleBuildingCommand(command);
         break;
-      case "REPUTATION_COMMAND":
+      case SimulationCommandType.REPUTATION_COMMAND:
         this.handleReputationCommand(command);
         break;
-      case "TASK_COMMAND":
+      case SimulationCommandType.TASK_COMMAND:
         this.handleTaskCommand(command);
         break;
-      case "TIME_COMMAND":
+      case SimulationCommandType.TIME_COMMAND:
         this.handleTimeCommand(command);
         break;
-      case "FORCE_EMERGENCE_EVALUATION":
+      case SimulationCommandType.FORCE_EMERGENCE_EVALUATION:
         this.runner.emergenceSystem.forcePatternEvaluation();
         break;
-      case "SAVE_GAME":
+      case SimulationCommandType.SAVE_GAME:
         this.runner.saveSimulation().catch((err) => {
           logger.error("Manual save failed:", err);
         });
         break;
-      case "PING":
+      case SimulationCommandType.PING:
       default:
         break;
     }
@@ -165,7 +177,7 @@ export class CommandProcessor {
     const payload = command.payload;
 
     switch (command.command) {
-      case "MOVE_TO":
+      case "MOVE_TO": // TODO: Create AgentCommandType enum
         if (
           payload &&
           typeof payload.x === "number" &&
@@ -183,7 +195,7 @@ export class CommandProcessor {
           });
         }
         break;
-      case "STOP_MOVEMENT":
+      case "STOP_MOVEMENT": // TODO: Create AgentCommandType enum
         this.runner.movementSystem.stopMovement(command.agentId);
         break;
       default:
@@ -218,7 +230,7 @@ export class CommandProcessor {
   ): void {
     const payload = command.payload ?? ({} as NeedsCommandPayload);
     switch (command.command) {
-      case "SATISFY_NEED":
+      case NeedsCommandType.SATISFY_NEED:
         if (
           payload.entityId &&
           payload.needType &&
@@ -231,7 +243,7 @@ export class CommandProcessor {
           );
         }
         break;
-      case "MODIFY_NEED":
+      case NeedsCommandType.MODIFY_NEED:
         if (
           payload.entityId &&
           payload.needType &&
@@ -244,7 +256,7 @@ export class CommandProcessor {
           );
         }
         break;
-      case "UPDATE_CONFIG":
+      case NeedsCommandType.UPDATE_CONFIG:
         this.runner.needsSystem.updateConfig(payload as Partial<NeedsConfig>);
         break;
     }
@@ -255,7 +267,7 @@ export class CommandProcessor {
   ): void {
     const payload = command.payload ?? ({} as RecipeCommandPayload);
     switch (command.command) {
-      case "TEACH_RECIPE":
+      case RecipeCommandType.TEACH_RECIPE:
         if ((payload.agentId || payload.teacherId) && payload.recipeId) {
           this.runner._recipeDiscoverySystem.teachRecipe(
             (payload.agentId as string) ?? (payload.teacherId as string) ?? "",
@@ -263,7 +275,7 @@ export class CommandProcessor {
           );
         }
         break;
-      case "SHARE_RECIPE":
+      case RecipeCommandType.SHARE_RECIPE:
         {
           const teacherId =
             (payload.teacherId as string | undefined) ??
@@ -293,7 +305,7 @@ export class CommandProcessor {
   ): void {
     const payload = command.payload ?? ({} as SocialCommandPayload);
     switch (command.command) {
-      case "IMPOSE_TRUCE":
+      case SocialCommandType.IMPOSE_TRUCE:
         if (
           payload.aId &&
           payload.bId &&
@@ -306,7 +318,7 @@ export class CommandProcessor {
           );
         }
         break;
-      case "SET_AFFINITY":
+      case SocialCommandType.SET_AFFINITY:
         if (payload.aId && payload.bId && typeof payload.value === "number") {
           this.runner.socialSystem.setAffinity(
             payload.aId as string,
@@ -315,7 +327,7 @@ export class CommandProcessor {
           );
         }
         break;
-      case "MODIFY_AFFINITY":
+      case SocialCommandType.MODIFY_AFFINITY:
         if (payload.aId && payload.bId && typeof payload.delta === "number") {
           this.runner.socialSystem.modifyAffinity(
             payload.aId as string,
@@ -324,14 +336,14 @@ export class CommandProcessor {
           );
         }
         break;
-      case "REMOVE_RELATIONSHIPS":
+      case SocialCommandType.REMOVE_RELATIONSHIPS:
         if (payload.agentId) {
           this.runner.socialSystem.removeRelationships(
             payload.agentId as string,
           );
         }
         break;
-      case "FRIENDLY_INTERACTION":
+      case SocialCommandType.FRIENDLY_INTERACTION:
         if (
           payload.agentA &&
           payload.agentB &&
@@ -349,7 +361,7 @@ export class CommandProcessor {
           );
         }
         break;
-      case "HOSTILE_ENCOUNTER":
+      case SocialCommandType.HOSTILE_ENCOUNTER:
         if (
           payload.agentA &&
           payload.agentB &&
@@ -375,14 +387,14 @@ export class CommandProcessor {
   ): void {
     const payload = command.payload ?? ({} as ResearchCommandPayload);
     switch (command.command) {
-      case "INITIALIZE_LINEAGE":
+      case ResearchCommandType.INITIALIZE_LINEAGE:
         if (payload.lineageId) {
           this.runner._researchSystem.initializeLineage(
             payload.lineageId as string,
           );
         }
         break;
-      case "RECIPE_DISCOVERED":
+      case ResearchCommandType.RECIPE_DISCOVERED:
         if (payload.recipeId) {
           const lineageId = this.runner.resolveLineageId(
             payload.lineageId as string | undefined,
@@ -405,7 +417,7 @@ export class CommandProcessor {
   ): void {
     const payload = command.payload ?? ({} as WorldResourceCommandPayload);
     switch (command.command) {
-      case "SPAWN_RESOURCE":
+      case WorldResourceCommandType.SPAWN_RESOURCE:
         if (payload.type && payload.position) {
           this.runner.worldResourceSystem.spawnResource(
             payload.type as string,
@@ -414,7 +426,7 @@ export class CommandProcessor {
           );
         }
         break;
-      case "HARVEST_RESOURCE":
+      case WorldResourceCommandType.HARVEST_RESOURCE:
         if (payload.resourceId && payload.agentId) {
           this.runner.worldResourceSystem.harvestResource(
             payload.resourceId as string,
@@ -430,7 +442,7 @@ export class CommandProcessor {
   ): void {
     const payload = command.payload ?? ({} as DialogueCommandPayload);
     switch (command.command) {
-      case "RESPOND_TO_CARD":
+      case DialogueCommandType.RESPOND_TO_CARD:
         if (payload.cardId && payload.choiceId) {
           this.runner.cardDialogueSystem.respondToCard(
             payload.cardId as string,
@@ -446,7 +458,7 @@ export class CommandProcessor {
   ): void {
     const payload = command.payload ?? ({} as BuildingCommandPayload);
     switch (command.command) {
-      case "START_UPGRADE":
+      case BuildingCommandType.START_UPGRADE:
         if (payload.zoneId && payload.agentId) {
           this.runner.buildingMaintenanceSystem.startUpgrade(
             payload.zoneId as string,
@@ -454,21 +466,21 @@ export class CommandProcessor {
           );
         }
         break;
-      case "CANCEL_UPGRADE":
+      case BuildingCommandType.CANCEL_UPGRADE:
         if (payload.zoneId) {
           this.runner.buildingMaintenanceSystem.cancelUpgrade(
             payload.zoneId as string,
           );
         }
         break;
-      case "ENQUEUE_CONSTRUCTION":
+      case BuildingCommandType.ENQUEUE_CONSTRUCTION:
         if (payload.buildingType) {
           this.runner.buildingSystem.enqueueConstruction(
             payload.buildingType as BuildingLabel,
           );
         }
         break;
-      case "CONSTRUCT_BUILDING":
+      case BuildingCommandType.CONSTRUCT_BUILDING:
         if (payload.buildingType) {
           this.runner.buildingSystem.constructBuilding(
             payload.buildingType as BuildingLabel,
@@ -484,7 +496,7 @@ export class CommandProcessor {
   ): void {
     const payload = command.payload ?? ({} as ReputationCommandPayload);
     switch (command.command) {
-      case "UPDATE_TRUST":
+      case ReputationCommandType.UPDATE_TRUST:
         if (
           payload.agentA &&
           payload.agentB &&
@@ -505,7 +517,7 @@ export class CommandProcessor {
   ): void {
     const payload = command.payload ?? ({} as TaskCommandPayload);
     switch (command.command) {
-      case "CREATE_TASK":
+      case TaskCommandType.CREATE_TASK:
         if (payload.type && typeof payload.requiredWork === "number") {
           this.runner.taskSystem.createTask({
             type: payload.type as TaskType,
@@ -530,7 +542,7 @@ export class CommandProcessor {
           });
         }
         break;
-      case "CONTRIBUTE_TO_TASK":
+      case TaskCommandType.CONTRIBUTE_TO_TASK:
         if (
           payload.taskId &&
           payload.agentId &&
@@ -544,7 +556,7 @@ export class CommandProcessor {
           );
         }
         break;
-      case "REMOVE_TASK":
+      case TaskCommandType.REMOVE_TASK:
         if (payload.taskId) {
           this.runner.taskSystem.removeTask(payload.taskId as string);
         }
@@ -555,7 +567,10 @@ export class CommandProcessor {
   private handleTimeCommand(
     command: Extract<SimulationCommand, { type: "TIME_COMMAND" }>,
   ): void {
-    if (command.command === "SET_WEATHER" && command.payload?.weatherType) {
+    if (
+      command.command === TimeCommandType.SET_WEATHER &&
+      command.payload?.weatherType
+    ) {
       const weatherType = command.payload.weatherType as string;
       if (
         this.runner.timeSystem &&

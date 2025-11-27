@@ -5,6 +5,7 @@ import type {
   ReputationEvent,
   LegendDeed,
 } from "../../types/simulation/legends";
+import { LegendTrend } from "../../../shared/constants/LegendEnums";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -90,7 +91,11 @@ export class LivingLegendsSystem {
 
     legend.reputation = data.newReputation;
     legend.reputationTrend =
-      data.delta > 0 ? "rising" : data.delta < 0 ? "falling" : "stable";
+      data.delta > 0
+        ? LegendTrend.RISING
+        : data.delta < 0
+          ? LegendTrend.FALLING
+          : LegendTrend.STABLE;
     legend.lastUpdate = Date.now();
 
     simulationEvents.emit(GameEventNames.LEGEND_UPDATE, { legend });
@@ -193,7 +198,7 @@ export class LivingLegendsSystem {
       agentId,
       agentName,
       reputation: 0,
-      reputationTrend: "stable",
+      reputationTrend: LegendTrend.STABLE,
       titles: [],
       currentTitle: "",
       deeds: [],

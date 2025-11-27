@@ -300,9 +300,12 @@ export class EventRegistry {
           const relevantAgents = this.runner.state.agents.filter((agent) => {
             const role = this.runner.roleSystem.getAgentRole(agent.id);
             if (!role) return false;
-            return ["guard", "builder", "farmer", "gatherer"].includes(
-              role.roleType,
-            );
+            return [
+              RoleType.GUARD,
+              RoleType.BUILDER,
+              RoleType.FARMER,
+              RoleType.GATHERER,
+            ].includes(role.roleType as RoleType);
           });
 
           for (const agent of relevantAgents.slice(0, 3)) {
@@ -364,8 +367,13 @@ export class EventRegistry {
         if (data.currentStage === "elder") {
           const role = this.runner.roleSystem.getAgentRole(data.entityId);
           if (role) {
-            const physicalRoles = ["logger", "quarryman", "builder", "guard"];
-            if (physicalRoles.includes(role.roleType)) {
+            const physicalRoles = [
+              RoleType.LOGGER,
+              RoleType.QUARRYMAN,
+              RoleType.BUILDER,
+              RoleType.GUARD,
+            ];
+            if (physicalRoles.includes(role.roleType as RoleType)) {
               const agent = this.runner.entityIndex.getAgent(data.entityId);
               if (agent) {
                 this.runner.roleSystem.reassignRole(
@@ -462,7 +470,10 @@ export class EventRegistry {
         roleId?: string;
         timestamp: number;
       }) => {
-        if (data.roleType === "leader" || data.roleType === "guard") {
+        if (
+          data.roleType === RoleType.LEADER ||
+          data.roleType === RoleType.GUARD
+        ) {
           this.runner.reputationSystem.updateReputation(
             data.agentId,
             0.1,

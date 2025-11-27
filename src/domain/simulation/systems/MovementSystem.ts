@@ -304,9 +304,7 @@ export class MovementSystem extends EventEmitter {
       this.updateEntityActivity(state, now);
       this.maybeStartIdleWander(state, now);
 
-      const agent =
-        this.entityIndex?.getAgent(entityId) ??
-        this.gameState.agents.find((a) => a.id === entityId);
+      const agent = this.getAgentFast(entityId);
       if (agent) {
         if (!agent.position) {
           agent.position = {
@@ -358,9 +356,7 @@ export class MovementSystem extends EventEmitter {
       state.currentPosition.y += dy * ratio;
     }
 
-    const agent =
-      this.entityIndex?.getAgent(state.entityId) ??
-      this.gameState.agents.find((a) => a.id === state.entityId);
+    const agent = this.getAgentFast(state.entityId);
     if (agent) {
       if (!agent.position) {
         agent.position = {
@@ -406,9 +402,7 @@ export class MovementSystem extends EventEmitter {
       state.currentPosition.x = state.targetPosition.x;
       state.currentPosition.y = state.targetPosition.y;
 
-      const agent =
-        this.entityIndex?.getAgent(state.entityId) ??
-        this.gameState.agents.find((a) => a.id === state.entityId);
+      const agent = this.getAgentFast(state.entityId);
       if (agent) {
         if (!agent.position) {
           agent.position = {
@@ -482,9 +476,7 @@ export class MovementSystem extends EventEmitter {
 
     this.movementStates.set(entityId, movementState);
 
-    const agent =
-      this.entityIndex?.getAgent(entityId) ??
-      this.gameState.agents.find((a) => a.id === entityId);
+    const agent = this.getAgentFast(entityId);
     if (agent) {
       agent.position = { ...initialPosition };
     }
@@ -965,5 +957,25 @@ export class MovementSystem extends EventEmitter {
     entityId: string,
   ): EntityMovementState | undefined {
     return this.movementStates.get(entityId);
+  }
+
+  /**
+   * Gets agent profile with O(1) lookup using AgentRegistry, EntityIndex, or fallback
+   */
+  private getAgentFast(
+    agentId: string,
+  ): import("../../types/simulation/agents").AgentProfile | undefined {
+    // Try AgentRegistry first (O(1))
+    if (this.agentRegistry) {
+      const profile = this.agentRegistry.getProfile(agentId);
+      if (profile) return profile;
+    }
+    // Try EntityIndex (O(1))
+    if (this.entityIndex) {
+      const agent = this.entityIndex.getAgent(agentId);
+      if (agent) return agent;
+    }
+    // Fallback to gameState.agents.find (O(n)) - should rarely happen
+    return this.gameState.agents.find((a) => a.id === agentId);
   }
 }

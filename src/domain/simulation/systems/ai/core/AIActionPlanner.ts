@@ -1,6 +1,6 @@
 import type { GameState } from "../../../../types/game-types";
 import type { AIGoal, AgentAction } from "../../../../types/simulation/ai";
-import { ActionType } from "../../../../../shared/constants/AIEnums";
+import { ActionType, GoalType } from "../../../../../shared/constants/AIEnums";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 
 export interface AIActionPlannerDeps {
@@ -41,65 +41,65 @@ export class AIActionPlanner {
     const timestamp = Date.now();
 
     switch (goal.type) {
-      case "satisfy_need":
+      case GoalType.SATISFY_NEED:
         return this.planSatisfyNeed(agentId, goal, timestamp);
 
-      case "satisfy_hunger":
+      case GoalType.SATISFY_HUNGER:
         return this.planSatisfyHunger(agentId, goal, timestamp);
 
-      case "satisfy_thirst":
+      case GoalType.SATISFY_THIRST:
         return this.planSatisfyThirst(agentId, goal, timestamp);
 
-      case "satisfy_energy":
+      case GoalType.SATISFY_ENERGY:
         return this.planSatisfyEnergy(agentId, goal, timestamp);
 
-      case "satisfy_social":
+      case GoalType.SATISFY_SOCIAL:
         return this.planSatisfySocial(agentId, goal, timestamp);
 
-      case "satisfy_fun":
+      case GoalType.SATISFY_FUN:
         return this.planSatisfyFun(agentId, goal, timestamp);
 
-      case "gather":
+      case GoalType.GATHER:
         return this.planGather(agentId, goal, timestamp);
 
-      case "work":
+      case GoalType.WORK:
         return this.planWork(agentId, goal, timestamp);
 
-      case "craft":
+      case GoalType.CRAFT:
         return this.planCraft(agentId, goal, timestamp);
 
-      case "deposit":
+      case GoalType.DEPOSIT:
         return this.planDeposit(agentId, goal, timestamp);
 
-      case "flee":
+      case GoalType.FLEE:
         return this.planFlee(agentId, goal, timestamp);
 
-      case "attack":
-      case "combat":
+      case GoalType.ATTACK:
+      case GoalType.COMBAT:
         return this.planCombat(agentId, goal, timestamp);
 
-      case "assist":
+      case GoalType.ASSIST:
         return this.planAssist(agentId, goal, timestamp);
 
-      case "social":
+      case GoalType.SOCIAL:
         return this.planSocial(agentId, goal, timestamp);
 
-      case "explore":
+      case GoalType.EXPLORE:
         return this.planExplore(agentId, goal, timestamp);
 
-      case "construction":
+      case GoalType.CONSTRUCTION:
         return this.planConstruction(agentId, goal, timestamp);
 
-      case "idle":
+      case GoalType.IDLE:
         return { actionType: ActionType.IDLE, agentId, timestamp };
 
-      case "rest":
+      case GoalType.REST:
         return this.planRest(agentId, goal, timestamp);
 
-      case "inspect":
+      case GoalType.INSPECT:
         return this.planInspect(agentId, goal, timestamp);
 
-      case "hunt":
+      case GoalType.HUNT:
         return this.planHunt(agentId, goal, timestamp);
 
       default:
@@ -949,28 +949,12 @@ export class AIActionPlanner {
     let targetId = goal.targetId;
     let targetPosition = goal.targetPosition;
 
-    if (!targetId && this.deps.gameState.animals?.animals) {
-      const agentPos = this.deps.getAgentPosition(agentId);
-      if (agentPos) {
-        let minDist = Infinity;
-        let nearestAnimal = null;
-
-        for (const animal of this.deps.gameState.animals.animals) {
-          if (animal.isDead) continue;
-          const dist = Math.hypot(
-            agentPos.x - animal.position.x,
-            agentPos.y - animal.position.y,
-          );
-          if (dist < minDist && dist < this.EXPLORE_RANGE * 2) {
-            minDist = dist;
-            nearestAnimal = animal;
-          }
-        }
-
-        if (nearestAnimal) {
-          targetId = nearestAnimal.id;
-          targetPosition = nearestAnimal.position;
-        }
+    // Use findNearestHuntableAnimal if available (delegates to AnimalRegistry)
+    if (!targetId && this.deps.findNearestHuntableAnimal) {
+      const nearestAnimal = this.deps.findNearestHuntableAnimal(agentId);
+      if (nearestAnimal) {
+        targetId = nearestAnimal.id;
+        targetPosition = { x: nearestAnimal.x, y: nearestAnimal.y };
       }
     }
 

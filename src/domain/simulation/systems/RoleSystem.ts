@@ -281,14 +281,14 @@ export class RoleSystem extends EventEmitter {
     agents.forEach((agent) => {
       if (!this.roles.has(agent.id)) {
         // Check resource gatherer needs first
-        const currentLoggers = countRole("logger");
-        const currentQuarrymen = countRole("quarryman");
-        const currentHunters = countRole("hunter");
+        const currentLoggers = countRole(RoleTypeEnum.LOGGER);
+        const currentQuarrymen = countRole(RoleTypeEnum.QUARRYMAN);
+        const currentHunters = countRole(RoleTypeEnum.HUNTER);
 
         // Priority: logger > quarryman > hunter > best role
         if (currentLoggers < minLoggers) {
           const loggerConfig = ROLE_DEFINITIONS.find(
-            (r) => r.type === "logger",
+            (r) => r.type === RoleTypeEnum.LOGGER,
           );
           if (loggerConfig && this.meetsRequirements(agent, loggerConfig)) {
             const result = this.reassignRole(agent.id, RoleTypeEnum.LOGGER);
@@ -301,7 +301,7 @@ export class RoleSystem extends EventEmitter {
 
         if (currentQuarrymen < minQuarrymen) {
           const quarrymanConfig = ROLE_DEFINITIONS.find(
-            (r) => r.type === "quarryman",
+            (r) => r.type === RoleTypeEnum.QUARRYMAN,
           );
           if (
             quarrymanConfig &&
@@ -317,7 +317,7 @@ export class RoleSystem extends EventEmitter {
 
         if (currentHunters < minHunters) {
           const hunterConfig = ROLE_DEFINITIONS.find(
-            (r) => r.type === "hunter",
+            (r) => r.type === RoleTypeEnum.HUNTER,
           );
           if (hunterConfig && this.meetsRequirements(agent, hunterConfig)) {
             const result = this.reassignRole(agent.id, RoleTypeEnum.HUNTER);
@@ -333,14 +333,24 @@ export class RoleSystem extends EventEmitter {
     });
 
     // Second pass: ensure minimum resource gatherers
-    this.ensureMinimumRole("logger", minLoggers, agents, "🪓 Forced logger");
     this.ensureMinimumRole(
-      "quarryman",
+      RoleTypeEnum.LOGGER,
+      minLoggers,
+      agents,
+      "🪓 Forced logger",
+    );
+    this.ensureMinimumRole(
+      RoleTypeEnum.QUARRYMAN,
       minQuarrymen,
       agents,
       "⛏️ Forced quarryman",
     );
-    this.ensureMinimumRole("hunter", minHunters, agents, "🎯 Forced hunter");
+    this.ensureMinimumRole(
+      RoleTypeEnum.HUNTER,
+      minHunters,
+      agents,
+      "🎯 Forced hunter",
+    );
   }
 
   private ensureMinimumRole(
@@ -366,8 +376,8 @@ export class RoleSystem extends EventEmitter {
 
       // Don't steal from other essential roles
       if (
-        currentRole?.roleType === "logger" ||
-        currentRole?.roleType === "quarryman"
+        currentRole?.roleType === RoleTypeEnum.LOGGER ||
+        currentRole?.roleType === RoleTypeEnum.QUARRYMAN
       ) {
         continue;
       }
@@ -483,16 +493,16 @@ export class RoleSystem extends EventEmitter {
   }
 
   private getMaxSlotsForRole(roleType: string): number {
-    const limits: Record<string, number> = {
-      logger: 10,
-      quarryman: 10,
-      builder: 5,
-      farmer: 10,
-      gatherer: 15,
-      guard: 8,
-      hunter: 10,
+    const limits: Partial<Record<RoleType, number>> = {
+      [RoleTypeEnum.LOGGER]: 10,
+      [RoleTypeEnum.QUARRYMAN]: 10,
+      [RoleTypeEnum.BUILDER]: 5,
+      [RoleTypeEnum.FARMER]: 10,
+      [RoleTypeEnum.GATHERER]: 15,
+      [RoleTypeEnum.GUARD]: 8,
+      [RoleTypeEnum.HUNTER]: 10,
     };
-    return limits[roleType] || 5;
+    return limits[roleType as RoleType] || 5;
   }
 
   public getAgentRole(agentId: string): AgentRole | undefined {
@@ -635,43 +645,43 @@ export class RoleSystem extends EventEmitter {
 
     // Base distribution (percentages)
     const baseDistribution: Record<RoleType, number> = {
-      logger: 0.15,
-      quarryman: 0.1,
-      builder: 0.15,
-      farmer: 0.15,
-      gatherer: 0.15,
-      guard: 0.1,
-      hunter: 0.1,
-      craftsman: 0.05,
-      leader: 0.03,
-      idle: 0.02,
+      [RoleTypeEnum.LOGGER]: 0.15,
+      [RoleTypeEnum.QUARRYMAN]: 0.1,
+      [RoleTypeEnum.BUILDER]: 0.15,
+      [RoleTypeEnum.FARMER]: 0.15,
+      [RoleTypeEnum.GATHERER]: 0.15,
+      [RoleTypeEnum.GUARD]: 0.1,
+      [RoleTypeEnum.HUNTER]: 0.1,
+      [RoleTypeEnum.CRAFTSMAN]: 0.05,
+      [RoleTypeEnum.LEADER]: 0.03,
+      [RoleTypeEnum.IDLE]: 0.02,
     };
 
     // Adjust based on needs
     if (collectiveState.foodPerCapita < 8) {
-      baseDistribution.farmer += 0.1;
-      baseDistribution.hunter += 0.05;
-      baseDistribution.builder -= 0.05;
-      baseDistribution.craftsman -= 0.05;
-      baseDistribution.guard -= 0.05;
+      baseDistribution[RoleTypeEnum.FARMER] += 0.1;
+      baseDistribution[RoleTypeEnum.HUNTER] += 0.05;
+      baseDistribution[RoleTypeEnum.BUILDER] -= 0.05;
+      baseDistribution[RoleTypeEnum.CRAFTSMAN] -= 0.05;
+      baseDistribution[RoleTypeEnum.GUARD] -= 0.05;
     }
 
     if (collectiveState.waterPerCapita < 12) {
-      baseDistribution.gatherer += 0.1;
-      baseDistribution.craftsman -= 0.05;
-      baseDistribution.guard -= 0.05;
+      baseDistribution[RoleTypeEnum.GATHERER] += 0.1;
+      baseDistribution[RoleTypeEnum.CRAFTSMAN] -= 0.05;
+      baseDistribution[RoleTypeEnum.GUARD] -= 0.05;
     }
 
     if (collectiveState.totalWood < 80) {
-      baseDistribution.logger += 0.1;
-      baseDistribution.farmer -= 0.05;
-      baseDistribution.hunter -= 0.05;
+      baseDistribution[RoleTypeEnum.LOGGER] += 0.1;
+      baseDistribution[RoleTypeEnum.FARMER] -= 0.05;
+      baseDistribution[RoleTypeEnum.HUNTER] -= 0.05;
     }
 
     if (collectiveState.totalStone < 40) {
-      baseDistribution.quarryman += 0.1;
-      baseDistribution.farmer -= 0.05;
-      baseDistribution.hunter -= 0.05;
+      baseDistribution[RoleTypeEnum.QUARRYMAN] += 0.1;
+      baseDistribution[RoleTypeEnum.FARMER] -= 0.05;
+      baseDistribution[RoleTypeEnum.HUNTER] -= 0.05;
     }
 
     // Convert to absolute numbers

@@ -155,26 +155,29 @@ export class AmbientAwarenessSystem {
   }
 
   private resolveMusicMood(wellbeing: CollectiveWellbeing): string {
-    if (wellbeing.mood === "thriving" && wellbeing.trend === "improving")
+    if (
+      wellbeing.mood === AmbientMood.THRIVING &&
+      wellbeing.trend === CrisisTrend.IMPROVING
+    )
       return "harmonious";
-    if (wellbeing.mood === "comfortable") return "neutral";
-    if (wellbeing.mood === "stressed") return "tense";
-    if (wellbeing.mood === "crisis") return "ominous";
-    if (wellbeing.mood === "collapse") return "chaotic";
+    if (wellbeing.mood === AmbientMood.COMFORTABLE) return "neutral";
+    if (wellbeing.mood === AmbientMood.STRESSED) return "tense";
+    if (wellbeing.mood === AmbientMood.CRISIS) return "ominous";
+    if (wellbeing.mood === AmbientMood.COLLAPSE) return "chaotic";
     return "neutral";
   }
 
   private resolveTint(mood: AmbientMood): number {
     switch (mood) {
-      case "thriving":
+      case AmbientMood.THRIVING:
         return 0xffffcc;
-      case "comfortable":
+      case AmbientMood.COMFORTABLE:
         return 0xffffff;
-      case "stressed":
+      case AmbientMood.STRESSED:
         return 0xccccff;
-      case "crisis":
+      case AmbientMood.CRISIS:
         return 0xff9999;
-      case "collapse":
+      case AmbientMood.COLLAPSE:
         return 0x994444;
       default:
         return 0xffffff;
@@ -183,15 +186,15 @@ export class AmbientAwarenessSystem {
 
   private resolveParticleIntensity(mood: AmbientMood): number {
     switch (mood) {
-      case "thriving":
+      case AmbientMood.THRIVING:
         return 0.8;
-      case "comfortable":
+      case AmbientMood.COMFORTABLE:
         return 0.4;
-      case "stressed":
+      case AmbientMood.STRESSED:
         return 0.3;
-      case "crisis":
+      case AmbientMood.CRISIS:
         return 0.6;
-      case "collapse":
+      case AmbientMood.COLLAPSE:
         return 0.9;
       default:
         return 0.5;
@@ -204,24 +207,24 @@ export class AmbientAwarenessSystem {
   ): number {
     let base = 1;
     switch (mood) {
-      case "thriving":
+      case AmbientMood.THRIVING:
         base = 0.6;
         break;
-      case "comfortable":
+      case AmbientMood.COMFORTABLE:
         base = 0.8;
         break;
-      case "stressed":
+      case AmbientMood.STRESSED:
         base = 1.2;
         break;
-      case "crisis":
+      case AmbientMood.CRISIS:
         base = 1.8;
         break;
-      case "collapse":
+      case AmbientMood.COLLAPSE:
         base = 2.4;
         break;
     }
 
-    if (trend === "improving") base *= 0.9;
+    if (trend === CrisisTrend.IMPROVING) base *= 0.9;
     else if (trend === "worsening") base *= 1.1;
 
     return base;

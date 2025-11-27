@@ -5,11 +5,11 @@ import type {
   GovernanceSnapshot,
   SettlementDemand,
   SettlementStats,
-  DemandType,
 } from "../../types/simulation/governance";
 import type { ResourceCost } from "../../types/simulation/economy";
 import type { RoleType } from "../../types/simulation/roles";
 import { RoleType as RoleTypeEnum } from "../../../shared/constants/RoleEnums";
+import { DemandType } from "../../../shared/constants/GovernanceEnums";
 import { GameEventNames, simulationEvents } from "../core/events";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 import { InventorySystem } from "./InventorySystem";
@@ -66,18 +66,18 @@ const DEMAND_SOLUTIONS: Partial<
     }
   >
 > = {
-  housing_full: {
+  [DemandType.HOUSING_FULL]: {
     project: "build_house",
     cost: { wood: 40, stone: 20 },
     roleAssignment: { role: RoleTypeEnum.BUILDER, count: 2 },
   },
-  food_shortage: {
+  [DemandType.FOOD_SHORTAGE]: {
     project: "assign_hunters",
     cost: { wood: 0, stone: 0 },
     resourceBoost: { food: 40 },
     roleAssignment: { role: RoleTypeEnum.HUNTER, count: 3 },
   },
-  water_shortage: {
+  [DemandType.WATER_SHORTAGE]: {
     project: "gather_water",
     cost: { wood: 0, stone: 0 },
     resourceBoost: { water: 30 },
@@ -107,18 +107,23 @@ export class GovernanceSystem {
   }): void => {
     const occupancy = payload.occupancy ?? 1;
     const priority = 7 + Math.min(3, Math.max(0, (occupancy - 0.8) * 10));
-    this.createDemand("housing_full", priority, "Ocupación de viviendas alta", {
-      occupancy,
-      free: payload.free ?? 0,
-      totalCapacity: payload.totalCapacity ?? 0,
-    });
+    this.createDemand(
+      DemandType.HOUSING_FULL,
+      priority,
+      "Ocupación de viviendas alta",
+      {
+        occupancy,
+        free: payload.free ?? 0,
+        totalCapacity: payload.totalCapacity ?? 0,
+      },
+    );
   };
 
   private readonly handleHomeless = (payload: { count?: number }): void => {
     const count = payload.count ?? 1;
     const priority = 8 + Math.min(4, Math.floor(count / 2));
     this.createDemand(
-      "housing_full",
+      DemandType.HOUSING_FULL,
       priority,
       "Agentes sin hogar detectados",
       {
@@ -128,7 +133,7 @@ export class GovernanceSystem {
   };
 
   private readonly handleNoHouses = (): void => {
-    this.createDemand("housing_full", 9, "No hay casas disponibles");
+    this.createDemand(DemandType.HOUSING_FULL, 9, "No hay casas disponibles");
   };
 
   constructor(
@@ -318,7 +323,11 @@ export class GovernanceSystem {
     const foodPolicy = this.policies.get("food_security");
     if (foodPolicy?.enabled) {
       if (stats.foodPerCapita < (foodPolicy.threshold.foodPerCapita ?? 5)) {
-        this.createDemand("food_shortage", 8, "Reservas de comida bajas", {
+        this.createDemand(
+          DemandType.FOOD_SHORTAGE,
+          8,
+          "Reservas de comida bajas",
+          {
           foodPerCapita: stats.foodPerCapita,
           population: stats.population,
         });
@@ -328,7 +337,11 @@ export class GovernanceSystem {
     const waterPolicy = this.policies.get("water_supply");
     if (waterPolicy?.enabled) {
       if (stats.waterPerCapita < (waterPolicy.threshold.waterPerCapita ?? 8)) {
-        this.createDemand("water_shortage", 9, "Reservas de agua bajas", {
+        this.createDemand(
+          DemandType.WATER_SHORTAGE,
+          9,
+          "Reservas de agua bajas",
+          {
           waterPerCapita: stats.waterPerCapita,
           population: stats.population,
         });
@@ -341,7 +354,7 @@ export class GovernanceSystem {
         stats.housingOccupancy >
         (housingPolicy.threshold.housingOccupancy ?? 0.8)
       ) {
-        this.createDemand("housing_full", 7, "Viviendas casi llenas", {
+        this.createDemand(DemandType.HOUSING_FULL, 7, "Viviendas casi llenas", {
           occupancy: stats.housingOccupancy,
           population: stats.population,
           capacity: stats.housingCapacity,
@@ -504,15 +517,15 @@ export class GovernanceSystem {
           score += (agent.traits.diligence ?? 0.5) * 25;
           score += (agent.traits.cooperation ?? 0.5) * 25;
           break;
-        case "farmer":
+        case RoleTypeEnum.FARMER:
           score += (agent.traits.diligence ?? 0.5) * 30;
           score += (agent.traits.curiosity ?? 0.5) * 10;
           break;
-        case "logger":
-        case "quarryman":
+        case RoleTypeEnum.LOGGER:
+        case RoleTypeEnum.QUARRYMAN:
           score += (agent.traits.diligence ?? 0.5) * 35;
           break;
-        case "guard":
+        case RoleTypeEnum.GUARD:
           score += (agent.traits.cooperation ?? 0.5) * 25;
           score += (agent.traits.diligence ?? 0.5) * 20;
           break;
@@ -556,15 +569,15 @@ export class GovernanceSystem {
     if (!resources) return;
 
     switch (type) {
-      case "housing_full":
+      case DemandType.HOUSING_FULL:
         this.housingProjectsStarted += 1;
         break;
-      case "food_shortage":
+      case DemandType.FOOD_SHORTAGE:
         if (solution?.resourceBoost?.food) {
           resources.materials.food += solution.resourceBoost.food;
         }
         break;
-      case "water_shortage":
+      case DemandType.WATER_SHORTAGE:
         if (solution?.resourceBoost?.water) {
           resources.materials.water += solution.resourceBoost.water;
         }
@@ -579,12 +592,15 @@ export class GovernanceSystem {
     const lineage = DEFAULT_LINEAGE;
     let multiplier = 1;
 
-    if (type === "housing_full") {
+    if (type === DemandType.HOUSING_FULL) {
       multiplier = this.divineFavorSystem.getMultiplier(
         lineage,
         "productivity_boost",
       );
-    } else if (type === "food_shortage" || type === "water_shortage") {
+    } else if (
+      type === DemandType.FOOD_SHORTAGE ||
+      type === DemandType.WATER_SHORTAGE
+    ) {
       multiplier = this.divineFavorSystem.getMultiplier(lineage, "prosperity");
     }
 
