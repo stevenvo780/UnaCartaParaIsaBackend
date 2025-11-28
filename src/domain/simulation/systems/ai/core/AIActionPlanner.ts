@@ -21,6 +21,11 @@ export interface AIActionPlannerDeps {
   findNearestHuntableAnimal?: (
     entityId: string,
   ) => { id: string; x: number; y: number; type: string } | null;
+  /**
+   * Gets the current position of an animal by ID.
+   * Used by planHunt to track moving animals instead of using stale goal positions.
+   */
+  getAnimalPosition?: (animalId: string) => { x: number; y: number } | null;
 }
 
 import { logger } from "../../../../../infrastructure/utils/logger";
@@ -992,6 +997,25 @@ export class AIActionPlanner {
   ): AgentAction | null {
     let targetId = goal.targetId;
     let targetPosition = goal.targetPosition;
+
+    // If we have a targetId, always get the CURRENT position of the animal
+    // because animals move constantly (especially when fleeing)
+    if (targetId && this.deps.getAnimalPosition) {
+      const currentPos = this.deps.getAnimalPosition(targetId);
+      if (currentPos) {
+        targetPosition = currentPos;
+        logger.debug(
+          `🎯 [Hunt] ${agentId}: Updated target position for ${targetId} to (${Math.round(currentPos.x)}, ${Math.round(currentPos.y)})`,
+        );
+      } else {
+        // Animal is dead or gone, clear target to find a new one
+        logger.debug(
+          `🎯 [Hunt] ${agentId}: Target ${targetId} not found, searching for new prey`,
+        );
+        targetId = undefined;
+        targetPosition = undefined;
+      }
+    }
 
     if (!targetId && this.deps.findNearestHuntableAnimal) {
       const nearestAnimal = this.deps.findNearestHuntableAnimal(agentId);

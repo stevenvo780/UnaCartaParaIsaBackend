@@ -404,6 +404,15 @@ export class AISystem extends EventEmitter {
         entityId: string,
       ): { id: string; x: number; y: number; type: string } | null =>
         this.findNearestHuntableAnimal(entityId),
+      getAnimalPosition: (
+        animalId: string,
+      ): { x: number; y: number } | null => {
+        const animal = this.animalSystem?.getAnimal(animalId);
+        if (animal && !animal.isDead) {
+          return { x: animal.position.x, y: animal.position.y };
+        }
+        return null;
+      },
     });
 
     this.actionExecutor = new AIActionExecutor({
@@ -2373,6 +2382,44 @@ export class AISystem extends EventEmitter {
       logger.debug(
         `📍 [AI] ${payload.agentId}: arrived (prev=${prevAction ?? "none"}), ready for harvest`,
       );
+      
+      // For HUNT goals with moving targets, immediately plan the next action
+      // to reduce the time window where the animal can escape
+      if (aiState.currentGoal?.type === GoalTypeEnum.HUNT && aiState.currentGoal.targetId) {
+        const animal = this.animalSystem?.getAnimal(aiState.currentGoal.targetId);
+        if (animal && !animal.isDead) {
+          const agentPos = this.agentRegistry?.getPosition(payload.agentId);
+          if (agentPos) {
+            const dist = Math.hypot(
+              agentPos.x - animal.position.x,
+              agentPos.y - animal.position.y,
+            );
+            // If in attack range, execute attack immediately
+            if (dist < 80) {
+              logger.debug(
+                `⚔️ [AI] ${payload.agentId}: In range (${dist.toFixed(0)}), attacking ${animal.id}`,
+              );
+              const attackAction: AgentAction = {
+                actionType: ActionType.ATTACK,
+                agentId: payload.agentId,
+                targetId: animal.id,
+                timestamp: Date.now(),
+              };
+              aiState.currentAction = attackAction;
+              this.executeAction(attackAction);
+              return;
+            }
+            // Otherwise update target position and continue pursuit
+            aiState.currentGoal.targetPosition = {
+              x: animal.position.x,
+              y: animal.position.y,
+            };
+          }
+        } else {
+          // Animal is dead or gone, clear goal
+          aiState.currentGoal = null;
+        }
+      }
       return;
     }
 
