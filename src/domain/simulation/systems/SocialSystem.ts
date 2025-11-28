@@ -45,7 +45,6 @@ export class SocialSystem {
   private infamy = new Map<string, number>();
   private zoneHeat = new Map<string, number>();
   private lastUpdate = 0;
-  private lastProximityUpdate = 0;
   private lastDecayUpdate = 0;
 
   /** Dirty flag to skip recomputeGroups when no edges changed */
@@ -121,10 +120,8 @@ export class SocialSystem {
 
     this.updateSpatialGridIncremental();
 
-    if (now - this.lastProximityUpdate > 500) {
-      this.updateProximity(dt);
-      this.lastProximityUpdate = now;
-    }
+    // Staggered update runs every frame
+    this.updateProximity(dt);
 
     if (now - this.lastDecayUpdate > 2000) {
       this.decayEdgesOptimized(dt);
@@ -166,7 +163,7 @@ export class SocialSystem {
    * This method is kept for backwards compatibility but is a no-op.
    * The SharedSpatialIndex is rebuilt by SimulationRunner each tick.
    */
-  private updateSpatialGridIncremental(): void {}
+  private updateSpatialGridIncremental(): void { }
 
   /**
    * Optimized edge decay that only processes edges with significant non-zero values.
@@ -286,6 +283,7 @@ export class SocialSystem {
   /**
    * Updates proximity-based social reinforcement.
    * Uses GPU pairwise distance calculation when entity count is high.
+   * Staggered to process only a subset of agents per frame to avoid spikes.
    */
   private updateProximity(dt: number): void {
     const entities = this.gameState.entities || [];
@@ -295,12 +293,33 @@ export class SocialSystem {
         !!e.position && !e.isDead,
     );
 
+    // If GPU is available and we have enough entities, use GPU (it's fast enough to do all)
+    // But even GPU path can be staggered if needed. For now, let's keep GPU path as is
+    // because it's O(1) mostly (transfer + compute).
+    // Actually, for very large N, GPU transfer might be heavy.
+    // Let's stick to CPU staggering for now as requested, or apply to both.
+
     if (this.gpuService?.isGPUAvailable() && entitiesWithPos.length >= 20) {
       this.updateProximityGPU(entitiesWithPos, reinforcement);
       return;
     }
 
-    for (const entity of entitiesWithPos) {
+    // Staggered CPU update
+    const totalAgents = entitiesWithPos.length;
+    if (totalAgents === 0) return;
+
+    // Process ~10% of agents per frame, or at least 1
+    const batchSize = Math.max(1, Math.ceil(totalAgents / 10));
+
+    // Ensure index is within bounds
+    if (this.proximityUpdateIndex >= totalAgents) {
+      this.proximityUpdateIndex = 0;
+    }
+
+    const endIndex = Math.min(this.proximityUpdateIndex + batchSize, totalAgents);
+
+    for (let i = this.proximityUpdateIndex; i < endIndex; i++) {
+      const entity = entitiesWithPos[i];
       const nearby = this.sharedSpatialIndex?.queryRadius(
         entity.position,
         this.config.proximityRadius,
@@ -311,11 +330,20 @@ export class SocialSystem {
           if (entity.id >= otherId) continue;
           this.addEdge(entity.id, otherId, reinforcement);
         }
-
         this.sharedSpatialIndex?.releaseResults(nearby);
       }
     }
+
+    // Advance index
+    this.proximityUpdateIndex = endIndex;
+    if (this.proximityUpdateIndex >= totalAgents) {
+      this.proximityUpdateIndex = 0;
+    }
   }
+
+  private proximityUpdateIndex = 0;
+
+  private proximityPositionsBuffer: Float32Array | null = null;
 
   /**
    * GPU-accelerated proximity detection using pairwise distance matrix.
@@ -326,15 +354,27 @@ export class SocialSystem {
     reinforcement: number,
   ): void {
     const count = entities.length;
-    const positions = new Float32Array(count * 2);
 
-    for (let i = 0; i < count; i++) {
-      positions[i * 2] = entities[i].position.x;
-      positions[i * 2 + 1] = entities[i].position.y;
+    // Resize buffer if needed
+    if (
+      !this.proximityPositionsBuffer ||
+      this.proximityPositionsBuffer.length < count * 2
+    ) {
+      this.proximityPositionsBuffer = new Float32Array(
+        Math.ceil(count * 2 * 1.5),
+      );
     }
 
+    for (let i = 0; i < count; i++) {
+      this.proximityPositionsBuffer[i * 2] = entities[i].position.x;
+      this.proximityPositionsBuffer[i * 2 + 1] = entities[i].position.y;
+    }
+
+    // Pass the view of valid data
+    const positionsView = this.proximityPositionsBuffer.subarray(0, count * 2);
+
     const { distances } = this.gpuService!.computePairwiseDistances(
-      positions,
+      positionsView,
       count,
     );
 
@@ -678,5 +718,5 @@ export class SocialSystem {
       timestamp: number;
       [key: string]: unknown;
     },
-  ): void {}
+  ): void { }
 }

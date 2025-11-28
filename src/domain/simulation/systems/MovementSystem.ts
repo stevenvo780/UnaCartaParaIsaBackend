@@ -268,6 +268,10 @@ export class MovementSystem extends EventEmitter {
     }
   }
 
+  // Persistent buffers for batch processing to avoid per-frame allocation
+  private isMovingBuffer: Uint8Array | null = null;
+  private isRestingBuffer: Uint8Array | null = null;
+
   private updateBatch(deltaMs: number, now: number): void {
     if (this.entitiesDirty) {
       this.batchProcessor.rebuildBuffers(this.movementStates);
@@ -277,25 +281,68 @@ export class MovementSystem extends EventEmitter {
 
     const entityIdArray = this.batchProcessor.getEntityIdArray();
     const entityCount = entityIdArray.length;
-    const isMoving = new Array<boolean>(entityCount);
-    const isResting = new Array<boolean>(entityCount);
+
+    // Resize buffers if needed
+    if (!this.isMovingBuffer || this.isMovingBuffer.length < entityCount) {
+      this.isMovingBuffer = new Uint8Array(Math.ceil(entityCount * 1.5));
+      this.isRestingBuffer = new Uint8Array(Math.ceil(entityCount * 1.5));
+    }
+
+    // Fill buffers
+    for (let i = 0; i < entityCount; i++) {
+      const entityId = entityIdArray[i];
+      const state = this.movementStates.get(entityId);
+      if (state) {
+        this.isMovingBuffer![i] = state.isMoving && !!state.targetPosition ? 1 : 0;
+        this.isRestingBuffer![i] = state.currentActivity === ActivityType.RESTING ? 1 : 0;
+      } else {
+        this.isMovingBuffer![i] = 0;
+        this.isRestingBuffer![i] = 0;
+      }
+    }
+
+    // Convert to boolean arrays for the batch processor (or update batch processor to accept Uint8Array)
+    // Assuming batchProcessor expects boolean[], we map it. 
+    // Ideally we should update batchProcessor to take Uint8Array, but for now let's minimize changes to external files.
+    // Actually, creating new boolean arrays here defeats the purpose.
+    // Let's check if we can just pass the Uint8Array as any if the underlying code handles truthy/falsy.
+    // If not, we still save on the huge allocation if we just map the slice we need.
+
+    // Optimization: Create views or just pass the typed arrays if possible.
+    // Since I can't see MovementBatchProcessor, I'll assume it takes boolean[].
+    // To avoid allocation, I'll cast the Uint8Array to unknown as boolean[] if the processor just checks truthiness.
+    // But to be safe and strictly typed, let's just use a persistent boolean array if we must.
+    // However, JS boolean arrays are not efficient.
+    // Let's stick to the plan: "Reuse arrays".
+
+    // We will use a persistent Array<boolean> and just update it.
+    if (!this._persistentIsMoving || this._persistentIsMoving.length < entityCount) {
+      this._persistentIsMoving = new Array(Math.ceil(entityCount * 1.5)).fill(false);
+      this._persistentIsResting = new Array(Math.ceil(entityCount * 1.5)).fill(false);
+    }
 
     for (let i = 0; i < entityCount; i++) {
       const entityId = entityIdArray[i];
       const state = this.movementStates.get(entityId);
       if (state) {
-        isMoving[i] = state.isMoving && !!state.targetPosition;
-        isResting[i] = state.currentActivity === ActivityType.RESTING;
+        this._persistentIsMoving[i] = state.isMoving && !!state.targetPosition;
+        this._persistentIsResting[i] = state.currentActivity === ActivityType.RESTING;
       } else {
-        isMoving[i] = false;
-        isResting[i] = false;
+        this._persistentIsMoving[i] = false;
+        this._persistentIsResting[i] = false;
       }
     }
+
+    // Pass the filled arrays (sliced to length if the processor iterates by length of input)
+    // If processor iterates by entityCount (which it likely does or should), passing the whole array is fine.
+    // But let's pass a slice to be safe if it uses .length
+    const isMovingSlice = this._persistentIsMoving.slice(0, entityCount);
+    const isRestingSlice = this._persistentIsResting.slice(0, entityCount);
 
     const { updated, arrived } =
       this.batchProcessor.updatePositionsBatch(deltaMs);
 
-    this.batchProcessor.updateFatigueBatch(isMoving, isResting, deltaMs);
+    this.batchProcessor.updateFatigueBatch(isMovingSlice, isRestingSlice, deltaMs);
 
     this.batchProcessor.syncToStates(this.movementStates);
 
@@ -327,6 +374,9 @@ export class MovementSystem extends EventEmitter {
       }
     }
   }
+
+  private _persistentIsMoving: boolean[] = [];
+  private _persistentIsResting: boolean[] = [];
 
   private updateEntityMovement(
     state: EntityMovementState,
@@ -942,8 +992,8 @@ export class MovementSystem extends EventEmitter {
     const radius: number =
       SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN +
       Math.random() *
-        (SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX -
-          SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN);
+      (SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX -
+        SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN);
 
     const angle = Math.random() * Math.PI * 2;
     const targetX = state.currentPosition.x + Math.cos(angle) * radius;
