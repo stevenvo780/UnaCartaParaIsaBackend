@@ -304,12 +304,12 @@ export class MovementSystem extends EventEmitter {
       !this._persistentIsMoving ||
       this._persistentIsMoving.length < entityCount
     ) {
-      this._persistentIsMoving = new Array(Math.ceil(entityCount * 1.5)).fill(
-        false,
-      );
-      this._persistentIsResting = new Array(Math.ceil(entityCount * 1.5)).fill(
-        false,
-      );
+      this._persistentIsMoving = new Array<boolean>(
+        Math.ceil(entityCount * 1.5),
+      ).fill(false);
+      this._persistentIsResting = new Array<boolean>(
+        Math.ceil(entityCount * 1.5),
+      ).fill(false);
     }
 
     for (let i = 0; i < entityCount; i++) {

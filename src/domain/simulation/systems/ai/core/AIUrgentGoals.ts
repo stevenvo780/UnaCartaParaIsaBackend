@@ -7,6 +7,7 @@ import { WorldResourceType } from "../../../../../shared/constants/ResourceEnums
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 import { toInventoryResource } from "../../../../types/simulation/resourceMapping";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
+import { logger } from "../../../../../infrastructure/utils/logger";
 
 export interface AIUrgentGoalsDeps {
   gameState: GameState;
@@ -40,12 +41,23 @@ export class AIUrgentGoals {
       WorldResourceType.MUSHROOM_PATCH,
       WorldResourceType.WHEAT_CROP,
     ];
+
+    logger.debug(
+      `🔍 [AI] ${agentId}: Searching for urgent food at pos (${position.x.toFixed(0)}, ${position.y.toFixed(0)})`,
+    );
+
     for (const resourceType of foodResourceTypes) {
       const nearestFood = this.deps.findNearestResourceForEntity(
         agentId,
         resourceType,
       );
+      logger.debug(
+        `🔍 [AI] ${agentId}: Checking ${resourceType} -> ${nearestFood ? `found at (${nearestFood.x}, ${nearestFood.y})` : "not found"}`,
+      );
       if (nearestFood) {
+        logger.debug(
+          `🍎 [AI] ${agentId}: Found food ${resourceType} at (${nearestFood.x}, ${nearestFood.y})`,
+        );
         return {
           id: `urgent-gather-${agentId}-${now}`,
           type: GoalType.GATHER,
@@ -61,6 +73,9 @@ export class AIUrgentGoals {
       }
     }
 
+    logger.debug(
+      `⚠️ [AI] ${agentId}: No food resources found (berry/mushroom/wheat)`,
+    );
     return null;
   }
 

@@ -255,7 +255,7 @@ export class WorldResourceSystem {
       spawnedAt: Date.now(),
     };
 
-    this.gameState.worldResources![id] = resource;
+    this.addResource(resource);
 
     simulationEvents.emit(GameEventType.RESOURCE_SPAWNED, { resource });
 

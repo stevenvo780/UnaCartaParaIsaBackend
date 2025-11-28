@@ -204,24 +204,25 @@ export class NeedsSystem extends EventEmitter {
     for (const agent of agents) {
       if (agent.isDead) continue;
 
-      if (!this.entityNeeds.has(agent.id)) {
+      const existingNeeds = this.entityNeeds.get(agent.id);
+
+      if (!existingNeeds) {
         this.initializeEntityNeeds(agent.id);
         syncCount++;
         logger.debug(
           `🔄 NeedsSystem auto-initialized needs for existing agent ${agent.name} (${agent.id})`,
         );
       } else {
-        const needs = this.entityNeeds.get(agent.id);
         if (
-          needs &&
-          needs.hunger === 0 &&
-          needs.thirst === 0 &&
-          needs.energy <= 1
+          existingNeeds.hunger <= 0 ||
+          existingNeeds.thirst <= 0 ||
+          existingNeeds.energy <= 0
         ) {
+          const oldValues = `h=${existingNeeds.hunger.toFixed(0)} t=${existingNeeds.thirst.toFixed(0)} e=${existingNeeds.energy.toFixed(0)}`;
           this.initializeEntityNeeds(agent.id);
           reinitCount++;
           logger.warn(
-            `🔧 NeedsSystem re-initialized corrupted needs for ${agent.name} (${agent.id})`,
+            `🔧 NeedsSystem re-initialized corrupted needs for ${agent.name} (${agent.id}): ${oldValues} -> 100/100/100`,
           );
         }
       }
@@ -231,6 +232,13 @@ export class NeedsSystem extends EventEmitter {
       logger.info(
         `🔄 NeedsSystem: synced=${syncCount}, reinit=${reinitCount}, total=${agents.length}`,
       );
+    }
+
+    if (this._tickCounter === 0 && this.entityNeeds.size > 0) {
+      const needsSummary = Array.from(this.entityNeeds.entries())
+        .map(([id, n]) => `${id.slice(-6)}:h${n.hunger.toFixed(0)}`)
+        .join(" ");
+      logger.debug(`📊 [Needs] ${needsSummary}`);
     }
   }
 
@@ -254,6 +262,11 @@ export class NeedsSystem extends EventEmitter {
     }
 
     if (now - this.lastUpdate < this.config.updateIntervalMs) {
+      return;
+    }
+
+    if (this.lastUpdate === 0) {
+      this.lastUpdate = now;
       return;
     }
 

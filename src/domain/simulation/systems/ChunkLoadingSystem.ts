@@ -4,6 +4,7 @@ import type { GameState } from "../../types/game-types";
 import type { AgentRegistry } from "../core/AgentRegistry";
 import type { WorldGenerationService } from "../../../infrastructure/services/world/worldGenerationService";
 import type { AnimalSystem } from "./AnimalSystem";
+import type { WorldResourceSystem } from "./WorldResourceSystem";
 import { logger } from "../../../infrastructure/utils/logger";
 import type { WorldGenConfig } from "../../world/generation/types";
 import { TileType } from "../../../shared/constants/TileTypeEnums";
@@ -38,6 +39,8 @@ export class ChunkLoadingSystem {
     @inject(TYPES.WorldGenerationService)
     private worldGenerationService: WorldGenerationService,
     @inject(TYPES.AnimalSystem) private animalSystem: AnimalSystem,
+    @inject(TYPES.WorldResourceSystem)
+    private worldResourceSystem: WorldResourceSystem,
     @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
   ) {
     this.agentRegistry = agentRegistry;
@@ -234,6 +237,18 @@ export class ChunkLoadingSystem {
     if (spawned > 0) {
       logger.debug(
         `🐾 [ChunkLoadingSystem] Spawned ${spawned} animals for chunk (${chunkCoords.x},${chunkCoords.y})`,
+      );
+    }
+
+    const resourcesSpawned = this.worldResourceSystem.spawnResourcesForChunk(
+      chunkCoords,
+      { x: worldX, y: worldY, width: pixelWidth, height: pixelHeight },
+      chunkTiles,
+    );
+
+    if (resourcesSpawned > 0) {
+      logger.debug(
+        `🌲 [ChunkLoadingSystem] Spawned ${resourcesSpawned} resources for chunk (${chunkCoords.x},${chunkCoords.y})`,
       );
     }
 

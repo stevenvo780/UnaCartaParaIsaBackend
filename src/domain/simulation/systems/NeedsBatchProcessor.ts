@@ -2,6 +2,8 @@ import type { EntityNeedsData } from "../../types/simulation/needs";
 import { logger } from "../../../infrastructure/utils/logger";
 import type { GPUComputeService } from "../core/GPUComputeService";
 import { injectable } from "inversify";
+import { performanceMonitor } from "../core/PerformanceMonitor";
+import { performance } from "node:perf_hooks";
 
 /**
  * Batch processor for entity needs calculations.
@@ -69,6 +71,8 @@ export class NeedsBatchProcessor {
   ): void {
     if (!this.needsBuffer || this.entityIdArray.length === 0) return;
 
+    const startTime = performance.now();
+    const entityCount = this.entityIdArray.length;
     const workBuffer = new Float32Array(this.needsBuffer);
 
     if (this.gpuService?.isGPUAvailable()) {
@@ -83,6 +87,14 @@ export class NeedsBatchProcessor {
         );
         this.needsBuffer = result;
         this.bufferDirty = true;
+
+        const duration = performance.now() - startTime;
+        performanceMonitor.recordBatchProcessing(
+          "needs_decay",
+          entityCount,
+          duration,
+          true,
+        );
         return;
       } catch (error) {
         logger.warn(
@@ -91,7 +103,7 @@ export class NeedsBatchProcessor {
       }
     }
 
-    const entityCount = this.entityIdArray.length;
+    // const entityCount = this.entityIdArray.length; // Already declared above
 
     for (let i = 0; i < entityCount; i++) {
       const offset = i * this.NEED_COUNT;
@@ -111,10 +123,21 @@ export class NeedsBatchProcessor {
 
     this.needsBuffer = workBuffer;
     this.bufferDirty = true;
+
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordBatchProcessing(
+      "needs_decay",
+      entityCount,
+      duration,
+      false,
+    );
   }
 
   public applyCrossEffectsBatch(): void {
     if (!this.needsBuffer || this.entityIdArray.length === 0) return;
+
+    const startTime = performance.now();
+    const entityCount = this.entityIdArray.length;
 
     if (this.gpuService?.isGPUAvailable()) {
       try {
@@ -124,6 +147,14 @@ export class NeedsBatchProcessor {
         );
         this.needsBuffer = newNeeds;
         this.bufferDirty = true;
+
+        const duration = performance.now() - startTime;
+        performanceMonitor.recordBatchProcessing(
+          "needs_cross_effects",
+          entityCount,
+          duration,
+          true,
+        );
         return;
       } catch (error) {
         logger.warn(
@@ -132,7 +163,7 @@ export class NeedsBatchProcessor {
       }
     }
 
-    const entityCount = this.entityIdArray.length;
+    // const entityCount = this.entityIdArray.length; // Already declared above
 
     for (let i = 0; i < entityCount; i++) {
       const offset = i * this.NEED_COUNT;
@@ -182,6 +213,14 @@ export class NeedsBatchProcessor {
     }
 
     this.bufferDirty = true;
+
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordBatchProcessing(
+      "needs_cross_effects",
+      entityCount,
+      duration,
+      false,
+    );
   }
 
   public syncToMap(entityNeeds: Map<string, EntityNeedsData>): void {

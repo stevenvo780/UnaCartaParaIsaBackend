@@ -18,6 +18,8 @@ const defaultResources: GameResources = {
     water: 40,
     rare_materials: 0,
     metal: 0,
+    iron_ore: 0,
+    copper_ore: 0,
   },
   currency: 100,
   experience: 0,

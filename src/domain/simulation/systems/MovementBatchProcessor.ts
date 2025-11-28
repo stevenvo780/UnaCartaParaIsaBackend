@@ -2,6 +2,8 @@ import type { EntityMovementState } from "./MovementSystem";
 import { logger } from "../../../infrastructure/utils/logger";
 import type { GPUComputeService } from "../core/GPUComputeService";
 import { injectable } from "inversify";
+import { performanceMonitor } from "../core/PerformanceMonitor";
+import { performance } from "node:perf_hooks";
 
 /**
  * Batch processor for entity movement calculations.
@@ -98,6 +100,7 @@ export class MovementBatchProcessor {
     }
 
     const entityCount = this.entityIdArray.length;
+    const startTime = performance.now();
     const updated = new Array<boolean>(entityCount).fill(true);
 
     const workPositions = new Float32Array(this.positionBuffer);
@@ -144,6 +147,14 @@ export class MovementBatchProcessor {
 
         this.velocityBuffer = workVelocities;
         this.bufferDirty = true;
+
+        const duration = performance.now() - startTime;
+        performanceMonitor.recordBatchProcessing(
+          "movement",
+          entityCount,
+          duration,
+          true,
+        );
 
         return { updated, arrived: result.arrived };
       } catch (error) {
@@ -200,6 +211,15 @@ export class MovementBatchProcessor {
     this.positionBuffer = workPositions;
     this.velocityBuffer = workVelocities;
     this.bufferDirty = true;
+
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordBatchProcessing(
+      "movement",
+      entityCount,
+      duration,
+      false,
+    );
+
     return { updated, arrived };
   }
 

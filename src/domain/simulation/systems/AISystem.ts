@@ -1186,11 +1186,17 @@ export class AISystem extends EventEmitter {
   ): AIGoal | null {
     const needs = this.needsSystem?.getNeeds(agentId);
     if (needs) {
-      if (needs.hunger < 20) {
+      if (Math.random() < 0.05) {
+        logger.debug(
+          `📊 [AI] ${agentId} needs: h=${needs.hunger.toFixed(0)} t=${needs.thirst.toFixed(0)} e=${needs.energy.toFixed(0)} s=${needs.social.toFixed(0)} f=${needs.fun.toFixed(0)} m=${needs.mentalHealth.toFixed(0)}`,
+        );
+      }
+
+      if (needs.hunger <= 25) {
         const foodGoal = this.createUrgentFoodGoal(agentId, now);
         if (foodGoal) return foodGoal;
       }
-      if (needs.thirst < 20) {
+      if (needs.thirst <= 25) {
         const waterGoal = this.createUrgentWaterGoal(agentId, now);
         if (waterGoal) return waterGoal;
       }
@@ -1198,7 +1204,8 @@ export class AISystem extends EventEmitter {
         const restGoal = this.createUrgentRestGoal(agentId, now);
         if (restGoal) return restGoal;
       }
-      if (needs.social < 20) {
+
+      if (needs.social < 15) {
         const socialGoal = this.createUrgentSocialGoal(agentId, now);
         if (socialGoal) return socialGoal;
       }

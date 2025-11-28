@@ -105,8 +105,6 @@ export class WorldLoader {
       ...worldConfig,
       biomeMap,
     });
-
-    this.generateFunctionalZones(worldConfig, biomeMap);
   }
 
   public async ensureInitialFamily(): Promise<void> {

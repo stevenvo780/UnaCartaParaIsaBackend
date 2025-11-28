@@ -154,7 +154,11 @@ export class SocialSystem {
     }
 
     const duration = performance.now() - startTime;
-    performanceMonitor.recordSubsystemExecution("SocialSystem", "update");
+    performanceMonitor.recordSubsystemExecution(
+      "SocialSystem",
+      "update",
+      duration,
+    );
     performanceMonitor.recordOperation("social_update", duration, 1, 0);
   }
 

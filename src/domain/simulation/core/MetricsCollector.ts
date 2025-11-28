@@ -53,6 +53,8 @@ export class MetricsCollector {
             Math.max(1, gpuStats.gpuOperations + gpuStats.cpuFallbacks)
           : 0,
       });
+
+      gpuService.resetStats();
     } catch (error) {
       logger.error("Error collecting metrics:", error);
     }

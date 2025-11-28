@@ -1,7 +1,6 @@
 import { Worker } from "node:worker_threads";
 import { logger } from "../../../../infrastructure/utils/logger";
 import { StateCache } from "../StateCache";
-import { StateDirtyTracker } from "../StateDirtyTracker";
 import { DeltaEncoder } from "../DeltaEncoder";
 import type { SimulationRunner } from "../SimulationRunner";
 import { cloneGameState } from "../defaultState";
@@ -16,13 +15,18 @@ export class SnapshotManager {
   private snapshotWorker?: Worker;
   private snapshotWorkerReady = false;
 
-  constructor(
-    private runner: SimulationRunner,
-    private dirtyTracker: StateDirtyTracker,
-  ) {
+  constructor(private runner: SimulationRunner) {
     this.stateCache = new StateCache();
     this.deltaEncoder = new DeltaEncoder();
     this.initializeSnapshotWorker();
+  }
+
+  /**
+   * Gets the dirty tracker from the runner.
+   * This is accessed at runtime to avoid Inversify injection timing issues.
+   */
+  private get dirtyTracker() {
+    return this.runner.stateDirtyTracker;
   }
 
   private initializeSnapshotWorker(): void {

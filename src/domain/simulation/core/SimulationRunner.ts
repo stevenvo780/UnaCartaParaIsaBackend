@@ -280,7 +280,7 @@ export class SimulationRunner {
 
     this.commandProcessor = new CommandProcessor(this);
 
-    this.snapshotManager = new SnapshotManager(this, this.stateDirtyTracker);
+    this.snapshotManager = new SnapshotManager(this);
 
     this.scheduleAutoSaves();
 

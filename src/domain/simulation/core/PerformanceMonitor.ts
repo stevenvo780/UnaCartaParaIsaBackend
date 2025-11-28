@@ -26,6 +26,7 @@ interface BatchProcessingStats {
   gpuExecutions: number;
   cpuFallbacks: number;
   avgBatchSize: number;
+  lastBatchSize: number;
   totalMs: number;
   avgMs: number;
 }
@@ -248,6 +249,7 @@ class PerformanceMonitor {
         gpuExecutions: 0,
         cpuFallbacks: 0,
         avgBatchSize: 0,
+        lastBatchSize: 0,
         totalMs: 0,
         avgMs: 0,
       };
@@ -256,6 +258,7 @@ class PerformanceMonitor {
 
     stats.batchCount += 1;
     stats.totalEntities += batchSize;
+    stats.lastBatchSize = batchSize;
     stats.totalMs += durationMs;
     if (usedGPU) {
       stats.gpuExecutions += 1;

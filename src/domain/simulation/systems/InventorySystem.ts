@@ -69,6 +69,8 @@ export class InventorySystem {
       water: 0,
       rare_materials: 0,
       metal: 0,
+      iron_ore: 0,
+      copper_ore: 0,
       capacity: capacity ?? this.DEFAULT_AGENT_CAPACITY,
       lastUpdateTime: Date.now(),
     };
@@ -92,6 +94,8 @@ export class InventorySystem {
         water: 0,
         rare_materials: 0,
         metal: 0,
+        iron_ore: 0,
+        copper_ore: 0,
         capacity: capacity ?? this.DEFAULT_STOCKPILE_CAPACITY,
         lastUpdateTime: Date.now(),
       },
@@ -251,6 +255,8 @@ export class InventorySystem {
       water: 0,
       rare_materials: 0,
       metal: 0,
+      iron_ore: 0,
+      copper_ore: 0,
     };
 
     const sp = this.stockpiles.get(stockpileId);
@@ -342,6 +348,8 @@ export class InventorySystem {
       water: 0,
       rare_materials: 0,
       metal: 0,
+      iron_ore: 0,
+      copper_ore: 0,
     };
 
     for (const [resource, amount] of Object.entries(resources)) {
@@ -477,6 +485,8 @@ export class InventorySystem {
           water: 0,
           rare_materials: 0,
           metal: 0,
+          iron_ore: 0,
+          copper_ore: 0,
           capacity: 0,
           lastUpdateTime: now,
         },
@@ -511,6 +521,8 @@ export class InventorySystem {
       rare_materials:
         stats.stockpiled.rare_materials + stats.inAgents.rare_materials,
       metal: stats.stockpiled.metal + stats.inAgents.metal,
+      iron_ore: stats.stockpiled.iron_ore + stats.inAgents.iron_ore,
+      copper_ore: stats.stockpiled.copper_ore + stats.inAgents.copper_ore,
       capacity: 0,
       lastUpdateTime: now,
     };
