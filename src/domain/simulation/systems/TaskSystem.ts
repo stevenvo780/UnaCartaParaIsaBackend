@@ -219,6 +219,8 @@ export class TaskSystem {
     });
 
     if (completed) {
+      this.recordWorkHistory(taskId, Array.from(task.contributors.keys()));
+
       simulationEvents.emit(GameEventType.TASK_COMPLETED, {
         taskId,
         completedBy: Array.from(task.contributors.keys()),
@@ -232,6 +234,43 @@ export class TaskSystem {
       completed,
       blocked: false,
     };
+  }
+
+  private workHistory = new Map<
+    string,
+    {
+      taskId: string;
+      taskType: string;
+      contribution: number;
+      timestamp: number;
+    }[]
+  >();
+
+  public getWorkHistory(agentId: string) {
+    return this.workHistory.get(agentId) || [];
+  }
+
+  private recordWorkHistory(taskId: string, contributors: string[]): void {
+    const task = this.tasks.get(taskId);
+    if (!task) return;
+
+    for (const agentId of contributors) {
+      const contribution = task.contributors?.get(agentId) || 0;
+      const history = this.workHistory.get(agentId) || [];
+
+      history.unshift({
+        taskId: task.id,
+        taskType: task.type,
+        contribution,
+        timestamp: Date.now(),
+      });
+
+      if (history.length > 10) {
+        history.pop();
+      }
+
+      this.workHistory.set(agentId, history);
+    }
   }
 
   public getTask(id: string): Task | undefined {
@@ -426,7 +465,7 @@ export class TaskSystem {
     const avgProgress =
       active.length > 0
         ? active.reduce((sum, t) => sum + t.progress / t.requiredWork, 0) /
-          active.length
+        active.length
         : 0;
 
     return {
@@ -506,26 +545,26 @@ export class TaskSystem {
       zoneId: task.zoneId,
       bounds: task.bounds
         ? {
-            x: task.bounds.x,
-            y: task.bounds.y,
-            width: task.bounds.width,
-            height: task.bounds.height,
-          }
+          x: task.bounds.x,
+          y: task.bounds.y,
+          width: task.bounds.width,
+          height: task.bounds.height,
+        }
         : undefined,
       requirements: task.requirements
         ? {
-            resources: { ...task.requirements.resources },
-            minWorkers: task.requirements.minWorkers,
-          }
+          resources: { ...task.requirements.resources },
+          minWorkers: task.requirements.minWorkers,
+        }
         : undefined,
       metadata: task.metadata ? { ...task.metadata } : undefined,
       contributors: task.contributors
         ? Array.from(task.contributors.entries()).map(
-            ([agentId, contribution]) => ({
-              agentId,
-              contribution,
-            }),
-          )
+          ([agentId, contribution]) => ({
+            agentId,
+            contribution,
+          }),
+        )
         : undefined,
       lastContribution: task.lastContribution,
       createdAt: task.createdAt,

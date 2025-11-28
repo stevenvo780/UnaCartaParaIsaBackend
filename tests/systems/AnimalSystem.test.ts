@@ -133,8 +133,10 @@ describe("AnimalSystem", () => {
       },
       exportForGameState: () => ({
         animals: Array.from(animalsMap.values()),
-        total: animalsMap.size,
-        alive: Array.from(animalsMap.values()).filter(a => !a.isDead).length,
+        stats: {
+          total: animalsMap.size,
+          byType: {},
+        },
       }),
       get size() { return animalsMap.size; },
     };

@@ -86,5 +86,11 @@ export interface AgentProfile {
       amount?: number;
       timestamp: number;
     }[];
+    work?: {
+      taskId: string;
+      taskType: string;
+      contribution: number;
+      timestamp: number;
+    }[];
   };
 }
