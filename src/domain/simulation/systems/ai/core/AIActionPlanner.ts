@@ -998,8 +998,6 @@ export class AIActionPlanner {
     let targetId = goal.targetId;
     let targetPosition = goal.targetPosition;
 
-    // If we have a targetId, always get the CURRENT position of the animal
-    // because animals move constantly (especially when fleeing)
     if (targetId && this.deps.getAnimalPosition) {
       const currentPos = this.deps.getAnimalPosition(targetId);
       if (currentPos) {
@@ -1008,7 +1006,6 @@ export class AIActionPlanner {
           `🎯 [Hunt] ${agentId}: Updated target position for ${targetId} to (${Math.round(currentPos.x)}, ${Math.round(currentPos.y)})`,
         );
       } else {
-        // Animal is dead or gone, clear target to find a new one
         logger.debug(
           `🎯 [Hunt] ${agentId}: Target ${targetId} not found, searching for new prey`,
         );
