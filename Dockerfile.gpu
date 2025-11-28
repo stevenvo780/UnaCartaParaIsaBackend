@@ -51,5 +51,8 @@ ENV TF_GPU_THREAD_COUNT=2
 # Evita que CUDA haga spin-wait, usa blocking sync (reduce CPU idle spinning)
 ENV CUDA_DEVICE_SCHEDULE=BLOCKING_SYNC
 
-# Comando de inicio
-CMD ["npm", "run", "dev"]
+# Build bundle con esbuild (compile-time, no runtime tsx/esbuild threads)
+RUN node scripts/build.mjs
+
+# Comando de inicio - Node.js nativo con inspector habilitado
+CMD ["node", "--inspect=0.0.0.0:9229", "dist/server.bundle.js"]

@@ -6,6 +6,7 @@ services:
       network: host
     ports:
       - "8080:8080"
+      - "9229:9229"  # Node.js inspector
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -38,7 +39,16 @@ services:
       - TF_GPU_THREAD_MODE=gpu_private
       - TF_GPU_THREAD_COUNT=2
       # Evita que CUDA haga spin-wait, usa blocking sync
+      # Limitar threads de libuv (UV_THREADPOOL_SIZE por defecto es 4)
+      - UV_THREADPOOL_SIZE=2
       - CUDA_DEVICE_SCHEDULE=BLOCKING_SYNC
+      # Pool elástico de chunk workers - escala bajo demanda
+      # MIN: Workers siempre calientes (arranque rápido)
+      # MAX: Límite superior para evitar saturación
+      # IDLE_TIMEOUT: Segundos antes de matar workers ociosos
+      - CHUNK_WORKERS_MIN=1
+      - CHUNK_WORKERS_MAX=8
+      - CHUNK_WORKER_IDLE_TIMEOUT_MS=30000
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/api/sim/health" ]

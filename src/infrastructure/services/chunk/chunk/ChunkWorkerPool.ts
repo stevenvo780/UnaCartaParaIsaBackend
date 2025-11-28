@@ -34,6 +34,8 @@ interface WorkerEnvelope {
   worker: Worker;
   busy: boolean;
   currentJob?: ChunkJob;
+  lastActivityTime: number;
+  idleTimer?: ReturnType<typeof setTimeout>;
 }
 
 interface WorkerMessage {
@@ -54,42 +56,92 @@ export interface ChunkPoolStats {
   queueSize: number;
   workers: number;
   busyWorkers: number;
+  maxWorkers: number;
+  minWorkers: number;
 }
 
 /**
- * Worker pool for asynchronous terrain chunk generation.
+ * Elastic worker pool for asynchronous terrain chunk generation.
  *
- * Manages a pool of worker threads that generate terrain chunks in parallel.
- * Supports job queuing, cancellation via AbortSignal, and automatic worker
- * restart on failure. Worker count is configurable via CHUNK_WORKERS env var
- * or defaults to CPU core count.
+ * Features on-demand scaling:
+ * - Starts with MIN_WORKERS (default: 1) workers
+ * - Spawns new workers when queue has pending jobs and all workers are busy
+ * - Terminates idle workers after IDLE_TIMEOUT_MS (default: 30s)
+ * - Respects MAX_WORKERS limit (configurable via CHUNK_WORKERS env var)
+ *
+ * This approach is more efficient than pre-allocating all workers because:
+ * - No memory/CPU overhead for unused workers
+ * - Scales up automatically under load
+ * - Scales down automatically when idle
  *
  * @see ChunkWorker for individual worker implementation
  */
 export class ChunkWorkerPool extends EventEmitter {
-  private readonly workers: WorkerEnvelope[] = [];
+  private readonly workers: Map<number, WorkerEnvelope> = new Map();
   private readonly queue: ChunkJob[] = [];
   private disposed = false;
   private readonly workerScript: URL;
   private readonly workerExecArgv: string[];
   private readonly maxWorkers: number;
+  private readonly minWorkers: number;
+  private readonly idleTimeoutMs: number;
+  private nextWorkerId = 0;
 
   constructor(size?: number) {
     super();
     this.workerScript = this.resolveWorkerScript();
     this.workerExecArgv = this.resolveExecArgs();
+
+    // Configuration from environment or defaults
     const parallelism =
       typeof os.availableParallelism === "function"
         ? os.availableParallelism()
         : os.cpus().length;
-    const envWorkers = Number.parseInt(process.env.CHUNK_WORKERS ?? "", 10);
-    const desired =
-      size ??
-      (Number.isNaN(envWorkers) ? parallelism : envWorkers || parallelism);
-    this.maxWorkers = Math.max(1, desired);
-    for (let i = 0; i < this.maxWorkers; i++) {
-      this.workers[i] = this.spawnWorker(i);
+
+    const envMaxWorkers = Number.parseInt(
+      process.env.CHUNK_WORKERS_MAX ?? process.env.CHUNK_WORKERS ?? "",
+      10,
+    );
+    const envMinWorkers = Number.parseInt(
+      process.env.CHUNK_WORKERS_MIN ?? "",
+      10,
+    );
+    const envIdleTimeout = Number.parseInt(
+      process.env.CHUNK_WORKER_IDLE_TIMEOUT_MS ?? "",
+      10,
+    );
+
+    // Max workers: explicit config > size param > parallelism (capped at 8)
+    this.maxWorkers = Math.max(
+      1,
+      !Number.isNaN(envMaxWorkers)
+        ? envMaxWorkers
+        : (size ?? Math.min(parallelism, 8)),
+    );
+
+    // Min workers: explicit config > 1 (always keep at least 1 warm)
+    this.minWorkers = Math.max(
+      1,
+      Math.min(
+        !Number.isNaN(envMinWorkers) ? envMinWorkers : 1,
+        this.maxWorkers,
+      ),
+    );
+
+    // Idle timeout: how long before terminating unused workers (default 30s)
+    this.idleTimeoutMs = !Number.isNaN(envIdleTimeout)
+      ? envIdleTimeout
+      : 30_000;
+
+    // Start with minimum workers
+    for (let i = 0; i < this.minWorkers; i++) {
+      this.spawnWorkerIfNeeded();
     }
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `[ChunkWorkerPool] Elastic pool initialized: min=${this.minWorkers}, max=${this.maxWorkers}, idleTimeout=${this.idleTimeoutMs}ms`,
+    );
   }
 
   /**
@@ -98,11 +150,16 @@ export class ChunkWorkerPool extends EventEmitter {
    * @returns {ChunkPoolStats} Current queue size and worker status
    */
   public getStats(): ChunkPoolStats {
-    const busyWorkers = this.workers.filter((w) => w?.busy).length;
+    let busyWorkers = 0;
+    for (const w of this.workers.values()) {
+      if (w.busy) busyWorkers++;
+    }
     return {
       queueSize: this.queue.length,
-      workers: this.workers.length,
+      workers: this.workers.size,
       busyWorkers,
+      maxWorkers: this.maxWorkers,
+      minWorkers: this.minWorkers,
     };
   }
 
@@ -114,10 +171,13 @@ export class ChunkWorkerPool extends EventEmitter {
   public async destroy(): Promise<void> {
     this.disposed = true;
     const terminations: Array<Promise<number>> = [];
-    for (const worker of this.workers) {
-      if (!worker) continue;
-      terminations.push(worker.worker.terminate());
+    for (const envelope of this.workers.values()) {
+      if (envelope.idleTimer) {
+        clearTimeout(envelope.idleTimer);
+      }
+      terminations.push(envelope.worker.terminate());
     }
+    this.workers.clear();
     this.queue.length = 0;
     await Promise.allSettled(terminations);
   }
@@ -186,13 +246,130 @@ export class ChunkWorkerPool extends EventEmitter {
     });
   }
 
+  /**
+   * Spawns a new worker if we haven't reached maxWorkers.
+   * Returns the new worker envelope or undefined if at capacity.
+   */
+  private spawnWorkerIfNeeded(): WorkerEnvelope | undefined {
+    if (this.disposed) return undefined;
+    if (this.workers.size >= this.maxWorkers) return undefined;
+
+    const id = this.nextWorkerId++;
+    const worker = new Worker(this.workerScript, {
+      name: `chunk-worker-${id}`,
+      execArgv: this.workerExecArgv,
+    });
+
+    const envelope: WorkerEnvelope = {
+      id,
+      worker,
+      busy: false,
+      lastActivityTime: Date.now(),
+    };
+
+    worker.on("message", (message: WorkerMessage) =>
+      this.handleWorkerMessage(envelope, message),
+    );
+    worker.on("error", (error) => {
+      this.emit("worker:error", { id: envelope.id, error });
+      this.failCurrentJob(envelope, error);
+      if (!this.disposed) {
+        this.workers.delete(envelope.id);
+        // Spawn replacement if we're below minimum
+        if (this.workers.size < this.minWorkers) {
+          this.spawnWorkerIfNeeded();
+        }
+        this.dispatch();
+      }
+    });
+    worker.on("exit", (code) => {
+      this.emit("worker:exit", { id: envelope.id, code });
+      if (!this.disposed) {
+        this.workers.delete(envelope.id);
+        // Spawn replacement if we're below minimum
+        if (this.workers.size < this.minWorkers) {
+          this.spawnWorkerIfNeeded();
+        }
+        this.dispatch();
+      }
+    });
+
+    this.workers.set(id, envelope);
+    this.emit("worker:spawn", { id, totalWorkers: this.workers.size });
+    return envelope;
+  }
+
+  /**
+   * Schedules termination of an idle worker after timeout.
+   * Cancels if the worker becomes busy again.
+   */
+  private scheduleIdleTermination(envelope: WorkerEnvelope): void {
+    // Don't terminate if we're at minimum workers
+    if (this.workers.size <= this.minWorkers) return;
+
+    // Clear any existing timer
+    if (envelope.idleTimer) {
+      clearTimeout(envelope.idleTimer);
+    }
+
+    envelope.idleTimer = setTimeout(() => {
+      // Double-check conditions before terminating
+      if (
+        this.disposed ||
+        envelope.busy ||
+        this.workers.size <= this.minWorkers
+      ) {
+        return;
+      }
+
+      this.emit("worker:idle-terminate", {
+        id: envelope.id,
+        idleMs: Date.now() - envelope.lastActivityTime,
+      });
+
+      envelope.worker.removeAllListeners();
+      envelope.worker.terminate().catch(() => {
+        // Ignore termination errors
+      });
+      this.workers.delete(envelope.id);
+    }, this.idleTimeoutMs);
+  }
+
   private dispatch(): void {
     if (this.disposed) return;
-    for (const envelope of this.workers) {
-      if (!envelope || envelope.busy) continue;
+
+    // Try to assign jobs to existing idle workers
+    for (const envelope of this.workers.values()) {
+      if (envelope.busy) continue;
+
+      // Cancel idle termination timer since we might use this worker
+      if (envelope.idleTimer) {
+        clearTimeout(envelope.idleTimer);
+        envelope.idleTimer = undefined;
+      }
+
       const job = this.dequeueNext();
-      if (!job) break;
+      if (!job) {
+        // No more jobs - schedule idle termination for this worker
+        this.scheduleIdleTermination(envelope);
+        continue;
+      }
+
       this.assignJob(envelope, job);
+    }
+
+    // If there are still pending jobs and all workers are busy, spawn more
+    while (this.queue.length > 0 && this.workers.size < this.maxWorkers) {
+      const allBusy = [...this.workers.values()].every((w) => w.busy);
+      if (!allBusy) break; // There's an idle worker that will pick up the job
+
+      const newWorker = this.spawnWorkerIfNeeded();
+      if (!newWorker) break; // At capacity
+
+      const job = this.dequeueNext();
+      if (job) {
+        this.assignJob(newWorker, job);
+      }
     }
   }
 
@@ -213,6 +390,7 @@ export class ChunkWorkerPool extends EventEmitter {
     }
     workerEnvelope.busy = true;
     workerEnvelope.currentJob = job;
+    workerEnvelope.lastActivityTime = Date.now();
     job.workerId = workerEnvelope.id;
     workerEnvelope.worker.postMessage({
       type: WorkerMessageType.GENERATE,
@@ -274,45 +452,6 @@ export class ChunkWorkerPool extends EventEmitter {
     return Number.isFinite(minor) && !Number.isNaN(minor) && minor >= 6;
   }
 
-  private spawnWorker(index: number): WorkerEnvelope {
-    const worker = new Worker(this.workerScript, {
-      name: `chunk-worker-${index}`,
-      execArgv: this.workerExecArgv,
-    });
-    const envelope: WorkerEnvelope = {
-      id: index,
-      worker,
-      busy: false,
-    };
-    worker.on("message", (message: WorkerMessage) =>
-      this.handleWorkerMessage(envelope, message),
-    );
-    worker.on("error", (error) => {
-      this.emit("worker:error", { id: envelope.id, error });
-      this.failCurrentJob(envelope, error);
-      if (!this.disposed) {
-        this.restartWorker(envelope);
-      }
-    });
-    worker.on("exit", (code) => {
-      this.emit("worker:exit", { id: envelope.id, code });
-      if (!this.disposed) {
-        this.restartWorker(envelope);
-      }
-    });
-    return envelope;
-  }
-
-  private restartWorker(envelope: WorkerEnvelope): void {
-    if (this.disposed) return;
-    envelope.busy = false;
-    envelope.currentJob = undefined;
-    envelope.worker.removeAllListeners();
-    const replacement = this.spawnWorker(envelope.id);
-    this.workers[envelope.id] = replacement;
-    this.dispatch();
-  }
-
   private failCurrentJob(envelope: WorkerEnvelope, error: Error): void {
     const job = envelope.currentJob;
     envelope.currentJob = undefined;
@@ -332,6 +471,12 @@ export class ChunkWorkerPool extends EventEmitter {
     const job = envelope.currentJob;
     envelope.currentJob = undefined;
     envelope.busy = false;
+    envelope.lastActivityTime = Date.now();
+
+    // Schedule idle termination check
+    this.scheduleIdleTermination(envelope);
+
+    // Try to dispatch more work
     this.dispatch();
 
     if (!job) return;
