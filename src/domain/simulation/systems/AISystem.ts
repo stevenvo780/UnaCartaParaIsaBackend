@@ -871,7 +871,7 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    const MAX_QUEUED_GOALS = 3;
+    const MAX_QUEUED_GOALS = 10;
     if (aiState.goalQueue.length < MAX_QUEUED_GOALS) {
       this.prePlanGoals(agentId, aiState, now, MAX_QUEUED_GOALS);
     }

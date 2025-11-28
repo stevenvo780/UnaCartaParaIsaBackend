@@ -9,7 +9,7 @@ import { ZoneType } from "../../../../shared/constants/ZoneEnums";
 import { BuildingType } from "../../../../shared/constants/BuildingEnums";
 
 export class WorldLoader {
-  constructor(private runner: SimulationRunner) {}
+  constructor(private runner: SimulationRunner) { }
 
   public async initializeWorldResources(worldConfig: {
     width: number;
@@ -231,8 +231,7 @@ export class WorldLoader {
         }
       } catch (err) {
         logger.warn(
-          `Failed to initialize movement state for agent ${agent.id}: ${
-            err instanceof Error ? err.message : String(err)
+          `Failed to initialize movement state for agent ${agent.id}: ${err instanceof Error ? err.message : String(err)
           }`,
         );
       }
@@ -345,7 +344,7 @@ export class WorldLoader {
       id: `zone_workbench_initial_${Date.now()}`,
       type: ZoneType.WORK,
       bounds: {
-        x: baseX + 100,
+        x: baseX + 150, // Increased from +100
         y: baseY,
         width: 40,
         height: 40,
@@ -370,8 +369,8 @@ export class WorldLoader {
       id: `zone_storage_initial_${Date.now()}`,
       type: ZoneType.STORAGE,
       bounds: {
-        x: baseX + 100,
-        y: baseY + 50,
+        x: baseX + 150, // Increased from +100
+        y: baseY + 80,  // Increased from +50
         width: 40,
         height: 30,
       },
@@ -382,59 +381,17 @@ export class WorldLoader {
         buildingId: `building_storage_initial_${Date.now()}`,
         builtAt: Date.now(),
         biome: defaultBiome,
-        buildingType: BuildingType.WORKBENCH,
-        spriteVariant: 1,
+        buildingType: "storage",
+        spriteVariant: 0,
       },
     };
 
-    const restZone: Zone = {
-      id: `zone_rest_initial_${Date.now()}`,
-      type: ZoneType.REST,
-      bounds: {
-        x: baseX + 10,
-        y: baseY + 10,
-        width: 30,
-        height: 40,
-      },
-      props: {
-        restQuality: 0.8,
-        beds: 6,
-      },
-      metadata: {
-        parentZoneId: houseZone.id,
-        biome: defaultBiome,
-        buildingType: BuildingType.HOUSE,
-        spriteVariant: 1,
-      },
-    };
 
-    const kitchenZone: Zone = {
-      id: `zone_kitchen_initial_${Date.now()}`,
-      type: ZoneType.KITCHEN,
-      bounds: {
-        x: baseX + 45,
-        y: baseY + 10,
-        width: 25,
-        height: 25,
-      },
-      props: {
-        cookingSpeed: 1.0,
-        foodCapacity: 50,
-      },
-      metadata: {
-        parentZoneId: houseZone.id,
-        biome: defaultBiome,
-        buildingType: BuildingType.WORKBENCH,
-        spriteVariant: 2,
-      },
-    };
 
     this.runner.state.zones.push(
       houseZone,
       workbenchZone,
-      storageZone,
-      restZone,
-      kitchenZone,
+      storageZone
     );
 
     logger.info(`🏠 Initial infrastructure created:`);

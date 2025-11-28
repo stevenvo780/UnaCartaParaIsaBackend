@@ -22,6 +22,7 @@ import { ResourceType as ResourceTypeEnum } from "../../../../../shared/constant
 import { RoleType as RoleTypeEnum } from "../../../../../shared/constants/RoleEnums";
 import { TaskType } from "../../../../../shared/constants/TaskEnums";
 import { DemandType } from "../../../../../shared/constants/GovernanceEnums";
+import { logger } from "@/infrastructure/utils/logger";
 
 /**
  * Configuration for collective needs thresholds.
@@ -193,7 +194,7 @@ function calculateCollectiveState(
 
   const activeDemands = ctx.getActiveDemands?.() || [];
 
-  return {
+  const state = {
     totalFood,
     totalWater,
     totalWood,
@@ -206,6 +207,15 @@ function calculateCollectiveState(
     stockpileFillRatio: totalCapacity > 0 ? usedCapacity / totalCapacity : 0,
     activeDemands,
   };
+
+  // Debug log every ~50 calls (using random sampling)
+  if (Math.random() < 0.1) {
+    logger.debug(
+      `[Collective] pop=${state.population} food/cap=${state.foodPerCapita.toFixed(1)} water/cap=${state.waterPerCapita.toFixed(1)} wood=${state.totalWood} stone=${state.totalStone}`,
+    );
+  }
+
+  return state;
 }
 
 /**
@@ -231,6 +241,10 @@ function getMostNeededResource(
       resource: ResourceTypeEnum.WATER,
       urgency: Math.min(1, urgency * 1.3),
     });
+    // Log water shortage detection (always log, no sampling)
+    logger.debug(
+      `[Collective] Water shortage: ${state.waterPerCapita.toFixed(1)}/${thresholds.waterPerCapita} per capita, urgency=${(urgency * 1.3).toFixed(2)}`,
+    );
   }
 
   if (state.totalWood < thresholds.minWoodReserve) {
@@ -334,12 +348,26 @@ export function evaluateCollectiveNeeds(
 
   const mostNeeded = getMostNeededResource(state, thresholds);
 
+  // Debug: log mostNeeded resource decision (only for water to reduce noise)
+  if (mostNeeded?.resource === ResourceTypeEnum.WATER) {
+    logger.debug(
+      `📊 [Collective] ${aiState.entityId}: mostNeeded=WATER urgency=${mostNeeded.urgency.toFixed(2)}, hasTaskSystem=${!!ctx.taskSystem}`,
+    );
+  }
+
   if (mostNeeded && ctx.taskSystem) {
     const existingTask = ctx.taskSystem
       .getAvailableCommunityTasks()
       .find(
         (t) => (t.metadata?.resourceType as string) === mostNeeded.resource,
       );
+
+    // Debug: log existingTask check
+    if (mostNeeded.resource === ResourceTypeEnum.WATER) {
+      logger.debug(
+        `💧 [Collective] ${aiState.entityId}: checking water task, existingTask=${existingTask?.id ?? "none"}`,
+      );
+    }
 
     if (!existingTask) {
       const workersNeeded = Math.ceil(state.population * 0.15);
@@ -416,6 +444,13 @@ export function evaluateCollectiveNeeds(
     finalPriority = Math.min(0.85, Math.max(0.3, finalPriority));
 
     const resourceGoalType = getGatherGoalType(mostNeeded.resource);
+
+    // Debug log when creating collective gather goals
+    if (mostNeeded.resource === ResourceTypeEnum.WATER) {
+      logger.debug(
+        `💧 [Collective] ${aiState.entityId}: Creating WATER goal, priority=${finalPriority.toFixed(2)}, urgency=${mostNeeded.urgency.toFixed(2)}`,
+      );
+    }
 
     goals.push({
       id: `collective_gather_${mostNeeded.resource}_${now}`,
@@ -526,15 +561,15 @@ export function evaluateCollectiveNeeds(
 function getGatherGoalType(resource: ResourceType): GoalType {
   switch (resource) {
     case ResourceTypeEnum.FOOD:
-      return GoalTypeEnum.GATHER;
+      return GoalTypeEnum.WORK;
     case ResourceTypeEnum.WATER:
-      return GoalTypeEnum.GATHER;
+      return GoalTypeEnum.WORK;
     case ResourceTypeEnum.WOOD:
       return GoalTypeEnum.WORK;
     case ResourceTypeEnum.STONE:
       return GoalTypeEnum.WORK;
     default:
-      return GoalTypeEnum.GATHER;
+      return GoalTypeEnum.WORK;
   }
 }
 

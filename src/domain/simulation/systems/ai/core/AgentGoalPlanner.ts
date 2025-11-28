@@ -41,6 +41,7 @@ import { selectBestZone, getUnexploredZones, prioritizeGoals } from "./utils";
 import type { Quest } from "../../../../types/simulation/quests";
 import { evaluateExpansionGoals } from "../evaluators/ExpansionEvaluator";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
+import { logger } from "@/infrastructure/utils/logger";
 
 /**
  * Dependencies interface for goal planning.
@@ -236,7 +237,11 @@ export async function planGoals(
   const cognitiveGoals = evaluateCognitiveDrives(cognitiveDeps, aiState);
   goals.push(...cognitiveGoals);
 
-  if (deps.getAgentInventory && deps.getAllStockpiles && deps.getPopulation) {
+  // Debug: Check why collective needs might not be called
+  const hasAllDeps = deps.getAgentInventory && deps.getAllStockpiles && deps.getPopulation;
+  logger.debug(`[GoalPlanner] ${aiState.entityId}: hasAllDeps=${hasAllDeps} inv=${!!deps.getAgentInventory} stock=${!!deps.getAllStockpiles} pop=${!!deps.getPopulation}`);
+  
+  if (hasAllDeps) {
     const collectiveDeps: CollectiveNeedsContext = {
       gameState: deps.gameState,
       getAgentInventory: deps.getAgentInventory,

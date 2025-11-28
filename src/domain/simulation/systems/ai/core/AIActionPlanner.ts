@@ -457,6 +457,10 @@ export class AIActionPlanner {
     const taskType = goal.data?.taskType as string | undefined;
     const resourceType = goal.data?.resourceType as string | undefined;
 
+    logger.debug(
+      `⚙️ [Work] ${agentId}: goal=${goal.id}, taskType=${taskType}, resourceType=${resourceType}, hasTargetId=${!!goal.targetId}, hasTargetZone=${!!goal.targetZoneId}`,
+    );
+
     if (goal.targetId && goal.targetPosition) {
       const agentPos = this.getPosition(agentId);
       if (agentPos) {
@@ -568,6 +572,9 @@ export class AIActionPlanner {
         const waterSource = this.deps.findNearestResource(
           agentId,
           "water_source",
+        );
+        logger.debug(
+          `💧 [Work] ${agentId}: searching water_source, found=${waterSource ? waterSource.id : "null"}`,
         );
         if (waterSource) {
           const agentPos = this.getPosition(agentId);

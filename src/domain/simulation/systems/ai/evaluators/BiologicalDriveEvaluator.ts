@@ -9,6 +9,8 @@ import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 import type { Inventory } from "../../../../types/simulation/economy";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
 
+import { logger } from "@/infrastructure/utils/logger";
+
 export interface BiologicalDriveDeps {
   getEntityNeeds: (entityId: string) => EntityNeedsData | undefined;
   getAgentInventory?: (entityId: string) => Inventory | undefined;
@@ -115,6 +117,10 @@ export function evaluateBiologicalDrives(
       const waterTarget = deps.findNearestResource?.(
         aiState.entityId,
         "water_source",
+      );
+
+      logger.debug(
+        `💧 [Bio] ${aiState.entityId}: thirst=${needs.thirst.toFixed(0)} utility=${thirstUtility.toFixed(2)} waterTarget=${waterTarget ? waterTarget.id : "null"}`,
       );
 
       if (
