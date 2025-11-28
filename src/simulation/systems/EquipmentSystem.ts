@@ -157,7 +157,6 @@ export class EquipmentSystem {
     const recommendedTools = ROLE_RECOMMENDED_TOOLS[role.toLowerCase()];
     if (!recommendedTools) return undefined;
 
-    // Find the first recommended tool that the agent has
     for (const toolId of recommendedTools) {
       if (availableItems.includes(toolId)) {
         this.equipItem(agentId, EquipmentSlot.MAIN_HAND, toolId);

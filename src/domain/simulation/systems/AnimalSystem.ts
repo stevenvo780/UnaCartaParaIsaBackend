@@ -459,7 +459,7 @@ export class AnimalSystem {
       }
     }
 
-    if (animal.needs.hunger < 30) {
+    if (animal.needs.hunger < 50) {
       if (config.isPredator) {
         animal.state = AnimalState.HUNTING;
         const prey = this.getAnimalsInRadius(
@@ -515,7 +515,7 @@ export class AnimalSystem {
       }
     }
 
-    if (animal.needs.thirst < 30 && config.consumesWater) {
+    if (animal.needs.thirst < 50 && config.consumesWater) {
       animal.state = AnimalState.SEEKING_WATER;
       const waterResources = this.findNearbyWater(
         animal,
@@ -572,14 +572,33 @@ export class AnimalSystem {
       return;
     }
 
-    if (animal.state === AnimalState.IDLE) {
-      if (Math.random() < 0.8) {
-        animal.state = AnimalState.WANDERING;
+    if (
+      animal.state === AnimalState.IDLE ||
+      animal.state === AnimalState.WANDERING
+    ) {
+      if (
+        config.consumesVegetation &&
+        this.terrainSystem &&
+        Math.random() < 0.2
+      ) {
+        const TILE_SIZE = 64;
+        const tileX = Math.floor(animal.position.x / TILE_SIZE);
+        const tileY = Math.floor(animal.position.y / TILE_SIZE);
+        const terrainTile = this.terrainSystem.getTile(tileX, tileY);
+
+        if (terrainTile?.assets.terrain === TileType.TERRAIN_GRASSLAND) {
+          animal.needs.hunger = Math.min(100, animal.needs.hunger + 5);
+        }
+      }
+
+      if (animal.state === AnimalState.IDLE) {
+        if (Math.random() < 0.8) {
+          animal.state = AnimalState.WANDERING;
+          AnimalBehavior.wander(animal, 0.5, deltaSeconds);
+        }
+      } else {
         AnimalBehavior.wander(animal, 0.5, deltaSeconds);
       }
-    } else {
-      animal.state = AnimalState.WANDERING;
-      AnimalBehavior.wander(animal, 0.5, deltaSeconds);
     }
   }
 

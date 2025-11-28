@@ -79,8 +79,8 @@ export function evaluateCombatGoals(
               priority: morale < panicThreshold ? 0.95 : 0.85,
               targetPosition: fleePos,
               createdAt: now,
-              expiresAt: now + 3000,
-              data: { reason: "enemy_too_close" },
+              expiresAt: now + 8000,
+              data: { reason: "enemy_too_close", threatPos: nearest.pos },
             });
           } else if (nearest.d < SEEK) {
             let shouldAttack = false;
@@ -148,8 +148,8 @@ export function evaluateCombatGoals(
             priority: 1.0,
             targetPosition: fleePos,
             createdAt: now,
-            expiresAt: now + 3000,
-            data: { reason: "predator_panic" },
+            expiresAt: now + 8000,
+            data: { reason: "predator_panic", threatPos: predator.position },
           });
         }
       }

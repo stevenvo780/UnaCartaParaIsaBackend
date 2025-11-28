@@ -314,11 +314,11 @@ export class AnimalBehavior {
       (other) =>
         other.type === animal.type &&
         other.id !== animal.id &&
-        other.needs.reproductiveUrge > 70 &&
-        animal.needs.hunger > 50 &&
-        animal.needs.thirst > 50 &&
-        other.needs.hunger > 50 &&
-        other.needs.thirst > 50,
+        other.needs.reproductiveUrge > 60 &&
+        animal.needs.hunger > 40 &&
+        animal.needs.thirst > 40 &&
+        other.needs.hunger > 40 &&
+        other.needs.thirst > 40,
     );
 
     if (nearbyMate) {
@@ -326,8 +326,8 @@ export class AnimalBehavior {
       const dy = nearbyMate.position.y - animal.position.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      if (distance < 30) {
-        if (Math.random() < 0.2) {
+      if (distance < 50) {
+        if (Math.random() < 0.35) {
           const offspringPosition = {
             x:
               (animal.position.x + nearbyMate.position.x) / 2 +

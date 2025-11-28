@@ -75,7 +75,6 @@ export const UNARMED_STATS: EquipmentStats = {
  * Maps ItemId to their combat/gathering stats.
  */
 export const EQUIPMENT_STATS: Record<string, EquipmentStats> = {
-  // ============ AXES ============
   [ItemId.STONE_AXE]: {
     itemId: ItemId.STONE_AXE,
     name: "Hacha de Piedra",
@@ -105,7 +104,6 @@ export const EQUIPMENT_STATS: Record<string, EquipmentStats> = {
     },
   },
 
-  // ============ PICKAXES ============
   [ItemId.STONE_PICKAXE]: {
     itemId: ItemId.STONE_PICKAXE,
     name: "Pico de Piedra",
@@ -139,7 +137,6 @@ export const EQUIPMENT_STATS: Record<string, EquipmentStats> = {
     },
   },
 
-  // ============ MELEE WEAPONS ============
   [ItemId.WOODEN_CLUB]: {
     itemId: ItemId.WOODEN_CLUB,
     name: "Garrote de Madera",
@@ -158,7 +155,7 @@ export const EQUIPMENT_STATS: Record<string, EquipmentStats> = {
     damageMultiplier: 2.0,
     attackSpeed: 1.3,
     gatheringBonus: {
-      [GatherableResource.FOOD]: 1.2, // Good for butchering
+      [GatherableResource.FOOD]: 1.2,
     },
     bonusYieldChance: {
       [GatherableResource.FOOD]: 0.1,
@@ -175,14 +172,13 @@ export const EQUIPMENT_STATS: Record<string, EquipmentStats> = {
     bonusYieldChance: {},
   },
 
-  // ============ RANGED WEAPONS ============
   [ItemId.BOW]: {
     itemId: ItemId.BOW,
     name: "Arco",
     toolType: EquipmentType.RANGED_WEAPON,
     attackRange: 300,
     damageMultiplier: 2.5,
-    attackSpeed: 0.7, // Slower to draw
+    attackSpeed: 0.7,
     gatheringBonus: {},
     bonusYieldChance: {},
   },
@@ -247,10 +243,8 @@ export function getBestWeapon(
       stats.toolType === EquipmentType.RANGED_WEAPON;
     if (!isWeapon) continue;
 
-    // Score based on damage and range
     let score = stats.damageMultiplier * stats.attackRange;
 
-    // Preference bonus
     if (preferRanged && stats.toolType === EquipmentType.RANGED_WEAPON) {
       score *= 1.5;
     } else if (!preferRanged && stats.toolType === EquipmentType.MELEE_WEAPON) {
@@ -274,8 +268,8 @@ export const ROLE_RECOMMENDED_TOOLS: Record<string, string[]> = {
   hunter: [ItemId.BOW, ItemId.STONE_DAGGER, ItemId.WOODEN_CLUB],
   lumberjack: [ItemId.IRON_AXE, ItemId.STONE_AXE],
   quarryman: [ItemId.IRON_PICKAXE, ItemId.STONE_PICKAXE],
-  gatherer: [ItemId.STONE_DAGGER], // For berries/mushrooms
-  farmer: [ItemId.STONE_AXE], // For clearing land
+  gatherer: [ItemId.STONE_DAGGER],
+  farmer: [ItemId.STONE_AXE],
   builder: [ItemId.STONE_AXE, ItemId.STONE_PICKAXE],
   guard: [ItemId.IRON_SWORD, ItemId.STONE_DAGGER, ItemId.WOODEN_CLUB],
 };

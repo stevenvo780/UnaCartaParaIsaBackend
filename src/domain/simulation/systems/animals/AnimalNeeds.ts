@@ -28,9 +28,15 @@ export class AnimalNeeds {
       animal.needs.fear = Math.max(0, animal.needs.fear - 10 * deltaMinutes);
     }
 
-    if (animal.needs.hunger > 80 && animal.needs.thirst > 80) {
-      const maxHealth = config.maxHealth * animal.genes.health;
-      if (animal.health < maxHealth) {
+    const maxHealth = config.maxHealth * animal.genes.health;
+    if (animal.health < maxHealth) {
+      if (animal.needs.hunger > 50 && animal.needs.thirst > 50) {
+        const recoveryRate = maxHealth * 0.15;
+        animal.health = Math.min(
+          maxHealth,
+          animal.health + recoveryRate * deltaMinutes,
+        );
+      } else if (animal.needs.hunger > 20 && animal.needs.thirst > 20) {
         const recoveryRate = maxHealth * 0.05;
         animal.health = Math.min(
           maxHealth,

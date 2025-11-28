@@ -760,15 +760,50 @@ export class AIActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
-    if (goal.targetPosition) {
-      return {
-        actionType: ActionType.MOVE,
-        agentId,
-        targetPosition: goal.targetPosition,
-        timestamp,
-      };
+    if (!goal.targetPosition) {
+      return null;
     }
-    return null;
+
+    const agentPos = this.getPosition(agentId);
+    if (!agentPos) {
+      return null;
+    }
+
+    const distToTarget = Math.hypot(
+      agentPos.x - goal.targetPosition.x,
+      agentPos.y - goal.targetPosition.y,
+    );
+
+    if (distToTarget < 30) {
+      const threatPos = goal.data?.threatPos as
+        | { x: number; y: number }
+        | undefined;
+      if (threatPos) {
+        const distToThreat = Math.hypot(
+          agentPos.x - threatPos.x,
+          agentPos.y - threatPos.y,
+        );
+
+        if (distToThreat > 180) {
+          logger.debug(
+            `🏃 [Flee] ${agentId}: Escaped threat (dist=${Math.round(distToThreat)}), stopping flee`,
+          );
+          return null;
+        }
+      } else {
+        logger.debug(
+          `🏃 [Flee] ${agentId}: Arrived at flee position, stopping`,
+        );
+        return null;
+      }
+    }
+
+    return {
+      actionType: ActionType.MOVE,
+      agentId,
+      targetPosition: goal.targetPosition,
+      timestamp,
+    };
   }
 
   private planCombat(
@@ -1010,18 +1045,15 @@ export class AIActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
-    // Check if agent has a weapon - hunters need weapons to hunt
     const hasWeapon = this.deps.agentHasWeapon?.(agentId) ?? false;
 
     if (!hasWeapon) {
-      // Try to claim a weapon from storage
       const claimed = this.deps.tryClaimWeapon?.(agentId) ?? false;
       if (!claimed) {
-        // No weapon available - fall back to gathering food instead
         logger.debug(
           `🎯 [Hunt] ${agentId}: No weapon available, switching to food gathering`,
         );
-        // Find nearest food resource (berries, etc.)
+
         const foodResource = this.deps.findNearestResource?.(
           agentId,
           ResourceType.FOOD,
@@ -1034,7 +1066,7 @@ export class AIActionPlanner {
             timestamp,
           };
         }
-        // No food either, explore
+
         return this.planExplore(agentId, goal, timestamp);
       }
       logger.info(`🎯 [Hunt] ${agentId}: Claimed weapon from storage!`);
@@ -1074,8 +1106,9 @@ export class AIActionPlanner {
           agentPos.x - targetPosition.x,
           agentPos.y - targetPosition.y,
         );
-        // Use equipped weapon's attack range, or default if not available
-        const attackRange = this.deps.getAgentAttackRange?.(agentId) ?? this.ATTACK_RANGE;
+
+        const attackRange =
+          this.deps.getAgentAttackRange?.(agentId) ?? this.ATTACK_RANGE;
         if (dist < attackRange) {
           logger.debug(
             `🎯 [Hunt] ${agentId}: In attack range (${Math.round(dist)} < ${attackRange}), attacking ${targetId}`,

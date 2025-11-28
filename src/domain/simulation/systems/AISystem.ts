@@ -374,7 +374,6 @@ export class AISystem extends EventEmitter {
       this.boundHandleActionComplete,
     );
 
-    // Auto-equip tools when role is assigned
     simulationEvents.on(
       GameEventType.ROLE_REASSIGNED,
       this.handleRoleReassigned.bind(this),
@@ -428,7 +427,6 @@ export class AISystem extends EventEmitter {
         return this.equipmentSystem.getAttackRange(agentId);
       },
       agentHasWeapon: (agentId: string): boolean => {
-        // Agent has weapon if they have something equipped in main hand
         const equipped = this.equipmentSystem.getEquippedItem(
           agentId,
           EquipmentSlot.MAIN_HAND,
@@ -436,11 +434,13 @@ export class AISystem extends EventEmitter {
         return equipped !== undefined;
       },
       tryClaimWeapon: (agentId: string): boolean => {
-        // Try to find and claim a hunting weapon from storage
         const weapon = toolStorage.findToolForRole("hunter");
         if (weapon && toolStorage.claimTool(agentId, weapon)) {
-          // Equip the claimed weapon
-          this.equipmentSystem.equipItem(agentId, EquipmentSlot.MAIN_HAND, weapon);
+          this.equipmentSystem.equipItem(
+            agentId,
+            EquipmentSlot.MAIN_HAND,
+            weapon,
+          );
           return true;
         }
         return false;
@@ -2578,11 +2578,9 @@ export class AISystem extends EventEmitter {
   }): void {
     const { agentId, newRole } = payload;
 
-    // Get agent's inventory items
     const inventory = this.inventorySystem?.getAgentInventory(agentId);
     if (!inventory) return;
 
-    // Get all item IDs the agent has
     const availableItems: string[] = [];
     for (const [itemId, quantity] of Object.entries(inventory)) {
       if (quantity > 0) {
@@ -2590,7 +2588,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Auto-equip based on role
     const equipped = this.equipmentSystem.autoEquipForRole(
       agentId,
       newRole,
@@ -2602,7 +2599,6 @@ export class AISystem extends EventEmitter {
         `🗡️ [Equipment] ${agentId}: Auto-equipped ${equipped} for role ${newRole}`,
       );
     } else {
-      // If no specific tool for role, try to equip any weapon for combat roles
       if (
         newRole.toLowerCase() === "hunter" ||
         newRole.toLowerCase() === "guard"
@@ -2610,7 +2606,7 @@ export class AISystem extends EventEmitter {
         const weapon = this.equipmentSystem.autoEquipBestWeapon(
           agentId,
           availableItems,
-          newRole.toLowerCase() === "hunter", // prefer ranged for hunters
+          newRole.toLowerCase() === "hunter",
         );
         if (weapon) {
           logger.info(

@@ -122,13 +122,11 @@ export class ToolStorageSystem {
       return false;
     }
 
-    // Remove from storage
     stored.quantity--;
     if (stored.quantity <= 0) {
       this.storage.delete(itemId);
     }
 
-    // Track claim
     this.claimedTools.set(agentId, itemId);
 
     logger.info(`🔧 [ToolStorage] ${agentId} claimed ${itemId}`);
@@ -160,7 +158,6 @@ export class ToolStorageSystem {
       return undefined;
     }
 
-    // Return first available tool (they're ordered by preference)
     for (const toolId of neededTools) {
       if (this.hasTool(toolId)) {
         return toolId;
@@ -177,8 +174,7 @@ export class ToolStorageSystem {
    */
   roleRequiresTool(role: string): boolean {
     const key = role.toLowerCase();
-    // Hunters NEED weapons to hunt
-    // Loggers/quarrymen work much slower without tools but can still work
+
     return key === "hunter" || key === "guard";
   }
 

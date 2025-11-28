@@ -157,10 +157,8 @@ export class EnhancedCraftingSystem {
     const output = recipe.output.itemId;
 
     if (BASE_WEAPONS.includes(output as WeaponId)) {
-      // Check if agent already has a weapon
       const currentWeapon = this.equippedWeapons.get(agentId);
       if (currentWeapon) {
-        // Already armed - deposit the new weapon to shared storage
         toolStorage.depositTool(output, recipe.output.quantity);
         simulationEvents.emit(GameEventType.ITEM_CRAFTED, {
           agentId,
@@ -170,7 +168,7 @@ export class EnhancedCraftingSystem {
         });
         return;
       }
-      // Not armed - equip the weapon
+
       this.equippedWeapons.set(agentId, output as WeaponId);
       return;
     }
