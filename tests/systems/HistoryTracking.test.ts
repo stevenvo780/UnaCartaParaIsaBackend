@@ -64,7 +64,7 @@ describe("History Tracking", () => {
 
   it("should record economy transactions", () => {
     const agentId = "agent-1";
-    entityIndex.updateEntity({ id: agentId, type: "agent", stats: { money: 100 } } as any);
+    entityIndex.setEntity({ id: agentId, type: "agent", stats: { money: 100 } } as any);
 
     economySystem.addMoney(agentId, 50, "Salary");
     economySystem.removeMoney(agentId, 20, "Tax");
@@ -81,7 +81,7 @@ describe("History Tracking", () => {
 
   it("should limit economy history to 10 entries", () => {
     const agentId = "agent-1";
-    entityIndex.updateEntity({ id: agentId, type: "agent", stats: { money: 1000 } } as any);
+    entityIndex.setEntity({ id: agentId, type: "agent", stats: { money: 1000 } } as any);
 
     for (let i = 0; i < 15; i++) {
       economySystem.addMoney(agentId, 10, `Income ${i}`);
