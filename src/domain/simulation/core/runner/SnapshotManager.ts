@@ -124,12 +124,34 @@ export class SnapshotManager {
 
         let ai;
         if (aiState) {
+          // Serialize memory structures (Set -> Array, Map -> Object/Array)
+          const memory = aiState.memory
+            ? {
+              ...aiState.memory,
+              visitedZones: Array.from(aiState.memory.visitedZones || []),
+              knownResourceLocations: aiState.memory.knownResourceLocations
+                ? Object.fromEntries(aiState.memory.knownResourceLocations)
+                : {},
+              successfulActivities: aiState.memory.successfulActivities
+                ? Object.fromEntries(aiState.memory.successfulActivities)
+                : {},
+              failedAttempts: aiState.memory.failedAttempts
+                ? Object.fromEntries(aiState.memory.failedAttempts)
+                : {},
+              failedTargets: aiState.memory.failedTargets
+                ? Object.fromEntries(aiState.memory.failedTargets)
+                : {},
+            }
+            : undefined;
+
           ai = {
             currentGoal: aiState.currentGoal || undefined,
             goalQueue: aiState.goalQueue || [],
             currentAction: aiState.currentAction || undefined,
             offDuty: aiState.offDuty || false,
             lastDecisionTime: aiState.lastDecisionTime || 0,
+            personality: aiState.personality,
+            memory,
           };
         }
 
@@ -200,12 +222,34 @@ export class SnapshotManager {
 
         let ai;
         if (aiState) {
+          // Serialize memory structures (Set -> Array, Map -> Object/Array)
+          const memory = aiState.memory
+            ? {
+              ...aiState.memory,
+              visitedZones: Array.from(aiState.memory.visitedZones || []),
+              knownResourceLocations: aiState.memory.knownResourceLocations
+                ? Object.fromEntries(aiState.memory.knownResourceLocations)
+                : {},
+              successfulActivities: aiState.memory.successfulActivities
+                ? Object.fromEntries(aiState.memory.successfulActivities)
+                : {},
+              failedAttempts: aiState.memory.failedAttempts
+                ? Object.fromEntries(aiState.memory.failedAttempts)
+                : {},
+              failedTargets: aiState.memory.failedTargets
+                ? Object.fromEntries(aiState.memory.failedTargets)
+                : {},
+            }
+            : undefined;
+
           ai = {
             currentGoal: aiState.currentGoal || undefined,
             goalQueue: aiState.goalQueue || [],
             currentAction: aiState.currentAction || undefined,
             offDuty: aiState.offDuty || false,
             lastDecisionTime: aiState.lastDecisionTime || 0,
+            personality: aiState.personality,
+            memory,
           };
         }
 

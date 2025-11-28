@@ -65,5 +65,7 @@ export interface AgentProfile {
     currentAction: unknown;
     offDuty: boolean;
     lastDecisionTime: number;
+    personality?: unknown;
+    memory?: unknown;
   };
 }
