@@ -189,6 +189,92 @@ export class AIGoalValidator {
   }
 
   /**
+   * Checks if a goal is invalid due to timeout only.
+   * Used by AISystem to queue re-evaluations instead of immediate invalidation.
+   * Returns true if the goal timed out but target/resources are still valid.
+   */
+  public isGoalTimedOut(goal: AIGoal, _agentId: string): boolean {
+    const now = Date.now();
+
+    if (goal.expiresAt && now > goal.expiresAt) {
+      return true;
+    }
+
+    if (now - goal.createdAt > this.GOAL_TIMEOUT_MS) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Checks if a goal has a "hard" invalidation (target gone, resource depleted, etc.)
+   * These should be handled immediately, not queued.
+   */
+  public isGoalHardInvalid(goal: AIGoal, agentId: string): boolean {
+    if (goal.targetZoneId) {
+      const zone = this.deps.gameState.zones?.find(
+        (z) => z.id === goal.targetZoneId,
+      );
+      if (!zone) {
+        logger.debug(
+          `🚫 [HARD_INVALID] ${agentId} goal ${goal.type} zone not found`,
+        );
+        return true;
+      }
+    }
+
+    const resourceValid = this.isResourceTargetValid(goal);
+    if (resourceValid === false) {
+      logger.debug(
+        `🚫 [HARD_INVALID] ${agentId} goal ${goal.type} resource invalid`,
+      );
+      return true;
+    }
+
+    const huntTargetValid = this.isHuntTargetValid(goal);
+    if (huntTargetValid === false) {
+      logger.debug(
+        `🚫 [HARD_INVALID] ${agentId} goal ${goal.type} hunt target invalid`,
+      );
+      return true;
+    }
+
+    const combatTargetValid = this.isCombatTargetValid(goal);
+    if (combatTargetValid === false) {
+      logger.debug(
+        `🚫 [HARD_INVALID] ${agentId} goal ${goal.type} combat target invalid`,
+      );
+      return true;
+    }
+
+    if (
+      (goal.type === GoalType.ASSIST ||
+        goal.type.startsWith(GoalPrefix.ASSIST)) &&
+      goal.data?.targetAgentId
+    ) {
+      const targetId = goal.data.targetAgentId as string;
+      const targetAgent = this.deps.agentRegistry?.getProfile(targetId);
+      if (!targetAgent || targetAgent.isDead) {
+        logger.debug(
+          `🚫 [HARD_INVALID] ${agentId} goal ${goal.type} assist target invalid`,
+        );
+        return true;
+      }
+    }
+
+    const agent = this.deps.agentRegistry?.getProfile(agentId);
+    if (!agent || agent.isDead) {
+      logger.debug(
+        `🚫 [HARD_INVALID] ${agentId} goal ${goal.type} agent not found or dead`,
+      );
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
    * Checks if a goal is invalid and should be abandoned.
    */
   public isGoalInvalid(goal: AIGoal, agentId: string): boolean {

@@ -227,7 +227,9 @@ export class EnhancedCraftingSystem {
     );
   }
 
-  public getKnownRecipes(agentId: string): Map<string, AgentRecipeState> | undefined {
+  public getKnownRecipes(
+    agentId: string,
+  ): Map<string, AgentRecipeState> | undefined {
     return this.knownRecipes.get(agentId);
   }
 

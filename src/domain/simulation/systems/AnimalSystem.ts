@@ -942,7 +942,7 @@ export class AnimalSystem {
     biome?: string,
   ): Animal | null {
     const resolvedBiome = biome || "grassland";
-    // createAnimal() already emits ANIMAL_SPAWNED event
+
     const animal = AnimalSpawning.createAnimal(type, position, resolvedBiome);
 
     if (!animal) {
@@ -950,7 +950,6 @@ export class AnimalSystem {
     }
 
     this.addAnimal(animal);
-    // Note: Event emission removed - AnimalSpawning.createAnimal() handles it
 
     this.updateGameStateSnapshot();
     return animal;

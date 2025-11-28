@@ -130,7 +130,7 @@ export class SnapshotManager {
 
         let ai;
         if (aiState) {
-          // Serialize memory structures (Set -> Array, Map -> Object/Array)
+
           const memory = aiState.memory
             ? {
               ...aiState.memory,
@@ -159,24 +159,22 @@ export class SnapshotManager {
             personality: aiState.personality,
             memory,
           };
-        };
-      }
+        }
 
-        // Serialize history data
         let history;
-      if (
-        this.runner.economySystem ||
-        this.runner.combatSystem ||
-        this.runner.taskSystem
-      ) {
-        history = {
-          economy: this.runner.economySystem?.getTransactionHistory(agent.id),
-          combat: this.runner.combatSystem?.getPersonalCombatHistory(
-            agent.id,
-          ),
-          work: this.runner.taskSystem?.getWorkHistory(agent.id),
-        };
-      }
+        if (
+          this.runner.economySystem ||
+          this.runner.combatSystem ||
+          this.runner.taskSystem
+        ) {
+          history = {
+            economy: this.runner.economySystem?.getTransactionHistory(agent.id),
+            combat: this.runner.combatSystem?.getPersonalCombatHistory(
+              agent.id,
+            ),
+            work: this.runner.taskSystem?.getWorkHistory(agent.id),
+          };
+        }
 
       return {
         ...agent,
@@ -246,7 +244,7 @@ this.snapshotWorker.postMessage({
 
       let ai;
       if (aiState) {
-        // Serialize memory structures (Set -> Array, Map -> Object/Array)
+
         const memory = aiState.memory
           ? {
             ...aiState.memory,
@@ -277,7 +275,7 @@ this.snapshotWorker.postMessage({
         };
       }
 
-      // Serialize crafting data
+
       let crafting;
       if (this.runner.enhancedCraftingSystem) {
         const recipes = this.runner.enhancedCraftingSystem.getKnownRecipes(
@@ -290,7 +288,7 @@ this.snapshotWorker.postMessage({
         }
       }
 
-      // Serialize history data
+
       let history;
       if (
         this.runner.economySystem ||

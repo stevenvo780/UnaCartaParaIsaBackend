@@ -231,6 +231,22 @@ export class AISystem extends EventEmitter {
 
   private readonly EXPLORE_RANGE = 200;
 
+  /**
+   * Queue of agents pending re-evaluation after goal timeout.
+   * This prevents cascade saturation when multiple goals expire at once.
+   */
+  private pendingReEvaluations = new Set<string>();
+  /**
+   * Maximum agents to re-evaluate per tick from the pending queue.
+   * This throttles re-evaluations to prevent tick saturation.
+   */
+  private readonly MAX_REEVALUATIONS_PER_TICK = 1;
+  /**
+   * Goal expiration jitter range in ms.
+   * Goals will have random jitter added to their createdAt to desynchronize expirations.
+   */
+  private readonly GOAL_JITTER_RANGE_MS = 15000;
+
   private readonly boundHandleActionComplete: (payload: {
     agentId: string;
     success: boolean;
@@ -586,7 +602,6 @@ export class AISystem extends EventEmitter {
     if (systems.questSystem) this.questSystem = systems.questSystem;
     if (systems.timeSystem) this.timeSystem = systems.timeSystem;
 
-    // Invalidate cached dependencies when systems change
     this.cachedDeps = null;
 
     this.initializeSubsystems();
@@ -715,6 +730,49 @@ export class AISystem extends EventEmitter {
     }
 
     this.agentIndex = (this.agentIndex + batchSize) % agents.length;
+
+    await this.processPendingReEvaluations(now);
+  }
+
+  /**
+   * Processes pending re-evaluations from agents with timed-out goals.
+   * Throttled to MAX_REEVALUATIONS_PER_TICK to prevent cascade saturation.
+   */
+  private async processPendingReEvaluations(now: number): Promise<void> {
+    if (this.pendingReEvaluations.size === 0) return;
+
+    let processed = 0;
+    for (const agentId of this.pendingReEvaluations) {
+      if (processed >= this.MAX_REEVALUATIONS_PER_TICK) break;
+
+      const aiState = this.aiStates.get(agentId);
+      if (!aiState || aiState.currentGoal) {
+        this.pendingReEvaluations.delete(agentId);
+        continue;
+      }
+
+      const agent = this.agentRegistry?.getProfile(agentId);
+      if (!agent || agent.isDead) {
+        this.pendingReEvaluations.delete(agentId);
+        continue;
+      }
+
+      try {
+        const newGoal = await this.makeDecision(agentId, aiState, now);
+        if (newGoal) {
+          aiState.currentGoal = newGoal;
+          aiState.lastDecisionTime = now;
+          logger.debug(
+            `🔄 [AI] ${agentId}: Re-evaluated from queue -> ${newGoal.type}`,
+          );
+        }
+      } catch (error) {
+        logger.error(`Error re-evaluating agent ${agentId}`, { error });
+      }
+
+      this.pendingReEvaluations.delete(agentId);
+      processed++;
+    }
   }
 
   /**
@@ -736,6 +794,7 @@ export class AISystem extends EventEmitter {
   /**
    * Processes a single agent's AI state.
    * Checks if current goal is completed or invalid, then makes a new decision if needed.
+   * Uses soft invalidation for timeouts to prevent cascade saturation.
    *
    * @param agentId - Agent identifier
    * @param aiState - Agent's AI state
@@ -749,8 +808,26 @@ export class AISystem extends EventEmitter {
     if (aiState.currentGoal) {
       if (this.isGoalCompleted(aiState.currentGoal, agentId)) {
         this.completeGoal(aiState, agentId);
-      } else if (this.isGoalInvalid(aiState.currentGoal, agentId)) {
+      } else if (
+        this.goalValidator.isGoalHardInvalid(aiState.currentGoal, agentId)
+      ) {
+        // Hard invalidation: target gone, resource depleted - handle immediately
         this.failGoal(aiState, agentId);
+      } else if (
+        this.goalValidator.isGoalTimedOut(aiState.currentGoal, agentId)
+      ) {
+        // Soft invalidation: timeout only - queue for re-evaluation to prevent cascade
+        // Agent continues current action/behavior until re-evaluated
+        if (!this.pendingReEvaluations.has(agentId)) {
+          this.pendingReEvaluations.add(agentId);
+          logger.debug(
+            `⏰ [AI] ${agentId}: Goal timeout, queued for re-evaluation (queue size: ${this.pendingReEvaluations.size})`,
+          );
+        }
+        // Clear goal but don't trigger immediate re-evaluation
+        aiState.currentGoal = null;
+        aiState.currentAction = null;
+        return; // Let the queue handle re-evaluation in next ticks
       } else if (aiState.currentAction) {
         return;
       }
@@ -885,11 +962,9 @@ export class AISystem extends EventEmitter {
       ? needs.hunger > 70 && needs.thirst > 70 && needs.energy > 70
       : false;
 
-    // New condition: explore if stuck without goal for too long
     const timeSinceDecision = Date.now() - (aiState.lastDecisionTime || 0);
     const stuckWithoutGoal = !aiState.currentGoal && timeSinceDecision > 5000;
 
-    // Trigger exploration if any condition is met
     if (!inventoryEmpty && !needsSatisfied && !stuckWithoutGoal) return;
 
     const pos = this.agentRegistry?.getPosition(agentId);
@@ -1347,7 +1422,14 @@ export class AISystem extends EventEmitter {
     const deps = this.getDeps();
 
     const goals = await planGoals(deps, aiState, now);
-    return goals.length > 0 ? goals[0] : null;
+    if (goals.length > 0) {
+      const goal = goals[0];
+
+      const jitter = Math.floor(Math.random() * this.GOAL_JITTER_RANGE_MS);
+      goal.createdAt = goal.createdAt - jitter;
+      return goal;
+    }
+    return null;
   }
 
   /**
