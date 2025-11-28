@@ -105,7 +105,29 @@ describe("AnimalSystem", () => {
     gameState = createMockGameState({
       animals: { animals: [] },
     });
-    animalSystem = new AnimalSystem(gameState);
+    animalSystem = new AnimalSystem();
+    
+    // Create a real animals map for the mock registry
+    const animalsMap = new Map<string, Animal>();
+    
+    // Manually initialize the properties that @postConstruct would set
+    (animalSystem as any).gameState = gameState;
+    (animalSystem as any).animalRegistry = {
+      getAnimalsMap: () => animalsMap,
+      registerAnimal: (animal: Animal) => { animalsMap.set(animal.id, animal); },
+      unregisterAnimal: (id: string) => { animalsMap.delete(id); },
+      getAnimal: (id: string) => animalsMap.get(id),
+      hasAnimal: (id: string) => animalsMap.has(id),
+      getAllAnimals: () => Array.from(animalsMap.values()),
+      getAnimalCount: () => animalsMap.size,
+    };
+    (animalSystem as any).batchProcessor = {
+      rebuildBuffers: batchMocks.rebuildBuffers,
+      getAnimalIdArray: () => batchMocks.batchIds,
+      updateNeedsBatch: batchMocks.updateNeedsBatch,
+      updateAgesBatch: batchMocks.updateAgesBatch,
+      syncToAnimals: batchMocks.syncToAnimals,
+    };
     emitSpy = vi.spyOn(simulationEvents, "emit");
     updateNeedsSpy = vi.spyOn(AnimalNeeds, "updateNeeds");
     wanderSpy = vi.spyOn(AnimalBehavior, "wander").mockImplementation(() => {});

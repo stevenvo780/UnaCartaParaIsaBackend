@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
 import { SnapshotManager } from "../../src/domain/simulation/core/runner/SnapshotManager";
-import { SimulationRunner } from "../../src/domain/simulation/core/SimulationRunner";
+import { AgentProfile } from "../../src/domain/types/simulation/agents";
+import { GameState } from "../../src/domain/types/game-types";
 import { createMockGameState } from "../setup";
-import type { AgentProfile } from "../../src/domain/types/simulation/agents";
+import { Sex, LifeStage, SocialStatus, ExplorationType, SocialPreference, WorkEthic } from "../../src/shared/constants/AgentEnums";
 import type { AIState } from "../../src/domain/types/simulation/ai";
+import type { SimulationRunner } from "../../src/domain/simulation/core/SimulationRunner";
 
 describe("SnapshotManager", () => {
   let snapshotManager: SnapshotManager;
@@ -106,19 +107,15 @@ describe("SnapshotManager", () => {
         cooperation: 0.5,
         diligence: 0.5,
         curiosity: 0.5,
-        explorationType: "balanced" as "balanced",
-        socialPreference: "balanced" as "balanced",
-        workEthic: "balanced" as "balanced",
+        explorationType: ExplorationType.Balanced,
+        socialPreference: SocialPreference.Balanced,
+        workEthic: WorkEthic.Balanced,
         riskTolerance: 0.5,
         neuroticism: 0.5,
         extraversion: 0.5,
         openness: 0.5,
         conscientiousness: 0.5,
-        agreeableness: 0.5,
-        creativity: 0.5,
-        empathy: 0.5,
-        memoryRetention: 0.5,
-        learningRate: 0.5
+        agreeableness: 0.5
       },
       memory: {
         visitedZones: new Set(["zone-1", "zone-2"]),
