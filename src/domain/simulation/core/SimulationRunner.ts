@@ -491,8 +491,6 @@ export class SimulationRunner {
           simulationEvents.flushEvents();
         }
 
-        // Throttle state synchronization to match snapshot rate (approx 250ms)
-        // This significantly reduces postTick duration by avoiding expensive array allocations every 50ms
         const now = Date.now();
         if (now - this.lastStateSync >= 250) {
           this.syncState();
@@ -824,11 +822,6 @@ export class SimulationRunner {
     const agents = this.state.agents || [];
     let initialized = 0;
 
-    // Clear spawned chunks tracking to allow resource regeneration in visited areas
-    // This is critical after loading a save since:
-    // 1. Resources may have been depleted before saving
-    // 2. spawnedChunks/loadedChunks Sets are not persisted
-    // 3. We need to regenerate resources for the world to function
     this.worldResourceSystem.clearSpawnedChunks();
     this.chunkLoadingSystem.clearLoadedChunks();
     this.animalSystem.clearSpawnedChunks();
@@ -836,7 +829,6 @@ export class SimulationRunner {
       `🔄 SimulationRunner: Cleared chunk tracking for fresh resource spawning`,
     );
 
-    // Rebuild agent registry index to include all loaded agents
     this.agentRegistry.rebuildProfileIndex();
     const registeredCount = this.agentRegistry.getAgentCount();
     logger.info(
@@ -1085,12 +1077,12 @@ export class SimulationRunner {
         social,
         ai: aiState
           ? {
-            currentGoal: aiState.currentGoal,
-            goalQueue: aiState.goalQueue,
-            currentAction: aiState.currentAction,
-            offDuty: aiState.offDuty,
-            lastDecisionTime: aiState.lastDecisionTime,
-          }
+              currentGoal: aiState.currentGoal,
+              goalQueue: aiState.goalQueue,
+              currentAction: aiState.currentAction,
+              offDuty: aiState.offDuty,
+              lastDecisionTime: aiState.lastDecisionTime,
+            }
           : null,
       };
     }

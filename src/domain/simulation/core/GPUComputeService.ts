@@ -1,7 +1,6 @@
 import { logger } from "../../../infrastructure/utils/logger";
 import { injectable } from "inversify";
 
-// Define TensorFlow types for type safety without importing the module
 type TF = typeof import("@tensorflow/tfjs-node-gpu");
 
 /**
@@ -42,7 +41,7 @@ export class GPUComputeService {
 
     try {
       logger.info("🔄 Attempting to load TensorFlow GPU module...");
-      // Dynamic import to avoid loading heavy CUDA bindings if not needed
+
       this.tf = await import("@tensorflow/tfjs-node-gpu");
 
       await this.tf.ready();
@@ -128,7 +127,6 @@ export class GPUComputeService {
     try {
       const tf = this.tf!;
 
-      // We cannot use tf.tidy with async operations inside, so we manually manage disposal
       const posT = tf.tensor2d(positions, [entityCount, 2]);
       const tarT = tf.tensor2d(targets, [entityCount, 2]);
       const spdT = tf.tensor1d(speeds);
@@ -148,7 +146,6 @@ export class GPUComputeService {
 
       const arrivedMask = distance.less(2);
 
-      // Async data retrieval
       const arrivedData = await arrivedMask.data();
       const arrivedArray = Array.from(arrivedData).map((v) => v !== 0);
 
@@ -159,10 +156,8 @@ export class GPUComputeService {
 
       const newPos = currentPos.add(moveAmount).add(targetPos);
 
-      // Async data retrieval
       const newPositions = (await newPos.data()) as Float32Array;
 
-      // Manual disposal
       posT.dispose();
       tarT.dispose();
       spdT.dispose();
@@ -321,10 +316,8 @@ export class GPUComputeService {
         .mul(deltaSeconds);
       const newNeeds = needsT.sub(decayAmount).maximum(0);
 
-      // Async data retrieval
       const result = (await newNeeds.data()) as Float32Array;
 
-      // Manual disposal
       needsT.dispose();
       decayRatesT.dispose();
       ageMultT.dispose();
@@ -459,10 +452,8 @@ export class GPUComputeService {
         .maximum(0)
         .minimum(100);
 
-      // Async data retrieval
       const result = (await newNeeds.data()) as Float32Array;
 
-      // Manual disposal
       needsT.dispose();
       energy.dispose();
       hunger.dispose();
@@ -601,10 +592,8 @@ export class GPUComputeService {
       const totalChange = movingChange.add(restingChange).add(idleChange);
       const newFatigue = fatigueT.add(totalChange).maximum(0).minimum(100);
 
-      // Async data retrieval
       const result = (await newFatigue.data()) as Float32Array;
 
-      // Manual disposal
       fatigueT.dispose();
       isMovingT.dispose();
       isRestingT.dispose();
@@ -728,10 +717,8 @@ export class GPUComputeService {
       const resultT = decayed.maximum(0);
       const finalT = tf.where(resultT.less(threshold), tf.scalar(0), resultT);
 
-      // Async data retrieval
       const result = (await finalT.data()) as Float32Array;
 
-      // Manual disposal
       valuesT.dispose();
       decayAmount.dispose();
       decayed.dispose();
@@ -846,10 +833,8 @@ export class GPUComputeService {
       const diffSq = diff.square();
       const distSq = diffSq.sum(1);
 
-      // Async data retrieval
       const result = (await distSq.data()) as Float32Array;
 
-      // Manual disposal
       posT.dispose();
       centerT.dispose();
       diff.dispose();
@@ -950,10 +935,8 @@ export class GPUComputeService {
       const thresholdMask = result.abs().greater(minAffinity);
       const finalResult = result.mul(thresholdMask.cast("float32"));
 
-      // Async data retrieval
       const output = (await finalResult.data()) as Float32Array;
 
-      // Manual disposal
       affT.dispose();
       sign.dispose();
       absAff.dispose();
@@ -1040,10 +1023,8 @@ export class GPUComputeService {
       const diff = pos1.sub(pos2);
       const distSq = diff.square().sum(2);
 
-      // Async data retrieval
       const distMatrix = (await distSq.array()) as number[][];
 
-      // Manual disposal
       posT.dispose();
       pos1.dispose();
       pos2.dispose();
@@ -1144,10 +1125,8 @@ export class GPUComputeService {
 
       const nearestIdx = distSq.argMin(1);
 
-      // Async data retrieval
       const nearestIdxArray = (await nearestIdx.array()) as number[];
 
-      // Manual disposal
       animalsT.dispose();
       threatsT.dispose();
       animalExp.dispose();

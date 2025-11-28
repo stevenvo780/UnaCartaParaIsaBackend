@@ -636,7 +636,6 @@ export class AIActionPlanner {
       }
     }
 
-    // Metal/ore is obtained by mining rocks (secondary yield)
     if (
       taskType === TaskType.GATHER_METAL ||
       resourceType === ResourceType.METAL ||

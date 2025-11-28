@@ -603,7 +603,6 @@ export class RoleSystem extends EventEmitter {
     > = {} as Partial<Record<RoleType, { count: number; percentage: number }>>;
     const totalAgents = this.roles.size;
 
-    // Initialize all known role types to ensure presence in result
     for (const roleType of ALL_ROLE_TYPES) {
       distribution[roleType] = { count: 0, percentage: 0 };
     }

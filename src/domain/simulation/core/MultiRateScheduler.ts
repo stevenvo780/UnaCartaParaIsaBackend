@@ -234,7 +234,6 @@ export class MultiRateScheduler {
 
       const startTime = performance.now();
 
-      // Measure preTick hook
       const preTickStart = performance.now();
       this.hooks.preTick?.();
       const preTickDuration = performance.now() - preTickStart;
@@ -249,7 +248,6 @@ export class MultiRateScheduler {
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.fastSystems, delta, entityCount);
 
-      // Measure postTick hook
       const postTickStart = performance.now();
       this.hooks.postTick?.();
       const postTickDuration = performance.now() - postTickStart;
@@ -299,7 +297,6 @@ export class MultiRateScheduler {
 
       const startTime = performance.now();
 
-      // Measure preTick hook
       const preTickStart = performance.now();
       this.hooks.preTick?.();
       const preTickDuration = performance.now() - preTickStart;
@@ -314,7 +311,6 @@ export class MultiRateScheduler {
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.mediumSystems, delta, entityCount);
 
-      // Measure postTick hook
       const postTickStart = performance.now();
       this.hooks.postTick?.();
       const postTickDuration = performance.now() - postTickStart;
@@ -361,7 +357,6 @@ export class MultiRateScheduler {
 
       const startTime = performance.now();
 
-      // Measure preTick hook
       const preTickStart = performance.now();
       this.hooks.preTick?.();
       const preTickDuration = performance.now() - preTickStart;
@@ -376,7 +371,6 @@ export class MultiRateScheduler {
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.slowSystems, delta, entityCount);
 
-      // Measure postTick hook
       const postTickStart = performance.now();
       this.hooks.postTick?.();
       const postTickDuration = performance.now() - postTickStart;

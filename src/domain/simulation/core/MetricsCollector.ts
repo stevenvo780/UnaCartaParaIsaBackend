@@ -54,7 +54,6 @@ export class MetricsCollector {
           : 0,
       });
 
-      // Reset GPU stats for the next interval to get instantaneous utilization
       gpuService.resetStats();
     } catch (error) {
       logger.error("Error collecting metrics:", error);

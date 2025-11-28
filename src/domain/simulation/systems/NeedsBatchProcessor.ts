@@ -103,8 +103,6 @@ export class NeedsBatchProcessor {
       }
     }
 
-    // const entityCount = this.entityIdArray.length; // Already declared above
-
     for (let i = 0; i < entityCount; i++) {
       const offset = i * this.NEED_COUNT;
       const ageMult = ageMultipliers[i] || 1.0;
@@ -162,8 +160,6 @@ export class NeedsBatchProcessor {
         );
       }
     }
-
-    // const entityCount = this.entityIdArray.length; // Already declared above
 
     for (let i = 0; i < entityCount; i++) {
       const offset = i * this.NEED_COUNT;

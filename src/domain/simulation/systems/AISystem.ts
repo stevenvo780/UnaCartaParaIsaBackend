@@ -1022,7 +1022,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // MINER role: focuses on mining rocks for metal/ore
     if (role === RoleType.MINER) {
       for (const stoneType of stoneTypes) {
         const resource = this.findNearestResourceForEntity(agentId, stoneType);
@@ -1051,7 +1050,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // CRAFTSMAN role: needs metal for crafting, will mine if needed
     if (role === RoleType.CRAFTSMAN) {
       for (const stoneType of stoneTypes) {
         const resource = this.findNearestResourceForEntity(agentId, stoneType);
@@ -1130,7 +1128,7 @@ export class AISystem extends EventEmitter {
           };
         }
       }
-      // Builder also needs metal for advanced constructions
+
       for (const stoneType of stoneTypes) {
         const resource = this.findNearestResourceForEntity(agentId, stoneType);
         if (resource && !excluded.has(resource.id)) {
@@ -1291,8 +1289,6 @@ export class AISystem extends EventEmitter {
     const goals = await planGoals(deps, aiState, now);
     return goals.length > 0 ? goals[0] : null;
   }
-
-  // ... (lines 1289-2066 omitted)
 
   /**
    * GPU-accelerated search for nearby agents within a radius.

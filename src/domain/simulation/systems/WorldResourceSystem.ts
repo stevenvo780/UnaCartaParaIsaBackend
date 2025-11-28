@@ -308,7 +308,6 @@ export class WorldResourceSystem {
         const pixelX = tile.x * tileSize;
         const pixelY = tile.y * tileSize;
 
-        // Spawn WATER_SOURCE for water tiles (ocean biome or terrain_water)
         const isWaterTile =
           tile.biome === BiomeType.OCEAN ||
           tile.assets.terrain.includes("water") ||

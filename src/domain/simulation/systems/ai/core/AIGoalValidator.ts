@@ -206,7 +206,6 @@ export class AIGoalValidator {
       return true;
     }
 
-    // Check hunt target validity
     const huntTargetValid = this.isHuntTargetValid(goal);
     if (huntTargetValid === false) {
       logger.debug(
@@ -279,7 +278,6 @@ export class AIGoalValidator {
    * Returns true if valid, false if invalid, null if not applicable.
    */
   private isResourceTargetValid(goal: AIGoal): boolean | null {
-    // Hunt goals target animals, not resources
     if (goal.type === GoalType.HUNT) {
       return null;
     }
@@ -399,7 +397,6 @@ export class AIGoalValidator {
       return !targetAnimal.isDead;
     }
 
-    // Animal not found - may have been removed or is out of range
     return false;
   }
 }

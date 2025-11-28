@@ -45,8 +45,10 @@ describe('SimulationRunner Throttling', () => {
     runner.start();
 
     // Advance time by 50ms (FAST tick)
-    // Date.now() = 50. lastStateSync = 0. 50 - 0 < 250.
     vi.advanceTimersByTime(50);
+    // Force execution of pending timers (setInterval)
+    vi.runOnlyPendingTimers();
+    console.log('Tick Counter:', runner.getTickCounter());
     expect(syncTasksSpy).not.toHaveBeenCalled();
 
     // Advance to 200ms
