@@ -52,7 +52,7 @@ import { logger } from "../../../../../infrastructure/utils/logger";
 export class AIActionPlanner {
   private readonly deps: AIActionPlannerDeps;
 
-  private readonly HARVEST_RANGE = 80;
+  private readonly HARVEST_RANGE = 250; // Increased from 150 to handle water tiles at shoreline
   private readonly ATTACK_RANGE = 50;
   private readonly EXPLORE_RANGE = 200;
 
@@ -582,6 +582,9 @@ export class AIActionPlanner {
             const dist = Math.hypot(
               agentPos.x - waterSource.x,
               agentPos.y - waterSource.y,
+            );
+            logger.debug(
+              `💧 [Work] ${agentId}: agent=(${agentPos.x.toFixed(0)},${agentPos.y.toFixed(0)}), water=(${waterSource.x},${waterSource.y}), dist=${dist.toFixed(1)}, HARVEST_RANGE=${this.HARVEST_RANGE}, willHarvest=${dist < this.HARVEST_RANGE}`,
             );
             if (dist < this.HARVEST_RANGE) {
               return {

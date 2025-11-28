@@ -194,6 +194,16 @@ function calculateCollectiveState(
 
   const activeDemands = ctx.getActiveDemands?.() || [];
 
+  // Debug: verify activeDemands (30% sampling)
+  if (activeDemands.length > 0 && Math.random() < 0.3) {
+    const waterDemandExists = activeDemands.some(
+      (d) => d.type === DemandType.WATER_SHORTAGE && !d.resolvedAt,
+    );
+    logger.debug(
+      `[Collective] activeDemands: ${activeDemands.map((d) => `${d.type}:${d.resolvedAt ? "resolved" : "active"}`).join(", ")} | hasWaterDemand=${waterDemandExists}`,
+    );
+  }
+
   const state = {
     totalFood,
     totalWater,
@@ -264,6 +274,16 @@ function getMostNeededResource(
   }
 
   needs.sort((a, b) => b.urgency - a.urgency);
+
+  // Debug: log the prioritized needs list
+  if (needs.length > 0 && Math.random() < 0.02) {
+    const needsList = needs
+      .slice(0, 3)
+      .map((n) => `${n.resource}:${n.urgency.toFixed(2)}`)
+      .join(", ");
+    logger.debug(`🔢 [getMostNeeded] Top needs: ${needsList}`);
+  }
+
   return needs[0] || null;
 }
 
@@ -348,10 +368,10 @@ export function evaluateCollectiveNeeds(
 
   const mostNeeded = getMostNeededResource(state, thresholds);
 
-  // Debug: log mostNeeded resource decision (only for water to reduce noise)
-  if (mostNeeded?.resource === ResourceTypeEnum.WATER) {
+  // Debug: log mostNeeded resource decision (always, but sample 5% to reduce noise)
+  if (mostNeeded && Math.random() < 0.05) {
     logger.debug(
-      `📊 [Collective] ${aiState.entityId}: mostNeeded=WATER urgency=${mostNeeded.urgency.toFixed(2)}, hasTaskSystem=${!!ctx.taskSystem}`,
+      `📊 [Collective] ${aiState.entityId}: mostNeeded=${mostNeeded.resource} urgency=${mostNeeded.urgency.toFixed(2)}, foodPC=${state.foodPerCapita.toFixed(1)}, waterPC=${state.waterPerCapita.toFixed(1)}`,
     );
   }
 
@@ -414,6 +434,95 @@ export function evaluateCollectiveNeeds(
             taskId: newTask.id,
             communityTask: true,
             resourceType: mostNeeded.resource,
+          },
+          createdAt: now,
+          expiresAt: now + 30000,
+        });
+      }
+    }
+  }
+
+  // Handle water shortage - both urgent (demand-based) and preventive (threshold-based)
+  // - Urgent: when waterDemand exists from GovernanceSystem (waterPerCapita < 8)
+  // - Preventive: when waterPerCapita < 15 (default threshold for stockpiling)
+  // - GATHERER agents can create water tasks
+  // - ANY agent can join existing water tasks when there's urgent shortage
+  // - GATHERER agents continue collecting until threshold is met (preventive storage)
+  const needsWater = waterDemand || (mostNeeded?.resource === ResourceTypeEnum.WATER);
+  
+  if (needsWater && ctx.taskSystem) {
+    const isGatherer = modifiers.preferredResource === ResourceTypeEnum.WATER;
+    const isUrgent = !!waterDemand; // Urgent if there's a governance demand
+    // Debug: log water demand check
+    logger.debug(
+      `💧 [Collective] ${aiState.entityId}: needsWater=${needsWater} (urgent=${isUrgent}), role=${roleType}, preferredResource=${modifiers.preferredResource}, isGatherer=${isGatherer}`,
+    );
+
+    const existingWaterTask = ctx.taskSystem
+      .getAvailableCommunityTasks()
+      .find((t) => (t.metadata?.resourceType as string) === "water");
+
+    // Create water task if none exists
+    // - During emergency: any agent can create if no task exists
+    // - Preventive: only gatherers create
+    const canCreateTask = !existingWaterTask && (isUrgent || isGatherer);
+    
+    if (canCreateTask) {
+      // Create a new water task
+      const newWaterTask = ctx.taskSystem.createTask({
+        type: TaskType.GATHER_WATER,
+        requiredWork: 100,
+        metadata: {
+          communityTask: true,
+          urgency: isUrgent ? 1.3 : 1.0, // Higher urgency for emergency
+          resourceType: ResourceTypeEnum.WATER,
+          maxClaims: isUrgent ? 4 : 2, // More agents during emergency
+          priority: isUrgent ? 0.9 : 0.7,
+        },
+      });
+
+      if (newWaterTask) {
+        logger.debug(
+          `💧 [Collective] ${aiState.entityId}: Created WATER task ${newWaterTask.id} (urgent=${isUrgent})`,
+        );
+        const taskPriority = isUrgent ? 0.92 : 0.70; // Very high priority during emergency
+        goals.push({
+          id: `water_demand_task_${newWaterTask.id}_${now}`,
+          type: GoalTypeEnum.WORK,
+          priority: taskPriority,
+          data: {
+            taskId: newWaterTask.id,
+            communityTask: true,
+            resourceType: ResourceTypeEnum.WATER,
+            taskType: TaskType.GATHER_WATER,
+          },
+          createdAt: now,
+          expiresAt: now + 30000,
+        });
+      }
+    } else if (existingWaterTask) {
+      // Agents can join existing water task
+      // Priority based on urgency and role:
+      // - Urgent (governance demand): very high priority for all (must compete with existing goals)
+      // - Preventive (threshold-based): only gatherers with moderate priority
+      if (isUrgent || isGatherer) {
+        const joinPriority = isUrgent 
+          ? (isGatherer ? 0.92 : 0.88) // Emergency: very high for all
+          : 0.65; // Preventive: moderate for gatherers only
+        
+        logger.debug(
+          `💧 [Collective] ${aiState.entityId}: Joining WATER task ${existingWaterTask.id} (priority=${joinPriority.toFixed(2)}, isGatherer=${isGatherer}, urgent=${isUrgent})`,
+        );
+      
+        goals.push({
+          id: `join_water_task_${existingWaterTask.id}_${now}`,
+          type: GoalTypeEnum.WORK,
+          priority: joinPriority,
+          data: {
+            taskId: existingWaterTask.id,
+            communityTask: true,
+            resourceType: ResourceTypeEnum.WATER,
+            taskType: existingWaterTask.type,
           },
           createdAt: now,
           expiresAt: now + 30000,

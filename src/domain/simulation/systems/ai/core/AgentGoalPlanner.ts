@@ -238,9 +238,12 @@ export async function planGoals(
   goals.push(...cognitiveGoals);
 
   // Debug: Check why collective needs might not be called
-  const hasAllDeps = deps.getAgentInventory && deps.getAllStockpiles && deps.getPopulation;
-  logger.debug(`[GoalPlanner] ${aiState.entityId}: hasAllDeps=${hasAllDeps} inv=${!!deps.getAgentInventory} stock=${!!deps.getAllStockpiles} pop=${!!deps.getPopulation}`);
-  
+  const hasAllDeps =
+    deps.getAgentInventory && deps.getAllStockpiles && deps.getPopulation;
+  logger.debug(
+    `[GoalPlanner] ${aiState.entityId}: hasAllDeps=${hasAllDeps} inv=${!!deps.getAgentInventory} stock=${!!deps.getAllStockpiles} pop=${!!deps.getPopulation}`,
+  );
+
   if (hasAllDeps) {
     const collectiveDeps: CollectiveNeedsContext = {
       gameState: deps.gameState,

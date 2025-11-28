@@ -190,11 +190,28 @@ export function getGoalTier(goal: AIGoal, _aiState: AIState): number {
     return PRIORITY_TIERS.OPPORTUNITY;
   }
 
-  if (goal.type === GoalType.WORK && goal.id?.startsWith(GoalPrefix.DEPOSIT)) {
-    return PRIORITY_TIERS.LOGISTICS;
+  // Emergency water/food collection tasks should have SURVIVAL_URGENT tier
+  if (goal.type === GoalType.WORK) {
+    const taskType = goal.data?.taskType as string | undefined;
+    if (taskType === 'gather_water' || taskType === 'gather_food') {
+      // High priority (>= 0.85) water/food tasks are emergency-level
+      if (goal.priority >= 0.85) return PRIORITY_TIERS.SURVIVAL_URGENT;
+      // Medium priority (>= 0.65) are still important
+      if (goal.priority >= 0.65) return PRIORITY_TIERS.LOGISTICS;
+    }
+    if (goal.id?.startsWith(GoalPrefix.DEPOSIT)) {
+      return PRIORITY_TIERS.LOGISTICS;
+    }
   }
 
+  // Deposit goals with water/food during emergency should be high priority
   if (goal.type === GoalType.DEPOSIT) {
+    const data = goal.data as Record<string, unknown> | undefined;
+    const hasWater = data?.hasWater as boolean | undefined;
+    const hasFood = data?.hasFood as boolean | undefined;
+    if ((hasWater || hasFood) && goal.priority >= 0.85) {
+      return PRIORITY_TIERS.SURVIVAL_URGENT;
+    }
     return PRIORITY_TIERS.LOGISTICS;
   }
 

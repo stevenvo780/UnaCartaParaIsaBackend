@@ -98,17 +98,23 @@ export function evaluateDepositGoals(
     const bestZone = ctx.selectBestZone(aiState, depositZones, "storage");
     if (!bestZone) return [];
 
+    // Higher priority boost when carrying critical resources (water/food)
+    // This ensures agents deposit water during water shortage
+    const criticalResourceBoost = (agentInv.water > 5 || agentInv.food > 10) ? 0.25 : 0;
     const priorityBoost =
       loadRatio >= depositThreshold ? 0.35 : Math.min(0.3, loadRatio);
+    const finalPriority = Math.min(0.95, 0.65 + priorityBoost + criticalResourceBoost);
 
     return [
       {
         id: `deposit_${now}`,
         type: GoalType.DEPOSIT,
-        priority: 0.65 + priorityBoost,
+        priority: finalPriority,
         targetZoneId: bestZone,
         data: {
           workType: "deposit",
+          hasWater: agentInv.water > 0,
+          hasFood: agentInv.food > 0,
         },
         createdAt: now,
         expiresAt: now + 4000,

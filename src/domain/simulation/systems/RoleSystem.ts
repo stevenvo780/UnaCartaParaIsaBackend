@@ -392,7 +392,8 @@ export class RoleSystem extends EventEmitter {
 
       if (
         currentRole?.roleType === RoleTypeEnum.LOGGER ||
-        currentRole?.roleType === RoleTypeEnum.QUARRYMAN
+        currentRole?.roleType === RoleTypeEnum.QUARRYMAN ||
+        currentRole?.roleType === RoleTypeEnum.GATHERER
       ) {
         continue;
       }

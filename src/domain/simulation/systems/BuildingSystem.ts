@@ -129,7 +129,7 @@ export class BuildingSystem {
     if (Math.random() < 0.15) {
       logger.debug(
         `🏗️ [BUILDING] Status: houses=${houses}/${this.config.maxHouses}, ` +
-        `zones=${zones.length}, activeJobs=${this.constructionJobs.size}`,
+          `zones=${zones.length}, activeJobs=${this.constructionJobs.size}`,
       );
     }
 
@@ -205,7 +205,7 @@ export class BuildingSystem {
       const available = this.reservationSystem.getAvailableResources();
       logger.debug(
         `🏗️ [BUILDING] Cannot reserve resources for ${label}: needs wood=${cost.wood}, stone=${cost.stone}. ` +
-        `Available: wood=${available.wood}, stone=${available.stone}`,
+          `Available: wood=${available.wood}, stone=${available.stone}`,
       );
       return false;
     }
@@ -289,7 +289,9 @@ export class BuildingSystem {
     // Determine biome
     const tileX = Math.floor(validatedPosition.x / TILE_SIZE);
     const tileY = Math.floor(validatedPosition.y / TILE_SIZE);
-    const tile = this.state.terrainTiles?.find((t) => t.x === tileX && t.y === tileY);
+    const tile = this.state.terrainTiles?.find(
+      (t) => t.x === tileX && t.y === tileY,
+    );
     const biome = tile?.biome || "Grassland";
 
     const metadata: MutableZone["metadata"] = {
@@ -522,9 +524,9 @@ export class BuildingSystem {
 
     logger.warn(
       `Could not find valid position for ${buildingType} after ${MAX_ATTEMPTS} attempts. ` +
-      `Stats: worldSize=${worldSize.width}x${worldSize.height}, zones=${zonesCount}, ` +
-      `terrainTiles=${terrainTilesCount}, waterTiles=${waterTilesCount}. ` +
-      `Rejects: bounds=${boundsRejects}, collision=${collisionRejects}, water=${waterRejects}`,
+        `Stats: worldSize=${worldSize.width}x${worldSize.height}, zones=${zonesCount}, ` +
+        `terrainTiles=${terrainTilesCount}, waterTiles=${waterTilesCount}. ` +
+        `Rejects: bounds=${boundsRejects}, collision=${collisionRejects}, water=${waterRejects}`,
     );
     return null;
   }

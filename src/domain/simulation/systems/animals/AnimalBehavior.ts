@@ -222,7 +222,7 @@ export class AnimalBehavior {
 
         // Small cooldown between attacks
         animal.stateEndTime = Date.now() + 1500;
-        
+
         // Trigger flee response in prey
         prey.state = AnimalState.FLEEING;
         prey.fleeTarget = animal.id;

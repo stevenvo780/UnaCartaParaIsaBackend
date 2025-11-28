@@ -316,6 +316,9 @@ export class WorldLoader {
 
     const defaultBiome = "Grassland";
 
+    // Clear existing zones to prevent duplicates on reload
+    this.runner.state.zones = [];
+
     const houseZone: Zone = {
       id: `zone_house_initial_${Date.now()}`,
       type: ZoneType.SHELTER,
@@ -370,7 +373,7 @@ export class WorldLoader {
       type: ZoneType.STORAGE,
       bounds: {
         x: baseX + 150, // Increased from +100
-        y: baseY + 80,  // Increased from +50
+        y: baseY + 80, // Increased from +50
         width: 40,
         height: 30,
       },
@@ -386,13 +389,7 @@ export class WorldLoader {
       },
     };
 
-
-
-    this.runner.state.zones.push(
-      houseZone,
-      workbenchZone,
-      storageZone
-    );
+    this.runner.state.zones.push(houseZone, workbenchZone, storageZone);
 
     logger.info(`🏠 Initial infrastructure created:`);
     logger.info(`   - Family house (shelter) at (${baseX}, ${baseY})`);

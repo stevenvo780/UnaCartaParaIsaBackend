@@ -464,7 +464,7 @@ export class AnimalSystem {
     const maxHealth = config.maxHealth * animal.genes.health;
     const needsHealing = animal.health < maxHealth * 0.9; // Below 90% health
     const isHungry = animal.needs.hunger < 70;
-    
+
     if (isHungry || needsHealing) {
       if (config.isPredator) {
         animal.state = AnimalState.HUNTING;
@@ -472,10 +472,15 @@ export class AnimalSystem {
           animal.position,
           config.huntingRange || 200,
         );
-        AnimalBehavior.huntPrey(animal, prey, deltaSeconds, (preyId, damage) => {
-          // Predators now deal damage instead of instant kill
-          this.damageAnimal(preyId, damage || 25, animal.id);
-        });
+        AnimalBehavior.huntPrey(
+          animal,
+          prey,
+          deltaSeconds,
+          (preyId, damage) => {
+            // Predators now deal damage instead of instant kill
+            this.damageAnimal(preyId, damage || 25, animal.id);
+          },
+        );
         return;
       } else if (config.consumesVegetation) {
         animal.state = AnimalState.SEEKING_FOOD;
@@ -560,7 +565,7 @@ export class AnimalSystem {
     const maturityAge = config.lifespan * 0.2;
     const isMature = animal.age > maturityAge;
     const isHealthyEnough = animal.health > maxHealth * 0.5;
-    
+
     if (animal.needs.reproductiveUrge > 70 && isMature && isHealthyEnough) {
       animal.state = AnimalState.MATING;
       const mates = this.getAnimalsInRadius(animal.position, 80);
@@ -1068,7 +1073,7 @@ export class AnimalSystem {
     if (!animal || animal.isDead) return false;
 
     animal.health = Math.max(0, animal.health - damage);
-    
+
     logger.debug(
       `🗡️ Animal ${animalId} took ${damage} damage (health: ${animal.health.toFixed(1)}) from ${attackerId || "unknown"}`,
     );
@@ -1076,7 +1081,7 @@ export class AnimalSystem {
     // If health depleted, animal dies
     if (animal.health <= 0) {
       this.killAnimal(animalId, "damage");
-      
+
       // Feed the attacker if it's a predator animal
       if (attackerId) {
         const attacker = this.animalRegistry.getAnimal(attackerId);

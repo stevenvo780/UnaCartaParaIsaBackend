@@ -867,7 +867,40 @@ export class AISystem extends EventEmitter {
         aiState.currentAction = null;
         return;
       } else if (aiState.currentAction) {
-        return;
+        // Check for high-priority preemption (emergency water/food collection)
+        // Preempt if new goal is:
+        // 1. Very high priority (>= 0.88) - emergency level
+        // 2. Significantly higher than current goal (> 0.05 difference)
+        const highPriorityGoal = aiState.goalQueue.find(
+          (g) =>
+            g.priority >= 0.88 &&
+            g.priority > aiState.currentGoal!.priority + 0.05,
+        );
+        if (highPriorityGoal) {
+          logger.info(
+            `🚨 [AI] ${agentId}: PREEMPTING current goal (priority=${aiState.currentGoal.priority.toFixed(2)}) with higher priority goal (${highPriorityGoal.type}, priority=${highPriorityGoal.priority.toFixed(2)})`,
+          );
+          // Remove the high priority goal from queue
+          aiState.goalQueue = aiState.goalQueue.filter(
+            (g) => g.id !== highPriorityGoal.id,
+          );
+          // Save current goal back to queue if not completed
+          if (aiState.currentGoal) {
+            aiState.goalQueue.push(aiState.currentGoal);
+          }
+          // Switch to high priority goal
+          aiState.currentGoal = highPriorityGoal;
+          aiState.currentAction = null;
+          aiState.lastDecisionTime = now;
+          simulationEvents.emit(GameEventType.AGENT_GOAL_CHANGED, {
+            agentId,
+            newGoal: highPriorityGoal,
+            timestamp: now,
+          });
+          // Don't return - continue to plan action for new goal
+        } else {
+          return;
+        }
       }
     }
 
@@ -878,11 +911,13 @@ export class AISystem extends EventEmitter {
 
     if (!aiState.currentGoal) {
       if (aiState.goalQueue.length > 0) {
+        // Sort queue by priority (highest first) before taking the next goal
+        aiState.goalQueue.sort((a, b) => b.priority - a.priority);
         aiState.currentGoal = aiState.goalQueue.shift() ?? null;
         aiState.lastDecisionTime = now;
         if (aiState.currentGoal) {
           logger.debug(
-            `🎯 [AI] ${agentId}: ${describeGoal(aiState.currentGoal)} (from queue)`,
+            `🎯 [AI] ${agentId}: ${describeGoal(aiState.currentGoal)} (from queue, priority=${aiState.currentGoal.priority.toFixed(2)})`,
           );
           simulationEvents.emit(GameEventType.AGENT_GOAL_CHANGED, {
             agentId,
@@ -1106,37 +1141,49 @@ export class AISystem extends EventEmitter {
 
     if (role === RoleType.HUNTER) {
       // First check if hunter has a weapon - no weapon, no hunt goal
-      const hasWeapon = this.equipmentSystem.getEquippedItem(
-        agentId,
-        EquipmentSlot.MAIN_HAND,
-      ) !== undefined;
-      
+      const hasWeapon =
+        this.equipmentSystem.getEquippedItem(
+          agentId,
+          EquipmentSlot.MAIN_HAND,
+        ) !== undefined;
+
       // Try to claim a weapon from storage if we don't have one
       if (!hasWeapon) {
         const weapon = toolStorage.findToolForRole("hunter");
         if (weapon && toolStorage.claimTool(agentId, weapon)) {
-          this.equipmentSystem.equipItem(agentId, EquipmentSlot.MAIN_HAND, weapon);
-          logger.debug(`🗡️ [AI] ${agentId}: Claimed weapon ${weapon} from storage`);
+          this.equipmentSystem.equipItem(
+            agentId,
+            EquipmentSlot.MAIN_HAND,
+            weapon,
+          );
+          logger.debug(
+            `🗡️ [AI] ${agentId}: Claimed weapon ${weapon} from storage`,
+          );
         } else {
           // No weapon available - fall through to food gathering instead of HUNT
-          logger.debug(`⚠️ [AI] ${agentId}: No weapon available, skipping HUNT goal creation`);
+          logger.debug(
+            `⚠️ [AI] ${agentId}: No weapon available, skipping HUNT goal creation`,
+          );
           // Fall through to food gathering below
         }
       }
-      
+
       // Only create HUNT goal if hunter now has a weapon
-      const canHunt = this.equipmentSystem.getEquippedItem(
-        agentId,
-        EquipmentSlot.MAIN_HAND,
-      ) !== undefined;
-      
+      const canHunt =
+        this.equipmentSystem.getEquippedItem(
+          agentId,
+          EquipmentSlot.MAIN_HAND,
+        ) !== undefined;
+
       if (canHunt) {
         const animal = this.findNearestHuntableAnimal(agentId, excluded);
         logger.debug(
           `🐺 [AI] ${agentId}: hunter findNearestHuntableAnimal -> ${animal?.id ?? "none"} (type: ${animal?.type ?? "N/A"})`,
         );
         if (animal) {
-          logger.debug(`🎯 [AI] ${agentId}: Creating HUNT goal for ${animal.id}`);
+          logger.debug(
+            `🎯 [AI] ${agentId}: Creating HUNT goal for ${animal.id}`,
+          );
           return {
             id: `hunt_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
             type: GoalTypeEnum.HUNT,
@@ -1677,10 +1724,25 @@ export class AISystem extends EventEmitter {
         NonNullable<AgentGoalPlannerDeps["getActiveDemands"]>
       > => {
         const governance = this.gameState.governance;
-        if (!governance || !governance.demands) return [];
-        return governance.demands.filter(
+        if (!governance || !governance.demands) {
+          // Debug: log when governance or demands is missing
+          if (Math.random() < 0.2) {
+            logger.debug(
+              `[AI] getActiveDemands: governance=${!!governance}, demands=${governance?.demands?.length ?? "N/A"}`,
+            );
+          }
+          return [];
+        }
+        const active = governance.demands.filter(
           (d: { resolvedAt?: number }) => !d.resolvedAt,
         );
+        // Debug: log active demands (20% sampling)
+        if (Math.random() < 0.2) {
+          logger.debug(
+            `[AI] getActiveDemands: total=${governance.demands.length}, active=${active.length}, types=${active.map((d) => (d as { type: string }).type).join(",")}`,
+          );
+        }
+        return active;
       },
       getPopulation: (): number => {
         return this.gameState.agents?.filter((a) => !a.isDead).length || 0;
