@@ -265,6 +265,17 @@ export class WorldResourceSystem {
   private spawnedChunks = new Set<string>();
 
   /**
+   * Clears the set of spawned chunks, allowing resources to be spawned again.
+   * Call this when loading a saved game to reinitialize chunk resources.
+   */
+  public clearSpawnedChunks(): void {
+    this.spawnedChunks.clear();
+    logger.info(
+      `[WorldResourceSystem] Cleared spawnedChunks set for fresh resource spawning`,
+    );
+  }
+
+  /**
    * Spawns resources for a specific chunk based on generated tiles and assets.
    * This ensures that visual assets (like trees) are interactive resources.
    */
@@ -274,6 +285,7 @@ export class WorldResourceSystem {
     tiles: {
       x: number;
       y: number;
+      biome?: string;
       assets: {
         terrain: string;
         vegetation?: string[];
@@ -293,14 +305,33 @@ export class WorldResourceSystem {
 
     for (const row of tiles) {
       for (const tile of row) {
+        const pixelX = tile.x * tileSize;
+        const pixelY = tile.y * tileSize;
+
+        // Spawn WATER_SOURCE for water tiles (ocean biome or terrain_water)
+        const isWaterTile =
+          tile.biome === BiomeType.OCEAN ||
+          tile.assets.terrain.includes("water") ||
+          tile.assets.terrain.includes("ocean");
+
+        if (isWaterTile) {
+          const resource = this.spawnResource(
+            WorldResourceType.WATER_SOURCE,
+            {
+              x: pixelX + tileSize / 2,
+              y: pixelY + tileSize / 2,
+            },
+            "ocean",
+          );
+          if (resource) spawnedCount++;
+        }
+
         if (tile.assets.vegetation) {
           for (const asset of tile.assets.vegetation) {
             const resourceType = this.mapAssetToResource(asset);
             if (resourceType) {
               const offsetX = (Math.random() - 0.5) * (tileSize * 0.6);
               const offsetY = (Math.random() - 0.5) * (tileSize * 0.6);
-              const pixelX = tile.x * tileSize;
-              const pixelY = tile.y * tileSize;
 
               const resource = this.spawnResource(
                 resourceType,
@@ -322,8 +353,6 @@ export class WorldResourceSystem {
             if (resourceType) {
               const offsetX = (Math.random() - 0.5) * (tileSize * 0.8);
               const offsetY = (Math.random() - 0.5) * (tileSize * 0.8);
-              const pixelX = tile.x * tileSize;
-              const pixelY = tile.y * tileSize;
 
               const resource = this.spawnResource(
                 resourceType,

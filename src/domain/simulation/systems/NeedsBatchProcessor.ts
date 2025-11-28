@@ -63,12 +63,12 @@ export class NeedsBatchProcessor {
     this.bufferDirty = false;
   }
 
-  public applyDecayBatch(
+  public async applyDecayBatch(
     decayRates: Float32Array,
     ageMultipliers: Float32Array,
     divineModifiers: Float32Array,
     deltaSeconds: number,
-  ): void {
+  ): Promise<void> {
     if (!this.needsBuffer || this.entityIdArray.length === 0) return;
 
     const startTime = performance.now();
@@ -77,7 +77,7 @@ export class NeedsBatchProcessor {
 
     if (this.gpuService?.isGPUAvailable()) {
       try {
-        const result = this.gpuService.applyNeedsDecayBatch(
+        const result = await this.gpuService.applyNeedsDecayBatch(
           workBuffer,
           decayRates,
           ageMultipliers,
@@ -133,7 +133,7 @@ export class NeedsBatchProcessor {
     );
   }
 
-  public applyCrossEffectsBatch(): void {
+  public async applyCrossEffectsBatch(): Promise<void> {
     if (!this.needsBuffer || this.entityIdArray.length === 0) return;
 
     const startTime = performance.now();
@@ -141,7 +141,7 @@ export class NeedsBatchProcessor {
 
     if (this.gpuService?.isGPUAvailable()) {
       try {
-        const newNeeds = this.gpuService.applyNeedsCrossEffectsBatch(
+        const newNeeds = await this.gpuService.applyNeedsCrossEffectsBatch(
           this.needsBuffer,
           this.NEED_COUNT,
         );

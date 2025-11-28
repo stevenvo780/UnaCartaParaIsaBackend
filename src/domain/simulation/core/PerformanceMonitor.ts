@@ -164,10 +164,10 @@ class PerformanceMonitor {
     totalResources: number;
     totalBuildings: number;
   } = {
-      activeAgents: 0,
-      totalResources: 0,
-      totalBuildings: 0,
-    };
+    activeAgents: 0,
+    totalResources: 0,
+    totalBuildings: 0,
+  };
 
   public setGameLogicStats(stats: {
     activeAgents: number;
@@ -183,11 +183,11 @@ class PerformanceMonitor {
     needsBatchSize: number;
     gpuUtilization: number;
   } = {
-      animalBatchSize: 0,
-      movementBatchSize: 0,
-      needsBatchSize: 0,
-      gpuUtilization: 0,
-    };
+    animalBatchSize: 0,
+    movementBatchSize: 0,
+    needsBatchSize: 0,
+    gpuUtilization: 0,
+  };
 
   public setBatchStats(stats: {
     animalBatchSize: number;

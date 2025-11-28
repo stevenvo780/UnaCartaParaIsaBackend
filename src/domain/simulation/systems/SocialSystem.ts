@@ -114,7 +114,7 @@ export class SocialSystem {
 
   private lastGraphSync = 0;
 
-  public update(deltaTimeMs: number): void {
+  public async update(deltaTimeMs: number): Promise<void> {
     const startTime = performance.now();
     const dt = deltaTimeMs / 1000;
     this.lastUpdate += deltaTimeMs;
@@ -122,10 +122,10 @@ export class SocialSystem {
 
     this.updateSpatialGridIncremental();
 
-    this.updateProximity(dt);
+    await this.updateProximity(dt);
 
     if (now - this.lastDecayUpdate > 2000) {
-      this.decayEdgesOptimized(dt);
+      await this.decayEdgesOptimized(dt);
       this.lastDecayUpdate = now;
     }
 
@@ -175,7 +175,7 @@ export class SocialSystem {
    *
    * @param dt - Delta time in seconds
    */
-  private decayEdgesOptimized(dt: number): void {
+  private async decayEdgesOptimized(dt: number): Promise<void> {
     const decayAmount = this.config.decayPerSecond * dt;
     const bondDecayAmount = decayAmount * 0.05;
     const minAffinity = 0.001;
@@ -186,7 +186,7 @@ export class SocialSystem {
     }
 
     if (this.gpuService?.isGPUAvailable() && totalEdges > 200) {
-      this.decayEdgesGPU(dt, minAffinity);
+      await this.decayEdgesGPU(dt, minAffinity);
       return;
     }
 
@@ -218,7 +218,7 @@ export class SocialSystem {
   /**
    * GPU-accelerated edge decay for large social networks
    */
-  private decayEdgesGPU(dt: number, minAffinity: number): void {
+  private async decayEdgesGPU(dt: number, minAffinity: number): Promise<void> {
     const edgeList: Array<{
       aId: string;
       bId: string;
@@ -251,7 +251,7 @@ export class SocialSystem {
     let newBonded: Float32Array | null = null;
 
     if (nonBondedAffinities.length > 0) {
-      newNonBonded = this.gpuService!.decayAffinitiesBatch(
+      newNonBonded = await this.gpuService!.decayAffinitiesBatch(
         nonBondedAffinities,
         this.config.decayPerSecond,
         dt,
@@ -259,7 +259,7 @@ export class SocialSystem {
       );
     }
     if (bondedAffinities.length > 0) {
-      newBonded = this.gpuService!.decayAffinitiesBatch(
+      newBonded = await this.gpuService!.decayAffinitiesBatch(
         bondedAffinities,
         this.config.decayPerSecond * 0.05,
         dt,
@@ -289,7 +289,7 @@ export class SocialSystem {
    * Uses GPU pairwise distance calculation when entity count is high.
    * Staggered to process only a subset of agents per frame to avoid spikes.
    */
-  private updateProximity(dt: number): void {
+  private async updateProximity(dt: number): Promise<void> {
     const entities = this.gameState.entities || [];
     const reinforcement = this.config.reinforcementPerSecond * dt;
     const entitiesWithPos = entities.filter(
@@ -298,7 +298,7 @@ export class SocialSystem {
     );
 
     if (this.gpuService?.isGPUAvailable() && entitiesWithPos.length >= 20) {
-      this.updateProximityGPU(entitiesWithPos, reinforcement);
+      await this.updateProximityGPU(entitiesWithPos, reinforcement);
       return;
     }
 
@@ -346,10 +346,10 @@ export class SocialSystem {
    * GPU-accelerated proximity detection using pairwise distance matrix.
    * Computes all N×N distances in parallel on GPU.
    */
-  private updateProximityGPU(
+  private async updateProximityGPU(
     entities: Array<{ id: string; position: { x: number; y: number } }>,
     reinforcement: number,
-  ): void {
+  ): Promise<void> {
     const count = entities.length;
 
     if (
@@ -368,7 +368,7 @@ export class SocialSystem {
 
     const positionsView = this.proximityPositionsBuffer.subarray(0, count * 2);
 
-    const { distances } = this.gpuService!.computePairwiseDistances(
+    const { distances } = await this.gpuService!.computePairwiseDistances(
       positionsView,
       count,
     );

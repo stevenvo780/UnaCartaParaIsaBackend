@@ -654,14 +654,15 @@ export class RoleSystem extends EventEmitter {
     const baseDistribution: Record<RoleType, number> = {
       [RoleTypeEnum.LOGGER]: 0.15,
       [RoleTypeEnum.QUARRYMAN]: 0.1,
+      [RoleTypeEnum.MINER]: 0.08,
       [RoleTypeEnum.BUILDER]: 0.15,
-      [RoleTypeEnum.FARMER]: 0.15,
-      [RoleTypeEnum.GATHERER]: 0.15,
-      [RoleTypeEnum.GUARD]: 0.1,
+      [RoleTypeEnum.FARMER]: 0.13,
+      [RoleTypeEnum.GATHERER]: 0.13,
+      [RoleTypeEnum.GUARD]: 0.08,
       [RoleTypeEnum.HUNTER]: 0.1,
       [RoleTypeEnum.CRAFTSMAN]: 0.05,
-      [RoleTypeEnum.LEADER]: 0.03,
-      [RoleTypeEnum.IDLE]: 0.02,
+      [RoleTypeEnum.LEADER]: 0.02,
+      [RoleTypeEnum.IDLE]: 0.01,
     };
 
     if (collectiveState.foodPerCapita < 8) {

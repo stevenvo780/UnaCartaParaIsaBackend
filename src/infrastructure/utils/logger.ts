@@ -80,7 +80,9 @@ class Logger {
     const flushAndExit = async (): Promise<void> => {
       try {
         await this.flush();
-      } catch {}
+      } catch {
+        // Silently ignore flush errors on exit
+      }
     };
     process.on("beforeExit", flushAndExit);
     process.on("exit", () => this.destroy());

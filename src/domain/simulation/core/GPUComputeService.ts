@@ -1,6 +1,8 @@
-import * as tf from "@tensorflow/tfjs-node-gpu";
 import { logger } from "../../../infrastructure/utils/logger";
 import { injectable } from "inversify";
+
+// Define TensorFlow types for type safety without importing the module
+type TF = typeof import("@tensorflow/tfjs-node-gpu");
 
 /**
  * GPU computation service abstraction using TensorFlow.js.
@@ -16,6 +18,7 @@ import { injectable } from "inversify";
 export class GPUComputeService {
   private gpuAvailable = false;
   private initialized = false;
+  private tf: TF | null = null;
   private performanceStats = {
     gpuOperations: 0,
     cpuFallbacks: 0,
@@ -38,13 +41,17 @@ export class GPUComputeService {
     if (this.initialized) return;
 
     try {
-      await tf.ready();
+      logger.info("🔄 Attempting to load TensorFlow GPU module...");
+      // Dynamic import to avoid loading heavy CUDA bindings if not needed
+      this.tf = await import("@tensorflow/tfjs-node-gpu");
 
-      const backend = tf.getBackend();
+      await this.tf.ready();
+
+      const backend = this.tf.getBackend();
 
       try {
         const testStart = performance.now();
-        const testTensor = tf.randomNormal([1000, 1000]);
+        const testTensor = this.tf.randomNormal([1000, 1000]);
         const result = testTensor.matMul(testTensor.transpose());
         await result.data();
         const testTime = performance.now() - testStart;
@@ -81,7 +88,7 @@ export class GPUComputeService {
    * @returns True if GPU backend is available and initialized
    */
   isGPUAvailable(): boolean {
-    if (!this.initialized) {
+    if (!this.initialized || !this.tf) {
       return false;
     }
     return this.gpuAvailable;
@@ -98,17 +105,17 @@ export class GPUComputeService {
    * @param deltaMs - Elapsed time in milliseconds
    * @returns New positions and boolean array indicating arrival at destination
    */
-  updatePositionsBatch(
+  async updatePositionsBatch(
     positions: Float32Array,
     targets: Float32Array,
     speeds: Float32Array,
     fatigue: Float32Array,
     deltaMs: number,
-  ): { newPositions: Float32Array; arrived: boolean[] } {
+  ): Promise<{ newPositions: Float32Array; arrived: boolean[] }> {
     const startTime = performance.now();
     const entityCount = positions.length / 2;
 
-    if (!this.gpuAvailable || entityCount < 50) {
+    if (!this.gpuAvailable || !this.tf || entityCount < 50) {
       return this.updatePositionsBatchCPU(
         positions,
         targets,
@@ -119,44 +126,66 @@ export class GPUComputeService {
     }
 
     try {
-      return tf.tidy(() => {
-        const posT = tf.tensor2d(positions, [entityCount, 2]);
-        const tarT = tf.tensor2d(targets, [entityCount, 2]);
-        const spdT = tf.tensor1d(speeds);
-        const fatT = tf.tensor1d(fatigue);
+      const tf = this.tf!;
 
-        const direction = tarT.sub(posT);
-        const distance = direction.norm("euclidean", 1, true);
+      // We cannot use tf.tidy with async operations inside, so we manually manage disposal
+      const posT = tf.tensor2d(positions, [entityCount, 2]);
+      const tarT = tf.tensor2d(targets, [entityCount, 2]);
+      const spdT = tf.tensor1d(speeds);
+      const fatT = tf.tensor1d(fatigue);
 
-        const fatigueMultiplier = tf
-          .onesLike(fatT)
-          .div(tf.onesLike(fatT).add(fatT.div(100).mul(0.5)));
-        const effectiveSpeed = spdT.mul(fatigueMultiplier);
+      const direction = tarT.sub(posT);
+      const distance = direction.norm("euclidean", 1, true);
 
-        const moveDistance = effectiveSpeed.expandDims(1).mul(deltaMs / 1000);
-        const normalized = direction.div(distance.add(0.001));
-        const movement = normalized.mul(moveDistance);
+      const fatigueMultiplier = tf
+        .onesLike(fatT)
+        .div(tf.onesLike(fatT).add(fatT.div(100).mul(0.5)));
+      const effectiveSpeed = spdT.mul(fatigueMultiplier);
 
-        const arrivedMask = distance.less(2);
-        const arrivedArray = Array.from(arrivedMask.dataSync()).map(
-          (v) => v !== 0,
-        );
+      const moveDistance = effectiveSpeed.expandDims(1).mul(deltaMs / 1000);
+      const normalized = direction.div(distance.add(0.001));
+      const movement = normalized.mul(moveDistance);
 
-        const shouldMove = distance.greaterEqual(2);
-        const moveAmount = movement.mul(shouldMove.expandDims(1));
-        const targetPos = tarT.mul(arrivedMask.expandDims(1));
-        const currentPos = posT.mul(shouldMove.expandDims(1));
+      const arrivedMask = distance.less(2);
 
-        const newPos = currentPos.add(moveAmount).add(targetPos);
+      // Async data retrieval
+      const arrivedData = await arrivedMask.data();
+      const arrivedArray = Array.from(arrivedData).map((v) => v !== 0);
 
-        const newPositions = newPos.dataSync() as Float32Array;
+      const shouldMove = distance.greaterEqual(2);
+      const moveAmount = movement.mul(shouldMove.expandDims(1));
+      const targetPos = tarT.mul(arrivedMask.expandDims(1));
+      const currentPos = posT.mul(shouldMove.expandDims(1));
 
-        const elapsed = performance.now() - startTime;
-        this.performanceStats.gpuOperations++;
-        this.performanceStats.totalGpuTime += elapsed;
+      const newPos = currentPos.add(moveAmount).add(targetPos);
 
-        return { newPositions, arrived: arrivedArray };
-      });
+      // Async data retrieval
+      const newPositions = (await newPos.data()) as Float32Array;
+
+      // Manual disposal
+      posT.dispose();
+      tarT.dispose();
+      spdT.dispose();
+      fatT.dispose();
+      direction.dispose();
+      distance.dispose();
+      fatigueMultiplier.dispose();
+      effectiveSpeed.dispose();
+      moveDistance.dispose();
+      normalized.dispose();
+      movement.dispose();
+      arrivedMask.dispose();
+      shouldMove.dispose();
+      moveAmount.dispose();
+      targetPos.dispose();
+      currentPos.dispose();
+      newPos.dispose();
+
+      const elapsed = performance.now() - startTime;
+      this.performanceStats.gpuOperations++;
+      this.performanceStats.totalGpuTime += elapsed;
+
+      return { newPositions, arrived: arrivedArray };
     } catch (error) {
       logger.warn(
         `⚠️ Error in GPU updatePositionsBatch, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
@@ -243,18 +272,18 @@ export class GPUComputeService {
    * @param deltaSeconds - Elapsed time in seconds
    * @returns Updated needs array
    */
-  applyNeedsDecayBatch(
+  async applyNeedsDecayBatch(
     needs: Float32Array,
     decayRates: Float32Array,
     ageMultipliers: Float32Array,
     divineModifiers: Float32Array,
     needCount: number,
     deltaSeconds: number,
-  ): Float32Array {
+  ): Promise<Float32Array> {
     const startTime = performance.now();
     const entityCount = needs.length / needCount;
 
-    if (!this.gpuAvailable || entityCount < 50) {
+    if (!this.gpuAvailable || !this.tf || entityCount < 50) {
       return this.applyNeedsDecayBatchCPU(
         needs,
         decayRates,
@@ -266,39 +295,49 @@ export class GPUComputeService {
     }
 
     try {
-      return tf.tidy(() => {
-        const needsT = tf.tensor2d(needs, [entityCount, needCount]);
-        const decayRatesT = tf.tensor1d(decayRates);
+      const tf = this.tf!;
 
-        let ageMultArray = ageMultipliers;
-        let divineMultArray = divineModifiers;
+      const needsT = tf.tensor2d(needs, [entityCount, needCount]);
+      const decayRatesT = tf.tensor1d(decayRates);
 
-        if (ageMultipliers.length !== entityCount) {
-          ageMultArray = new Float32Array(entityCount).fill(1.0);
-        }
-        if (divineModifiers.length !== entityCount) {
-          divineMultArray = new Float32Array(entityCount).fill(1.0);
-        }
+      let ageMultArray = ageMultipliers;
+      let divineMultArray = divineModifiers;
 
-        const ageMultT = tf.tensor1d(ageMultArray).expandDims(1);
-        const divineMultT = tf.tensor1d(divineMultArray).expandDims(1);
+      if (ageMultipliers.length !== entityCount) {
+        ageMultArray = new Float32Array(entityCount).fill(1.0);
+      }
+      if (divineModifiers.length !== entityCount) {
+        divineMultArray = new Float32Array(entityCount).fill(1.0);
+      }
 
-        const finalMultiplier = ageMultT.mul(divineMultT);
+      const ageMultT = tf.tensor1d(ageMultArray).expandDims(1);
+      const divineMultT = tf.tensor1d(divineMultArray).expandDims(1);
 
-        const decayAmount = decayRatesT
-          .expandDims(0)
-          .mul(finalMultiplier)
-          .mul(deltaSeconds);
-        const newNeeds = needsT.sub(decayAmount).maximum(0);
+      const finalMultiplier = ageMultT.mul(divineMultT);
 
-        const result = newNeeds.dataSync() as Float32Array;
+      const decayAmount = decayRatesT
+        .expandDims(0)
+        .mul(finalMultiplier)
+        .mul(deltaSeconds);
+      const newNeeds = needsT.sub(decayAmount).maximum(0);
 
-        const elapsed = performance.now() - startTime;
-        this.performanceStats.gpuOperations++;
-        this.performanceStats.totalGpuTime += elapsed;
+      // Async data retrieval
+      const result = (await newNeeds.data()) as Float32Array;
 
-        return result;
-      });
+      // Manual disposal
+      needsT.dispose();
+      decayRatesT.dispose();
+      ageMultT.dispose();
+      divineMultT.dispose();
+      finalMultiplier.dispose();
+      decayAmount.dispose();
+      newNeeds.dispose();
+
+      const elapsed = performance.now() - startTime;
+      this.performanceStats.gpuOperations++;
+      this.performanceStats.totalGpuTime += elapsed;
+
+      return result;
     } catch (error) {
       logger.warn(
         `⚠️ Error in GPU applyNeedsDecayBatch, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
@@ -362,73 +401,89 @@ export class GPUComputeService {
    * @param needCount - Number of needs per entity
    * @returns Updated needs array with cross-effects applied
    */
-  applyNeedsCrossEffectsBatch(
+  async applyNeedsCrossEffectsBatch(
     needs: Float32Array,
     needCount: number,
-  ): Float32Array {
+  ): Promise<Float32Array> {
     const startTime = performance.now();
     const entityCount = needs.length / needCount;
 
-    if (!this.gpuAvailable || entityCount < 50) {
+    if (!this.gpuAvailable || !this.tf || entityCount < 50) {
       return this.applyNeedsCrossEffectsBatchCPU(needs, needCount);
     }
 
     try {
-      return tf.tidy(() => {
-        const needsT = tf.tensor2d(needs, [entityCount, needCount]);
+      const tf = this.tf!;
 
-        const energy = needsT.slice([0, 2], [entityCount, 1]);
-        const hunger = needsT.slice([0, 0], [entityCount, 1]);
-        const thirst = needsT.slice([0, 1], [entityCount, 1]);
+      const needsT = tf.tensor2d(needs, [entityCount, needCount]);
 
-        const energyPenalty = tf.scalar(30).sub(energy).maximum(0).mul(0.02);
-        const hungerPenalty = tf.scalar(40).sub(hunger).maximum(0).mul(0.03);
-        const thirstPenalty = tf.scalar(30).sub(thirst).maximum(0).mul(0.05);
+      const energy = needsT.slice([0, 2], [entityCount, 1]);
+      const hunger = needsT.slice([0, 0], [entityCount, 1]);
+      const thirst = needsT.slice([0, 1], [entityCount, 1]);
 
-        const hungerCol = needsT.slice([0, 0], [entityCount, 1]);
-        const thirstCol = needsT.slice([0, 1], [entityCount, 1]);
-        const energyCol = needsT
-          .slice([0, 2], [entityCount, 1])
-          .sub(hungerPenalty)
-          .sub(thirstPenalty.mul(2));
-        const hygieneCol = needsT.slice([0, 3], [entityCount, 1]);
-        const socialCol = needsT
-          .slice([0, 4], [entityCount, 1])
-          .sub(energyPenalty);
-        const funCol = needsT
-          .slice([0, 5], [entityCount, 1])
-          .sub(energyPenalty);
-        const mentalHealthCol = needsT
-          .slice([0, 6], [entityCount, 1])
-          .sub(energyPenalty.mul(1.5))
-          .sub(hungerPenalty.mul(0.5))
-          .sub(thirstPenalty);
+      const energyPenalty = tf.scalar(30).sub(energy).maximum(0).mul(0.02);
+      const hungerPenalty = tf.scalar(40).sub(hunger).maximum(0).mul(0.03);
+      const thirstPenalty = tf.scalar(30).sub(thirst).maximum(0).mul(0.05);
 
-        const newNeeds = tf
-          .concat(
-            [
-              hungerCol,
-              thirstCol,
-              energyCol,
-              hygieneCol,
-              socialCol,
-              funCol,
-              mentalHealthCol,
-            ],
-            1,
-          )
-          .as2D(entityCount, needCount)
-          .maximum(0)
-          .minimum(100);
+      const hungerCol = needsT.slice([0, 0], [entityCount, 1]);
+      const thirstCol = needsT.slice([0, 1], [entityCount, 1]);
+      const energyCol = needsT
+        .slice([0, 2], [entityCount, 1])
+        .sub(hungerPenalty)
+        .sub(thirstPenalty.mul(2));
+      const hygieneCol = needsT.slice([0, 3], [entityCount, 1]);
+      const socialCol = needsT
+        .slice([0, 4], [entityCount, 1])
+        .sub(energyPenalty);
+      const funCol = needsT.slice([0, 5], [entityCount, 1]).sub(energyPenalty);
+      const mentalHealthCol = needsT
+        .slice([0, 6], [entityCount, 1])
+        .sub(energyPenalty.mul(1.5))
+        .sub(hungerPenalty.mul(0.5))
+        .sub(thirstPenalty);
 
-        const result = newNeeds.dataSync() as Float32Array;
+      const newNeeds = tf
+        .concat(
+          [
+            hungerCol,
+            thirstCol,
+            energyCol,
+            hygieneCol,
+            socialCol,
+            funCol,
+            mentalHealthCol,
+          ],
+          1,
+        )
+        .as2D(entityCount, needCount)
+        .maximum(0)
+        .minimum(100);
 
-        const elapsed = performance.now() - startTime;
-        this.performanceStats.gpuOperations++;
-        this.performanceStats.totalGpuTime += elapsed;
+      // Async data retrieval
+      const result = (await newNeeds.data()) as Float32Array;
 
-        return result;
-      });
+      // Manual disposal
+      needsT.dispose();
+      energy.dispose();
+      hunger.dispose();
+      thirst.dispose();
+      energyPenalty.dispose();
+      hungerPenalty.dispose();
+      thirstPenalty.dispose();
+      hungerCol.dispose();
+      thirstCol.dispose();
+      energyCol.dispose();
+      hygieneCol.dispose();
+      socialCol.dispose();
+      funCol.dispose();
+      mentalHealthCol.dispose();
+      newNeeds.dispose();
+
+      const elapsed = performance.now() - startTime;
+      this.performanceStats.gpuOperations++;
+      this.performanceStats.totalGpuTime += elapsed;
+
+      return result;
     } catch (error) {
       logger.warn(
         `⚠️ Error in GPU applyNeedsCrossEffectsBatch, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
@@ -508,51 +563,62 @@ export class GPUComputeService {
    * @param deltaMs - Elapsed time in milliseconds
    * @returns Updated fatigue array
    */
-  updateFatigueBatch(
+  async updateFatigueBatch(
     fatigue: Float32Array,
     isMoving: boolean[],
     isResting: boolean[],
     deltaMs: number,
-  ): Float32Array {
+  ): Promise<Float32Array> {
     const startTime = performance.now();
     const entityCount = fatigue.length;
 
-    if (!this.gpuAvailable || entityCount < 50) {
+    if (!this.gpuAvailable || !this.tf || entityCount < 50) {
       return this.updateFatigueBatchCPU(fatigue, isMoving, isResting, deltaMs);
     }
 
     try {
-      return tf.tidy(() => {
-        const fatigueT = tf.tensor1d(fatigue);
-        const isMovingT = tf
-          .tensor1d(isMoving.map((v) => (v ? 1 : 0)))
-          .cast("float32");
-        const isRestingT = tf
-          .tensor1d(isResting.map((v) => (v ? 1 : 0)))
-          .cast("float32");
+      const tf = this.tf!;
 
-        const fatigueDecayRate = 0.1 * (deltaMs / 1000);
-        const fatigueRestRate = 0.5 * (deltaMs / 1000);
+      const fatigueT = tf.tensor1d(fatigue);
+      const isMovingT = tf
+        .tensor1d(isMoving.map((v) => (v ? 1 : 0)))
+        .cast("float32");
+      const isRestingT = tf
+        .tensor1d(isResting.map((v) => (v ? 1 : 0)))
+        .cast("float32");
 
-        const movingChange = isMovingT.mul(0.1);
-        const restingChange = isRestingT.mul(-fatigueRestRate);
-        const idleChange = tf
-          .onesLike(isMovingT)
-          .sub(isMovingT)
-          .sub(isRestingT)
-          .mul(-fatigueDecayRate);
+      const fatigueDecayRate = 0.1 * (deltaMs / 1000);
+      const fatigueRestRate = 0.5 * (deltaMs / 1000);
 
-        const totalChange = movingChange.add(restingChange).add(idleChange);
-        const newFatigue = fatigueT.add(totalChange).maximum(0).minimum(100);
+      const movingChange = isMovingT.mul(0.1);
+      const restingChange = isRestingT.mul(-fatigueRestRate);
+      const idleChange = tf
+        .onesLike(isMovingT)
+        .sub(isMovingT)
+        .sub(isRestingT)
+        .mul(-fatigueDecayRate);
 
-        const result = newFatigue.dataSync() as Float32Array;
+      const totalChange = movingChange.add(restingChange).add(idleChange);
+      const newFatigue = fatigueT.add(totalChange).maximum(0).minimum(100);
 
-        const elapsed = performance.now() - startTime;
-        this.performanceStats.gpuOperations++;
-        this.performanceStats.totalGpuTime += elapsed;
+      // Async data retrieval
+      const result = (await newFatigue.data()) as Float32Array;
 
-        return result;
-      });
+      // Manual disposal
+      fatigueT.dispose();
+      isMovingT.dispose();
+      isRestingT.dispose();
+      movingChange.dispose();
+      restingChange.dispose();
+      idleChange.dispose();
+      totalChange.dispose();
+      newFatigue.dispose();
+
+      const elapsed = performance.now() - startTime;
+      this.performanceStats.gpuOperations++;
+      this.performanceStats.totalGpuTime += elapsed;
+
+      return result;
     } catch (error) {
       logger.warn(
         `⚠️ Error in GPU updateFatigueBatch, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
@@ -635,16 +701,16 @@ export class GPUComputeService {
    * @param threshold - Minimum threshold (values below become 0)
    * @returns Decayed values array
    */
-  computeGeneralDecay(
+  async computeGeneralDecay(
     values: Float32Array,
     decayRate: number,
     deltaSeconds: number,
     threshold: number = 0.001,
-  ): Float32Array {
+  ): Promise<Float32Array> {
     const startTime = performance.now();
     const count = values.length;
 
-    if (!this.gpuAvailable || count < 100) {
+    if (!this.gpuAvailable || !this.tf || count < 100) {
       return this.computeGeneralDecayCPU(
         values,
         decayRate,
@@ -654,21 +720,29 @@ export class GPUComputeService {
     }
 
     try {
-      return tf.tidy(() => {
-        const valuesT = tf.tensor1d(values);
-        const decayAmount = tf.scalar(decayRate * deltaSeconds);
-        const decayed = valuesT.sub(decayAmount);
-        const resultT = decayed.maximum(0);
-        const finalT = tf.where(resultT.less(threshold), tf.scalar(0), resultT);
+      const tf = this.tf!;
 
-        const result = finalT.dataSync() as Float32Array;
+      const valuesT = tf.tensor1d(values);
+      const decayAmount = tf.scalar(decayRate * deltaSeconds);
+      const decayed = valuesT.sub(decayAmount);
+      const resultT = decayed.maximum(0);
+      const finalT = tf.where(resultT.less(threshold), tf.scalar(0), resultT);
 
-        const elapsed = performance.now() - startTime;
-        this.performanceStats.gpuOperations++;
-        this.performanceStats.totalGpuTime += elapsed;
+      // Async data retrieval
+      const result = (await finalT.data()) as Float32Array;
 
-        return result;
-      });
+      // Manual disposal
+      valuesT.dispose();
+      decayAmount.dispose();
+      decayed.dispose();
+      resultT.dispose();
+      finalT.dispose();
+
+      const elapsed = performance.now() - startTime;
+      this.performanceStats.gpuOperations++;
+      this.performanceStats.totalGpuTime += elapsed;
+
+      return result;
     } catch (error) {
       logger.warn(
         `⚠️ Error in GPU computeGeneralDecay, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
@@ -711,7 +785,10 @@ export class GPUComputeService {
    */
   logPerformanceStats(): void {
     const stats = this.getPerformanceStats();
-    const memInfo = tf.memory();
+    let memInfo;
+    if (this.tf) {
+      memInfo = this.tf.memory();
+    }
     const totalOps = stats.gpuOperations + stats.cpuFallbacks;
     const gpuRatio = totalOps > 0 ? (stats.gpuOperations / totalOps) * 100 : 0;
 
@@ -747,35 +824,43 @@ export class GPUComputeService {
    * @param positions - Flat array [x1, y1, x2, y2, ...] of entity positions
    * @returns Array of squared distances for each entity
    */
-  computeDistancesBatch(
+  async computeDistancesBatch(
     centerX: number,
     centerY: number,
     positions: Float32Array,
-  ): Float32Array {
+  ): Promise<Float32Array> {
     const startTime = performance.now();
     const entityCount = positions.length / 2;
 
-    if (!this.gpuAvailable || entityCount < 100) {
+    if (!this.gpuAvailable || !this.tf || entityCount < 100) {
       return this.computeDistancesBatchCPU(centerX, centerY, positions);
     }
 
     try {
-      return tf.tidy(() => {
-        const posT = tf.tensor2d(positions, [entityCount, 2]);
-        const centerT = tf.tensor1d([centerX, centerY]);
+      const tf = this.tf!;
 
-        const diff = posT.sub(centerT);
-        const diffSq = diff.square();
-        const distSq = diffSq.sum(1);
+      const posT = tf.tensor2d(positions, [entityCount, 2]);
+      const centerT = tf.tensor1d([centerX, centerY]);
 
-        const result = distSq.dataSync() as Float32Array;
+      const diff = posT.sub(centerT);
+      const diffSq = diff.square();
+      const distSq = diffSq.sum(1);
 
-        const elapsed = performance.now() - startTime;
-        this.performanceStats.gpuOperations++;
-        this.performanceStats.totalGpuTime += elapsed;
+      // Async data retrieval
+      const result = (await distSq.data()) as Float32Array;
 
-        return result;
-      });
+      // Manual disposal
+      posT.dispose();
+      centerT.dispose();
+      diff.dispose();
+      diffSq.dispose();
+      distSq.dispose();
+
+      const elapsed = performance.now() - startTime;
+      this.performanceStats.gpuOperations++;
+      this.performanceStats.totalGpuTime += elapsed;
+
+      return result;
     } catch (error) {
       logger.warn(
         `⚠️ Error in GPU computeDistancesBatch: ${error instanceof Error ? error.message : String(error)}`,
@@ -833,16 +918,16 @@ export class GPUComputeService {
    * @param minAffinity - Minimum threshold (below this becomes 0)
    * @returns Updated affinity values
    */
-  decayAffinitiesBatch(
+  async decayAffinitiesBatch(
     affinities: Float32Array,
     decayRate: number,
     deltaSeconds: number,
     minAffinity: number = 0.001,
-  ): Float32Array {
+  ): Promise<Float32Array> {
     const startTime = performance.now();
     const count = affinities.length;
 
-    if (!this.gpuAvailable || count < 100) {
+    if (!this.gpuAvailable || !this.tf || count < 100) {
       return this.decayAffinitiesBatchCPU(
         affinities,
         decayRate,
@@ -852,26 +937,36 @@ export class GPUComputeService {
     }
 
     try {
-      return tf.tidy(() => {
-        const affT = tf.tensor1d(affinities);
-        const decayAmount = decayRate * deltaSeconds;
+      const tf = this.tf!;
 
-        const sign = affT.sign();
-        const absAff = affT.abs();
-        const decayed = absAff.sub(decayAmount).maximum(0);
-        const result = decayed.mul(sign);
+      const affT = tf.tensor1d(affinities);
+      const decayAmount = decayRate * deltaSeconds;
 
-        const thresholdMask = result.abs().greater(minAffinity);
-        const finalResult = result.mul(thresholdMask.cast("float32"));
+      const sign = affT.sign();
+      const absAff = affT.abs();
+      const decayed = absAff.sub(decayAmount).maximum(0);
+      const result = decayed.mul(sign);
 
-        const output = finalResult.dataSync() as Float32Array;
+      const thresholdMask = result.abs().greater(minAffinity);
+      const finalResult = result.mul(thresholdMask.cast("float32"));
 
-        const elapsed = performance.now() - startTime;
-        this.performanceStats.gpuOperations++;
-        this.performanceStats.totalGpuTime += elapsed;
+      // Async data retrieval
+      const output = (await finalResult.data()) as Float32Array;
 
-        return output;
-      });
+      // Manual disposal
+      affT.dispose();
+      sign.dispose();
+      absAff.dispose();
+      decayed.dispose();
+      result.dispose();
+      thresholdMask.dispose();
+      finalResult.dispose();
+
+      const elapsed = performance.now() - startTime;
+      this.performanceStats.gpuOperations++;
+      this.performanceStats.totalGpuTime += elapsed;
+
+      return output;
     } catch (error) {
       logger.warn(
         `⚠️ Error in GPU decayAffinitiesBatch: ${error instanceof Error ? error.message : String(error)}`,
@@ -920,45 +1015,54 @@ export class GPUComputeService {
    * @param maxEntities - Limit computation to first N entities (performance)
    * @returns Flat array of pairwise squared distances (upper triangle)
    */
-  computePairwiseDistances(
+  async computePairwiseDistances(
     positions: Float32Array,
     maxEntities: number = 100,
-  ): { distances: Float32Array; pairCount: number } {
+  ): Promise<{ distances: Float32Array; pairCount: number }> {
     const startTime = performance.now();
     const entityCount = Math.min(positions.length / 2, maxEntities);
     const pairCount = (entityCount * (entityCount - 1)) / 2;
 
-    if (!this.gpuAvailable || entityCount < 50) {
+    if (!this.gpuAvailable || !this.tf || entityCount < 50) {
       return this.computePairwiseDistancesCPU(positions, maxEntities);
     }
 
     try {
-      return tf.tidy(() => {
-        const posT = tf.tensor2d(positions.slice(0, entityCount * 2), [
-          entityCount,
-          2,
-        ]);
+      const tf = this.tf!;
 
-        const pos1 = posT.expandDims(1);
-        const pos2 = posT.expandDims(0);
-        const diff = pos1.sub(pos2);
-        const distSq = diff.square().sum(2);
+      const posT = tf.tensor2d(positions.slice(0, entityCount * 2), [
+        entityCount,
+        2,
+      ]);
 
-        const distMatrix = distSq.arraySync() as number[][];
-        const distances = new Float32Array(pairCount);
-        let idx = 0;
-        for (let i = 0; i < entityCount; i++) {
-          for (let j = i + 1; j < entityCount; j++) {
-            distances[idx++] = distMatrix[i][j];
-          }
+      const pos1 = posT.expandDims(1);
+      const pos2 = posT.expandDims(0);
+      const diff = pos1.sub(pos2);
+      const distSq = diff.square().sum(2);
+
+      // Async data retrieval
+      const distMatrix = (await distSq.array()) as number[][];
+
+      // Manual disposal
+      posT.dispose();
+      pos1.dispose();
+      pos2.dispose();
+      diff.dispose();
+      distSq.dispose();
+
+      const distances = new Float32Array(pairCount);
+      let idx = 0;
+      for (let i = 0; i < entityCount; i++) {
+        for (let j = i + 1; j < entityCount; j++) {
+          distances[idx++] = distMatrix[i][j];
         }
+      }
 
-        const elapsed = performance.now() - startTime;
-        this.performanceStats.gpuOperations++;
-        this.performanceStats.totalGpuTime += elapsed;
+      const elapsed = performance.now() - startTime;
+      this.performanceStats.gpuOperations++;
+      this.performanceStats.totalGpuTime += elapsed;
 
-        return { distances, pairCount };
-      });
+      return { distances, pairCount };
     } catch (error) {
       logger.warn(
         `⚠️ Error in GPU computePairwiseDistances: ${error instanceof Error ? error.message : String(error)}`,
@@ -1003,17 +1107,22 @@ export class GPUComputeService {
    * @param deltaSeconds - Elapsed time
    * @returns New positions after fleeing
    */
-  computeFleeVectorsBatch(
+  async computeFleeVectorsBatch(
     animalPositions: Float32Array,
     threatPositions: Float32Array,
     fleeSpeed: number,
     deltaSeconds: number,
-  ): Float32Array {
+  ): Promise<Float32Array> {
     const startTime = performance.now();
     const animalCount = animalPositions.length / 2;
     const threatCount = threatPositions.length / 2;
 
-    if (!this.gpuAvailable || animalCount < 50 || threatCount === 0) {
+    if (
+      !this.gpuAvailable ||
+      !this.tf ||
+      animalCount < 50 ||
+      threatCount === 0
+    ) {
       return this.computeFleeVectorsBatchCPU(
         animalPositions,
         threatPositions,
@@ -1023,40 +1132,51 @@ export class GPUComputeService {
     }
 
     try {
-      return tf.tidy(() => {
-        const animalsT = tf.tensor2d(animalPositions, [animalCount, 2]);
-        const threatsT = tf.tensor2d(threatPositions, [threatCount, 2]);
+      const tf = this.tf!;
 
-        const animalExp = animalsT.expandDims(1);
-        const threatExp = threatsT.expandDims(0);
-        const diff = animalExp.sub(threatExp);
-        const distSq = diff.square().sum(2);
+      const animalsT = tf.tensor2d(animalPositions, [animalCount, 2]);
+      const threatsT = tf.tensor2d(threatPositions, [threatCount, 2]);
 
-        const nearestIdx = distSq.argMin(1);
-        const nearestIdxArray = nearestIdx.arraySync() as number[];
+      const animalExp = animalsT.expandDims(1);
+      const threatExp = threatsT.expandDims(0);
+      const diff = animalExp.sub(threatExp);
+      const distSq = diff.square().sum(2);
 
-        const newPositions = new Float32Array(animalPositions);
-        const moveAmount = fleeSpeed * deltaSeconds;
+      const nearestIdx = distSq.argMin(1);
 
-        for (let i = 0; i < animalCount; i++) {
-          const threatIdx = nearestIdxArray[i];
-          const dx = animalPositions[i * 2] - threatPositions[threatIdx * 2];
-          const dy =
-            animalPositions[i * 2 + 1] - threatPositions[threatIdx * 2 + 1];
-          const dist = Math.sqrt(dx * dx + dy * dy);
+      // Async data retrieval
+      const nearestIdxArray = (await nearestIdx.array()) as number[];
 
-          if (dist > 0.001) {
-            newPositions[i * 2] += (dx / dist) * moveAmount;
-            newPositions[i * 2 + 1] += (dy / dist) * moveAmount;
-          }
+      // Manual disposal
+      animalsT.dispose();
+      threatsT.dispose();
+      animalExp.dispose();
+      threatExp.dispose();
+      diff.dispose();
+      distSq.dispose();
+      nearestIdx.dispose();
+
+      const newPositions = new Float32Array(animalPositions);
+      const moveAmount = fleeSpeed * deltaSeconds;
+
+      for (let i = 0; i < animalCount; i++) {
+        const threatIdx = nearestIdxArray[i];
+        const dx = animalPositions[i * 2] - threatPositions[threatIdx * 2];
+        const dy =
+          animalPositions[i * 2 + 1] - threatPositions[threatIdx * 2 + 1];
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist > 0.001) {
+          newPositions[i * 2] += (dx / dist) * moveAmount;
+          newPositions[i * 2 + 1] += (dy / dist) * moveAmount;
         }
+      }
 
-        const elapsed = performance.now() - startTime;
-        this.performanceStats.gpuOperations++;
-        this.performanceStats.totalGpuTime += elapsed;
+      const elapsed = performance.now() - startTime;
+      this.performanceStats.gpuOperations++;
+      this.performanceStats.totalGpuTime += elapsed;
 
-        return newPositions;
-      });
+      return newPositions;
     } catch (error) {
       logger.warn(
         `⚠️ Error in GPU computeFleeVectorsBatch: ${error instanceof Error ? error.message : String(error)}`,
@@ -1119,7 +1239,9 @@ export class GPUComputeService {
    * Cleans up TensorFlow memory. Should be called periodically.
    */
   dispose(): void {
-    tf.disposeVariables();
-    logger.debug("🧹 GPUComputeService: TensorFlow memory cleaned");
+    if (this.tf) {
+      this.tf.disposeVariables();
+      logger.debug("🧹 GPUComputeService: TensorFlow memory cleaned");
+    }
   }
 }

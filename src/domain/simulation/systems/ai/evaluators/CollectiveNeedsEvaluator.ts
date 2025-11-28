@@ -76,6 +76,12 @@ const ROLE_COLLECTIVE_MODIFIERS: Record<
     depositPriority: 1.2,
     preferredResource: ResourceTypeEnum.STONE,
   },
+  [RoleTypeEnum.MINER]: {
+    gatherPriority: 1.4,
+    buildPriority: 0.7,
+    depositPriority: 1.3,
+    preferredResource: ResourceTypeEnum.METAL,
+  },
   [RoleTypeEnum.BUILDER]: {
     gatherPriority: 0.9,
     buildPriority: 1.5,
@@ -566,6 +572,10 @@ function getTaskTypeForResource(resource: ResourceType): TaskType {
       return TaskType.GATHER_WOOD;
     case ResourceTypeEnum.STONE:
       return TaskType.GATHER_STONE;
+    case ResourceTypeEnum.METAL:
+    case ResourceTypeEnum.IRON_ORE:
+    case ResourceTypeEnum.COPPER_ORE:
+      return TaskType.GATHER_METAL;
     default:
       return TaskType.CUSTOM;
   }

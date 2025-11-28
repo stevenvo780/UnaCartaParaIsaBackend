@@ -171,7 +171,7 @@ export class MovementSystem extends EventEmitter {
     });
   }
 
-  public update(deltaMs: number): void {
+  public async update(deltaMs: number): Promise<void> {
     const now = getFrameTime();
 
     this.processPathfindingQueue();
@@ -182,7 +182,7 @@ export class MovementSystem extends EventEmitter {
     }
 
     if (movingCount >= this.BATCH_THRESHOLD) {
-      this.updateBatch(deltaMs, now);
+      await this.updateBatch(deltaMs, now);
     } else {
       for (const state of this.movementStates.values()) {
         this.updateEntityMovement(state, now, deltaMs);
@@ -271,7 +271,7 @@ export class MovementSystem extends EventEmitter {
   private isMovingBuffer: Uint8Array | null = null;
   private isRestingBuffer: Uint8Array | null = null;
 
-  private updateBatch(deltaMs: number, now: number): void {
+  private async updateBatch(deltaMs: number, now: number): Promise<void> {
     if (this.entitiesDirty) {
       this.batchProcessor.rebuildBuffers(this.movementStates);
       this.entitiesDirty = false;
@@ -329,9 +329,9 @@ export class MovementSystem extends EventEmitter {
     const isRestingSlice = this._persistentIsResting.slice(0, entityCount);
 
     const { updated, arrived } =
-      this.batchProcessor.updatePositionsBatch(deltaMs);
+      await this.batchProcessor.updatePositionsBatch(deltaMs);
 
-    this.batchProcessor.updateFatigueBatch(
+    await this.batchProcessor.updateFatigueBatch(
       isMovingSlice,
       isRestingSlice,
       deltaMs,

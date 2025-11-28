@@ -110,7 +110,7 @@ export interface AgentGoalPlannerDeps {
   getNearbyAgentsWithDistances?: (
     entityId: string,
     radius: number,
-  ) => Array<{ id: string; distance: number }>;
+  ) => Promise<Array<{ id: string; distance: number }>>;
 
   getAllStockpiles?: () => Stockpile[];
   getActiveDemands?: () => SettlementDemand[];
@@ -159,12 +159,12 @@ export interface AgentGoalPlannerDeps {
  * @param minPriority - Minimum priority threshold for goals (default: 0.3)
  * @returns Array of goals sorted by priority (highest first)
  */
-export function planGoals(
+export async function planGoals(
   deps: AgentGoalPlannerDeps,
   aiState: AIState,
   now: number,
   minPriority: number = 0.3,
-): AIGoal[] {
+): Promise<AIGoal[]> {
   const goals: AIGoal[] = [];
   const entityNeeds = deps.getEntityNeeds(aiState.entityId);
   const positionFor = (id: string): { x: number; y: number } =>
@@ -299,7 +299,7 @@ export function planGoals(
       getZoneIdsByType: zoneIdsByType,
       getNearbyAgentsWithDistances: deps.getNearbyAgentsWithDistances,
     };
-    const assistGoals = evaluateAssist(assistDeps, aiState);
+    const assistGoals = await evaluateAssist(assistDeps, aiState);
     goals.push(...assistGoals);
   }
 

@@ -25,7 +25,7 @@ export class SnapshotManager {
    * Gets the dirty tracker from the runner.
    * This is accessed at runtime to avoid Inversify injection timing issues.
    */
-  private get dirtyTracker() {
+  private get dirtyTracker(): import("../StateDirtyTracker").StateDirtyTracker {
     return this.runner.stateDirtyTracker;
   }
 

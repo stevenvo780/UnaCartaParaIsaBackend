@@ -35,6 +35,12 @@ const ROLE_NEED_MODIFIERS: Record<RoleType, RoleNeedModifiers> = {
     energy: 0.8,
     social: 1.0,
   },
+  [RoleTypeEnum.MINER]: {
+    hunger: 0.85,
+    thirst: 0.85,
+    energy: 0.75,
+    social: 0.95,
+  },
   [RoleTypeEnum.BUILDER]: {
     hunger: 0.95,
     thirst: 0.95,

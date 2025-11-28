@@ -19,10 +19,13 @@ export interface AssistContext {
   getNearbyAgentsWithDistances?: (
     entityId: string,
     radius: number,
-  ) => Array<{ id: string; distance: number }>;
+  ) => Promise<Array<{ id: string; distance: number }>>;
 }
 
-export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
+export async function evaluateAssist(
+  ctx: AssistContext,
+  aiState: AIState,
+): Promise<AIGoal[]> {
   try {
     const { personality } = aiState;
     const now = Date.now();
@@ -37,7 +40,7 @@ export function evaluateAssist(ctx: AssistContext, aiState: AIState): AIGoal[] {
     } | null = null;
 
     if (ctx.getNearbyAgentsWithDistances) {
-      const nearbyAgents = ctx.getNearbyAgentsWithDistances(
+      const nearbyAgents = await ctx.getNearbyAgentsWithDistances(
         aiState.entityId,
         helpRadius,
       );

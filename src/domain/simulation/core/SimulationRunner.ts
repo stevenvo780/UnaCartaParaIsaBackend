@@ -811,6 +811,18 @@ export class SimulationRunner {
     const agents = this.state.agents || [];
     let initialized = 0;
 
+    // Clear spawned chunks tracking to allow resource regeneration in visited areas
+    // This is critical after loading a save since:
+    // 1. Resources may have been depleted before saving
+    // 2. spawnedChunks/loadedChunks Sets are not persisted
+    // 3. We need to regenerate resources for the world to function
+    this.worldResourceSystem.clearSpawnedChunks();
+    this.chunkLoadingSystem.clearLoadedChunks();
+    this.animalSystem.clearSpawnedChunks();
+    logger.info(
+      `🔄 SimulationRunner: Cleared chunk tracking for fresh resource spawning`,
+    );
+
     // Rebuild agent registry index to include all loaded agents
     this.agentRegistry.rebuildProfileIndex();
     const registeredCount = this.agentRegistry.getAgentCount();

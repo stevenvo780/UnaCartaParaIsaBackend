@@ -144,7 +144,7 @@ export class AnimalSystem {
     );
   }
 
-  public update(deltaMs: number): void {
+  public async update(deltaMs: number): Promise<void> {
     const startTime = performance.now();
     const now = getFrameTime();
     const deltaSeconds = deltaMs / 1000;
@@ -173,7 +173,7 @@ export class AnimalSystem {
     }
 
     if (liveCount >= this.BATCH_THRESHOLD) {
-      this.updateBatch(deltaSeconds, deltaMinutes, now);
+      await this.updateBatch(deltaSeconds, deltaMinutes, now);
     } else {
       for (const animal of this.animals.values()) {
         if (animal.isDead) continue;
@@ -218,11 +218,11 @@ export class AnimalSystem {
     );
   }
 
-  private updateBatch(
+  private async updateBatch(
     deltaSeconds: number,
     deltaMinutes: number,
     _now: number,
-  ): void {
+  ): Promise<void> {
     const startTime = performance.now();
     this.updateFrame++;
     this.batchProcessor.rebuildBuffers(this.animals);
@@ -256,7 +256,7 @@ export class AnimalSystem {
 
     this.batchProcessor.syncToAnimals(this.animals);
 
-    this.processFleeingAnimalsBatch(animalIdArray, deltaSeconds);
+    await this.processFleeingAnimalsBatch(animalIdArray, deltaSeconds);
 
     /**
      * Staggered behavior updates: critical states (fleeing, hunting, etc.) update
@@ -306,10 +306,10 @@ export class AnimalSystem {
    * Computes flee vectors for all animals that are fleeing in parallel.
    * This is an O(A × T) operation where A = fleeing animals, T = threats.
    */
-  private processFleeingAnimalsBatch(
+  private async processFleeingAnimalsBatch(
     animalIds: string[],
     deltaSeconds: number,
-  ): void {
+  ): Promise<void> {
     const fleeingAnimals: Array<{
       animal: Animal;
       threatPos: { x: number; y: number };
@@ -350,7 +350,7 @@ export class AnimalSystem {
     }
 
     if (this.gpuService?.isGPUAvailable() && fleeingAnimals.length >= 50) {
-      this.computeFleeMovementsGPU(fleeingAnimals, deltaSeconds);
+      await this.computeFleeMovementsGPU(fleeingAnimals, deltaSeconds);
     } else {
       for (const { animal, threatPos } of fleeingAnimals) {
         AnimalBehavior.moveAwayFrom(animal, threatPos, 1.2, deltaSeconds);
@@ -361,13 +361,13 @@ export class AnimalSystem {
   /**
    * GPU-accelerated flee vector computation for multiple animals.
    */
-  private computeFleeMovementsGPU(
+  private async computeFleeMovementsGPU(
     fleeingAnimals: Array<{
       animal: Animal;
       threatPos: { x: number; y: number };
     }>,
     deltaSeconds: number,
-  ): void {
+  ): Promise<void> {
     const count = fleeingAnimals.length;
     const animalPositions = new Float32Array(count * 2);
     const threatPositions = new Float32Array(count * 2);
@@ -379,7 +379,7 @@ export class AnimalSystem {
       threatPositions[i * 2 + 1] = fleeingAnimals[i].threatPos.y;
     }
 
-    const newPositions = this.gpuService!.computeFleeVectorsBatch(
+    const newPositions = await this.gpuService!.computeFleeVectorsBatch(
       animalPositions,
       threatPositions,
       1.2 * 50,

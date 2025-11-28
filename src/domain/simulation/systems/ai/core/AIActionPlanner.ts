@@ -636,6 +636,39 @@ export class AIActionPlanner {
       }
     }
 
+    // Metal/ore is obtained by mining rocks (secondary yield)
+    if (
+      taskType === TaskType.GATHER_METAL ||
+      resourceType === ResourceType.METAL ||
+      resourceType === ResourceType.IRON_ORE ||
+      resourceType === ResourceType.COPPER_ORE
+    ) {
+      if (this.deps.findNearestResource) {
+        const rock = this.deps.findNearestResource(agentId, "rock");
+        if (rock) {
+          const agentPos = this.getPosition(agentId);
+          if (agentPos) {
+            const dist = Math.hypot(agentPos.x - rock.x, agentPos.y - rock.y);
+            if (dist < this.HARVEST_RANGE) {
+              return {
+                actionType: ActionType.HARVEST,
+                agentId,
+                targetId: rock.id,
+                targetPosition: { x: rock.x, y: rock.y },
+                timestamp,
+              };
+            }
+            return {
+              actionType: ActionType.MOVE,
+              agentId,
+              targetPosition: { x: rock.x, y: rock.y },
+              timestamp,
+            };
+          }
+        }
+      }
+    }
+
     return null;
   }
 

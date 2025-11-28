@@ -86,10 +86,10 @@ export class MovementBatchProcessor {
     this.bufferDirty = false;
   }
 
-  public updatePositionsBatch(deltaMs: number): {
+  public async updatePositionsBatch(deltaMs: number): Promise<{
     updated: boolean[];
     arrived: boolean[];
-  } {
+  }> {
     if (
       !this.positionBuffer ||
       !this.targetBuffer ||
@@ -113,7 +113,7 @@ export class MovementBatchProcessor {
         const speeds = new Float32Array(entityCount).fill(
           this.BASE_MOVEMENT_SPEED,
         );
-        const result = this.gpuService.updatePositionsBatch(
+        const result = await this.gpuService.updatePositionsBatch(
           workPositions,
           this.targetBuffer,
           speeds,
@@ -223,18 +223,18 @@ export class MovementBatchProcessor {
     return { updated, arrived };
   }
 
-  public updateFatigueBatch(
+  public async updateFatigueBatch(
     isMoving: boolean[],
     isResting: boolean[],
     deltaMs: number,
-  ): void {
+  ): Promise<void> {
     if (!this.fatigueBuffer || this.entityIdArray.length === 0) return;
 
     const workFatigue = new Float32Array(this.fatigueBuffer);
 
     if (this.gpuService?.isGPUAvailable()) {
       try {
-        const result = this.gpuService.updateFatigueBatch(
+        const result = await this.gpuService.updateFatigueBatch(
           workFatigue,
           isMoving,
           isResting,

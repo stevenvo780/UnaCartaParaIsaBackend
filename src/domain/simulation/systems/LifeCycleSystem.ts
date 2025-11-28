@@ -119,7 +119,7 @@ export class LifeCycleSystem extends EventEmitter {
   private syncSpawnCounter(): void {
     const agents = this.gameState.agents || [];
     let maxNum = 0;
-    
+
     for (const agent of agents) {
       const match = agent.id.match(/^agent_(\d+)$/);
       if (match) {
@@ -129,9 +129,11 @@ export class LifeCycleSystem extends EventEmitter {
         }
       }
     }
-    
+
     if (maxNum > this.spawnCounter) {
-      logger.info(`🔢 LifeCycleSystem: synced spawnCounter from ${this.spawnCounter} to ${maxNum}`);
+      logger.info(
+        `🔢 LifeCycleSystem: synced spawnCounter from ${this.spawnCounter} to ${maxNum}`,
+      );
       this.spawnCounter = maxNum;
     }
   }

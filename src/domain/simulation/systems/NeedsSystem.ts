@@ -248,7 +248,13 @@ export class NeedsSystem extends EventEmitter {
    *
    * @param _deltaTimeMs - Elapsed time in milliseconds (uses config interval)
    */
-  public update(_deltaTimeMs: number): void {
+  /**
+   * Updates the needs system, processing all entity needs.
+   * Uses batch processing if entity count >= BATCH_THRESHOLD.
+   *
+   * @param _deltaTimeMs - Elapsed time in milliseconds (uses config interval)
+   */
+  public async update(_deltaTimeMs: number): Promise<void> {
     const now = getFrameTime();
 
     this.processRespawnQueue(now);
@@ -274,7 +280,7 @@ export class NeedsSystem extends EventEmitter {
     this.lastUpdate = now;
 
     if (this.entityNeeds.size >= this.BATCH_THRESHOLD) {
-      this.updateBatch(dtSeconds, now);
+      await this.updateBatch(dtSeconds, now);
     } else {
       this.updateTraditional(dtSeconds, now);
     }
@@ -317,7 +323,7 @@ export class NeedsSystem extends EventEmitter {
     this.dirtyTracker?.markDirty("agents");
   }
 
-  private updateBatch(dtSeconds: number, _now: number): void {
+  private async updateBatch(dtSeconds: number, _now: number): Promise<void> {
     const startTime = performance.now();
     this.batchProcessor.rebuildBuffers(this.entityNeeds);
 
@@ -343,19 +349,19 @@ export class NeedsSystem extends EventEmitter {
       divineModifiers[i] = 1.0;
     }
 
-    this.batchProcessor.applyDecayBatch(
+    await this.batchProcessor.applyDecayBatch(
       decayRates,
       ageMultipliers,
       divineModifiers,
       dtSeconds,
     );
     if (this.config.crossEffectsEnabled) {
-      this.batchProcessor.applyCrossEffectsBatch();
+      await this.batchProcessor.applyCrossEffectsBatch();
     }
 
     this.batchProcessor.syncToMap(this.entityNeeds);
 
-    this.applySocialMoraleBoostBatch(entityIdArray);
+    await this.applySocialMoraleBoostBatch(entityIdArray);
 
     for (const [entityId, needs] of this.entityNeeds.entries()) {
       this.consumeResourcesForNeeds(entityId, needs);
@@ -866,7 +872,9 @@ export class NeedsSystem extends EventEmitter {
    * @param entityIds - Array of entity IDs to process
    * @returns void - Modifies entityNeeds map in place
    */
-  private applySocialMoraleBoostBatch(entityIds: string[]): void {
+  private async applySocialMoraleBoostBatch(
+    entityIds: string[],
+  ): Promise<void> {
     if (!this.socialSystem || !this.gameState.entities) return;
 
     const GPU_BATCH_THRESHOLD = 20;
@@ -901,7 +909,10 @@ export class NeedsSystem extends EventEmitter {
         positions[i * 2 + 1] = entityPositions[i].y;
       }
 
-      const result = this.gpuService.computePairwiseDistances(positions, n);
+      const result = await this.gpuService.computePairwiseDistances(
+        positions,
+        n,
+      );
       const distancesSq = result.distances;
 
       const getTriangleIndex = (i: number, j: number): number => {

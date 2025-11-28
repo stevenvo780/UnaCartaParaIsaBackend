@@ -132,7 +132,7 @@ export class CombatSystem {
     }
   }
 
-  public update(_deltaMs: number): void {
+  public async update(_deltaMs: number): Promise<void> {
     const startTime = performance.now();
     const now = getFrameTime();
     if (now - this.lastUpdate < this.config.decisionIntervalMs) {
@@ -182,7 +182,7 @@ export class CombatSystem {
      */
     const BATCH_THRESHOLD = 10;
     if (potentialAttackers.length > BATCH_THRESHOLD) {
-      this.updateBatch(potentialAttackers, entitiesById, now);
+      await this.updateBatch(potentialAttackers, entitiesById, now);
     } else {
       for (const attacker of potentialAttackers) {
         if (!attacker.position) continue;
@@ -225,15 +225,15 @@ export class CombatSystem {
     );
   }
 
-  private updateBatch(
+  private async updateBatch(
     attackers: SimulationEntity[],
     entitiesById: Map<string, SimulationEntity>,
     now: number,
-  ): void {
+  ): Promise<void> {
     const startTime = performance.now();
 
     if (this.gpuService?.isGPUAvailable() && attackers.length >= 30) {
-      this.updateBatchGPU(attackers, entitiesById, now);
+      await this.updateBatchGPU(attackers, entitiesById, now);
       return;
     }
 
@@ -293,11 +293,11 @@ export class CombatSystem {
    * GPU-accelerated combat batch processing.
    * Uses pairwise distance matrix for efficient enemy detection.
    */
-  private updateBatchGPU(
+  private async updateBatchGPU(
     attackers: SimulationEntity[],
     entitiesById: Map<string, SimulationEntity>,
     now: number,
-  ): void {
+  ): Promise<void> {
     const startTime = performance.now();
     const attackersWithPos = attackers.filter((a) => a.position);
     const allEntities = Array.from(entitiesById.values()).filter(
@@ -348,7 +348,7 @@ export class CombatSystem {
       const radius = Math.max(this.config.engagementRadius, weapon.range);
       const radiusSq = radius * radius;
 
-      const distances = this.gpuService!.computeDistancesBatch(
+      const distances = await this.gpuService!.computeDistancesBatch(
         attacker.position!.x,
         attacker.position!.y,
         targetsView,

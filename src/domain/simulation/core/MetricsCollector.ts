@@ -50,7 +50,7 @@ export class MetricsCollector {
         needsBatchSize: 0,
         gpuUtilization: gpuStats.gpuAvailable
           ? gpuStats.gpuOperations /
-          Math.max(1, gpuStats.gpuOperations + gpuStats.cpuFallbacks)
+            Math.max(1, gpuStats.gpuOperations + gpuStats.cpuFallbacks)
           : 0,
       });
 

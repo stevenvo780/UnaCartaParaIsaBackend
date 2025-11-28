@@ -191,27 +191,35 @@ export class AIGoalValidator {
         (z) => z.id === goal.targetZoneId,
       );
       if (!zone) {
-        logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} zone not found`);
+        logger.debug(
+          `🚫 [INVALID] ${agentId} goal ${goal.type} zone not found`,
+        );
         return true;
       }
     }
 
     const resourceValid = this.isResourceTargetValid(goal);
     if (resourceValid === false) {
-      logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} resource invalid`);
+      logger.debug(
+        `🚫 [INVALID] ${agentId} goal ${goal.type} resource invalid`,
+      );
       return true;
     }
 
     // Check hunt target validity
     const huntTargetValid = this.isHuntTargetValid(goal);
     if (huntTargetValid === false) {
-      logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} hunt target invalid`);
+      logger.debug(
+        `🚫 [INVALID] ${agentId} goal ${goal.type} hunt target invalid`,
+      );
       return true;
     }
 
     const combatTargetValid = this.isCombatTargetValid(goal);
     if (combatTargetValid === false) {
-      logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} combat target invalid`);
+      logger.debug(
+        `🚫 [INVALID] ${agentId} goal ${goal.type} combat target invalid`,
+      );
       return true;
     }
 
@@ -223,14 +231,18 @@ export class AIGoalValidator {
       const targetId = goal.data.targetAgentId as string;
       const targetAgent = this.deps.agentRegistry?.getProfile(targetId);
       if (!targetAgent || targetAgent.isDead) {
-        logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} assist target invalid`);
+        logger.debug(
+          `🚫 [INVALID] ${agentId} goal ${goal.type} assist target invalid`,
+        );
         return true;
       }
     }
 
     const agent = this.deps.agentRegistry?.getProfile(agentId);
     if (!agent || agent.isDead) {
-      logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} agent not found or dead`);
+      logger.debug(
+        `🚫 [INVALID] ${agentId} goal ${goal.type} agent not found or dead`,
+      );
       return true;
     }
 

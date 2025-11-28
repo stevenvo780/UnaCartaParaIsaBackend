@@ -15,6 +15,7 @@ export enum TaskType {
   GATHER_STONE = "gather_stone",
   GATHER_FOOD = "gather_food",
   GATHER_WATER = "gather_water",
+  GATHER_METAL = "gather_metal",
   DEPOSIT_RESOURCES = "deposit_resources",
   HUNT_ANIMAL = "hunt_animal",
   CRAFT_ITEM = "craft_item",

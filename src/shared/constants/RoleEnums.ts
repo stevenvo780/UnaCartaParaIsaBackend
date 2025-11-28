@@ -24,6 +24,7 @@ export enum WorkShift {
 export enum RoleType {
   LOGGER = "logger",
   QUARRYMAN = "quarryman",
+  MINER = "miner",
   BUILDER = "builder",
   FARMER = "farmer",
   GATHERER = "gatherer",
