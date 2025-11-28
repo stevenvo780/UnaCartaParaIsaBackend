@@ -5,7 +5,7 @@ import EasyStar from "easystarjs";
 import { GameState, MapElement } from "../../types/game-types";
 import { logger } from "../../../infrastructure/utils/logger";
 import { GameEventType, simulationEvents } from "../core/events";
-import { injectable, inject, optional } from "inversify";
+import { injectable, inject, optional, postConstruct } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
 import type { GPUComputeService } from "../core/GPUComputeService";
@@ -78,7 +78,8 @@ export interface ZoneDistance {
  */
 @injectable()
 export class MovementSystem extends EventEmitter {
-  private gameState: GameState;
+  @inject(TYPES.GameState)
+  private gameState!: GameState;
   private movementStates = new Map<string, EntityMovementState>();
   private pathfinder: EasyStar.js;
 
@@ -115,25 +116,40 @@ export class MovementSystem extends EventEmitter {
   }> = [];
   private activePaths = 0;
   private readonly MAX_CONCURRENT_PATHS = 5;
+  @inject(TYPES.AgentRegistry as symbol)
+  @optional()
   private agentRegistry?: AgentRegistry;
 
-  constructor(
-    @inject(TYPES.GameState) gameState: GameState,
-    @inject(TYPES.EntityIndex) @optional() _entityIndex?: EntityIndex,
-    @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
-    @inject(TYPES.AgentRegistry)
-    @optional()
-    agentRegistry?: AgentRegistry,
-    @inject(TYPES.StateDirtyTracker)
-    @optional()
-    _dirtyTracker?: StateDirtyTracker,
-    @inject(TYPES.TerrainSystem) @optional() _terrainSystem?: TerrainSystem,
-  ) {
-    super();
-    this.gameState = gameState;
-    this.agentRegistry = agentRegistry;
+  @inject(TYPES.EntityIndex as symbol)
+  @optional()
+  private _entityIndex?: EntityIndex;
+  @inject(TYPES.GPUComputeService as symbol)
+  @optional()
+  private _gpuService?: GPUComputeService;
+  @inject(TYPES.StateDirtyTracker as symbol)
+  @optional()
+  private _dirtyTracker?: StateDirtyTracker;
+  @inject(TYPES.TerrainSystem as symbol)
+  @optional()
+  private _terrainSystem?: TerrainSystem;
 
+  constructor() {
+    super();
+    // defer heavy init to postConstruct
+    // create minimal placeholders
     this.pathfinder = new EasyStar.js();
+    this.gridWidth = 1;
+    this.gridHeight = 1;
+    this.batchProcessor = new MovementBatchProcessor(this._gpuService);
+    void this._entityIndex;
+    void this._dirtyTracker;
+    void this._terrainSystem;
+    void this._init;
+  }
+
+  @postConstruct()
+  private _init(): void {
+    // Configure pathfinder
     this.pathfinder.setAcceptableTiles([0]);
     this.pathfinder.enableDiagonals();
     this.pathfinder.setIterationsPerCalculation(
@@ -149,8 +165,8 @@ export class MovementSystem extends EventEmitter {
 
     this.precomputeZoneDistances();
     this.initializeObstacles();
-    this.batchProcessor = new MovementBatchProcessor(gpuService);
-    if (gpuService?.isGPUAvailable()) {
+    this.batchProcessor = new MovementBatchProcessor(this._gpuService);
+    if (this._gpuService?.isGPUAvailable()) {
       logger.info(
         "🚶 MovementSystem: GPU acceleration enabled for batch processing",
       );
@@ -169,6 +185,7 @@ export class MovementSystem extends EventEmitter {
       gridSize: `${this.gridWidth}x${this.gridHeight}`,
       zones: this.gameState.zones.length,
     });
+    void this._init; // mark as used for TS
   }
 
   public async update(deltaMs: number): Promise<void> {

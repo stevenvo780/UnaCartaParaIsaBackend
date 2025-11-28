@@ -492,7 +492,9 @@ export class SimulationRunner {
         }
 
         const now = Date.now();
-        if (now - this.lastStateSync >= 250) {
+        if (now - this.lastStateSync < 250) {
+          // Do not return, just skip the syncState call
+        } else {
           this.syncState();
           this.lastStateSync = now;
         }

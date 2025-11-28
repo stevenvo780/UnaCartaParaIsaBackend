@@ -46,6 +46,8 @@ interface PendingQuery {
  */
 @injectable()
 export class GPUBatchQueryService {
+  @inject(TYPES.GPUComputeService)
+  @optional()
   private gpuService?: GPUComputeService;
   private pendingQueries: PendingQuery[] = [];
   private entityPositions: Float32Array = new Float32Array(0);
@@ -70,12 +72,9 @@ export class GPUBatchQueryService {
     totalCpuTime: 0,
   };
 
-  constructor(
-    @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
-  ) {
-    this.gpuService = gpuService;
-    logger.info("🔍 GPUBatchQueryService initialized");
-  }
+  constructor() {}
+
+  // Intentionally no eager init; defers to first use
 
   /**
    * Updates the entity positions buffer. Call this once per frame.

@@ -1305,16 +1305,29 @@ export class AISystem extends EventEmitter {
       gameState: this.gameState,
       priorityManager: this.priorityManager,
       agentRegistry: this.agentRegistry!,
-      getEntityNeeds: (id: string) => this.needsSystem?.getNeeds(id),
-      findNearestResource: (id: string, resourceType: string) => {
+      getEntityNeeds: (
+        id: string,
+      ): ReturnType<AgentGoalPlannerDeps["getEntityNeeds"]> =>
+        this.needsSystem?.getNeeds(id),
+      findNearestResource: (
+        id: string,
+        resourceType: string,
+      ): { id: string; x: number; y: number } | null => {
         return this.findNearestResourceForEntity(id, resourceType);
       },
-      findNearestHuntableAnimal: (entityId: string) =>
+      findNearestHuntableAnimal: (
+        entityId: string,
+      ): { id: string; x: number; y: number; type: string } | null =>
         this.findNearestHuntableAnimal(entityId),
-      getAgentRole: (id: string) => this.roleSystem?.getAgentRole(id),
-      getAgentInventory: (id: string) =>
+      getAgentRole: (
+        id: string,
+      ): ReturnType<NonNullable<AgentGoalPlannerDeps["getAgentRole"]>> =>
+        this.roleSystem?.getAgentRole(id),
+      getAgentInventory: (
+        id: string,
+      ): ReturnType<NonNullable<AgentGoalPlannerDeps["getAgentInventory"]>> =>
         this.inventorySystem?.getAgentInventory(id),
-      getCurrentZone: (id: string) => {
+      getCurrentZone: (id: string): string | undefined => {
         if (this.zoneCache.has(id)) {
           return this.zoneCache.get(id);
         }
@@ -1337,9 +1350,9 @@ export class AISystem extends EventEmitter {
         this.zoneCache.set(id, zoneId);
         return zoneId;
       },
-      getEquipped: (id: string) =>
+      getEquipped: (id: string): string =>
         this.combatSystem?.getEquipped(id) || "unarmed",
-      getSuggestedCraftZone: () => {
+      getSuggestedCraftZone: (): string | undefined => {
         if (this.craftingZoneCache !== null) {
           return this.craftingZoneCache;
         }
@@ -1349,7 +1362,7 @@ export class AISystem extends EventEmitter {
         this.craftingZoneCache = zone?.id;
         return this.craftingZoneCache;
       },
-      canCraftWeapon: (id: string, weaponId: string) => {
+      canCraftWeapon: (id: string, weaponId: string): boolean => {
         if (!this.craftingSystem) return false;
         const validWeaponIds: CraftingWeaponId[] = [
           CraftingWeaponId.WOODEN_CLUB,
@@ -1363,7 +1376,7 @@ export class AISystem extends EventEmitter {
           weaponId as CraftingWeaponId,
         );
       },
-      getAllActiveAgentIds: () => {
+      getAllActiveAgentIds: (): string[] => {
         if (this.activeAgentIdsCache !== null) {
           return this.activeAgentIdsCache;
         }
@@ -1376,7 +1389,7 @@ export class AISystem extends EventEmitter {
         this.activeAgentIdsCache = activeIds;
         return activeIds;
       },
-      getEntityStats: (id: string) => {
+      getEntityStats: (id: string): Record<string, number> | null => {
         const entity = this.gameState.entities?.find((e) => e.id === id);
         return entity?.stats
           ? {
@@ -1387,12 +1400,16 @@ export class AISystem extends EventEmitter {
             }
           : null;
       },
-      getPreferredResourceForRole: (role: string) =>
+      getPreferredResourceForRole: (role: string): string | undefined =>
         this.roleSystem?.getPreferredResourceForRole(role),
-      getStrategy: (id: string) => this.agentStrategies.get(id) || "peaceful",
-      isWarrior: (id: string) =>
+      getStrategy: (id: string): "peaceful" | "tit_for_tat" | "bully" =>
+        this.agentStrategies.get(id) || "peaceful",
+      isWarrior: (id: string): boolean =>
         this.roleSystem?.getAgentRole(id)?.roleType === RoleType.GUARD,
-      getNearbyPredators: (pos, range) => {
+      getNearbyPredators: (
+        pos: { x: number; y: number },
+        range: number,
+      ): Array<{ id: string; position: { x: number; y: number } }> => {
         return (
           this.animalSystem
             ?.getAnimalsInRadius(pos, range)
@@ -1400,18 +1417,22 @@ export class AISystem extends EventEmitter {
             .map((a) => ({ id: a.id, position: a.position })) || []
         );
       },
-      getEnemiesForAgent: (id, threshold) =>
+      getEnemiesForAgent: (id: string, threshold?: number): string[] =>
         this.combatSystem?.getNearbyEnemies(id, threshold) || [],
-      getTasks: () => this.taskSystem?.getActiveTasks() || [],
+      getTasks: (): ReturnType<NonNullable<AgentGoalPlannerDeps["getTasks"]>> =>
+        this.taskSystem?.getActiveTasks() || [],
       taskSystem: this.taskSystem
         ? {
-            createTask: (params: TaskCreationParams) =>
+            createTask: (
+              params: TaskCreationParams,
+            ): ReturnType<TaskSystem["createTask"]> =>
               this.taskSystem!.createTask(params),
-            getAvailableCommunityTasks: () =>
-              this.taskSystem!.getAvailableCommunityTasks(),
-            claimTask: (taskId: string, agentId: string) =>
+            getAvailableCommunityTasks: (): ReturnType<
+              TaskSystem["getAvailableCommunityTasks"]
+            > => this.taskSystem!.getAvailableCommunityTasks(),
+            claimTask: (taskId: string, agentId: string): boolean =>
               this.taskSystem!.claimTask(taskId, agentId),
-            releaseTaskClaim: (taskId: string, agentId: string) =>
+            releaseTaskClaim: (taskId: string, agentId: string): void =>
               this.taskSystem!.releaseTaskClaim(taskId, agentId),
           }
         : undefined,
@@ -1427,27 +1448,41 @@ export class AISystem extends EventEmitter {
             },
           }
         : undefined,
-      getActiveQuests: () => this.questSystem?.getActiveQuests() || [],
-      getAvailableQuests: () => this.questSystem?.getAvailableQuests() || [],
-      getCurrentTimeOfDay: () => {
+      getActiveQuests: (): ReturnType<
+        NonNullable<AgentGoalPlannerDeps["getActiveQuests"]>
+      > => this.questSystem?.getActiveQuests() || [],
+      getAvailableQuests: (): ReturnType<
+        NonNullable<AgentGoalPlannerDeps["getAvailableQuests"]>
+      > => this.questSystem?.getAvailableQuests() || [],
+      getCurrentTimeOfDay: (): TimeOfDay["phase"] => {
         return (this.timeSystem?.getCurrentTime().phase ||
           TimeOfDayPhase.MORNING) as TimeOfDay["phase"];
       },
-      getNearbyAgentsWithDistances: (entityId: string, radius: number) =>
+      getNearbyAgentsWithDistances: (
+        entityId: string,
+        radius: number,
+      ): Promise<Array<{ id: string; distance: number }>> =>
         this.getNearbyAgentsWithDistancesGPU(entityId, radius),
 
-      getAllStockpiles: () => this.inventorySystem?.getAllStockpiles() || [],
-      getActiveDemands: () => {
+      getAllStockpiles: (): Stockpile[] =>
+        this.inventorySystem?.getAllStockpiles() || [],
+      getActiveDemands: (): ReturnType<
+        NonNullable<AgentGoalPlannerDeps["getActiveDemands"]>
+      > => {
         const governance = this.gameState.governance;
         if (!governance || !governance.demands) return [];
         return governance.demands.filter(
           (d: { resolvedAt?: number }) => !d.resolvedAt,
         );
       },
-      getPopulation: () => {
+      getPopulation: (): number => {
         return this.gameState.agents?.filter((a) => !a.isDead).length || 0;
       },
-      getCollectiveResourceState: () => {
+      getCollectiveResourceState: (): {
+        foodPerCapita: number;
+        waterPerCapita: number;
+        stockpileFillRatio: number;
+      } => {
         const stockpiles = this.inventorySystem?.getAllStockpiles() || [];
         const population =
           this.gameState.agents?.filter((a) => !a.isDead).length || 1;
@@ -1479,9 +1514,16 @@ export class AISystem extends EventEmitter {
         entityId: string,
         resourceType: ResourceType.FOOD | ResourceType.WATER,
         minAmount: number,
-      ) => this.findAgentWithResource(entityId, resourceType, minAmount),
-      findPotentialMate: (entityId: string) => this.findPotentialMate(entityId),
-      findNearbyAgent: (entityId: string) => this.findNearbyAgent(entityId),
+      ): { agentId: string; x: number; y: number } | null =>
+        this.findAgentWithResource(entityId, resourceType, minAmount),
+      findPotentialMate: (
+        entityId: string,
+      ): { id: string; x: number; y: number } | null =>
+        this.findPotentialMate(entityId),
+      findNearbyAgent: (
+        entityId: string,
+      ): { id: string; x: number; y: number } | null =>
+        this.findNearbyAgent(entityId),
     };
 
     return this.cachedDeps;

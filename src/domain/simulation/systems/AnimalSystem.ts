@@ -31,22 +31,31 @@ const DEFAULT_CONFIG: AnimalSystemConfig = {
   cleanupInterval: SIM_CONSTANTS.ANIMAL_CLEANUP_INTERVAL,
 };
 
-import { injectable, inject, optional } from "inversify";
+import { injectable, inject, optional, postConstruct } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { GPUComputeService } from "../core/GPUComputeService";
 import type { StateDirtyTracker } from "../core/StateDirtyTracker";
 
 @injectable()
 export class AnimalSystem {
-  private gameState: GameState;
+  @inject(TYPES.GameState)
+  private gameState!: GameState;
   private config: AnimalSystemConfig;
   /** @deprecated Use animalRegistry instead - this getter delegates to registry */
   private get animals(): Map<string, Animal> {
     return this.animalRegistry.getAnimalsMap();
   }
+  @inject(TYPES.WorldResourceSystem as symbol)
+  @optional()
   private worldResourceSystem?: WorldResourceSystem;
+  @inject(TYPES.GPUComputeService as symbol)
+  @optional()
   private gpuService?: GPUComputeService;
-  private animalRegistry: AnimalRegistry;
+  @inject(TYPES.AnimalRegistry as symbol)
+  @optional()
+  private animalRegistry!: AnimalRegistry;
+  @inject(TYPES.AgentRegistry as symbol)
+  @optional()
   private agentRegistry?: AgentRegistry;
 
   private lastCleanup = Date.now();
@@ -97,40 +106,28 @@ export class AnimalSystem {
   private updateFrame = 0;
   private readonly IDLE_UPDATE_DIVISOR = 5;
 
-  constructor(
-    @inject(TYPES.GameState) gameState: GameState,
-    @inject(TYPES.WorldResourceSystem)
-    @optional()
-    worldResourceSystem?: WorldResourceSystem,
-    @inject(TYPES.TerrainSystem)
-    @optional()
-    private terrainSystem?: TerrainSystem,
-    @inject(TYPES.GPUComputeService)
-    @optional()
-    gpuService?: GPUComputeService,
-    @inject(TYPES.AnimalRegistry as symbol)
-    @optional()
-    animalRegistry?: AnimalRegistry,
-    @inject(TYPES.AgentRegistry)
-    @optional()
-    agentRegistry?: AgentRegistry,
-    @inject(TYPES.StateDirtyTracker)
-    @optional()
-    private dirtyTracker?: StateDirtyTracker,
-  ) {
-    this.gameState = gameState;
-    this.worldResourceSystem = worldResourceSystem;
-    this.gpuService = gpuService;
-    this.animalRegistry = animalRegistry ?? new AnimalRegistry();
-    this.agentRegistry = agentRegistry;
+  @inject(TYPES.TerrainSystem as symbol)
+  @optional()
+  private terrainSystem?: TerrainSystem;
+
+  @inject(TYPES.StateDirtyTracker as symbol)
+  @optional()
+  private dirtyTracker?: StateDirtyTracker;
+
+  constructor() {
     this.config = DEFAULT_CONFIG;
-    this.batchProcessor = new AnimalBatchProcessor(gpuService);
-    if (gpuService?.isGPUAvailable()) {
+    this.batchProcessor = new AnimalBatchProcessor();
+    void this._init; // mark postConstruct method as used for TS
+  }
+
+  @postConstruct()
+  private _init(): void {
+    this.animalRegistry = this.animalRegistry ?? new AnimalRegistry();
+    if (this.gpuService?.isGPUAvailable()) {
       logger.info(
         "🐾 AnimalSystem: GPU acceleration enabled for batch processing",
       );
     }
-
     this.setupEventListeners();
     logger.info("🐾 AnimalSystem (Backend) initialized with AnimalRegistry");
   }

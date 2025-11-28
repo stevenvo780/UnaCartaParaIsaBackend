@@ -55,7 +55,8 @@ const DEFAULT_CONFIG: TimeConfig = {
 
 @injectable()
 export class TimeSystem extends EventEmitter {
-  private gameState: GameState;
+  @inject(TYPES.GameState)
+  private gameState!: GameState;
   private config: TimeConfig;
   private currentTime: TimeOfDay;
   private currentWeather: WeatherCondition;
@@ -63,12 +64,8 @@ export class TimeSystem extends EventEmitter {
   private lastWeatherChange = 0;
   private readonly TIME_UPDATE_INTERVAL = 1000;
 
-  constructor(
-    @inject(TYPES.GameState) gameState: GameState,
-    @unmanaged() config?: Partial<TimeConfig>,
-  ) {
+  constructor(@unmanaged() config?: Partial<TimeConfig>) {
     super();
-    this.gameState = gameState;
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.currentTime = this.createInitialTime();
     this.currentWeather = this.createInitialWeather();
