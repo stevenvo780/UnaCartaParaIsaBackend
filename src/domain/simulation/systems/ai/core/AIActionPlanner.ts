@@ -26,6 +26,11 @@ export interface AIActionPlannerDeps {
    * Used by planHunt to track moving animals instead of using stale goal positions.
    */
   getAnimalPosition?: (animalId: string) => { x: number; y: number } | null;
+  /**
+   * Gets the attack range for an agent based on equipped weapon.
+   * Returns the weapon's attack range, or the default ATTACK_RANGE if no weapon equipped.
+   */
+  getAgentAttackRange?: (agentId: string) => number;
 }
 
 import { logger } from "../../../../../infrastructure/utils/logger";
@@ -1029,7 +1034,12 @@ export class AIActionPlanner {
           agentPos.x - targetPosition.x,
           agentPos.y - targetPosition.y,
         );
-        if (dist < this.ATTACK_RANGE) {
+        // Use equipped weapon's attack range, or default if not available
+        const attackRange = this.deps.getAgentAttackRange?.(agentId) ?? this.ATTACK_RANGE;
+        if (dist < attackRange) {
+          logger.debug(
+            `🎯 [Hunt] ${agentId}: In attack range (${Math.round(dist)} < ${attackRange}), attacking ${targetId}`,
+          );
           return {
             actionType: ActionType.ATTACK,
             agentId,

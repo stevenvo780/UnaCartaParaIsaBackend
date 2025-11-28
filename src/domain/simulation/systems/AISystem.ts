@@ -106,6 +106,7 @@ import { AIActionPlanner } from "./ai/core/AIActionPlanner";
 import { AIActionExecutor } from "./ai/core/AIActionExecutor";
 import { AIUrgentGoals } from "./ai/core/AIUrgentGoals";
 import { AIZoneHandler } from "./ai/core/AIZoneHandler";
+import { EquipmentSystem } from "../../../simulation/systems/EquipmentSystem";
 import { GameEventType } from "../core/events";
 import { simulationEvents } from "../core/events";
 import type { NeedsSystem } from "./NeedsSystem";
@@ -190,6 +191,7 @@ export class AISystem extends EventEmitter {
   private questSystem?: QuestSystem;
   private timeSystem?: TimeSystem;
   private sharedKnowledgeSystem?: SharedKnowledgeSystem;
+  private equipmentSystem: EquipmentSystem;
   // @ts-expect-error - Reserved for future use
   private _entityIndex?: EntityIndex;
   private gpuService?: GPUComputeService;
@@ -328,6 +330,7 @@ export class AISystem extends EventEmitter {
     this.gpuService = gpuService;
     this.agentRegistry = agentRegistry;
     this.animalRegistry = animalRegistry;
+    this.equipmentSystem = new EquipmentSystem();
     this.config = {
       updateIntervalMs: 50,
       enablePersonality: true,
@@ -367,6 +370,12 @@ export class AISystem extends EventEmitter {
     simulationEvents.on(
       GameEventType.AGENT_ACTION_COMPLETE,
       this.boundHandleActionComplete,
+    );
+
+    // Auto-equip tools when role is assigned
+    simulationEvents.on(
+      GameEventType.ROLE_REASSIGNED,
+      this.handleRoleReassigned.bind(this),
     );
   }
 
@@ -412,6 +421,9 @@ export class AISystem extends EventEmitter {
           return { x: animal.position.x, y: animal.position.y };
         }
         return null;
+      },
+      getAgentAttackRange: (agentId: string): number => {
+        return this.equipmentSystem.getAttackRange(agentId);
       },
     });
 
