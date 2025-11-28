@@ -5,7 +5,7 @@
   "tags": ["simulation", "performance", "ticks"],
   "timezone": "browser",
   "schemaVersion": 38,
-  "version": 1,
+  "version": 2,
   "refresh": "5s",
   "time": {
     "from": "now-15m",
@@ -20,13 +20,19 @@
     },
     {
       "type": "timeseries",
-      "title": "Tick Duration - Promedio por Rate",
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 1 },
+      "title": "Tick Duration - Last + Recent Max (60s)",
+      "description": "Último tick vs máximo en ventana de 60 segundos",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
       "targets": [
         {
-          "expr": "backend_tick_duration_ms",
-          "legendFormat": "{{rate}} - Avg",
+          "expr": "backend_tick_duration_last_ms",
+          "legendFormat": "{{rate}} - Last",
           "refId": "A"
+        },
+        {
+          "expr": "backend_tick_duration_recent_max_ms",
+          "legendFormat": "{{rate}} - Max (60s)",
+          "refId": "B"
         }
       ],
       "fieldConfig": {
@@ -47,13 +53,24 @@
     },
     {
       "type": "timeseries",
-      "title": "Tick Duration - Máximo por Rate",
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 1 },
+      "title": "Tick Duration - Percentiles (P50/P95/P99)",
+      "description": "Percentiles calculados desde histograma - muestra distribución real",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
       "targets": [
         {
-          "expr": "backend_tick_duration_max_ms",
-          "legendFormat": "{{rate}} - Max",
+          "expr": "histogram_quantile(0.50, sum(rate(backend_tick_duration_histogram_ms_bucket[2m])) by (rate, le))",
+          "legendFormat": "{{rate}} - P50",
           "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(backend_tick_duration_histogram_ms_bucket[2m])) by (rate, le))",
+          "legendFormat": "{{rate}} - P95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(backend_tick_duration_histogram_ms_bucket[2m])) by (rate, le))",
+          "legendFormat": "{{rate}} - P99",
+          "refId": "C"
         }
       ],
       "fieldConfig": {
@@ -63,14 +80,14 @@
           "custom": {
             "lineWidth": 2,
             "fillOpacity": 10,
-            "showPoints": "auto"
+            "showPoints": "never"
           },
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "value": null, "color": "green" },
               { "value": 10, "color": "yellow" },
-              { "value": 16, "color": "red" }
+              { "value": 20, "color": "red" }
             ]
           }
         }
@@ -82,17 +99,18 @@
     },
     {
       "type": "stat",
-      "title": "FAST Tick - Promedio",
-      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "title": "FAST Tick - P95",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 9 },
       "targets": [
         {
-          "expr": "backend_tick_duration_ms{rate=\"FAST\"}",
+          "expr": "histogram_quantile(0.95, sum(rate(backend_tick_duration_histogram_ms_bucket{rate=\"FAST\"}[2m])) by (le))",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "ms",
+          "decimals": 2,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -111,17 +129,18 @@
     },
     {
       "type": "stat",
-      "title": "MEDIUM Tick - Promedio",
-      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "title": "MEDIUM Tick - P95",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 9 },
       "targets": [
         {
-          "expr": "backend_tick_duration_ms{rate=\"MEDIUM\"}",
+          "expr": "histogram_quantile(0.95, sum(rate(backend_tick_duration_histogram_ms_bucket{rate=\"MEDIUM\"}[2m])) by (le))",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "ms",
+          "decimals": 2,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -140,23 +159,24 @@
     },
     {
       "type": "stat",
-      "title": "SLOW Tick - Promedio",
-      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 5 },
+      "title": "SLOW Tick - P95",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 9 },
       "targets": [
         {
-          "expr": "backend_tick_duration_ms{rate=\"SLOW\"}",
+          "expr": "histogram_quantile(0.95, sum(rate(backend_tick_duration_histogram_ms_bucket{rate=\"SLOW\"}[2m])) by (le))",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "ms",
+          "decimals": 2,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "value": null, "color": "green" },
-              { "value": 20, "color": "yellow" },
-              { "value": 33, "color": "red" }
+              { "value": 50, "color": "yellow" },
+              { "value": 100, "color": "red" }
             ]
           }
         }
@@ -170,7 +190,7 @@
     {
       "type": "stat",
       "title": "Event Loop Utilization",
-      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 5 },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 9 },
       "targets": [
         {
           "expr": "backend_event_loop_utilization",
@@ -198,14 +218,103 @@
     },
     {
       "type": "row",
+      "title": "Outliers y Sistema Más Lento",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Outlier Rate (ticks que exceden threshold)",
+      "description": "FAST >5ms, MEDIUM >15ms, SLOW >100ms",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 14 },
+      "targets": [
+        {
+          "expr": "rate(backend_tick_outliers_total[5m]) * 60",
+          "legendFormat": "{{rate}} (>{{threshold_ms}}ms)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15
+          }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "bottom" }
+      }
+    },
+    {
+      "type": "bargauge",
+      "title": "Sistema Más Lento (último tick)",
+      "description": "El sistema que más tiempo tomó en la última ejecución",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 14 },
+      "targets": [
+        {
+          "expr": "backend_tick_slowest_system_ms",
+          "legendFormat": "{{rate}}: {{system}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Último Outlier Detectado",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 14 },
+      "targets": [
+        {
+          "expr": "backend_tick_last_outlier_ms > 0",
+          "legendFormat": "{{rate}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 15, "color": "yellow" },
+              { "value": 50, "color": "red" }
+            ]
+          },
+          "noValue": "Sin outliers"
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "row",
       "title": "Scheduler Stats",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 20 },
       "collapsed": false
     },
     {
       "type": "bargauge",
       "title": "Sistemas Habilitados por Rate",
-      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 10 },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 21 },
       "targets": [
         {
           "expr": "backend_scheduler_enabled_systems",
@@ -228,7 +337,7 @@
     {
       "type": "timeseries",
       "title": "Scheduler Tick Avg - Reportado por Scheduler",
-      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 10 },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 21 },
       "targets": [
         {
           "expr": "backend_scheduler_tick_avg_ms",
@@ -254,7 +363,7 @@
     {
       "type": "stat",
       "title": "Total Entidades en Scheduler",
-      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 10 },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 21 },
       "targets": [
         {
           "expr": "backend_scheduler_entity_count",
