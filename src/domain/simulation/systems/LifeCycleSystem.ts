@@ -457,10 +457,22 @@ export class LifeCycleSystem extends EventEmitter {
       timestamp: now,
     });
 
+    // Child spawns near the mother's position with small random offset
+    const motherPos = mother.position || { x: 1000, y: 1000 };
+    const spawnOffset = {
+      x: (RandomUtils.float() - 0.5) * 50,
+      y: (RandomUtils.float() - 0.5) * 50,
+    };
+    const childPosition = {
+      x: motherPos.x + spawnOffset.x,
+      y: motherPos.y + spawnOffset.y,
+    };
+
     const childId = await this.spawnAgent({
       generation: Math.max(father.generation, mother.generation) + 1,
       parents: { father: fatherId, mother: motherId },
       sex: RandomUtils.chance(0.5) ? Sex.MALE : Sex.FEMALE,
+      position: childPosition,
     });
 
     this.reproductionCooldown.set(

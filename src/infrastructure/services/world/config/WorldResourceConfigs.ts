@@ -211,6 +211,7 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
       BiomeType.FOREST,
       BiomeType.GRASSLAND,
       BiomeType.VILLAGE,
+      BiomeType.OCEAN,
     ],
     clusterSize: { min: 1, max: 1 },
     minDistanceBetweenClusters: 500,

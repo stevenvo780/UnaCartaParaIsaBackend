@@ -10,6 +10,7 @@ import { simulationEvents, GameEventType } from "../core/events";
 import type { ResourceType } from "../../types/simulation/economy";
 import { itemToInventoryResource } from "../../types/simulation/resourceMapping";
 import { toolStorage } from "../../../simulation/systems/ToolStorageSystem";
+import { logger } from "../../../infrastructure/utils/logger";
 
 interface EnhancedCraftingConfig {
   requireWorkstation: boolean;
@@ -183,14 +184,32 @@ export class EnhancedCraftingSystem {
     }
   }
 
+  /**
+   * Checks if ingredients are available either in agent's inventory or stockpiles.
+   * First checks agent inventory, then falls back to settlement stockpiles.
+   */
   private hasIngredients(agentId: string, recipe: CraftingRecipe): boolean {
+    // First try agent's inventory
     const inventory = this.inventorySystem.getAgentInventory(agentId);
-    if (!inventory) return false;
+    
+    // Get total settlement resources as fallback
+    const stockpileResources = this.inventorySystem.getTotalStockpileResources();
 
     for (const ingredient of recipe.ingredients) {
       const key = this.mapToResourceKey(ingredient.itemId);
-      if (!key) return false;
-      if ((inventory[key] ?? 0) < ingredient.quantity) {
+      if (!key) {
+        return false;
+      }
+      
+      // Check agent inventory first, then stockpile
+      const haveInInventory = inventory?.[key] ?? 0;
+      const haveInStockpile = stockpileResources[key] ?? 0;
+      const totalAvailable = haveInInventory + haveInStockpile;
+      
+      if (totalAvailable < ingredient.quantity) {
+        logger.debug(
+          `🔨 [Craft] ${agentId}: Missing ${ingredient.itemId} (inv=${haveInInventory}, stockpile=${haveInStockpile}, need=${ingredient.quantity})`,
+        );
         return false;
       }
     }
@@ -198,11 +217,41 @@ export class EnhancedCraftingSystem {
     return true;
   }
 
+  /**
+   * Consumes ingredients from agent inventory first, then from stockpiles.
+   */
   private consumeIngredients(agentId: string, recipe: CraftingRecipe): void {
     for (const ingredient of recipe.ingredients) {
       const key = this.mapToResourceKey(ingredient.itemId);
       if (!key) continue;
-      this.inventorySystem.removeFromAgent(agentId, key, ingredient.quantity);
+
+      let remaining = ingredient.quantity;
+
+      // First consume from agent inventory
+      const inventory = this.inventorySystem.getAgentInventory(agentId);
+      if (inventory) {
+        const fromAgent = Math.min(inventory[key] ?? 0, remaining);
+        if (fromAgent > 0) {
+          this.inventorySystem.removeFromAgent(agentId, key, fromAgent);
+          remaining -= fromAgent;
+        }
+      }
+
+      // If still need more, consume from stockpiles
+      if (remaining > 0) {
+        const stockpiles = this.inventorySystem.getAllStockpiles();
+        for (const stockpile of stockpiles) {
+          const available = stockpile.inventory[key] ?? 0;
+          const fromStockpile = Math.min(available, remaining);
+          if (fromStockpile > 0) {
+            this.inventorySystem.consumeFromStockpile(stockpile.id, {
+              [key]: fromStockpile,
+            });
+            remaining -= fromStockpile;
+            if (remaining <= 0) break;
+          }
+        }
+      }
     }
   }
 
@@ -247,6 +296,76 @@ export class EnhancedCraftingSystem {
     agentId: string,
   ): Map<string, AgentRecipeState> | undefined {
     return this.knownRecipes.get(agentId);
+  }
+
+  /**
+   * Returns all active crafting jobs as an array for snapshot serialization.
+   */
+  public getActiveJobs(): Array<{
+    id: string;
+    agentId: string;
+    recipeId: string;
+    finishesAt: number;
+    progress: number;
+  }> {
+    const now = this.now();
+    return Array.from(this.activeJobs.entries()).map(([agentId, job]) => {
+      const duration = job.finishesAt - job.startedAt;
+      const elapsed = now - job.startedAt;
+      const progress = Math.min(1, elapsed / duration);
+      return {
+        id: `${agentId}_${job.recipeId}`,
+        agentId,
+        recipeId: job.recipeId,
+        finishesAt: job.finishesAt,
+        progress,
+      };
+    });
+  }
+
+  /**
+   * Returns all known recipes for all agents as a Record for snapshot serialization.
+   * Initializes basic recipes for all agents if not yet initialized.
+   */
+  public getAllKnownRecipes(): Record<string, string[]> {
+    // Ensure all agents have their recipe maps initialized
+    for (const agent of this.state.agents) {
+      if (!this.knownRecipes.has(agent.id)) {
+        this.getOrCreateRecipeMap(agent.id);
+      }
+    }
+    
+    const result: Record<string, string[]> = {};
+    for (const [agentId, recipes] of this.knownRecipes.entries()) {
+      result[agentId] = Array.from(recipes.keys());
+    }
+    return result;
+  }
+
+  /**
+   * Returns crafting snapshot data for the frontend.
+   */
+  public getCraftingSnapshot(): {
+    activeJobs: Array<{
+      id: string;
+      agentId: string;
+      recipeId: string;
+      finishesAt: number;
+      progress: number;
+    }>;
+    knownRecipes: Record<string, string[]>;
+    equippedWeapons: Record<string, string>;
+  } {
+    const equippedWeapons: Record<string, string> = {};
+    for (const [agentId, weaponId] of this.equippedWeapons.entries()) {
+      equippedWeapons[agentId] = weaponId;
+    }
+
+    return {
+      activeJobs: this.getActiveJobs(),
+      knownRecipes: this.getAllKnownRecipes(),
+      equippedWeapons,
+    };
   }
 
   private getRecipeState(

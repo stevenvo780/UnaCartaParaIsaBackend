@@ -445,6 +445,21 @@ export interface TaskState {
  * This is the root state object that holds all agents, entities, zones,
  * resources, and subsystem states. Used for serialization and client synchronization.
  */
+/**
+ * Crafting data sent in snapshots to frontend
+ */
+export interface EnhancedCraftingState {
+  activeJobs: Array<{
+    id: string;
+    agentId: string;
+    recipeId: string;
+    finishesAt: number;
+    progress: number;
+  }>;
+  knownRecipes: Record<string, string[]>;
+  equippedWeapons?: Record<string, string>;
+}
+
 export interface GameState {
   agents: AgentProfile[];
   entities: SimulationEntity[];
@@ -456,6 +471,7 @@ export interface GameState {
   cycles: number;
   weather: WeatherState;
   timeOfDay?: TimeOfDayPhase;
+  enhancedCrafting?: EnhancedCraftingState;
   worldResources?: Record<string, WorldResourceInstance>;
   socialGraph?: SocialGraphState;
   market?: MarketState;

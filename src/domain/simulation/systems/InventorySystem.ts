@@ -137,6 +137,46 @@ export class InventorySystem {
     return [...this.stockpiles.values()];
   }
 
+  /**
+   * Gets total resources across all stockpiles in the settlement.
+   * Useful for checking if crafting is possible using community resources.
+   * @returns Inventory-like object with total resources
+   */
+  public getTotalStockpileResources(): Inventory {
+    const totals: Inventory = {
+      food: 0,
+      water: 0,
+      wood: 0,
+      stone: 0,
+      rare_materials: 0,
+      metal: 0,
+      iron_ore: 0,
+      copper_ore: 0,
+      capacity: 0,
+    };
+
+    const stockpileCount = this.stockpiles.size;
+    for (const stockpile of this.stockpiles.values()) {
+      totals.food += stockpile.inventory.food ?? 0;
+      totals.water += stockpile.inventory.water ?? 0;
+      totals.wood += stockpile.inventory.wood ?? 0;
+      totals.stone += stockpile.inventory.stone ?? 0;
+      totals.rare_materials += stockpile.inventory.rare_materials ?? 0;
+      totals.metal += stockpile.inventory.metal ?? 0;
+      totals.iron_ore += stockpile.inventory.iron_ore ?? 0;
+      totals.copper_ore += stockpile.inventory.copper_ore ?? 0;
+      totals.capacity += stockpile.capacity ?? 0;
+    }
+
+    if (stockpileCount > 0 && (totals.wood > 0 || totals.stone > 0)) {
+      logger.debug(
+        `📦 [Stockpile] Total: ${stockpileCount} stockpiles, wood=${totals.wood}, stone=${totals.stone}, food=${totals.food}`,
+      );
+    }
+
+    return totals;
+  }
+
   public addResource(
     agentId: string,
     resource: ResourceType,

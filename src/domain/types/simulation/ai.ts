@@ -46,6 +46,14 @@ export interface AIGoalData {
   animalType?: string;
   searchFor?: string;
   threatPos?: { x: number; y: number };
+  /** For craft goals: indicates if the agent's role requires a weapon to function */
+  roleNeedsWeapon?: boolean;
+  /** For deposit goals: indicates if agent is carrying water */
+  hasWater?: boolean;
+  /** For deposit goals: indicates if agent is carrying food */
+  hasFood?: boolean;
+  /** For deposit goals: indicates if agent inventory is full (>70% capacity) */
+  inventoryFull?: boolean;
 }
 
 export interface AIGoal {

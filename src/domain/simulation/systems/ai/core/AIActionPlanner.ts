@@ -784,29 +784,7 @@ export class AIActionPlanner {
       agentPos.y - goal.targetPosition.y,
     );
 
-    if (distToTarget < 30) {
-      const threatPos = goal.data?.threatPos as
-        | { x: number; y: number }
-        | undefined;
-      if (threatPos) {
-        const distToThreat = Math.hypot(
-          agentPos.x - threatPos.x,
-          agentPos.y - threatPos.y,
-        );
 
-        if (distToThreat > 180) {
-          logger.debug(
-            `🏃 [Flee] ${agentId}: Escaped threat (dist=${Math.round(distToThreat)}), stopping flee`,
-          );
-          return null;
-        }
-      } else {
-        logger.debug(
-          `🏃 [Flee] ${agentId}: Arrived at flee position, stopping`,
-        );
-        return null;
-      }
-    }
 
     return {
       actionType: ActionType.MOVE,

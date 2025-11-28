@@ -2,6 +2,10 @@ import { logger } from "../../../../../infrastructure/utils/logger";
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import { GoalType } from "../../../../../shared/constants/AIEnums";
 
+// Cooldown tracking for flee behavior to prevent infinite flee loops
+const fleeCooldowns: Map<string, number> = new Map();
+const FLEE_COOLDOWN_MS = 5000; // 5 seconds between flee goals
+
 export interface CombatContext {
   getEntityPosition: (id: string) => { x: number; y: number } | null;
   getEntityStats: (id: string) => Record<string, number> | null;
@@ -12,6 +16,34 @@ export interface CombatContext {
     pos: { x: number; y: number },
     range: number,
   ) => Array<{ id: string; position: { x: number; y: number } }>;
+}
+
+/**
+ * Checks if an entity can flee (not on cooldown)
+ */
+function canFlee(entityId: string, now: number): boolean {
+  const lastFlee = fleeCooldowns.get(entityId);
+  if (!lastFlee) return true;
+  return now - lastFlee >= FLEE_COOLDOWN_MS;
+}
+
+/**
+ * Records a flee event for cooldown tracking
+ */
+function recordFlee(entityId: string, now: number): void {
+  fleeCooldowns.set(entityId, now);
+}
+
+/**
+ * Clears old flee cooldowns to prevent memory leaks
+ */
+export function clearOldFleeCooldowns(): void {
+  const now = Date.now();
+  for (const [entityId, lastFlee] of fleeCooldowns.entries()) {
+    if (now - lastFlee > FLEE_COOLDOWN_MS * 2) {
+      fleeCooldowns.delete(entityId);
+    }
+  }
 }
 
 export function evaluateCombatGoals(
@@ -63,7 +95,7 @@ export function evaluateCombatGoals(
           const theirPower = (tStats.morale || 50) + (tStats.stamina || 50);
           const advantage = theirPower > 0 ? myPower / theirPower : 1.0;
 
-          if (!isWarrior && nearest.d < DANGER) {
+          if (!isWarrior && nearest.d < DANGER && canFlee(aiState.entityId, now)) {
             const dx = myPos.x - nearest.pos.x;
             const dy = myPos.y - nearest.pos.y;
             const len = Math.max(1, Math.hypot(dx, dy));
@@ -73,6 +105,7 @@ export function evaluateCombatGoals(
               y: myPos.y + dy * scale,
             };
 
+            recordFlee(aiState.entityId, now);
             goals.push({
               id: `flee_${now}`,
               type: GoalType.FLEE,
@@ -122,7 +155,7 @@ export function evaluateCombatGoals(
         const health = stats.health ?? 100;
 
         const fightThreshold = 60 + personality.neuroticism * 20;
-        const canFight = isWarrior || (morale > fightThreshold && health > 50);
+        const canFightPredator = isWarrior || (morale > fightThreshold && health > 50);
 
         // Calculate actual distance to predator
         const distToPredator = Math.hypot(
@@ -130,7 +163,7 @@ export function evaluateCombatGoals(
           predator.position.y - myPos.y,
         );
 
-        if (canFight) {
+        if (canFightPredator) {
           goals.push({
             id: `attack_animal_${predator.id}_${now}`,
             type: GoalType.ATTACK,
@@ -141,8 +174,9 @@ export function evaluateCombatGoals(
             expiresAt: now + 5000,
             data: { reason: "predator_defense" },
           });
-        } else if (distToPredator < 80) {
+        } else if (distToPredator < 80 && canFlee(aiState.entityId, now)) {
           // Only flee with high priority if predator is VERY close (< 80 units)
+          // and agent is not on flee cooldown
           const dx = myPos.x - predator.position.x;
           const dy = myPos.y - predator.position.y;
           const len = Math.max(1, Math.hypot(dx, dy));
@@ -156,6 +190,7 @@ export function evaluateCombatGoals(
           // At 80 units: priority ~0.75, at 20 units: priority ~0.90
           const fleePriority = Math.min(0.90, 0.70 + (80 - distToPredator) / 300);
 
+          recordFlee(aiState.entityId, now);
           goals.push({
             id: `flee_animal_${predator.id}_${now}`,
             type: GoalType.FLEE,

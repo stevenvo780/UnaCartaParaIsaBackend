@@ -168,6 +168,24 @@ export class WorldResourceSystem {
   ): WorldResourceInstance | undefined {
     const searchRadii = [200, 500, 1000, 2000];
 
+    // Debug: Log total resources in system
+    if (type === WorldResourceType.WATER_SOURCE) {
+      const totalResources = this.resources.size;
+      const waterResources = Array.from(this.resources.values()).filter(
+        (r) => r.type === WorldResourceType.WATER_SOURCE,
+      );
+      logger.debug(
+        `[WorldRes] getNearestResource(water_source) at (${x.toFixed(0)}, ${y.toFixed(0)}): totalResources=${totalResources}, waterResources=${waterResources.length}`,
+      );
+      if (waterResources.length > 0 && waterResources.length <= 5) {
+        waterResources.forEach((r) =>
+          logger.debug(
+            `  - water: ${r.id} at (${r.position.x.toFixed(0)}, ${r.position.y.toFixed(0)}), state=${r.state}`,
+          ),
+        );
+      }
+    }
+
     for (const radius of searchRadii) {
       const nearbyIds = this.spatialGrid.queryRadius({ x, y }, radius);
 
@@ -192,6 +210,13 @@ export class WorldResourceSystem {
       }
 
       if (found) return nearest;
+    }
+
+    // Debug: if type is water and we found nothing
+    if (type === WorldResourceType.WATER_SOURCE) {
+      logger.debug(
+        `[WorldRes] getNearestResource(water_source): NO WATER FOUND within 2000 units`,
+      );
     }
 
     return undefined;
@@ -399,6 +424,40 @@ export class WorldResourceSystem {
             }
           }
         }
+
+        // Spawn water sources in suitable biomes (WETLAND, FOREST, GRASSLAND, VILLAGE)
+        // with a small probability, separate from ocean/water tiles
+        if (!isWaterTile && tile.biome) {
+          const waterSuitableBiomes: string[] = [
+            BiomeType.WETLAND,
+            BiomeType.FOREST,
+            BiomeType.GRASSLAND,
+            BiomeType.VILLAGE,
+          ];
+          if (waterSuitableBiomes.includes(tile.biome)) {
+            // Low probability to spawn a freshwater source (pond, well, stream)
+            const waterSpawnProb =
+              tile.biome === BiomeType.WETLAND
+                ? 0.08
+                : tile.biome === BiomeType.VILLAGE
+                  ? 0.04
+                  : 0.02;
+            if (Math.random() < waterSpawnProb) {
+              const waterResourceId = `water_fresh_${tile.x}_${tile.y}`;
+              if (!this.resources.has(waterResourceId)) {
+                const resource = this.spawnFreshWaterResource(
+                  waterResourceId,
+                  {
+                    x: pixelX + tileSize / 2,
+                    y: pixelY + tileSize / 2,
+                  },
+                  tile.biome,
+                );
+                if (resource) spawnedCount++;
+              }
+            }
+          }
+        }
       }
     }
 
@@ -436,6 +495,36 @@ export class WorldResourceSystem {
 
       linkedTileX: tileCoords.tileX,
       linkedTileY: tileCoords.tileY,
+    };
+
+    this.addResource(resource);
+
+    simulationEvents.emit(GameEventType.RESOURCE_SPAWNED, { resource });
+
+    return resource;
+  }
+
+  /**
+   * Spawns a freshwater resource (pond, well, stream) in non-ocean biomes.
+   * These are standalone water sources not linked to terrain tiles.
+   */
+  private spawnFreshWaterResource(
+    id: string,
+    position: { x: number; y: number },
+    biome: string,
+  ): WorldResourceInstance | null {
+    const config = getResourceConfig(WorldResourceType.WATER_SOURCE);
+    if (!config) return null;
+
+    const resource: WorldResourceInstance = {
+      id,
+      type: WorldResourceType.WATER_SOURCE,
+      position,
+      state: ResourceState.PRISTINE,
+      harvestCount: 0,
+      lastHarvestTime: 0,
+      biome: biome as BiomeType,
+      spawnedAt: Date.now(),
     };
 
     this.addResource(resource);

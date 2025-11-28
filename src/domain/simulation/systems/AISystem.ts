@@ -1630,6 +1630,7 @@ export class AISystem extends EventEmitter {
           weaponId as CraftingWeaponId,
         );
       },
+      hasAvailableWeapons: (): boolean => toolStorage.hasAnyWeapon(),
       getAllActiveAgentIds: (): string[] => {
         if (this.activeAgentIdsCache !== null) {
           return this.activeAgentIdsCache;

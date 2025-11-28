@@ -42,17 +42,21 @@ export function itemToInventoryResource(itemId: string): ResourceType | null {
   if (woodItems.includes(itemId)) return ResourceTypeEnum.WOOD;
 
   const stoneItems = [
-    "iron_ore",
-    "copper_ore",
     "coal",
     "clay",
     "brick",
-    "iron_ingot",
-    "copper_ingot",
     "obsidian",
     "flint",
   ];
   if (stoneItems.includes(itemId)) return ResourceTypeEnum.STONE;
+
+  const metalItems = [
+    "iron_ore",
+    "copper_ore",
+    "iron_ingot",
+    "copper_ingot",
+  ];
+  if (metalItems.includes(itemId)) return ResourceTypeEnum.METAL;
 
   const foodItems = [
     "wheat",

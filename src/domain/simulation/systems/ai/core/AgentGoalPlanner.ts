@@ -89,6 +89,8 @@ export interface AgentGoalPlannerDeps {
   getEquipped?: (id: string) => string;
   getSuggestedCraftZone?: () => string | undefined;
   canCraftWeapon?: (id: string, weaponId: string) => boolean;
+  /** Returns true if there are weapons available in shared tool storage */
+  hasAvailableWeapons?: () => boolean;
   getAllActiveAgentIds?: () => string[];
   getEntityStats?: (id: string) => Record<string, number> | null;
   getStrategy?: (id: string) => "peaceful" | "tit_for_tat" | "bully";
@@ -247,7 +249,7 @@ export async function planGoals(
   if (hasAllDeps) {
     const collectiveDeps: CollectiveNeedsContext = {
       gameState: deps.gameState,
-      getAgentInventory: deps.getAgentInventory,
+      getAgentInventory: deps.getAgentInventory!,
       getAgentRole: deps.getAgentRole
         ? (id: string): { roleType: RoleType } | undefined => {
             const role = deps.getAgentRole!(id);
@@ -263,7 +265,7 @@ export async function planGoals(
           capacity: sp.capacity,
         })),
       getActiveDemands: deps.getActiveDemands,
-      getPopulation: deps.getPopulation,
+      getPopulation: deps.getPopulation!,
       taskSystem: deps.taskSystem,
     };
     const collectiveGoals = evaluateCollectiveNeeds(
@@ -337,6 +339,13 @@ export async function planGoals(
       getEquipped: deps.getEquipped,
       getSuggestedCraftZone: deps.getSuggestedCraftZone,
       canCraftWeapon: deps.canCraftWeapon,
+      hasAvailableWeapons: deps.hasAvailableWeapons,
+      getAgentRole: deps.getAgentRole
+        ? (id: string): { roleType: string } | undefined => {
+            const role = deps.getAgentRole!(id);
+            return role ? { roleType: role.roleType } : undefined;
+          }
+        : undefined,
     };
     const craftingGoals = evaluateCrafting(craftingDeps, aiState);
     goals.push(...craftingGoals);

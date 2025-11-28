@@ -596,7 +596,14 @@ export function evaluateCollectiveNeeds(
         depositPriority += 0.2;
       }
 
-      depositPriority = Math.min(0.8, Math.max(0.4, depositPriority));
+      // When inventory is very full (>70%), make deposit high priority
+      // This ensures agents actually deposit instead of always chasing water
+      const isInventoryFull = loadRatio > 0.7;
+      if (isInventoryFull) {
+        depositPriority = Math.max(depositPriority, 0.9);
+      }
+
+      depositPriority = Math.min(0.95, Math.max(0.4, depositPriority));
 
       goals.push({
         id: `collective_deposit_${now}`,
@@ -605,6 +612,7 @@ export function evaluateCollectiveNeeds(
         data: {
           collectiveNeed: "true",
           stockpileFillRatio: state.stockpileFillRatio,
+          inventoryFull: isInventoryFull,
         },
         createdAt: now,
         expiresAt: now + 20000,

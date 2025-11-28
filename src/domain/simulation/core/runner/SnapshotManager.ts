@@ -185,6 +185,27 @@ export class SnapshotManager {
         : [];
     this.runner.capturedEvents.length = 0;
 
+    // Add enhanced crafting data to state
+    if (this.runner.enhancedCraftingSystem) {
+      const craftingSnapshot = this.runner.enhancedCraftingSystem.getCraftingSnapshot();
+      stateSnapshot.enhancedCrafting = craftingSnapshot;
+      
+      // DEBUG: Log crafting data every 10 ticks (~2.5 seconds)
+      if (currentTick % 10 === 0) {
+        logger.debug("📦 [Snapshot] enhancedCrafting data:", {
+          tick: currentTick,
+          activeJobs: craftingSnapshot.activeJobs?.length || 0,
+          knownRecipesAgents: Object.keys(craftingSnapshot.knownRecipes || {}).length,
+          equippedWeapons: Object.keys(craftingSnapshot.equippedWeapons || {}).length
+        });
+      }
+    } else {
+      // DEBUG: Log if system is missing
+      if (currentTick % 10 === 0) {
+        logger.warn("⚠️ [Snapshot] enhancedCraftingSystem not available");
+      }
+    }
+
     const fullSnapshot: SimulationSnapshot = {
       tick: currentTick,
       updatedAt: now,
@@ -298,6 +319,12 @@ export class SnapshotManager {
           history,
         };
       });
+    }
+
+    // Add enhanced crafting data to state
+    if (this.runner.enhancedCraftingSystem) {
+      snapshotState.enhancedCrafting =
+        this.runner.enhancedCraftingSystem.getCraftingSnapshot();
     }
 
     return {

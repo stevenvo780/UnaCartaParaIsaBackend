@@ -179,6 +179,20 @@ export class ToolStorageSystem {
   }
 
   /**
+   * Checks if any weapon is available in storage.
+   * Useful to determine if agents should craft more weapons.
+   * @returns true if at least one weapon is available
+   */
+  hasAnyWeapon(): boolean {
+    for (const weaponId of TOOL_CATEGORIES.HUNTING_WEAPONS) {
+      if (this.hasTool(weaponId)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Gets what tool an agent has claimed.
    * @param agentId - The agent to check
    * @returns The claimed tool itemId, or undefined
