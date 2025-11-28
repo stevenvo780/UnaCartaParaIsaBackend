@@ -182,7 +182,7 @@
       "gridPos": { "h": 8, "w": 6, "x": 12, "y": 11 },
       "targets": [
         {
-          "expr": "(backend_memory_bytes{type=\"heapUsed\"} / backend_memory_bytes{type=\"heapTotal\"}) * 100",
+          "expr": "scalar(backend_memory_bytes{type=\"heapUsed\"}) / scalar(backend_memory_bytes{type=\"heapTotal\"}) * 100",
           "refId": "A"
         }
       ],

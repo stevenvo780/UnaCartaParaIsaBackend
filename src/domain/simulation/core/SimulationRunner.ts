@@ -336,6 +336,12 @@ export class SimulationRunner {
   public async saveSimulation(): Promise<void> {
     const startTime = performance.now();
     try {
+
+      this.needsSystem.syncToGameState();
+      this.aiSystem.syncToGameState();
+
+
+
       const stateClone = cloneGameState(this.state);
 
       const saveData = {
@@ -486,32 +492,32 @@ export class SimulationRunner {
           }
         }
       },
-      // Light postTick: only critical work - must complete fast
+
       postTickLight: () => {
-        // Flush events - this is critical for system communication
+
         if (simulationEvents instanceof BatchedEventEmitter) {
           simulationEvents.flushEvents();
         }
-        // Increment tick counter
+
         this.tickCounter += 1;
       },
-      // Heavy postTick: expensive operations deferred via setImmediate
-      // Only runs after MEDIUM/SLOW ticks, not FAST
+
+
       postTickHeavy: () => {
         const now = Date.now();
-        // Sync state (throttled to 250ms)
+
         if (now - this.lastStateSync >= 250) {
           this.syncState();
           this.lastStateSync = now;
         }
 
-        // Generate snapshot for clients
+
         this.snapshotManager.generateSnapshotThrottled();
 
-        // Update scheduler stats
+
         performanceMonitor.setSchedulerStats(this.scheduler.getStats());
 
-        // Update game logic stats
+
         performanceMonitor.setGameLogicStats({
           activeAgents: this.state.agents.length,
           totalResources: this.state.worldResources
@@ -520,7 +526,7 @@ export class SimulationRunner {
           totalBuildings: this.state.zones ? this.state.zones.length : 0,
         });
 
-        // Collect metrics (already throttled to 5s internally)
+
         this.metricsCollector.tryCollect(
           this.scheduler,
           this.gpuComputeService,
@@ -848,9 +854,18 @@ export class SimulationRunner {
     for (const agent of agents) {
       if (agent.isDead) continue;
 
-      if (!this.needsSystem.getNeeds(agent.id)) {
+
+      if (agent.needs) {
+        this.needsSystem.setEntityNeeds(agent.id, agent.needs);
+        initialized++;
+      } else if (!this.needsSystem.getNeeds(agent.id)) {
         this.needsSystem.initializeEntityNeeds(agent.id);
         initialized++;
+      }
+
+
+      if (agent.ai) {
+        this.aiSystem.restoreAIState(agent.id, agent.ai);
       }
 
       if (!this.inventorySystem.getAgentInventory(agent.id)) {
@@ -1087,12 +1102,12 @@ export class SimulationRunner {
         social,
         ai: aiState
           ? {
-              currentGoal: aiState.currentGoal,
-              goalQueue: aiState.goalQueue,
-              currentAction: aiState.currentAction,
-              offDuty: aiState.offDuty,
-              lastDecisionTime: aiState.lastDecisionTime,
-            }
+            currentGoal: aiState.currentGoal,
+            goalQueue: aiState.goalQueue,
+            currentAction: aiState.currentAction,
+            offDuty: aiState.offDuty,
+            lastDecisionTime: aiState.lastDecisionTime,
+          }
           : null,
       };
     }

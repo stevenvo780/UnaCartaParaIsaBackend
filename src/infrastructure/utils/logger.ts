@@ -81,7 +81,7 @@ class Logger {
       try {
         await this.flush();
       } catch {
-        // Silently ignore flush errors on exit
+
       }
     };
     process.on("beforeExit", flushAndExit);

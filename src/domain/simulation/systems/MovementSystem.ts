@@ -135,8 +135,8 @@ export class MovementSystem extends EventEmitter {
 
   constructor() {
     super();
-    // defer heavy init to postConstruct
-    // create minimal placeholders
+
+
     this.pathfinder = new EasyStar.js();
     this.gridWidth = 1;
     this.gridHeight = 1;
@@ -149,7 +149,7 @@ export class MovementSystem extends EventEmitter {
 
   @postConstruct()
   private _init(): void {
-    // Configure pathfinder
+
     this.pathfinder.setAcceptableTiles([0]);
     this.pathfinder.enableDiagonals();
     this.pathfinder.setIterationsPerCalculation(
@@ -185,7 +185,7 @@ export class MovementSystem extends EventEmitter {
       gridSize: `${this.gridWidth}x${this.gridHeight}`,
       zones: this.gameState.zones.length,
     });
-    void this._init; // mark as used for TS
+    void this._init;
   }
 
   public async update(deltaMs: number): Promise<void> {

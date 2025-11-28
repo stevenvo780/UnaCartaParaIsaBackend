@@ -117,15 +117,15 @@ export class AnimalSystem {
 
   constructor() {
     this.config = DEFAULT_CONFIG;
-    // BatchProcessor se crea en @postConstruct donde gpuService ya está inyectado
+
     this.batchProcessor = null!;
-    void this._init; // mark postConstruct method as used for TS
+    void this._init;
   }
 
   @postConstruct()
   private _init(): void {
     this.animalRegistry = this.animalRegistry ?? new AnimalRegistry();
-    // Crear BatchProcessor DESPUÉS de que gpuService esté disponible
+
     this.batchProcessor = new AnimalBatchProcessor(this.gpuService);
     if (this.gpuService?.isGPUAvailable()) {
       logger.info(
@@ -594,7 +594,7 @@ export class AnimalSystem {
 
   private ensurePredatorConfigCache(): void {
     if (this.predatorConfigCache.size > 0) return;
-    // Build predator lookup cache once
+
     for (const type of [
       "wolf",
       "bear",

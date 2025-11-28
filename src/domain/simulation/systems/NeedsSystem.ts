@@ -674,10 +674,10 @@ export class NeedsSystem extends EventEmitter {
     needs.fun = 70;
     needs.mentalHealth = 80;
 
-    if (this.gameState.entities) {
-      const entity = this.entityIndex?.getEntity(entityId);
-      if (entity) {
-        entity.isDead = false;
+    if (this.gameState.agents) {
+      const agent = this.gameState.agents.find((a) => a.id === entityId);
+      if (agent) {
+        agent.isDead = false;
       }
     }
 
@@ -687,6 +687,21 @@ export class NeedsSystem extends EventEmitter {
       agentId: entityId,
       timestamp: Date.now(),
     });
+  }
+
+  public setEntityNeeds(
+    entityId: string,
+    needs: {
+      hunger: number;
+      thirst: number;
+      energy: number;
+      social: number;
+      fun: number;
+      hygiene: number;
+      mentalHealth: number;
+    },
+  ): void {
+    this.entityNeeds.set(entityId, { ...needs });
   }
 
   private checkEmergencyNeeds(entityId: string, needs: EntityNeedsData): void {
@@ -1233,12 +1248,12 @@ export class NeedsSystem extends EventEmitter {
 
     if (changes.health !== 0) {
       logger.debug(
-        `🏥 Food health effect for ${entityId}: ${changes.health > 0 ? "+" : ""}${changes.health}`,
+        `🏥 Food health effect for ${entityId}: ${changes.health > 0 ? "+" : ""}${changes.health} `,
       );
     }
 
     logger.debug(
-      `🍖 ${entityId} consumed ${food.name}: hunger+${changes.hunger}, energy+${changes.energy}`,
+      `🍖 ${entityId} consumed ${food.name}: hunger + ${changes.hunger}, energy + ${changes.energy} `,
     );
 
     return changes;

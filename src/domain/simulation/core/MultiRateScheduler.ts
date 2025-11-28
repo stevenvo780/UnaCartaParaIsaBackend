@@ -263,12 +263,12 @@ export class MultiRateScheduler {
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.fastSystems, delta, entityCount);
 
-      // FAST tick: only run lightweight postTick (event flush)
+
       const postTickStart = performance.now();
       if (this.hooks.postTickLight) {
         this.hooks.postTickLight();
       } else {
-        // Fallback to legacy postTick if new hooks not configured
+
         this.hooks.postTick?.();
       }
       const postTickDuration = performance.now() - postTickStart;
@@ -332,18 +332,18 @@ export class MultiRateScheduler {
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.mediumSystems, delta, entityCount);
 
-      // MEDIUM tick: run lightweight postTick + defer heavy work
+
       const postTickStart = performance.now();
       if (this.hooks.postTickLight) {
         this.hooks.postTickLight();
-        // Defer heavy work to not block the event loop
+
         if (this.hooks.postTickHeavy) {
           setImmediate(() => {
             this.hooks.postTickHeavy?.();
           });
         }
       } else {
-        // Fallback to legacy postTick if new hooks not configured
+
         this.hooks.postTick?.();
       }
       const postTickDuration = performance.now() - postTickStart;
@@ -404,18 +404,18 @@ export class MultiRateScheduler {
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.slowSystems, delta, entityCount);
 
-      // SLOW tick: run lightweight postTick + defer heavy work
+
       const postTickStart = performance.now();
       if (this.hooks.postTickLight) {
         this.hooks.postTickLight();
-        // Defer heavy work to not block the event loop
+
         if (this.hooks.postTickHeavy) {
           setImmediate(() => {
             this.hooks.postTickHeavy?.();
           });
         }
       } else {
-        // Fallback to legacy postTick if new hooks not configured
+
         this.hooks.postTick?.();
       }
       const postTickDuration = performance.now() - postTickStart;

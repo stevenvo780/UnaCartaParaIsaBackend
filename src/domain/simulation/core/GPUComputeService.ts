@@ -56,7 +56,7 @@ export class GPUComputeService {
   private async ensureTensorFlowLoaded(): Promise<boolean> {
     if (this.tf) return this.gpuAvailable;
     if (this.tfLoading) {
-      // Wait for ongoing load
+
       while (this.tfLoading) {
         await new Promise((resolve) => setTimeout(resolve, 10));
       }
@@ -142,7 +142,7 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = positions.length / 2;
 
-    // Use CPU for small entity counts - don't even try to load TensorFlow
+
     if (entityCount < 1000) {
       return this.updatePositionsBatchCPU(
         positions,
@@ -153,7 +153,7 @@ export class GPUComputeService {
       );
     }
 
-    // Lazy-load TensorFlow when threshold exceeded
+
     const gpuReady = await this.ensureTensorFlowLoaded();
     if (!gpuReady || !this.tf) {
       return this.updatePositionsBatchCPU(
@@ -320,7 +320,7 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = needs.length / needCount;
 
-    // Use CPU for small entity counts - don't even try to load TensorFlow
+
     if (entityCount < 1000) {
       return this.applyNeedsDecayBatchCPU(
         needs,
@@ -332,7 +332,7 @@ export class GPUComputeService {
       );
     }
 
-    // Lazy-load TensorFlow when threshold exceeded
+
     const gpuReady = await this.ensureTensorFlowLoaded();
     if (!gpuReady || !this.tf) {
       return this.applyNeedsDecayBatchCPU(
@@ -458,12 +458,12 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = needs.length / needCount;
 
-    // Use CPU for small entity counts - don't even try to load TensorFlow
+
     if (entityCount < 1000) {
       return this.applyNeedsCrossEffectsBatchCPU(needs, needCount);
     }
 
-    // Lazy-load TensorFlow when threshold exceeded
+
     const gpuReady = await this.ensureTensorFlowLoaded();
     if (!gpuReady || !this.tf) {
       return this.applyNeedsCrossEffectsBatchCPU(needs, needCount);
@@ -628,12 +628,12 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = fatigue.length;
 
-    // Use CPU for small entity counts - don't even try to load TensorFlow
+
     if (entityCount < 1000) {
       return this.updateFatigueBatchCPU(fatigue, isMoving, isResting, deltaMs);
     }
 
-    // Lazy-load TensorFlow when threshold exceeded
+
     const gpuReady = await this.ensureTensorFlowLoaded();
     if (!gpuReady || !this.tf) {
       return this.updateFatigueBatchCPU(fatigue, isMoving, isResting, deltaMs);
@@ -893,12 +893,12 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = positions.length / 2;
 
-    // Use CPU for small entity counts - don't even try to load TensorFlow
+
     if (entityCount < 1000) {
       return this.computeDistancesBatchCPU(centerX, centerY, positions);
     }
 
-    // Lazy-load TensorFlow when threshold exceeded
+
     const gpuReady = await this.ensureTensorFlowLoaded();
     if (!gpuReady || !this.tf) {
       return this.computeDistancesBatchCPU(centerX, centerY, positions);
@@ -1088,12 +1088,12 @@ export class GPUComputeService {
     const entityCount = Math.min(positions.length / 2, maxEntities);
     const pairCount = (entityCount * (entityCount - 1)) / 2;
 
-    // Use CPU for small entity counts - don't even try to load TensorFlow
+
     if (entityCount < 1000) {
       return this.computePairwiseDistancesCPU(positions, maxEntities);
     }
 
-    // Lazy-load TensorFlow when threshold exceeded
+
     const gpuReady = await this.ensureTensorFlowLoaded();
     if (!gpuReady || !this.tf) {
       return this.computePairwiseDistancesCPU(positions, maxEntities);

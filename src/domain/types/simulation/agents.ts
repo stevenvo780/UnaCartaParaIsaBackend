@@ -50,4 +50,20 @@ export interface AgentProfile {
     money?: number;
     reputation?: number;
   };
+  needs?: {
+    hunger: number;
+    thirst: number;
+    energy: number;
+    social: number;
+    fun: number;
+    hygiene: number;
+    mentalHealth: number;
+  };
+  ai?: {
+    currentGoal: unknown;
+    goalQueue: unknown[];
+    currentAction: unknown;
+    offDuty: boolean;
+    lastDecisionTime: number;
+  };
 }

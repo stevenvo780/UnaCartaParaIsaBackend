@@ -1,5 +1,5 @@
-// Lazy-load TensorFlow to avoid CPU thread spinning when not needed
-// TensorFlow.js GPU creates Eigen threads that consume CPU even when idle
+
+
 type TF = typeof import("@tensorflow/tfjs-node-gpu");
 let tf: TF | null = null;
 let tfLoadPromise: Promise<TF> | null = null;
@@ -89,7 +89,7 @@ export class GPUBatchQueryService {
 
   constructor() {}
 
-  // Intentionally no eager init; defers to first use
+
 
   /**
    * Updates the entity positions buffer. Call this once per frame.
@@ -199,7 +199,7 @@ export class GPUBatchQueryService {
       queryCount >= this.GPU_QUERY_THRESHOLD;
 
     if (useGpu) {
-      // Async GPU processing - only loads TensorFlow when actually needed
+
       this.processGPUAsync(queries, entityCount);
     } else {
       this.processCPU(queries, entityCount);
@@ -223,7 +223,7 @@ export class GPUBatchQueryService {
     const startTime = performance.now();
 
     try {
-      // Lazy-load TensorFlow only when GPU is actually needed
+
       const tfModule = await getTensorFlow();
 
       const queryCenters = new Float32Array(queries.length * 2);

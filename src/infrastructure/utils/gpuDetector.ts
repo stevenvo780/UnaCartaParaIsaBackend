@@ -78,7 +78,7 @@ export function detectGPUAvailability(): GPUInfo {
     libraries: {},
   };
 
-  // Check CUDA environment first (lightweight check)
+
   const cudaVisible = process.env.CUDA_VISIBLE_DEVICES;
   const cudaHome = process.env.CUDA_HOME;
   const cudaPath = process.env.CUDA_PATH;
@@ -91,7 +91,7 @@ export function detectGPUAvailability(): GPUInfo {
     });
   }
 
-  // Check nvidia-smi (lightweight, doesn't load TensorFlow)
+
   try {
     const { execSync } = require("child_process") as {
       execSync: (
@@ -126,7 +126,7 @@ export function detectGPUAvailability(): GPUInfo {
     });
   }
 
-  // Report GPU status without loading TensorFlow
+
   if (info.available) {
     logger.info(
       "✅ GPU available for computations (will be used when needed)",
