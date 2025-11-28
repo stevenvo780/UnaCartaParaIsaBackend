@@ -1,5 +1,6 @@
 import type { LifeStage, Sex } from "./agents";
 import { ClothingStyle } from "../../constants/AgentEnums";
+import { GenerationStyleId } from "../../constants/AppearanceEnums";
 
 export type ColorPalette = {
   primary: string;
@@ -75,7 +76,7 @@ export type AgentAppearance = {
 
 export const GENERATION_STYLES: VisualStyle[] = [
   {
-    id: "divine_gen0",
+    id: GenerationStyleId.DIVINE_GEN0,
     name: "Divino Primigenio",
     description: "Estilo majestuoso de los dioses fundadores",
     palette: {
@@ -89,7 +90,7 @@ export const GENERATION_STYLES: VisualStyle[] = [
   },
 
   {
-    id: "pioneer_gen1",
+    id: GenerationStyleId.PIONEER_GEN1,
     name: "Pioneros",
     description: "Primera generación mortal, estilo práctico",
     palette: {

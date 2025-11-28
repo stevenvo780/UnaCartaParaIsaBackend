@@ -8,6 +8,14 @@
  */
 
 /**
+ * Enumeration of quest objective IDs.
+ */
+export enum QuestObjectiveID {
+  OBJ_1 = "obj_1",
+  OBJ_2 = "obj_2",
+}
+
+/**
  * Enumeration of quest IDs.
  */
 export enum QuestID {

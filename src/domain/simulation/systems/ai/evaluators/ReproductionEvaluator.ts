@@ -3,6 +3,7 @@ import type { EntityNeedsData } from "../../../../types/simulation/needs";
 import {
   GoalType,
   ExplorationType,
+  GoalReason,
 } from "../../../../../shared/constants/AIEnums";
 
 import type { Inventory } from "../../../../types/simulation/economy";
@@ -71,7 +72,7 @@ export function evaluateReproductionDrive(
         targetPosition: { x: mate.x, y: mate.y },
         data: {
           action: "find_mate",
-          reason: "reproduction_drive",
+          reason: GoalReason.REPRODUCTION_DRIVE,
         },
         createdAt: now,
         expiresAt: now + 30000,
@@ -84,7 +85,7 @@ export function evaluateReproductionDrive(
         data: {
           explorationType: ExplorationType.SOCIAL_SEARCH,
           searchFor: "mate",
-          reason: "reproduction_drive",
+          reason: GoalReason.REPRODUCTION_DRIVE,
         },
         createdAt: now,
         expiresAt: now + 20000,

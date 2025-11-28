@@ -141,6 +141,14 @@ export enum ExplorationType {
   INSPECT = "inspect",
   DEFAULT = "default",
   DESPERATE_SEARCH = "desperate_search",
+  FOOD_OR_PREY = "food_or_prey",
+}
+
+/**
+ * Enumeration of reasons for goals or actions.
+ */
+export enum GoalReason {
+  REPRODUCTION_DRIVE = "reproduction_drive",
 }
 
 /**

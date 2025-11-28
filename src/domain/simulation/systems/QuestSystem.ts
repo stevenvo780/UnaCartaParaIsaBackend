@@ -13,6 +13,7 @@ import {
   QuestObjectiveType,
   QuestAction,
   QuestID,
+  QuestObjectiveID,
 } from "../../../shared/constants/QuestEnums";
 import {
   DialogueSpeaker,
@@ -27,7 +28,7 @@ const QUEST_CATALOG: Quest[] = [
     status: QuestStatus.AVAILABLE,
     objectives: [
       {
-        id: "obj_1",
+        id: QuestObjectiveID.OBJ_1,
         type: QuestObjectiveType.COLLECT_RESOURCE,
         description: "Gather 5 wood",
         target: "wood",
@@ -36,7 +37,7 @@ const QUEST_CATALOG: Quest[] = [
         isCompleted: false,
       },
       {
-        id: "obj_2",
+        id: QuestObjectiveID.OBJ_2,
         type: QuestObjectiveType.COLLECT_RESOURCE,
         description: "Gather 3 food",
         target: "food",
@@ -72,7 +73,7 @@ const QUEST_CATALOG: Quest[] = [
     status: QuestStatus.AVAILABLE,
     objectives: [
       {
-        id: "obj_1",
+        id: QuestObjectiveID.OBJ_1,
         type: QuestObjectiveType.BUILD_STRUCTURE,
         description: "Build a basic shelter",
         target: "shelter",

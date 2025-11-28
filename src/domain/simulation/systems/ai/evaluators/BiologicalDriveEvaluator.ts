@@ -207,7 +207,7 @@ export function evaluateBiologicalDrives(
             data: {
               explorationType: ExplorationType.DESPERATE_SEARCH,
               need: NeedType.HUNGER,
-              searchFor: "food_or_prey",
+              searchFor: ExplorationType.FOOD_OR_PREY,
             },
             createdAt: now,
             expiresAt: now + 30000,
