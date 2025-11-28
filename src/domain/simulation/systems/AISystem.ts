@@ -2062,14 +2062,15 @@ export class AISystem extends EventEmitter {
     entityId: string,
     excludeIds?: Set<string>,
   ): { id: string; x: number; y: number; type: string } | null {
-    const agentPos = this.agentRegistry?.getProfile(entityId);
-    if (!agentPos) return null;
+    const agentProfile = this.agentRegistry?.getProfile(entityId);
+    if (!agentProfile?.position) return null;
 
     if (!this.animalSystem) {
       logger.debug(`🐺 [AI] ${entityId}: animalSystem not available`);
       return null;
     }
 
+    const agentPos = agentProfile.position;
     const HUNT_SEARCH_RANGE = 800;
     const animals = this.animalSystem.getAnimalsInRadius(
       agentPos,
@@ -2078,7 +2079,7 @@ export class AISystem extends EventEmitter {
 
     if (animals.length === 0) {
       logger.debug(
-        `🐺 [AI] ${entityId}: No animals in radius ${HUNT_SEARCH_RANGE} (agentPos: ${Math.round(agentPos.position.x)},${Math.round(agentPos.position.y)})`,
+        `🐺 [AI] ${entityId}: No animals in radius ${HUNT_SEARCH_RANGE} (agentPos: ${Math.round(agentPos.x)},${Math.round(agentPos.y)})`,
       );
       return null;
     }
@@ -2094,8 +2095,8 @@ export class AISystem extends EventEmitter {
       if (!config?.canBeHunted) continue;
 
       const dist = Math.hypot(
-        agentPos.position.x - animal.position.x,
-        agentPos.position.y - animal.position.y,
+        agentPos.x - animal.position.x,
+        agentPos.y - animal.position.y,
       );
       if (dist < minDist) {
         minDist = dist;
