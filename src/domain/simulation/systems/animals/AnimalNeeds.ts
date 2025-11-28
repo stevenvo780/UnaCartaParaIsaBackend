@@ -18,9 +18,10 @@ export class AnimalNeeds {
     );
 
     if (Date.now() - animal.lastReproduction > config.reproductionCooldown) {
+      // Increased reproductive urge growth rate from 5.0 to 15.0 for faster breeding cycles
       animal.needs.reproductiveUrge = Math.min(
         100,
-        animal.needs.reproductiveUrge + 5.0 * deltaMinutes,
+        animal.needs.reproductiveUrge + 15.0 * deltaMinutes,
       );
     }
 

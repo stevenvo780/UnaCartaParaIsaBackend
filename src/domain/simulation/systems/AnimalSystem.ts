@@ -459,15 +459,22 @@ export class AnimalSystem {
       }
     }
 
-    if (animal.needs.hunger < 50) {
+    // Animals seek food when: hungry (< 70) OR injured (health < maxHealth)
+    // This ensures they keep eating until fully healed
+    const maxHealth = config.maxHealth * animal.genes.health;
+    const needsHealing = animal.health < maxHealth * 0.9; // Below 90% health
+    const isHungry = animal.needs.hunger < 70;
+    
+    if (isHungry || needsHealing) {
       if (config.isPredator) {
         animal.state = AnimalState.HUNTING;
         const prey = this.getAnimalsInRadius(
           animal.position,
           config.huntingRange || 200,
         );
-        AnimalBehavior.huntPrey(animal, prey, deltaSeconds, (preyId) => {
-          this.killAnimal(preyId, "hunted");
+        AnimalBehavior.huntPrey(animal, prey, deltaSeconds, (preyId, damage) => {
+          // Predators now deal damage instead of instant kill
+          this.damageAnimal(preyId, damage || 25, animal.id);
         });
         return;
       } else if (config.consumesVegetation) {
@@ -515,7 +522,9 @@ export class AnimalSystem {
       }
     }
 
-    if (animal.needs.thirst < 50 && config.consumesWater) {
+    // Animals seek water when: thirsty (< 70) OR injured (for healing)
+    const isThirsty = animal.needs.thirst < 70;
+    if ((isThirsty || needsHealing) && config.consumesWater) {
       animal.state = AnimalState.SEEKING_WATER;
       const waterResources = this.findNearbyWater(
         animal,
@@ -547,15 +556,23 @@ export class AnimalSystem {
       return;
     }
 
-    if (animal.needs.reproductiveUrge > 80) {
+    // Reproduction: needs high urge, must be mature (age > 20% of lifespan), and healthy
+    const maturityAge = config.lifespan * 0.2;
+    const isMature = animal.age > maturityAge;
+    const isHealthyEnough = animal.health > maxHealth * 0.5;
+    
+    if (animal.needs.reproductiveUrge > 70 && isMature && isHealthyEnough) {
       animal.state = AnimalState.MATING;
-      const mates = this.getAnimalsInRadius(animal.position, 60);
+      const mates = this.getAnimalsInRadius(animal.position, 80);
       AnimalBehavior.attemptReproduction(
         animal,
         mates,
         deltaSeconds,
         (offspring) => {
           this.addAnimal(offspring);
+          logger.info(
+            `🐣 New ${offspring.type} born (gen ${offspring.generation}) at (${Math.round(offspring.position.x)}, ${Math.round(offspring.position.y)})`,
+          );
         },
       );
       return;
@@ -995,6 +1012,12 @@ export class AnimalSystem {
     const config = getAnimalConfig(animal.type);
     if (!config) return;
 
+    // Death by health depleted (damage from predators or other causes)
+    if (animal.health <= 0) {
+      this.killAnimal(animal.id, "damage");
+      return;
+    }
+
     if (AnimalNeeds.isStarving(animal)) {
       this.killAnimal(animal.id, "starvation");
       return;
@@ -1015,7 +1038,7 @@ export class AnimalSystem {
    */
   private killAnimal(
     animalId: string,
-    cause: "starvation" | "dehydration" | "old_age" | "hunted",
+    cause: "starvation" | "dehydration" | "old_age" | "hunted" | "damage",
   ): void {
     const animal = this.animalRegistry.getAnimal(animalId);
     if (!animal || animal.isDead) return;
@@ -1030,6 +1053,43 @@ export class AnimalSystem {
     });
 
     logger.warn(`💀 Animal died: ${animalId} (${cause})`);
+  }
+
+  /**
+   * Deal damage to an animal (from predators, agents, etc.)
+   * Returns true if the animal died from this damage
+   */
+  public damageAnimal(
+    animalId: string,
+    damage: number,
+    attackerId?: string,
+  ): boolean {
+    const animal = this.animalRegistry.getAnimal(animalId);
+    if (!animal || animal.isDead) return false;
+
+    animal.health = Math.max(0, animal.health - damage);
+    
+    logger.debug(
+      `🗡️ Animal ${animalId} took ${damage} damage (health: ${animal.health.toFixed(1)}) from ${attackerId || "unknown"}`,
+    );
+
+    // If health depleted, animal dies
+    if (animal.health <= 0) {
+      this.killAnimal(animalId, "damage");
+      
+      // Feed the attacker if it's a predator animal
+      if (attackerId) {
+        const attacker = this.animalRegistry.getAnimal(attackerId);
+        if (attacker) {
+          const config = getAnimalConfig(animal.type);
+          const foodValue = config?.foodValue || 30;
+          AnimalNeeds.feed(attacker, foodValue);
+          logger.info(`🍖 Predator ${attackerId} fed ${foodValue} from kill`);
+        }
+      }
+      return true;
+    }
+    return false;
   }
 
   /**

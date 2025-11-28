@@ -162,12 +162,14 @@ export class AnimalBehavior {
 
   /**
    * Hunt prey (for predators)
+   * Now deals damage instead of instant kill - prey must be worn down
+   * @param onDamage callback receives (preyId, damageAmount)
    */
   public static huntPrey(
     animal: Animal,
     availablePrey: Animal[],
     deltaSeconds: number,
-    onKill: (preyId: string) => void,
+    onDamage: (preyId: string, damage: number) => void,
   ): void {
     const config = getAnimalConfig(animal.type);
     if (!config?.isPredator || !config.preyTypes) return;
@@ -176,9 +178,18 @@ export class AnimalBehavior {
       !animal.currentTarget ||
       animal.currentTarget.type !== AnimalTargetType.FOOD
     ) {
-      const prey = availablePrey.find((p) =>
-        config.preyTypes!.includes(p.type),
-      );
+      // Prioritize wounded prey (health < 50%)
+      const prey = availablePrey
+        .filter((p) => config.preyTypes!.includes(p.type) && !p.isDead)
+        .sort((a, b) => {
+          const aConfig = getAnimalConfig(a.type);
+          const bConfig = getAnimalConfig(b.type);
+          const aMaxHealth = (aConfig?.maxHealth || 100) * a.genes.health;
+          const bMaxHealth = (bConfig?.maxHealth || 100) * b.genes.health;
+          const aHealthPct = a.health / aMaxHealth;
+          const bHealthPct = b.health / bMaxHealth;
+          return aHealthPct - bHealthPct; // Prefer lower health
+        })[0];
 
       if (prey) {
         animal.currentTarget = { type: AnimalTargetType.FOOD, id: prey.id };
@@ -205,23 +216,17 @@ export class AnimalBehavior {
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < 25) {
-        animal.state = AnimalState.EATING;
-        const consumed = config.foodValue || 50;
-        AnimalNeeds.feed(animal, consumed);
+        // Attack the prey - deal damage based on predator size (proxy for strength)
+        const attackDamage = (config.attackDamage || 15) * animal.genes.size;
+        onDamage(prey.id, attackDamage);
 
-        onKill(prey.id);
-
-        simulationEvents.emit(GameEventType.ANIMAL_CONSUMED_RESOURCE, {
-          animalId: animal.id,
-          resourceType: "meat",
-          amount: consumed,
-          position: animal.position,
-          biome: animal.biome,
-        });
-
-        animal.currentTarget = null;
-        animal.targetPosition = null;
-        animal.stateEndTime = Date.now() + 5000;
+        // Small cooldown between attacks
+        animal.stateEndTime = Date.now() + 1500;
+        
+        // Trigger flee response in prey
+        prey.state = AnimalState.FLEEING;
+        prey.fleeTarget = animal.id;
+        prey.needs.fear = 100;
       } else {
         this.moveToward(
           animal,
