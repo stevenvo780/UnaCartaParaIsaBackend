@@ -36,7 +36,26 @@ describe("MultiRateScheduler", () => {
   });
 
   describe("setHooks", () => {
-    it("debe configurar hooks preTick/postTick", () => {
+    it("debe configurar hooks preTick/postTickLight/postTickHeavy", () => {
+      const preTick = vi.fn();
+      const postTickLight = vi.fn();
+      const postTickHeavy = vi.fn();
+      const getEntityCount = vi.fn(() => 10);
+
+      scheduler.setHooks({
+        preTick,
+        postTickLight,
+        postTickHeavy,
+        getEntityCount,
+      });
+
+      expect(preTick).toBeDefined();
+      expect(postTickLight).toBeDefined();
+      expect(postTickHeavy).toBeDefined();
+      expect(getEntityCount).toBeDefined();
+    });
+
+    it("debe soportar hooks legacy postTick para compatibilidad", () => {
       const preTick = vi.fn();
       const postTick = vi.fn();
       const getEntityCount = vi.fn(() => 10);

@@ -10,7 +10,8 @@ import { TaskSystem } from "../../src/domain/simulation/systems/TaskSystem";
 describe('SimulationRunner Throttling', () => {
   let runner: SimulationRunner;
   let mockScheduler: any;
-  let postTickHook: () => void;
+  let postTickHeavyHook: () => void;
+  let postTickLightHook: () => void;
   let syncTasksSpy: any;
 
   beforeEach(async () => {
@@ -41,12 +42,15 @@ describe('SimulationRunner Throttling', () => {
     runner.start();
     console.log('Runner started.');
 
-    // Capture the postTick hook
+    // Capture the postTickHeavy hook (where syncState is now)
     console.log('Mock scheduler calls:', mockScheduler.setHooks.mock.calls);
     const setHooksCall = mockScheduler.setHooks.mock.calls[0];
     if (setHooksCall) {
-      postTickHook = setHooksCall[0].postTick;
-      console.log('Captured postTickHook:', !!postTickHook);
+      // New hook structure: postTickLight for fast work, postTickHeavy for expensive work
+      postTickHeavyHook = setHooksCall[0].postTickHeavy;
+      postTickLightHook = setHooksCall[0].postTickLight;
+      console.log('Captured postTickHeavyHook:', !!postTickHeavyHook);
+      console.log('Captured postTickLightHook:', !!postTickLightHook);
     } else {
       console.log('setHooks was NOT called');
       // If start() didn't call setHooks, maybe it's called in constructor?
@@ -60,7 +64,7 @@ describe('SimulationRunner Throttling', () => {
   });
 
   it('should throttle state synchronization to approximately 250ms', () => {
-    expect(postTickHook).toBeDefined();
+    expect(postTickHeavyHook).toBeDefined();
 
     vi.useFakeTimers();
     vi.setSystemTime(0);
@@ -69,29 +73,39 @@ describe('SimulationRunner Throttling', () => {
 
     // 1. Initial call at t=0
     // lastStateSync is 0. Date.now() is 0. Diff is 0. < 250. Should NOT run.
-    postTickHook();
+    postTickHeavyHook();
     expect(syncTasksSpy).not.toHaveBeenCalled();
 
     // 2. Advance to t=50ms
     vi.advanceTimersByTime(50);
-    postTickHook();
+    postTickHeavyHook();
     expect(syncTasksSpy).not.toHaveBeenCalled();
 
     // 3. Advance to t=250ms
     vi.advanceTimersByTime(200); // Total 250
-    postTickHook();
+    postTickHeavyHook();
     expect(syncTasksSpy).toHaveBeenCalledTimes(1);
 
     // 4. Advance to t=300ms
     vi.advanceTimersByTime(50); // Total 300
-    postTickHook();
+    postTickHeavyHook();
     expect(syncTasksSpy).toHaveBeenCalledTimes(1); // Should not have increased
 
     // 5. Advance to t=500ms
     vi.advanceTimersByTime(200); // Total 500
-    postTickHook();
+    postTickHeavyHook();
     expect(syncTasksSpy).toHaveBeenCalledTimes(2); // Should have increased
 
     vi.useRealTimers(); // Clean up fake timers
+  });
+
+  it('should have lightweight postTickLight hook that increments tick counter', () => {
+    expect(postTickLightHook).toBeDefined();
+
+    const initialTick = runner.getTickCounter();
+    postTickLightHook();
+    expect(runner.getTickCounter()).toBe(initialTick + 1);
+    postTickLightHook();
+    expect(runner.getTickCounter()).toBe(initialTick + 2);
   });
 });

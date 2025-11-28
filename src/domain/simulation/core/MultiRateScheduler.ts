@@ -49,7 +49,20 @@ export interface ScheduledSystem {
 export interface SchedulerHooks {
   /** Executes before each tick (any rate) to synchronize indices */
   preTick?: () => void;
-  /** Executes after each tick to flush events */
+  /** 
+   * Lightweight postTick - only critical work (event flush).
+   * Executes synchronously after each tick of any rate.
+   */
+  postTickLight?: () => void;
+  /**
+   * Heavy postTick - expensive operations (snapshots, metrics, state sync).
+   * Deferred to setImmediate to not block the event loop.
+   * Only triggered after MEDIUM/SLOW ticks to reduce frequency.
+   */
+  postTickHeavy?: () => void;
+  /** 
+   * @deprecated Use postTickLight for critical work and postTickHeavy for expensive work
+   */
   postTick?: () => void;
   /** Returns current entity count for optimization decisions */
   getEntityCount?: () => number;
@@ -219,6 +232,7 @@ export class MultiRateScheduler {
   /**
    * Executes FAST rate tick (50ms interval).
    * Updates shared frame time and runs all FAST systems.
+   * Only runs lightweight postTick (event flush) - heavy work is deferred.
    */
   private async tickFast(): Promise<void> {
     if (this.isTickingFast) {
@@ -248,16 +262,20 @@ export class MultiRateScheduler {
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.fastSystems, delta, entityCount);
 
+      // FAST tick: only run lightweight postTick (event flush)
       const postTickStart = performance.now();
-      this.hooks.postTick?.();
-      const postTickDuration = performance.now() - postTickStart;
-      if (this.hooks.postTick) {
-        performanceMonitor.recordSystemExecution(
-          TickRate.FAST,
-          "_lifecycle:postTick",
-          postTickDuration,
-        );
+      if (this.hooks.postTickLight) {
+        this.hooks.postTickLight();
+      } else {
+        // Fallback to legacy postTick if new hooks not configured
+        this.hooks.postTick?.();
       }
+      const postTickDuration = performance.now() - postTickStart;
+      performanceMonitor.recordSystemExecution(
+        TickRate.FAST,
+        "_lifecycle:postTick",
+        postTickDuration,
+      );
 
       const elapsed = performance.now() - startTime;
       this.stats.fast.count++;
@@ -282,6 +300,7 @@ export class MultiRateScheduler {
   /**
    * Executes MEDIUM rate tick (250ms interval).
    * Updates shared frame time and runs all MEDIUM systems.
+   * Runs lightweight postTick sync + schedules heavy work via setImmediate.
    */
   private async tickMedium(): Promise<void> {
     if (this.isTickingMedium) {
@@ -311,16 +330,26 @@ export class MultiRateScheduler {
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.mediumSystems, delta, entityCount);
 
+      // MEDIUM tick: run lightweight postTick + defer heavy work
       const postTickStart = performance.now();
-      this.hooks.postTick?.();
-      const postTickDuration = performance.now() - postTickStart;
-      if (this.hooks.postTick) {
-        performanceMonitor.recordSystemExecution(
-          TickRate.MEDIUM,
-          "_lifecycle:postTick",
-          postTickDuration,
-        );
+      if (this.hooks.postTickLight) {
+        this.hooks.postTickLight();
+        // Defer heavy work to not block the event loop
+        if (this.hooks.postTickHeavy) {
+          setImmediate(() => {
+            this.hooks.postTickHeavy?.();
+          });
+        }
+      } else {
+        // Fallback to legacy postTick if new hooks not configured
+        this.hooks.postTick?.();
       }
+      const postTickDuration = performance.now() - postTickStart;
+      performanceMonitor.recordSystemExecution(
+        TickRate.MEDIUM,
+        "_lifecycle:postTick",
+        postTickDuration,
+      );
 
       const elapsed = performance.now() - startTime;
       this.stats.medium.count++;
@@ -342,6 +371,7 @@ export class MultiRateScheduler {
   /**
    * Executes SLOW rate tick (1000ms interval).
    * Updates shared frame time and runs all SLOW systems.
+   * Runs lightweight postTick sync + schedules heavy work via setImmediate.
    */
   private async tickSlow(): Promise<void> {
     if (this.isTickingSlow) {
@@ -371,16 +401,26 @@ export class MultiRateScheduler {
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.slowSystems, delta, entityCount);
 
+      // SLOW tick: run lightweight postTick + defer heavy work
       const postTickStart = performance.now();
-      this.hooks.postTick?.();
-      const postTickDuration = performance.now() - postTickStart;
-      if (this.hooks.postTick) {
-        performanceMonitor.recordSystemExecution(
-          TickRate.SLOW,
-          "_lifecycle:postTick",
-          postTickDuration,
-        );
+      if (this.hooks.postTickLight) {
+        this.hooks.postTickLight();
+        // Defer heavy work to not block the event loop
+        if (this.hooks.postTickHeavy) {
+          setImmediate(() => {
+            this.hooks.postTickHeavy?.();
+          });
+        }
+      } else {
+        // Fallback to legacy postTick if new hooks not configured
+        this.hooks.postTick?.();
       }
+      const postTickDuration = performance.now() - postTickStart;
+      performanceMonitor.recordSystemExecution(
+        TickRate.SLOW,
+        "_lifecycle:postTick",
+        postTickDuration,
+      );
 
       const elapsed = performance.now() - startTime;
       this.stats.slow.count++;

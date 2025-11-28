@@ -456,8 +456,8 @@ export class SimulationRunner {
    *
    * These hooks execute before and after each tick to maintain system consistency:
    * - Pre-tick: Processes commands, conditionally rebuilds indices (every N ticks or when dirty)
-   * - Post-tick: Flushes batched events, marks state cache dirty, generates throttled snapshots,
-   *   and updates performance metrics
+   * - PostTickLight: Flushes batched events, increments tick counter (runs every tick, fast)
+   * - PostTickHeavy: Syncs state, generates snapshots, updates metrics (deferred via setImmediate, only MEDIUM/SLOW)
    *
    * Index rebuilding is expensive, so it's done periodically (every 5 FAST ticks) or when
    * indices report themselves as dirty. This balances performance with data consistency.
@@ -486,25 +486,32 @@ export class SimulationRunner {
           }
         }
       },
-      postTick: () => {
+      // Light postTick: only critical work - must complete fast
+      postTickLight: () => {
+        // Flush events - this is critical for system communication
         if (simulationEvents instanceof BatchedEventEmitter) {
           simulationEvents.flushEvents();
         }
-
+        // Increment tick counter
+        this.tickCounter += 1;
+      },
+      // Heavy postTick: expensive operations deferred via setImmediate
+      // Only runs after MEDIUM/SLOW ticks, not FAST
+      postTickHeavy: () => {
         const now = Date.now();
-        if (now - this.lastStateSync < 250) {
-          // Do not return, just skip the syncState call
-        } else {
+        // Sync state (throttled to 250ms)
+        if (now - this.lastStateSync >= 250) {
           this.syncState();
           this.lastStateSync = now;
         }
 
-        this.tickCounter += 1;
-
+        // Generate snapshot for clients
         this.snapshotManager.generateSnapshotThrottled();
 
+        // Update scheduler stats
         performanceMonitor.setSchedulerStats(this.scheduler.getStats());
 
+        // Update game logic stats
         performanceMonitor.setGameLogicStats({
           activeAgents: this.state.agents.length,
           totalResources: this.state.worldResources
@@ -513,6 +520,7 @@ export class SimulationRunner {
           totalBuildings: this.state.zones ? this.state.zones.length : 0,
         });
 
+        // Collect metrics (already throttled to 5s internally)
         this.metricsCollector.tryCollect(
           this.scheduler,
           this.gpuComputeService,
