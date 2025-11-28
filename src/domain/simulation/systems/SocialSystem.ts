@@ -147,7 +147,8 @@ export class SocialSystem {
         };
       } else {
         this.gameState.socialGraph.groups = this.groups;
-        this.gameState.socialGraph.relationships = this.serializeRelationships();
+        this.gameState.socialGraph.relationships =
+          this.serializeRelationships();
       }
       this.dirtyTracker?.markDirty("socialGraph");
       this.lastGraphSync = now;
@@ -167,7 +168,7 @@ export class SocialSystem {
    * This method is kept for backwards compatibility but is a no-op.
    * The SharedSpatialIndex is rebuilt by SimulationRunner each tick.
    */
-  private updateSpatialGridIncremental(): void { }
+  private updateSpatialGridIncremental(): void {}
 
   /**
    * Optimized edge decay that only processes edges with significant non-zero values.
@@ -716,7 +717,7 @@ export class SocialSystem {
       timestamp: number;
       [key: string]: unknown;
     },
-  ): void { }
+  ): void {}
   private serializeRelationships(): Record<string, Record<string, number>> {
     const serialized: Record<string, Record<string, number>> = {};
     for (const [agentId, neighbors] of this.edges.entries()) {

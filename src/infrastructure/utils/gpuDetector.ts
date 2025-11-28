@@ -78,7 +78,6 @@ export function detectGPUAvailability(): GPUInfo {
     libraries: {},
   };
 
-
   const cudaVisible = process.env.CUDA_VISIBLE_DEVICES;
   const cudaHome = process.env.CUDA_HOME;
   const cudaPath = process.env.CUDA_PATH;
@@ -90,7 +89,6 @@ export function detectGPUAvailability(): GPUInfo {
       CUDA_PATH: cudaPath ? "configured" : "not configured",
     });
   }
-
 
   try {
     const { execSync } = require("child_process") as {
@@ -125,7 +123,6 @@ export function detectGPUAvailability(): GPUInfo {
       error: err2 instanceof Error ? err2.message : String(err2),
     });
   }
-
 
   if (info.available) {
     logger.info(

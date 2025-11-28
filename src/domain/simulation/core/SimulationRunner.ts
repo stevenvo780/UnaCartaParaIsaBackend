@@ -336,11 +336,8 @@ export class SimulationRunner {
   public async saveSimulation(): Promise<void> {
     const startTime = performance.now();
     try {
-
       this.needsSystem.syncToGameState();
       this.aiSystem.syncToGameState();
-
-
 
       const stateClone = cloneGameState(this.state);
 
@@ -494,14 +491,12 @@ export class SimulationRunner {
       },
 
       postTickLight: () => {
-
         if (simulationEvents instanceof BatchedEventEmitter) {
           simulationEvents.flushEvents();
         }
 
         this.tickCounter += 1;
       },
-
 
       postTickHeavy: () => {
         const now = Date.now();
@@ -511,12 +506,9 @@ export class SimulationRunner {
           this.lastStateSync = now;
         }
 
-
         this.snapshotManager.generateSnapshotThrottled();
 
-
         performanceMonitor.setSchedulerStats(this.scheduler.getStats());
-
 
         performanceMonitor.setGameLogicStats({
           activeAgents: this.state.agents.length,
@@ -525,7 +517,6 @@ export class SimulationRunner {
             : 0,
           totalBuildings: this.state.zones ? this.state.zones.length : 0,
         });
-
 
         this.metricsCollector.tryCollect(
           this.scheduler,
@@ -854,7 +845,6 @@ export class SimulationRunner {
     for (const agent of agents) {
       if (agent.isDead) continue;
 
-
       if (agent.needs) {
         this.needsSystem.setEntityNeeds(agent.id, agent.needs);
         initialized++;
@@ -862,7 +852,6 @@ export class SimulationRunner {
         this.needsSystem.initializeEntityNeeds(agent.id);
         initialized++;
       }
-
 
       if (agent.ai) {
         this.aiSystem.restoreAIState(agent.id, agent.ai);
@@ -1102,12 +1091,12 @@ export class SimulationRunner {
         social,
         ai: aiState
           ? {
-            currentGoal: aiState.currentGoal,
-            goalQueue: aiState.goalQueue,
-            currentAction: aiState.currentAction,
-            offDuty: aiState.offDuty,
-            lastDecisionTime: aiState.lastDecisionTime,
-          }
+              currentGoal: aiState.currentGoal,
+              goalQueue: aiState.goalQueue,
+              currentAction: aiState.currentAction,
+              offDuty: aiState.offDuty,
+              lastDecisionTime: aiState.lastDecisionTime,
+            }
           : null,
       };
     }

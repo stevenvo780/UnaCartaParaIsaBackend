@@ -263,12 +263,10 @@ export class MultiRateScheduler {
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.fastSystems, delta, entityCount);
 
-
       const postTickStart = performance.now();
       if (this.hooks.postTickLight) {
         this.hooks.postTickLight();
       } else {
-
         this.hooks.postTick?.();
       }
       const postTickDuration = performance.now() - postTickStart;
@@ -332,7 +330,6 @@ export class MultiRateScheduler {
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.mediumSystems, delta, entityCount);
 
-
       const postTickStart = performance.now();
       if (this.hooks.postTickLight) {
         this.hooks.postTickLight();
@@ -343,7 +340,6 @@ export class MultiRateScheduler {
           });
         }
       } else {
-
         this.hooks.postTick?.();
       }
       const postTickDuration = performance.now() - postTickStart;
@@ -404,7 +400,6 @@ export class MultiRateScheduler {
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.slowSystems, delta, entityCount);
 
-
       const postTickStart = performance.now();
       if (this.hooks.postTickLight) {
         this.hooks.postTickLight();
@@ -415,7 +410,6 @@ export class MultiRateScheduler {
           });
         }
       } else {
-
         this.hooks.postTick?.();
       }
       const postTickDuration = performance.now() - postTickStart;

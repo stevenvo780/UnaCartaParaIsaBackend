@@ -69,16 +69,13 @@ interface TickStats extends SimpleStats {
 
 type SystemKey = `${TickRate}:${string}`;
 
-
 const LATENCY_BUCKETS = [0.1, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
-
 
 const OUTLIER_THRESHOLDS: Record<TickRate, number> = {
   [TickRate.FAST]: 5,
   [TickRate.MEDIUM]: 15,
   [TickRate.SLOW]: 100,
 };
-
 
 const SLIDING_WINDOW_MS = 60_000;
 
@@ -102,7 +99,6 @@ class PerformanceMonitor {
 
   private systemStats = new Map<SystemKey, SystemStats>();
   private schedulerStats: SchedulerStatsSnapshot | null = null;
-
 
   private currentTickSystems: Map<
     TickRate,
@@ -146,15 +142,12 @@ class PerformanceMonitor {
     const stats = this.tickStats[rate];
     const now = Date.now();
 
-
     stats.count += 1;
     stats.totalMs += durationMs;
     stats.lastMs = durationMs;
     if (durationMs > stats.maxMs) {
       stats.maxMs = durationMs;
     }
-
-
 
     let assigned = false;
     for (const bucket of LATENCY_BUCKETS) {
@@ -175,9 +168,7 @@ class PerformanceMonitor {
       );
     }
 
-
     stats.recentSamples.push({ time: now, value: durationMs });
-
 
     const cutoff = now - SLIDING_WINDOW_MS;
     stats.recentSamples = stats.recentSamples.filter((s) => s.time > cutoff);
@@ -190,13 +181,11 @@ class PerformanceMonitor {
       stats.recentMinMs = durationMs;
     }
 
-
     if (durationMs > stats.outlierThresholdMs) {
       stats.outlierCount += 1;
       stats.lastOutlierMs = durationMs;
       stats.lastOutlierTimestamp = now;
     }
-
 
     const systems = this.currentTickSystems.get(rate) ?? [];
     if (systems.length > 0) {
@@ -233,7 +222,6 @@ class PerformanceMonitor {
     if (durationMs > stats.maxMs) {
       stats.maxMs = durationMs;
     }
-
 
     const tickSystems = this.currentTickSystems.get(rate);
     if (tickSystems) {
@@ -558,7 +546,6 @@ class PerformanceMonitor {
       );
     }
 
-
     lines.push(
       "# HELP backend_tick_duration_recent_max_ms Max tick duration in last 60 seconds",
     );
@@ -582,7 +569,6 @@ class PerformanceMonitor {
       );
     }
 
-
     lines.push(
       "# HELP backend_tick_duration_last_ms Most recent tick duration",
     );
@@ -592,7 +578,6 @@ class PerformanceMonitor {
         `backend_tick_duration_last_ms{rate="${rate}"} ${stats.lastMs.toFixed(6)}`,
       );
     }
-
 
     lines.push(
       "# HELP backend_tick_duration_histogram_ms Histogram of tick durations for percentile calculation",
@@ -620,7 +605,6 @@ class PerformanceMonitor {
       );
     }
 
-
     lines.push(
       "# HELP backend_tick_outliers_total Number of ticks exceeding threshold",
     );
@@ -642,7 +626,6 @@ class PerformanceMonitor {
         `backend_tick_last_outlier_ms{rate="${rate}"} ${ts.lastOutlierMs.toFixed(6)}`,
       );
     }
-
 
     lines.push(
       "# HELP backend_tick_slowest_system_ms Duration of the slowest system in last tick",
@@ -667,7 +650,6 @@ class PerformanceMonitor {
       );
     }
 
-
     lines.push(
       "# HELP backend_system_execution_max_ms Max execution time per system",
     );
@@ -677,7 +659,6 @@ class PerformanceMonitor {
         `backend_system_execution_max_ms{rate="${system.rate}",system="${system.name}"} ${system.maxMs.toFixed(6)}`,
       );
     }
-
 
     lines.push(
       "# HELP backend_system_execution_last_ms Most recent execution time per system",

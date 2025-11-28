@@ -92,7 +92,6 @@ export class ChunkWorkerPool extends EventEmitter {
     this.workerScript = this.resolveWorkerScript();
     this.workerExecArgv = this.resolveExecArgs();
 
-
     const parallelism =
       typeof os.availableParallelism === "function"
         ? os.availableParallelism()
@@ -111,14 +110,12 @@ export class ChunkWorkerPool extends EventEmitter {
       10,
     );
 
-
     this.maxWorkers = Math.max(
       1,
       !Number.isNaN(envMaxWorkers)
         ? envMaxWorkers
         : (size ?? Math.min(parallelism, 8)),
     );
-
 
     this.minWorkers = Math.max(
       1,
@@ -128,11 +125,9 @@ export class ChunkWorkerPool extends EventEmitter {
       ),
     );
 
-
     this.idleTimeoutMs = !Number.isNaN(envIdleTimeout)
       ? envIdleTimeout
       : 30_000;
-
 
     for (let i = 0; i < this.minWorkers; i++) {
       this.spawnWorkerIfNeeded();
@@ -304,16 +299,13 @@ export class ChunkWorkerPool extends EventEmitter {
    * Cancels if the worker becomes busy again.
    */
   private scheduleIdleTermination(envelope: WorkerEnvelope): void {
-
     if (this.workers.size <= this.minWorkers) return;
-
 
     if (envelope.idleTimer) {
       clearTimeout(envelope.idleTimer);
     }
 
     envelope.idleTimer = setTimeout(() => {
-
       if (
         this.disposed ||
         envelope.busy ||
@@ -328,9 +320,7 @@ export class ChunkWorkerPool extends EventEmitter {
       });
 
       envelope.worker.removeAllListeners();
-      envelope.worker.terminate().catch(() => {
-
-      });
+      envelope.worker.terminate().catch(() => {});
       this.workers.delete(envelope.id);
     }, this.idleTimeoutMs);
   }
@@ -338,10 +328,8 @@ export class ChunkWorkerPool extends EventEmitter {
   private dispatch(): void {
     if (this.disposed) return;
 
-
     for (const envelope of this.workers.values()) {
       if (envelope.busy) continue;
-
 
       if (envelope.idleTimer) {
         clearTimeout(envelope.idleTimer);
@@ -350,14 +338,12 @@ export class ChunkWorkerPool extends EventEmitter {
 
       const job = this.dequeueNext();
       if (!job) {
-
         this.scheduleIdleTermination(envelope);
         continue;
       }
 
       this.assignJob(envelope, job);
     }
-
 
     while (this.queue.length > 0 && this.workers.size < this.maxWorkers) {
       const allBusy = [...this.workers.values()].every((w) => w.busy);
@@ -473,9 +459,7 @@ export class ChunkWorkerPool extends EventEmitter {
     envelope.busy = false;
     envelope.lastActivityTime = Date.now();
 
-
     this.scheduleIdleTermination(envelope);
-
 
     this.dispatch();
 

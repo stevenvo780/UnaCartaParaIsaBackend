@@ -80,9 +80,7 @@ class Logger {
     const flushAndExit = async (): Promise<void> => {
       try {
         await this.flush();
-      } catch {
-
-      }
+      } catch {}
     };
     process.on("beforeExit", flushAndExit);
     process.on("exit", () => this.destroy());

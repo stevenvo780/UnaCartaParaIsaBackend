@@ -1,5 +1,3 @@
-
-
 type TF = typeof import("@tensorflow/tfjs-node-gpu");
 let tf: TF | null = null;
 let tfLoadPromise: Promise<TF> | null = null;
@@ -88,8 +86,6 @@ export class GPUBatchQueryService {
   };
 
   constructor() {}
-
-
 
   /**
    * Updates the entity positions buffer. Call this once per frame.
@@ -199,7 +195,6 @@ export class GPUBatchQueryService {
       queryCount >= this.GPU_QUERY_THRESHOLD;
 
     if (useGpu) {
-
       this.processGPUAsync(queries, entityCount);
     } else {
       this.processCPU(queries, entityCount);
@@ -223,7 +218,6 @@ export class GPUBatchQueryService {
     const startTime = performance.now();
 
     try {
-
       const tfModule = await getTensorFlow();
 
       const queryCenters = new Float32Array(queries.length * 2);

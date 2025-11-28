@@ -136,7 +136,6 @@ export class MovementSystem extends EventEmitter {
   constructor() {
     super();
 
-
     this.pathfinder = new EasyStar.js();
     this.gridWidth = 1;
     this.gridHeight = 1;
@@ -149,7 +148,6 @@ export class MovementSystem extends EventEmitter {
 
   @postConstruct()
   private _init(): void {
-
     this.pathfinder.setAcceptableTiles([0]);
     this.pathfinder.enableDiagonals();
     this.pathfinder.setIterationsPerCalculation(

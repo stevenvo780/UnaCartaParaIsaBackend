@@ -56,7 +56,6 @@ export class GPUComputeService {
   private async ensureTensorFlowLoaded(): Promise<boolean> {
     if (this.tf) return this.gpuAvailable;
     if (this.tfLoading) {
-
       while (this.tfLoading) {
         await new Promise((resolve) => setTimeout(resolve, 10));
       }
@@ -142,7 +141,6 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = positions.length / 2;
 
-
     if (entityCount < 1000) {
       return this.updatePositionsBatchCPU(
         positions,
@@ -152,7 +150,6 @@ export class GPUComputeService {
         deltaMs,
       );
     }
-
 
     const gpuReady = await this.ensureTensorFlowLoaded();
     if (!gpuReady || !this.tf) {
@@ -320,7 +317,6 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = needs.length / needCount;
 
-
     if (entityCount < 1000) {
       return this.applyNeedsDecayBatchCPU(
         needs,
@@ -331,7 +327,6 @@ export class GPUComputeService {
         deltaSeconds,
       );
     }
-
 
     const gpuReady = await this.ensureTensorFlowLoaded();
     if (!gpuReady || !this.tf) {
@@ -458,11 +453,9 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = needs.length / needCount;
 
-
     if (entityCount < 1000) {
       return this.applyNeedsCrossEffectsBatchCPU(needs, needCount);
     }
-
 
     const gpuReady = await this.ensureTensorFlowLoaded();
     if (!gpuReady || !this.tf) {
@@ -628,11 +621,9 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = fatigue.length;
 
-
     if (entityCount < 1000) {
       return this.updateFatigueBatchCPU(fatigue, isMoving, isResting, deltaMs);
     }
-
 
     const gpuReady = await this.ensureTensorFlowLoaded();
     if (!gpuReady || !this.tf) {
@@ -893,11 +884,9 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = positions.length / 2;
 
-
     if (entityCount < 1000) {
       return this.computeDistancesBatchCPU(centerX, centerY, positions);
     }
-
 
     const gpuReady = await this.ensureTensorFlowLoaded();
     if (!gpuReady || !this.tf) {
@@ -1088,11 +1077,9 @@ export class GPUComputeService {
     const entityCount = Math.min(positions.length / 2, maxEntities);
     const pairCount = (entityCount * (entityCount - 1)) / 2;
 
-
     if (entityCount < 1000) {
       return this.computePairwiseDistancesCPU(positions, maxEntities);
     }
-
 
     const gpuReady = await this.ensureTensorFlowLoaded();
     if (!gpuReady || !this.tf) {
