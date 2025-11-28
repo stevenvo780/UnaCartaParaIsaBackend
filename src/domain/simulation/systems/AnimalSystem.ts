@@ -80,9 +80,10 @@ export class AnimalSystem {
   >();
   /**
    * Threat cache duration in milliseconds.
-   * Increased to 30s for better performance with 1000+ animals.
+   * Reduced to 10s for more responsive threat detection.
+   * Animals move, so 30s cache caused stale threat data.
    */
-  private readonly CACHE_DURATION = 30000;
+  private readonly CACHE_DURATION = 10000;
 
   private batchProcessor: AnimalBatchProcessor;
   /**
@@ -116,13 +117,16 @@ export class AnimalSystem {
 
   constructor() {
     this.config = DEFAULT_CONFIG;
-    this.batchProcessor = new AnimalBatchProcessor();
+    // BatchProcessor se crea en @postConstruct donde gpuService ya está inyectado
+    this.batchProcessor = null!;
     void this._init; // mark postConstruct method as used for TS
   }
 
   @postConstruct()
   private _init(): void {
     this.animalRegistry = this.animalRegistry ?? new AnimalRegistry();
+    // Crear BatchProcessor DESPUÉS de que gpuService esté disponible
+    this.batchProcessor = new AnimalBatchProcessor(this.gpuService);
     if (this.gpuService?.isGPUAvailable()) {
       logger.info(
         "🐾 AnimalSystem: GPU acceleration enabled for batch processing",
@@ -215,6 +219,31 @@ export class AnimalSystem {
     );
   }
 
+  /**
+   * Cache for animal decay rates by type - avoids repeated config lookups
+   */
+  private decayRateCache = new Map<
+    string,
+    { hungerDecayRate: number; thirstDecayRate: number }
+  >();
+
+  private getDecayRates(
+    type: string,
+  ): { hungerDecayRate: number; thirstDecayRate: number } | undefined {
+    let cached = this.decayRateCache.get(type);
+    if (!cached) {
+      const config = getAnimalConfig(type);
+      if (config) {
+        cached = {
+          hungerDecayRate: config.hungerDecayRate,
+          thirstDecayRate: config.thirstDecayRate,
+        };
+        this.decayRateCache.set(type, cached);
+      }
+    }
+    return cached;
+  }
+
   private async updateBatch(
     deltaSeconds: number,
     deltaMinutes: number,
@@ -236,10 +265,10 @@ export class AnimalSystem {
       const animal = this.animals.get(animalId);
       if (!animal || animal.isDead) continue;
 
-      const config = getAnimalConfig(animal.type);
-      if (config) {
-        hungerDecayRates[i] = config.hungerDecayRate;
-        thirstDecayRates[i] = config.thirstDecayRate;
+      const rates = this.getDecayRates(animal.type);
+      if (rates) {
+        hungerDecayRates[i] = rates.hungerDecayRate;
+        thirstDecayRates[i] = rates.thirstDecayRate;
       }
     }
 
@@ -554,13 +583,45 @@ export class AnimalSystem {
     }
   }
 
+  /**
+   * Pre-cached predator configs for O(1) lookup during threat detection.
+   * Built once and reused across all threat searches.
+   */
+  private predatorConfigCache = new Map<
+    string,
+    { isPredator: boolean; preyTypes?: string[] }
+  >();
+
+  private ensurePredatorConfigCache(): void {
+    if (this.predatorConfigCache.size > 0) return;
+    // Build predator lookup cache once
+    for (const type of [
+      "wolf",
+      "bear",
+      "boar",
+      "rabbit",
+      "deer",
+      "bird",
+      "fish",
+    ]) {
+      const config = getAnimalConfig(type);
+      if (config) {
+        this.predatorConfigCache.set(type, {
+          isPredator: config.isPredator ?? false,
+          preyTypes: config.preyTypes,
+        });
+      }
+    }
+  }
+
   private findNearbyPredator(
     animal: Animal,
     range: number,
   ): { id: string; position: { x: number; y: number } } | null {
+    const now = getFrameTime();
     const cacheKey = `predator_${animal.id}`;
     const cached = this.threatSearchCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+    if (cached && now - cached.timestamp < this.CACHE_DURATION) {
       if (cached.threat) {
         const cachedAnimal = this.animals.get(cached.threat.id);
         if (!cachedAnimal || cachedAnimal.isDead) {
@@ -573,19 +634,20 @@ export class AnimalSystem {
       }
     }
 
+    this.ensurePredatorConfigCache();
     const nearbyAnimals = this.getAnimalsInRadius(animal.position, range);
 
     for (const predator of nearbyAnimals) {
       if (predator.id === animal.id) continue;
 
-      const predatorConfig = getAnimalConfig(predator.type);
-      if (!predatorConfig?.isPredator || !predatorConfig.preyTypes) continue;
+      const predatorInfo = this.predatorConfigCache.get(predator.type);
+      if (!predatorInfo?.isPredator || !predatorInfo.preyTypes) continue;
 
-      if (predatorConfig.preyTypes.includes(animal.type)) {
+      if (predatorInfo.preyTypes.includes(animal.type)) {
         const result = { id: predator.id, position: { ...predator.position } };
         this.threatSearchCache.set(cacheKey, {
           threat: result,
-          timestamp: Date.now(),
+          timestamp: now,
         });
         return result;
       }
@@ -593,7 +655,7 @@ export class AnimalSystem {
 
     this.threatSearchCache.set(cacheKey, {
       threat: null,
-      timestamp: Date.now(),
+      timestamp: now,
     });
     return null;
   }
@@ -602,8 +664,10 @@ export class AnimalSystem {
     animal: Animal,
     range: number,
   ): { id: string; position: { x: number; y: number } } | null {
-    const cached = this.threatSearchCache.get(`human_${animal.id}`);
-    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+    const now = getFrameTime();
+    const cacheKey = `human_${animal.id}`;
+    const cached = this.threatSearchCache.get(cacheKey);
+    if (cached && now - cached.timestamp < this.CACHE_DURATION) {
       return cached.threat;
     }
 
@@ -639,17 +703,17 @@ export class AnimalSystem {
 
       if (distSq <= range * range) {
         const result = { id: entity.id, position: entityPos };
-        this.threatSearchCache.set(`human_${animal.id}`, {
+        this.threatSearchCache.set(cacheKey, {
           threat: result,
-          timestamp: Date.now(),
+          timestamp: now,
         });
         return result;
       }
     }
 
-    this.threatSearchCache.set(`human_${animal.id}`, {
+    this.threatSearchCache.set(cacheKey, {
       threat: null,
-      timestamp: Date.now(),
+      timestamp: now,
     });
     return null;
   }
@@ -661,9 +725,10 @@ export class AnimalSystem {
     animal: Animal,
     range: number,
   ): Array<{ id: string; position: { x: number; y: number }; type: string }> {
+    const now = getFrameTime();
     const cacheKey = `food_${animal.id}`;
     const cached = this.resourceSearchCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+    if (cached && now - cached.timestamp < this.CACHE_DURATION) {
       return cached.resources;
     }
 
@@ -682,7 +747,7 @@ export class AnimalSystem {
 
     this.resourceSearchCache.set(cacheKey, {
       resources,
-      timestamp: Date.now(),
+      timestamp: now,
     });
     return resources;
   }

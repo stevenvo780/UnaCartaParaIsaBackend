@@ -38,5 +38,18 @@ ENV TF_FORCE_GPU_ALLOW_GROWTH=true
 ENV TF_CPP_MIN_LOG_LEVEL=2
 ENV CUDA_VISIBLE_DEVICES=0
 
+# Limitar threads de TensorFlow para evitar saturación de CPU
+# TF_NUM_INTEROP_THREADS: threads para operaciones paralelas entre nodos del grafo
+# TF_NUM_INTRAOP_THREADS: threads para operaciones paralelas dentro de un nodo
+ENV TF_NUM_INTEROP_THREADS=4
+ENV TF_NUM_INTRAOP_THREADS=4
+# OpenMP threads (usado por Eigen en TF)
+ENV OMP_NUM_THREADS=4
+# CRÍTICO: Usa threads privados para GPU, evita spinning/polling en CPU
+ENV TF_GPU_THREAD_MODE=gpu_private
+ENV TF_GPU_THREAD_COUNT=2
+# Evita que CUDA haga spin-wait, usa blocking sync (reduce CPU idle spinning)
+ENV CUDA_DEVICE_SCHEDULE=BLOCKING_SYNC
+
 # Comando de inicio
 CMD ["npm", "run", "dev"]

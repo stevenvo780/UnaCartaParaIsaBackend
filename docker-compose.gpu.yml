@@ -26,6 +26,15 @@ services:
       - TF_FORCE_GPU_ALLOW_GROWTH=true
       - TF_CPP_MIN_LOG_LEVEL=2
       - CUDA_VISIBLE_DEVICES=0
+      # Limitar threads de TensorFlow para evitar saturación de CPU
+      - TF_NUM_INTEROP_THREADS=4
+      - TF_NUM_INTRAOP_THREADS=4
+      - OMP_NUM_THREADS=4
+      # CRÍTICO: Usa threads privados para GPU, evita spinning/polling en CPU
+      - TF_GPU_THREAD_MODE=gpu_private
+      - TF_GPU_THREAD_COUNT=2
+      # Evita que CUDA haga spin-wait, usa blocking sync
+      - CUDA_DEVICE_SCHEDULE=BLOCKING_SYNC
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/api/sim/health" ]

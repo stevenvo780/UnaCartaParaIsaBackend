@@ -212,7 +212,11 @@ export class AISystem extends EventEmitter {
   private craftingZoneCache: string | undefined | null = null;
   private activeAgentIdsCache: string[] | null = null;
   private lastCacheInvalidation = 0;
-  private readonly CACHE_INVALIDATION_INTERVAL = 1000;
+  /**
+   * Cache invalidation interval - increased to 2s for better performance.
+   * Zones don't change frequently, so stale data is acceptable.
+   */
+  private readonly CACHE_INVALIDATION_INTERVAL = 2000;
 
   private nearestResourceCache = new Map<
     string,
@@ -701,6 +705,11 @@ export class AISystem extends EventEmitter {
       } else if (this.isGoalInvalid(aiState.currentGoal, agentId)) {
         this.failGoal(aiState, agentId);
       } else if (aiState.currentAction) {
+        // Skip expensive decision making if agent has active action
+        return;
+      } else {
+        // Agent has goal but no action - skip re-planning to reduce CPU
+        // Goal execution will handle getting next action
         return;
       }
     }
