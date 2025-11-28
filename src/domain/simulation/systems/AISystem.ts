@@ -1105,24 +1105,51 @@ export class AISystem extends EventEmitter {
     }
 
     if (role === RoleType.HUNTER) {
-      const animal = this.findNearestHuntableAnimal(agentId, excluded);
-      logger.debug(
-        `🐺 [AI] ${agentId}: hunter findNearestHuntableAnimal -> ${animal?.id ?? "none"} (type: ${animal?.type ?? "N/A"})`,
-      );
-      if (animal) {
-        logger.debug(`🎯 [AI] ${agentId}: Creating HUNT goal for ${animal.id}`);
-        return {
-          id: `hunt_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-          type: GoalTypeEnum.HUNT,
-          priority: 0.6,
-          targetId: animal.id,
-          targetPosition: { x: animal.x, y: animal.y },
-          data: {
-            taskType: TaskType.HUNT_ANIMAL,
-            animalType: animal.type,
-          },
-          createdAt: now,
-        };
+      // First check if hunter has a weapon - no weapon, no hunt goal
+      const hasWeapon = this.equipmentSystem.getEquippedItem(
+        agentId,
+        EquipmentSlot.MAIN_HAND,
+      ) !== undefined;
+      
+      // Try to claim a weapon from storage if we don't have one
+      if (!hasWeapon) {
+        const weapon = toolStorage.findToolForRole("hunter");
+        if (weapon && toolStorage.claimTool(agentId, weapon)) {
+          this.equipmentSystem.equipItem(agentId, EquipmentSlot.MAIN_HAND, weapon);
+          logger.debug(`🗡️ [AI] ${agentId}: Claimed weapon ${weapon} from storage`);
+        } else {
+          // No weapon available - fall through to food gathering instead of HUNT
+          logger.debug(`⚠️ [AI] ${agentId}: No weapon available, skipping HUNT goal creation`);
+          // Fall through to food gathering below
+        }
+      }
+      
+      // Only create HUNT goal if hunter now has a weapon
+      const canHunt = this.equipmentSystem.getEquippedItem(
+        agentId,
+        EquipmentSlot.MAIN_HAND,
+      ) !== undefined;
+      
+      if (canHunt) {
+        const animal = this.findNearestHuntableAnimal(agentId, excluded);
+        logger.debug(
+          `🐺 [AI] ${agentId}: hunter findNearestHuntableAnimal -> ${animal?.id ?? "none"} (type: ${animal?.type ?? "N/A"})`,
+        );
+        if (animal) {
+          logger.debug(`🎯 [AI] ${agentId}: Creating HUNT goal for ${animal.id}`);
+          return {
+            id: `hunt_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
+            type: GoalTypeEnum.HUNT,
+            priority: 0.6,
+            targetId: animal.id,
+            targetPosition: { x: animal.x, y: animal.y },
+            data: {
+              taskType: TaskType.HUNT_ANIMAL,
+              animalType: animal.type,
+            },
+            createdAt: now,
+          };
+        }
       }
       for (const foodType of foodTypes) {
         const resource = this.findNearestResourceForEntity(agentId, foodType);

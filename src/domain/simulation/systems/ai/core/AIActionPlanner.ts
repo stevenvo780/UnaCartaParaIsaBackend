@@ -1050,24 +1050,12 @@ export class AIActionPlanner {
     if (!hasWeapon) {
       const claimed = this.deps.tryClaimWeapon?.(agentId) ?? false;
       if (!claimed) {
+        // No weapon available - invalidate HUNT goal so agent gets reassigned to other work
+        // Returning null will cause goal validation to fail and agent will be re-evaluated
         logger.debug(
-          `🎯 [Hunt] ${agentId}: No weapon available, switching to food gathering`,
+          `🎯 [Hunt] ${agentId}: No weapon available, invalidating hunt goal`,
         );
-
-        const foodResource = this.deps.findNearestResource?.(
-          agentId,
-          ResourceType.FOOD,
-        );
-        if (foodResource) {
-          return {
-            actionType: ActionType.MOVE,
-            agentId,
-            targetPosition: { x: foodResource.x, y: foodResource.y },
-            timestamp,
-          };
-        }
-
-        return this.planExplore(agentId, goal, timestamp);
+        return null;
       }
       logger.info(`🎯 [Hunt] ${agentId}: Claimed weapon from storage!`);
     }

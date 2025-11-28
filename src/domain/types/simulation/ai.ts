@@ -45,6 +45,7 @@ export interface AIGoalData {
   objectiveId?: string;
   animalType?: string;
   searchFor?: string;
+  threatPos?: { x: number; y: number };
 }
 
 export interface AIGoal {
