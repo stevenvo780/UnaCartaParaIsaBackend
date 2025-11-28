@@ -118,20 +118,25 @@ export class SnapshotManager {
 
     if (stateSnapshot.agents) {
       stateSnapshot.agents = stateSnapshot.agents.map((agent) => {
+        const needs = this.runner.needsSystem.getNeeds(agent.id);
+        const role = this.runner.roleSystem.getAgentRole(agent.id);
         const aiState = this.runner.aiSystem.getAIState(agent.id);
 
-        const ai = aiState
-          ? {
-              currentGoal: aiState.currentGoal || undefined,
-              goalQueue: aiState.goalQueue || [],
-              currentAction: aiState.currentAction || undefined,
-              offDuty: aiState.offDuty || false,
-              lastDecisionTime: aiState.lastDecisionTime || 0,
-            }
-          : undefined;
+        let ai;
+        if (aiState) {
+          ai = {
+            currentGoal: aiState.currentGoal || undefined,
+            goalQueue: aiState.goalQueue || [],
+            currentAction: aiState.currentAction || undefined,
+            offDuty: aiState.offDuty || false,
+            lastDecisionTime: aiState.lastDecisionTime || 0,
+          };
+        }
 
         return {
           ...agent,
+          needs: needs ? { ...needs } : undefined,
+          role: role ? { ...role } : undefined,
           ai,
         };
       });
@@ -193,15 +198,16 @@ export class SnapshotManager {
         const role = this.runner.roleSystem.getAgentRole(agent.id);
         const aiState = this.runner.aiSystem.getAIState(agent.id);
 
-        const ai = aiState
-          ? {
-              currentGoal: aiState.currentGoal || undefined,
-              goalQueue: aiState.goalQueue || [],
-              currentAction: aiState.currentAction || undefined,
-              offDuty: aiState.offDuty || false,
-              lastDecisionTime: aiState.lastDecisionTime || 0,
-            }
-          : undefined;
+        let ai;
+        if (aiState) {
+          ai = {
+            currentGoal: aiState.currentGoal || undefined,
+            goalQueue: aiState.goalQueue || [],
+            currentAction: aiState.currentAction || undefined,
+            offDuty: aiState.offDuty || false,
+            lastDecisionTime: aiState.lastDecisionTime || 0,
+          };
+        }
 
         return {
           ...agent,

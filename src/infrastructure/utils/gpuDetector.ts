@@ -63,7 +63,7 @@ export function getTensorFlow(): unknown {
  * Checks multiple sources:
  * - NVIDIA GPU via nvidia-smi command
  * - CUDA environment variables
- * 
+ *
  * NOTE: Does NOT load TensorFlow.js to avoid CPU thread spinning.
  * TensorFlow will be lazy-loaded only when GPU operations are actually needed.
  *
@@ -128,10 +128,13 @@ export function detectGPUAvailability(): GPUInfo {
 
   // Report GPU status without loading TensorFlow
   if (info.available) {
-    logger.info("✅ GPU available for computations (will be used when needed)", {
-      deviceName: info.deviceName,
-      note: "TensorFlow.js will lazy-load when entity count exceeds threshold",
-    });
+    logger.info(
+      "✅ GPU available for computations (will be used when needed)",
+      {
+        deviceName: info.deviceName,
+        note: "TensorFlow.js will lazy-load when entity count exceeds threshold",
+      },
+    );
   } else {
     logger.debug("ℹ️ Running in CPU mode (normal)", {
       note: "GPU not detected or not required for this simulation",

@@ -49,7 +49,7 @@ export interface ScheduledSystem {
 export interface SchedulerHooks {
   /** Executes before each tick (any rate) to synchronize indices */
   preTick?: () => void;
-  /** 
+  /**
    * Lightweight postTick - only critical work (event flush).
    * Executes synchronously after each tick of any rate.
    */
@@ -60,7 +60,7 @@ export interface SchedulerHooks {
    * Only triggered after MEDIUM/SLOW ticks to reduce frequency.
    */
   postTickHeavy?: () => void;
-  /** 
+  /**
    * @deprecated Use postTickLight for critical work and postTickHeavy for expensive work
    */
   postTick?: () => void;
@@ -247,6 +247,7 @@ export class MultiRateScheduler {
       this.lastFastTick = now;
 
       const startTime = performance.now();
+      performanceMonitor.beginTick(TickRate.FAST);
 
       const preTickStart = performance.now();
       this.hooks.preTick?.();
@@ -315,6 +316,7 @@ export class MultiRateScheduler {
       this.lastMediumTick = now;
 
       const startTime = performance.now();
+      performanceMonitor.beginTick(TickRate.MEDIUM);
 
       const preTickStart = performance.now();
       this.hooks.preTick?.();
@@ -386,6 +388,7 @@ export class MultiRateScheduler {
       this.lastSlowTick = now;
 
       const startTime = performance.now();
+      performanceMonitor.beginTick(TickRate.SLOW);
 
       const preTickStart = performance.now();
       this.hooks.preTick?.();

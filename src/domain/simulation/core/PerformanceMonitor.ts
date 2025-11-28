@@ -46,17 +46,52 @@ interface SystemStats extends SimpleStats {
   rate: TickRate;
 }
 
+/**
+ * Extended tick stats with histogram buckets and sliding window for better observability.
+ */
 interface TickStats extends SimpleStats {
   rate: TickRate;
+  // Histogram buckets for percentile calculation (cumulative counts)
+  histogramBuckets: Map<number, number>;
+  // Sliding window for recent max/min (last 60s worth of samples)
+  recentSamples: { time: number; value: number }[];
+  recentMaxMs: number;
+  recentMinMs: number;
+  // Outlier tracking
+  outlierCount: number; // ticks > threshold
+  outlierThresholdMs: number;
+  lastOutlierMs: number;
+  lastOutlierTimestamp: number;
+  // Slowest system tracking per tick
+  slowestSystem: string;
+  slowestSystemMs: number;
 }
 
 type SystemKey = `${TickRate}:${string}`;
 
+// Histogram bucket boundaries in ms for latency distribution
+const LATENCY_BUCKETS = [0.1, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+
+// Outlier thresholds per rate (in ms)
+const OUTLIER_THRESHOLDS: Record<TickRate, number> = {
+  [TickRate.FAST]: 5, // >5ms is an outlier for FAST
+  [TickRate.MEDIUM]: 15, // >15ms is an outlier for MEDIUM
+  [TickRate.SLOW]: 100, // >100ms is an outlier for SLOW
+};
+
+// How long to keep samples for sliding window (ms)
+const SLIDING_WINDOW_MS = 60_000;
+
 /**
  * Central registry that aggregates runtime metrics without introducing I/O.
  *
- * The monitor keeps only rolling aggregates (avg, max, count) so memory usage
- * remains constant regardless of entity count.
+ * Features:
+ * - Histogram buckets for percentile calculation (p50, p95, p99)
+ * - Sliding window for recent max/min (last 60s)
+ * - Outlier detection and tracking
+ * - Slowest system identification per tick
+ *
+ * The monitor keeps only rolling aggregates so memory usage remains bounded.
  */
 class PerformanceMonitor {
   private tickStats: Record<TickRate, TickStats> = {
@@ -68,23 +103,108 @@ class PerformanceMonitor {
   private systemStats = new Map<SystemKey, SystemStats>();
   private schedulerStats: SchedulerStatsSnapshot | null = null;
 
+  // Track which systems ran in current tick for slowest system detection
+  private currentTickSystems: Map<
+    TickRate,
+    { name: string; durationMs: number }[]
+  > = new Map();
+
   private createTickStats(rate: TickRate): TickStats {
+    const buckets = new Map<number, number>();
+    for (const bucket of LATENCY_BUCKETS) {
+      buckets.set(bucket, 0);
+    }
+    buckets.set(Infinity, 0); // +Inf bucket
+
     return {
       rate,
       count: 0,
       totalMs: 0,
       maxMs: 0,
       lastMs: 0,
+      histogramBuckets: buckets,
+      recentSamples: [],
+      recentMaxMs: 0,
+      recentMinMs: Infinity,
+      outlierCount: 0,
+      outlierThresholdMs: OUTLIER_THRESHOLDS[rate],
+      lastOutlierMs: 0,
+      lastOutlierTimestamp: 0,
+      slowestSystem: "",
+      slowestSystemMs: 0,
     };
+  }
+
+  /**
+   * Called BEFORE tick execution to reset per-tick tracking.
+   */
+  public beginTick(rate: TickRate): void {
+    this.currentTickSystems.set(rate, []);
   }
 
   public recordTick(rate: TickRate, durationMs: number): void {
     const stats = this.tickStats[rate];
+    const now = Date.now();
+
+    // Basic stats
     stats.count += 1;
     stats.totalMs += durationMs;
     stats.lastMs = durationMs;
     if (durationMs > stats.maxMs) {
       stats.maxMs = durationMs;
+    }
+
+    // Update histogram bucket (find the first bucket that fits)
+    // We store per-bucket counts; cumulative calculation is done at export time
+    let assigned = false;
+    for (const bucket of LATENCY_BUCKETS) {
+      if (durationMs <= bucket) {
+        stats.histogramBuckets.set(
+          bucket,
+          (stats.histogramBuckets.get(bucket) ?? 0) + 1,
+        );
+        assigned = true;
+        break; // Only increment the first matching bucket
+      }
+    }
+    // If no bucket matched (value > max bucket), count goes to +Inf
+    if (!assigned) {
+      stats.histogramBuckets.set(
+        Infinity,
+        (stats.histogramBuckets.get(Infinity) ?? 0) + 1,
+      );
+    }
+
+    // Sliding window for recent max/min
+    stats.recentSamples.push({ time: now, value: durationMs });
+
+    // Prune old samples and recalculate recent max/min
+    const cutoff = now - SLIDING_WINDOW_MS;
+    stats.recentSamples = stats.recentSamples.filter((s) => s.time > cutoff);
+
+    if (stats.recentSamples.length > 0) {
+      stats.recentMaxMs = Math.max(...stats.recentSamples.map((s) => s.value));
+      stats.recentMinMs = Math.min(...stats.recentSamples.map((s) => s.value));
+    } else {
+      stats.recentMaxMs = durationMs;
+      stats.recentMinMs = durationMs;
+    }
+
+    // Outlier detection
+    if (durationMs > stats.outlierThresholdMs) {
+      stats.outlierCount += 1;
+      stats.lastOutlierMs = durationMs;
+      stats.lastOutlierTimestamp = now;
+    }
+
+    // Find slowest system in this tick
+    const systems = this.currentTickSystems.get(rate) ?? [];
+    if (systems.length > 0) {
+      const slowest = systems.reduce((a, b) =>
+        a.durationMs > b.durationMs ? a : b,
+      );
+      stats.slowestSystem = slowest.name;
+      stats.slowestSystemMs = slowest.durationMs;
     }
   }
 
@@ -112,6 +232,12 @@ class PerformanceMonitor {
     stats.lastMs = durationMs;
     if (durationMs > stats.maxMs) {
       stats.maxMs = durationMs;
+    }
+
+    // Track for slowest system detection
+    const tickSystems = this.currentTickSystems.get(rate);
+    if (tickSystems) {
+      tickSystems.push({ name, durationMs });
     }
   }
 
@@ -423,13 +549,112 @@ class PerformanceMonitor {
     }
 
     lines.push(
-      "# HELP backend_tick_duration_max_ms Max tick duration per rate",
+      "# HELP backend_tick_duration_max_ms Max tick duration per rate (all time)",
     );
     lines.push("# TYPE backend_tick_duration_max_ms gauge");
     for (const [rate, stats] of Object.entries(snapshot.tickRates)) {
       lines.push(
         `backend_tick_duration_max_ms{rate="${rate}"} ${stats.maxMs.toFixed(6)}`,
       );
+    }
+
+    // NEW: Recent max/min (last 60s sliding window)
+    lines.push(
+      "# HELP backend_tick_duration_recent_max_ms Max tick duration in last 60 seconds",
+    );
+    lines.push("# TYPE backend_tick_duration_recent_max_ms gauge");
+    for (const rate of Object.keys(this.tickStats) as TickRate[]) {
+      const ts = this.tickStats[rate];
+      lines.push(
+        `backend_tick_duration_recent_max_ms{rate="${rate}"} ${ts.recentMaxMs.toFixed(6)}`,
+      );
+    }
+
+    lines.push(
+      "# HELP backend_tick_duration_recent_min_ms Min tick duration in last 60 seconds",
+    );
+    lines.push("# TYPE backend_tick_duration_recent_min_ms gauge");
+    for (const rate of Object.keys(this.tickStats) as TickRate[]) {
+      const ts = this.tickStats[rate];
+      const minVal = ts.recentMinMs === Infinity ? 0 : ts.recentMinMs;
+      lines.push(
+        `backend_tick_duration_recent_min_ms{rate="${rate}"} ${minVal.toFixed(6)}`,
+      );
+    }
+
+    // NEW: Last tick duration (current/instant value)
+    lines.push(
+      "# HELP backend_tick_duration_last_ms Most recent tick duration",
+    );
+    lines.push("# TYPE backend_tick_duration_last_ms gauge");
+    for (const [rate, stats] of Object.entries(snapshot.tickRates)) {
+      lines.push(
+        `backend_tick_duration_last_ms{rate="${rate}"} ${stats.lastMs.toFixed(6)}`,
+      );
+    }
+
+    // NEW: Histogram for latency distribution
+    lines.push(
+      "# HELP backend_tick_duration_histogram_ms Histogram of tick durations for percentile calculation",
+    );
+    lines.push("# TYPE backend_tick_duration_histogram_ms histogram");
+    for (const rate of Object.keys(this.tickStats) as TickRate[]) {
+      const ts = this.tickStats[rate];
+      let cumulativeCount = 0;
+      for (const bucket of LATENCY_BUCKETS) {
+        cumulativeCount += ts.histogramBuckets.get(bucket) ?? 0;
+        lines.push(
+          `backend_tick_duration_histogram_ms_bucket{rate="${rate}",le="${bucket}"} ${cumulativeCount}`,
+        );
+      }
+      // +Inf bucket (total count)
+      const total = ts.count;
+      lines.push(
+        `backend_tick_duration_histogram_ms_bucket{rate="${rate}",le="+Inf"} ${total}`,
+      );
+      lines.push(
+        `backend_tick_duration_histogram_ms_sum{rate="${rate}"} ${ts.totalMs.toFixed(6)}`,
+      );
+      lines.push(
+        `backend_tick_duration_histogram_ms_count{rate="${rate}"} ${ts.count}`,
+      );
+    }
+
+    // NEW: Outlier tracking
+    lines.push(
+      "# HELP backend_tick_outliers_total Number of ticks exceeding threshold",
+    );
+    lines.push("# TYPE backend_tick_outliers_total counter");
+    for (const rate of Object.keys(this.tickStats) as TickRate[]) {
+      const ts = this.tickStats[rate];
+      lines.push(
+        `backend_tick_outliers_total{rate="${rate}",threshold_ms="${ts.outlierThresholdMs}"} ${ts.outlierCount}`,
+      );
+    }
+
+    lines.push(
+      "# HELP backend_tick_last_outlier_ms Duration of the most recent outlier tick",
+    );
+    lines.push("# TYPE backend_tick_last_outlier_ms gauge");
+    for (const rate of Object.keys(this.tickStats) as TickRate[]) {
+      const ts = this.tickStats[rate];
+      lines.push(
+        `backend_tick_last_outlier_ms{rate="${rate}"} ${ts.lastOutlierMs.toFixed(6)}`,
+      );
+    }
+
+    // NEW: Slowest system per rate
+    lines.push(
+      "# HELP backend_tick_slowest_system_ms Duration of the slowest system in last tick",
+    );
+    lines.push("# TYPE backend_tick_slowest_system_ms gauge");
+    for (const rate of Object.keys(this.tickStats) as TickRate[]) {
+      const ts = this.tickStats[rate];
+      if (ts.slowestSystem) {
+        lines.push(
+          `backend_tick_slowest_system_ms{rate="${rate}",system="${ts.slowestSystem}"} ${ts.slowestSystemMs.toFixed(6)}`,
+        );
+      }
     }
 
     lines.push(
@@ -439,6 +664,28 @@ class PerformanceMonitor {
     for (const system of snapshot.systems) {
       lines.push(
         `backend_system_execution_ms{rate="${system.rate}",system="${system.name}"} ${system.avgMs.toFixed(6)}`,
+      );
+    }
+
+    // NEW: Max execution time per system (for bottleneck detection)
+    lines.push(
+      "# HELP backend_system_execution_max_ms Max execution time per system",
+    );
+    lines.push("# TYPE backend_system_execution_max_ms gauge");
+    for (const system of snapshot.systems) {
+      lines.push(
+        `backend_system_execution_max_ms{rate="${system.rate}",system="${system.name}"} ${system.maxMs.toFixed(6)}`,
+      );
+    }
+
+    // NEW: Last execution time per system
+    lines.push(
+      "# HELP backend_system_execution_last_ms Most recent execution time per system",
+    );
+    lines.push("# TYPE backend_system_execution_last_ms gauge");
+    for (const system of snapshot.systems) {
+      lines.push(
+        `backend_system_execution_last_ms{rate="${system.rate}",system="${system.name}"} ${system.lastMs.toFixed(6)}`,
       );
     }
 

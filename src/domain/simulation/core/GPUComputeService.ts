@@ -9,7 +9,7 @@ type TF = typeof import("@tensorflow/tfjs-node-gpu");
  * Provides optimized batch operations for entity processing.
  * Automatically falls back to CPU if GPU is unavailable or for small batches.
  * Tracks performance statistics for monitoring.
- * 
+ *
  * NOTE: TensorFlow.js is LAZY-LOADED only when entity count exceeds thresholds.
  * This prevents CPU thread spinning from TensorFlow's Eigen thread pool when
  * the simulation has few entities and doesn't need GPU acceleration.
@@ -43,7 +43,9 @@ export class GPUComputeService {
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    logger.info("🔄 GPUComputeService initialized (TensorFlow will lazy-load when needed)");
+    logger.info(
+      "🔄 GPUComputeService initialized (TensorFlow will lazy-load when needed)",
+    );
     this.initialized = true;
   }
 
@@ -56,14 +58,16 @@ export class GPUComputeService {
     if (this.tfLoading) {
       // Wait for ongoing load
       while (this.tfLoading) {
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
       return this.gpuAvailable;
     }
 
     this.tfLoading = true;
     try {
-      logger.info("🔄 Lazy-loading TensorFlow GPU module (entity threshold exceeded)...");
+      logger.info(
+        "🔄 Lazy-loading TensorFlow GPU module (entity threshold exceeded)...",
+      );
 
       this.tf = await import("@tensorflow/tfjs-node-gpu");
       await this.tf.ready();

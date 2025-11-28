@@ -216,13 +216,16 @@ export class GPUBatchQueryService {
    * GPU batch processing - compute all distances, then filter per query.
    * Now async to support lazy-loading of TensorFlow.
    */
-  private async processGPUAsync(queries: PendingQuery[], entityCount: number): Promise<void> {
+  private async processGPUAsync(
+    queries: PendingQuery[],
+    entityCount: number,
+  ): Promise<void> {
     const startTime = performance.now();
 
     try {
       // Lazy-load TensorFlow only when GPU is actually needed
       const tfModule = await getTensorFlow();
-      
+
       const queryCenters = new Float32Array(queries.length * 2);
       for (let i = 0; i < queries.length; i++) {
         queryCenters[i * 2] = queries[i].centerX;
@@ -230,7 +233,10 @@ export class GPUBatchQueryService {
       }
 
       const distancesSq = tfModule.tidy(() => {
-        const entities = tfModule.tensor2d(this.entityPositions, [entityCount, 2]);
+        const entities = tfModule.tensor2d(this.entityPositions, [
+          entityCount,
+          2,
+        ]);
         const centers = tfModule.tensor2d(queryCenters, [queries.length, 2]);
 
         const centersExp = centers.expandDims(1);
