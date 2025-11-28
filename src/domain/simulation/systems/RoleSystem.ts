@@ -133,6 +133,22 @@ const ROLE_DEFINITIONS: RoleConfig[] = [
     preferredZoneType: ZoneType.WILD,
     workShifts: [WorkShift.MORNING, WorkShift.EVENING, WorkShift.NIGHT],
   },
+  {
+    type: RoleTypeEnum.CRAFTSMAN,
+    name: "Artesano",
+    description: "Fabrica herramientas y armas para la comunidad",
+    primaryResource: undefined,
+    requirements: {
+      minAge: 16,
+      traits: { diligence: 0.5, curiosity: 0.3 },
+    },
+    efficiency: {
+      base: 0.7,
+      traitBonus: { diligence: 0.3, curiosity: 0.3 },
+    },
+    preferredZoneType: ZoneType.WORK,
+    workShifts: [WorkShift.MORNING, WorkShift.AFTERNOON],
+  },
 ];
 
 import { injectable, inject, optional } from "inversify";

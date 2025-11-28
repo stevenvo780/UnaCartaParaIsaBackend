@@ -9,6 +9,7 @@ import { RecipesCatalog } from "../../../simulation/data/RecipesCatalog";
 import { simulationEvents, GameEventType } from "../core/events";
 import type { ResourceType } from "../../types/simulation/economy";
 import { itemToInventoryResource } from "../../types/simulation/resourceMapping";
+import { toolStorage } from "../../../simulation/systems/ToolStorageSystem";
 
 interface EnhancedCraftingConfig {
   requireWorkstation: boolean;
@@ -148,11 +149,28 @@ export class EnhancedCraftingSystem {
    * Applies the output of a completed crafting recipe.
    * Due to the simplified inventory system (ResourceType only),
    * crafted items are converted to their base resource type.
+   *
+   * For weapons: If agent already has a weapon equipped, deposit to shared storage.
+   * This enables Craftsmen to make tools for the community.
    */
   private applyOutput(agentId: string, recipe: CraftingRecipe): void {
     const output = recipe.output.itemId;
 
     if (BASE_WEAPONS.includes(output as WeaponId)) {
+      // Check if agent already has a weapon
+      const currentWeapon = this.equippedWeapons.get(agentId);
+      if (currentWeapon) {
+        // Already armed - deposit the new weapon to shared storage
+        toolStorage.depositTool(output, recipe.output.quantity);
+        simulationEvents.emit(GameEventType.ITEM_CRAFTED, {
+          agentId,
+          itemId: output,
+          quantity: recipe.output.quantity,
+          deposited: true,
+        });
+        return;
+      }
+      // Not armed - equip the weapon
       this.equippedWeapons.set(agentId, output as WeaponId);
       return;
     }

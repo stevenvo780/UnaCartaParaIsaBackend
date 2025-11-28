@@ -107,6 +107,8 @@ import { AIActionExecutor } from "./ai/core/AIActionExecutor";
 import { AIUrgentGoals } from "./ai/core/AIUrgentGoals";
 import { AIZoneHandler } from "./ai/core/AIZoneHandler";
 import { EquipmentSystem } from "../../../simulation/systems/EquipmentSystem";
+import { toolStorage } from "../../../simulation/systems/ToolStorageSystem";
+import { EquipmentSlot } from "../../../shared/constants/EquipmentEnums";
 import { GameEventType } from "../core/events";
 import { simulationEvents } from "../core/events";
 import type { NeedsSystem } from "./NeedsSystem";
@@ -424,6 +426,24 @@ export class AISystem extends EventEmitter {
       },
       getAgentAttackRange: (agentId: string): number => {
         return this.equipmentSystem.getAttackRange(agentId);
+      },
+      agentHasWeapon: (agentId: string): boolean => {
+        // Agent has weapon if they have something equipped in main hand
+        const equipped = this.equipmentSystem.getEquippedItem(
+          agentId,
+          EquipmentSlot.MAIN_HAND,
+        );
+        return equipped !== undefined;
+      },
+      tryClaimWeapon: (agentId: string): boolean => {
+        // Try to find and claim a hunting weapon from storage
+        const weapon = toolStorage.findToolForRole("hunter");
+        if (weapon && toolStorage.claimTool(agentId, weapon)) {
+          // Equip the claimed weapon
+          this.equipmentSystem.equipItem(agentId, EquipmentSlot.MAIN_HAND, weapon);
+          return true;
+        }
+        return false;
       },
     });
 
@@ -2544,5 +2564,60 @@ export class AISystem extends EventEmitter {
    */
   public removeAgentState(agentId: string): void {
     this.removeEntityAI(agentId);
+  }
+
+  /**
+   * Handles role reassignment events to auto-equip appropriate tools.
+   * When an agent gets a new role, we check their inventory for suitable
+   * tools and equip the best one for their new role.
+   */
+  private handleRoleReassigned(payload: {
+    agentId: string;
+    newRole: string;
+    previousRole?: string;
+  }): void {
+    const { agentId, newRole } = payload;
+
+    // Get agent's inventory items
+    const inventory = this.inventorySystem?.getAgentInventory(agentId);
+    if (!inventory) return;
+
+    // Get all item IDs the agent has
+    const availableItems: string[] = [];
+    for (const [itemId, quantity] of Object.entries(inventory)) {
+      if (quantity > 0) {
+        availableItems.push(itemId);
+      }
+    }
+
+    // Auto-equip based on role
+    const equipped = this.equipmentSystem.autoEquipForRole(
+      agentId,
+      newRole,
+      availableItems,
+    );
+
+    if (equipped) {
+      logger.info(
+        `🗡️ [Equipment] ${agentId}: Auto-equipped ${equipped} for role ${newRole}`,
+      );
+    } else {
+      // If no specific tool for role, try to equip any weapon for combat roles
+      if (
+        newRole.toLowerCase() === "hunter" ||
+        newRole.toLowerCase() === "guard"
+      ) {
+        const weapon = this.equipmentSystem.autoEquipBestWeapon(
+          agentId,
+          availableItems,
+          newRole.toLowerCase() === "hunter", // prefer ranged for hunters
+        );
+        if (weapon) {
+          logger.info(
+            `🗡️ [Equipment] ${agentId}: Auto-equipped weapon ${weapon} for ${newRole}`,
+          );
+        }
+      }
+    }
   }
 }

@@ -31,6 +31,16 @@ export interface AIActionPlannerDeps {
    * Returns the weapon's attack range, or the default ATTACK_RANGE if no weapon equipped.
    */
   getAgentAttackRange?: (agentId: string) => number;
+  /**
+   * Checks if the agent has a weapon equipped.
+   * Used to determine if hunter can hunt or should do something else.
+   */
+  agentHasWeapon?: (agentId: string) => boolean;
+  /**
+   * Tries to claim a weapon from tool storage for the agent.
+   * Returns true if a weapon was successfully claimed.
+   */
+  tryClaimWeapon?: (agentId: string) => boolean;
 }
 
 import { logger } from "../../../../../infrastructure/utils/logger";
@@ -1000,6 +1010,36 @@ export class AIActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
+    // Check if agent has a weapon - hunters need weapons to hunt
+    const hasWeapon = this.deps.agentHasWeapon?.(agentId) ?? false;
+
+    if (!hasWeapon) {
+      // Try to claim a weapon from storage
+      const claimed = this.deps.tryClaimWeapon?.(agentId) ?? false;
+      if (!claimed) {
+        // No weapon available - fall back to gathering food instead
+        logger.debug(
+          `🎯 [Hunt] ${agentId}: No weapon available, switching to food gathering`,
+        );
+        // Find nearest food resource (berries, etc.)
+        const foodResource = this.deps.findNearestResource?.(
+          agentId,
+          ResourceType.FOOD,
+        );
+        if (foodResource) {
+          return {
+            actionType: ActionType.MOVE,
+            agentId,
+            targetPosition: { x: foodResource.x, y: foodResource.y },
+            timestamp,
+          };
+        }
+        // No food either, explore
+        return this.planExplore(agentId, goal, timestamp);
+      }
+      logger.info(`🎯 [Hunt] ${agentId}: Claimed weapon from storage!`);
+    }
+
     let targetId = goal.targetId;
     let targetPosition = goal.targetPosition;
 
