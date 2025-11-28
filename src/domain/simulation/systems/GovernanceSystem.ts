@@ -108,7 +108,6 @@ export class GovernanceSystem {
   private housingProjectsStarted = 0;
   private agentRegistry?: AgentRegistry;
 
-
   private readonly handleHighOccupancy = (payload: {
     occupancy?: number;
     free?: number;

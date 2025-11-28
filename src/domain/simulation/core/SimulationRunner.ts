@@ -413,8 +413,6 @@ export class SimulationRunner {
 
     this.economySystem.setDependencies({
       roleSystem: this.roleSystem,
-
-      genealogySystem: this._genealogySystem,
     });
 
     logger.info("🔗 SimulationRunner: System dependencies configured");
