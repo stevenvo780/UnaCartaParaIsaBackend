@@ -1862,10 +1862,6 @@ export class AISystem extends EventEmitter {
     return this.goalValidator.isGoalCompleted(goal, agentId);
   }
 
-  private isGoalInvalid(goal: AIGoal, agentId: string): boolean {
-    return this.goalValidator.isGoalInvalid(goal, agentId);
-  }
-
   private completeGoal(aiState: AIState, agentId: string): void {
     this.releaseResourceReservation(agentId);
 

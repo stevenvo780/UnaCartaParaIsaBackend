@@ -246,7 +246,11 @@ export class TaskSystem {
     }[]
   >();
 
-  public getWorkHistory(agentId: string) {
+  public getWorkHistory(agentId: string): {
+    taskType: string;
+    contribution: number;
+    timestamp: number;
+  }[] {
     return this.workHistory.get(agentId) || [];
   }
 
