@@ -928,11 +928,11 @@ export class AISystem extends EventEmitter {
     }
 
     if (role === RoleType.HUNTER) {
-      const animal = this.findNearestHuntableAnimal(agentId);
+      const animal = this.findNearestHuntableAnimal(agentId, excluded);
       logger.debug(
         `🐺 [AI] ${agentId}: hunter findNearestHuntableAnimal -> ${animal?.id ?? "none"} (type: ${animal?.type ?? "N/A"})`,
       );
-      if (animal && !excluded.has(animal.id)) {
+      if (animal) {
         logger.debug(`🎯 [AI] ${agentId}: Creating HUNT goal for ${animal.id}`);
         return {
           id: `hunt_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
@@ -946,10 +946,6 @@ export class AISystem extends EventEmitter {
           },
           createdAt: now,
         };
-      } else if (animal) {
-        logger.debug(
-          `⚠️ [AI] ${agentId}: Animal ${animal.id} already excluded`,
-        );
       }
       for (const foodType of foodTypes) {
         const resource = this.findNearestResourceForEntity(agentId, foodType);
@@ -1936,9 +1932,12 @@ export class AISystem extends EventEmitter {
   /**
    * Finds the nearest huntable animal for an agent.
    * Uses AnimalSystem directly for real-time animal data.
+   * @param entityId - The agent ID
+   * @param excludeIds - Set of animal IDs to exclude from search
    */
   private findNearestHuntableAnimal(
     entityId: string,
+    excludeIds?: Set<string>,
   ): { id: string; x: number; y: number; type: string } | null {
     const agentPos = this.agentRegistry?.getPosition(entityId);
     if (!agentPos) return null;
@@ -1967,6 +1966,7 @@ export class AISystem extends EventEmitter {
 
     for (const animal of animals) {
       if (animal.isDead) continue;
+      if (excludeIds?.has(animal.id)) continue;
       const config = getAnimalConfig(animal.type);
       if (!config?.canBeHunted) continue;
 

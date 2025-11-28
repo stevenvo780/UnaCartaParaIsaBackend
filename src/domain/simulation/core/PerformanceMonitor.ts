@@ -164,10 +164,10 @@ class PerformanceMonitor {
     totalResources: number;
     totalBuildings: number;
   } = {
-    activeAgents: 0,
-    totalResources: 0,
-    totalBuildings: 0,
-  };
+      activeAgents: 0,
+      totalResources: 0,
+      totalBuildings: 0,
+    };
 
   public setGameLogicStats(stats: {
     activeAgents: number;
@@ -183,11 +183,11 @@ class PerformanceMonitor {
     needsBatchSize: number;
     gpuUtilization: number;
   } = {
-    animalBatchSize: 0,
-    movementBatchSize: 0,
-    needsBatchSize: 0,
-    gpuUtilization: 0,
-  };
+      animalBatchSize: 0,
+      movementBatchSize: 0,
+      needsBatchSize: 0,
+      gpuUtilization: 0,
+    };
 
   public setBatchStats(stats: {
     animalBatchSize: number;
@@ -573,15 +573,11 @@ class PerformanceMonitor {
 
     lines.push("# HELP backend_batch_size Batch size for GPU processing");
     lines.push("# TYPE backend_batch_size gauge");
-    lines.push(
-      `backend_batch_size{processor="animal"} ${this.batchStats.animalBatchSize}`,
-    );
-    lines.push(
-      `backend_batch_size{processor="movement"} ${this.batchStats.movementBatchSize}`,
-    );
-    lines.push(
-      `backend_batch_size{processor="needs"} ${this.batchStats.needsBatchSize}`,
-    );
+    for (const [processor, stats] of this.batchProcessingStats.entries()) {
+      lines.push(
+        `backend_batch_size{processor="${processor}"} ${stats.lastBatchSize}`,
+      );
+    }
 
     lines.push("# HELP backend_gpu_utilization GPU utilization ratio (0-1)");
     lines.push("# TYPE backend_gpu_utilization gauge");

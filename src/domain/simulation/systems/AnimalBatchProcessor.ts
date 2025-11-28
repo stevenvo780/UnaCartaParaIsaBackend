@@ -185,7 +185,7 @@ export class AnimalBatchProcessor {
 
     const duration = performance.now() - startTime;
     performanceMonitor.recordBatchProcessing(
-      "animal_needs",
+      "animal",
       animalCount,
       duration,
       false,
@@ -206,7 +206,7 @@ export class AnimalBatchProcessor {
 
     const duration = performance.now() - startTime;
     performanceMonitor.recordBatchProcessing(
-      "animal_ages",
+      "animal",
       animalCount,
       duration,
       false,

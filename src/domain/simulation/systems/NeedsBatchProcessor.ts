@@ -90,7 +90,7 @@ export class NeedsBatchProcessor {
 
         const duration = performance.now() - startTime;
         performanceMonitor.recordBatchProcessing(
-          "needs_decay",
+          "needs",
           entityCount,
           duration,
           true,
@@ -126,7 +126,7 @@ export class NeedsBatchProcessor {
 
     const duration = performance.now() - startTime;
     performanceMonitor.recordBatchProcessing(
-      "needs_decay",
+      "needs",
       entityCount,
       duration,
       false,
@@ -150,7 +150,7 @@ export class NeedsBatchProcessor {
 
         const duration = performance.now() - startTime;
         performanceMonitor.recordBatchProcessing(
-          "needs_cross_effects",
+          "needs",
           entityCount,
           duration,
           true,
@@ -216,7 +216,7 @@ export class NeedsBatchProcessor {
 
     const duration = performance.now() - startTime;
     performanceMonitor.recordBatchProcessing(
-      "needs_cross_effects",
+      "needs",
       entityCount,
       duration,
       false,

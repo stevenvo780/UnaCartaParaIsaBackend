@@ -50,10 +50,11 @@ export class MetricsCollector {
         needsBatchSize: 0,
         gpuUtilization: gpuStats.gpuAvailable
           ? gpuStats.gpuOperations /
-            Math.max(1, gpuStats.gpuOperations + gpuStats.cpuFallbacks)
+          Math.max(1, gpuStats.gpuOperations + gpuStats.cpuFallbacks)
           : 0,
       });
 
+      // Reset GPU stats for the next interval to get instantaneous utilization
       gpuService.resetStats();
     } catch (error) {
       logger.error("Error collecting metrics:", error);
