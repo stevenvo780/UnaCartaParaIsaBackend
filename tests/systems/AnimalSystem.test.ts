@@ -124,7 +124,19 @@ describe("AnimalSystem", () => {
         const animal = animalsMap.get(id);
         if (animal) animal.isDead = true;
       },
-      size: animalsMap.size,
+      getAnimalsInRadius: (x: number, y: number, radius: number) => {
+        return Array.from(animalsMap.values()).filter((a) => {
+          const dx = a.position.x - x;
+          const dy = a.position.y - y;
+          return Math.sqrt(dx * dx + dy * dy) <= radius;
+        });
+      },
+      exportForGameState: () => ({
+        animals: Array.from(animalsMap.values()),
+        total: animalsMap.size,
+        alive: Array.from(animalsMap.values()).filter(a => !a.isDead).length,
+      }),
+      get size() { return animalsMap.size; },
     };
     (animalSystem as any).batchProcessor = {
       rebuildBuffers: batchMocks.rebuildBuffers,

@@ -52,6 +52,14 @@ const WEAPON_COSTS: Record<WeaponId, Partial<Record<ResourceType, number>>> = {
   [WeaponId.STONE_DAGGER]: { stone: 8 },
 };
 
+export interface PersonalCombatEvent {
+  type: "kill" | "assist" | "death" | "damage_dealt" | "damage_taken";
+  targetId?: string;
+  weaponId?: WeaponId;
+  amount?: number;
+  timestamp: number;
+}
+
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import { SharedSpatialIndex } from "../core/SharedSpatialIndex";
@@ -80,6 +88,7 @@ export class CombatSystem {
   private readonly equippedWeapons = new Map<string, WeaponId>();
   private readonly maxLogEntries = 200;
   private combatLog: CombatLogEntry[];
+  private personalCombatHistory = new Map<string, PersonalCombatEvent[]>();
 
   private animalSystem?: AnimalSystem;
   private normsSystem?: NormsSystem;
@@ -123,6 +132,22 @@ export class CombatSystem {
       GameEventType.AGENT_BIRTH,
       this.handleAgentBirth.bind(this),
     );
+  }
+
+  public getPersonalCombatHistory(agentId: string): PersonalCombatEvent[] {
+    return this.personalCombatHistory.get(agentId) || [];
+  }
+
+  private recordPersonalEvent(
+    agentId: string,
+    event: Omit<PersonalCombatEvent, "timestamp">,
+  ): void {
+    const history = this.personalCombatHistory.get(agentId) || [];
+    history.unshift({ ...event, timestamp: Date.now() });
+    if (history.length > 10) {
+      history.pop();
+    }
+    this.personalCombatHistory.set(agentId, history);
   }
 
   private handleAgentBirth(data: { entityId: string }): void {
@@ -656,6 +681,18 @@ export class CombatSystem {
     this.lifeCycleSystem.removeAgent(target.id);
 
     this.equippedWeapons.delete(target.id);
+
+    this.recordPersonalEvent(attacker.id, {
+      type: "kill",
+      targetId: target.id,
+      weaponId,
+    });
+
+    this.recordPersonalEvent(target.id, {
+      type: "death",
+      targetId: attacker.id,
+      weaponId,
+    });
 
     simulationEvents.emit(GameEventType.COMBAT_KILL, {
       attackerId: attacker.id,

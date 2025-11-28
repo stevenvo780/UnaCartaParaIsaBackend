@@ -71,4 +71,20 @@ export interface AgentProfile {
   crafting?: {
     recipes: Record<string, { successRate: number; timesUsed: number }>;
   };
+  history?: {
+    economy?: {
+      type: "income" | "expense";
+      amount: number;
+      reason: string;
+      timestamp: number;
+      relatedEntityId?: string;
+    }[];
+    combat?: {
+      type: "kill" | "assist" | "death" | "damage_dealt" | "damage_taken";
+      targetId?: string;
+      weaponId?: string;
+      amount?: number;
+      timestamp: number;
+    }[];
+  };
 }

@@ -5,6 +5,12 @@ import { DeltaEncoder } from "../DeltaEncoder";
 import type { SimulationRunner } from "../SimulationRunner";
 import { cloneGameState } from "../defaultState";
 import type { SimulationSnapshot } from "../../../../shared/types/commands/SimulationCommand";
+import {
+  AgentProfile,
+  AgentStats,
+  AgentNeeds,
+  SocialStatus,
+} from "../../../types/simulation/agents";
 import { WorkerMessageType } from "../../../../shared/constants/WebSocketEnums";
 
 export class SnapshotManager {
@@ -253,11 +259,42 @@ export class SnapshotManager {
           };
         }
 
+        // Serialize crafting data
+        let crafting;
+        if (this.runner.enhancedCraftingSystem) {
+          const recipes = this.runner.enhancedCraftingSystem.getKnownRecipes(
+            agent.id,
+          );
+          if (recipes) {
+            crafting = {
+              recipes: Object.fromEntries(recipes),
+            };
+          }
+        }
+
+        // Serialize history data
+        let history;
+        if (
+          this.runner.economySystem ||
+          this.runner.combatSystem
+        ) {
+          history = {
+            economy: this.runner.economySystem?.getTransactionHistory(agent.id),
+            combat: this.runner.combatSystem?.getPersonalCombatHistory(
+              agent.id,
+            ),
+          };
+        }
+
         return {
           ...agent,
           needs: needs ? { ...needs } : undefined,
-          role: role ? { ...role } : undefined,
+          socialStatus: role?.roleType
+            ? (role.roleType as SocialStatus)
+            : agent.socialStatus,
           ai,
+          crafting,
+          history,
         };
       });
     }

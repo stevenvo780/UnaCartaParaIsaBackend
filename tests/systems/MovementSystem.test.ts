@@ -24,7 +24,15 @@ describe("MovementSystem", () => {
       zones: [createZone() as any],
       worldSize: { width: 512, height: 512 },
     });
-    system = new MovementSystem(gameState);
+    system = new MovementSystem();
+    // Manually set the gameState since @inject doesn't work in tests
+    (system as any).gameState = gameState;
+    // Initialize the system manually (normally done by @postConstruct)
+    (system as any).pathfinder.setAcceptableTiles([0]);
+    (system as any).pathfinder.enableDiagonals();
+    (system as any).gridWidth = 8;
+    (system as any).gridHeight = 8;
+    
     system.initializeEntityMovement(entityId, { x: 0, y: 0 });
     emitSpy = vi.spyOn(simulationEvents, "emit");
   });

@@ -222,7 +222,7 @@ export class EconomySystem {
           break;
       }
 
-      if (this.addMoney(agent.id, baseSalary)) {
+      if (this.addMoney(agent.id, baseSalary, "Salario")) {
         totalSalaries += baseSalary;
 
         simulationEvents.emit(GameEventType.SALARY_PAID, {
@@ -330,7 +330,7 @@ export class EconomySystem {
         this.config.salaryRates[resourceType] * teamBonus,
       );
 
-      this.addMoney(agentId, salary);
+      this.addMoney(agentId, salary, `Trabajo: ${resourceType}`);
 
       logger.debug(
         `⚒️ [ECONOMY] Work: ${agentId} produced ${amount} ${resourceType} (yield: ${totalYield.toFixed(2)}, bonus: ${teamBonus.toFixed(2)})`,
@@ -487,12 +487,12 @@ export class EconomySystem {
       return false;
     }
 
-    if (!this.removeMoney(fromId, amount)) {
+    if (!this.removeMoney(fromId, amount, `Transferencia a ${toId}`)) {
       return false;
     }
 
-    if (!this.addMoney(toId, amount)) {
-      this.addMoney(fromId, amount);
+    if (!this.addMoney(toId, amount, `Transferencia de ${fromId}`)) {
+      this.addMoney(fromId, amount, "Reembolso por fallo en transferencia");
       return false;
     }
 

@@ -131,6 +131,14 @@ describe("CombatSystem", () => {
     socialSystem.setAffinity("attacker", "target", -0.8);
     entityIndex = createEntityIndex(gameState);
 
+    // Mock spatial index that returns target when querying from attacker position
+    const mockSpatialIndex = {
+      queryRadius: vi.fn().mockReturnValue([
+        { entity: "target", distance: 10 }
+      ]),
+      releaseResults: vi.fn(),
+    };
+
     combatSystem = new CombatSystem(
       gameState,
       inventorySystem as unknown as any,
@@ -138,7 +146,7 @@ describe("CombatSystem", () => {
       socialSystem as unknown as any,
       undefined, // animalSystem
       undefined, // normsSystem
-      undefined, // sharedSpatialIndex
+      mockSpatialIndex as any, // sharedSpatialIndex
       undefined, // gpuService
       entityIndex,
     );

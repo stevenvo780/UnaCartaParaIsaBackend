@@ -75,7 +75,8 @@ describe("WorldResourceSystem", () => {
     resourceSystem.harvestResource(resource!.id, "agent-1");
     emitSpy.mockClear();
 
-    vi.setSystemTime(6000);
+    // The actual regeneration time is hardcoded to 60000ms in checkRegeneration
+    vi.setSystemTime(70000);
     resourceSystem.update(0);
 
     expect(resource!.state).toBe("pristine");
