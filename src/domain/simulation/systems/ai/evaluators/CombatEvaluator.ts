@@ -111,7 +111,10 @@ export function evaluateCombatGoals(
         }
       }
 
-      const predators = ctx.getNearbyPredators(myPos, 200);
+      // Only flee from predators if they are VERY close (120 units)
+      // This prevents constant fleeing from predators that aren't an immediate threat
+      const PREDATOR_FLEE_RANGE = 120;
+      const predators = ctx.getNearbyPredators(myPos, PREDATOR_FLEE_RANGE);
       for (const predator of predators) {
         const isWarrior = ctx.isWarrior(aiState.entityId);
         const stats = ctx.getEntityStats(aiState.entityId) || {};
@@ -120,6 +123,12 @@ export function evaluateCombatGoals(
 
         const fightThreshold = 60 + personality.neuroticism * 20;
         const canFight = isWarrior || (morale > fightThreshold && health > 50);
+
+        // Calculate actual distance to predator
+        const distToPredator = Math.hypot(
+          predator.position.x - myPos.x,
+          predator.position.y - myPos.y,
+        );
 
         if (canFight) {
           goals.push({
@@ -132,26 +141,32 @@ export function evaluateCombatGoals(
             expiresAt: now + 5000,
             data: { reason: "predator_defense" },
           });
-        } else {
+        } else if (distToPredator < 80) {
+          // Only flee with high priority if predator is VERY close (< 80 units)
           const dx = myPos.x - predator.position.x;
           const dy = myPos.y - predator.position.y;
           const len = Math.max(1, Math.hypot(dx, dy));
-          const scale = 200 / len;
+          const scale = 150 / len;
           const fleePos = {
             x: myPos.x + dx * scale,
             y: myPos.y + dy * scale,
           };
 
+          // Priority scales with proximity: closer = higher priority
+          // At 80 units: priority ~0.75, at 20 units: priority ~0.90
+          const fleePriority = Math.min(0.90, 0.70 + (80 - distToPredator) / 300);
+
           goals.push({
             id: `flee_animal_${predator.id}_${now}`,
             type: GoalType.FLEE,
-            priority: 1.0,
+            priority: fleePriority,
             targetPosition: fleePos,
             createdAt: now,
-            expiresAt: now + 8000,
+            expiresAt: now + 5000,
             data: { reason: "predator_panic", threatPos: predator.position },
           });
         }
+        // If predator is between 80-120 units, agent can continue working but stays alert
       }
     }
 

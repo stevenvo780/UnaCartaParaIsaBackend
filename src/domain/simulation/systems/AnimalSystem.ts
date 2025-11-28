@@ -422,6 +422,14 @@ export class AnimalSystem {
     const config = getAnimalConfig(animal.type);
     if (!config) return;
 
+    // Debug: Log animal health status periodically
+    if (Math.random() < 0.01) {
+      const maxHealth = config.maxHealth * animal.genes.health;
+      logger.debug(
+        `🐾 [AnimalDebug] ${animal.id} (${animal.type}): health=${animal.health.toFixed(0)}/${maxHealth.toFixed(0)}, hunger=${animal.needs.hunger.toFixed(0)}, thirst=${animal.needs.thirst.toFixed(0)}, state=${animal.state}`,
+      );
+    }
+
     const nearbyPredator = this.findNearbyPredator(
       animal,
       config.detectionRange,
@@ -459,11 +467,11 @@ export class AnimalSystem {
       }
     }
 
-    // Animals seek food when: hungry (< 70) OR injured (health < maxHealth)
+    // Animals seek food when: hungry (< 80) OR injured (health < maxHealth)
     // This ensures they keep eating until fully healed
     const maxHealth = config.maxHealth * animal.genes.health;
     const needsHealing = animal.health < maxHealth * 0.9; // Below 90% health
-    const isHungry = animal.needs.hunger < 70;
+    const isHungry = animal.needs.hunger < 80;
 
     if (isHungry || needsHealing) {
       if (config.isPredator) {
@@ -498,28 +506,45 @@ export class AnimalSystem {
             },
           );
           return;
-        } else if (this.terrainSystem) {
+        } else {
+          // No nearby food resources - try to forage from terrain
           const TILE_SIZE = 64;
           const tileX = Math.floor(animal.position.x / TILE_SIZE);
           const tileY = Math.floor(animal.position.y / TILE_SIZE);
 
-          const terrainTile = this.terrainSystem.getTile(tileX, tileY);
+          const terrainTile = this.terrainSystem?.getTile(tileX, tileY);
+          const terrainType = terrainTile?.assets?.terrain;
 
-          if (
-            terrainTile &&
-            terrainTile.assets.terrain === TileType.TERRAIN_GRASSLAND
-          ) {
+          // Animals can eat on: grassland or unknown terrain (wilderness)
+          // If terrain is unknown (not loaded), allow foraging anyway (wilderness has food)
+          const canForage =
+            !terrainType || // Unknown terrain - assume wilderness with food
+            terrainType === TileType.TERRAIN_GRASSLAND ||
+            terrainType === TileType.GRASS; // Both grass types are edible
+
+          if (canForage) {
             animal.state = AnimalState.EATING;
             if (!animal.stateEndTime) {
               animal.stateEndTime = Date.now() + 2000;
             } else if (Date.now() > animal.stateEndTime) {
-              this.terrainSystem.modifyTile(tileX, tileY, {
-                assets: { terrain: TileType.TERRAIN_DIRT },
-              });
+              // Only modify terrain if it's grassland (others regenerate)
+              if (
+                terrainType === TileType.TERRAIN_GRASSLAND &&
+                this.terrainSystem
+              ) {
+                this.terrainSystem.modifyTile(tileX, tileY, {
+                  assets: { terrain: TileType.TERRAIN_DIRT },
+                });
+              }
               animal.needs.hunger = Math.min(100, animal.needs.hunger + 30);
               animal.state = AnimalState.IDLE;
               animal.stateEndTime = undefined;
             }
+            return;
+          } else {
+            // Non-vegetated terrain (desert, rock, water) - wander to find food
+            animal.state = AnimalState.WANDERING;
+            AnimalBehavior.wander(animal, 0.7, deltaSeconds);
             return;
           }
         }
@@ -527,8 +552,8 @@ export class AnimalSystem {
       }
     }
 
-    // Animals seek water when: thirsty (< 70) OR injured (for healing)
-    const isThirsty = animal.needs.thirst < 70;
+    // Animals seek water when: thirsty (< 80) OR injured (for healing)
+    const isThirsty = animal.needs.thirst < 80;
     if ((isThirsty || needsHealing) && config.consumesWater) {
       animal.state = AnimalState.SEEKING_WATER;
       const waterResources = this.findNearbyWater(
@@ -545,18 +570,25 @@ export class AnimalSystem {
             this.consumeResource(resourceId, animal.id);
           },
         );
-      } else if (this.terrainSystem) {
-        const waterTile = this.findNearbyWaterTile(
-          animal,
-          config.detectionRange,
-        );
+      } else {
+        const waterTile = this.terrainSystem
+          ? this.findNearbyWaterTile(animal, config.detectionRange)
+          : null;
+
         if (waterTile) {
           this.drinkFromTerrain(animal, waterTile, config, deltaSeconds);
         } else {
-          AnimalBehavior.wander(animal, 0.5, deltaSeconds);
+          // No water resource or terrain - allow drinking from "natural water source"
+          // This simulates wilderness water (streams, puddles) for animals far from known resources
+          animal.state = AnimalState.DRINKING;
+          if (!animal.stateEndTime) {
+            animal.stateEndTime = Date.now() + 2000;
+          } else if (Date.now() > animal.stateEndTime) {
+            animal.needs.thirst = Math.min(100, animal.needs.thirst + 40);
+            animal.state = AnimalState.IDLE;
+            animal.stateEndTime = undefined;
+          }
         }
-      } else {
-        AnimalBehavior.wander(animal, 0.5, deltaSeconds);
       }
       return;
     }

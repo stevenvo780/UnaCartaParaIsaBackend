@@ -228,22 +228,34 @@ export class AnimalBatchProcessor {
 
     for (let i = 0; i < animalCount; i++) {
       const animalId = this.animalIdArray[i];
+      // Skip empty slots (capacity padding)
+      if (!animalId) continue;
+
       const animal = animals.get(animalId);
       if (!animal) continue;
 
       const posOffset = i * 2;
       const needsOffset = i * this.NEED_COUNT;
 
-      animal.position.x = this.positionBuffer[posOffset];
-      animal.position.y = this.positionBuffer[posOffset + 1];
+      // Only sync if values are valid (not NaN/undefined)
+      const posX = this.positionBuffer[posOffset];
+      const posY = this.positionBuffer[posOffset + 1];
+      const hunger = this.needsBuffer[needsOffset + 0];
+      const thirst = this.needsBuffer[needsOffset + 1];
+      const fear = this.needsBuffer[needsOffset + 2];
+      const reproUrge = this.needsBuffer[needsOffset + 3];
+      const age = this.ageBuffer[i];
+      const health = this.healthBuffer[i];
 
-      animal.needs.hunger = this.needsBuffer[needsOffset + 0];
-      animal.needs.thirst = this.needsBuffer[needsOffset + 1];
-      animal.needs.fear = this.needsBuffer[needsOffset + 2];
-      animal.needs.reproductiveUrge = this.needsBuffer[needsOffset + 3];
-
-      animal.age = this.ageBuffer[i];
-      animal.health = this.healthBuffer[i];
+      // Validate and only update valid values to prevent NaN propagation
+      if (Number.isFinite(posX)) animal.position.x = posX;
+      if (Number.isFinite(posY)) animal.position.y = posY;
+      if (Number.isFinite(hunger)) animal.needs.hunger = hunger;
+      if (Number.isFinite(thirst)) animal.needs.thirst = thirst;
+      if (Number.isFinite(fear)) animal.needs.fear = fear;
+      if (Number.isFinite(reproUrge)) animal.needs.reproductiveUrge = reproUrge;
+      if (Number.isFinite(age)) animal.age = age;
+      if (Number.isFinite(health)) animal.health = health;
     }
   }
 
