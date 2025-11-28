@@ -159,168 +159,187 @@ export class SnapshotManager {
             personality: aiState.personality,
             memory,
           };
-        }
-
-        return {
-          ...agent,
-          needs: needs ? { ...needs } : undefined,
-          role: role ? { ...role } : undefined,
-          ai,
         };
-      });
-    }
-
-    const events =
-      this.runner.capturedEvents.length > 0
-        ? [...this.runner.capturedEvents]
-        : [];
-    this.runner.capturedEvents.length = 0;
-
-    const fullSnapshot: SimulationSnapshot = {
-      tick: currentTick,
-      updatedAt: now,
-      state: stateSnapshot,
-      events,
-    };
-
-    const delta = this.deltaEncoder.encodeDelta(fullSnapshot);
-
-    if (!delta) return;
-
-    const snapshotData = {
-      tick: currentTick,
-      time: now,
-      delta,
-      events,
-    };
-
-    this.snapshotWorker.postMessage({
-      type: WorkerMessageType.SNAPSHOT,
-      data: snapshotData,
-    });
-  }
-
-  public getInitialSnapshot(): SimulationSnapshot {
-    const events =
-      this.runner.capturedEvents.length > 0
-        ? [...this.runner.capturedEvents]
-        : undefined;
-    const snapshotState = cloneGameState(this.runner.state);
-    snapshotState.genealogy =
-      this.runner._genealogySystem?.getSerializedFamilyTree() ?? {};
-
-    const allLegends = this.runner.livingLegendsSystem.getAllLegends();
-    const activeLegends = this.runner.livingLegendsSystem.getActiveLegends();
-    snapshotState.legends = {
-      records: allLegends,
-      activeLegends,
-    };
-
-    if (!snapshotState.socialGraph) {
-      snapshotState.socialGraph = this.runner.socialSystem.getGraphSnapshot();
-    }
-
-    if (snapshotState.agents) {
-      snapshotState.agents = snapshotState.agents.map((agent) => {
-        const needs = this.runner.needsSystem.getNeeds(agent.id);
-        const role = this.runner.roleSystem.getAgentRole(agent.id);
-        const aiState = this.runner.aiSystem.getAIState(agent.id);
-
-        let ai;
-        if (aiState) {
-          // Serialize memory structures (Set -> Array, Map -> Object/Array)
-          const memory = aiState.memory
-            ? {
-              ...aiState.memory,
-              visitedZones: Array.from(aiState.memory.visitedZones || []),
-              knownResourceLocations: aiState.memory.knownResourceLocations
-                ? Object.fromEntries(aiState.memory.knownResourceLocations)
-                : {},
-              successfulActivities: aiState.memory.successfulActivities
-                ? Object.fromEntries(aiState.memory.successfulActivities)
-                : {},
-              failedAttempts: aiState.memory.failedAttempts
-                ? Object.fromEntries(aiState.memory.failedAttempts)
-                : {},
-              failedTargets: aiState.memory.failedTargets
-                ? Object.fromEntries(aiState.memory.failedTargets)
-                : {},
-            }
-            : undefined;
-
-          ai = {
-            currentGoal: aiState.currentGoal || undefined,
-            goalQueue: aiState.goalQueue || [],
-            currentAction: aiState.currentAction || undefined,
-            offDuty: aiState.offDuty || false,
-            lastDecisionTime: aiState.lastDecisionTime || 0,
-            personality: aiState.personality,
-            memory,
-          };
-        }
-
-        // Serialize crafting data
-        let crafting;
-        if (this.runner.enhancedCraftingSystem) {
-          const recipes = this.runner.enhancedCraftingSystem.getKnownRecipes(
-            agent.id,
-          );
-          if (recipes) {
-            crafting = {
-              recipes: Object.fromEntries(recipes),
-            };
-          }
-        }
+      }
 
         // Serialize history data
         let history;
-        if (
-          this.runner.economySystem ||
-          this.runner.combatSystem
-        ) {
-          history = {
-            economy: this.runner.economySystem?.getTransactionHistory(agent.id),
-            combat: this.runner.combatSystem?.getPersonalCombatHistory(
-              agent.id,
-            ),
-          };
-        }
-
-        return {
-          ...agent,
-          needs: needs ? { ...needs } : undefined,
-          socialStatus: role?.roleType
-            ? (role.roleType as SocialStatus)
-            : agent.socialStatus,
-          ai,
-          crafting,
-          history,
+      if (
+        this.runner.economySystem ||
+        this.runner.combatSystem ||
+        this.runner.taskSystem
+      ) {
+        history = {
+          economy: this.runner.economySystem?.getTransactionHistory(agent.id),
+          combat: this.runner.combatSystem?.getPersonalCombatHistory(
+            agent.id,
+          ),
+          work: this.runner.taskSystem?.getWorkHistory(agent.id),
         };
-      });
-    }
+      }
 
-    return {
-      tick: this.runner.getTickCounter(),
-      updatedAt: Date.now(),
-      state: snapshotState,
-      events,
-    };
+      return {
+        ...agent,
+        needs: needs ? { ...needs } : undefined,
+        role: role ? { ...role } : undefined,
+        ai,
+        history,
+      };
+    });
   }
 
+  const events =
+    this.runner.capturedEvents.length > 0
+      ? [...this.runner.capturedEvents]
+      : [];
+    this.runner.capturedEvents.length = 0;
+
+const fullSnapshot: SimulationSnapshot = {
+  tick: currentTick,
+  updatedAt: now,
+  state: stateSnapshot,
+  events,
+};
+
+const delta = this.deltaEncoder.encodeDelta(fullSnapshot);
+
+if (!delta) return;
+
+const snapshotData = {
+  tick: currentTick,
+  time: now,
+  delta,
+  events,
+};
+
+this.snapshotWorker.postMessage({
+  type: WorkerMessageType.SNAPSHOT,
+  data: snapshotData,
+});
+  }
+
+  public getInitialSnapshot(): SimulationSnapshot {
+  const events =
+    this.runner.capturedEvents.length > 0
+      ? [...this.runner.capturedEvents]
+      : undefined;
+  const snapshotState = cloneGameState(this.runner.state);
+  snapshotState.genealogy =
+    this.runner._genealogySystem?.getSerializedFamilyTree() ?? {};
+
+  const allLegends = this.runner.livingLegendsSystem.getAllLegends();
+  const activeLegends = this.runner.livingLegendsSystem.getActiveLegends();
+  snapshotState.legends = {
+    records: allLegends,
+    activeLegends,
+  };
+
+  if (!snapshotState.socialGraph) {
+    snapshotState.socialGraph = this.runner.socialSystem.getGraphSnapshot();
+  }
+
+  if (snapshotState.agents) {
+    snapshotState.agents = snapshotState.agents.map((agent) => {
+      const needs = this.runner.needsSystem.getNeeds(agent.id);
+      const role = this.runner.roleSystem.getAgentRole(agent.id);
+      const aiState = this.runner.aiSystem.getAIState(agent.id);
+
+      let ai;
+      if (aiState) {
+        // Serialize memory structures (Set -> Array, Map -> Object/Array)
+        const memory = aiState.memory
+          ? {
+            ...aiState.memory,
+            visitedZones: Array.from(aiState.memory.visitedZones || []),
+            knownResourceLocations: aiState.memory.knownResourceLocations
+              ? Object.fromEntries(aiState.memory.knownResourceLocations)
+              : {},
+            successfulActivities: aiState.memory.successfulActivities
+              ? Object.fromEntries(aiState.memory.successfulActivities)
+              : {},
+            failedAttempts: aiState.memory.failedAttempts
+              ? Object.fromEntries(aiState.memory.failedAttempts)
+              : {},
+            failedTargets: aiState.memory.failedTargets
+              ? Object.fromEntries(aiState.memory.failedTargets)
+              : {},
+          }
+          : undefined;
+
+        ai = {
+          currentGoal: aiState.currentGoal || undefined,
+          goalQueue: aiState.goalQueue || [],
+          currentAction: aiState.currentAction || undefined,
+          offDuty: aiState.offDuty || false,
+          lastDecisionTime: aiState.lastDecisionTime || 0,
+          personality: aiState.personality,
+          memory,
+        };
+      }
+
+      // Serialize crafting data
+      let crafting;
+      if (this.runner.enhancedCraftingSystem) {
+        const recipes = this.runner.enhancedCraftingSystem.getKnownRecipes(
+          agent.id,
+        );
+        if (recipes) {
+          crafting = {
+            recipes: Object.fromEntries(recipes),
+          };
+        }
+      }
+
+      // Serialize history data
+      let history;
+      if (
+        this.runner.economySystem ||
+        this.runner.combatSystem
+      ) {
+        history = {
+          economy: this.runner.economySystem?.getTransactionHistory(agent.id),
+          combat: this.runner.combatSystem?.getPersonalCombatHistory(
+            agent.id,
+          ),
+          work: this.runner.taskSystem?.getWorkHistory(agent.id),
+        };
+      }
+
+      return {
+        ...agent,
+        needs: needs ? { ...needs } : undefined,
+        socialStatus: role?.roleType
+          ? (role.roleType as SocialStatus)
+          : agent.socialStatus,
+        ai,
+        crafting,
+        history,
+      };
+    });
+  }
+
+  return {
+    tick: this.runner.getTickCounter(),
+    updatedAt: Date.now(),
+    state: snapshotState,
+    events,
+  };
+}
+
   public markDirty(sections: string | string[]): void {
-    if (Array.isArray(sections)) {
-      this.stateCache.markDirtyMultiple(sections);
-    } else {
-      this.stateCache.markDirty(sections);
-    }
+  if(Array.isArray(sections)) {
+  this.stateCache.markDirtyMultiple(sections);
+} else {
+  this.stateCache.markDirty(sections);
+}
   }
 
   public cleanup(): void {
-    if (this.snapshotWorker) {
-      this.snapshotWorker.postMessage({ type: WorkerMessageType.SHUTDOWN });
-      this.snapshotWorker.terminate();
-      this.snapshotWorker = undefined;
-      this.snapshotWorkerReady = false;
-    }
+  if(this.snapshotWorker) {
+  this.snapshotWorker.postMessage({ type: WorkerMessageType.SHUTDOWN });
+  this.snapshotWorker.terminate();
+  this.snapshotWorker = undefined;
+  this.snapshotWorkerReady = false;
+}
   }
 }
