@@ -10,6 +10,8 @@ import { SIMULATION_CONSTANTS } from "../../../shared/constants/SimulationConsta
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { AgentRegistry } from "../core/AgentRegistry";
+import type { StateDirtyTracker } from "../core/StateDirtyTracker";
+import { performanceMonitor } from "../core/PerformanceMonitor";
 
 /**
  * System for managing agent inventories and zone stockpiles.
@@ -38,13 +40,16 @@ export class InventorySystem {
   private readonly DEFAULT_STOCKPILE_CAPACITY =
     SIMULATION_CONSTANTS.INVENTORY.DEFAULT_STOCKPILE_CAPACITY;
   private agentRegistry?: AgentRegistry;
+  private dirtyTracker?: StateDirtyTracker;
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
     @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
+    @inject(TYPES.StateDirtyTracker) @optional() dirtyTracker?: StateDirtyTracker,
   ) {
     this.gameState = gameState;
     this.agentRegistry = agentRegistry;
+    this.dirtyTracker = dirtyTracker;
 
     if (this.agentRegistry) {
       this.agentRegistry.registerInventory(this.agentInventories);
@@ -409,12 +414,22 @@ export class InventorySystem {
   }
 
   public update(): void {
+    const startTime = performance.now();
     const now = Date.now();
 
     this.syncInventoriesWithAgents();
 
     this.syncToGameState(now);
     if (now - this.lastDeprecationCheck < this.DEPRECATION_INTERVAL) return;
+    // Process inventory decay or other updates if needed
+    this.dirtyTracker?.markDirty("inventory");
+
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordSubsystemExecution(
+      "InventorySystem",
+      "update",
+      duration,
+    );
     this.lastDeprecationCheck = now;
 
     const statsDebug = this.getSystemStats();

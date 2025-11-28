@@ -14,6 +14,7 @@ import type { EntityIndex } from "../core/EntityIndex";
 import type { SharedSpatialIndex } from "../core/SharedSpatialIndex";
 import type { GPUComputeService } from "../core/GPUComputeService";
 import type { AgentRegistry } from "../core/AgentRegistry";
+import type { StateDirtyTracker } from "../core/StateDirtyTracker";
 import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
@@ -109,6 +110,9 @@ export class NeedsSystem extends EventEmitter {
     @inject(TYPES.AgentRegistry)
     @optional()
     agentRegistry?: AgentRegistry,
+    @inject(TYPES.StateDirtyTracker)
+    @optional()
+    private dirtyTracker?: StateDirtyTracker,
   ) {
     super();
     this.gameState = gameState;
@@ -300,6 +304,7 @@ export class NeedsSystem extends EventEmitter {
       "updateTraditional",
       duration,
     );
+    this.dirtyTracker?.markDirty("agents");
   }
 
   private updateBatch(dtSeconds: number, _now: number): void {
@@ -366,6 +371,7 @@ export class NeedsSystem extends EventEmitter {
       "updateBatch",
       duration,
     );
+    this.dirtyTracker?.markDirty("agents");
   }
 
   /**

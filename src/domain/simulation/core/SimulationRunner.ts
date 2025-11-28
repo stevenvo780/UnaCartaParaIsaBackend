@@ -53,6 +53,7 @@ import { MovementSystem } from "../systems/MovementSystem";
 import { ChunkLoadingSystem } from "../systems/ChunkLoadingSystem";
 import { SharedKnowledgeSystem } from "../systems/SharedKnowledgeSystem";
 import { GPUComputeService } from "./GPUComputeService";
+import { StateDirtyTracker } from "./StateDirtyTracker";
 import { MultiRateScheduler } from "./MultiRateScheduler";
 import { TickRate } from "../../../shared/constants/SchedulerEnums";
 import { performanceMonitor } from "./PerformanceMonitor";
@@ -243,6 +244,9 @@ export class SimulationRunner {
   @inject(TYPES.SharedKnowledgeSystem)
   public readonly sharedKnowledgeSystem!: SharedKnowledgeSystem;
 
+  @inject(TYPES.StateDirtyTracker)
+  public readonly stateDirtyTracker!: StateDirtyTracker;
+
   private readonly INDEX_REBUILD_INTERVAL_FAST = 5;
 
   private readonly AUTO_SAVE_INTERVAL_MS = 60000;
@@ -274,7 +278,11 @@ export class SimulationRunner {
 
     this.commandProcessor = new CommandProcessor(this);
 
-    this.snapshotManager = new SnapshotManager(this);
+    this.commandProcessor = new CommandProcessor(this);
+
+    this.snapshotManager = new SnapshotManager(this, this.stateDirtyTracker);
+
+    this.scheduleAutoSaves();
 
     this.scheduleAutoSaves();
   }
@@ -472,32 +480,16 @@ export class SimulationRunner {
         this.syncAnimalsToState();
         this.syncGenealogyToState();
 
-        const baseDirtySections = [
-          "agents",
-          "entities",
-          "animals",
-          "inventory",
-          "zones",
-          "worldResources",
-          "socialGraph",
-          "market",
-          "trade",
-          "marriage",
-          "quests",
-          "conflicts",
-          "research",
-          "recipes",
-          "reputation",
-          "norms",
-          "knowledgeGraph",
-        ] as const;
+        this.syncAnimalsToState();
+        this.syncGenealogyToState();
 
         const tasksChanged = this.taskSystem.syncTasksState();
         if (tasksChanged) {
-          this.snapshotManager.markDirty("tasks");
+          this.stateDirtyTracker.markDirty("tasks");
         }
 
-        this.snapshotManager.markDirty([...baseDirtySections]);
+        // Removed blanket markDirty. Systems must now mark themselves dirty via StateDirtyTracker.
+        // this.snapshotManager.markDirty([...baseDirtySections]);
 
         this.tickCounter += 1;
 
@@ -1066,12 +1058,12 @@ export class SimulationRunner {
         social,
         ai: aiState
           ? {
-              currentGoal: aiState.currentGoal,
-              goalQueue: aiState.goalQueue,
-              currentAction: aiState.currentAction,
-              offDuty: aiState.offDuty,
-              lastDecisionTime: aiState.lastDecisionTime,
-            }
+            currentGoal: aiState.currentGoal,
+            goalQueue: aiState.goalQueue,
+            currentAction: aiState.currentAction,
+            offDuty: aiState.offDuty,
+            lastDecisionTime: aiState.lastDecisionTime,
+          }
           : null,
       };
     }

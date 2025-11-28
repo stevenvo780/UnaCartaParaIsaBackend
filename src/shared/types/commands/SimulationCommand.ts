@@ -210,7 +210,6 @@ import {
   TaskCommandType,
   TimeCommandType,
   AgentCommandType,
-  AgentCommandType,
   AnimalCommandType,
   ConflictCommandType,
 } from "../../constants/CommandEnums";

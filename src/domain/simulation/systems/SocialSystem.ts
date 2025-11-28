@@ -5,12 +5,13 @@ import { simulationEvents, GameEventType } from "../core/events";
 import { logger } from "../../../infrastructure/utils/logger";
 import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "node:perf_hooks";
+import { TYPES } from "../../../config/Types";
+import type { StateDirtyTracker } from "../core/StateDirtyTracker";
 import { performanceMonitor } from "../core/PerformanceMonitor";
 import type { EntityIndex } from "../core/EntityIndex";
 import type { SharedSpatialIndex } from "../core/SharedSpatialIndex";
 
 import { injectable, inject, optional } from "inversify";
-import { TYPES } from "../../../config/Types";
 import type { GPUComputeService } from "../core/GPUComputeService";
 
 /**
@@ -53,8 +54,12 @@ export class SocialSystem {
   private gpuService?: GPUComputeService;
   private entityIndex?: EntityIndex;
 
+
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
+    @inject(TYPES.StateDirtyTracker)
+    @optional()
+    private dirtyTracker?: StateDirtyTracker,
     @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
     @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
     @inject(TYPES.SharedSpatialIndex)
@@ -150,6 +155,7 @@ export class SocialSystem {
       this.gameState.socialGraph.groups = this.groups;
       this.gameState.socialGraph.relationships = this.edges;
     }
+    this.dirtyTracker?.markDirty("socialGraph");
 
     const duration = performance.now() - startTime;
     performanceMonitor.recordSubsystemExecution(
@@ -683,5 +689,5 @@ export class SocialSystem {
       timestamp: number;
       [key: string]: unknown;
     },
-  ): void {}
+  ): void { }
 }

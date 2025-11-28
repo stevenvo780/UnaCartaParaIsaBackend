@@ -45,6 +45,23 @@ export class ConflictResolutionSystem {
 
   constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
+    this.setupEventListeners();
+  }
+
+  private setupEventListeners(): void {
+    simulationEvents.on(
+      GameEventType.COMBAT_HIT,
+      this.handleCombatHitEvent.bind(this),
+    );
+  }
+
+  private handleCombatHitEvent(data: {
+    attackerId: string;
+    targetId: string;
+    remaining: number;
+    damage: number;
+  }): void {
+    this.handleCombatHit(data);
   }
 
   private createInitialConflictState(): ConflictState {

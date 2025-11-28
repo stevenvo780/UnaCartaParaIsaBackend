@@ -21,6 +21,13 @@ export interface AgentTraits {
   neuroticism?: number;
 }
 
+export interface AgentAppearance {
+  skinColor: string;
+  hairColor: string;
+  hairStyle: string;
+  eyeColor: string;
+}
+
 export interface AgentProfile {
   id: string;
   name: string;
@@ -32,6 +39,7 @@ export interface AgentProfile {
   immortal?: boolean;
   isDead?: boolean;
   traits: AgentTraits;
+  appearance?: AgentAppearance;
   socialStatus?: SocialStatus;
   parents?: {
     father?: string;

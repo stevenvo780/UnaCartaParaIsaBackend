@@ -34,6 +34,7 @@ const DEFAULT_CONFIG: AnimalSystemConfig = {
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { GPUComputeService } from "../core/GPUComputeService";
+import type { StateDirtyTracker } from "../core/StateDirtyTracker";
 
 @injectable()
 export class AnimalSystem {
@@ -113,6 +114,9 @@ export class AnimalSystem {
     @inject(TYPES.AgentRegistry)
     @optional()
     agentRegistry?: AgentRegistry,
+    @inject(TYPES.StateDirtyTracker)
+    @optional()
+    private dirtyTracker?: StateDirtyTracker,
   ) {
     this.gameState = gameState;
     this.worldResourceSystem = worldResourceSystem;
@@ -201,6 +205,11 @@ export class AnimalSystem {
     }
 
     this.updateGameStateSnapshot();
+
+    if (liveCount > 0) {
+      this.dirtyTracker?.markDirty("animals");
+    }
+
     const duration = performance.now() - startTime;
     performanceMonitor.recordSubsystemExecution(
       "AnimalSystem",
@@ -271,7 +280,7 @@ export class AnimalSystem {
       if (
         isIdleState &&
         i % this.IDLE_UPDATE_DIVISOR !==
-          this.updateFrame % this.IDLE_UPDATE_DIVISOR
+        this.updateFrame % this.IDLE_UPDATE_DIVISOR
       ) {
         continue;
       }

@@ -4,6 +4,7 @@ import { GameState } from "../../types/game-types";
 import {
   AgentProfile,
   AgentTraits,
+  AgentAppearance,
   LifeStage,
   Sex,
   SocialStatus,
@@ -78,7 +79,6 @@ export class LifeCycleSystem extends EventEmitter {
   private _socialSystem?: ISocialPort;
   private _marriageSystem?: MarriageSystem;
   private _genealogySystem?: GenealogySystem;
-  private _divineFavorSystem?: any; // DivineFavorSystem removed
   private _movementSystem?: IMovementPort;
   private _roleSystem?: RoleSystem;
   private _taskSystem?: TaskSystem;
@@ -410,8 +410,8 @@ export class LifeCycleSystem extends EventEmitter {
 
       logger.debug(
         `🍼 [tryCouple] ${father.name}+${mother.name} needs: ` +
-          `father(hunger=${fatherNeeds?.hunger?.toFixed(0)}, energy=${fatherNeeds?.energy?.toFixed(0)}) ` +
-          `mother(hunger=${motherNeeds?.hunger?.toFixed(0)}, energy=${motherNeeds?.energy?.toFixed(0)})`,
+        `father(hunger=${fatherNeeds?.hunger?.toFixed(0)}, energy=${fatherNeeds?.energy?.toFixed(0)}) ` +
+        `mother(hunger=${motherNeeds?.hunger?.toFixed(0)}, energy=${motherNeeds?.energy?.toFixed(0)})`,
       );
 
       if (
@@ -459,23 +459,29 @@ export class LifeCycleSystem extends EventEmitter {
     spec:
       | Partial<AgentProfile>
       | {
-          id?: string;
-          name?: string;
-          sex: Sex;
-          ageYears: number;
-          lifeStage: LifeStage;
-          generation: number;
-          immortal?: boolean;
-          traits?: Partial<AgentTraits>;
-        } = {},
+        id?: string;
+        name?: string;
+        sex: Sex;
+        ageYears: number;
+        lifeStage: LifeStage;
+        generation: number;
+        immortal?: boolean;
+        traits?: Partial<AgentTraits>;
+      } = {},
   ): AgentProfile {
     const partial = spec as Partial<AgentProfile>;
     const id = partial.id ?? `agent_${++this.spawnCounter}`;
     logger.info(`🧑 Spawning agent ${id} (${partial.name || "unnamed"})`);
 
     let traits = this.randomTraits();
+    let appearance = this.generateRandomAppearance();
+
     if (partial.parents?.father && partial.parents?.mother) {
       traits = this.inheritTraits(
+        partial.parents.father,
+        partial.parents.mother,
+      );
+      appearance = this.inheritAppearance(
         partial.parents.father,
         partial.parents.mother,
       );
@@ -491,6 +497,7 @@ export class LifeCycleSystem extends EventEmitter {
       birthTimestamp: Date.now(),
       immortal: false,
       traits,
+      appearance,
       socialStatus: SocialStatus.COMMONER,
       ...partial,
     };
@@ -628,8 +635,48 @@ export class LifeCycleSystem extends EventEmitter {
     return {
       cooperation: mix(father.traits.cooperation, mother.traits.cooperation),
       aggression: mix(father.traits.aggression, mother.traits.aggression),
-      diligence: mix(father.traits.diligence, mother.traits.diligence),
       curiosity: mix(father.traits.curiosity, mother.traits.curiosity),
+    };
+  }
+
+  private generateRandomAppearance(): AgentAppearance {
+    const skinColors = ["#f5d0b0", "#e0ac69", "#8d5524", "#c68642", "#ffdbac"];
+    const hairColors = ["#000000", "#4a3b2a", "#b55239", "#e6cea8", "#915f6d"];
+    const eyeColors = ["#634e34", "#2e536f", "#3d671d", "#1c7847", "#497665"];
+    const hairStyles = ["short", "long", "bald", "ponytail", "braids"];
+
+    return {
+      skinColor: RandomUtils.element(skinColors) || "#f5d0b0",
+      hairColor: RandomUtils.element(hairColors) || "#000000",
+      eyeColor: RandomUtils.element(eyeColors) || "#634e34",
+      hairStyle: RandomUtils.element(hairStyles) || "short",
+    };
+  }
+
+  private inheritAppearance(
+    fatherId: string,
+    motherId: string,
+  ): AgentAppearance {
+    const father = this.getAgent(fatherId);
+    const mother = this.getAgent(motherId);
+
+    if (!father?.appearance || !mother?.appearance) {
+      return this.generateRandomAppearance();
+    }
+
+    return {
+      skinColor: RandomUtils.chance(0.5)
+        ? father.appearance.skinColor
+        : mother.appearance.skinColor,
+      hairColor: RandomUtils.chance(0.5)
+        ? father.appearance.hairColor
+        : mother.appearance.hairColor,
+      eyeColor: RandomUtils.chance(0.5)
+        ? father.appearance.eyeColor
+        : mother.appearance.eyeColor,
+      hairStyle: RandomUtils.chance(0.5)
+        ? father.appearance.hairStyle
+        : mother.appearance.hairStyle,
     };
   }
 
@@ -659,13 +706,13 @@ export class LifeCycleSystem extends EventEmitter {
     const removed = this.agentRegistry
       ? this.agentRegistry.removeAgent(id)
       : ((): boolean => {
-          const index = this.gameState.agents!.findIndex((a) => a.id === id);
-          if (index !== -1) {
-            this.gameState.agents!.splice(index, 1);
-            return true;
-          }
-          return false;
-        })();
+        const index = this.gameState.agents!.findIndex((a) => a.id === id);
+        if (index !== -1) {
+          this.gameState.agents!.splice(index, 1);
+          return true;
+        }
+        return false;
+      })();
 
     if (removed) {
       if (this.gameState.entities) {
@@ -754,13 +801,13 @@ export class LifeCycleSystem extends EventEmitter {
     const removed = this.agentRegistry
       ? this.agentRegistry.removeAgent(id)
       : ((): boolean => {
-          const index = this.gameState.agents!.findIndex((a) => a.id === id);
-          if (index !== -1) {
-            this.gameState.agents!.splice(index, 1);
-            return true;
-          }
-          return false;
-        })();
+        const index = this.gameState.agents!.findIndex((a) => a.id === id);
+        if (index !== -1) {
+          this.gameState.agents!.splice(index, 1);
+          return true;
+        }
+        return false;
+      })();
 
     if (!removed) return false;
 

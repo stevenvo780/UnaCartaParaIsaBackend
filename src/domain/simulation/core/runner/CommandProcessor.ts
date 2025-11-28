@@ -10,7 +10,6 @@ import type {
   WorldResourceCommandPayload,
   BuildingCommandPayload,
   ReputationCommandPayload,
-  ReputationCommandPayload,
   TaskCommandPayload,
   ConflictCommandPayload,
 } from "../../../../shared/types/commands/SimulationCommand";

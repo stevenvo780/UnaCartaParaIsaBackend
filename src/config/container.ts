@@ -70,12 +70,18 @@ import { ChunkLoadingSystem } from "../domain/simulation/systems/ChunkLoadingSys
 import { SharedKnowledgeSystem } from "../domain/simulation/systems/SharedKnowledgeSystem";
 import { AgentRegistry } from "../domain/simulation/core/AgentRegistry";
 import { AnimalRegistry } from "../domain/simulation/core/AnimalRegistry";
+import { StateDirtyTracker } from "../domain/simulation/core/StateDirtyTracker";
 
 export const container = new Container();
 
 const initialState = createInitialGameState();
 container.bind<GameState>(TYPES.GameState).toConstantValue(initialState);
 container.bind(TYPES.SimulationConfig).toConstantValue({});
+
+container
+  .bind<StateDirtyTracker>(TYPES.StateDirtyTracker)
+  .to(StateDirtyTracker)
+  .inSingletonScope();
 
 container
   .bind<SimulationRunner>(TYPES.SimulationRunner)

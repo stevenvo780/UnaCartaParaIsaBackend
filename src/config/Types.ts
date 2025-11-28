@@ -57,6 +57,7 @@ export const TYPES = {
   EntityIndex: Symbol.for("EntityIndex"),
   SharedSpatialIndex: Symbol.for("SharedSpatialIndex"),
   GPUComputeService: Symbol.for("GPUComputeService"),
+  StateDirtyTracker: Symbol.for("StateDirtyTracker"),
   GPUBatchQueryService: Symbol.for("GPUBatchQueryService"),
   TerrainSystem: Symbol.for("TerrainSystem"),
   ChunkLoadingSystem: Symbol.for("ChunkLoadingSystem"),

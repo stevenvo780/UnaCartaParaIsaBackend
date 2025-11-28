@@ -1,6 +1,7 @@
 import { Worker } from "node:worker_threads";
 import { logger } from "../../../../infrastructure/utils/logger";
 import { StateCache } from "../StateCache";
+import { StateDirtyTracker } from "../StateDirtyTracker";
 import { DeltaEncoder } from "../DeltaEncoder";
 import type { SimulationRunner } from "../SimulationRunner";
 import { cloneGameState } from "../defaultState";
@@ -15,7 +16,10 @@ export class SnapshotManager {
   private snapshotWorker?: Worker;
   private snapshotWorkerReady = false;
 
-  constructor(private runner: SimulationRunner) {
+  constructor(
+    private runner: SimulationRunner,
+    private dirtyTracker: StateDirtyTracker,
+  ) {
     this.stateCache = new StateCache();
     this.deltaEncoder = new DeltaEncoder();
     this.initializeSnapshotWorker();
@@ -97,6 +101,13 @@ export class SnapshotManager {
     }
 
     const currentTick = this.runner.getTickCounter();
+
+    // Flush dirty flags from tracker and mark them in cache
+    const dirtySections = this.dirtyTracker.flush();
+    if (dirtySections.length > 0) {
+      this.stateCache.markDirtyMultiple(dirtySections);
+    }
+
     const stateSnapshot = this.stateCache.getSnapshot(
       this.runner.state,
       currentTick,
@@ -108,12 +119,12 @@ export class SnapshotManager {
 
         const ai = aiState
           ? {
-              currentGoal: aiState.currentGoal || undefined,
-              goalQueue: aiState.goalQueue || [],
-              currentAction: aiState.currentAction || undefined,
-              offDuty: aiState.offDuty || false,
-              lastDecisionTime: aiState.lastDecisionTime || 0,
-            }
+            currentGoal: aiState.currentGoal || undefined,
+            goalQueue: aiState.goalQueue || [],
+            currentAction: aiState.currentAction || undefined,
+            offDuty: aiState.offDuty || false,
+            lastDecisionTime: aiState.lastDecisionTime || 0,
+          }
           : undefined;
 
         return {
@@ -181,12 +192,12 @@ export class SnapshotManager {
 
         const ai = aiState
           ? {
-              currentGoal: aiState.currentGoal || undefined,
-              goalQueue: aiState.goalQueue || [],
-              currentAction: aiState.currentAction || undefined,
-              offDuty: aiState.offDuty || false,
-              lastDecisionTime: aiState.lastDecisionTime || 0,
-            }
+            currentGoal: aiState.currentGoal || undefined,
+            goalQueue: aiState.goalQueue || [],
+            currentAction: aiState.currentAction || undefined,
+            offDuty: aiState.offDuty || false,
+            lastDecisionTime: aiState.lastDecisionTime || 0,
+          }
           : undefined;
 
         return {

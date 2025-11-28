@@ -44,7 +44,7 @@ export enum BuildingSpriteId {
   AGENT_BUILT_KITCHEN = "agent_built_kitchen",
   AGENT_BUILT_OFFICE = "agent_built_office",
   AGENT_BUILT_MEDICAL = "agent_built_medical",
-  AGENT_BUILT_GYM = " agent_built_gym",
+  AGENT_BUILT_GYM = "agent_built_gym",
   AGENT_BUILT_HOUSE = "agent_built_house",
   AGENT_BUILT_LIBRARY = "agent_built_library",
   AGENT_BUILT_EDUCATION = "agent_built_education",
