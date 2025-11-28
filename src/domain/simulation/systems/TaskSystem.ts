@@ -247,6 +247,7 @@ export class TaskSystem {
   >();
 
   public getWorkHistory(agentId: string): {
+    taskId: string;
     taskType: string;
     contribution: number;
     timestamp: number;

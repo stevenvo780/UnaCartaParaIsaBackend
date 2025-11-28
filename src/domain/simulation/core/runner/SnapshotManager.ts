@@ -5,7 +5,6 @@ import { DeltaEncoder } from "../DeltaEncoder";
 import type { SimulationRunner } from "../SimulationRunner";
 import { cloneGameState } from "../defaultState";
 import type { SimulationSnapshot } from "../../../../shared/types/commands/SimulationCommand";
-import { SocialStatus } from "../../../types/simulation/agents";
 import { WorkerMessageType } from "../../../../shared/constants/WebSocketEnums";
 
 export class SnapshotManager {
@@ -233,7 +232,6 @@ export class SnapshotManager {
     if (snapshotState.agents) {
       snapshotState.agents = snapshotState.agents.map((agent) => {
         const needs = this.runner.needsSystem.getNeeds(agent.id);
-        const role = this.runner.roleSystem.getAgentRole(agent.id);
         const aiState = this.runner.aiSystem.getAIState(agent.id);
 
         let ai;
@@ -294,9 +292,7 @@ export class SnapshotManager {
         return {
           ...agent,
           needs: needs ? { ...needs } : undefined,
-          socialStatus: role?.roleType
-            ? (role.roleType as SocialStatus)
-            : agent.socialStatus,
+          socialStatus: agent.socialStatus,
           ai,
           crafting,
           history,

@@ -731,9 +731,8 @@ export class SocialSystem {
   public syncToGameState(): void {
     if (!this.gameState.socialGraph) {
       this.gameState.socialGraph = {
-        nodes: [],
-        edges: [],
         groups: [],
+        relationships: {},
       };
     }
 
