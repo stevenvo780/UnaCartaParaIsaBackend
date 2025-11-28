@@ -45,6 +45,9 @@ export class MarketSystem {
   private economySystem: EconomySystem;
   private config: MarketConfig;
   private agentRegistry?: AgentRegistry;
+  // Track recent trades to prevent ping-pong trading (agent pairs trading back and forth)
+  private recentTrades: Map<string, number> = new Map();
+  private readonly TRADE_COOLDOWN_MS = 30000; // 30 seconds between same agent-pair trades
 
   constructor(
     @inject(TYPES.GameState) state: GameState,
@@ -168,6 +171,14 @@ export class MarketSystem {
     }
     if (entities.length < 2) return;
 
+    const now = Date.now();
+    // Clean up old trade records
+    for (const [key, timestamp] of this.recentTrades) {
+      if (now - timestamp > this.TRADE_COOLDOWN_MS) {
+        this.recentTrades.delete(key);
+      }
+    }
+
     for (let i = 0; i < entities.length; i++) {
       const seller = entities[i];
       if (!seller || !seller.id) continue;
@@ -183,15 +194,21 @@ export class MarketSystem {
         ResourceType.METAL,
       ]) {
         const sellerStock = sellerInv[resource] || 0;
-        if (sellerStock < 10) continue;
+        // Increase threshold to reduce trading frequency
+        if (sellerStock < 15) continue; // Was 10, now 15
 
         for (let j = 0; j < entities.length; j++) {
           if (i === j) continue;
           const buyer = entities[j];
           if (!buyer || !buyer.id) continue;
 
+          // Check cooldown to prevent ping-pong trading
+          const tradeKey = [seller.id, buyer.id, resource].sort().join(":");
+          if (this.recentTrades.has(tradeKey)) continue;
+
           const buyerInv = this.inventorySystem.getAgentInventory(buyer.id);
-          if (!buyerInv || (buyerInv[resource] || 0) > 5) continue;
+          // Lower buyer threshold to 3 (was 5) - only buy if really low
+          if (!buyerInv || (buyerInv[resource] || 0) > 3) continue;
 
           const tradeAmount = Math.min(5, sellerStock);
           const price = this.getResourcePrice(resource);
@@ -208,6 +225,9 @@ export class MarketSystem {
             this.inventorySystem.addResource(buyer.id, resource, removed);
 
             this.economySystem.transferMoney(buyer.id, seller.id, cost);
+
+            // Record trade to prevent immediate reverse trade
+            this.recentTrades.set(tradeKey, now);
 
             logger.debug(
               `🔄 [MARKET] Auto-trade: ${seller.id} sold ${removed} ${resource} to ${buyer.id} for ${cost}`,

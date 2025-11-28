@@ -811,6 +811,13 @@ export class SimulationRunner {
     const agents = this.state.agents || [];
     let initialized = 0;
 
+    // Rebuild agent registry index to include all loaded agents
+    this.agentRegistry.rebuildProfileIndex();
+    const registeredCount = this.agentRegistry.getAgentCount();
+    logger.info(
+      `🔄 SimulationRunner: AgentRegistry rebuilt with ${registeredCount} agents`,
+    );
+
     for (const agent of agents) {
       if (agent.isDead) continue;
 

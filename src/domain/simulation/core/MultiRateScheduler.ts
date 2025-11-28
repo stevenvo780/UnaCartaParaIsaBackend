@@ -223,12 +223,32 @@ export class MultiRateScheduler {
 
     const startTime = performance.now();
 
+    // Measure preTick hook
+    const preTickStart = performance.now();
     this.hooks.preTick?.();
+    const preTickDuration = performance.now() - preTickStart;
+    if (this.hooks.preTick) {
+      performanceMonitor.recordSystemExecution(
+        TickRate.FAST,
+        "_lifecycle:preTick",
+        preTickDuration,
+      );
+    }
 
     const entityCount = this.getEntityCount();
     await this.executeSystems(this.fastSystems, delta, entityCount);
 
+    // Measure postTick hook
+    const postTickStart = performance.now();
     this.hooks.postTick?.();
+    const postTickDuration = performance.now() - postTickStart;
+    if (this.hooks.postTick) {
+      performanceMonitor.recordSystemExecution(
+        TickRate.FAST,
+        "_lifecycle:postTick",
+        postTickDuration,
+      );
+    }
 
     const elapsed = performance.now() - startTime;
     this.stats.fast.count++;
@@ -258,12 +278,32 @@ export class MultiRateScheduler {
 
     const startTime = performance.now();
 
+    // Measure preTick hook
+    const preTickStart = performance.now();
     this.hooks.preTick?.();
+    const preTickDuration = performance.now() - preTickStart;
+    if (this.hooks.preTick) {
+      performanceMonitor.recordSystemExecution(
+        TickRate.MEDIUM,
+        "_lifecycle:preTick",
+        preTickDuration,
+      );
+    }
 
     const entityCount = this.getEntityCount();
     await this.executeSystems(this.mediumSystems, delta, entityCount);
 
+    // Measure postTick hook
+    const postTickStart = performance.now();
     this.hooks.postTick?.();
+    const postTickDuration = performance.now() - postTickStart;
+    if (this.hooks.postTick) {
+      performanceMonitor.recordSystemExecution(
+        TickRate.MEDIUM,
+        "_lifecycle:postTick",
+        postTickDuration,
+      );
+    }
 
     const elapsed = performance.now() - startTime;
     this.stats.medium.count++;
@@ -290,12 +330,32 @@ export class MultiRateScheduler {
 
     const startTime = performance.now();
 
+    // Measure preTick hook
+    const preTickStart = performance.now();
     this.hooks.preTick?.();
+    const preTickDuration = performance.now() - preTickStart;
+    if (this.hooks.preTick) {
+      performanceMonitor.recordSystemExecution(
+        TickRate.SLOW,
+        "_lifecycle:preTick",
+        preTickDuration,
+      );
+    }
 
     const entityCount = this.getEntityCount();
     await this.executeSystems(this.slowSystems, delta, entityCount);
 
+    // Measure postTick hook
+    const postTickStart = performance.now();
     this.hooks.postTick?.();
+    const postTickDuration = performance.now() - postTickStart;
+    if (this.hooks.postTick) {
+      performanceMonitor.recordSystemExecution(
+        TickRate.SLOW,
+        "_lifecycle:postTick",
+        postTickDuration,
+      );
+    }
 
     const elapsed = performance.now() - startTime;
     this.stats.slow.count++;

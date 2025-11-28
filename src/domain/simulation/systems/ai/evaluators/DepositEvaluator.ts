@@ -53,9 +53,11 @@ export function evaluateDepositGoals(
     const cap = agentInv.capacity || 50;
     const loadRatio = load / cap;
 
-    const baseThreshold = 0.3;
+    // Lower threshold to ensure agents deposit more frequently
+    // This helps construction by keeping stockpiles stocked
+    const baseThreshold = 0.1; // Was 0.3 - deposit at 10% capacity instead of 30%
     const depositThreshold =
-      baseThreshold - personality.conscientiousness * 0.1;
+      baseThreshold - personality.conscientiousness * 0.05; // Reduced multiplier
 
     if (loadRatio >= depositThreshold) {
       const currentZoneId = ctx.getCurrentZone(aiState.entityId);
@@ -73,7 +75,8 @@ export function evaluateDepositGoals(
       }
     }
 
-    if (load <= 0 || loadRatio < depositThreshold * 0.75) return [];
+    // Reduced factor from 0.75 to 0.5 so agents deposit more readily
+    if (load <= 0 || loadRatio < depositThreshold * 0.5) return [];
 
     const storageZones =
       ctx.gameState.zones

@@ -113,6 +113,30 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   /**
+   * Synchronizes the spawn counter with existing agents to avoid ID collisions.
+   * Parses agent IDs like "agent_5" to find the highest number.
+   */
+  private syncSpawnCounter(): void {
+    const agents = this.gameState.agents || [];
+    let maxNum = 0;
+    
+    for (const agent of agents) {
+      const match = agent.id.match(/^agent_(\d+)$/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) {
+          maxNum = num;
+        }
+      }
+    }
+    
+    if (maxNum > this.spawnCounter) {
+      logger.info(`🔢 LifeCycleSystem: synced spawnCounter from ${this.spawnCounter} to ${maxNum}`);
+      this.spawnCounter = maxNum;
+    }
+  }
+
+  /**
    * Sets up a listener for AGENT_DEATH events from NeedsSystem.
    * Ensures that when an agent dies from starvation/dehydration/exhaustion,
    * they are properly removed and cleaned up.
@@ -192,6 +216,7 @@ export class LifeCycleSystem extends EventEmitter {
   public update(deltaTimeMs: number): void {
     if (!this.dependenciesChecked) {
       this.checkDependencies();
+      this.syncSpawnCounter();
     }
     const dtSec = deltaTimeMs / 1000;
 

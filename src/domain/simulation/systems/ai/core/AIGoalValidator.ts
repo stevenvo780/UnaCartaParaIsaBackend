@@ -16,6 +16,7 @@ import {
   ResourceState,
 } from "../../../../../shared/constants/ResourceEnums";
 import type { AgentRegistry } from "../../../core/AgentRegistry";
+import { logger } from "../../../../../infrastructure/utils/logger";
 
 export interface AIGoalValidatorDeps {
   gameState: GameState;
@@ -176,10 +177,12 @@ export class AIGoalValidator {
     const now = Date.now();
 
     if (goal.expiresAt && now > goal.expiresAt) {
+      logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} expired`);
       return true;
     }
 
     if (now - goal.createdAt > this.GOAL_TIMEOUT_MS) {
+      logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} timeout`);
       return true;
     }
 
@@ -188,17 +191,27 @@ export class AIGoalValidator {
         (z) => z.id === goal.targetZoneId,
       );
       if (!zone) {
+        logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} zone not found`);
         return true;
       }
     }
 
     const resourceValid = this.isResourceTargetValid(goal);
     if (resourceValid === false) {
+      logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} resource invalid`);
+      return true;
+    }
+
+    // Check hunt target validity
+    const huntTargetValid = this.isHuntTargetValid(goal);
+    if (huntTargetValid === false) {
+      logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} hunt target invalid`);
       return true;
     }
 
     const combatTargetValid = this.isCombatTargetValid(goal);
     if (combatTargetValid === false) {
+      logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} combat target invalid`);
       return true;
     }
 
@@ -210,12 +223,14 @@ export class AIGoalValidator {
       const targetId = goal.data.targetAgentId as string;
       const targetAgent = this.deps.agentRegistry?.getProfile(targetId);
       if (!targetAgent || targetAgent.isDead) {
+        logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} assist target invalid`);
         return true;
       }
     }
 
     const agent = this.deps.agentRegistry?.getProfile(agentId);
     if (!agent || agent.isDead) {
+      logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} agent not found or dead`);
       return true;
     }
 
@@ -252,6 +267,11 @@ export class AIGoalValidator {
    * Returns true if valid, false if invalid, null if not applicable.
    */
   private isResourceTargetValid(goal: AIGoal): boolean | null {
+    // Hunt goals target animals, not resources
+    if (goal.type === GoalType.HUNT) {
+      return null;
+    }
+
     if (!goal.targetId) {
       return null;
     }
@@ -347,6 +367,27 @@ export class AIGoalValidator {
       return !targetAnimal.isDead;
     }
 
+    return false;
+  }
+
+  /**
+   * Validates if a hunt target (animal) is still valid.
+   */
+  private isHuntTargetValid(goal: AIGoal): boolean | null {
+    if (goal.type !== GoalType.HUNT) {
+      return null;
+    }
+
+    if (!goal.targetId) {
+      return null;
+    }
+
+    const targetAnimal = this.deps.animalSystem?.getAnimal(goal.targetId);
+    if (targetAnimal) {
+      return !targetAnimal.isDead;
+    }
+
+    // Animal not found - may have been removed or is out of range
     return false;
   }
 }
