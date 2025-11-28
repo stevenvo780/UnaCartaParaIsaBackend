@@ -125,12 +125,12 @@ export class SocialSystem {
 
     this.updateSpatialGridIncremental();
 
-    if (now - this.lastProximityUpdate > 200) {
+    if (now - this.lastProximityUpdate > 500) {
       this.updateProximity(dt);
       this.lastProximityUpdate = now;
     }
 
-    if (now - this.lastDecayUpdate > 1000) {
+    if (now - this.lastDecayUpdate > 2000) {
       this.decayEdgesOptimized(dt);
       this.lastDecayUpdate = now;
     }
@@ -688,5 +688,5 @@ export class SocialSystem {
       timestamp: number;
       [key: string]: unknown;
     },
-  ): void {}
+  ): void { }
 }

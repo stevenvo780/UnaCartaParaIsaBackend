@@ -114,3 +114,14 @@ export enum DialogueSpeaker {
   NARRATOR = "narrator",
   SYSTEM = "system",
 }
+
+/**
+ * Enumeration of music mood states.
+ */
+export enum MusicMood {
+  HARMONIOUS = "harmonious",
+  NEUTRAL = "neutral",
+  TENSE = "tense",
+  OMINOUS = "ominous",
+  CHAOTIC = "chaotic",
+}

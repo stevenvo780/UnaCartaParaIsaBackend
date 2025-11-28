@@ -1078,7 +1078,7 @@ export class SimulationRunner {
       const zone = this.state.zones.find((z) => z.id === entityId);
       if (zone) {
         return {
-          type: "zone",
+          type: EntityType.ZONE,
           entity: zone,
         };
       }
@@ -1088,7 +1088,7 @@ export class SimulationRunner {
       const resource = this.state.worldResources[entityId];
       if (resource) {
         return {
-          type: "resource",
+          type: EntityType.RESOURCE,
           entity: resource,
         };
       }

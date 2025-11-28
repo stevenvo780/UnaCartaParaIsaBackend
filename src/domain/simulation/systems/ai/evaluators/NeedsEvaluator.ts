@@ -3,11 +3,12 @@ import type { EntityNeedsData } from "../../../../types/simulation/needs";
 import type { RoleType } from "../../../../types/simulation/roles";
 import { RoleType as RoleTypeEnum } from "../../../../../shared/constants/RoleEnums";
 import type { Inventory } from "../../../../types/simulation/economy";
-import { GoalType } from "../../../../../shared/constants/AIEnums";
-import { NeedType } from "../../../../../shared/constants/AIEnums";
+import {
+  GoalType,
+  NeedType,
+  ExplorationType,
+} from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
-import { TimeOfDayPhase } from "../../../../../shared/constants/TimeEnums";
-import { ExplorationType } from "../../../../../shared/constants/AgentEnums";
 
 /**
  * Role-based threshold modifiers for individual needs.

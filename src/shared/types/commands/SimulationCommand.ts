@@ -14,7 +14,7 @@ import { AnimalType } from "../../constants/AnimalEnums";
 import { BuildingType } from "../../constants/BuildingEnums";
 import { SystemProperty } from "../../constants/SystemEnums";
 
-export type ResourcesState = NonNullable<GameState["resources"]>;
+export type ResourcesState = NonNullable<GameState[SystemProperty.RESOURCES]>;
 
 /**
  * Base interface for all event payloads.

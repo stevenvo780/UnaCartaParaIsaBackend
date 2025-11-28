@@ -9,6 +9,7 @@ import {
   CrisisTrend,
   AmbientMood,
   WeatherType,
+  MusicMood,
 } from "../../../shared/constants/AmbientEnums";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -160,11 +161,11 @@ export class AmbientAwarenessSystem {
       wellbeing.mood === AmbientMood.THRIVING &&
       wellbeing.trend === CrisisTrend.IMPROVING
     )
-      return "harmonious";
-    if (wellbeing.mood === AmbientMood.COMFORTABLE) return "neutral";
-    if (wellbeing.mood === AmbientMood.STRESSED) return "tense";
-    if (wellbeing.mood === AmbientMood.CRISIS) return "ominous";
-    if (wellbeing.mood === AmbientMood.COLLAPSE) return "chaotic";
+      return MusicMood.HARMONIOUS;
+    if (wellbeing.mood === AmbientMood.COMFORTABLE) return MusicMood.NEUTRAL;
+    if (wellbeing.mood === AmbientMood.STRESSED) return MusicMood.TENSE;
+    if (wellbeing.mood === AmbientMood.CRISIS) return MusicMood.OMINOUS;
+    if (wellbeing.mood === AmbientMood.COLLAPSE) return MusicMood.CHAOTIC;
     return "neutral";
   }
 

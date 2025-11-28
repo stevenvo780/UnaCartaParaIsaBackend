@@ -98,6 +98,7 @@ export class MovementSystem extends EventEmitter {
   private readonly GRID_CACHE_DURATION = 30000;
   private readonly PATH_CACHE_DURATION = 30000;
   private lastCacheCleanup: number = 0;
+  private entitiesDirty = true;
 
   private batchProcessor: MovementBatchProcessor;
   /**
@@ -268,7 +269,10 @@ export class MovementSystem extends EventEmitter {
   }
 
   private updateBatch(deltaMs: number, now: number): void {
-    this.batchProcessor.rebuildBuffers(this.movementStates);
+    if (this.entitiesDirty) {
+      this.batchProcessor.rebuildBuffers(this.movementStates);
+      this.entitiesDirty = false;
+    }
     this.batchProcessor.syncTargetsFromStates(this.movementStates);
 
     const entityIdArray = this.batchProcessor.getEntityIdArray();
@@ -483,6 +487,7 @@ export class MovementSystem extends EventEmitter {
     };
 
     this.movementStates.set(entityId, movementState);
+    this.entitiesDirty = true;
 
     const agent = this.agentRegistry?.getProfile(entityId);
     if (agent) {
@@ -622,6 +627,7 @@ export class MovementSystem extends EventEmitter {
 
   public removeEntityMovement(entityId: string): void {
     this.movementStates.delete(entityId);
+    this.entitiesDirty = true;
   }
 
   public isMovingToZone(entityId: string, zoneId: string): boolean {
@@ -936,8 +942,8 @@ export class MovementSystem extends EventEmitter {
     const radius: number =
       SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN +
       Math.random() *
-        (SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX -
-          SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN);
+      (SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX -
+        SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN);
 
     const angle = Math.random() * Math.PI * 2;
     const targetX = state.currentPosition.x + Math.cos(angle) * radius;

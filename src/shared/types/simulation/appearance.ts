@@ -104,7 +104,7 @@ export const GENERATION_STYLES: VisualStyle[] = [
   },
 
   {
-    id: "crafters_gen2",
+    id: GenerationStyleId.CRAFTERS_GEN2,
     name: "Artesanos",
     description: "Generación de constructores y creadores",
     palette: {
@@ -118,7 +118,7 @@ export const GENERATION_STYLES: VisualStyle[] = [
   },
 
   {
-    id: "scholars_gen3",
+    id: GenerationStyleId.SCHOLARS_GEN3,
     name: "Eruditos",
     description: "Generación del conocimiento",
     palette: {
@@ -132,7 +132,7 @@ export const GENERATION_STYLES: VisualStyle[] = [
   },
 
   {
-    id: "warriors_gen4",
+    id: GenerationStyleId.WARRIORS_GEN4,
     name: "Guardianes",
     description: "Generación de protectores",
     palette: {
@@ -146,7 +146,7 @@ export const GENERATION_STYLES: VisualStyle[] = [
   },
 
   {
-    id: "mixed_gen5",
+    id: GenerationStyleId.MIXED_GEN5,
     name: "Mixtos",
     description: "Generación con herencia mezclada",
     palette: {

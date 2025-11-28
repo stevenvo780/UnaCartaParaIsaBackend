@@ -87,6 +87,10 @@ export class CombatSystem {
   private gpuService?: GPUComputeService;
   private entityIndex?: EntityIndex;
 
+  // Buffers for GPU batch processing to avoid allocation every frame
+  private attackerPositionsBuffer: Float32Array | null = null;
+  private targetPositionsBuffer: Float32Array | null = null;
+
   constructor(
     @inject(TYPES.GameState) private readonly state: GameState,
     @inject(TYPES.InventorySystem)
@@ -308,17 +312,36 @@ export class CombatSystem {
 
     if (attackersWithPos.length === 0 || allEntities.length === 0) return;
 
-    const attackerPositions = new Float32Array(attackersWithPos.length * 2);
-    const targetPositions = new Float32Array(allEntities.length * 2);
+    // Resize buffers if needed (with some margin to avoid frequent resizing)
+    const neededAttackerSize = attackersWithPos.length * 2;
+    if (
+      !this.attackerPositionsBuffer ||
+      this.attackerPositionsBuffer.length < neededAttackerSize
+    ) {
+      this.attackerPositionsBuffer = new Float32Array(
+        Math.ceil(neededAttackerSize * 1.5),
+      );
+    }
+
+    const neededTargetSize = allEntities.length * 2;
+    if (
+      !this.targetPositionsBuffer ||
+      this.targetPositionsBuffer.length < neededTargetSize
+    ) {
+      this.targetPositionsBuffer = new Float32Array(
+        Math.ceil(neededTargetSize * 1.5),
+      );
+    }
 
     for (let i = 0; i < attackersWithPos.length; i++) {
-      attackerPositions[i * 2] = attackersWithPos[i].position!.x;
-      attackerPositions[i * 2 + 1] = attackersWithPos[i].position!.y;
+      this.attackerPositionsBuffer[i * 2] = attackersWithPos[i].position!.x;
+      this.attackerPositionsBuffer[i * 2 + 1] =
+        attackersWithPos[i].position!.y;
     }
 
     for (let i = 0; i < allEntities.length; i++) {
-      targetPositions[i * 2] = allEntities[i].position!.x;
-      targetPositions[i * 2 + 1] = allEntities[i].position!.y;
+      this.targetPositionsBuffer[i * 2] = allEntities[i].position!.x;
+      this.targetPositionsBuffer[i * 2 + 1] = allEntities[i].position!.y;
     }
 
     for (let a = 0; a < attackersWithPos.length; a++) {
@@ -328,10 +351,18 @@ export class CombatSystem {
       const radius = Math.max(this.config.engagementRadius, weapon.range);
       const radiusSq = radius * radius;
 
+      // Use the reused buffer (slice is not needed if computeDistancesBatch handles offsets,
+      // but assuming it takes the whole array or we pass length.
+      // If computeDistancesBatch iterates the whole array, we might process garbage data.
+      // Let's assume we need to pass the valid data.
+      // Ideally computeDistancesBatch should accept a count.
+      // Checking GPUComputeService signature... it takes Float32Array.
+      // If it iterates the whole array, we must subarray it. Subarray is cheap (view).
+
       const distances = this.gpuService!.computeDistancesBatch(
         attacker.position!.x,
         attacker.position!.y,
-        targetPositions,
+        this.targetPositionsBuffer.subarray(0, neededTargetSize),
       );
 
       for (let t = 0; t < allEntities.length; t++) {

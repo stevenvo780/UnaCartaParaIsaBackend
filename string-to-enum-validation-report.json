@@ -1,11 +1,11 @@
 {
   "summary": {
-    "totalEnums": 144,
-    "totalEnumValues": 890,
-    "totalStringOccurrences": 1578,
-    "missingEnumStrings": 279,
-    "missingEnumOccurrences": 352,
-    "filesAffected": 89
+    "totalEnums": 148,
+    "totalEnumValues": 904,
+    "totalStringOccurrences": 1557,
+    "missingEnumStrings": 261,
+    "missingEnumOccurrences": 324,
+    "filesAffected": 80
   },
   "enums": [
     {
@@ -137,6 +137,13 @@
         "default"
       ],
       "file": "src/shared/constants/AgentEnums.ts"
+    },
+    {
+      "name": "GoalReason",
+      "values": [
+        "reproduction_drive"
+      ],
+      "file": "src/shared/constants/AIEnums.ts"
     },
     {
       "name": "Sex",
@@ -291,6 +298,17 @@
       "file": "../UnaCartaParaIsa/src/constants/DialogueEnums.ts"
     },
     {
+      "name": "MusicMood",
+      "values": [
+        "harmonious",
+        "neutral",
+        "tense",
+        "ominous",
+        "chaotic"
+      ],
+      "file": "src/shared/constants/AmbientEnums.ts"
+    },
+    {
       "name": "AnimalType",
       "values": [
         "rabbit",
@@ -326,6 +344,18 @@
         "mate"
       ],
       "file": "src/shared/constants/AnimalEnums.ts"
+    },
+    {
+      "name": "GenerationStyleId",
+      "values": [
+        "divine_gen0",
+        "pioneer_gen1",
+        "crafters_gen2",
+        "scholars_gen3",
+        "warriors_gen4",
+        "mixed_gen5"
+      ],
+      "file": "src/shared/constants/AppearanceEnums.ts"
     },
     {
       "name": "BiomeType",
@@ -1141,6 +1171,14 @@
       "file": "src/shared/constants/MovementEnums.ts"
     },
     {
+      "name": "QuestObjectiveID",
+      "values": [
+        "obj_1",
+        "obj_2"
+      ],
+      "file": "src/shared/constants/QuestEnums.ts"
+    },
+    {
       "name": "QuestID",
       "values": [
         "tutorial_survival",
@@ -1566,7 +1604,8 @@
         "sex",
         "resolution",
         "assets",
-        "materials"
+        "materials",
+        "resources"
       ],
       "file": "src/shared/constants/SystemEnums.ts"
     },
@@ -2324,206 +2363,6 @@
       ]
     },
     {
-      "stringLiteral": "obj_1",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 30,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"obj_1\","
-        },
-        {
-          "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 75,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"obj_1\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "food_or_prey",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/ai/evaluators/BiologicalDriveEvaluator.ts",
-          "line": 210,
-          "column": 23,
-          "pattern": "Asignaciones",
-          "lineContent": "searchFor: \"food_or_prey\","
-        },
-        {
-          "file": "src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts",
-          "line": 349,
-          "column": 25,
-          "pattern": "Asignaciones",
-          "lineContent": "searchFor: \"food_or_prey\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "reproduction_drive",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator.ts",
-          "line": 74,
-          "column": 16,
-          "pattern": "Asignaciones",
-          "lineContent": "reason: \"reproduction_drive\","
-        },
-        {
-          "file": "src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator.ts",
-          "line": 87,
-          "column": 16,
-          "pattern": "Asignaciones",
-          "lineContent": "reason: \"reproduction_drive\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "resources",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/types/commands/SimulationCommand.ts",
-          "line": 17,
-          "column": 50,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "export type ResourcesState = NonNullable<GameState[\"resources\"]>;"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/shared/types/commands/SimulationCommand.ts",
-          "line": 22,
-          "column": 50,
-          "pattern": "Acceso a propiedades",
-          "lineContent": "export type ResourcesState = NonNullable<GameState[\"resources\"]>;"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "divine_gen0",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/types/simulation/appearance.ts",
-          "line": 78,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"divine_gen0\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/types/appearance.ts",
-          "line": 77,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"divine_gen0\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "pioneer_gen1",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/types/simulation/appearance.ts",
-          "line": 92,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"pioneer_gen1\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/types/appearance.ts",
-          "line": 91,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"pioneer_gen1\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "crafters_gen2",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/types/simulation/appearance.ts",
-          "line": 106,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"crafters_gen2\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/types/appearance.ts",
-          "line": 105,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"crafters_gen2\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "scholars_gen3",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/types/simulation/appearance.ts",
-          "line": 120,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"scholars_gen3\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/types/appearance.ts",
-          "line": 119,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"scholars_gen3\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "warriors_gen4",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/types/simulation/appearance.ts",
-          "line": 134,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"warriors_gen4\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/types/appearance.ts",
-          "line": 133,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"warriors_gen4\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "mixed_gen5",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/shared/types/simulation/appearance.ts",
-          "line": 148,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"mixed_gen5\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/types/appearance.ts",
-          "line": 147,
-          "column": 6,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"mixed_gen5\","
-        }
-      ]
-    },
-    {
       "stringLiteral": "build_mine",
       "count": 2,
       "occurrences": [
@@ -3224,84 +3063,6 @@
       ]
     },
     {
-      "stringLiteral": "zone",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/core/SimulationRunner.ts",
-          "line": 1081,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"zone\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "resource",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/core/SimulationRunner.ts",
-          "line": 1091,
-          "column": 14,
-          "pattern": "Asignaciones",
-          "lineContent": "type: \"resource\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "harmonious",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/AmbientAwarenessSystem.ts",
-          "line": 163,
-          "column": 6,
-          "pattern": "Return statements",
-          "lineContent": "return \"harmonious\";"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "tense",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/AmbientAwarenessSystem.ts",
-          "line": 165,
-          "column": 49,
-          "pattern": "Return statements",
-          "lineContent": "if (wellbeing.mood === AmbientMood.STRESSED) return \"tense\";"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "ominous",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/AmbientAwarenessSystem.ts",
-          "line": 166,
-          "column": 47,
-          "pattern": "Return statements",
-          "lineContent": "if (wellbeing.mood === AmbientMood.CRISIS) return \"ominous\";"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "chaotic",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/AmbientAwarenessSystem.ts",
-          "line": 167,
-          "column": 49,
-          "pattern": "Return statements",
-          "lineContent": "if (wellbeing.mood === AmbientMood.COLLAPSE) return \"chaotic\";"
-        }
-      ]
-    },
-    {
       "stringLiteral": "time",
       "count": 1,
       "occurrences": [
@@ -3437,7 +3198,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/MovementSystem.ts",
-          "line": 519,
+          "line": 524,
           "column": 18,
           "pattern": "Asignaciones",
           "lineContent": "reason: \"no_path_found\","
@@ -3458,25 +3219,12 @@
       ]
     },
     {
-      "stringLiteral": "obj_2",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 39,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"obj_2\","
-        }
-      ]
-    },
-    {
       "stringLiteral": "advanced_building",
       "count": 1,
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 88,
+          "line": 89,
           "column": 16,
           "pattern": "Asignaciones",
           "lineContent": "unlockId: \"advanced_building\","
@@ -3489,7 +3237,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/QuestSystem.ts",
-          "line": 239,
+          "line": 240,
           "column": 19,
           "pattern": "Acceso a propiedades",
           "lineContent": "rewards?: Quest[\"rewards\"];"
@@ -3801,7 +3549,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator.ts",
-          "line": 73,
+          "line": 74,
           "column": 16,
           "pattern": "Asignaciones",
           "lineContent": "action: \"find_mate\","
@@ -5590,19 +5338,6 @@
       ]
     },
     {
-      "stringLiteral": "update",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/rendering/AgentSpriteManager.ts",
-          "line": 90,
-          "column": 16,
-          "pattern": "Asignaciones",
-          "lineContent": "reason: \"update\","
-        }
-      ]
-    },
-    {
       "stringLiteral": "man1_golden",
       "count": 1,
       "occurrences": [
@@ -5959,7 +5694,7 @@
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 975,
+          "line": 926,
           "column": 42,
           "pattern": "Acceso a propiedades",
           "lineContent": "getGroups?: () => RawSocialStats[\"groups\"];"
@@ -5972,7 +5707,7 @@
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 982,
+          "line": 933,
           "column": 48,
           "pattern": "Acceso a propiedades",
           "lineContent": "| { getAllMarriages?: () => RawSocialStats[\"marriages\"] }"
@@ -6099,14 +5834,6 @@
   ],
   "byFile": [
     {
-      "file": "src/domain/simulation/core/SimulationRunner.ts",
-      "count": 2,
-      "uniqueStrings": [
-        "zone",
-        "resource"
-      ]
-    },
-    {
       "file": "src/domain/simulation/systems/AISystem.ts",
       "count": 1,
       "uniqueStrings": [
@@ -6118,16 +5845,6 @@
       "count": 2,
       "uniqueStrings": [
         "phase"
-      ]
-    },
-    {
-      "file": "src/domain/simulation/systems/AmbientAwarenessSystem.ts",
-      "count": 4,
-      "uniqueStrings": [
-        "harmonious",
-        "tense",
-        "ominous",
-        "chaotic"
       ]
     },
     {
@@ -6198,10 +5915,8 @@
     },
     {
       "file": "src/domain/simulation/systems/QuestSystem.ts",
-      "count": 5,
+      "count": 2,
       "uniqueStrings": [
-        "obj_1",
-        "obj_2",
         "advanced_building",
         "rewards"
       ]
@@ -6254,20 +5969,6 @@
       ]
     },
     {
-      "file": "src/domain/simulation/systems/ai/evaluators/BiologicalDriveEvaluator.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "food_or_prey"
-      ]
-    },
-    {
-      "file": "src/domain/simulation/systems/ai/evaluators/NeedsEvaluator.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "food_or_prey"
-      ]
-    },
-    {
       "file": "src/domain/simulation/systems/ai/evaluators/CognitiveDriveEvaluator.ts",
       "count": 2,
       "uniqueStrings": [
@@ -6305,10 +6006,9 @@
     },
     {
       "file": "src/domain/simulation/systems/ai/evaluators/ReproductionEvaluator.ts",
-      "count": 3,
+      "count": 1,
       "uniqueStrings": [
-        "find_mate",
-        "reproduction_drive"
+        "find_mate"
       ]
     },
     {
@@ -6331,44 +6031,6 @@
       "uniqueStrings": [
         "tensorflow",
         "utf8"
-      ]
-    },
-    {
-      "file": "src/shared/types/commands/SimulationCommand.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "resources"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/shared/types/commands/SimulationCommand.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "resources"
-      ]
-    },
-    {
-      "file": "src/shared/types/simulation/appearance.ts",
-      "count": 6,
-      "uniqueStrings": [
-        "divine_gen0",
-        "pioneer_gen1",
-        "crafters_gen2",
-        "scholars_gen3",
-        "warriors_gen4",
-        "mixed_gen5"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/types/appearance.ts",
-      "count": 6,
-      "uniqueStrings": [
-        "divine_gen0",
-        "pioneer_gen1",
-        "crafters_gen2",
-        "scholars_gen3",
-        "warriors_gen4",
-        "mixed_gen5"
       ]
     },
     {
@@ -6842,13 +6504,6 @@
       "count": 1,
       "uniqueStrings": [
         "severity"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/presentation/managers/rendering/AgentSpriteManager.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "update"
       ]
     },
     {
