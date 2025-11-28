@@ -1,4 +1,19 @@
-import * as tf from "@tensorflow/tfjs-node-gpu";
+// Lazy-load TensorFlow to avoid CPU thread spinning when not needed
+// TensorFlow.js GPU creates Eigen threads that consume CPU even when idle
+type TF = typeof import("@tensorflow/tfjs-node-gpu");
+let tf: TF | null = null;
+let tfLoadPromise: Promise<TF> | null = null;
+
+async function getTensorFlow(): Promise<TF> {
+  if (tf) return tf;
+  if (tfLoadPromise) return tfLoadPromise;
+  tfLoadPromise = import("@tensorflow/tfjs-node-gpu").then((module) => {
+    tf = module;
+    return tf;
+  });
+  return tfLoadPromise;
+}
+
 import { logger } from "../../../infrastructure/utils/logger";
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -184,7 +199,8 @@ export class GPUBatchQueryService {
       queryCount >= this.GPU_QUERY_THRESHOLD;
 
     if (useGpu) {
-      this.processGPU(queries, entityCount);
+      // Async GPU processing - only loads TensorFlow when actually needed
+      this.processGPUAsync(queries, entityCount);
     } else {
       this.processCPU(queries, entityCount);
     }
@@ -198,20 +214,24 @@ export class GPUBatchQueryService {
 
   /**
    * GPU batch processing - compute all distances, then filter per query.
+   * Now async to support lazy-loading of TensorFlow.
    */
-  private processGPU(queries: PendingQuery[], entityCount: number): void {
+  private async processGPUAsync(queries: PendingQuery[], entityCount: number): Promise<void> {
     const startTime = performance.now();
 
     try {
+      // Lazy-load TensorFlow only when GPU is actually needed
+      const tfModule = await getTensorFlow();
+      
       const queryCenters = new Float32Array(queries.length * 2);
       for (let i = 0; i < queries.length; i++) {
         queryCenters[i * 2] = queries[i].centerX;
         queryCenters[i * 2 + 1] = queries[i].centerY;
       }
 
-      const distancesSq = tf.tidy(() => {
-        const entities = tf.tensor2d(this.entityPositions, [entityCount, 2]);
-        const centers = tf.tensor2d(queryCenters, [queries.length, 2]);
+      const distancesSq = tfModule.tidy(() => {
+        const entities = tfModule.tensor2d(this.entityPositions, [entityCount, 2]);
+        const centers = tfModule.tensor2d(queryCenters, [queries.length, 2]);
 
         const centersExp = centers.expandDims(1);
         const entitiesExp = entities.expandDims(0);

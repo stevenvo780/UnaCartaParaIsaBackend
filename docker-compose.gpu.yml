@@ -30,6 +30,10 @@ services:
       - TF_NUM_INTEROP_THREADS=4
       - TF_NUM_INTRAOP_THREADS=4
       - OMP_NUM_THREADS=4
+      # Evitar spinning de threads CUDA - operaciones síncronas
+      - CUDA_LAUNCH_BLOCKING=1
+      # Hacer que threads de CUDA esperen pasivamente en lugar de spin-wait
+      - CUDA_DEVICE_SCHEDULE_BLOCKING_SYNC=1
       # CRÍTICO: Usa threads privados para GPU, evita spinning/polling en CPU
       - TF_GPU_THREAD_MODE=gpu_private
       - TF_GPU_THREAD_COUNT=2

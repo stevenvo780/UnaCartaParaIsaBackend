@@ -9,6 +9,10 @@ type TF = typeof import("@tensorflow/tfjs-node-gpu");
  * Provides optimized batch operations for entity processing.
  * Automatically falls back to CPU if GPU is unavailable or for small batches.
  * Tracks performance statistics for monitoring.
+ * 
+ * NOTE: TensorFlow.js is LAZY-LOADED only when entity count exceeds thresholds.
+ * This prevents CPU thread spinning from TensorFlow's Eigen thread pool when
+ * the simulation has few entities and doesn't need GPU acceleration.
  *
  * @see NeedsSystem for needs decay batch processing
  * @see MovementSystem for position update batch processing
@@ -17,33 +21,51 @@ type TF = typeof import("@tensorflow/tfjs-node-gpu");
 export class GPUComputeService {
   private gpuAvailable = false;
   private initialized = false;
+  private tfLoading = false;
   private tf: TF | null = null;
   private performanceStats = {
     gpuOperations: 0,
     cpuFallbacks: 0,
     totalGpuTime: 0,
     totalCpuTime: 0,
+    gpuAvailable: false,
   };
 
   /**
-   * Initializes TensorFlow.js and detects GPU availability.
-   * Must be called before using any GPU operations.
+   * Initializes the service (lightweight, does NOT load TensorFlow).
+   * TensorFlow will be lazy-loaded only when entity count exceeds thresholds.
    *
    * @remarks
-   * Performs GPU detection by testing tensor operations. Falls back to CPU
-   * if GPU is unavailable or initialization fails. This method is idempotent
-   * and safe to call multiple times.
-   *
-   * @throws Never throws - errors are caught and logged, CPU fallback is used
+   * This is a lightweight initialization that doesn't load TensorFlow.
+   * GPU availability will be set to true only after TensorFlow is actually loaded
+   * via ensureTensorFlowLoaded() when needed.
    */
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
+    logger.info("🔄 GPUComputeService initialized (TensorFlow will lazy-load when needed)");
+    this.initialized = true;
+  }
+
+  /**
+   * Lazy-loads TensorFlow only when actually needed for GPU operations.
+   * This prevents CPU thread spinning when the simulation doesn't need GPU.
+   */
+  private async ensureTensorFlowLoaded(): Promise<boolean> {
+    if (this.tf) return this.gpuAvailable;
+    if (this.tfLoading) {
+      // Wait for ongoing load
+      while (this.tfLoading) {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+      return this.gpuAvailable;
+    }
+
+    this.tfLoading = true;
     try {
-      logger.info("🔄 Attempting to load TensorFlow GPU module...");
+      logger.info("🔄 Lazy-loading TensorFlow GPU module (entity threshold exceeded)...");
 
       this.tf = await import("@tensorflow/tfjs-node-gpu");
-
       await this.tf.ready();
 
       const backend = this.tf.getBackend();
@@ -65,37 +87,39 @@ export class GPUComputeService {
 
       const gpuBackends = ["tensorflow", "cuda", "webgl", "webgpu"];
       this.gpuAvailable = gpuBackends.includes(backend?.toLowerCase() ?? "");
+      this.performanceStats.gpuAvailable = this.gpuAvailable;
 
       logger.info(
-        `🚀 GPUComputeService initialized - Backend: ${backend} (GPU: ${this.gpuAvailable ? "available" : "unavailable, using CPU"})`,
+        `🚀 TensorFlow lazy-loaded - Backend: ${backend} (GPU: ${this.gpuAvailable ? "available" : "unavailable, using CPU"})`,
       );
 
-      this.initialized = true;
+      return this.gpuAvailable;
     } catch (error) {
       logger.warn(
-        `⚠️ Error initializing TensorFlow, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
+        `⚠️ Error loading TensorFlow, using CPU fallback: ${error instanceof Error ? error.message : String(error)}`,
       );
       this.gpuAvailable = false;
-      this.initialized = true;
+      this.performanceStats.gpuAvailable = false;
+      return false;
+    } finally {
+      this.tfLoading = false;
     }
   }
 
   /**
    * Checks if GPU is available for computation.
-   * Returns false if service hasn't been initialized yet.
+   * Returns false until TensorFlow is lazy-loaded.
    *
-   * @returns True if GPU backend is available and initialized
+   * @returns True if GPU backend is available and loaded
    */
   isGPUAvailable(): boolean {
-    if (!this.initialized || !this.tf) {
-      return false;
-    }
-    return this.gpuAvailable;
+    return this.gpuAvailable && this.tf !== null;
   }
 
   /**
    * Updates entity positions in batch using GPU acceleration.
-   * Falls back to CPU if GPU unavailable or entity count < 10.
+   * Falls back to CPU if GPU unavailable or entity count < 1000.
+   * TensorFlow is lazy-loaded only when entity count >= 1000.
    *
    * @param positions - Flat array [x1, y1, x2, y2, ...] of current positions
    * @param targets - Flat array [x1, y1, x2, y2, ...] of target positions
@@ -114,7 +138,20 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = positions.length / 2;
 
-    if (!this.gpuAvailable || !this.tf || entityCount < 50) {
+    // Use CPU for small entity counts - don't even try to load TensorFlow
+    if (entityCount < 1000) {
+      return this.updatePositionsBatchCPU(
+        positions,
+        targets,
+        speeds,
+        fatigue,
+        deltaMs,
+      );
+    }
+
+    // Lazy-load TensorFlow when threshold exceeded
+    const gpuReady = await this.ensureTensorFlowLoaded();
+    if (!gpuReady || !this.tf) {
       return this.updatePositionsBatchCPU(
         positions,
         targets,
@@ -257,7 +294,8 @@ export class GPUComputeService {
 
   /**
    * Applies decay to entity needs in batch using GPU acceleration.
-   * Falls back to CPU if GPU unavailable or entity count < 10.
+   * Falls back to CPU if GPU unavailable or entity count < 1000.
+   * TensorFlow is lazy-loaded only when entity count >= 1000.
    *
    * @param needs - Flat array [h1, t1, e1, ...] where each entity has needCount values
    * @param decayRates - Array of decay rates per need [rate0, rate1, ...]
@@ -278,7 +316,21 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = needs.length / needCount;
 
-    if (!this.gpuAvailable || !this.tf || entityCount < 50) {
+    // Use CPU for small entity counts - don't even try to load TensorFlow
+    if (entityCount < 1000) {
+      return this.applyNeedsDecayBatchCPU(
+        needs,
+        decayRates,
+        ageMultipliers,
+        divineModifiers,
+        needCount,
+        deltaSeconds,
+      );
+    }
+
+    // Lazy-load TensorFlow when threshold exceeded
+    const gpuReady = await this.ensureTensorFlowLoaded();
+    if (!gpuReady || !this.tf) {
       return this.applyNeedsDecayBatchCPU(
         needs,
         decayRates,
@@ -388,7 +440,8 @@ export class GPUComputeService {
 
   /**
    * Applies cross-effects between needs (e.g., low hunger affects energy).
-   * Falls back to CPU if GPU unavailable or entity count < 10.
+   * Falls back to CPU if GPU unavailable or entity count < 1000.
+   * TensorFlow is lazy-loaded only when entity count >= 1000.
    *
    * @param needs - Flat array of needs [h1, t1, e1, ...]
    * @param needCount - Number of needs per entity
@@ -401,7 +454,14 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = needs.length / needCount;
 
-    if (!this.gpuAvailable || !this.tf || entityCount < 50) {
+    // Use CPU for small entity counts - don't even try to load TensorFlow
+    if (entityCount < 1000) {
+      return this.applyNeedsCrossEffectsBatchCPU(needs, needCount);
+    }
+
+    // Lazy-load TensorFlow when threshold exceeded
+    const gpuReady = await this.ensureTensorFlowLoaded();
+    if (!gpuReady || !this.tf) {
       return this.applyNeedsCrossEffectsBatchCPU(needs, needCount);
     }
 
@@ -546,7 +606,8 @@ export class GPUComputeService {
 
   /**
    * Updates entity fatigue in batch using GPU acceleration.
-   * Falls back to CPU if GPU unavailable or entity count < 10.
+   * Falls back to CPU if GPU unavailable or entity count < 1000.
+   * TensorFlow is lazy-loaded only when entity count >= 1000.
    *
    * @param fatigue - Array of fatigue values
    * @param isMoving - Array of booleans indicating if entities are moving
@@ -563,7 +624,14 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = fatigue.length;
 
-    if (!this.gpuAvailable || !this.tf || entityCount < 50) {
+    // Use CPU for small entity counts - don't even try to load TensorFlow
+    if (entityCount < 1000) {
+      return this.updateFatigueBatchCPU(fatigue, isMoving, isResting, deltaMs);
+    }
+
+    // Lazy-load TensorFlow when threshold exceeded
+    const gpuReady = await this.ensureTensorFlowLoaded();
+    if (!gpuReady || !this.tf) {
       return this.updateFatigueBatchCPU(fatigue, isMoving, isResting, deltaMs);
     }
 
@@ -799,12 +867,14 @@ export class GPUComputeService {
       cpuFallbacks: 0,
       totalGpuTime: 0,
       totalCpuTime: 0,
+      gpuAvailable: this.gpuAvailable,
     };
   }
 
   /**
    * Computes squared distances from a center point to all entity positions in batch.
    * Much faster than individual distance calculations for large entity counts.
+   * TensorFlow is lazy-loaded only when entity count >= 1000.
    *
    * @param centerX - Center X coordinate
    * @param centerY - Center Y coordinate
@@ -819,7 +889,14 @@ export class GPUComputeService {
     const startTime = performance.now();
     const entityCount = positions.length / 2;
 
-    if (!this.gpuAvailable || !this.tf || entityCount < 100) {
+    // Use CPU for small entity counts - don't even try to load TensorFlow
+    if (entityCount < 1000) {
+      return this.computeDistancesBatchCPU(centerX, centerY, positions);
+    }
+
+    // Lazy-load TensorFlow when threshold exceeded
+    const gpuReady = await this.ensureTensorFlowLoaded();
+    if (!gpuReady || !this.tf) {
       return this.computeDistancesBatchCPU(centerX, centerY, positions);
     }
 
@@ -993,6 +1070,7 @@ export class GPUComputeService {
   /**
    * Computes pairwise distances for proximity reinforcement.
    * Returns a matrix of squared distances between all pairs.
+   * TensorFlow is lazy-loaded only when entity count >= 1000.
    *
    * @param positions - Flat array [x1, y1, x2, y2, ...] of positions
    * @param maxEntities - Limit computation to first N entities (performance)
@@ -1006,7 +1084,14 @@ export class GPUComputeService {
     const entityCount = Math.min(positions.length / 2, maxEntities);
     const pairCount = (entityCount * (entityCount - 1)) / 2;
 
-    if (!this.gpuAvailable || !this.tf || entityCount < 50) {
+    // Use CPU for small entity counts - don't even try to load TensorFlow
+    if (entityCount < 1000) {
+      return this.computePairwiseDistancesCPU(positions, maxEntities);
+    }
+
+    // Lazy-load TensorFlow when threshold exceeded
+    const gpuReady = await this.ensureTensorFlowLoaded();
+    if (!gpuReady || !this.tf) {
       return this.computePairwiseDistancesCPU(positions, maxEntities);
     }
 

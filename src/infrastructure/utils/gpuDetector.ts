@@ -61,9 +61,11 @@ export function getTensorFlow(): unknown {
  * Detects GPU availability and usage status.
  *
  * Checks multiple sources:
- * - TensorFlow.js backend (GPU vs CPU)
  * - NVIDIA GPU via nvidia-smi command
  * - CUDA environment variables
+ * 
+ * NOTE: Does NOT load TensorFlow.js to avoid CPU thread spinning.
+ * TensorFlow will be lazy-loaded only when GPU operations are actually needed.
  *
  * Logs detailed information about GPU detection and usage.
  *
@@ -76,56 +78,7 @@ export function detectGPUAvailability(): GPUInfo {
     libraries: {},
   };
 
-  const tf = getTensorFlow() as {
-    getBackend?: () => string;
-    backend?: () => {
-      getGpuDeviceInfo?: () => { deviceName?: string; vendor?: string };
-    };
-  } | null;
-
-  if (tf && typeof tf.getBackend === "function") {
-    info.tf = tf;
-    info.libraries!.tensorflow = true;
-
-    const backend = tf.getBackend();
-    info.backend = backend;
-    logger.info(`📦 TensorFlow backend: ${backend}`);
-
-    if (backend === "tensorflow") {
-      info.usingGPU = true;
-      info.available = true;
-      info.libraries!.tensorflowGpu = true;
-
-      try {
-        const backendInstance = tf.backend?.();
-        const deviceInfo = backendInstance?.getGpuDeviceInfo?.();
-        if (deviceInfo) {
-          info.deviceName = deviceInfo.deviceName;
-          info.vendor = deviceInfo.vendor;
-          logger.info("🎮 GPU detected and in use", {
-            backend: backend,
-            deviceName: deviceInfo.deviceName,
-            vendor: deviceInfo.vendor,
-          });
-        } else {
-          logger.info("🎮 GPU in use (TensorFlow.js)", { backend });
-        }
-      } catch (err) {
-        logger.debug("Error getting GPU device info, assuming GPU available", {
-          error: err instanceof Error ? err.message : String(err),
-          backend,
-        });
-        logger.info("🎮 GPU in use (TensorFlow.js)", { backend });
-      }
-    } else {
-      info.libraries!.tensorflowGpu = false;
-      logger.info("⚠️ TensorFlow.js using CPU backend", { backend });
-    }
-  } else {
-    info.libraries!.tensorflow = false;
-    info.libraries!.tensorflowGpu = false;
-  }
-
+  // Check CUDA environment first (lightweight check)
   const cudaVisible = process.env.CUDA_VISIBLE_DEVICES;
   const cudaHome = process.env.CUDA_HOME;
   const cudaPath = process.env.CUDA_PATH;
@@ -138,6 +91,7 @@ export function detectGPUAvailability(): GPUInfo {
     });
   }
 
+  // Check nvidia-smi (lightweight, doesn't load TensorFlow)
   try {
     const { execSync } = require("child_process") as {
       execSync: (
@@ -172,22 +126,15 @@ export function detectGPUAvailability(): GPUInfo {
     });
   }
 
-  if (info.usingGPU) {
-    logger.info("✅ GPU is being used for computations", {
-      backend: info.backend,
+  // Report GPU status without loading TensorFlow
+  if (info.available) {
+    logger.info("✅ GPU available for computations (will be used when needed)", {
       deviceName: info.deviceName,
-      vendor: info.vendor,
-    });
-  } else if (info.available) {
-    logger.info("ℹ️ GPU detected but TensorFlow using CPU", {
-      deviceName: info.deviceName,
-      reason: "CUDA Toolkit 11.x not installed or incompatible",
-      note: "CPU performance is sufficient for this simulation",
+      note: "TensorFlow.js will lazy-load when entity count exceeds threshold",
     });
   } else {
     logger.debug("ℹ️ Running in CPU mode (normal)", {
-      tensorflowInstalled: info.libraries?.tensorflow ?? false,
-      note: "GPU not required for this simulation",
+      note: "GPU not detected or not required for this simulation",
     });
   }
 
