@@ -120,6 +120,11 @@ describe("AnimalSystem", () => {
       hasAnimal: (id: string) => animalsMap.has(id),
       getAllAnimals: () => Array.from(animalsMap.values()),
       getAnimalCount: () => animalsMap.size,
+      markDead: (id: string) => {
+        const animal = animalsMap.get(id);
+        if (animal) animal.isDead = true;
+      },
+      size: animalsMap.size,
     };
     (animalSystem as any).batchProcessor = {
       rebuildBuffers: batchMocks.rebuildBuffers,
