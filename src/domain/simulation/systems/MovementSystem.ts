@@ -116,7 +116,6 @@ export class MovementSystem extends EventEmitter {
   private readonly MAX_CONCURRENT_PATHS = 5;
   private agentRegistry?: AgentRegistry;
 
-
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
     @inject(TYPES.EntityIndex) @optional() _entityIndex?: EntityIndex,
@@ -126,12 +125,11 @@ export class MovementSystem extends EventEmitter {
     agentRegistry?: AgentRegistry,
     @inject(TYPES.StateDirtyTracker)
     @optional()
-    private _dirtyTracker?: StateDirtyTracker,
-    @inject(TYPES.TerrainSystem) @optional() terrainSystem?: TerrainSystem,
+    _dirtyTracker?: StateDirtyTracker,
+    @inject(TYPES.TerrainSystem) @optional() _terrainSystem?: TerrainSystem,
   ) {
     super();
     this.gameState = gameState;
-    this.terrainSystem = terrainSystem;
     this.agentRegistry = agentRegistry;
 
     this.pathfinder = new EasyStar.js();
@@ -683,8 +681,6 @@ export class MovementSystem extends EventEmitter {
         endGrid.x,
         endGrid.y,
         (path) => {
-
-
           const duration = performance.now() - startTime;
           performanceMonitor.recordSubsystemExecution(
             "MovementSystem",
@@ -940,8 +936,8 @@ export class MovementSystem extends EventEmitter {
     const radius: number =
       SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN +
       Math.random() *
-      (SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX -
-        SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN);
+        (SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX -
+          SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN);
 
     const angle = Math.random() * Math.PI * 2;
     const targetX = state.currentPosition.x + Math.cos(angle) * radius;

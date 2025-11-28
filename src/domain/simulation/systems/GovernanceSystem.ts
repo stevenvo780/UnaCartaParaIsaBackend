@@ -25,7 +25,6 @@ import { ResourceReservationSystem } from "./ResourceReservationSystem";
 import { RoleSystem } from "./RoleSystem";
 import { logger } from "../../../infrastructure/utils/logger";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
-import { DEFAULT_LINEAGE } from "../../../shared/constants/CommonConstants";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
 /**
@@ -108,7 +107,7 @@ export class GovernanceSystem {
   private demandSeq = 0;
   private housingProjectsStarted = 0;
   private agentRegistry?: AgentRegistry;
-  private divineFavorSystem?: any; // DivineFavorSystem removed - kept for compatibility
+
 
   private readonly handleHighOccupancy = (payload: {
     occupancy?: number;
@@ -625,24 +624,8 @@ export class GovernanceSystem {
     }
   }
 
-  private applyDivineModifiers(type: DemandType, priority: number): number {
-    if (!this.divineFavorSystem) return priority;
-    const lineage = DEFAULT_LINEAGE;
-    let multiplier = 1;
-
-    if (type === DemandType.HOUSING_FULL) {
-      multiplier = this.divineFavorSystem.getMultiplier(
-        lineage,
-        "productivity_boost",
-      );
-    } else if (
-      type === DemandType.FOOD_SHORTAGE ||
-      type === DemandType.WATER_SHORTAGE
-    ) {
-      multiplier = this.divineFavorSystem.getMultiplier(lineage, "prosperity");
-    }
-
-    return Number((priority * Math.max(1, multiplier)).toFixed(2));
+  private applyDivineModifiers(_type: DemandType, priority: number): number {
+    return priority;
   }
 
   private getSettlementStats(): SettlementStats {

@@ -57,7 +57,7 @@ export class NeedsSystem extends EventEmitter {
   private lastUpdate: number = 0;
 
   private lifeCyclePort?: ILifeCyclePort;
-  private divineFavorSystem?: any; // DivineFavorSystem removed
+
   private inventorySystem?: InventorySystem;
   private socialSystem?: SocialSystem;
 
@@ -96,7 +96,7 @@ export class NeedsSystem extends EventEmitter {
     @unmanaged()
     systems?: {
       lifeCyclePort?: ILifeCyclePort;
-      divineFavorSystem?: any; // DivineFavorSystem removed
+
       inventorySystem?: InventorySystem;
       socialSystem?: SocialSystem;
     },
@@ -159,7 +159,7 @@ export class NeedsSystem extends EventEmitter {
 
     if (systems) {
       this.lifeCyclePort = systems.lifeCyclePort;
-      this.divineFavorSystem = systems.divineFavorSystem;
+
       this.inventorySystem = systems.inventorySystem;
       this.socialSystem = systems.socialSystem;
     }
@@ -172,13 +172,10 @@ export class NeedsSystem extends EventEmitter {
    */
   public setDependencies(systems: {
     lifeCyclePort?: ILifeCyclePort;
-    divineFavorSystem?: any; // DivineFavorSystem removed
     inventorySystem?: InventorySystem;
     socialSystem?: SocialSystem;
   }): void {
     if (systems.lifeCyclePort) this.lifeCyclePort = systems.lifeCyclePort;
-    if (systems.divineFavorSystem)
-      this.divineFavorSystem = systems.divineFavorSystem;
     if (systems.inventorySystem) this.inventorySystem = systems.inventorySystem;
     if (systems.socialSystem) this.socialSystem = systems.socialSystem;
   }
@@ -330,16 +327,7 @@ export class NeedsSystem extends EventEmitter {
       const entityId = entityIdArray[i];
       ageMultipliers[i] = this.getAgeDecayMultiplier(entityId);
 
-      if (this.divineFavorSystem) {
-        const favorObj = this.divineFavorSystem.getFavor(entityId);
-        if (favorObj) {
-          divineModifiers[i] = 1 - favorObj.favor * 0.3;
-        } else {
-          divineModifiers[i] = 1.0;
-        }
-      } else {
-        divineModifiers[i] = 1.0;
-      }
+      divineModifiers[i] = 1.0;
     }
 
     this.batchProcessor.applyDecayBatch(
@@ -746,10 +734,7 @@ export class NeedsSystem extends EventEmitter {
     action: string = ActionType.IDLE,
   ): void {
     const ageMultiplier = this.getAgeDecayMultiplier(entityId);
-    const divineModifiers = this.applyDivineFavorModifiers(
-      entityId,
-      this.config.decayRates,
-    );
+    const divineModifiers = this.config.decayRates;
 
     for (const [need, rate] of Object.entries(divineModifiers)) {
       let finalRate = rate * ageMultiplier;
@@ -786,23 +771,6 @@ export class NeedsSystem extends EventEmitter {
       default:
         return 1.0;
     }
-  }
-
-  private applyDivineFavorModifiers(
-    entityId: string,
-    decayRates: Record<string, number>,
-  ): Record<string, number> {
-    if (!this.divineFavorSystem) return decayRates;
-    const favorObj = this.divineFavorSystem.getFavor(entityId);
-    if (!favorObj) return decayRates;
-    const favorValue = favorObj.favor;
-    const modifier = 1 - favorValue * 0.3;
-
-    const result: Record<string, number> = {};
-    for (const [key, val] of Object.entries(decayRates)) {
-      result[key] = val * modifier;
-    }
-    return result;
   }
 
   private applySocialMoraleBoost(

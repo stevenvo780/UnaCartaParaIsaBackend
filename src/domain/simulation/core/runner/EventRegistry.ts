@@ -212,26 +212,6 @@ export class EventRegistry {
     );
 
     this.registerEvent(
-      GameEventType.DIALOGUE_CARD_RESPONDED,
-      (data: { cardId: string; choiceId: string }) => {
-        const dialogueState = this.runner.state.dialogueState;
-        if (dialogueState?.active) {
-          const card = dialogueState.active.find((c) => c.id === data.cardId);
-          if (card && card.participants && card.participants.length > 0) {
-            this.runner.questSystem.handleEvent({
-              type: GameEventType.DIALOGUE_CARD_RESPONDED,
-              entityId: card.participants[0],
-              timestamp: Date.now(),
-              data: {
-                cardId: data.cardId,
-              },
-            });
-          }
-        }
-      },
-    );
-
-    this.registerEvent(
       GameEventType.NEED_CRITICAL,
       (data: { agentId: string; need: string; value: number }) => {
         const aiState = this.runner.aiSystem.getAIState(data.agentId);
@@ -281,59 +261,6 @@ export class EventRegistry {
       GameEventType.MOVEMENT_ARRIVED_AT_ZONE,
       (data: { entityId: string; zoneId: string }) => {
         this.runner.aiSystem.notifyEntityArrived(data.entityId, data.zoneId);
-      },
-    );
-
-    this.registerEvent(
-      GameEventType.CRISIS_IMMEDIATE_WARNING,
-      (_data: {
-        prediction: {
-          type: string;
-          probability: number;
-          severity: number;
-          recommendedActions: string[];
-        };
-        timestamp: number;
-      }) => {
-        for (const agent of this.runner.state.agents) {
-          this.runner.aiSystem.forceGoalReevaluation(agent.id);
-        }
-      },
-    );
-
-    this.registerEvent(
-      GameEventType.CRISIS_PREDICTION,
-      (data: {
-        prediction: {
-          type: string;
-          probability: number;
-          severity: number;
-          recommendedActions: string[];
-        };
-        timestamp: number;
-      }) => {
-        if (data.prediction.probability >= 0.6) {
-          const relevantAgents: Array<{ id: string }> = [];
-          for (const agent of this.runner.agentRegistry.getAllProfiles()) {
-            const role = this.runner.roleSystem.getAgentRole(agent.id);
-            if (!role) continue;
-            if (
-              [
-                RoleType.GUARD,
-                RoleType.BUILDER,
-                RoleType.FARMER,
-                RoleType.GATHERER,
-              ].includes(role.roleType as RoleType)
-            ) {
-              relevantAgents.push(agent);
-              if (relevantAgents.length >= 3) break;
-            }
-          }
-
-          for (const agent of relevantAgents) {
-            this.runner.aiSystem.forceGoalReevaluation(agent.id);
-          }
-        }
       },
     );
 
