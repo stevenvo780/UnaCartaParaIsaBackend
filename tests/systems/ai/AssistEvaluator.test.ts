@@ -77,13 +77,13 @@ describe("AssistEvaluator", () => {
   });
 
   describe("evaluateAssist", () => {
-    it("debe retornar array vacío si no hay posición", () => {
+    it("debe retornar array vacío si no hay posición", async () => {
       context.getEntityPosition = () => null;
-      const goals = evaluateAssist(context, aiState);
+      const goals = await evaluateAssist(context, aiState);
       expect(goals).toEqual([]);
     });
 
-    it("debe retornar array vacío si no hay agentes cercanos con necesidades", () => {
+    it("debe retornar array vacío si no hay agentes cercanos con necesidades", async () => {
       context.getNeeds = () => ({
         hunger: 80,
         thirst: 80,
@@ -94,12 +94,12 @@ describe("AssistEvaluator", () => {
         mentalHealth: 80,
       });
       context.getEntityStats = () => ({ morale: 80, wounds: 0 });
-      const goals = evaluateAssist(context, aiState);
+      const goals = await evaluateAssist(context, aiState);
       expect(goals).toEqual([]);
     });
 
-    it("debe generar goal de asistencia para agente con hambre", () => {
-      const goals = evaluateAssist(context, aiState);
+    it("debe generar goal de asistencia para agente con hambre", async () => {
+      const goals = await evaluateAssist(context, aiState);
       if (goals.length > 0) {
         expect(goals[0].type).toBe("assist");
         expect(goals[0].targetZoneId).toBe("food-zone-1");
@@ -108,7 +108,7 @@ describe("AssistEvaluator", () => {
       }
     });
 
-    it("debe generar goal de asistencia para agente con sed", () => {
+    it("debe generar goal de asistencia para agente con sed", async () => {
       context.getNeeds = (id: string) => {
         if (id === "agent-2")
           return {
@@ -122,14 +122,14 @@ describe("AssistEvaluator", () => {
           };
         return undefined;
       };
-      const goals = evaluateAssist(context, aiState);
+      const goals = await evaluateAssist(context, aiState);
       if (goals.length > 0) {
         expect(goals[0].data?.need).toBe("water");
         expect(goals[0].targetZoneId).toBe("water-zone-1");
       }
     });
 
-    it("debe generar goal de asistencia médica para agente herido", () => {
+    it("debe generar goal de asistencia médica para agente herido", async () => {
       context.getNeeds = () => ({
         hunger: 100,
         thirst: 100,
@@ -143,14 +143,14 @@ describe("AssistEvaluator", () => {
         if (id === "agent-2") return { morale: 80, wounds: 30 };
         return null;
       };
-      const goals = evaluateAssist(context, aiState);
+      const goals = await evaluateAssist(context, aiState);
       if (goals.length > 0) {
         expect(goals[0].data?.need).toBe("medical");
         expect(goals[0].targetZoneId).toBe("medical-zone-1");
       }
     });
 
-    it("debe generar goal de asistencia para descanso si energía o moral es baja", () => {
+    it("debe generar goal de asistencia para descanso si energía o moral es baja", async () => {
       context.getNeeds = () => ({
         hunger: 100,
         thirst: 100,
@@ -161,45 +161,45 @@ describe("AssistEvaluator", () => {
         mentalHealth: 100,
       });
       context.getEntityStats = () => ({ morale: 80, wounds: 0 });
-      const goals = evaluateAssist(context, aiState);
+      const goals = await evaluateAssist(context, aiState);
       if (goals.length > 0) {
         expect(goals[0].data?.need).toBe("rest");
         expect(goals[0].targetZoneId).toBe("rest-zone-1");
       }
     });
 
-    it("debe considerar radio de ayuda basado en extraversión", () => {
+    it("debe considerar radio de ayuda basado en extraversión", async () => {
       aiState.personality.extraversion = 1.0; // Máxima extraversión
-      const goals = evaluateAssist(context, aiState);
+      const goals = await evaluateAssist(context, aiState);
       // Con alta extraversión, el radio es mayor (220 + 1.0*100 = 320)
       expect(Array.isArray(goals)).toBe(true);
     });
 
-    it("debe considerar empatía para calcular prioridad", () => {
+    it("debe considerar empatía para calcular prioridad", async () => {
       aiState.personality.agreeableness = 1.0; // Máxima empatía
-      const goals = evaluateAssist(context, aiState);
+      const goals = await evaluateAssist(context, aiState);
       if (goals.length > 0) {
         expect(goals[0].priority).toBeGreaterThan(0.4);
       }
     });
 
-    it("debe ignorar al mismo agente", () => {
+    it("debe ignorar al mismo agente", async () => {
       context.getAllActiveAgentIds = () => ["agent-1"];
-      const goals = evaluateAssist(context, aiState);
+      const goals = await evaluateAssist(context, aiState);
       expect(goals).toEqual([]);
     });
 
-    it("debe retornar array vacío si no hay zona disponible", () => {
+    it("debe retornar array vacío si no hay zona disponible", async () => {
       context.getZoneIdsByType = () => [];
-      const goals = evaluateAssist(context, aiState);
+      const goals = await evaluateAssist(context, aiState);
       expect(goals).toEqual([]);
     });
 
-    it("debe manejar errores y retornar array vacío", () => {
+    it("debe manejar errores y retornar array vacío", async () => {
       context.getAllActiveAgentIds = () => {
         throw new Error("Test error");
       };
-      const goals = evaluateAssist(context, aiState);
+      const goals = await evaluateAssist(context, aiState);
       expect(goals).toEqual([]);
     });
   });

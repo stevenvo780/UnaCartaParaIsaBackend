@@ -93,13 +93,15 @@ describe("DepositEvaluator", () => {
 
     it("debe retornar array vacío si carga es muy baja", () => {
       context.getAgentInventory = () => ({
-        wood: 10,
+        wood: 1,
         stone: 0,
         food: 0,
         water: 0,
         capacity: 100,
       });
       const goals = evaluateDepositGoals(context, aiState);
+      // Con conscientiousness=0.8, threshold=0.1-0.04=0.06, minThreshold=0.03
+      // 1/100=0.01 < 0.03, no debería depositar
       expect(goals).toEqual([]);
     });
 
@@ -122,16 +124,16 @@ describe("DepositEvaluator", () => {
     it("debe considerar personalidad conscientiousness para umbral", () => {
       aiState.personality.conscientiousness = 0.2; // Baja conciencia
       context.getAgentInventory = () => ({
-        wood: 10, // Poco inventario
+        wood: 1, // Muy poco inventario
         stone: 0,
         food: 0,
         water: 0,
         capacity: 100,
       });
       const goals = evaluateDepositGoals(context, aiState);
-      // Con baja conciencia, depositThreshold = 0.3 - 0.2*0.1 = 0.28
-      // El umbral mínimo es depositThreshold * 0.75 = 0.28 * 0.75 = 0.21
-      // 10/100 = 0.1, que es menor que 0.21, así que no debería depositar
+      // Con baja conciencia, depositThreshold = 0.1 - 0.2*0.05 = 0.09
+      // El umbral mínimo es depositThreshold * 0.5 = 0.045
+      // 1/100 = 0.01, que es menor que 0.045, así que no debería depositar
       expect(goals.length).toBe(0);
     });
 

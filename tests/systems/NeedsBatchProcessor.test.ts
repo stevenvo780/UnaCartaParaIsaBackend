@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { EntityNeedsData } from "../../src/domain/types/simulation/needs";
 import { NeedsBatchProcessor } from "../../src/domain/simulation/systems/NeedsBatchProcessor";
+import { createMockGPUService } from "../setup";
 
 const createNeeds = (overrides: Partial<EntityNeedsData> = {}): EntityNeedsData => ({
   hunger: 80,
@@ -22,7 +23,8 @@ describe("NeedsBatchProcessor", () => {
       ["agent-1", createNeeds()],
       ["agent-2", createNeeds({ hunger: 20, thirst: 25, energy: 15, social: 80, fun: 75, mentalHealth: 90 })],
     ]);
-    processor = new NeedsBatchProcessor();
+    const gpuService = createMockGPUService();
+    processor = new NeedsBatchProcessor(gpuService as any);
   });
 
   it("rebuildBuffers construye el buffer de necesidades", () => {

@@ -157,13 +157,13 @@ describe("AgentGoalPlanner", () => {
     );
   });
 
-  it("debe evaluar necesidades biológicas críticas", () => {
+  it("debe evaluar necesidades biológicas críticas", async () => {
     vi.mocked(evaluateBiologicalDrives).mockReturnValue([
       createTestGoal({ id: "critical_hunger", type: GoalType.SATISFY_HUNGER, priority: 0.95 }),
     ]);
 
     const deps = baseDeps();
-    const goals = planGoals(deps as any, aiState, Date.now());
+    const goals = await planGoals(deps as any, aiState, Date.now());
 
     expect(evaluateBiologicalDrives).toHaveBeenCalled();
     // Cuando hay un goal crítico (>0.9), debe retornar solo ese
@@ -171,33 +171,33 @@ describe("AgentGoalPlanner", () => {
     expect(goals[0].id).toBe("critical_hunger");
   });
 
-  it("debe evaluar impulsos cognitivos", () => {
+  it("debe evaluar impulsos cognitivos", async () => {
     vi.mocked(evaluateCognitiveDrives).mockReturnValue([
       createTestGoal({ id: "work_drive", type: GoalType.WORK, priority: 0.6 }),
     ]);
 
     const deps = baseDeps();
-    const goals = planGoals(deps as any, aiState, Date.now(), 0.3);
+    const goals = await planGoals(deps as any, aiState, Date.now(), 0.3);
 
     expect(evaluateCognitiveDrives).toHaveBeenCalled();
     expect(goals.some((goal) => goal.id === "work_drive")).toBe(true);
   });
 
-  it("debe respetar minPriority al filtrar objetivos", () => {
+  it("debe respetar minPriority al filtrar objetivos", async () => {
     vi.mocked(evaluateCognitiveDrives).mockReturnValue([
       createTestGoal({ id: "low_priority", type: GoalType.WORK, priority: 0.2 }),
       createTestGoal({ id: "high_priority", type: GoalType.WORK, priority: 0.8 }),
     ]);
 
     const deps = baseDeps();
-    const goals = planGoals(deps as any, aiState, Date.now(), 0.5);
+    const goals = await planGoals(deps as any, aiState, Date.now(), 0.5);
 
     expect(prioritizeGoals).toHaveBeenCalled();
     expect(goals.some((goal) => goal.id === "high_priority")).toBe(true);
     expect(goals.some((goal) => goal.id === "low_priority")).toBe(false);
   });
 
-  it("debe retornar default exploration cuando no hay otros objetivos", () => {
+  it("debe retornar default exploration cuando no hay otros objetivos", async () => {
     vi.mocked(evaluateBiologicalDrives).mockReturnValue([]);
     vi.mocked(evaluateCognitiveDrives).mockReturnValue([]);
     vi.mocked(evaluateDefaultExploration).mockReturnValue([
@@ -205,7 +205,7 @@ describe("AgentGoalPlanner", () => {
     ]);
 
     const deps = baseDeps();
-    const goals = planGoals(deps as any, aiState, Date.now(), 0.3);
+    const goals = await planGoals(deps as any, aiState, Date.now(), 0.3);
 
     expect(evaluateDefaultExploration).toHaveBeenCalled();
     expect(goals.some((goal) => goal.id === "default")).toBe(true);

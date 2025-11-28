@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { SocialSystem } from "../../src/domain/simulation/systems/SocialSystem.ts";
-import { createMockGameState, createEntityIndex } from "../setup.ts";
+import { createMockGameState, createEntityIndex, createMockGPUService } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 import { EntityIndex } from "../../src/domain/simulation/core/EntityIndex.ts";
 
@@ -12,7 +12,8 @@ describe("SocialSystem", () => {
   beforeEach(() => {
     gameState = createMockGameState();
     entityIndex = createEntityIndex(gameState);
-    socialSystem = new SocialSystem(gameState, undefined, entityIndex);
+    const gpuService = createMockGPUService();
+    socialSystem = new SocialSystem(gameState, undefined, gpuService as any, entityIndex);
   });
 
   describe("Inicialización", () => {
@@ -68,21 +69,21 @@ describe("SocialSystem", () => {
     it("debe degradar afinidad con el tiempo", () => {
       socialSystem.addEdge("entity-12", "entity-13", 0.8);
       const initialAffinity = socialSystem.getAffinityBetween("entity-12", "entity-13");
-      
+
       socialSystem.update(2000);
-      
+
       const updatedAffinity = socialSystem.getAffinityBetween("entity-12", "entity-13");
       expect(updatedAffinity).toBeLessThan(initialAffinity);
     });
 
     it("no debe degradar afinidad por debajo de 0", () => {
       socialSystem.addEdge("entity-14", "entity-15", 0.1);
-      
+
       // Simular mucho tiempo
       for (let i = 0; i < 100; i++) {
         socialSystem.update(1000);
       }
-      
+
       const affinity = socialSystem.getAffinityBetween("entity-14", "entity-15");
       expect(affinity).toBeGreaterThanOrEqual(0);
     });
@@ -102,7 +103,7 @@ describe("SocialSystem", () => {
           type: "agent",
         },
       ];
-      
+
       const initialAffinity = socialSystem.getAffinityBetween("entity-16", "entity-17");
       socialSystem.update(1000);
       const updatedAffinity = socialSystem.getAffinityBetween("entity-16", "entity-17");
@@ -122,7 +123,7 @@ describe("SocialSystem", () => {
           type: "agent",
         },
       ];
-      
+
       const initialAffinity = socialSystem.getAffinityBetween("entity-18", "entity-19");
       socialSystem.update(1000);
       const updatedAffinity = socialSystem.getAffinityBetween("entity-18", "entity-19");
@@ -134,7 +135,8 @@ describe("SocialSystem", () => {
 
   describe("Configuración personalizada", () => {
     it("debe aceptar configuración personalizada", () => {
-      const customSystem = new SocialSystem(gameState, {
+      const gpuService = createMockGPUService();
+      const customSystem = new SocialSystem(gameState, undefined, gpuService as any, entityIndex, {
         proximityRadius: 200,
         reinforcementPerSecond: 0.1,
         decayPerSecond: 0.02,

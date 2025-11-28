@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { MovementBatchProcessor } from "../../src/domain/simulation/systems/MovementBatchProcessor";
+import { createMockGPUService } from "../setup";
 import type { EntityMovementState } from "../../src/domain/simulation/systems/MovementSystem";
 
 function createMovementState(
@@ -28,7 +29,8 @@ describe("MovementBatchProcessor", () => {
   let states: Map<string, EntityMovementState>;
 
   beforeEach(() => {
-    processor = new MovementBatchProcessor();
+    const gpuService = createMockGPUService();
+    processor = new MovementBatchProcessor(gpuService as any);
     states = new Map();
     states.set("entity-1", createMovementState());
   });

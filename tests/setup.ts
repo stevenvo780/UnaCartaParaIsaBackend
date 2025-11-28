@@ -146,6 +146,7 @@ export function createMockAISystemDependencies() {
       removeFromAgent: vi.fn(),
       hasItem: vi.fn(() => false),
       getStockpilesInZone: vi.fn(() => []),
+      getAllStockpiles: vi.fn(() => []),
       createStockpile: vi.fn(),
       transferToStockpile: vi.fn(),
     } as unknown as InventorySystem,
@@ -230,5 +231,52 @@ export function createEntityIndex(gameState: GameState): EntityIndex {
   const entityIndex = new EntityIndex();
   entityIndex.rebuild(gameState);
   return entityIndex;
+}
+
+/**
+ * Creates a mock GPUComputeService for testing
+ * Returns CPU fallback mode (isGPUAvailable = false) to avoid GPU-specific logic in tests
+ */
+export function createMockGPUService() {
+  return {
+    initialize: vi.fn().mockResolvedValue(undefined),
+    isGPUAvailable: vi.fn().mockReturnValue(false),
+    updatePositionsBatch: vi.fn((positions, targets, speeds, fatigue, deltaMs) => {
+      // Simple CPU fallback mock
+      const count = positions.length / 2;
+      return {
+        newPositions: positions,
+        arrived: new Array(count).fill(false),
+      };
+    }),
+    applyNeedsDecayBatch: vi.fn((needs, decayRates, ageMultipliers, divineModifiers, needCount, dt) => {
+      return needs; // Return unchanged for simplicity
+    }),
+    applyNeedsCrossEffectsBatch: vi.fn((needs, needCount) => {
+      return needs; // Return unchanged for simplicity
+    }),
+    updateFatigueBatch: vi.fn((fatigue, isMoving, isResting, deltaMs) => {
+      return fatigue; // Return unchanged for simplicity
+    }),
+    decayAffinitiesBatch: vi.fn((affinities, decayRate, dt, minAffinity) => {
+      return affinities; // Return unchanged for simplicity
+    }),
+    computePairwiseDistances: vi.fn((positions, count) => {
+      // Return mock distance matrix
+      const pairCount = (count * (count - 1)) / 2;
+      return Promise.resolve({
+        distances: new Float32Array(pairCount).fill(1000), // All far apart
+      });
+    }),
+    getPerformanceStats: vi.fn(() => ({
+      gpuAvailable: false,
+      backend: 'cpu',
+      gpuOperations: 0,
+      cpuFallbacks: 0,
+      avgGpuTime: 0,
+      avgCpuTime: 0,
+    })),
+    dispose: vi.fn(),
+  };
 }
 

@@ -17,7 +17,7 @@ describe("TimeSystem", () => {
         duration: 300000,
       },
     });
-    timeSystem = new TimeSystem(gameState);
+    timeSystem = new TimeSystem();
   });
 
   describe("Inicialización", () => {
@@ -174,7 +174,7 @@ describe("TimeSystem", () => {
 
   describe("Configuración personalizada", () => {
     it("debe aceptar configuración personalizada", () => {
-      const customSystem = new TimeSystem(gameState, {
+      const customSystem = new TimeSystem({
         minutesPerGameHour: 5,
         startHour: 12,
         startMinute: 30,

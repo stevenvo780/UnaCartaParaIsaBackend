@@ -17,3 +17,9 @@ export const simulationEvents = new BatchedEventEmitter();
  * All simulation systems emit and listen to these events for coordination.
  */
 export { GameEventType, ALL_GAME_EVENT_TYPES };
+
+/**
+ * Alias for GameEventType to provide a more descriptive name.
+ * This allows accessing event types as GameEventNames.EVENT_NAME
+ */
+export const GameEventNames = GameEventType;
