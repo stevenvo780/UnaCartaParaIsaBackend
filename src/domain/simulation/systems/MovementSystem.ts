@@ -25,6 +25,7 @@ import { MovementBatchProcessor } from "./MovementBatchProcessor";
 import { ActivityType } from "../../../shared/constants/MovementEnums";
 import { ActionType } from "../../../shared/constants/AIEnums";
 import { SIM_CONSTANTS } from "../core/SimulationConstants";
+import { TerrainSystem } from "./TerrainSystem";
 
 export interface EntityMovementState {
   entityId: string;
@@ -114,18 +115,18 @@ export class MovementSystem extends EventEmitter {
   private activePaths = 0;
   private readonly MAX_CONCURRENT_PATHS = 5;
   private agentRegistry?: AgentRegistry;
-  private terrainSystem?: TerrainSystem;
+
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
-    @inject(TYPES.EntityIndex) @optional() entityIndex?: EntityIndex,
+    @inject(TYPES.EntityIndex) @optional() _entityIndex?: EntityIndex,
     @inject(TYPES.GPUComputeService) @optional() gpuService?: GPUComputeService,
     @inject(TYPES.AgentRegistry)
     @optional()
     agentRegistry?: AgentRegistry,
     @inject(TYPES.StateDirtyTracker)
     @optional()
-    private dirtyTracker?: StateDirtyTracker,
+    private _dirtyTracker?: StateDirtyTracker,
     @inject(TYPES.TerrainSystem) @optional() terrainSystem?: TerrainSystem,
   ) {
     super();
@@ -682,8 +683,7 @@ export class MovementSystem extends EventEmitter {
         endGrid.x,
         endGrid.y,
         (path) => {
-          this.processMovement(dtSeconds);
-          this.dirtyTracker?.markDirty("agents");
+
 
           const duration = performance.now() - startTime;
           performanceMonitor.recordSubsystemExecution(
@@ -691,279 +691,277 @@ export class MovementSystem extends EventEmitter {
             "update",
             duration,
           );
-          duration,
-          );
 
-      if (path) {
-        const worldPath = path.map((p) => ({
-          x: p.x * this.gridSize + this.gridSize / 2,
-          y: p.y * this.gridSize + this.gridSize / 2,
-        }));
+          if (path) {
+            const worldPath = path.map((p) => ({
+              x: p.x * this.gridSize + this.gridSize / 2,
+              y: p.y * this.gridSize + this.gridSize / 2,
+            }));
 
-        let distance = 0;
-        for (let i = 0; i < worldPath.length - 1; i++) {
-          distance += Math.hypot(
-            worldPath[i + 1].x - worldPath[i].x,
-            worldPath[i + 1].y - worldPath[i].y,
-          );
-        }
+            let distance = 0;
+            for (let i = 0; i < worldPath.length - 1; i++) {
+              distance += Math.hypot(
+                worldPath[i + 1].x - worldPath[i].x,
+                worldPath[i + 1].y - worldPath[i].y,
+              );
+            }
 
-        const result: PathfindingResult = {
-          success: true,
-          path: worldPath,
-          estimatedTime: estimateTravelTime(
-            distance,
-            0,
-            SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
-            SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
-          ),
-          distance,
-        };
-
-        this.pathCache.set(pathKey, { result, timestamp: now });
-        resolve(result);
-      } else {
-        const grid = this.getOptimizedGrid();
-        const accessiblePos = findAccessibleDestination(
-          grid,
-          endGrid.x,
-          endGrid.y,
-          this.gridWidth,
-          this.gridHeight,
-          5,
-        );
-
-        if (
-          accessiblePos.x !== endGrid.x ||
-          accessiblePos.y !== endGrid.y
-        ) {
-          this.pathfinder.findPath(
-            startGrid.x,
-            startGrid.y,
-            accessiblePos.x,
-            accessiblePos.y,
-            (altPath) => {
-              if (altPath && altPath.length > 0) {
-                const worldPath = altPath.map((p) => ({
-                  x: p.x * this.gridSize + this.gridSize / 2,
-                  y: p.y * this.gridSize + this.gridSize / 2,
-                }));
-
-                let distance = 0;
-                for (let i = 0; i < worldPath.length - 1; i++) {
-                  distance += Math.hypot(
-                    worldPath[i + 1].x - worldPath[i].x,
-                    worldPath[i + 1].y - worldPath[i].y,
-                  );
-                }
-
-                resolve({
-                  success: true,
-                  path: worldPath,
-                  estimatedTime: estimateTravelTime(
-                    distance,
-                    0,
-                    SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
-                    SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
-                  ),
-                  distance,
-                });
-                return;
-              }
-
-              const distance = Math.hypot(to.x - from.x, to.y - from.y);
-              resolve({
-                success: false,
-                path: [],
-                estimatedTime: estimateTravelTime(
-                  distance,
-                  0,
-                  SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
-                  SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
-                ),
+            const result: PathfindingResult = {
+              success: true,
+              path: worldPath,
+              estimatedTime: estimateTravelTime(
                 distance,
-              });
-            },
-          );
-          return;
-        }
+                0,
+                SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
+                SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+              ),
+              distance,
+            };
 
-        const distance = Math.hypot(to.x - from.x, to.y - from.y);
-        resolve({
-          success: false,
-          path: [],
-          estimatedTime: estimateTravelTime(
-            distance,
-            0,
-            SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
-            SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
-          ),
-          distance,
-        });
-      }
-    },
-    );
-  });
-}
+            this.pathCache.set(pathKey, { result, timestamp: now });
+            resolve(result);
+          } else {
+            const grid = this.getOptimizedGrid();
+            const accessiblePos = findAccessibleDestination(
+              grid,
+              endGrid.x,
+              endGrid.y,
+              this.gridWidth,
+              this.gridHeight,
+              5,
+            );
+
+            if (
+              accessiblePos.x !== endGrid.x ||
+              accessiblePos.y !== endGrid.y
+            ) {
+              this.pathfinder.findPath(
+                startGrid.x,
+                startGrid.y,
+                accessiblePos.x,
+                accessiblePos.y,
+                (altPath) => {
+                  if (altPath && altPath.length > 0) {
+                    const worldPath = altPath.map((p) => ({
+                      x: p.x * this.gridSize + this.gridSize / 2,
+                      y: p.y * this.gridSize + this.gridSize / 2,
+                    }));
+
+                    let distance = 0;
+                    for (let i = 0; i < worldPath.length - 1; i++) {
+                      distance += Math.hypot(
+                        worldPath[i + 1].x - worldPath[i].x,
+                        worldPath[i + 1].y - worldPath[i].y,
+                      );
+                    }
+
+                    resolve({
+                      success: true,
+                      path: worldPath,
+                      estimatedTime: estimateTravelTime(
+                        distance,
+                        0,
+                        SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
+                        SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+                      ),
+                      distance,
+                    });
+                    return;
+                  }
+
+                  const distance = Math.hypot(to.x - from.x, to.y - from.y);
+                  resolve({
+                    success: false,
+                    path: [],
+                    estimatedTime: estimateTravelTime(
+                      distance,
+                      0,
+                      SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
+                      SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+                    ),
+                    distance,
+                  });
+                },
+              );
+              return;
+            }
+
+            const distance = Math.hypot(to.x - from.x, to.y - from.y);
+            resolve({
+              success: false,
+              path: [],
+              estimatedTime: estimateTravelTime(
+                distance,
+                0,
+                SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
+                SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+              ),
+              distance,
+            });
+          }
+        },
+      );
+    });
+  }
 
   private getOptimizedGrid(): number[][] {
-  const now = Date.now();
+    const now = Date.now();
 
-  if (
-    this.cachedGrid &&
-    !this.gridDirty &&
-    now - this.gridCacheTime < this.GRID_CACHE_DURATION
-  ) {
-    return this.cachedGrid;
-  }
-
-  if (!this.cachedGrid) {
-    this.cachedGrid = Array(this.gridHeight)
-      .fill(null)
-      .map(() => Array<number>(this.gridWidth).fill(0));
-  } else if (this.gridDirty) {
-    for (let y = 0; y < this.gridHeight; y++) {
-      this.cachedGrid[y].fill(0);
-    }
-  }
-
-  for (const key of this.occupiedTiles) {
-    const [x, y] = key.split(",").map(Number);
     if (
-      x >= 0 &&
-      x < this.gridWidth &&
-      y >= 0 &&
-      y < this.gridHeight &&
-      this.cachedGrid
+      this.cachedGrid &&
+      !this.gridDirty &&
+      now - this.gridCacheTime < this.GRID_CACHE_DURATION
     ) {
-      this.cachedGrid[y][x] = 1;
+      return this.cachedGrid;
     }
+
+    if (!this.cachedGrid) {
+      this.cachedGrid = Array(this.gridHeight)
+        .fill(null)
+        .map(() => Array<number>(this.gridWidth).fill(0));
+    } else if (this.gridDirty) {
+      for (let y = 0; y < this.gridHeight; y++) {
+        this.cachedGrid[y].fill(0);
+      }
+    }
+
+    for (const key of this.occupiedTiles) {
+      const [x, y] = key.split(",").map(Number);
+      if (
+        x >= 0 &&
+        x < this.gridWidth &&
+        y >= 0 &&
+        y < this.gridHeight &&
+        this.cachedGrid
+      ) {
+        this.cachedGrid[y][x] = 1;
+      }
+    }
+
+    this.gridCacheTime = now;
+    this.gridDirty = false;
+
+    return this.cachedGrid!;
   }
-
-  this.gridCacheTime = now;
-  this.gridDirty = false;
-
-  return this.cachedGrid!;
-}
 
   private initializeObstacles(): void {
-  this.occupiedTiles.clear();
+    this.occupiedTiles.clear();
 
-  if(this.gameState.mapElements) {
-  for (const element of this.gameState.mapElements) {
-    if (this.isObstacle(element)) {
-      const gridPos = worldToGrid(
-        element.position.x,
-        element.position.y,
-        this.gridSize,
-      );
-      const width = element.width || this.gridSize;
-      const height = element.height || this.gridSize;
-      const tilesWide = Math.ceil(width / this.gridSize);
-      const tilesHigh = Math.ceil(height / this.gridSize);
+    if (this.gameState.mapElements) {
+      for (const element of this.gameState.mapElements) {
+        if (this.isObstacle(element)) {
+          const gridPos = worldToGrid(
+            element.position.x,
+            element.position.y,
+            this.gridSize,
+          );
+          const width = element.width || this.gridSize;
+          const height = element.height || this.gridSize;
+          const tilesWide = Math.ceil(width / this.gridSize);
+          const tilesHigh = Math.ceil(height / this.gridSize);
 
-      for (let dx = 0; dx < tilesWide; dx++) {
-        for (let dy = 0; dy < tilesHigh; dy++) {
-          this.occupiedTiles.add(`${gridPos.x + dx},${gridPos.y + dy}`);
+          for (let dx = 0; dx < tilesWide; dx++) {
+            for (let dy = 0; dy < tilesHigh; dy++) {
+              this.occupiedTiles.add(`${gridPos.x + dx},${gridPos.y + dy}`);
+            }
+          }
         }
       }
     }
-  }
-}
 
-this.gridDirty = true;
+    this.gridDirty = true;
   }
 
   private isObstacle(element: MapElement): boolean {
-  const type = element.type || "";
-  return (
-    type === "obstacle" ||
-    type === "building" ||
-    type === "rock" ||
-    type === "tree"
-  );
-}
+    const type = element.type || "";
+    return (
+      type === "obstacle" ||
+      type === "building" ||
+      type === "rock" ||
+      type === "tree"
+    );
+  }
 
   private precomputeZoneDistances(): void {
-  const zones = this.gameState.zones;
-  for(let i = 0; i <zones.length; i++) {
-  for (let j = i + 1; j < zones.length; j++) {
-    const zoneA = zones[i];
-    const zoneB = zones[j];
-    const distance = calculateZoneDistance(zoneA, zoneB);
-    const travelTime = estimateTravelTime(
-      distance,
-      0,
-      SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
-      SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
-    );
-    const difficulty: Difficulty =
-      assessRouteDifficultyByDistance(distance);
+    const zones = this.gameState.zones;
+    for (let i = 0; i < zones.length; i++) {
+      for (let j = i + 1; j < zones.length; j++) {
+        const zoneA = zones[i];
+        const zoneB = zones[j];
+        const distance = calculateZoneDistance(zoneA, zoneB);
+        const travelTime = estimateTravelTime(
+          distance,
+          0,
+          SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
+          SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+        );
+        const difficulty: Difficulty =
+          assessRouteDifficultyByDistance(distance);
 
-    const zoneDistance: ZoneDistance = {
-      fromZone: zoneA.id,
-      toZone: zoneB.id,
-      distance,
-      travelTime,
-      difficulty,
-    };
-    this.zoneDistanceCache.set(`${zoneA.id}->${zoneB.id}`, zoneDistance);
-    this.zoneDistanceCache.set(`${zoneB.id}->${zoneA.id}`, {
-      ...zoneDistance,
-      fromZone: zoneB.id,
-      toZone: zoneA.id,
-    });
-  }
-}
+        const zoneDistance: ZoneDistance = {
+          fromZone: zoneA.id,
+          toZone: zoneB.id,
+          distance,
+          travelTime,
+          difficulty,
+        };
+        this.zoneDistanceCache.set(`${zoneA.id}->${zoneB.id}`, zoneDistance);
+        this.zoneDistanceCache.set(`${zoneB.id}->${zoneA.id}`, {
+          ...zoneDistance,
+          fromZone: zoneB.id,
+          toZone: zoneA.id,
+        });
+      }
+    }
   }
 
   /** Grace period after arrival before idle wander can start (allows AI to plan next action) */
   private readonly ARRIVAL_GRACE_PERIOD_MS = 2000;
 
   private maybeStartIdleWander(state: EntityMovementState, now: number): void {
-  if(state.isMoving || state.currentActivity !== ActivityType.IDLE) return;
+    if (state.isMoving || state.currentActivity !== ActivityType.IDLE) return;
 
-  if(
-    state.lastArrivalTime &&
+    if (
+      state.lastArrivalTime &&
       now - state.lastArrivalTime < this.ARRIVAL_GRACE_PERIOD_MS
     ) {
-  return;
-}
+      return;
+    }
 
-if (
-  (state.lastIdleWander || 0) + SIM_CONSTANTS.IDLE_WANDER_COOLDOWN_MS >
-  now
-) {
-  return;
-}
+    if (
+      (state.lastIdleWander || 0) + SIM_CONSTANTS.IDLE_WANDER_COOLDOWN_MS >
+      now
+    ) {
+      return;
+    }
 
-if (Math.random() > SIM_CONSTANTS.IDLE_WANDER_PROBABILITY) return;
+    if (Math.random() > SIM_CONSTANTS.IDLE_WANDER_PROBABILITY) return;
 
-const radius =
-  SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN +
-  Math.random() *
-  (SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX -
-    SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN);
+    const radius: number =
+      SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN +
+      Math.random() *
+      (SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX -
+        SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN);
 
-const angle = Math.random() * Math.PI * 2;
-const targetX = state.currentPosition.x + Math.cos(angle) * radius;
-const targetY = state.currentPosition.y + Math.sin(angle) * radius;
+    const angle = Math.random() * Math.PI * 2;
+    const targetX = state.currentPosition.x + Math.cos(angle) * radius;
+    const targetY = state.currentPosition.y + Math.sin(angle) * radius;
 
-this.moveToPoint(state.entityId, targetX, targetY);
-state.lastIdleWander = now;
+    this.moveToPoint(state.entityId, targetX, targetY);
+    state.lastIdleWander = now;
   }
 
   private cleanupOldCache(now: number): void {
-  for(const [key, cached] of this.pathCache.entries()) {
-  if (now - cached.timestamp > this.PATH_CACHE_DURATION) {
-    this.pathCache.delete(key);
-  }
-}
+    for (const [key, cached] of this.pathCache.entries()) {
+      if (now - cached.timestamp > this.PATH_CACHE_DURATION) {
+        this.pathCache.delete(key);
+      }
+    }
   }
 
   public getEntityMovementState(
-  entityId: string,
-): EntityMovementState | undefined {
-  return this.movementStates.get(entityId);
-}
+    entityId: string,
+  ): EntityMovementState | undefined {
+    return this.movementStates.get(entityId);
+  }
 }

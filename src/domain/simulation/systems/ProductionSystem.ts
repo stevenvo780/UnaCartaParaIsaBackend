@@ -36,6 +36,7 @@ export interface ProductionMetadata {
 
 type MutableZone = Zone & {
   metadata?: ProductionMetadata;
+  durability?: number;
 };
 
 import { injectable, inject, optional } from "inversify";

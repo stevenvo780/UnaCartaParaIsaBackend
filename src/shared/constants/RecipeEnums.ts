@@ -17,7 +17,7 @@ export enum RecipeId {
   STONE_PICKAXE = "stone_pickaxe",
   WOODEN_CLUB = "wooden_club",
   STONE_DAGGER = "stone_dagger",
-  
+
   // Processing
   SMELT_IRON = "smelt_iron",
   SMELT_COPPER = "smelt_copper",
@@ -25,13 +25,13 @@ export enum RecipeId {
   WEAVE_CLOTH = "weave_cloth",
   FIRE_BRICK = "fire_brick",
   GRIND_WHEAT = "grind_wheat",
-  
+
   // Cooking
   BAKE_BREAD = "bake_bread",
   COOK_MEAT = "cook_meat",
   COOK_FISH = "cook_fish",
   MAKE_STEW = "make_stew",
-  
+
   // Equipment
   IRON_AXE = "iron_axe",
   IRON_PICKAXE = "iron_pickaxe",
@@ -40,12 +40,12 @@ export enum RecipeId {
   CLOTH_SHIRT = "cloth_shirt",
   LEATHER_VEST = "leather_vest",
   IRON_HELMET = "iron_helmet",
-  
+
   // Construction
   WOODEN_FRAME = "wooden_frame",
   STONE_FOUNDATION = "stone_foundation",
   DOOR = "door",
-  
+
   // Biome Specific
   MYSTICAL_POTION = "mystical_potion",
   CRYSTAL_TOOL = "crystal_tool",

@@ -54,7 +54,6 @@ export class SocialSystem {
   private gpuService?: GPUComputeService;
   private entityIndex?: EntityIndex;
 
-
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
     @inject(TYPES.StateDirtyTracker)
@@ -689,5 +688,5 @@ export class SocialSystem {
       timestamp: number;
       [key: string]: unknown;
     },
-  ): void { }
+  ): void {}
 }

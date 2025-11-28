@@ -143,7 +143,7 @@ export class LifeCycleSystem extends EventEmitter {
     marriageSystem?: MarriageSystem;
     genealogySystem?: GenealogySystem;
     householdSystem?: IHouseholdPort;
-    divineFavorSystem?: any; // DivineFavorSystem removed
+
     movementSystem?: IMovementPort;
     roleSystem?: RoleSystem;
     taskSystem?: TaskSystem;
@@ -156,8 +156,7 @@ export class LifeCycleSystem extends EventEmitter {
     if (systems.genealogySystem)
       this._genealogySystem = systems.genealogySystem;
     if (systems.householdSystem) this.householdSystem = systems.householdSystem;
-    if (systems.divineFavorSystem)
-      this._divineFavorSystem = systems.divineFavorSystem;
+
     if (systems.movementSystem) this._movementSystem = systems.movementSystem;
     if (systems.taskSystem) this._taskSystem = systems.taskSystem;
     if (systems.roleSystem) {
@@ -636,6 +635,7 @@ export class LifeCycleSystem extends EventEmitter {
       cooperation: mix(father.traits.cooperation, mother.traits.cooperation),
       aggression: mix(father.traits.aggression, mother.traits.aggression),
       curiosity: mix(father.traits.curiosity, mother.traits.curiosity),
+      diligence: mix(father.traits.diligence, mother.traits.diligence),
     };
   }
 

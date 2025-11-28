@@ -119,12 +119,12 @@ export class SnapshotManager {
 
         const ai = aiState
           ? {
-            currentGoal: aiState.currentGoal || undefined,
-            goalQueue: aiState.goalQueue || [],
-            currentAction: aiState.currentAction || undefined,
-            offDuty: aiState.offDuty || false,
-            lastDecisionTime: aiState.lastDecisionTime || 0,
-          }
+              currentGoal: aiState.currentGoal || undefined,
+              goalQueue: aiState.goalQueue || [],
+              currentAction: aiState.currentAction || undefined,
+              offDuty: aiState.offDuty || false,
+              lastDecisionTime: aiState.lastDecisionTime || 0,
+            }
           : undefined;
 
         return {
@@ -192,12 +192,12 @@ export class SnapshotManager {
 
         const ai = aiState
           ? {
-            currentGoal: aiState.currentGoal || undefined,
-            goalQueue: aiState.goalQueue || [],
-            currentAction: aiState.currentAction || undefined,
-            offDuty: aiState.offDuty || false,
-            lastDecisionTime: aiState.lastDecisionTime || 0,
-          }
+              currentGoal: aiState.currentGoal || undefined,
+              goalQueue: aiState.goalQueue || [],
+              currentAction: aiState.currentAction || undefined,
+              offDuty: aiState.offDuty || false,
+              lastDecisionTime: aiState.lastDecisionTime || 0,
+            }
           : undefined;
 
         return {

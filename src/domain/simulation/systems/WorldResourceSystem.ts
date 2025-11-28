@@ -37,8 +37,6 @@ export class WorldResourceSystem {
     if (!this.gameState.worldResources) {
       this.gameState.worldResources = {};
     }
-
-
   }
 
   public update(_dt: number): void {
@@ -46,10 +44,7 @@ export class WorldResourceSystem {
     const now = Date.now();
 
     // Check for regeneration
-    if (
-      now - this.lastRegenerationCheck >
-      this.REGENERATION_CHECK_INTERVAL
-    ) {
+    if (now - this.lastRegenerationCheck > this.REGENERATION_CHECK_INTERVAL) {
       this.checkRegeneration(now);
       this.lastRegenerationCheck = now;
     }
@@ -122,8 +117,6 @@ export class WorldResourceSystem {
     // Implementation would go here
   }
 
-
-
   public getResourcesInRadius(
     x: number,
     y: number,
@@ -164,8 +157,6 @@ export class WorldResourceSystem {
 
     return nearest;
   }
-
-
 
   public spawnResourcesInWorld(worldConfig: {
     width: number;
@@ -388,8 +379,6 @@ export class WorldResourceSystem {
     );
   }
 
-
-
   public getResourcesByType(type: WorldResourceType): WorldResourceInstance[] {
     if (!this.gameState.worldResources) return [];
     const results = Object.values(this.gameState.worldResources).filter(
@@ -479,7 +468,7 @@ export class WorldResourceSystem {
 
     const yieldState =
       resource.state === ResourceState.DEPLETED &&
-        previousState === ResourceState.HARVESTED_PARTIAL
+      previousState === ResourceState.HARVESTED_PARTIAL
         ? ResourceState.HARVESTED_PARTIAL
         : ResourceState.PRISTINE;
 
@@ -495,7 +484,7 @@ export class WorldResourceSystem {
     ) {
       harvestAmount = Math.floor(
         Math.random() * (yields.amountMax - yields.amountMin + 1) +
-        yields.amountMin,
+          yields.amountMin,
       );
 
       if (yields?.secondaryYields) {
@@ -509,7 +498,7 @@ export class WorldResourceSystem {
 
           const amount = Math.floor(
             Math.random() * (secondary.amountMax - secondary.amountMin + 1) +
-            secondary.amountMin,
+              secondary.amountMin,
           );
 
           if (amount > 0) {

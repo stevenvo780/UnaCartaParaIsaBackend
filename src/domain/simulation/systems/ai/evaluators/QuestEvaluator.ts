@@ -1,9 +1,6 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { Quest } from "../../../../types/simulation/quests";
-import {
-  GoalType,
-  ActionType,
-} from "../../../../../shared/constants/AIEnums";
+import { GoalType, ActionType } from "../../../../../shared/constants/AIEnums";
 import {
   QuestObjectiveType,
   QuestStatus,

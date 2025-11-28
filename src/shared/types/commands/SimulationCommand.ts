@@ -220,94 +220,94 @@ import type { TaskMetadata } from "../../../domain/types/simulation/tasks";
 export type SimulationCommand =
   | { type: SimulationCommandType.SET_TIME_SCALE; multiplier: number }
   | {
-    type: SimulationCommandType.APPLY_RESOURCE_DELTA;
-    delta: Partial<GameResources["materials"]>;
-  }
+      type: SimulationCommandType.APPLY_RESOURCE_DELTA;
+      delta: Partial<GameResources["materials"]>;
+    }
   | {
-    type: SimulationCommandType.GATHER_RESOURCE;
-    resourceId: string;
-    amount: number;
-  }
+      type: SimulationCommandType.GATHER_RESOURCE;
+      resourceId: string;
+      amount: number;
+    }
   | {
-    type: SimulationCommandType.GIVE_RESOURCE;
-    payload: GiveResourceCommandPayload;
-  }
+      type: SimulationCommandType.GIVE_RESOURCE;
+      payload: GiveResourceCommandPayload;
+    }
   | {
-    type: SimulationCommandType.SPAWN_AGENT;
-    payload?: SpawnAgentCommandPayload;
-  }
+      type: SimulationCommandType.SPAWN_AGENT;
+      payload?: SpawnAgentCommandPayload;
+    }
   | { type: SimulationCommandType.KILL_AGENT; agentId: string }
   | { type: SimulationCommandType.PING; payload?: PingPayload }
   | {
-    type: SimulationCommandType.AGENT_COMMAND;
-    agentId: string;
-    command: AgentCommandType;
-    payload?: AgentCommandPayload;
-  }
+      type: SimulationCommandType.AGENT_COMMAND;
+      agentId: string;
+      command: AgentCommandType;
+      payload?: AgentCommandPayload;
+    }
   | {
-    type: SimulationCommandType.ANIMAL_COMMAND;
-    command: AnimalCommandType;
-    payload?: AnimalCommandPayload;
-  }
+      type: SimulationCommandType.ANIMAL_COMMAND;
+      command: AnimalCommandType;
+      payload?: AnimalCommandPayload;
+    }
   | {
-    type: SimulationCommandType.NEEDS_COMMAND;
-    command: NeedsCommandType;
-    payload?: NeedsCommandPayload;
-  }
+      type: SimulationCommandType.NEEDS_COMMAND;
+      command: NeedsCommandType;
+      payload?: NeedsCommandPayload;
+    }
   | {
-    type: SimulationCommandType.RECIPE_COMMAND;
-    command: RecipeCommandType;
-    payload?: RecipeCommandPayload;
-  }
+      type: SimulationCommandType.RECIPE_COMMAND;
+      command: RecipeCommandType;
+      payload?: RecipeCommandPayload;
+    }
   | {
-    type: SimulationCommandType.SOCIAL_COMMAND;
-    command: SocialCommandType;
-    payload?: SocialCommandPayload;
-  }
+      type: SimulationCommandType.SOCIAL_COMMAND;
+      command: SocialCommandType;
+      payload?: SocialCommandPayload;
+    }
   | {
-    type: SimulationCommandType.RESEARCH_COMMAND;
-    command: ResearchCommandType;
-    payload?: ResearchCommandPayload;
-  }
+      type: SimulationCommandType.RESEARCH_COMMAND;
+      command: ResearchCommandType;
+      payload?: ResearchCommandPayload;
+    }
   | {
-    type: SimulationCommandType.WORLD_RESOURCE_COMMAND;
-    command: WorldResourceCommandType;
-    payload?: WorldResourceCommandPayload;
-  }
+      type: SimulationCommandType.WORLD_RESOURCE_COMMAND;
+      command: WorldResourceCommandType;
+      payload?: WorldResourceCommandPayload;
+    }
   | {
-    type: SimulationCommandType.DIALOGUE_COMMAND;
-    command: DialogueCommandType;
-    payload?: DialogueCommandPayload;
-  }
+      type: SimulationCommandType.DIALOGUE_COMMAND;
+      command: DialogueCommandType;
+      payload?: DialogueCommandPayload;
+    }
   | {
-    type: SimulationCommandType.BUILDING_COMMAND;
-    command: BuildingCommandType;
-    payload?: BuildingCommandPayload;
-  }
+      type: SimulationCommandType.BUILDING_COMMAND;
+      command: BuildingCommandType;
+      payload?: BuildingCommandPayload;
+    }
   | {
-    type: SimulationCommandType.REPUTATION_COMMAND;
-    command: ReputationCommandType;
-    payload?: ReputationCommandPayload;
-  }
+      type: SimulationCommandType.REPUTATION_COMMAND;
+      command: ReputationCommandType;
+      payload?: ReputationCommandPayload;
+    }
   | {
-    type: SimulationCommandType.TASK_COMMAND;
-    command: TaskCommandType;
-    payload?: TaskCommandPayload;
-  }
+      type: SimulationCommandType.TASK_COMMAND;
+      command: TaskCommandType;
+      payload?: TaskCommandPayload;
+    }
   | {
-    type: SimulationCommandType.CONFLICT_COMMAND;
-    command: ConflictCommandType;
-    payload?: ConflictCommandPayload;
-  }
+      type: SimulationCommandType.CONFLICT_COMMAND;
+      command: ConflictCommandType;
+      payload?: ConflictCommandPayload;
+    }
   | {
-    type: SimulationCommandType.TIME_COMMAND;
-    command: TimeCommandType;
-    payload?: { weatherType: WeatherType };
-  }
+      type: SimulationCommandType.TIME_COMMAND;
+      command: TimeCommandType;
+      payload?: { weatherType: WeatherType };
+    }
   | {
-    type: SimulationCommandType.FORCE_EMERGENCE_EVALUATION;
-    timestamp?: number;
-  }
+      type: SimulationCommandType.FORCE_EMERGENCE_EVALUATION;
+      timestamp?: number;
+    }
   | { type: SimulationCommandType.SAVE_GAME; timestamp?: number };
 
 export interface SimulationConfig {
@@ -319,15 +319,15 @@ import { SimulationRequestType } from "../../constants/CommandEnums";
 
 export type SimulationRequest =
   | {
-    type: SimulationRequestType.REQUEST_FULL_STATE;
-    requestId: string;
-  }
+      type: SimulationRequestType.REQUEST_FULL_STATE;
+      requestId: string;
+    }
   | {
-    type: SimulationRequestType.REQUEST_ENTITY_DETAILS;
-    requestId: string;
-    entityId: string;
-  }
+      type: SimulationRequestType.REQUEST_ENTITY_DETAILS;
+      requestId: string;
+      entityId: string;
+    }
   | {
-    type: SimulationRequestType.REQUEST_PLAYER_ID;
-    requestId: string;
-  };
+      type: SimulationRequestType.REQUEST_PLAYER_ID;
+      requestId: string;
+    };

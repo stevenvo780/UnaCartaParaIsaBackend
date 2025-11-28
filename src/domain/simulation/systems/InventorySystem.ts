@@ -45,7 +45,9 @@ export class InventorySystem {
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
     @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
-    @inject(TYPES.StateDirtyTracker) @optional() dirtyTracker?: StateDirtyTracker,
+    @inject(TYPES.StateDirtyTracker)
+    @optional()
+    dirtyTracker?: StateDirtyTracker,
   ) {
     this.gameState = gameState;
     this.agentRegistry = agentRegistry;

@@ -1,9 +1,6 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { GameState } from "../../../../types/game-types";
-import {
-  GoalType,
-  ActionType,
-} from "../../../../../shared/constants/AIEnums";
+import { GoalType, ActionType } from "../../../../../shared/constants/AIEnums";
 import { BuildingType } from "../../../../../shared/constants/BuildingEnums";
 
 export interface BuildingContributionDependencies {
