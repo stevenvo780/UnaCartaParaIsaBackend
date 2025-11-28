@@ -64,6 +64,12 @@ export interface WorldResourceInstance {
   regenerationStartTime?: number;
   biome?: BiomeType;
   spawnedAt?: number;
+  /** Coordenada X del tile de terreno vinculado (para recursos como agua que modifican el terreno al agotarse) */
+  linkedTileX?: number;
+  /** Coordenada Y del tile de terreno vinculado */
+  linkedTileY?: number;
+  /** Número de veces que el recurso se ha agotado completamente (para tiles de agua, al llegar a MAX_DEPLETION_CYCLES se convierte en tierra permanente) */
+  depletionCycles?: number;
 }
 
 export interface HarvestResult {

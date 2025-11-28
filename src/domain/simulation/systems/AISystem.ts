@@ -811,23 +811,20 @@ export class AISystem extends EventEmitter {
       } else if (
         this.goalValidator.isGoalHardInvalid(aiState.currentGoal, agentId)
       ) {
-        // Hard invalidation: target gone, resource depleted - handle immediately
         this.failGoal(aiState, agentId);
       } else if (
         this.goalValidator.isGoalTimedOut(aiState.currentGoal, agentId)
       ) {
-        // Soft invalidation: timeout only - queue for re-evaluation to prevent cascade
-        // Agent continues current action/behavior until re-evaluated
         if (!this.pendingReEvaluations.has(agentId)) {
           this.pendingReEvaluations.add(agentId);
           logger.debug(
             `⏰ [AI] ${agentId}: Goal timeout, queued for re-evaluation (queue size: ${this.pendingReEvaluations.size})`,
           );
         }
-        // Clear goal but don't trigger immediate re-evaluation
+
         aiState.currentGoal = null;
         aiState.currentAction = null;
-        return; // Let the queue handle re-evaluation in next ticks
+        return;
       } else if (aiState.currentAction) {
         return;
       }

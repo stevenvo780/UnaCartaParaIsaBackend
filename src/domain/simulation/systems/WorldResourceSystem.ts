@@ -12,6 +12,8 @@ import {
   ResourceState,
 } from "../../../shared/constants/ResourceEnums";
 import { BiomeType } from "../../../shared/constants/BiomeEnums";
+import { TileType } from "../../../shared/constants/TileTypeEnums";
+import { TerrainSystem } from "./TerrainSystem";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -33,6 +35,9 @@ export class WorldResourceSystem {
     @inject(TYPES.StateDirtyTracker)
     @optional()
     private dirtyTracker?: StateDirtyTracker,
+    @inject(TYPES.TerrainSystem)
+    @optional()
+    private terrainSystem?: TerrainSystem,
   ) {
     this.gameState = gameState;
     if (!this.gameState.worldResources) {
@@ -100,12 +105,32 @@ export class WorldResourceSystem {
         continue;
       }
 
-      if (now - startTime > 60000) {
+      const config = getResourceConfig(resource.type);
+      const regenerationTime = config?.regenerationTime || 60000;
+
+      if (now - startTime > regenerationTime) {
         resource.state = ResourceState.PRISTINE;
         resource.harvestCount = 0;
         resource.regenerationStartTime = undefined;
         this.regenerationTimers.delete(resourceId);
         this.dirtyTracker?.markDirty("worldResources");
+
+        if (
+          resource.linkedTileX !== undefined &&
+          resource.linkedTileY !== undefined &&
+          this.terrainSystem
+        ) {
+          this.terrainSystem.modifyTile(
+            resource.linkedTileX,
+            resource.linkedTileY,
+            {
+              assets: { terrain: TileType.WATER },
+            },
+          );
+          logger.debug(
+            `[WorldResourceSystem] Tile de agua (${resource.linkedTileX}, ${resource.linkedTileY}) regenerado`,
+          );
+        }
 
         simulationEvents.emit(GameEventType.RESOURCE_STATE_CHANGE, {
           resourceId,
@@ -278,6 +303,7 @@ export class WorldResourceSystem {
   /**
    * Spawns resources for a specific chunk based on generated tiles and assets.
    * This ensures that visual assets (like trees) are interactive resources.
+   * Water tiles are linked to their terrain tile - consuming all water converts the tile to dirt.
    */
   public spawnResourcesForChunk(
     chunkCoords: { x: number; y: number },
@@ -314,12 +340,19 @@ export class WorldResourceSystem {
           tile.assets.terrain.includes("ocean");
 
         if (isWaterTile) {
-          const resource = this.spawnResource(
-            WorldResourceType.WATER_SOURCE,
+          const waterResourceId = `water_tile_${tile.x}_${tile.y}`;
+
+          if (this.resources.has(waterResourceId)) {
+            continue;
+          }
+
+          const resource = this.spawnWaterTileResource(
+            waterResourceId,
             {
               x: pixelX + tileSize / 2,
               y: pixelY + tileSize / 2,
             },
+            { tileX: tile.x, tileY: tile.y },
             "ocean",
           );
           if (resource) spawnedCount++;
@@ -376,6 +409,40 @@ export class WorldResourceSystem {
     }
 
     return spawnedCount;
+  }
+
+  /**
+   * Spawns a water resource linked to a specific terrain tile.
+   * When depleted, the terrain tile will be converted from water to dirt.
+   */
+  private spawnWaterTileResource(
+    id: string,
+    position: { x: number; y: number },
+    tileCoords: { tileX: number; tileY: number },
+    biome: string,
+  ): WorldResourceInstance | null {
+    const config = getResourceConfig(WorldResourceType.WATER_SOURCE);
+    if (!config) return null;
+
+    const resource: WorldResourceInstance = {
+      id,
+      type: WorldResourceType.WATER_SOURCE,
+      position,
+      state: ResourceState.PRISTINE,
+      harvestCount: 0,
+      lastHarvestTime: 0,
+      biome: biome as BiomeType,
+      spawnedAt: Date.now(),
+
+      linkedTileX: tileCoords.tileX,
+      linkedTileY: tileCoords.tileY,
+    };
+
+    this.addResource(resource);
+
+    simulationEvents.emit(GameEventType.RESOURCE_SPAWNED, { resource });
+
+    return resource;
   }
 
   private mapAssetToResource(asset: string): WorldResourceType | null {
@@ -472,10 +539,46 @@ export class WorldResourceSystem {
     const previousState = resource.state;
 
     const maxHarvests = config.harvestsUntilDepleted || 5;
+    const MAX_DEPLETION_CYCLES = 5;
+
     if (resource.harvestCount >= maxHarvests) {
       resource.state = ResourceState.DEPLETED;
 
-      if (config.canRegenerate) {
+      if (
+        resource.linkedTileX !== undefined &&
+        resource.linkedTileY !== undefined
+      ) {
+        resource.depletionCycles = (resource.depletionCycles || 0) + 1;
+
+        if (this.terrainSystem) {
+          this.terrainSystem.modifyTile(
+            resource.linkedTileX,
+            resource.linkedTileY,
+            {
+              assets: { terrain: TileType.TERRAIN_DIRT },
+            },
+          );
+        }
+
+        if (resource.depletionCycles >= MAX_DEPLETION_CYCLES) {
+          logger.info(
+            `[WorldResourceSystem] Tile de agua (${resource.linkedTileX}, ${resource.linkedTileY}) convertido a tierra permanente tras ${resource.depletionCycles} ciclos de agotamiento`,
+          );
+          delete this.gameState.worldResources![resourceId];
+          this.resources.delete(resourceId);
+          simulationEvents.emit(GameEventType.RESOURCE_DEPLETED, {
+            resourceId,
+            resourceType: resource.type,
+            position: resource.position,
+          });
+        } else {
+          logger.debug(
+            `[WorldResourceSystem] Tile de agua (${resource.linkedTileX}, ${resource.linkedTileY}) agotado temporalmente (ciclo ${resource.depletionCycles}/${MAX_DEPLETION_CYCLES})`,
+          );
+          resource.regenerationStartTime = Date.now();
+          this.regenerationTimers.set(resourceId, Date.now());
+        }
+      } else if (config.canRegenerate) {
         resource.regenerationStartTime = Date.now();
         this.regenerationTimers.set(resourceId, Date.now());
       } else {
