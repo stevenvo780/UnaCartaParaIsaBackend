@@ -17,6 +17,8 @@ export interface Inventory {
   water: number;
   rare_materials: number;
   metal: number;
+  iron_ore: number;
+  copper_ore: number;
   capacity: number;
   lastUpdateTime?: number;
 }

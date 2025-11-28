@@ -306,13 +306,13 @@ export class CombatSystem {
 
     if (attackersWithPos.length === 0 || allEntities.length === 0) return;
 
-    // Resize buffers if needed (with some margin to avoid frequent resizing)
+
     const neededAttackerSize = attackersWithPos.length * 2;
     if (
       !this.attackerPositionsBuffer ||
       this.attackerPositionsBuffer.length < neededAttackerSize
     ) {
-      // Allocate 50% more than needed to avoid frequent resizing
+
       this.attackerPositionsBuffer = new Float32Array(
         Math.ceil(neededAttackerSize * 1.5),
       );
@@ -323,7 +323,7 @@ export class CombatSystem {
       !this.targetPositionsBuffer ||
       this.targetPositionsBuffer.length < neededTargetSize
     ) {
-      // Allocate 50% more than needed
+
       this.targetPositionsBuffer = new Float32Array(
         Math.ceil(neededTargetSize * 1.5),
       );
@@ -339,8 +339,8 @@ export class CombatSystem {
       this.targetPositionsBuffer[i * 2 + 1] = allEntities[i].position!.y;
     }
 
-    // Pass the subarray view to the GPU service to avoid processing garbage data
-    // at the end of the buffer if it's larger than needed.
+
+
     const targetsView = this.targetPositionsBuffer.subarray(
       0,
       neededTargetSize,

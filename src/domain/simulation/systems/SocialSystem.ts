@@ -112,6 +112,8 @@ export class SocialSystem {
     return this.groups.find((group) => group.members.includes(agentId));
   }
 
+  private lastGraphSync = 0;
+
   public update(deltaTimeMs: number): void {
     const startTime = performance.now();
     const dt = deltaTimeMs / 1000;
@@ -120,7 +122,7 @@ export class SocialSystem {
 
     this.updateSpatialGridIncremental();
 
-    // Staggered update runs every frame
+
     this.updateProximity(dt);
 
     if (now - this.lastDecayUpdate > 2000) {
@@ -138,22 +140,25 @@ export class SocialSystem {
 
     this.updateTruces(now);
 
-    if (!this.gameState.socialGraph) {
-      this.gameState.socialGraph = {
-        groups: this.groups,
-        relationships: this.edges,
-      };
-    } else {
-      this.gameState.socialGraph.groups = this.groups;
-      this.gameState.socialGraph.relationships = this.edges;
+
+    if (now - this.lastGraphSync > 200) {
+      if (!this.gameState.socialGraph) {
+        this.gameState.socialGraph = {
+          groups: this.groups,
+          relationships: this.edges,
+        };
+      } else {
+        this.gameState.socialGraph.groups = this.groups;
+        this.gameState.socialGraph.relationships = this.edges;
+      }
+      this.dirtyTracker?.markDirty("socialGraph");
+      this.lastGraphSync = now;
     }
-    this.dirtyTracker?.markDirty("socialGraph");
 
     const duration = performance.now() - startTime;
     performanceMonitor.recordSubsystemExecution(
       "SocialSystem",
       "update",
-      duration,
     );
     performanceMonitor.recordOperation("social_update", duration, 1, 0);
   }
@@ -293,25 +298,25 @@ export class SocialSystem {
         !!e.position && !e.isDead,
     );
 
-    // If GPU is available and we have enough entities, use GPU (it's fast enough to do all)
-    // But even GPU path can be staggered if needed. For now, let's keep GPU path as is
-    // because it's O(1) mostly (transfer + compute).
-    // Actually, for very large N, GPU transfer might be heavy.
-    // Let's stick to CPU staggering for now as requested, or apply to both.
+
+
+
+
+
 
     if (this.gpuService?.isGPUAvailable() && entitiesWithPos.length >= 20) {
       this.updateProximityGPU(entitiesWithPos, reinforcement);
       return;
     }
 
-    // Staggered CPU update
+
     const totalAgents = entitiesWithPos.length;
     if (totalAgents === 0) return;
 
-    // Process ~10% of agents per frame, or at least 1
+
     const batchSize = Math.max(1, Math.ceil(totalAgents / 10));
 
-    // Ensure index is within bounds
+
     if (this.proximityUpdateIndex >= totalAgents) {
       this.proximityUpdateIndex = 0;
     }
@@ -334,7 +339,7 @@ export class SocialSystem {
       }
     }
 
-    // Advance index
+
     this.proximityUpdateIndex = endIndex;
     if (this.proximityUpdateIndex >= totalAgents) {
       this.proximityUpdateIndex = 0;
@@ -355,7 +360,7 @@ export class SocialSystem {
   ): void {
     const count = entities.length;
 
-    // Resize buffer if needed
+
     if (
       !this.proximityPositionsBuffer ||
       this.proximityPositionsBuffer.length < count * 2
@@ -370,7 +375,7 @@ export class SocialSystem {
       this.proximityPositionsBuffer[i * 2 + 1] = entities[i].position.y;
     }
 
-    // Pass the view of valid data
+
     const positionsView = this.proximityPositionsBuffer.subarray(0, count * 2);
 
     const { distances } = this.gpuService!.computePairwiseDistances(
@@ -405,7 +410,11 @@ export class SocialSystem {
     const newAffinityB = Math.max(-1, Math.min(1, currentB + delta));
     this.edges.get(b)!.set(a, newAffinityB);
 
-    if (newAffinityA !== currentA || newAffinityB !== currentB) {
+
+    if (
+      Math.abs(newAffinityA - currentA) > 0.01 ||
+      Math.abs(newAffinityB - currentB) > 0.01
+    ) {
       this.edgesModified = true;
       simulationEvents.emit(GameEventType.SOCIAL_RELATION_CHANGED, {
         agentA: a,

@@ -121,6 +121,8 @@ export const INVENTORY_TO_WORLD: Record<ResourceType, WorldResourceType[]> = {
   ],
   [ResourceTypeEnum.RARE_MATERIALS]: [],
   [ResourceTypeEnum.METAL]: [WorldResourceTypeEnum.ROCK],
+  [ResourceTypeEnum.IRON_ORE]: [WorldResourceTypeEnum.ROCK],
+  [ResourceTypeEnum.COPPER_ORE]: [WorldResourceTypeEnum.ROCK],
 };
 
 /**

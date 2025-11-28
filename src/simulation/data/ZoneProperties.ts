@@ -345,7 +345,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#9C27B0",
     attractiveness: 9,
     effects: { resonance: 9, mentalHealth: 8, comfort: 5 },
-    spriteKey: "agent_built_spiritual",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_SPIRITUAL,
     capacity: 8,
   },
 

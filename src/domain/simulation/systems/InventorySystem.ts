@@ -526,6 +526,8 @@ export class InventorySystem {
       water: number;
       rare_materials: number;
       metal: number;
+      iron_ore: number;
+      copper_ore: number;
     };
     inAgents: {
       wood: number;
@@ -534,6 +536,8 @@ export class InventorySystem {
       water: number;
       rare_materials: number;
       metal: number;
+      iron_ore: number;
+      copper_ore: number;
     };
   } {
     const totalStockpiled = {
@@ -543,6 +547,8 @@ export class InventorySystem {
       water: 0,
       rare_materials: 0,
       metal: 0,
+      iron_ore: 0,
+      copper_ore: 0,
     };
     for (const sp of this.stockpiles.values()) {
       totalStockpiled.wood += sp.inventory.wood;
@@ -551,6 +557,8 @@ export class InventorySystem {
       totalStockpiled.water += sp.inventory.water;
       totalStockpiled.rare_materials += sp.inventory.rare_materials;
       totalStockpiled.metal += sp.inventory.metal;
+      totalStockpiled.iron_ore += sp.inventory.iron_ore;
+      totalStockpiled.copper_ore += sp.inventory.copper_ore;
     }
 
     const totalInAgents = {
@@ -560,6 +568,8 @@ export class InventorySystem {
       water: 0,
       rare_materials: 0,
       metal: 0,
+      iron_ore: 0,
+      copper_ore: 0,
     };
     for (const inv of this.agentInventories.values()) {
       totalInAgents.wood += inv.wood;
@@ -568,6 +578,8 @@ export class InventorySystem {
       totalInAgents.water += inv.water;
       totalInAgents.rare_materials += inv.rare_materials;
       totalInAgents.metal += inv.metal;
+      totalInAgents.iron_ore += inv.iron_ore;
+      totalInAgents.copper_ore += inv.copper_ore;
     }
 
     return {

@@ -245,6 +245,8 @@ export class AISystem extends EventEmitter {
   private _decisionCount = 0;
   private _goalsCompletedRef = { value: 0 };
 
+  private cachedDeps: AgentGoalPlannerDeps | null = null;
+
   /**
    * Creates a new AI system.
    *
@@ -1206,7 +1208,16 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    const deps: AgentGoalPlannerDeps = {
+    const deps = this.getDeps();
+
+    const goals = planGoals(deps, aiState, now);
+    return goals.length > 0 ? goals[0] : null;
+  }
+
+  private getDeps(): AgentGoalPlannerDeps {
+    if (this.cachedDeps) return this.cachedDeps;
+
+    this.cachedDeps = {
       gameState: this.gameState,
       priorityManager: this.priorityManager,
       agentRegistry: this.agentRegistry!,
@@ -1389,8 +1400,7 @@ export class AISystem extends EventEmitter {
       findNearbyAgent: (entityId: string) => this.findNearbyAgent(entityId),
     };
 
-    const goals = planGoals(deps, aiState, now);
-    return goals.length > 0 ? goals[0] : null;
+    return this.cachedDeps;
   }
 
   private createAIState(agentId: string): AIState {
@@ -1718,8 +1728,8 @@ export class AISystem extends EventEmitter {
     let nearest: { id: string; x: number; y: number } | null = null;
 
     if (this.worldResourceSystem) {
-      // Use optimized spatial query from WorldResourceSystem
-      // Try each compatible type and find the closest one
+
+
       let minDistance = Infinity;
 
       for (const worldType of targetWorldTypes) {
@@ -1748,7 +1758,7 @@ export class AISystem extends EventEmitter {
         }
       }
     } else {
-      // Fallback to legacy O(N) search if WorldResourceSystem not available (shouldn't happen in normal flow)
+
       const maxRadiusSq =
         this.MAX_RESOURCE_SEARCH_RADIUS * this.MAX_RESOURCE_SEARCH_RADIUS;
       let minDistance = maxRadiusSq;

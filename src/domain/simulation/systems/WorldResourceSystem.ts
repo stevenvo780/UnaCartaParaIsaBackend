@@ -23,6 +23,10 @@ import { optional } from "inversify";
 export class WorldResourceSystem {
   private gameState: GameState;
   private spatialGrid: SpatialGrid<string>;
+  private resources: Map<string, WorldResourceInstance> = new Map();
+  private lastRegenerationCheck = 0;
+  private readonly REGENERATION_CHECK_INTERVAL = 5000;
+  private regenerationTimers: Map<string, number> = new Map();
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
@@ -31,15 +35,14 @@ export class WorldResourceSystem {
     private dirtyTracker?: StateDirtyTracker,
   ) {
     this.gameState = gameState;
-    this.resources = new Map();
     if (!this.gameState.worldResources) {
       this.gameState.worldResources = {};
     }
-    // Initialize spatial grid with world dimensions (defaulting to 3200x3200 if not specified)
-    // Cell size of 100 is a reasonable balance for resource density
+
+
     this.spatialGrid = new SpatialGrid(3200, 3200, 100);
 
-    // Index existing resources if any
+
     if (this.gameState.worldResources) {
       for (const resource of Object.values(this.gameState.worldResources)) {
         this.resources.set(resource.id, resource);
@@ -57,7 +60,7 @@ export class WorldResourceSystem {
       this.lastRegenerationCheck = now;
     }
 
-    // No need for explicit updateSpatialIndex as we update on add/remove
+
     this.dirtyTracker?.markDirty("worldResources");
 
     const duration = performance.now() - startTime;
@@ -119,8 +122,6 @@ export class WorldResourceSystem {
     }
   }
 
-  private updateSpatialIndex(): void { }
-
   public getResourcesInRadius(
     x: number,
     y: number,
@@ -143,8 +144,8 @@ export class WorldResourceSystem {
     y: number,
     type?: WorldResourceType,
   ): WorldResourceInstance | undefined {
-    // Optimization: Start with a small radius and expand if not found
-    // This avoids checking all resources in the world
+
+
     const searchRadii = [200, 500, 1000, 2000];
 
     for (const radius of searchRadii) {
@@ -161,8 +162,8 @@ export class WorldResourceSystem {
         if (type && resource.type !== type) continue;
         if (resource.state === ResourceState.DEPLETED) continue;
 
-        // Use the distance from spatial query if accurate enough, or recompute
-        // SpatialGrid returns distance, so we can use it directly or square it
+
+
         const distSq = distance * distance;
 
         if (distSq < minDistSq) {
@@ -175,8 +176,8 @@ export class WorldResourceSystem {
       if (found) return nearest;
     }
 
-    // Fallback to full search if not found in largest radius (unlikely but safe)
-    // Or just return undefined to avoid O(N) spike
+
+
     return undefined;
   }
 

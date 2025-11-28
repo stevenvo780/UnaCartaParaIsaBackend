@@ -146,6 +146,8 @@ export interface GameResources {
     water: number;
     rare_materials: number;
     metal: number;
+    iron_ore: number;
+    copper_ore: number;
   };
   currency: number;
   experience: number;

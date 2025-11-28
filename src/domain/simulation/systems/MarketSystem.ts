@@ -17,6 +17,8 @@ const DEFAULT_MARKET_CONFIG: MarketConfig = {
     water: 2,
     rare_materials: 25,
     metal: 15,
+    iron_ore: 10,
+    copper_ore: 12,
   },
 };
 
