@@ -3,7 +3,7 @@ import type { EntityNeedsData } from "../../../../types/simulation/needs";
 import {
   GoalType,
   NeedType,
-  ExplorationType,
+  SearchType,
 } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 import type { Inventory } from "../../../../types/simulation/economy";
@@ -205,9 +205,9 @@ export function evaluateBiologicalDrives(
             type: GoalType.EXPLORE,
             priority: hungerUtility * 0.7,
             data: {
-              explorationType: ExplorationType.DESPERATE_SEARCH,
+              explorationType: SearchType.DESPERATE_SEARCH,
               need: NeedType.HUNGER,
-              searchFor: ExplorationType.FOOD_OR_PREY,
+              searchFor: SearchType.FOOD_OR_PREY,
             },
             createdAt: now,
             expiresAt: now + 30000,

@@ -6,12 +6,10 @@ import type {
 import type { AgentTraits } from "../../../../types/simulation/agents";
 import { getFrameTime } from "../../../../../shared/FrameTime";
 import { logger } from "../../../../../infrastructure/utils/logger";
+import { AgentPriority } from "../../../../../shared/constants/AIEnums";
 import {
   SocialPreference,
   WorkEthic,
-  AgentPriority,
-} from "../../../../../shared/constants/AIEnums";
-import {
   ExplorationType,
   LifeStage,
 } from "../../../../../shared/constants/AgentEnums";

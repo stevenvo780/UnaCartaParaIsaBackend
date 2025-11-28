@@ -942,8 +942,8 @@ export class MovementSystem extends EventEmitter {
     const radius: number =
       SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN +
       Math.random() *
-      (SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX -
-        SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN);
+        (SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX -
+          SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN);
 
     const angle = Math.random() * Math.PI * 2;
     const targetX = state.currentPosition.x + Math.cos(angle) * radius;

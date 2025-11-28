@@ -39,7 +39,7 @@ export class SocialSystem {
     Map<string, "family" | "marriage">
   >();
   private groups: SocialGroup[] = [];
-  // NOTE: Using SharedSpatialIndex instead of own SpatialGrid to avoid duplication
+
   private sharedSpatialIndex?: SharedSpatialIndex;
   private truces = new Map<string, number>();
   private infamy = new Map<string, number>();
@@ -48,7 +48,6 @@ export class SocialSystem {
   private lastProximityUpdate = 0;
   private lastDecayUpdate = 0;
 
-  // NOTE: Removed knownEntities, positionCache - now handled by SharedSpatialIndex
   /** Dirty flag to skip recomputeGroups when no edges changed */
   private edgesModified = false;
   private gpuService?: GPUComputeService;
@@ -75,9 +74,6 @@ export class SocialSystem {
       decayPerSecond: 0.01,
       groupThreshold: 0.6,
     };
-
-    // NOTE: SocialSystem now uses SharedSpatialIndex instead of own SpatialGrid
-    // The SharedSpatialIndex is maintained by SimulationRunner and shared across systems
 
     this.setupMarriageListeners();
   }
@@ -170,10 +166,7 @@ export class SocialSystem {
    * This method is kept for backwards compatibility but is a no-op.
    * The SharedSpatialIndex is rebuilt by SimulationRunner each tick.
    */
-  private updateSpatialGridIncremental(): void {
-    // No-op: SharedSpatialIndex is maintained centrally by SimulationRunner
-    // Entities are automatically tracked there
-  }
+  private updateSpatialGridIncremental(): void {}
 
   /**
    * Optimized edge decay that only processes edges with significant non-zero values.
@@ -307,7 +300,6 @@ export class SocialSystem {
       return;
     }
 
-    // Use SharedSpatialIndex for proximity queries
     for (const entity of entitiesWithPos) {
       const nearby = this.sharedSpatialIndex?.queryRadius(
         entity.position,
@@ -319,7 +311,7 @@ export class SocialSystem {
           if (entity.id >= otherId) continue;
           this.addEdge(entity.id, otherId, reinforcement);
         }
-        // Release results back to pool for memory efficiency
+
         this.sharedSpatialIndex?.releaseResults(nearby);
       }
     }
@@ -457,8 +449,6 @@ export class SocialSystem {
         this.truces.delete(key);
       }
     }
-
-    // NOTE: spatialGrid cleanup now handled by SharedSpatialIndex centrally
   }
 
   public registerFriendlyInteraction(aId: string, bId: string): void {
@@ -688,5 +678,5 @@ export class SocialSystem {
       timestamp: number;
       [key: string]: unknown;
     },
-  ): void { }
+  ): void {}
 }

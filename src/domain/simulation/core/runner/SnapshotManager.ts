@@ -102,7 +102,6 @@ export class SnapshotManager {
 
     const currentTick = this.runner.getTickCounter();
 
-    // Flush dirty flags from tracker and mark them in cache
     const dirtySections = this.dirtyTracker.flush();
     if (dirtySections.length > 0) {
       this.stateCache.markDirtyMultiple(dirtySections);

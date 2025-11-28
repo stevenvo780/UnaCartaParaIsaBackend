@@ -8,6 +8,18 @@
  */
 
 /**
+ * Re-export SocialPreference from AgentEnums for backward compatibility.
+ * @deprecated Import SocialPreference from AgentEnums instead.
+ */
+export { SocialPreference } from "./AgentEnums";
+
+/**
+ * Re-export WorkEthic from AgentEnums for backward compatibility.
+ * @deprecated Import WorkEthic from AgentEnums instead.
+ */
+export { WorkEthic } from "./AgentEnums";
+
+/**
  * Enumeration of AI goal types.
  * Goals represent high-level objectives that agents work towards.
  */
@@ -75,24 +87,6 @@ export enum NeedType {
 }
 
 /**
- * Enumeration of social preference types.
- */
-export enum SocialPreference {
-  INTROVERTED = "introverted",
-  BALANCED = "balanced",
-  EXTROVERTED = "extroverted",
-}
-
-/**
- * Enumeration of work ethic types.
- */
-export enum WorkEthic {
-  LAZY = "lazy",
-  BALANCED = "balanced",
-  WORKAHOLIC = "workaholic",
-}
-
-/**
  * Enumeration of agent priority modes.
  * Determines how agents prioritize their goals and actions.
  */
@@ -133,9 +127,10 @@ export enum GoalPrefix {
 }
 
 /**
- * Enumeration of exploration types.
+ * Enumeration of search types for AI exploration goals.
+ * Defines the different modes of searching/exploring the world.
  */
-export enum ExplorationType {
+export enum SearchType {
   WANDER = "wander",
   SOCIAL_SEARCH = "social_search",
   INSPECT = "inspect",
@@ -143,6 +138,12 @@ export enum ExplorationType {
   DESPERATE_SEARCH = "desperate_search",
   FOOD_OR_PREY = "food_or_prey",
 }
+
+/**
+ * @deprecated Use SearchType instead. This alias is kept for backward compatibility.
+ */
+export const ExplorationType = SearchType;
+export type ExplorationType = SearchType;
 
 /**
  * Enumeration of reasons for goals or actions.
@@ -167,14 +168,16 @@ export type ActionTypeValue = `${ActionType}`;
 export type NeedTypeValue = `${NeedType}`;
 
 /**
- * Type representing all possible social preference values.
+ * Re-export SocialPreferenceValue from AgentEnums for backward compatibility.
+ * @deprecated Import from AgentEnums instead.
  */
-export type SocialPreferenceValue = `${SocialPreference}`;
+export type { SocialPreferenceValue } from "./AgentEnums";
 
 /**
- * Type representing all possible work ethic values.
+ * Re-export WorkEthicValue from AgentEnums for backward compatibility.
+ * @deprecated Import from AgentEnums instead.
  */
-export type WorkEthicValue = `${WorkEthic}`;
+export type { WorkEthicValue } from "./AgentEnums";
 
 /**
  * Type representing all possible agent priority values.

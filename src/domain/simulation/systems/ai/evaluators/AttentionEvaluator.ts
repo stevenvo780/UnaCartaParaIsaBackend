@@ -1,10 +1,7 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { GameState } from "../../../../types/game-types";
 import { RandomUtils } from "../../../../../shared/utils/RandomUtils";
-import {
-  GoalType,
-  ExplorationType,
-} from "../../../../../shared/constants/AIEnums";
+import { GoalType, SearchType } from "../../../../../shared/constants/AIEnums";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 
 export interface AttentionContext {
@@ -52,7 +49,7 @@ export function evaluateAttention(
       targetId: pick.res.id,
       targetPosition: pick.res.position,
       data: {
-        explorationType: ExplorationType.INSPECT,
+        explorationType: SearchType.INSPECT,
       },
       createdAt: now,
       expiresAt: now + 3000,
@@ -80,7 +77,7 @@ export function evaluateDefaultExploration(
         type: GoalType.EXPLORE,
         priority: 0.3,
         data: {
-          explorationType: ExplorationType.WANDER,
+          explorationType: SearchType.WANDER,
         },
         createdAt: now,
         expiresAt: now + 8000,
@@ -101,7 +98,7 @@ export function evaluateDefaultExploration(
         type: GoalType.EXPLORE,
         priority: 0.3,
         data: {
-          explorationType: ExplorationType.WANDER,
+          explorationType: SearchType.WANDER,
         },
         createdAt: now,
         expiresAt: now + 8000,

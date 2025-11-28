@@ -610,7 +610,6 @@ export class AnimalSystem {
       return cached.threat;
     }
 
-    // NOTA: AgentRegistry es la fuente de verdad para agentes/humanos
     const entities: Array<{
       id: string;
       isDead?: boolean;
@@ -625,7 +624,6 @@ export class AnimalSystem {
         }
       }
     } else if (this.gameState.entities) {
-      // Fallback: solo si AgentRegistry no disponible
       entities.push(...this.gameState.entities);
     }
 

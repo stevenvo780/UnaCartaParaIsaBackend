@@ -18,7 +18,7 @@ import type { SimulationEntity } from "../core/schema";
 import { InventorySystem } from "./InventorySystem";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 import { SocialSystem } from "./SocialSystem";
-// NOTE: Removed SpatialGrid import - now using SharedSpatialIndex exclusively
+
 import type { AnimalSystem } from "./AnimalSystem";
 import type { NormsSystem } from "./NormsSystem";
 import { getFrameTime } from "../../../shared/FrameTime";
@@ -74,7 +74,7 @@ import type { EntityIndex } from "../core/EntityIndex";
 @injectable()
 export class CombatSystem {
   private readonly config: CombatConfig;
-  // NOTE: Removed private spatialGrid - now using SharedSpatialIndex exclusively
+
   private lastUpdate = Date.now();
   private readonly lastAttackAt = new Map<string, number>();
   private readonly equippedWeapons = new Map<string, WeaponId>();
@@ -87,7 +87,6 @@ export class CombatSystem {
   private gpuService?: GPUComputeService;
   private entityIndex?: EntityIndex;
 
-  // Buffers for GPU batch processing to avoid allocation every frame
   private attackerPositionsBuffer: Float32Array | null = null;
   private targetPositionsBuffer: Float32Array | null = null;
 
@@ -116,8 +115,7 @@ export class CombatSystem {
     this.gpuService = gpuService;
     this.entityIndex = entityIndex;
     this.config = DEFAULT_COMBAT_CONFIG;
-    // NOTE: Removed SpatialGrid creation - now using SharedSpatialIndex exclusively
-    // The SharedSpatialIndex is maintained by SimulationRunner and shared across systems
+
     this.combatLog = this.state.combatLog ?? [];
     this.state.combatLog = this.combatLog;
 
@@ -148,12 +146,10 @@ export class CombatSystem {
     const entitiesById = new Map<string, SimulationEntity>();
     const validEntities = entities.filter((e) => !e.isDead && e.position);
 
-    // NOTE: Now using SharedSpatialIndex exclusively - no fallback to local spatialGrid
     for (const entity of validEntities) {
       entitiesById.set(entity.id, entity);
     }
 
-    // Animals are indexed in SharedSpatialIndex by AnimalSystem/AnimalRegistry
     if (this.animalSystem) {
       const animals = this.animalSystem.getAnimals();
       for (const [animalId, animal] of animals) {
@@ -174,7 +170,6 @@ export class CombatSystem {
           },
         };
         entitiesById.set(animalId, animalEntity);
-        // NOTE: Animal positions are tracked in SharedSpatialIndex by SimulationRunner
       }
     }
 
@@ -197,7 +192,6 @@ export class CombatSystem {
         const radius = Math.max(this.config.engagementRadius, weapon.range);
         let nearby: SimulationEntity[] = [];
 
-        // NOTE: Now using SharedSpatialIndex exclusively
         if (this.sharedSpatialIndex) {
           const results = this.sharedSpatialIndex.queryRadius(
             attacker.position,
@@ -260,7 +254,7 @@ export class CombatSystem {
       const { attacker, center, radius } = query;
 
       let nearby: SimulationEntity[] = [];
-      // NOTE: Now using SharedSpatialIndex exclusively
+
       if (this.sharedSpatialIndex) {
         const results = this.sharedSpatialIndex.queryRadius(
           center,
@@ -312,7 +306,6 @@ export class CombatSystem {
 
     if (attackersWithPos.length === 0 || allEntities.length === 0) return;
 
-    // Resize buffers if needed (with some margin to avoid frequent resizing)
     const neededAttackerSize = attackersWithPos.length * 2;
     if (
       !this.attackerPositionsBuffer ||
@@ -335,8 +328,7 @@ export class CombatSystem {
 
     for (let i = 0; i < attackersWithPos.length; i++) {
       this.attackerPositionsBuffer[i * 2] = attackersWithPos[i].position!.x;
-      this.attackerPositionsBuffer[i * 2 + 1] =
-        attackersWithPos[i].position!.y;
+      this.attackerPositionsBuffer[i * 2 + 1] = attackersWithPos[i].position!.y;
     }
 
     for (let i = 0; i < allEntities.length; i++) {
@@ -350,14 +342,6 @@ export class CombatSystem {
       const weapon = getWeapon(weaponId);
       const radius = Math.max(this.config.engagementRadius, weapon.range);
       const radiusSq = radius * radius;
-
-      // Use the reused buffer (slice is not needed if computeDistancesBatch handles offsets,
-      // but assuming it takes the whole array or we pass length.
-      // If computeDistancesBatch iterates the whole array, we might process garbage data.
-      // Let's assume we need to pass the valid data.
-      // Ideally computeDistancesBatch should accept a count.
-      // Checking GPUComputeService signature... it takes Float32Array.
-      // If it iterates the whole array, we must subarray it. Subarray is cheap (view).
 
       const distances = this.gpuService!.computeDistancesBatch(
         attacker.position!.x,

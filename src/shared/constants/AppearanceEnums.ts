@@ -26,9 +26,8 @@ export type GenerationStyleIdValue = `${GenerationStyleId}`;
 /**
  * Array of all generation style IDs for iteration.
  */
-export const ALL_GENERATION_STYLE_IDS: readonly GenerationStyleId[] = Object.values(
-  GenerationStyleId,
-) as GenerationStyleId[];
+export const ALL_GENERATION_STYLE_IDS: readonly GenerationStyleId[] =
+  Object.values(GenerationStyleId) as GenerationStyleId[];
 
 /**
  * Type guard to check if a string is a valid GenerationStyleId.

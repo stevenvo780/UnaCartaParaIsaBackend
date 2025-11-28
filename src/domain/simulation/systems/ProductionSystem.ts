@@ -226,9 +226,7 @@ export class ProductionSystem {
 
     const amount = workers.size * this.config.baseYieldPerWorker;
 
-    // Check building durability if applicable
     if (zone.durability !== undefined && zone.durability <= 0) {
-      // Building is ruined, production halted
       return;
     }
 

@@ -49,7 +49,6 @@ export enum ItemCategory {
  * This is the single source of truth for all item identifiers.
  */
 export enum ItemId {
-  // Raw Materials
   WOOD_LOG = "wood_log",
   FIBER = "fiber",
   STONE = "stone",
@@ -79,7 +78,6 @@ export enum ItemId {
   OLD_TOOLS = "old_tools",
   SEEDS = "seeds",
 
-  // Processed Materials
   PLANK = "plank",
   IRON_INGOT = "iron_ingot",
   COPPER_INGOT = "copper_ingot",
@@ -93,7 +91,6 @@ export enum ItemId {
   COOKED_FISH = "cooked_fish",
   MEAT_STEW = "meat_stew",
 
-  // Tools & Weapons
   STONE_AXE = "stone_axe",
   STONE_PICKAXE = "stone_pickaxe",
   IRON_AXE = "iron_axe",
@@ -103,21 +100,17 @@ export enum ItemId {
   IRON_SWORD = "iron_sword",
   BOW = "bow",
 
-  // Armor
   CLOTH_SHIRT = "cloth_shirt",
   LEATHER_VEST = "leather_vest",
   IRON_HELMET = "iron_helmet",
 
-  // Structures
   WOODEN_FRAME = "wooden_frame",
   STONE_FOUNDATION = "stone_foundation",
   DOOR = "door",
 
-  // Crafting Stations
   ANVIL = "anvil",
   SMITHING = "smithing",
 
-  // Special/Craftable Items
   MYSTICAL_POTION = "mystical_potion",
   CRYSTAL_PICKAXE = "crystal_pickaxe",
   ENERGY_CRYSTAL = "energy_crystal",

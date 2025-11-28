@@ -24,7 +24,7 @@ export class WorldResourceSystem {
   private regenerationTimers = new Map<string, number>();
   private readonly REGENERATION_CHECK_INTERVAL = 5000;
   private lastRegenerationCheck = 0;
-  private resources = new Map<string, WorldResourceInstance>(); // Assuming this is a new property based on the snippet
+  private resources = new Map<string, WorldResourceInstance>();
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
@@ -43,13 +43,11 @@ export class WorldResourceSystem {
     const startTime = performance.now();
     const now = Date.now();
 
-    // Check for regeneration
     if (now - this.lastRegenerationCheck > this.REGENERATION_CHECK_INTERVAL) {
       this.checkRegeneration(now);
       this.lastRegenerationCheck = now;
     }
 
-    // Update spatial index
     this.updateSpatialIndex();
     this.dirtyTracker?.markDirty("worldResources");
 
@@ -91,10 +89,8 @@ export class WorldResourceSystem {
         continue;
       }
 
-      // Simple regeneration logic for now
       if (now - startTime > 60000) {
-        // 1 minute
-        resource.state = ResourceState.PRISTINE; // Changed from READY to PRISTINE
+        resource.state = ResourceState.PRISTINE;
         resource.harvestCount = 0;
         resource.regenerationStartTime = undefined;
         this.regenerationTimers.delete(resourceId);
@@ -102,10 +98,9 @@ export class WorldResourceSystem {
 
         simulationEvents.emit(GameEventType.RESOURCE_STATE_CHANGE, {
           resourceId,
-          newState: ResourceState.PRISTINE, // Changed from READY to PRISTINE
+          newState: ResourceState.PRISTINE,
         });
 
-        // Update state
         if (this.gameState.worldResources) {
           this.gameState.worldResources[resourceId] = resource;
         }
@@ -113,9 +108,7 @@ export class WorldResourceSystem {
     }
   }
 
-  private updateSpatialIndex(): void {
-    // Implementation would go here
-  }
+  private updateSpatialIndex(): void {}
 
   public getResourcesInRadius(
     x: number,
@@ -136,7 +129,7 @@ export class WorldResourceSystem {
   public getNearestResource(
     x: number,
     y: number,
-    type?: WorldResourceType, // Changed from ResourceType to WorldResourceType
+    type?: WorldResourceType,
   ): WorldResourceInstance | undefined {
     let nearest: WorldResourceInstance | undefined;
     let minDistSq = Infinity;

@@ -172,7 +172,6 @@ export class SharedKnowledgeSystem extends EventEmitter {
       return;
     }
 
-    // NOTA: AgentRegistry es la fuente de verdad para perfiles de agentes
     const agents: Array<{ id: string; position?: { x: number; y: number } }> =
       [];
     if (this.agentRegistry) {
@@ -180,7 +179,6 @@ export class SharedKnowledgeSystem extends EventEmitter {
         agents.push(profile);
       }
     } else if (this.gameState.agents) {
-      // Fallback: solo si AgentRegistry no disponible
       agents.push(...this.gameState.agents);
     }
 

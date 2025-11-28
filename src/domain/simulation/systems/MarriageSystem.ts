@@ -319,9 +319,6 @@ export class MarriageSystem {
       }
     }
 
-    // NOTE: Source of truth is this.marriageGroups Map.
-    // gameState.marriage is a READ-ONLY SNAPSHOT for frontend/serialization.
-    // All modifications must go through MarriageSystem methods, not gameState directly.
     this.syncToGameState();
   }
 

@@ -65,7 +65,7 @@ import type { AgentRegistry } from "../core/AgentRegistry";
 export class LifeCycleSystem extends EventEmitter {
   private gameState: GameState;
   private config: LifeCycleConfig;
-  // NOTE: lastResourceConsumption removed - resource consumption now handled by NeedsSystem only
+
   private lastRoleRebalance = 0;
 
   private reproductionCooldown = new Map<string, number>();
@@ -194,9 +194,6 @@ export class LifeCycleSystem extends EventEmitter {
       this.checkDependencies();
     }
     const dtSec = deltaTimeMs / 1000;
-
-    // Resource consumption is now handled exclusively by NeedsSystem.consumeResourcesForNeeds()
-    // to avoid duplicate consumption bugs
 
     const yearInc = dtSec / this.config.secondsPerYear;
     const agents = this.gameState.agents || [];
@@ -329,9 +326,6 @@ export class LifeCycleSystem extends EventEmitter {
       processed++;
     }
   }
-
-  // NOTE: consumeResourcesPeriodically was REMOVED - it duplicated NeedsSystem.consumeResourcesForNeeds()
-  // All resource consumption for needs is now handled exclusively by NeedsSystem
 
   private lastBreedingCheck = 0;
   private readonly BREEDING_CHECK_INTERVAL = 60000;

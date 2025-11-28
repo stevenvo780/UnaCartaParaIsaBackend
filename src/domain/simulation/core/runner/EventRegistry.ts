@@ -63,8 +63,6 @@ export class EventRegistry {
     this.registerEvent(
       GameEventType.AGENT_BIRTH,
       (data: { entityId: string; parentIds: [string, string] | null }) => {
-        // AppearanceGenerationSystem removed - appearance generation disabled
-        // Previously generated appearance based on parent genetics
         logger.debug(
           `Agent birth event for ${data.entityId} - appearance generation skipped`,
         );

@@ -19,7 +19,7 @@ export enum ZoneSpriteKey {
   AGENT_BUILT_OFFICE = "agent_built_office",
   AGENT_BUILT_MEDICAL = "agent_built_medical",
   AGENT_BUILT_GYM = "agent_built_gym",
-  AGENT_BUILT_HOUSE = "agent_built_house", // Used for 'rest' zone
+  AGENT_BUILT_HOUSE = "agent_built_house",
   AGENT_BUILT_LIBRARY = "agent_built_library",
   AGENT_BUILT_EDUCATION = "agent_built_education",
   AGENT_BUILT_TRAINING = "agent_built_training",
@@ -41,7 +41,7 @@ export enum ZoneSpriteKey {
   AGENT_BUILT_COMFORT = "agent_built_comfort",
   AGENT_BUILT_WELL = "agent_built_well",
   AGENT_BUILT_TAVERN = "agent_built_tavern",
-  WILD = "wild", // From the wild zone in ZoneProperties
+  WILD = "wild",
 }
 
 /**

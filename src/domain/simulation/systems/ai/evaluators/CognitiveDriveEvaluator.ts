@@ -1,6 +1,9 @@
 import type { AIState, AIGoal } from "../../../../types/simulation/ai";
-import { GoalType, WorkEthic } from "../../../../../shared/constants/AIEnums";
-import { ExplorationType } from "../../../../../shared/constants/AgentEnums";
+import { GoalType } from "../../../../../shared/constants/AIEnums";
+import {
+  ExplorationType,
+  WorkEthic,
+} from "../../../../../shared/constants/AgentEnums";
 import type { RoleType } from "../../../../types/simulation/roles";
 import { RoleType as RoleTypeEnum } from "../../../../../shared/constants/RoleEnums";
 import { TimeOfDayPhase } from "../../../../../shared/constants/TimeEnums";

@@ -156,14 +156,12 @@ export class MarketSystem {
   }
 
   private autoTradeAmongAgents(): void {
-    // NOTA: AgentRegistry es la fuente de verdad para perfiles de agentes
     const entities: Array<{ id: string }> = [];
     if (this.agentRegistry) {
       for (const profile of this.agentRegistry.getAllProfiles()) {
         if (!profile.isDead) entities.push(profile);
       }
     } else if (this.state.entities) {
-      // Fallback: solo si AgentRegistry no disponible
       entities.push(...this.state.entities);
     }
     if (entities.length < 2) return;

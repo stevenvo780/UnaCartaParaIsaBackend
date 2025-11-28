@@ -492,7 +492,6 @@ export class GovernanceSystem {
     count: number,
     demandType: DemandType,
   ): number {
-    // NOTA: AgentRegistry es la única fuente de verdad para perfiles
     type AgentWithTraits = {
       id: string;
       isDead?: boolean;
@@ -512,7 +511,6 @@ export class GovernanceSystem {
         }
       }
     } else if (this.state.agents) {
-      // Fallback temporal: solo usar si AgentRegistry no está disponible
       for (const a of this.state.agents) {
         if (!a.isDead && (a.ageYears ?? 0) >= 16) {
           agents.push(a as AgentWithTraits);

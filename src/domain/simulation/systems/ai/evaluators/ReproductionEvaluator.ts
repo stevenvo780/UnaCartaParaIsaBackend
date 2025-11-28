@@ -2,7 +2,7 @@ import type { AIState, AIGoal } from "../../../../types/simulation/ai";
 import type { EntityNeedsData } from "../../../../types/simulation/needs";
 import {
   GoalType,
-  ExplorationType,
+  SearchType,
   GoalReason,
 } from "../../../../../shared/constants/AIEnums";
 
@@ -83,7 +83,7 @@ export function evaluateReproductionDrive(
         type: GoalType.EXPLORE,
         priority: reproductionUtility * 0.8,
         data: {
-          explorationType: ExplorationType.SOCIAL_SEARCH,
+          explorationType: SearchType.SOCIAL_SEARCH,
           searchFor: "mate",
           reason: GoalReason.REPRODUCTION_DRIVE,
         },

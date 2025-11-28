@@ -423,7 +423,7 @@ export class InventorySystem {
 
     this.syncToGameState(now);
     if (now - this.lastDeprecationCheck < this.DEPRECATION_INTERVAL) return;
-    // Process inventory decay or other updates if needed
+
     this.dirtyTracker?.markDirty("inventory");
 
     const duration = performance.now() - startTime;

@@ -2,10 +2,12 @@ import {
   GoalType,
   ActionType,
   NeedType,
+} from "../../../shared/constants/AIEnums";
+import {
+  ExplorationType,
   SocialPreference,
   WorkEthic,
-} from "../../../shared/constants/AIEnums";
-import { ExplorationType } from "../../../shared/constants/AgentEnums";
+} from "../../../shared/constants/AgentEnums";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
 /**

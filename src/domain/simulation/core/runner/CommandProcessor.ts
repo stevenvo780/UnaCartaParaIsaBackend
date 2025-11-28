@@ -103,14 +103,12 @@ export class CommandProcessor {
         this.handleSocialCommand(command);
         break;
       case SimulationCommandType.RESEARCH_COMMAND:
-        // ResearchSystem removed - command handling disabled
         logger.warn("RESEARCH_COMMAND ignored - system removed");
         break;
       case SimulationCommandType.WORLD_RESOURCE_COMMAND:
         this.handleWorldResourceCommand(command);
         break;
       case SimulationCommandType.DIALOGUE_COMMAND:
-        // CardDialogueSystem removed - command handling disabled
         logger.warn("DIALOGUE_COMMAND ignored - system removed");
         break;
       case SimulationCommandType.BUILDING_COMMAND:
@@ -129,7 +127,6 @@ export class CommandProcessor {
         this.handleTimeCommand(command);
         break;
       case SimulationCommandType.FORCE_EMERGENCE_EVALUATION:
-        // EmergenceSystem removed - command disabled
         logger.warn(
           "FORCE_EMERGENCE_EVALUATION command ignored - system removed",
         );
@@ -388,13 +385,6 @@ export class CommandProcessor {
     }
   }
 
-  // ResearchSystem removed - handler disabled
-  // private handleResearchCommand(
-  //   command: Extract<SimulationCommand, { type: "RESEARCH_COMMAND" }>,
-  // ): void {
-  //   // Implementation removed
-  // }
-
   private handleWorldResourceCommand(
     command: Extract<SimulationCommand, { type: "WORLD_RESOURCE_COMMAND" }>,
   ): void {
@@ -419,13 +409,6 @@ export class CommandProcessor {
         break;
     }
   }
-
-  // CardDialogueSystem removed - handler disabled
-  // private handleDialogueCommand(
-  //   command: Extract<SimulationCommand, { type: "DIALOGUE_COMMAND" }>,
-  // ): void {
-  //   // Implementation removed
-  // }
 
   private handleBuildingCommand(
     command: Extract<SimulationCommand, { type: "BUILDING_COMMAND" }>,

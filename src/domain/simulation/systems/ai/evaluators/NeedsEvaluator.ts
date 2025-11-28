@@ -6,7 +6,7 @@ import type { Inventory } from "../../../../types/simulation/economy";
 import {
   GoalType,
   NeedType,
-  ExplorationType,
+  SearchType,
 } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
 
@@ -256,7 +256,7 @@ export function evaluateCriticalNeeds(
             type: GoalType.EXPLORE,
             priority: calculateNeedPriority(needs.thirst, 140),
             data: {
-              explorationType: ExplorationType.DESPERATE_SEARCH,
+              explorationType: SearchType.DESPERATE_SEARCH,
               need: NeedType.THIRST,
             },
             createdAt: now,
@@ -345,9 +345,9 @@ export function evaluateCriticalNeeds(
               type: GoalType.EXPLORE,
               priority: calculateNeedPriority(needs.hunger, 120),
               data: {
-                explorationType: ExplorationType.DESPERATE_SEARCH,
+                explorationType: SearchType.DESPERATE_SEARCH,
                 need: NeedType.HUNGER,
-                searchFor: ExplorationType.FOOD_OR_PREY,
+                searchFor: SearchType.FOOD_OR_PREY,
               },
               createdAt: now,
               expiresAt: now + 10000,

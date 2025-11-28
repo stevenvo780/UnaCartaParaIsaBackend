@@ -311,7 +311,7 @@ export class TradeSystem {
    */
   private processBackgroundTrade(): void {
     if (!this.inventorySystem) return;
-    // NOTA: AgentRegistry es la única fuente de verdad para perfiles
+
     if (!this.agentRegistry) return;
 
     const agents: Array<{ id: string; lifeStage?: string; isDead?: boolean }> =
@@ -500,7 +500,7 @@ export class TradeSystem {
     minAmount: number,
   ): { agentId: string; x: number; y: number } | null {
     if (!this.inventorySystem) return null;
-    // NOTA: AgentRegistry es la única fuente de verdad para perfiles
+
     if (!this.agentRegistry) return null;
 
     const profiles = this.agentRegistry.getAllProfiles();

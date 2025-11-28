@@ -18,14 +18,10 @@ export enum WeaponId {
 }
 
 /**
- * Enumeration of item tiers for crafting and item classification.
+ * Re-export ItemTier from ItemEnums for backward compatibility.
+ * @deprecated Import ItemTier from ItemEnums instead.
  */
-export enum ItemTier {
-  RAW = "raw",
-  PROCESSED = "processed",
-  CRAFTABLE = "craftable",
-  SPECIAL = "special",
-}
+export { ItemTier } from "./ItemEnums";
 
 /**
  * Enumeration of workstation types used in crafting.

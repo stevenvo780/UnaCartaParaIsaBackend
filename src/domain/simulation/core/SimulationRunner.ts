@@ -486,9 +486,6 @@ export class SimulationRunner {
           this.stateDirtyTracker.markDirty("tasks");
         }
 
-        // Removed blanket markDirty. Systems must now mark themselves dirty via StateDirtyTracker.
-        // this.snapshotManager.markDirty([...baseDirtySections]);
-
         this.tickCounter += 1;
 
         this.snapshotManager.generateSnapshotThrottled();
@@ -1024,7 +1021,7 @@ export class SimulationRunner {
         : undefined;
 
     const lineageId = existing ?? "lineage_default";
-    // ResearchSystem removed - lineage initialization no longer needed
+
     return lineageId;
   }
 
