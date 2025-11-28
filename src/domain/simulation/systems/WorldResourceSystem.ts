@@ -39,9 +39,7 @@ export class WorldResourceSystem {
       this.gameState.worldResources = {};
     }
 
-
     this.spatialGrid = new SpatialGrid(3200, 3200, 100);
-
 
     if (this.gameState.worldResources) {
       for (const resource of Object.values(this.gameState.worldResources)) {
@@ -59,7 +57,6 @@ export class WorldResourceSystem {
       this.checkRegeneration(now);
       this.lastRegenerationCheck = now;
     }
-
 
     this.dirtyTracker?.markDirty("worldResources");
 
@@ -144,8 +141,6 @@ export class WorldResourceSystem {
     y: number,
     type?: WorldResourceType,
   ): WorldResourceInstance | undefined {
-
-
     const searchRadii = [200, 500, 1000, 2000];
 
     for (const radius of searchRadii) {
@@ -162,8 +157,6 @@ export class WorldResourceSystem {
         if (type && resource.type !== type) continue;
         if (resource.state === ResourceState.DEPLETED) continue;
 
-
-
         const distSq = distance * distance;
 
         if (distSq < minDistSq) {
@@ -175,8 +168,6 @@ export class WorldResourceSystem {
 
       if (found) return nearest;
     }
-
-
 
     return undefined;
   }
@@ -491,7 +482,7 @@ export class WorldResourceSystem {
 
     const yieldState =
       resource.state === ResourceState.DEPLETED &&
-        previousState === ResourceState.HARVESTED_PARTIAL
+      previousState === ResourceState.HARVESTED_PARTIAL
         ? ResourceState.HARVESTED_PARTIAL
         : ResourceState.PRISTINE;
 
@@ -507,7 +498,7 @@ export class WorldResourceSystem {
     ) {
       harvestAmount = Math.floor(
         Math.random() * (yields.amountMax - yields.amountMin + 1) +
-        yields.amountMin,
+          yields.amountMin,
       );
 
       if (yields?.secondaryYields) {
@@ -521,7 +512,7 @@ export class WorldResourceSystem {
 
           const amount = Math.floor(
             Math.random() * (secondary.amountMax - secondary.amountMin + 1) +
-            secondary.amountMin,
+              secondary.amountMin,
           );
 
           if (amount > 0) {

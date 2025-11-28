@@ -306,13 +306,11 @@ export class CombatSystem {
 
     if (attackersWithPos.length === 0 || allEntities.length === 0) return;
 
-
     const neededAttackerSize = attackersWithPos.length * 2;
     if (
       !this.attackerPositionsBuffer ||
       this.attackerPositionsBuffer.length < neededAttackerSize
     ) {
-
       this.attackerPositionsBuffer = new Float32Array(
         Math.ceil(neededAttackerSize * 1.5),
       );
@@ -323,7 +321,6 @@ export class CombatSystem {
       !this.targetPositionsBuffer ||
       this.targetPositionsBuffer.length < neededTargetSize
     ) {
-
       this.targetPositionsBuffer = new Float32Array(
         Math.ceil(neededTargetSize * 1.5),
       );
@@ -338,8 +335,6 @@ export class CombatSystem {
       this.targetPositionsBuffer[i * 2] = allEntities[i].position!.x;
       this.targetPositionsBuffer[i * 2 + 1] = allEntities[i].position!.y;
     }
-
-
 
     const targetsView = this.targetPositionsBuffer.subarray(
       0,

@@ -122,7 +122,6 @@ export class SocialSystem {
 
     this.updateSpatialGridIncremental();
 
-
     this.updateProximity(dt);
 
     if (now - this.lastDecayUpdate > 2000) {
@@ -140,7 +139,6 @@ export class SocialSystem {
 
     this.updateTruces(now);
 
-
     if (now - this.lastGraphSync > 200) {
       if (!this.gameState.socialGraph) {
         this.gameState.socialGraph = {
@@ -156,10 +154,7 @@ export class SocialSystem {
     }
 
     const duration = performance.now() - startTime;
-    performanceMonitor.recordSubsystemExecution(
-      "SocialSystem",
-      "update",
-    );
+    performanceMonitor.recordSubsystemExecution("SocialSystem", "update");
     performanceMonitor.recordOperation("social_update", duration, 1, 0);
   }
 
@@ -168,7 +163,7 @@ export class SocialSystem {
    * This method is kept for backwards compatibility but is a no-op.
    * The SharedSpatialIndex is rebuilt by SimulationRunner each tick.
    */
-  private updateSpatialGridIncremental(): void { }
+  private updateSpatialGridIncremental(): void {}
 
   /**
    * Optimized edge decay that only processes edges with significant non-zero values.
@@ -298,30 +293,24 @@ export class SocialSystem {
         !!e.position && !e.isDead,
     );
 
-
-
-
-
-
-
     if (this.gpuService?.isGPUAvailable() && entitiesWithPos.length >= 20) {
       this.updateProximityGPU(entitiesWithPos, reinforcement);
       return;
     }
 
-
     const totalAgents = entitiesWithPos.length;
     if (totalAgents === 0) return;
 
-
     const batchSize = Math.max(1, Math.ceil(totalAgents / 10));
-
 
     if (this.proximityUpdateIndex >= totalAgents) {
       this.proximityUpdateIndex = 0;
     }
 
-    const endIndex = Math.min(this.proximityUpdateIndex + batchSize, totalAgents);
+    const endIndex = Math.min(
+      this.proximityUpdateIndex + batchSize,
+      totalAgents,
+    );
 
     for (let i = this.proximityUpdateIndex; i < endIndex; i++) {
       const entity = entitiesWithPos[i];
@@ -338,7 +327,6 @@ export class SocialSystem {
         this.sharedSpatialIndex?.releaseResults(nearby);
       }
     }
-
 
     this.proximityUpdateIndex = endIndex;
     if (this.proximityUpdateIndex >= totalAgents) {
@@ -360,7 +348,6 @@ export class SocialSystem {
   ): void {
     const count = entities.length;
 
-
     if (
       !this.proximityPositionsBuffer ||
       this.proximityPositionsBuffer.length < count * 2
@@ -374,7 +361,6 @@ export class SocialSystem {
       this.proximityPositionsBuffer[i * 2] = entities[i].position.x;
       this.proximityPositionsBuffer[i * 2 + 1] = entities[i].position.y;
     }
-
 
     const positionsView = this.proximityPositionsBuffer.subarray(0, count * 2);
 
@@ -409,7 +395,6 @@ export class SocialSystem {
     const currentB = this.edges.get(b)!.get(a) || 0;
     const newAffinityB = Math.max(-1, Math.min(1, currentB + delta));
     this.edges.get(b)!.set(a, newAffinityB);
-
 
     if (
       Math.abs(newAffinityA - currentA) > 0.01 ||
@@ -727,5 +712,5 @@ export class SocialSystem {
       timestamp: number;
       [key: string]: unknown;
     },
-  ): void { }
+  ): void {}
 }
