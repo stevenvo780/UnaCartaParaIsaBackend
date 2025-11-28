@@ -44,10 +44,10 @@ describe("MovementBatchProcessor", () => {
     expect(processor.getEntityIdArray()).toHaveLength(1);
   });
 
-  it("debe actualizar posiciones en CPU fallback", () => {
+  it("debe actualizar posiciones en CPU fallback", async () => {
     processor.rebuildBuffers(states);
 
-    const result = processor.updatePositionsBatch(1000); // 1 segundo
+    const result = await processor.updatePositionsBatch(1000); // 1 segundo
 
     expect(result.updated).toEqual([true]);
 
@@ -56,7 +56,7 @@ describe("MovementBatchProcessor", () => {
     expect(updatedState.currentPosition.x).toBeGreaterThan(0);
   });
 
-  it("debe marcar arrived cuando alcanza el objetivo", () => {
+  it("debe marcar arrived cuando alcanza el objetivo", async () => {
     states.set(
       "entity-1",
       createMovementState({
@@ -66,15 +66,15 @@ describe("MovementBatchProcessor", () => {
     );
     processor.rebuildBuffers(states);
 
-    const result = processor.updatePositionsBatch(5000); // 5 segundos
+    const result = await processor.updatePositionsBatch(5000); // 5 segundos
     expect(result.arrived[0]).toBe(true);
   });
 
-  it("debe actualizar fatiga en CPU fallback", () => {
+  it("debe actualizar fatiga en CPU fallback", async () => {
     processor.rebuildBuffers(states);
     const fatigueBefore = processor.getFatigueBuffer()![0];
 
-    processor.updateFatigueBatch([true], [false], 1000);
+    await processor.updateFatigueBatch([true], [false], 1000);
 
     const fatigueAfter = processor.getFatigueBuffer()![0];
     expect(fatigueAfter).toBeGreaterThanOrEqual(fatigueBefore);

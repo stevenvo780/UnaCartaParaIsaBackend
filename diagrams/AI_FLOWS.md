@@ -215,7 +215,89 @@
 
 ---
 
-## ⚠️ PROBLEMAS IDENTIFICADOS
+### Ciclo Principal de IA
+
+| Componente | Estado | Notas |
+|------------|--------|-------|
+| MultiRateScheduler → AISystem.update() | ✅ Conectado | Rate: MEDIUM (250ms) |
+| AISystem.update() → processAgent() | ✅ Conectado | Batch size: 2 |
+| processAgent() → isGoalCompleted() | ✅ Conectado | Via AIGoalValidator |
+| processAgent() → isGoalInvalid() | ✅ Conectado | Via AIGoalValidator |
+| processAgent() → makeDecision() | ✅ Conectado | Async con tiempo límite |
+| makeDecision() → planGoals() | ✅ Conectado | Via AgentGoalPlanner |
+| processAgent() → planAction() | ✅ Conectado | Via AIActionPlanner |
+| processAgent() → executeAction() | ✅ Conectado | Via AIActionExecutor |
+
+### Evaluadores de Objetivos
+
+| Evaluador | Estado | Tipo de Objetivo |
+|-----------|--------|------------------|
+| BiologicalDriveEvaluator | ✅ Conectado | SATISFY_HUNGER/THIRST/ENERGY |
+| ReproductionEvaluator | ✅ Conectado | REPRODUCE |
+| SocialDriveEvaluator | ✅ Conectado | SATISFY_SOCIAL/FUN |
+| CognitiveDriveEvaluator | ✅ Conectado | WORK, EXPLORE |
+| CollectiveNeedsEvaluator | ✅ Conectado | Necesidades comunidad |
+| CombatEvaluator | ✅ Conectado | ATTACK, FLEE, COMBAT |
+| AssistEvaluator | ✅ Conectado | ASSIST |
+| ConstructionEvaluator | ✅ Conectado | CONSTRUCTION |
+| DepositEvaluator | ✅ Conectado | DEPOSIT |
+| CraftingEvaluator | ✅ Conectado | CRAFT |
+| QuestEvaluator | ✅ Conectado | QUEST |
+| TradeEvaluator | ✅ Conectado | TRADE |
+| BuildingContributionEvaluator | ✅ Conectado | BUILD |
+| AttentionEvaluator | ✅ Conectado | EXPLORE |
+| OpportunitiesEvaluator | ✅ Conectado | WORK, EXPLORE |
+| ExpansionEvaluator | ✅ Conectado | EXPAND |
+
+### Flujo de Acciones
+
+| Acción | Planificación | Ejecución | Evento Completado |
+|--------|---------------|-----------|-------------------|
+| MOVE | ✅ AIActionPlanner | ✅ MovementSystem | ✅ AGENT_ACTION_COMPLETE |
+| HARVEST | ✅ AIActionPlanner | ✅ WorldResourceSystem | ✅ AGENT_ACTION_COMPLETE |
+| ATTACK | ✅ AIActionPlanner | ✅ AIActionExecutor→AnimalRegistry | ✅ AGENT_ACTION_COMPLETE |
+| SOCIALIZE | ✅ AIActionPlanner | ✅ SocialSystem | ✅ AGENT_ACTION_COMPLETE |
+| EAT | ✅ AIActionPlanner | ✅ NeedsSystem | ✅ AGENT_ACTION_COMPLETE |
+| DRINK | ✅ AIActionPlanner | ✅ NeedsSystem | ✅ AGENT_ACTION_COMPLETE |
+| SLEEP | ✅ AIActionPlanner | ✅ NeedsSystem | ✅ AGENT_ACTION_COMPLETE |
+| CRAFT | ✅ AIActionPlanner | ✅ CraftingSystem | ✅ AGENT_ACTION_COMPLETE |
+| DEPOSIT | ✅ AIActionPlanner | ✅ AIZoneHandler | ✅ AGENT_ACTION_COMPLETE |
+| WORK | ✅ AIActionPlanner | ✅ TaskSystem | ✅ AGENT_ACTION_COMPLETE |
+| BUILD | ✅ AIActionPlanner | ✅ AIActionExecutor | ✅ AGENT_ACTION_COMPLETE |
+| IDLE | ✅ AIActionPlanner | ✅ NeedsSystem | ✅ AGENT_ACTION_COMPLETE |
+
+### Dependencias entre Sistemas
+
+| Sistema Fuente | Sistema Destino | Método de Conexión | Estado |
+|----------------|-----------------|---------------------|--------|
+| AISystem | NeedsSystem | setDependencies() | ✅ |
+| AISystem | RoleSystem | setDependencies() | ✅ |
+| AISystem | WorldResourceSystem | setDependencies() | ✅ |
+| AISystem | InventorySystem | setDependencies() | ✅ |
+| AISystem | SocialSystem | setDependencies() | ✅ |
+| AISystem | EnhancedCraftingSystem | setDependencies() | ✅ |
+| AISystem | MovementSystem | setDependencies() | ✅ |
+| AISystem | HouseholdSystem | setDependencies() | ✅ |
+| AISystem | TaskSystem | setDependencies() | ✅ |
+| AISystem | CombatSystem | setDependencies() | ✅ |
+| AISystem | AnimalSystem | setDependencies() | ✅ |
+| AISystem | QuestSystem | setDependencies() | ✅ |
+| AISystem | TimeSystem | setDependencies() | ✅ |
+| AISystem | SharedKnowledgeSystem | Constructor @inject | ✅ |
+| AISystem | AgentRegistry | Constructor @inject | ✅ |
+| AISystem | AnimalRegistry | Constructor @inject | ✅ |
+| AISystem | GPUComputeService | Constructor @inject | ✅ |
+
+### Eventos Escuchados
+
+| Sistema | Evento | Handler | Estado |
+|---------|--------|---------|--------|
+| AISystem | AGENT_ACTION_COMPLETE | handleActionComplete() | ✅ Conectado |
+| CombatSystem | AGENT_BIRTH | handleAgentBirth() | ✅ Conectado |
+| AnimalSystem | ANIMAL_HUNTED | handleAnimalHunted() | ✅ Conectado |
+| LivingLegendsSystem | AGENT_ACTION_COMPLETE | (listener) | ✅ Conectado |
+
+---
 
 ### 1. Validación de Objetivos GATHER/WORK - Diseño Intencional (Severidad: Info)
 
@@ -342,23 +424,6 @@ if (
    ```
 
 ---
-
-## 📈 MÉTRICAS DE RENDIMIENTO
-
-| Métrica | Valor Configurado | Notas |
-|---------|-------------------|-------|
-| AISystem Update Rate | 250ms (MEDIUM) | Adecuado para IA |
-| Batch Size | 2 agentes/tick | Conservador - podría aumentar |
-| Max Decision Time | 5ms | Límite antes de fallback |
-| Goal Timeout | 60000ms | Fijo para todos los objetivos |
-| Cache Invalidation | 2000ms | Zonas y recursos |
-| Resource Cache TTL | 2000ms | Recursos cercanos |
-| Memory Cleanup | 300000ms (5min) | Limpieza de memoria |
-| Max Queued Goals | 3 | Cola de objetivos |
-
----
-
-## 📋 RESUMEN
 
 ### Fortalezas del Sistema
 - ✅ Arquitectura modular bien organizada (AISystem → Planner → Executor)

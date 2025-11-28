@@ -201,18 +201,74 @@
 
 ---
 
-## 📈 MÉTRICAS DE RENDIMIENTO
+### Componentes del Sistema
 
-| Métrica | Valor | Notas |
-|---------|-------|-------|
-| Update Interval | 50ms | Configurable en DEFAULT_CONFIG |
-| Batch Threshold | 100 animales | GPU processing activado |
-| Cache Duration | 10000ms | Threat/resource cache |
-| Max Cache Size | 500 entradas | Eviction automática |
-| Cleanup Interval | 30000ms | Registry cleanup |
-| Grid Cell Size | 256px | Spatial indexing |
-| Idle Update Divisor | 5 | Staggered updates para idle |
-| State Log Interval | 2000ms | Estado logging |
+| Componente | Estado | Notas |
+|------------|--------|-------|
+| AnimalSystem → AnimalRegistry | ✅ Conectado | @inject(TYPES.AnimalRegistry) |
+| AnimalSystem → WorldResourceSystem | ✅ Conectado | @inject opcional |
+| AnimalSystem → TerrainSystem | ✅ Conectado | @inject opcional |
+| AnimalSystem → GPUComputeService | ✅ Conectado | @inject opcional |
+| AnimalSystem → AgentRegistry | ✅ Conectado | Para detección de humanos |
+| AnimalSystem → StateDirtyTracker | ✅ Conectado | Delta sync |
+| AnimalSystem → AnimalBatchProcessor | ✅ Conectado | Creado en postConstruct |
+
+### Subsistemas de Animales
+
+| Subsistema | Estado | Responsabilidad |
+|------------|--------|-----------------|
+| AnimalNeeds | ✅ Funcionando | Actualizar necesidades, detectar estados críticos |
+| AnimalBehavior | ✅ Funcionando | Movimiento, búsqueda, caza, reproducción |
+| AnimalSpawning | ✅ Funcionando | Spawn por chunk, lazy loading, deduplicación |
+| AnimalGenetics | ✅ Funcionando | Genes aleatorios, herencia, mutación |
+| AnimalBatchProcessor | ✅ Funcionando | GPU/CPU batch processing |
+
+### Estados del Animal
+
+| Estado | Transición Entrada | Transición Salida | Estado |
+|--------|-------------------|-------------------|--------|
+| IDLE | Acción completada | Random → WANDERING | ✅ |
+| WANDERING | Random desde IDLE | 2% prob → IDLE | ✅ |
+| SEEKING_FOOD | hunger < 30 | Alimento encontrado | ✅ |
+| SEEKING_WATER | thirst < 30 | Agua encontrada | ✅ |
+| EATING | Llegó a comida | stateEndTime expires | ✅ |
+| DRINKING | Llegó a agua | stateEndTime expires | ✅ |
+| FLEEING | Predator/Human detectado | Distancia > 300 | ✅ |
+| HUNTING | hunger<30 && isPredator | Presa muerta | ✅ |
+| MATING | reproductiveUrge > 80 | Reproducción exitosa | ✅ |
+
+### Tipos de Animales
+
+| Tipo | Presas | Depredadores | Biomas | Estado |
+|------|--------|--------------|--------|--------|
+| rabbit | - | wolf | grassland, forest, mystical, village | ✅ |
+| deer | - | wolf | forest, mystical, village | ✅ |
+| boar | - | - | forest, grassland, village | ✅ |
+| bird | - | - | forest, mystical, grassland, wetland, village | ✅ |
+| fish | - | - | wetland, ocean, lake, river (acuático) | ✅ |
+| wolf | rabbit, deer, human | - | forest, mystical | ✅ |
+
+### Flujo de Eventos
+
+| Evento | Emisor | Receptor | Estado |
+|--------|--------|----------|--------|
+| ANIMAL_SPAWNED | AnimalSpawning, AnimalSystem | Client, UI | ✅ |
+| ANIMAL_DIED | AnimalSystem | Client, UI, Stats | ✅ |
+| ANIMAL_HUNTED | CombatSystem, AIActionExecutor | AnimalSystem | ✅ |
+| ANIMAL_CONSUMED_RESOURCE | AnimalBehavior | WorldResourceSystem | ✅ |
+| ANIMAL_REPRODUCED | AnimalBehavior | Client, Stats | ✅ |
+
+### Dependencias Inyectadas
+
+| Dependencia | Tipo | Requerido | Estado |
+|-------------|------|-----------|--------|
+| GameState | @inject | ✅ Sí | ✅ |
+| AnimalRegistry | @inject @optional | ✅ Auto-create | ✅ |
+| WorldResourceSystem | @inject @optional | No | ✅ |
+| TerrainSystem | @inject @optional | No | ✅ |
+| GPUComputeService | @inject @optional | No | ✅ |
+| AgentRegistry | @inject @optional | No | ✅ |
+| StateDirtyTracker | @inject @optional | No | ✅ |
 
 ---
 
@@ -253,10 +309,6 @@
 | AIActionPlanner | Planifica ATTACK para animales | ✅ |
 
 ---
-
-## ⚠️ OBSERVACIONES MENORES
-
-## ⚠️ PROBLEMAS IDENTIFICADOS
 
 ### ~~1. Evento ANIMAL_SPAWNED Duplicado~~ ✅ CORREGIDO
 
@@ -328,8 +380,6 @@ if (this.gpuService?.isGPUAvailable() && fleeingAnimals.length >= 50) {
 **Estado:** ✅ Threshold apropiado
 
 ---
-
-## 📋 RESUMEN
 
 ### Fortalezas del Sistema
 

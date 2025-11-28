@@ -68,4 +68,7 @@ export interface AgentProfile {
     personality?: unknown;
     memory?: unknown;
   };
+  crafting?: {
+    recipes: Record<string, { successRate: number; timesUsed: number }>;
+  };
 }

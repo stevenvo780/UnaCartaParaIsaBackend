@@ -139,33 +139,33 @@
 
 ---
 
-## ⚠️ PROBLEMAS IDENTIFICADOS
+### Dependencias Inyectadas (InversifyJS)
 
-**Ninguno.** El sistema está bien diseñado con:
+| Sistema | Tipo | Estado | Notas |
+|---------|------|--------|-------|
+| GameState | @inject | ✅ | worldResources storage |
+| StateDirtyTracker | @inject @optional | ✅ | Marca cambios para sync |
 
-1. ✅ **Deduplicación de chunks**: Set previene spawn duplicado
-2. ✅ **SpatialGrid eficiente**: 100px cells para queries rápidos
-3. ✅ **Progresive search**: getNearestResource usa radios 200→500→1000→2000
-4. ✅ **Regeneración automática**: Timer de 60s restaura recursos
-5. ✅ **Estado dirty tracking**: Marca cambios para sincronización
-6. ✅ **Asset mapping**: Vegetación visual se convierte en recursos interactivos
+### Integración con Otros Sistemas
+
+| Sistema | Método de Integración | Uso | Estado |
+|---------|----------------------|-----|--------|
+| BuildingSystem | Inyección directa | removeResourcesInArea(), spawnResource() | ✅ |
+| AIActionExecutor | Via AISystem deps | harvestResource() | ✅ |
+| NeedsSystem | Búsqueda de recursos | getNearestResource(), getResourcesInRadius() | ✅ |
+| AnimalSystem | Búsqueda de comida | getResourcesInRadius() | ✅ |
+| ChunkLoadingSystem | Spawn por chunks | spawnResourcesForChunk() | ✅ |
+
+### SpatialGrid Operations
+
+| Operación | Método | Complejidad | Estado |
+|-----------|--------|-------------|--------|
+| Insert | addResource() | O(1) | ✅ |
+| Remove | removeResource() | O(1) | ✅ |
+| Query Radius | getResourcesInRadius() | O(log n + k) | ✅ |
+| Query Nearest | getNearestResource() | O(log n) progresivo | ✅ |
 
 ---
-
-## 📈 MÉTRICAS DE RENDIMIENTO
-
-| Métrica | Valor | Notas |
-|---------|-------|-------|
-| SpatialGrid Cell Size | 100px | Balance entre memoria y precisión |
-| Regeneration Check Interval | 5000ms | Cada 5 segundos |
-| Regeneration Time | 60000ms | 1 minuto para restaurar |
-| Sample Step (World Spawn) | 32px | Granularidad de spawn inicial |
-| Tile Size | 64px | Tamaño de tile estándar |
-| Search Radii | 200, 500, 1000, 2000 | Progresivo para eficiencia |
-
----
-
-## 📋 RESUMEN
 
 ### Fortalezas del Sistema
 

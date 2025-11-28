@@ -110,15 +110,57 @@
 
 ---
 
-## 📈 MÉTRICAS DE RENDIMIENTO
+### Componentes del Sistema
 
-| Métrica | Valor | Notas |
-|---------|-------|-------|
-| Update Interval | 10000ms | Estadísticas económicas |
-| Salary Interval | 60000ms | Pago de salarios |
-| Max Residuals | 100 | Cleanup cuando excede |
-| Team Bonus Max | 1.5 (50%) | Límite de bonus grupal |
-| Team Bonus Per Member | 0.05 (5%) | Por miembro en zona |
+| Componente | Estado | Notas |
+|------------|--------|-------|
+| EconomySystem → GameState | ✅ Conectado | @inject(TYPES.GameState) |
+| EconomySystem → InventorySystem | ✅ Conectado | @inject(TYPES.InventorySystem) |
+| EconomySystem → SocialSystem | ✅ Conectado | @inject(TYPES.SocialSystem) |
+| EconomySystem → EntityIndex | ✅ Conectado | @inject @optional |
+| EconomySystem → AgentRegistry | ✅ Conectado | @inject @optional |
+| EconomySystem → RoleSystem | ✅ Conectado | Via setDependencies() |
+
+### Funcionalidades de Dinero
+
+| Función | Estado | Descripción |
+|---------|--------|-------------|
+| getMoney() | ✅ Funcional | Retorna balance del agente |
+| canAfford() | ✅ Funcional | Valida si puede pagar |
+| addMoney() | ✅ Funcional | Añade dinero + evento |
+| removeMoney() | ✅ Funcional | Remueve dinero + validación |
+| transferMoney() | ✅ Funcional | Transferencia atómica |
+
+### Zonas de Trabajo
+
+| Zona | Recurso | Base Yield | Estado |
+|------|---------|------------|--------|
+| WORK (wood) | wood | 1.5 | ✅ |
+| WORK (stone) | stone | 1.0 | ✅ |
+| FOOD | food | 2.0 | ✅ |
+| WATER | water | 3.0 | ✅ |
+
+### Salarios por Rol
+
+| Rol | Salario Base | Bonus de Especialización | Estado |
+|-----|-------------|-------------------------|--------|
+| FARMER | 15 | +50% en FOOD | ✅ |
+| QUARRYMAN | 15 | +80% en STONE | ✅ |
+| LOGGER | 15 | +60% en WOOD | ✅ |
+| BUILDER | 20 | +30% en WOOD/STONE | ✅ |
+| CRAFTSMAN | 20 | - | ✅ |
+| GATHERER | 10 | +30% en WATER/FOOD | ✅ |
+| GUARD | 25 | - | ✅ |
+| LEADER | 25 | - | ✅ |
+
+### Flujo de Eventos
+
+| Evento | Emisor | Receptor | Estado |
+|--------|--------|----------|--------|
+| ECONOMY_RESERVATIONS_UPDATE | EconomySystem | Client, UI | ✅ |
+| SALARY_PAID | EconomySystem | Client, Stats | ✅ |
+| MONEY_CHANGED | EconomySystem | Client, UI | ✅ |
+| MONEY_TRANSFERRED | EconomySystem | Client, Stats | ✅ |
 
 ---
 
@@ -157,8 +199,6 @@
 | AgentRegistry | getAllProfiles() | ✅ |
 
 ---
-
-## ⚠️ OBSERVACIONES MENORES
 
 ### 1. Fallback a Recursos Globales (Severidad: Info)
 
@@ -210,8 +250,6 @@ if (this.agentRegistry) {
 **Estado:** ✅ Patrón correcto
 
 ---
-
-## 📋 RESUMEN
 
 ### Fortalezas del Sistema
 

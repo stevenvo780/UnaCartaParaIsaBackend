@@ -33,6 +33,14 @@ const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
   },
 };
 
+export interface TransactionRecord {
+  type: "income" | "expense";
+  amount: number;
+  reason: string;
+  timestamp: number;
+  relatedEntityId?: string;
+}
+
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { EntityIndex } from "../core/EntityIndex";
@@ -60,6 +68,7 @@ export class EconomySystem {
 
   private config: EconomyConfig;
   private yieldResiduals = new Map<string, number>();
+  private transactionHistory = new Map<string, TransactionRecord[]>();
   private lastUpdate = Date.now();
   private readonly UPDATE_INTERVAL_MS = 10000;
   private lastSalaryPayment = 0;
@@ -80,6 +89,31 @@ export class EconomySystem {
     this.entityIndex = entityIndex;
     this.agentRegistry = agentRegistry;
     this.config = DEFAULT_ECONOMY_CONFIG;
+  }
+
+  public getTransactionHistory(agentId: string): TransactionRecord[] {
+    return this.transactionHistory.get(agentId) || [];
+  }
+
+  private recordTransaction(
+    agentId: string,
+    type: "income" | "expense",
+    amount: number,
+    reason: string,
+    relatedEntityId?: string,
+  ): void {
+    const history = this.transactionHistory.get(agentId) || [];
+    history.unshift({
+      type,
+      amount,
+      reason,
+      timestamp: Date.now(),
+      relatedEntityId,
+    });
+    if (history.length > 10) {
+      history.pop();
+    }
+    this.transactionHistory.set(agentId, history);
   }
 
   public setDependencies(deps: { roleSystem?: RoleSystem }): void {
@@ -365,7 +399,11 @@ export class EconomySystem {
    * @param amount - The amount to add (must be positive)
    * @returns True if successful, false if entity not found
    */
-  public addMoney(agentId: string, amount: number): boolean {
+  public addMoney(
+    agentId: string,
+    amount: number,
+    reason = "Ingreso vario",
+  ): boolean {
     if (amount < 0) {
       logger.warn(`EconomySystem: Attempted to add negative money: ${amount}`);
       return false;
@@ -381,6 +419,8 @@ export class EconomySystem {
     const currentMoney =
       typeof entity.stats.money === "number" ? entity.stats.money : 0;
     entity.stats.money = currentMoney + amount;
+
+    this.recordTransaction(agentId, "income", amount, reason);
 
     simulationEvents.emit(GameEventType.MONEY_CHANGED, {
       agentId,
@@ -399,7 +439,11 @@ export class EconomySystem {
    * @param amount - The amount to remove (must be positive)
    * @returns True if successful, false if insufficient funds or entity not found
    */
-  public removeMoney(agentId: string, amount: number): boolean {
+  public removeMoney(
+    agentId: string,
+    amount: number,
+    reason = "Gasto vario",
+  ): boolean {
     if (amount < 0) {
       logger.warn(
         `EconomySystem: Attempted to remove negative money: ${amount}`,
@@ -417,6 +461,8 @@ export class EconomySystem {
     }
 
     entity.stats.money = currentMoney - amount;
+
+    this.recordTransaction(agentId, "expense", amount, reason);
 
     simulationEvents.emit(GameEventType.MONEY_CHANGED, {
       agentId,

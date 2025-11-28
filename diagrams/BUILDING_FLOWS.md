@@ -115,32 +115,33 @@
 
 ---
 
-## ⚠️ PROBLEMAS IDENTIFICADOS
+### Dependencias Inyectadas (InversifyJS)
 
-**Ninguno.** El sistema está bien diseñado con:
+| Sistema | Tipo | Estado | Notas |
+|---------|------|--------|-------|
+| GameState | @inject | ✅ | Acceso a zones, worldSize, terrainTiles |
+| ResourceReservationSystem | @inject | ✅ | Reservar/consumir materiales |
+| TaskSystem | @inject @optional | ✅ | Crear tareas de construcción |
+| WorldResourceSystem | @inject @optional | ✅ | Eliminar recursos en área, spawn crops |
+| TerrainSystem | @inject @optional | ✅ | Modificar tiles a DIRT |
+| InventorySystem | @inject | ✅ | (MaintenanceSystem) Para reparaciones |
 
-1. ✅ Validación robusta de posición (MAX_ATTEMPTS=100, evita colisiones y agua)
-2. ✅ Sistema de reservación de recursos previene condiciones de carrera
-3. ✅ Integración completa con TaskSystem para asignación de trabajadores
-4. ✅ Limpieza automática de recursos en área de construcción
-5. ✅ Spawneo automático de crops para granjas
-6. ✅ Sistema de mantenimiento con deterioro realista
+### Flujo de Eventos
+
+| Componente | Evento Emitido | Handler | Estado |
+|------------|----------------|---------|--------|
+| BuildingSystem | BUILDING_CONSTRUCTION_STARTED | UI/Client | ✅ |
+| BuildingSystem | BUILDING_CONSTRUCTED | MaintenanceSystem.init | ✅ |
+| MaintenanceSystem | BUILDING_DAMAGED | UI/Client | ✅ |
+| MaintenanceSystem | BUILDING_REPAIRED | UI/Client | ✅ |
+
+### Listener de Eventos
+
+| Sistema | Escucha | Handler | Estado |
+|---------|---------|---------|--------|
+| BuildingMaintenanceSystem | BUILDING_CONSTRUCTED | initializeBuildingState() | ✅ |
 
 ---
-
-## 📈 MÉTRICAS DE RENDIMIENTO
-
-| Métrica | Valor | Notas |
-|---------|-------|-------|
-| Decision Interval | 7000ms | Evalúa qué construir |
-| Update Interval (Maintenance) | 5000ms | Aplica deterioro |
-| Max Position Attempts | 100 | Para encontrar posición válida |
-| Abandonment Threshold | 5 min | Antes de deterioro acelerado |
-| Building Dimensions | 120x80 px | Tamaño estándar de zona |
-
----
-
-## 📋 RESUMEN
 
 ### Fortalezas del Sistema
 

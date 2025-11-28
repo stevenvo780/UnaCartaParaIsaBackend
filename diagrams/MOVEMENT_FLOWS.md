@@ -120,20 +120,54 @@
 
 ---
 
-## 📈 MÉTRICAS DE RENDIMIENTO
+### Componentes del Sistema
 
-| Métrica | Valor | Notas |
-|---------|-------|-------|
-| Grid Size | SIM_CONSTANTS.PATHFINDING_GRID_SIZE | Resolución del grid |
-| Grid Cache Duration | 30000ms | Cache de obstáculos |
-| Path Cache Duration | 30000ms | Cache de rutas calculadas |
-| Max Concurrent Paths | 5 | Pathfinding paralelo |
-| Batch Threshold | 5 | Umbral para batch processing |
-| Idle Wander Cooldown | SIM_CONSTANTS.IDLE_WANDER_COOLDOWN_MS | Entre wanders |
-| Idle Wander Probability | SIM_CONSTANTS.IDLE_WANDER_PROBABILITY | Chance de wander |
-| Arrival Grace Period | 2000ms | Antes de idle wander |
-| Base Movement Speed | 60 px/s | Velocidad base |
-| Fatigue Penalty Multiplier | 0.5 | Reducción por fatiga |
+| Componente | Estado | Notas |
+|------------|--------|-------|
+| MovementSystem → GameState | ✅ Conectado | @inject(TYPES.GameState) |
+| MovementSystem → AgentRegistry | ✅ Conectado | @inject @optional |
+| MovementSystem → EntityIndex | ✅ Conectado | @inject @optional |
+| MovementSystem → GPUComputeService | ✅ Conectado | @inject @optional |
+| MovementSystem → StateDirtyTracker | ✅ Conectado | @inject @optional |
+| MovementSystem → TerrainSystem | ✅ Conectado | @inject @optional |
+| MovementSystem → MovementBatchProcessor | ✅ Creado en _init | Interno |
+
+### Estados de Actividad
+
+| Actividad | Transición Entrada | Transición Salida | Estado |
+|-----------|-------------------|-------------------|--------|
+| IDLE | Movimiento completado | WANDERING, MOVING | ✅ |
+| MOVING | moveToZone/moveToPoint | Llegada a destino | ✅ |
+| EATING | Acción de comer | activityDuration expires | ✅ |
+| DRINKING | Acción de beber | activityDuration expires | ✅ |
+| RESTING | Acción de descanso | activityDuration expires | ✅ |
+| WORKING | Acción de trabajo | activityDuration expires | ✅ |
+| SOCIALIZING | Acción social | activityDuration expires | ✅ |
+| FLEEING | Detección de amenaza | Amenaza eliminada | ✅ |
+| ATTACKING | Combate iniciado | Combate terminado | ✅ |
+
+### Funcionalidades de Movimiento
+
+| Función | Estado | Descripción |
+|---------|--------|-------------|
+| initializeEntityMovement() | ✅ Funcional | Inicializa estado de movimiento |
+| moveToZone() | ✅ Funcional | A* pathfinding a zona |
+| moveToPoint() | ✅ Funcional | Movimiento directo a punto |
+| stopMovement() | ✅ Funcional | Detiene movimiento actual |
+| isMoving() | ✅ Funcional | Query de estado |
+| getPosition() | ✅ Funcional | Retorna posición actual |
+| hasMovementState() | ✅ Funcional | Verifica si existe estado |
+| removeEntityMovement() | ✅ Funcional | Limpieza de entidad |
+
+### Flujo de Eventos
+
+| Evento | Emisor | Receptor | Estado |
+|--------|--------|----------|--------|
+| MOVEMENT_ARRIVED_AT_ZONE | MovementSystem | AISystem, EventRegistry | ✅ |
+| MOVEMENT_ACTIVITY_STARTED | MovementSystem | Client, UI | ✅ |
+| MOVEMENT_ACTIVITY_COMPLETED | MovementSystem | Client, UI | ✅ |
+| AGENT_ACTION_COMPLETE | MovementSystem | AISystem | ✅ |
+| PATHFINDING_FAILED | MovementSystem | AISystem, Debug | ✅ |
 
 ---
 
@@ -228,8 +262,6 @@
 
 ---
 
-## ⚠️ OBSERVACIONES MENORES
-
 ### 1. Pathfinding Queue Warning (Severidad: Info)
 
 **Ubicación:** `MovementSystem.processPathfindingQueue()` - línea 228
@@ -279,8 +311,6 @@ private readonly ARRIVAL_GRACE_PERIOD_MS = 2000;
 **Estado:** ✅ Diseño intencional
 
 ---
-
-## 📋 RESUMEN
 
 ### Fortalezas del Sistema
 

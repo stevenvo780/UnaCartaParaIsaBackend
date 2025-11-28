@@ -46,13 +46,13 @@ describe("NeedsBatchProcessor", () => {
     expect(processor.isDirty()).toBe(false);
   });
 
-  it("applyDecayBatch aplica decaimiento en CPU", () => {
+  it("applyDecayBatch aplica decaimiento en CPU", async () => {
     processor.rebuildBuffers(needsMap);
     const decayRates = new Float32Array([0.5, 1, 2, 0, 0, 0, 0]);
     const ageMultipliers = new Float32Array([1, 2]);
     const divineModifiers = new Float32Array([1, 1]);
 
-    processor.applyDecayBatch(decayRates, ageMultipliers, divineModifiers, 10);
+    await processor.applyDecayBatch(decayRates, ageMultipliers, divineModifiers, 10);
 
     expect(processor.getNeedsBuffer()).toEqual(
       new Float32Array([
@@ -63,14 +63,14 @@ describe("NeedsBatchProcessor", () => {
     expect(processor.isDirty()).toBe(true);
   });
 
-  it("applyDecayBatch usa GPU cuando está disponible", () => {
+  it("applyDecayBatch usa GPU cuando está disponible", async () => {
     const gpuService = {
       isGPUAvailable: () => true,
       applyNeedsDecayBatch: vi.fn(() =>
-        new Float32Array([
+        Promise.resolve(new Float32Array([
           40, 50, 60, 70, 80, 90, 100,
           30, 40, 50, 60, 70, 80, 90,
-        ]),
+        ])),
       ),
     } as any;
     processor = new NeedsBatchProcessor(gpuService);
@@ -78,7 +78,7 @@ describe("NeedsBatchProcessor", () => {
 
     const decayRates = new Float32Array(7).fill(1);
     const ones = new Float32Array([1, 1]);
-    processor.applyDecayBatch(decayRates, ones, ones, 1);
+    await processor.applyDecayBatch(decayRates, ones, ones, 1);
 
     expect(gpuService.applyNeedsDecayBatch).toHaveBeenCalled();
     expect(processor.getNeedsBuffer()).toEqual(
@@ -89,9 +89,9 @@ describe("NeedsBatchProcessor", () => {
     );
   });
 
-  it("applyCrossEffectsBatch ajusta necesidades en CPU", () => {
+  it("applyCrossEffectsBatch ajusta necesidades en CPU", async () => {
     processor.rebuildBuffers(needsMap);
-    processor.applyCrossEffectsBatch();
+    await processor.applyCrossEffectsBatch();
 
     const buffer = processor.getNeedsBuffer();
     expect(buffer).toBeDefined();
@@ -111,15 +111,15 @@ describe("NeedsBatchProcessor", () => {
     expect(asArray[13]).toBeLessThan(90);
   });
 
-  it("applyCrossEffectsBatch usa GPU cuando está disponible", () => {
+  it("applyCrossEffectsBatch usa GPU cuando está disponible", async () => {
     const gpuService = {
       isGPUAvailable: () => true,
-      applyNeedsCrossEffectsBatch: vi.fn(() => new Float32Array(14).fill(10)),
+      applyNeedsCrossEffectsBatch: vi.fn(() => Promise.resolve(new Float32Array(14).fill(10))),
     } as any;
     processor = new NeedsBatchProcessor(gpuService);
     processor.rebuildBuffers(needsMap);
 
-    processor.applyCrossEffectsBatch();
+    await processor.applyCrossEffectsBatch();
 
     expect(gpuService.applyNeedsCrossEffectsBatch).toHaveBeenCalled();
     expect(processor.getNeedsBuffer()).toEqual(new Float32Array(14).fill(10));

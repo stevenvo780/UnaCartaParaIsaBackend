@@ -159,16 +159,49 @@
 
 ---
 
-## 📈 MÉTRICAS DE RENDIMIENTO
+### Componentes del Sistema
 
-| Métrica | Valor | Notas |
-|---------|-------|-------|
-| Decision Interval | 750ms | Frecuencia de evaluación |
-| Engagement Radius | 70px | Radio de detección |
-| Base Cooldown | 4000ms | Cooldown entre ataques |
-| Batch Threshold | 10 | CPU batch processing |
-| GPU Threshold | 30 | GPU batch processing |
-| Max Log Entries | 200 | Combat log history |
+| Componente | Estado | Notas |
+|------------|--------|-------|
+| CombatSystem → GameState | ✅ Conectado | @inject(TYPES.GameState) |
+| CombatSystem → InventorySystem | ✅ Conectado | @inject para crafting |
+| CombatSystem → LifeCycleSystem | ✅ Conectado | @inject para kills |
+| CombatSystem → SocialSystem | ✅ Conectado | @inject para affinity |
+| CombatSystem → AnimalSystem | ✅ Conectado | @inject @optional |
+| CombatSystem → NormsSystem | ✅ Conectado | @inject @optional |
+| CombatSystem → SharedSpatialIndex | ✅ Conectado | @inject @optional |
+| CombatSystem → GPUComputeService | ✅ Conectado | @inject @optional |
+| CombatSystem → EntityIndex | ✅ Conectado | @inject @optional |
+
+### Armas Disponibles
+
+| Arma | Costo | Daño Base | Estado |
+|------|-------|-----------|--------|
+| UNARMED | - | Bajo | ✅ |
+| WOODEN_CLUB | 10 wood | Medio | ✅ |
+| STONE_DAGGER | 8 stone | Medio | ✅ |
+
+### Condiciones de Ataque
+
+| Condición | Verificación | Estado |
+|-----------|--------------|--------|
+| Target es animal | Siempre ataca | ✅ |
+| Affinity <= -0.4 | Hostilidad detectada | ✅ |
+| Aggression >= 0.6 | 25% probabilidad | ✅ |
+| Target no muerto | Validación básica | ✅ |
+| Target no immortal | Entidades especiales | ✅ |
+| Cooldown completado | weapon.attackSpeed | ✅ |
+
+### Flujo de Eventos
+
+| Evento | Emisor | Receptor | Estado |
+|--------|--------|----------|--------|
+| COMBAT_WEAPON_EQUIPPED | CombatSystem | Client, UI | ✅ |
+| COMBAT_WEAPON_CRAFTED | CombatSystem | Client, Stats | ✅ |
+| COMBAT_ENGAGED | CombatSystem | Client, UI | ✅ |
+| COMBAT_HIT | CombatSystem | Client, ConflictResolution | ✅ |
+| COMBAT_KILL | CombatSystem | Client, EventRegistry | ✅ |
+| ANIMAL_HUNTED | CombatSystem | AnimalSystem | ✅ |
 
 ---
 
@@ -232,8 +265,6 @@ const damage = Math.max(1, Math.round(base * scale * (crit ? weapon.critMultipli
 
 ---
 
-## ⚠️ OBSERVACIONES MENORES
-
 ### 1. Animales Siempre Atacables (Severidad: Info)
 
 **Ubicación:** `CombatSystem.shouldAttack()` - línea 491
@@ -284,8 +315,6 @@ if (this.gpuService?.isGPUAvailable() && attackers.length >= 30) {
 **Estado:** ✅ Threshold apropiado
 
 ---
-
-## 📋 RESUMEN
 
 ### Fortalezas del Sistema
 

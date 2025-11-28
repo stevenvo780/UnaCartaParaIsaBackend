@@ -145,19 +145,59 @@
 
 ---
 
-## 📈 MÉTRICAS DE RENDIMIENTO
+### Componentes del Sistema
 
-| Métrica | Valor | Notas |
-|---------|-------|-------|
-| Update Interval | 1000ms | Frecuencia de actualización |
-| Critical Threshold | 20 | Necesidad crítica |
-| Emergency Threshold | 10 | Necesidad de emergencia |
-| Death Threshold | 0 | Muerte por necesidad |
-| Batch Threshold | 5 | GPU batch processing |
-| GPU Batch for Social | 20 | Pairwise distance GPU |
-| Zone Cache TTL | 15000ms | Cache de zonas cercanas |
-| Zone Cache Cleanup | Cada 100 ticks | Limpieza de cache |
-| Respawn Delay | 30000ms | Si allowRespawn=true |
+| Componente | Estado | Notas |
+|------------|--------|-------|
+| NeedsSystem → GameState | ✅ Conectado | @inject(TYPES.GameState) |
+| NeedsSystem → EntityIndex | ✅ Conectado | @inject @optional |
+| NeedsSystem → SharedSpatialIndex | ✅ Conectado | @inject @optional |
+| NeedsSystem → GPUComputeService | ✅ Conectado | @inject @optional |
+| NeedsSystem → AgentRegistry | ✅ Conectado | @inject @optional |
+| NeedsSystem → StateDirtyTracker | ✅ Conectado | @inject @optional |
+| NeedsSystem → InventorySystem | ✅ Conectado | Via setDependencies() |
+| NeedsSystem → SocialSystem | ✅ Conectado | Via setDependencies() |
+| NeedsSystem → LifeCyclePort | ✅ Conectado | Via setDependencies() |
+
+### Tipos de Necesidades
+
+| Necesidad | Decay Rate | Threshold Crítico | Threshold Muerte | Estado |
+|-----------|------------|-------------------|------------------|--------|
+| HUNGER | 0.2/s | 20 | 0 | ✅ |
+| THIRST | 0.3/s | 20 | 0 | ✅ |
+| ENERGY | 0.15/s | 20 | 0 | ✅ |
+| HYGIENE | 0.1/s | 20 | - | ✅ |
+| SOCIAL | 0.15/s | 20 | - | ✅ |
+| FUN | 0.15/s | 20 | - | ✅ |
+| MENTAL_HEALTH | 0.08/s | 20 | - | ✅ |
+
+### Multiplicadores por Edad
+
+| Life Stage | Multiplicador | Descripción |
+|------------|---------------|-------------|
+| CHILD | 0.7 | Decay más lento |
+| ADULT | 1.0 | Decay normal |
+| ELDER | 1.4 | Decay más rápido |
+
+### Bonuses de Zona
+
+| Zona | Bonus | Necesidades Afectadas |
+|------|-------|----------------------|
+| HYGIENE/BATH/WELL | +2.0 | hygiene |
+| SOCIAL/MARKET/GATHERING/TAVERN | +1.5/+1.0 | social, fun |
+| ENTERTAINMENT/FESTIVAL | +2.5/+1.0 | fun, mentalHealth |
+| TEMPLE/SANCTUARY | +2.0/+0.5 | mentalHealth, social |
+| SHELTER/REST | 3x multiplier | energy recovery |
+
+### Flujo de Eventos
+
+| Evento | Emisor | Receptor | Estado |
+|--------|--------|----------|--------|
+| RESOURCE_CONSUMED | NeedsSystem | Client, Stats | ✅ |
+| AGENT_DEATH | NeedsSystem | LifeCycleSystem | ✅ |
+| AGENT_RESPAWNED | NeedsSystem | Client, AI | ✅ |
+| NEED_CRITICAL | NeedsSystem | EventRegistry | ✅ |
+| NEED_SATISFIED | NeedsSystem | ResourceReservation | ✅ |
 
 ---
 
@@ -286,8 +326,6 @@ public getFoodsByCategory(category: FoodCategory): FoodItem[]
 
 ---
 
-## ⚠️ OBSERVACIONES MENORES
-
 ### 1. Emergency Needs Passive Recovery (Severidad: Info)
 
 **Ubicación:** `NeedsSystem.checkEmergencyNeeds()` - líneas 701-710
@@ -345,8 +383,6 @@ if (agent) {
 **Estado:** ⚠️ Inconsistencia menor - podría delegarse a LifeCycleSystem
 
 ---
-
-## 📋 RESUMEN
 
 ### Fortalezas del Sistema
 
