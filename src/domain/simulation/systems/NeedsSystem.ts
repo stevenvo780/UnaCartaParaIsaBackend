@@ -242,6 +242,17 @@ export class NeedsSystem extends EventEmitter {
     }
   }
 
+  public syncToGameState(): void {
+    if (!this.gameState.agents) return;
+
+    for (const agent of this.gameState.agents) {
+      const needs = this.entityNeeds.get(agent.id);
+      if (needs) {
+        agent.needs = { ...needs };
+      }
+    }
+  }
+
   /**
    * Updates the needs system, processing all entity needs.
    * Uses batch processing if entity count >= BATCH_THRESHOLD.

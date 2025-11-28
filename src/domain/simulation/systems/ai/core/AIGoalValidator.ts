@@ -37,6 +37,8 @@ export class AIGoalValidator {
 
   private _goalsCompleted = 0;
   private _goalsFailed = 0;
+  private _goalsTimedOut = 0;
+  private _goalsExpired = 0;
 
   constructor(deps: AIGoalValidatorDeps) {
     this.deps = deps;
@@ -57,11 +59,27 @@ export class AIGoalValidator {
   }
 
   /**
+   * Gets the number of goals that timed out.
+   */
+  public get goalsTimedOut(): number {
+    return this._goalsTimedOut;
+  }
+
+  /**
+   * Gets the number of goals that expired.
+   */
+  public get goalsExpired(): number {
+    return this._goalsExpired;
+  }
+
+  /**
    * Resets goal metrics.
    */
   public resetMetrics(): void {
     this._goalsCompleted = 0;
     this._goalsFailed = 0;
+    this._goalsTimedOut = 0;
+    this._goalsExpired = 0;
   }
 
   /**
@@ -178,11 +196,15 @@ export class AIGoalValidator {
 
     if (goal.expiresAt && now > goal.expiresAt) {
       logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} expired`);
+      this._goalsExpired++;
       return true;
     }
 
     if (now - goal.createdAt > this.GOAL_TIMEOUT_MS) {
-      logger.debug(`🚫 [INVALID] ${agentId} goal ${goal.type} timeout`);
+      logger.debug(
+        `🚫 [INVALID] ${agentId} goal ${goal.type} timeout after ${this.GOAL_TIMEOUT_MS}ms`,
+      );
+      this._goalsTimedOut++;
       return true;
     }
 

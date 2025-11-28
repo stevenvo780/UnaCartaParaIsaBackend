@@ -586,6 +586,9 @@ export class AISystem extends EventEmitter {
     if (systems.questSystem) this.questSystem = systems.questSystem;
     if (systems.timeSystem) this.timeSystem = systems.timeSystem;
 
+    // Invalidate cached dependencies when systems change
+    this.cachedDeps = null;
+
     this.initializeSubsystems();
   }
 
@@ -856,13 +859,15 @@ export class AISystem extends EventEmitter {
 
   /**
    * Fallback exploratory movement when no goal is selected.
-   * Conditions:
-   * - Inventory empty (no food, water, wood, stone) OR needs all > 70 (low urgency)
+   * Conditions (any of these triggers exploration):
+   * - Inventory empty (no food, water, wood, stone)
+   * - Needs all > 70 (low urgency, can afford to explore)
+   * - No goal assigned for > 5 seconds (prevents agent getting stuck)
    * - Agent not already moving
    * - MovementSystem available
    * Action: pick a random point in radius and move there to stimulate discovery.
    */
-  private maybeFallbackExplore(agentId: string, _aiState: AIState): void {
+  private maybeFallbackExplore(agentId: string, aiState: AIState): void {
     if (!this._movementSystem) return;
     if (this._movementSystem.isMoving(agentId)) return;
 
@@ -880,7 +885,12 @@ export class AISystem extends EventEmitter {
       ? needs.hunger > 70 && needs.thirst > 70 && needs.energy > 70
       : false;
 
-    if (!inventoryEmpty && !needsSatisfied) return;
+    // New condition: explore if stuck without goal for too long
+    const timeSinceDecision = Date.now() - (aiState.lastDecisionTime || 0);
+    const stuckWithoutGoal = !aiState.currentGoal && timeSinceDecision > 5000;
+
+    // Trigger exploration if any condition is met
+    if (!inventoryEmpty && !needsSatisfied && !stuckWithoutGoal) return;
 
     const pos = this.agentRegistry?.getPosition(agentId);
     if (!pos) return;
@@ -895,7 +905,9 @@ export class AISystem extends EventEmitter {
     targetY = Math.max(50, Math.min(mapHeight - 50, targetY));
 
     this._movementSystem.moveToPoint(agentId, targetX, targetY);
-    logger.debug(`🚶 [AI] Fallback explore triggered for ${agentId}`);
+    logger.debug(
+      `🚶 [AI] Fallback explore triggered for ${agentId} (stuckWithoutGoal=${stuckWithoutGoal})`,
+    );
   }
 
   /**
@@ -1714,7 +1726,7 @@ export class AISystem extends EventEmitter {
   /**
    * Gets performance metrics for the AI system.
    *
-   * @returns Performance metrics including decision counts and goal completion rates
+   * @returns Performance metrics including decision counts, goal completion rates, and timeout stats
    */
   public getPerformanceMetrics(): Record<string, number> {
     return {
@@ -1725,6 +1737,8 @@ export class AISystem extends EventEmitter {
           : 0,
       goalsCompleted: this.goalValidator.goalsCompleted,
       goalsFailed: this.goalValidator.goalsFailed,
+      goalsTimedOut: this.goalValidator.goalsTimedOut,
+      goalsExpired: this.goalValidator.goalsExpired,
     };
   }
 
