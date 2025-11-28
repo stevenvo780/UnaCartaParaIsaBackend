@@ -13,6 +13,7 @@ import type {
 import {
   WorkShift,
   RoleType as RoleTypeEnum,
+  ALL_ROLE_TYPES,
 } from "../../../shared/constants/RoleEnums";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
@@ -602,13 +603,10 @@ export class RoleSystem extends EventEmitter {
     > = {} as Partial<Record<RoleType, { count: number; percentage: number }>>;
     const totalAgents = this.roles.size;
 
-    for (const roleConfig of ROLE_DEFINITIONS) {
-      distribution[roleConfig.type] = { count: 0, percentage: 0 };
+    // Initialize all known role types to ensure presence in result
+    for (const roleType of ALL_ROLE_TYPES) {
+      distribution[roleType] = { count: 0, percentage: 0 };
     }
-
-    distribution.idle = { count: 0, percentage: 0 };
-    distribution.craftsman = { count: 0, percentage: 0 };
-    distribution.leader = { count: 0, percentage: 0 };
 
     for (const role of this.roles.values()) {
       if (distribution[role.roleType]) {
@@ -618,16 +616,12 @@ export class RoleSystem extends EventEmitter {
 
     const result: Record<RoleType, { count: number; percentage: number }> =
       {} as Record<RoleType, { count: number; percentage: number }>;
-    for (const roleType in distribution) {
+    for (const roleType of ALL_ROLE_TYPES) {
       const dist = distribution[roleType as RoleType];
-      if (dist) {
-        result[roleType as RoleType] = {
-          count: dist.count,
-          percentage: totalAgents > 0 ? dist.count / totalAgents : 0,
-        };
-      } else {
-        result[roleType as RoleType] = { count: 0, percentage: 0 };
-      }
+      result[roleType as RoleType] = {
+        count: dist?.count ?? 0,
+        percentage: totalAgents > 0 ? (dist?.count ?? 0) / totalAgents : 0,
+      };
     }
 
     return result;
@@ -729,7 +723,8 @@ export class RoleSystem extends EventEmitter {
 
     for (const roleType in needed) {
       const rt = roleType as RoleType;
-      const deficit = needed[rt] - current[rt].count;
+      const currentCount = current[rt]?.count ?? 0;
+      const deficit = needed[rt] - currentCount;
 
       if (deficit > 0) {
         rolesNeedingMore.push(rt);

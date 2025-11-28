@@ -80,6 +80,10 @@ export class MultiRateScheduler {
   private lastMediumTick = Date.now();
   private lastSlowTick = Date.now();
 
+  private isTickingFast = false;
+  private isTickingMedium = false;
+  private isTickingSlow = false;
+
   private isRunning = false;
   private tickRates: TickRates;
 
@@ -217,53 +221,63 @@ export class MultiRateScheduler {
    * Updates shared frame time and runs all FAST systems.
    */
   private async tickFast(): Promise<void> {
-    const now = updateFrameTime();
-    const delta = now - this.lastFastTick;
-    this.lastFastTick = now;
-
-    const startTime = performance.now();
-
-    // Measure preTick hook
-    const preTickStart = performance.now();
-    this.hooks.preTick?.();
-    const preTickDuration = performance.now() - preTickStart;
-    if (this.hooks.preTick) {
-      performanceMonitor.recordSystemExecution(
-        TickRate.FAST,
-        "_lifecycle:preTick",
-        preTickDuration,
-      );
+    if (this.isTickingFast) {
+      this.stats.fast.skipped++;
+      return;
     }
+    this.isTickingFast = true;
 
-    const entityCount = this.getEntityCount();
-    await this.executeSystems(this.fastSystems, delta, entityCount);
+    try {
+      const now = updateFrameTime();
+      const delta = now - this.lastFastTick;
+      this.lastFastTick = now;
 
-    // Measure postTick hook
-    const postTickStart = performance.now();
-    this.hooks.postTick?.();
-    const postTickDuration = performance.now() - postTickStart;
-    if (this.hooks.postTick) {
-      performanceMonitor.recordSystemExecution(
-        TickRate.FAST,
-        "_lifecycle:postTick",
-        postTickDuration,
-      );
-    }
+      const startTime = performance.now();
 
-    const elapsed = performance.now() - startTime;
-    this.stats.fast.count++;
-    this.stats.fast.totalMs += elapsed;
-    this.stats.fast.avgMs = this.stats.fast.totalMs / this.stats.fast.count;
+      // Measure preTick hook
+      const preTickStart = performance.now();
+      this.hooks.preTick?.();
+      const preTickDuration = performance.now() - preTickStart;
+      if (this.hooks.preTick) {
+        performanceMonitor.recordSystemExecution(
+          TickRate.FAST,
+          "_lifecycle:preTick",
+          preTickDuration,
+        );
+      }
 
-    /**
-     * Performance threshold: warn only for ticks >120ms.
-     * Lower thresholds (e.g., 80ms) are too aggressive with 1000+ entities.
-     */
-    performanceMonitor.recordTick(TickRate.FAST, elapsed);
-    if (elapsed > 120) {
-      logger.warn(
-        `⚠️ FAST tick took ${elapsed.toFixed(2)}ms (>120ms threshold)`,
-      );
+      const entityCount = this.getEntityCount();
+      await this.executeSystems(this.fastSystems, delta, entityCount);
+
+      // Measure postTick hook
+      const postTickStart = performance.now();
+      this.hooks.postTick?.();
+      const postTickDuration = performance.now() - postTickStart;
+      if (this.hooks.postTick) {
+        performanceMonitor.recordSystemExecution(
+          TickRate.FAST,
+          "_lifecycle:postTick",
+          postTickDuration,
+        );
+      }
+
+      const elapsed = performance.now() - startTime;
+      this.stats.fast.count++;
+      this.stats.fast.totalMs += elapsed;
+      this.stats.fast.avgMs = this.stats.fast.totalMs / this.stats.fast.count;
+
+      /**
+       * Performance threshold: warn only for ticks >120ms.
+       * Lower thresholds (e.g., 80ms) are too aggressive with 1000+ entities.
+       */
+      performanceMonitor.recordTick(TickRate.FAST, elapsed);
+      if (elapsed > 120) {
+        logger.warn(
+          `⚠️ FAST tick took ${elapsed.toFixed(2)}ms (>120ms threshold)`,
+        );
+      }
+    } finally {
+      this.isTickingFast = false;
     }
   }
 
@@ -272,50 +286,60 @@ export class MultiRateScheduler {
    * Updates shared frame time and runs all MEDIUM systems.
    */
   private async tickMedium(): Promise<void> {
-    const now = updateFrameTime();
-    const delta = now - this.lastMediumTick;
-    this.lastMediumTick = now;
-
-    const startTime = performance.now();
-
-    // Measure preTick hook
-    const preTickStart = performance.now();
-    this.hooks.preTick?.();
-    const preTickDuration = performance.now() - preTickStart;
-    if (this.hooks.preTick) {
-      performanceMonitor.recordSystemExecution(
-        TickRate.MEDIUM,
-        "_lifecycle:preTick",
-        preTickDuration,
-      );
+    if (this.isTickingMedium) {
+      this.stats.medium.skipped++;
+      return;
     }
+    this.isTickingMedium = true;
 
-    const entityCount = this.getEntityCount();
-    await this.executeSystems(this.mediumSystems, delta, entityCount);
+    try {
+      const now = updateFrameTime();
+      const delta = now - this.lastMediumTick;
+      this.lastMediumTick = now;
 
-    // Measure postTick hook
-    const postTickStart = performance.now();
-    this.hooks.postTick?.();
-    const postTickDuration = performance.now() - postTickStart;
-    if (this.hooks.postTick) {
-      performanceMonitor.recordSystemExecution(
-        TickRate.MEDIUM,
-        "_lifecycle:postTick",
-        postTickDuration,
-      );
-    }
+      const startTime = performance.now();
 
-    const elapsed = performance.now() - startTime;
-    this.stats.medium.count++;
-    this.stats.medium.totalMs += elapsed;
-    this.stats.medium.avgMs =
-      this.stats.medium.totalMs / this.stats.medium.count;
+      // Measure preTick hook
+      const preTickStart = performance.now();
+      this.hooks.preTick?.();
+      const preTickDuration = performance.now() - preTickStart;
+      if (this.hooks.preTick) {
+        performanceMonitor.recordSystemExecution(
+          TickRate.MEDIUM,
+          "_lifecycle:preTick",
+          preTickDuration,
+        );
+      }
 
-    performanceMonitor.recordTick(TickRate.MEDIUM, elapsed);
-    if (elapsed > 400) {
-      logger.warn(
-        `⚠️ MEDIUM tick took ${elapsed.toFixed(2)}ms (>400ms threshold)`,
-      );
+      const entityCount = this.getEntityCount();
+      await this.executeSystems(this.mediumSystems, delta, entityCount);
+
+      // Measure postTick hook
+      const postTickStart = performance.now();
+      this.hooks.postTick?.();
+      const postTickDuration = performance.now() - postTickStart;
+      if (this.hooks.postTick) {
+        performanceMonitor.recordSystemExecution(
+          TickRate.MEDIUM,
+          "_lifecycle:postTick",
+          postTickDuration,
+        );
+      }
+
+      const elapsed = performance.now() - startTime;
+      this.stats.medium.count++;
+      this.stats.medium.totalMs += elapsed;
+      this.stats.medium.avgMs =
+        this.stats.medium.totalMs / this.stats.medium.count;
+
+      performanceMonitor.recordTick(TickRate.MEDIUM, elapsed);
+      if (elapsed > 400) {
+        logger.warn(
+          `⚠️ MEDIUM tick took ${elapsed.toFixed(2)}ms (>400ms threshold)`,
+        );
+      }
+    } finally {
+      this.isTickingMedium = false;
     }
   }
 
@@ -324,49 +348,59 @@ export class MultiRateScheduler {
    * Updates shared frame time and runs all SLOW systems.
    */
   private async tickSlow(): Promise<void> {
-    const now = updateFrameTime();
-    const delta = now - this.lastSlowTick;
-    this.lastSlowTick = now;
-
-    const startTime = performance.now();
-
-    // Measure preTick hook
-    const preTickStart = performance.now();
-    this.hooks.preTick?.();
-    const preTickDuration = performance.now() - preTickStart;
-    if (this.hooks.preTick) {
-      performanceMonitor.recordSystemExecution(
-        TickRate.SLOW,
-        "_lifecycle:preTick",
-        preTickDuration,
-      );
+    if (this.isTickingSlow) {
+      this.stats.slow.skipped++;
+      return;
     }
+    this.isTickingSlow = true;
 
-    const entityCount = this.getEntityCount();
-    await this.executeSystems(this.slowSystems, delta, entityCount);
+    try {
+      const now = updateFrameTime();
+      const delta = now - this.lastSlowTick;
+      this.lastSlowTick = now;
 
-    // Measure postTick hook
-    const postTickStart = performance.now();
-    this.hooks.postTick?.();
-    const postTickDuration = performance.now() - postTickStart;
-    if (this.hooks.postTick) {
-      performanceMonitor.recordSystemExecution(
-        TickRate.SLOW,
-        "_lifecycle:postTick",
-        postTickDuration,
-      );
-    }
+      const startTime = performance.now();
 
-    const elapsed = performance.now() - startTime;
-    this.stats.slow.count++;
-    this.stats.slow.totalMs += elapsed;
-    this.stats.slow.avgMs = this.stats.slow.totalMs / this.stats.slow.count;
+      // Measure preTick hook
+      const preTickStart = performance.now();
+      this.hooks.preTick?.();
+      const preTickDuration = performance.now() - preTickStart;
+      if (this.hooks.preTick) {
+        performanceMonitor.recordSystemExecution(
+          TickRate.SLOW,
+          "_lifecycle:preTick",
+          preTickDuration,
+        );
+      }
 
-    performanceMonitor.recordTick(TickRate.SLOW, elapsed);
-    if (elapsed > 800) {
-      logger.warn(
-        `⚠️ SLOW tick took ${elapsed.toFixed(2)}ms (>800ms threshold)`,
-      );
+      const entityCount = this.getEntityCount();
+      await this.executeSystems(this.slowSystems, delta, entityCount);
+
+      // Measure postTick hook
+      const postTickStart = performance.now();
+      this.hooks.postTick?.();
+      const postTickDuration = performance.now() - postTickStart;
+      if (this.hooks.postTick) {
+        performanceMonitor.recordSystemExecution(
+          TickRate.SLOW,
+          "_lifecycle:postTick",
+          postTickDuration,
+        );
+      }
+
+      const elapsed = performance.now() - startTime;
+      this.stats.slow.count++;
+      this.stats.slow.totalMs += elapsed;
+      this.stats.slow.avgMs = this.stats.slow.totalMs / this.stats.slow.count;
+
+      performanceMonitor.recordTick(TickRate.SLOW, elapsed);
+      if (elapsed > 800) {
+        logger.warn(
+          `⚠️ SLOW tick took ${elapsed.toFixed(2)}ms (>800ms threshold)`,
+        );
+      }
+    } finally {
+      this.isTickingSlow = false;
     }
   }
 

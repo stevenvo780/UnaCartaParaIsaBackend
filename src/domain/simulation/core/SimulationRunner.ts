@@ -103,6 +103,22 @@ export class SimulationRunner {
   private commandProcessor: CommandProcessor;
   private snapshotManager: SnapshotManager;
 
+  private lastStateSync = 0;
+
+  /**
+   * Synchronizes system states to the main GameState.
+   * Throttled to run periodically (e.g. 250ms) to save CPU.
+   */
+  private syncState(): void {
+    this.syncAnimalsToState();
+    this.syncGenealogyToState();
+
+    const tasksChanged = this.taskSystem.syncTasksState();
+    if (tasksChanged) {
+      this.stateDirtyTracker.markDirty("tasks");
+    }
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public on(event: string, listener: (...args: any[]) => void): void {
     this.emitter.on(event, listener);
@@ -475,15 +491,12 @@ export class SimulationRunner {
           simulationEvents.flushEvents();
         }
 
-        this.syncAnimalsToState();
-        this.syncGenealogyToState();
-
-        this.syncAnimalsToState();
-        this.syncGenealogyToState();
-
-        const tasksChanged = this.taskSystem.syncTasksState();
-        if (tasksChanged) {
-          this.stateDirtyTracker.markDirty("tasks");
+        // Throttle state synchronization to match snapshot rate (approx 250ms)
+        // This significantly reduces postTick duration by avoiding expensive array allocations every 50ms
+        const now = Date.now();
+        if (now - this.lastStateSync >= 250) {
+          this.syncState();
+          this.lastStateSync = now;
         }
 
         this.tickCounter += 1;
@@ -1072,12 +1085,12 @@ export class SimulationRunner {
         social,
         ai: aiState
           ? {
-              currentGoal: aiState.currentGoal,
-              goalQueue: aiState.goalQueue,
-              currentAction: aiState.currentAction,
-              offDuty: aiState.offDuty,
-              lastDecisionTime: aiState.lastDecisionTime,
-            }
+            currentGoal: aiState.currentGoal,
+            goalQueue: aiState.goalQueue,
+            currentAction: aiState.currentAction,
+            offDuty: aiState.offDuty,
+            lastDecisionTime: aiState.lastDecisionTime,
+          }
           : null,
       };
     }
