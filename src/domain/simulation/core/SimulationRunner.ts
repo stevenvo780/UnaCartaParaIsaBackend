@@ -338,6 +338,7 @@ export class SimulationRunner {
     try {
       this.needsSystem.syncToGameState();
       this.aiSystem.syncToGameState();
+      this.socialSystem.syncToGameState();
 
       const stateClone = cloneGameState(this.state);
 
@@ -1091,12 +1092,12 @@ export class SimulationRunner {
         social,
         ai: aiState
           ? {
-              currentGoal: aiState.currentGoal,
-              goalQueue: aiState.goalQueue,
-              currentAction: aiState.currentAction,
-              offDuty: aiState.offDuty,
-              lastDecisionTime: aiState.lastDecisionTime,
-            }
+            currentGoal: aiState.currentGoal,
+            goalQueue: aiState.goalQueue,
+            currentAction: aiState.currentAction,
+            offDuty: aiState.offDuty,
+            lastDecisionTime: aiState.lastDecisionTime,
+          }
           : null,
       };
     }
