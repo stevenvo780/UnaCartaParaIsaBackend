@@ -76,13 +76,13 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
         amountMax: 20,
         secondaryYields: [
           {
-            resourceType: "iron_ore" as ResourceType,
+            resourceType: ResourceType.IRON_ORE,
             amountMin: 1,
             amountMax: 3,
             rareMaterialsChance: 0.15,
           },
           {
-            resourceType: "copper_ore" as ResourceType,
+            resourceType: ResourceType.COPPER_ORE,
             amountMin: 1,
             amountMax: 3,
             rareMaterialsChance: 0.15,
@@ -95,13 +95,13 @@ export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
         amountMax: 10,
         secondaryYields: [
           {
-            resourceType: "iron_ore" as ResourceType,
+            resourceType: ResourceType.IRON_ORE,
             amountMin: 0,
             amountMax: 1,
             rareMaterialsChance: 0.1,
           },
           {
-            resourceType: "copper_ore" as ResourceType,
+            resourceType: ResourceType.COPPER_ORE,
             amountMin: 0,
             amountMax: 1,
             rareMaterialsChance: 0.1,

@@ -1,11 +1,11 @@
 {
   "summary": {
-    "totalEnums": 141,
-    "totalEnumValues": 881,
-    "totalStringOccurrences": 1665,
-    "missingEnumStrings": 299,
-    "missingEnumOccurrences": 391,
-    "filesAffected": 96
+    "totalEnums": 144,
+    "totalEnumValues": 890,
+    "totalStringOccurrences": 1578,
+    "missingEnumStrings": 279,
+    "missingEnumOccurrences": 352,
+    "filesAffected": 89
   },
   "enums": [
     {
@@ -382,7 +382,7 @@
         "agent_built_kitchen",
         "agent_built_office",
         "agent_built_medical",
-        " agent_built_gym",
+        "agent_built_gym",
         "agent_built_house",
         "agent_built_library",
         "agent_built_education",
@@ -441,6 +441,7 @@
         "BUILDING_COMMAND",
         "REPUTATION_COMMAND",
         "TASK_COMMAND",
+        "CONFLICT_COMMAND",
         "TIME_COMMAND",
         "FORCE_EMERGENCE_EVALUATION",
         "SAVE_GAME"
@@ -524,6 +525,13 @@
         "REMOVE_TASK"
       ],
       "file": "../UnaCartaParaIsa/src/constants/CommandTypes.ts"
+    },
+    {
+      "name": "ConflictCommandType",
+      "values": [
+        "RESOLVE_CONFLICT"
+      ],
+      "file": "src/shared/constants/CommandEnums.ts"
     },
     {
       "name": "TimeCommandType",
@@ -798,16 +806,10 @@
         "SOCIAL_GROUPS_UPDATE",
         "SOCIAL_INTERACTION",
         "FRIENDSHIP_FORMED",
-        "RELATIONSHIP_ENDED",
         "MOVEMENT_ARRIVED_AT_ZONE",
         "MOVEMENT_ACTIVITY_COMPLETED",
         "MOVEMENT_ACTIVITY_STARTED",
         "PATHFINDING_FAILED",
-        "DIALOGUE_SHOW_CARD",
-        "DIALOGUE_CARD_EXPIRED",
-        "DIALOGUE_CARD_RESPONDED",
-        "APPEARANCE_GENERATED",
-        "APPEARANCE_UPDATED",
         "TRADE_OFFER_CREATED",
         "TRADE_COMPLETED",
         "TRADE_REJECTED",
@@ -824,12 +826,9 @@
         "ECONOMY_RESERVATIONS_UPDATE",
         "MONEY_CHANGED",
         "MONEY_TRANSFERRED",
-        "CRISIS_PREDICTION",
-        "CRISIS_IMMEDIATE_WARNING",
-        "CHUNK_RENDERED",
         "TERRAIN_MODIFIED",
-        "TIME_CHANGED",
         "TIME_WEATHER_CHANGED",
+        "TIME_CHANGED",
         "LEGEND_UPDATE",
         "REPUTATION_UPDATED",
         "GOVERNANCE_UPDATE",
@@ -841,19 +840,17 @@
         "HOUSEHOLD_AGENT_LEFT",
         "HOUSEHOLD_RESOURCE_DEPOSITED",
         "HOUSEHOLD_RESOURCE_WITHDRAWN",
-        "EMERGENCE_METRICS_UPDATED",
-        "EMERGENCE_PATTERN_DETECTED",
         "INTERACTION_GAME_PLAYED",
         "REPRODUCTION_SUCCESS",
         "REPRODUCTION_ATTEMPT",
         "INVENTORY_DROPPED",
         "NEED_CRITICAL",
         "NEED_SATISFIED",
+        "CRISIS_IMMEDIATE_WARNING",
         "KNOWLEDGE_LEARNED",
         "KNOWLEDGE_SHARED",
         "KNOWLEDGE_ADDED",
         "THREAT_DETECTED",
-        "DIVINE_BLESSING_GRANTED",
         "TASK_CREATED",
         "TASK_PROGRESS",
         "TASK_COMPLETED",
@@ -871,7 +868,7 @@
         "CONFLICT_TRUCE_ACCEPTED",
         "CONFLICT_TRUCE_REJECTED"
       ],
-      "file": "../UnaCartaParaIsa/src/constants/EventEnums.ts"
+      "file": "src/shared/constants/EventEnums.ts"
     },
     {
       "name": "FoodCategory",
@@ -1234,6 +1231,56 @@
       "file": "src/shared/constants/QuestEnums.ts"
     },
     {
+      "name": "RecipeId",
+      "values": [
+        "wood_to_plank",
+        "make_rope",
+        "stone_axe",
+        "stone_pickaxe",
+        "wooden_club",
+        "stone_dagger",
+        "smelt_iron",
+        "smelt_copper",
+        "tan_leather",
+        "weave_cloth",
+        "fire_brick",
+        "grind_wheat",
+        "bake_bread",
+        "cook_meat",
+        "cook_fish",
+        "make_stew",
+        "iron_axe",
+        "iron_pickaxe",
+        "iron_sword",
+        "bow",
+        "cloth_shirt",
+        "leather_vest",
+        "iron_helmet",
+        "wooden_frame",
+        "stone_foundation",
+        "door",
+        "mystical_potion",
+        "crystal_tool",
+        "energy_crystal",
+        "swamp_antidote",
+        "reed_basket",
+        "clay_pottery",
+        "mountain_pickaxe",
+        "gem_jewelry",
+        "reinforced_rope",
+        "healing_salve",
+        "honey_bread",
+        "pine_torch",
+        "cotton_cloth",
+        "flower_dye",
+        "wheat_beer",
+        "recycled_tools",
+        "cultivated_seeds",
+        "community_meal"
+      ],
+      "file": "src/shared/constants/RecipeEnums.ts"
+    },
+    {
       "name": "ResearchId",
       "values": [
         "basic_survival",
@@ -1403,6 +1450,44 @@
       "file": "src/shared/constants/SchedulerEnums.ts"
     },
     {
+      "name": "ZoneSpriteKey",
+      "values": [
+        "agent_built_shelter",
+        "agent_built_bedroom",
+        "agent_built_living",
+        "agent_built_bathroom",
+        "agent_built_workbench",
+        "agent_built_kitchen",
+        "agent_built_office",
+        "agent_built_medical",
+        "agent_built_gym",
+        "agent_built_house",
+        "agent_built_library",
+        "agent_built_education",
+        "agent_built_training",
+        "agent_built_knowledge",
+        "agent_built_social",
+        "agent_built_recreation",
+        "agent_built_entertainment",
+        "agent_built_fun",
+        "agent_built_play",
+        "agent_built_food",
+        "agent_built_water",
+        "agent_built_storage",
+        "agent_built_market",
+        "agent_built_defense",
+        "agent_built_security",
+        "agent_built_spiritual",
+        "agent_built_energy",
+        "agent_built_hygiene",
+        "agent_built_comfort",
+        "agent_built_well",
+        "agent_built_tavern",
+        "wild"
+      ],
+      "file": "src/shared/constants/SpriteEnums.ts"
+    },
+    {
       "name": "StorageStatus",
       "values": [
         "ok",
@@ -1480,7 +1565,8 @@
         "traits",
         "sex",
         "resolution",
-        "assets"
+        "assets",
+        "materials"
       ],
       "file": "src/shared/constants/SystemEnums.ts"
     },
@@ -1878,7 +1964,7 @@
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/application/composition/DISystemComposer.ts",
-          "line": 155,
+          "line": 147,
           "column": 18,
           "pattern": "Operaciones Set/Map",
           "lineContent": "scene.registry.set(\"clock\", clock);"
@@ -1973,7 +2059,7 @@
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/constants/GameEventNames.ts",
-          "line": 314,
+          "line": 445,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "TICK: \"tick\","
@@ -2303,7 +2389,7 @@
       "occurrences": [
         {
           "file": "src/shared/types/commands/SimulationCommand.ts",
-          "line": 16,
+          "line": 17,
           "column": 50,
           "pattern": "Acceso a propiedades",
           "lineContent": "export type ResourcesState = NonNullable<GameState[\"resources\"]>;"
@@ -2438,392 +2524,12 @@
       ]
     },
     {
-      "stringLiteral": "crystal_tool",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-          "line": 29,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"crystal_tool\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 24,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"crystal_tool\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "clay_pottery",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-          "line": 94,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"clay_pottery\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 89,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"clay_pottery\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "gem_jewelry",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-          "line": 132,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"gem_jewelry\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 127,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"gem_jewelry\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "reinforced_rope",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-          "line": 149,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"reinforced_rope\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 144,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"reinforced_rope\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "recycled_tools",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-          "line": 263,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"recycled_tools\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 258,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"recycled_tools\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "cultivated_seeds",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-          "line": 277,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"cultivated_seeds\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 272,
-          "column": 10,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"cultivated_seeds\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "wood_to_plank",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 24,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"wood_to_plank\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 6,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"wood_to_plank\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "smelt_iron",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 34,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"smelt_iron\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 16,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"smelt_iron\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "smelt_copper",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 50,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"smelt_copper\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 32,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"smelt_copper\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "tan_leather",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 66,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"tan_leather\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 48,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"tan_leather\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "weave_cloth",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 79,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"weave_cloth\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 61,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"weave_cloth\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "make_rope",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 92,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"make_rope\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 74,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"make_rope\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "fire_brick",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 102,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"fire_brick\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 84,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"fire_brick\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "grind_wheat",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 119,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"grind_wheat\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 101,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"grind_wheat\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "bake_bread",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 132,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"bake_bread\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 114,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"bake_bread\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "cook_meat",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 148,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"cook_meat\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 130,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"cook_meat\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "cook_fish",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 161,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"cook_fish\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 143,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"cook_fish\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "make_stew",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/RecipesCatalog.ts",
-          "line": 174,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"make_stew\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 156,
-          "column": 8,
-          "pattern": "Asignaciones",
-          "lineContent": "id: \"make_stew\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_gym",
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/simulation/data/ZoneProperties.ts",
-          "line": 97,
-          "column": 13,
-          "pattern": "Asignaciones",
-          "lineContent": "spriteKey: \"agent_built_gym\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 97,
-          "column": 13,
-          "pattern": "Asignaciones",
-          "lineContent": "spriteKey: \"agent_built_gym\","
-        }
-      ]
-    },
-    {
       "stringLiteral": "build_mine",
       "count": 2,
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/application/composition/gameLogic/GameTelemetryEmitter.ts",
-          "line": 304,
+          "line": 298,
           "column": 22,
           "pattern": "Comparaciones",
           "lineContent": "task.type === \"build_mine\" ||"
@@ -2843,7 +2549,7 @@
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/application/composition/gameLogic/GameTelemetryEmitter.ts",
-          "line": 305,
+          "line": 299,
           "column": 22,
           "pattern": "Comparaciones",
           "lineContent": "task.type === \"build_workbench\"),"
@@ -3523,7 +3229,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/core/SimulationRunner.ts",
-          "line": 1091,
+          "line": 1081,
           "column": 14,
           "pattern": "Asignaciones",
           "lineContent": "type: \"zone\","
@@ -3536,7 +3242,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/core/SimulationRunner.ts",
-          "line": 1101,
+          "line": 1091,
           "column": 14,
           "pattern": "Asignaciones",
           "lineContent": "type: \"resource\","
@@ -3614,7 +3320,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/ConflictResolutionSystem.ts",
-          "line": 90,
+          "line": 107,
           "column": 34,
           "pattern": "Acceso a propiedades",
           "lineContent": "const reason: MediationAttempt[\"reason\"] = lowHealth"
@@ -3627,7 +3333,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/EconomySystem.ts",
-          "line": 421,
+          "line": 389,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "type: \"add\","
@@ -3640,7 +3346,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/EconomySystem.ts",
-          "line": 457,
+          "line": 425,
           "column": 10,
           "pattern": "Asignaciones",
           "lineContent": "type: \"remove\","
@@ -3679,7 +3385,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/GovernanceSystem.ts",
-          "line": 661,
+          "line": 643,
           "column": 29,
           "pattern": "Comparaciones",
           "lineContent": "zone.props.subtype === \"housing\"),"
@@ -3692,7 +3398,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/GovernanceSystem.ts",
-          "line": 438,
+          "line": 436,
           "column": 48,
           "pattern": "Asignaciones",
           "lineContent": "details: { demandId: demand.id, reason: \"insufficient_resources\" },"
@@ -3705,7 +3411,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/LifeCycleSystem.ts",
-          "line": 684,
+          "line": 731,
           "column": 14,
           "pattern": "Asignaciones",
           "lineContent": "reason: \"removed\","
@@ -3718,7 +3424,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/LifeCycleSystem.ts",
-          "line": 771,
+          "line": 818,
           "column": 12,
           "pattern": "Asignaciones",
           "lineContent": "reason: \"killed\","
@@ -3731,7 +3437,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/MovementSystem.ts",
-          "line": 512,
+          "line": 519,
           "column": 18,
           "pattern": "Asignaciones",
           "lineContent": "reason: \"no_path_found\","
@@ -3835,7 +3541,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/TaskSystem.ts",
-          "line": 482,
+          "line": 497,
           "column": 37,
           "pattern": "Acceso a propiedades",
           "lineContent": "private serializeTasks(): TaskState[\"tasks\"] {"
@@ -3848,7 +3554,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/WorldResourceSystem.ts",
-          "line": 259,
+          "line": 340,
           "column": 13,
           "pattern": "Métodos de string",
           "lineContent": "if (asset.startsWith(\"tree_\")) return WorldResourceType.TREE;"
@@ -3861,7 +3567,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/WorldResourceSystem.ts",
-          "line": 260,
+          "line": 341,
           "column": 13,
           "pattern": "Métodos de string",
           "lineContent": "if (asset.startsWith(\"plant_\")) return WorldResourceType.BERRY_BUSH;"
@@ -3874,7 +3580,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/WorldResourceSystem.ts",
-          "line": 261,
+          "line": 342,
           "column": 13,
           "pattern": "Métodos de string",
           "lineContent": "if (asset.startsWith(\"prop_rock\")) return WorldResourceType.ROCK;"
@@ -3887,7 +3593,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/WorldResourceSystem.ts",
-          "line": 266,
+          "line": 347,
           "column": 14,
           "pattern": "Métodos de string",
           "lineContent": "if (_decal.startsWith(\"decal_rock_\")) return WorldResourceType.ROCK;"
@@ -4173,7 +3879,7 @@
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/application/composition/DISystemComposer.ts",
-          "line": 310,
+          "line": 290,
           "column": 36,
           "pattern": "Operaciones Set/Map",
           "lineContent": "const ambientDisabled = params.get(\"ambient\") === \"0\";"
@@ -4186,7 +3892,7 @@
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/application/composition/gameLogic/GameTelemetryEmitter.ts",
-          "line": 392,
+          "line": 386,
           "column": 42,
           "pattern": "Asignaciones",
           "lineContent": "type: strength > 0 ? \"friend\" : \"enemy\","
@@ -4199,7 +3905,7 @@
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/application/composition/gameLogic/GameTelemetryEmitter.ts",
-          "line": 560,
+          "line": 536,
           "column": 18,
           "pattern": "Asignaciones",
           "lineContent": ": \"noche\","
@@ -4212,7 +3918,7 @@
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/application/composition/gameLogic/GameTelemetryEmitter.ts",
-          "line": 576,
+          "line": 552,
           "column": 18,
           "pattern": "Asignaciones",
           "lineContent": ": \"nublado\","
@@ -4641,7 +4347,7 @@
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/constants/GameEventNames.ts",
-          "line": 319,
+          "line": 530,
           "column": 7,
           "pattern": "Asignaciones",
           "lineContent": "PAUSE: \"pause\","
@@ -4654,7 +4360,7 @@
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/constants/GameEventNames.ts",
-          "line": 320,
+          "line": 531,
           "column": 8,
           "pattern": "Asignaciones",
           "lineContent": "RESUME: \"resume\","
@@ -4667,7 +4373,7 @@
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/constants/GameEventNames.ts",
-          "line": 321,
+          "line": 532,
           "column": 6,
           "pattern": "Asignaciones",
           "lineContent": "SAVE: \"save\","
@@ -4693,7 +4399,7 @@
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/domain/entities/AnimatedGameEntity.ts",
-          "line": 537,
+          "line": 494,
           "column": 18,
           "pattern": "Métodos de string",
           "lineContent": "animationKey.startsWith(\"isa_\") || animationKey.startsWith(\"stev_\");"
@@ -4706,7 +4412,7 @@
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/domain/entities/AnimatedGameEntity.ts",
-          "line": 537,
+          "line": 494,
           "column": 53,
           "pattern": "Métodos de string",
           "lineContent": "animationKey.startsWith(\"isa_\") || animationKey.startsWith(\"stev_\");"
@@ -4944,19 +4650,6 @@
           "column": 74,
           "pattern": "Asignaciones",
           "lineContent": "return `Gen ${generation} - Linaje mixto (${sex === \"male\" ? \"hombre\" : \"mujer\"})`;"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "social_group",
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/rendering/VisualDiversityCoordinator.ts",
-          "line": 155,
-          "column": 18,
-          "pattern": "Asignaciones",
-          "lineContent": "reason: \"social_group\","
         }
       ]
     },
@@ -5278,7 +4971,7 @@
       "occurrences": [
         {
           "file": "../UnaCartaParaIsa/src/infrastructure/bridges/HTMLUIBridge.ts",
-          "line": 978,
+          "line": 952,
           "column": 18,
           "pattern": "Asignaciones",
           "lineContent": "type: \"event_audit_snapshot\","
@@ -6686,80 +6379,6 @@
       ]
     },
     {
-      "file": "src/simulation/data/BiomeRecipesCatalog.ts",
-      "count": 6,
-      "uniqueStrings": [
-        "crystal_tool",
-        "clay_pottery",
-        "gem_jewelry",
-        "reinforced_rope",
-        "recycled_tools",
-        "cultivated_seeds"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-      "count": 6,
-      "uniqueStrings": [
-        "crystal_tool",
-        "clay_pottery",
-        "gem_jewelry",
-        "reinforced_rope",
-        "recycled_tools",
-        "cultivated_seeds"
-      ]
-    },
-    {
-      "file": "src/simulation/data/RecipesCatalog.ts",
-      "count": 12,
-      "uniqueStrings": [
-        "wood_to_plank",
-        "smelt_iron",
-        "smelt_copper",
-        "tan_leather",
-        "weave_cloth",
-        "make_rope",
-        "fire_brick",
-        "grind_wheat",
-        "bake_bread",
-        "cook_meat",
-        "cook_fish",
-        "make_stew"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-      "count": 12,
-      "uniqueStrings": [
-        "wood_to_plank",
-        "smelt_iron",
-        "smelt_copper",
-        "tan_leather",
-        "weave_cloth",
-        "make_rope",
-        "fire_brick",
-        "grind_wheat",
-        "bake_bread",
-        "cook_meat",
-        "cook_fish",
-        "make_stew"
-      ]
-    },
-    {
-      "file": "src/simulation/data/ZoneProperties.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "agent_built_gym"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "agent_built_gym"
-      ]
-    },
-    {
       "file": "../UnaCartaParaIsa/src/application/composition/DISystemComposer.ts",
       "count": 2,
       "uniqueStrings": [
@@ -6987,13 +6606,6 @@
       "count": 1,
       "uniqueStrings": [
         "mujer"
-      ]
-    },
-    {
-      "file": "../UnaCartaParaIsa/src/domain/systems/rendering/VisualDiversityCoordinator.ts",
-      "count": 1,
-      "uniqueStrings": [
-        "social_group"
       ]
     },
     {

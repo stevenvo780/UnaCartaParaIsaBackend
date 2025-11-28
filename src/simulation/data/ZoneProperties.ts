@@ -1,12 +1,13 @@
 import type { ZoneType } from "../../domain/types/simulation/zones";
 import type { EntityStats } from "../../domain/simulation/core/schema";
+import { ZoneSpriteKey } from "../../shared/constants/SpriteEnums";
 
 export interface ZonePropertyConfig {
   name: string;
   color: string;
   attractiveness: number;
   effects?: Partial<Record<keyof EntityStats, number>>;
-  spriteKey: string;
+  spriteKey: ZoneSpriteKey;
   capacity?: number;
   stockpileCapacity?: number;
 }
@@ -17,7 +18,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#8B7355",
     attractiveness: 5,
     effects: { energy: 4, comfort: 2 },
-    spriteKey: "agent_built_shelter",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_SHELTER,
     capacity: 4,
     stockpileCapacity: 50,
   },
@@ -27,7 +28,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#9370DB",
     attractiveness: 8,
     effects: { energy: 7, comfort: 5, happiness: 2 },
-    spriteKey: "agent_built_bedroom",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_BEDROOM,
     capacity: 2,
     stockpileCapacity: 30,
   },
@@ -37,7 +38,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#FFB347",
     attractiveness: 7,
     effects: { comfort: 4, happiness: 3, resonance: 2 },
-    spriteKey: "agent_built_living",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_LIVING,
     capacity: 6,
   },
 
@@ -46,7 +47,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#87CEEB",
     attractiveness: 6,
     effects: { hygiene: 8, comfort: 2 },
-    spriteKey: "agent_built_bathroom",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_BATHROOM,
     capacity: 1,
   },
 
@@ -55,7 +56,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#CC8844",
     attractiveness: 6,
     effects: { stamina: 2, focus: 3 },
-    spriteKey: "agent_built_workbench",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_WORKBENCH,
     capacity: 4,
     stockpileCapacity: 200,
   },
@@ -65,7 +66,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#FF6B6B",
     attractiveness: 7,
     effects: { hunger: 8, happiness: 3 },
-    spriteKey: "agent_built_kitchen",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_KITCHEN,
     capacity: 3,
     stockpileCapacity: 150,
   },
@@ -75,7 +76,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#4ECDC4",
     attractiveness: 5,
     effects: { focus: 5, energy: -1 },
-    spriteKey: "agent_built_office",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_OFFICE,
     capacity: 2,
   },
 
@@ -84,7 +85,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#E74C3C",
     attractiveness: 8,
     effects: { health: 10, stamina: 3 },
-    spriteKey: "agent_built_medical",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_MEDICAL,
     capacity: 3,
     stockpileCapacity: 100,
   },
@@ -94,7 +95,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#3498DB",
     attractiveness: 6,
     effects: { stamina: 5, health: 3, energy: -2 },
-    spriteKey: "agent_built_gym",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_GYM,
     capacity: 5,
   },
 
@@ -103,7 +104,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#AA66FF",
     attractiveness: 7,
     effects: { energy: 6, comfort: 3, happiness: 2 },
-    spriteKey: "agent_built_house",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_HOUSE,
     capacity: 4,
     stockpileCapacity: 100,
   },
@@ -113,7 +114,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#8E44AD",
     attractiveness: 6,
     effects: { focus: 7, knowledge: 5, resonance: 2 },
-    spriteKey: "agent_built_library",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_LIBRARY,
     capacity: 8,
   },
 
@@ -122,7 +123,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#27AE60",
     attractiveness: 7,
     effects: { knowledge: 8, focus: 4, resonance: 3 },
-    spriteKey: "agent_built_education",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_EDUCATION,
     capacity: 12,
   },
 
@@ -131,7 +132,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#E67E22",
     attractiveness: 6,
     effects: { stamina: 4, focus: 3, health: 2 },
-    spriteKey: "agent_built_training",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_TRAINING,
     capacity: 8,
   },
 
@@ -140,7 +141,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#9B59B6",
     attractiveness: 7,
     effects: { knowledge: 9, focus: 5, resonance: 4 },
-    spriteKey: "agent_built_knowledge",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_KNOWLEDGE,
     capacity: 6,
   },
 
@@ -149,7 +150,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#F39C12",
     attractiveness: 8,
     effects: { happiness: 6, resonance: 5, comfort: 2 },
-    spriteKey: "agent_built_social",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_SOCIAL,
     capacity: 10,
   },
 
@@ -158,7 +159,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#1ABC9C",
     attractiveness: 8,
     effects: { happiness: 7, energy: 3, resonance: 3 },
-    spriteKey: "agent_built_recreation",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_RECREATION,
     capacity: 12,
   },
 
@@ -167,7 +168,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#E91E63",
     attractiveness: 9,
     effects: { happiness: 8, energy: 2, resonance: 4 },
-    spriteKey: "agent_built_entertainment",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_ENTERTAINMENT,
     capacity: 15,
   },
 
@@ -176,7 +177,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#FF5722",
     attractiveness: 9,
     effects: { happiness: 9, energy: 2 },
-    spriteKey: "agent_built_fun",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_FUN,
     capacity: 10,
   },
 
@@ -185,7 +186,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#FFEB3B",
     attractiveness: 8,
     effects: { happiness: 7, energy: 4, comfort: 2 },
-    spriteKey: "agent_built_play",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_PLAY,
     capacity: 8,
   },
 
@@ -194,7 +195,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#8BC34A",
     attractiveness: 5,
     effects: { hunger: 5 },
-    spriteKey: "agent_built_food",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_FOOD,
     capacity: 2,
     stockpileCapacity: 500,
   },
@@ -204,7 +205,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#03A9F4",
     attractiveness: 5,
     effects: { thirst: 5 },
-    spriteKey: "agent_built_water",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_WATER,
     capacity: 2,
     stockpileCapacity: 400,
   },
@@ -214,7 +215,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#795548",
     attractiveness: 3,
     effects: {},
-    spriteKey: "agent_built_storage",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_STORAGE,
     capacity: 2,
     stockpileCapacity: 1000,
   },
@@ -224,7 +225,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#FFC107",
     attractiveness: 7,
     effects: { happiness: 4, resonance: 3 },
-    spriteKey: "agent_built_market",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_MARKET,
     capacity: 8,
     stockpileCapacity: 300,
   },
@@ -234,7 +235,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#607D8B",
     attractiveness: 4,
     effects: { stamina: 3, focus: 4 },
-    spriteKey: "agent_built_defense",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_DEFENSE,
     capacity: 3,
     stockpileCapacity: 100,
   },
@@ -244,7 +245,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#424242",
     attractiveness: 4,
     effects: { stamina: 2, focus: 5 },
-    spriteKey: "agent_built_security",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_SECURITY,
     capacity: 2,
   },
 
@@ -253,7 +254,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#7E57C2",
     attractiveness: 7,
     effects: { resonance: 8, happiness: 4, comfort: 3 },
-    spriteKey: "agent_built_spiritual",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_SPIRITUAL,
     capacity: 10,
   },
 
@@ -262,7 +263,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#FFEB3B",
     attractiveness: 3,
     effects: { energy: 5 },
-    spriteKey: "agent_built_energy",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_ENERGY,
     capacity: 1,
   },
 
@@ -271,7 +272,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#B2DFDB",
     attractiveness: 6,
     effects: { hygiene: 10, health: 2 },
-    spriteKey: "agent_built_hygiene",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_HYGIENE,
     capacity: 2,
   },
 
@@ -280,7 +281,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#BCAAA4",
     attractiveness: 8,
     effects: { comfort: 8, happiness: 3, energy: 2 },
-    spriteKey: "agent_built_comfort",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_COMFORT,
     capacity: 6,
   },
 
@@ -289,7 +290,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#87CEEB",
     attractiveness: 7,
     effects: { hygiene: 10, comfort: 4 },
-    spriteKey: "agent_built_bathroom",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_BATHROOM,
     capacity: 2,
   },
 
@@ -298,7 +299,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#4682B4",
     attractiveness: 6,
     effects: { hygiene: 8, thirst: 5 },
-    spriteKey: "agent_built_well",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_WELL,
     capacity: 1,
   },
 
@@ -307,7 +308,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#9370DB",
     attractiveness: 8,
     effects: { social: 6, happiness: 4, resonance: 3 },
-    spriteKey: "agent_built_social",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_SOCIAL,
     capacity: 12,
   },
 
@@ -316,7 +317,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#8B4513",
     attractiveness: 9,
     effects: { social: 8, happiness: 6, fun: 4 },
-    spriteKey: "agent_built_tavern",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_TAVERN,
     capacity: 15,
     stockpileCapacity: 200,
   },
@@ -326,7 +327,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#FFD700",
     attractiveness: 10,
     effects: { happiness: 10, fun: 9, resonance: 5 },
-    spriteKey: "agent_built_entertainment",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_ENTERTAINMENT,
     capacity: 20,
   },
 
@@ -335,7 +336,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#7E57C2",
     attractiveness: 9,
     effects: { resonance: 10, happiness: 5, comfort: 4 },
-    spriteKey: "agent_built_spiritual",
+    spriteKey: ZoneSpriteKey.AGENT_BUILT_SPIRITUAL,
     capacity: 12,
   },
 
@@ -353,7 +354,7 @@ export const ZONE_PROPERTIES: Record<ZoneType, ZonePropertyConfig> = {
     color: "#228B22",
     attractiveness: 3,
     effects: {},
-    spriteKey: "wild",
+    spriteKey: ZoneSpriteKey.WILD,
     capacity: 0,
   },
 };

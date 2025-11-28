@@ -17,6 +17,8 @@ export enum ResourceType {
   WATER = "water",
   RARE_MATERIALS = "rare_materials",
   METAL = "metal",
+  IRON_ORE = "iron_ore",
+  COPPER_ORE = "copper_ore",
 }
 
 /**

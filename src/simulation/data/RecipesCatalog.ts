@@ -352,7 +352,7 @@ export class RecipesCatalog {
       successRate: 0.8,
     },
     {
-      id: "iron_helmet",
+      id: RecipeId.IRON_HELMET,
       name: "Forjar Casco de Hierro",
       description: "Forjar protección para cabeza",
       output: { itemId: ItemId.IRON_HELMET, quantity: 1 },
@@ -368,7 +368,7 @@ export class RecipesCatalog {
     },
 
     {
-      id: "wooden_frame",
+      id: RecipeId.WOODEN_FRAME,
       name: "Construir Marco de Madera",
       description: "Ensamblar estructura básica",
       output: { itemId: ItemId.WOODEN_FRAME, quantity: 1 },
@@ -381,7 +381,7 @@ export class RecipesCatalog {
       successRate: 0.9,
     },
     {
-      id: "stone_foundation",
+      id: RecipeId.STONE_FOUNDATION,
       name: "Construir Cimientos",
       description: "Crear base de piedra sólida",
       output: { itemId: ItemId.STONE_FOUNDATION, quantity: 1 },
@@ -394,7 +394,7 @@ export class RecipesCatalog {
       successRate: 0.85,
     },
     {
-      id: "door",
+      id: RecipeId.DOOR,
       name: "Hacer Puerta",
       description: "Construir puerta funcional",
       output: { itemId: ItemId.DOOR, quantity: 1 },

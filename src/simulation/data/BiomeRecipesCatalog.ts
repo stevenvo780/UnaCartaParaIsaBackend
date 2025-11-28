@@ -1,5 +1,6 @@
 import type { CraftingRecipe } from "../../domain/types/simulation/crafting";
 import { ItemId } from "../../shared/constants/ItemEnums";
+import { RecipeId } from "../../shared/constants/RecipeEnums";
 import {
   WorkstationType,
   SkillType,
@@ -9,7 +10,7 @@ export class BiomeRecipesCatalog {
   private static readonly biomeRecipes: Record<string, CraftingRecipe[]> = {
     mystical: [
       {
-        id: "mystical_potion",
+        id: RecipeId.MYSTICAL_POTION,
         name: "Poción Mística",
         description: "Una poción brillante con propiedades místicas",
         output: { itemId: ItemId.MYSTICAL_POTION, quantity: 1 },
@@ -26,7 +27,7 @@ export class BiomeRecipesCatalog {
         successRate: 0.7,
       },
       {
-        id: "crystal_tool",
+        id: RecipeId.CRYSTAL_TOOL,
         name: "Herramienta de Cristal",
         description: "Una herramienta mística que nunca se desgasta",
         output: { itemId: ItemId.CRYSTAL_PICKAXE, quantity: 1 },
@@ -44,7 +45,7 @@ export class BiomeRecipesCatalog {
         successRate: 0.65,
       },
       {
-        id: "energy_crystal",
+        id: RecipeId.ENERGY_CRYSTAL,
         name: "Cristal Energético",
         description: "Cristal procesado que almacena energía mística",
         output: { itemId: ItemId.ENERGY_CRYSTAL, quantity: 1 },
@@ -60,7 +61,7 @@ export class BiomeRecipesCatalog {
 
     wetland: [
       {
-        id: "swamp_antidote",
+        id: RecipeId.SWAMP_ANTIDOTE,
         name: "Antídoto Pantanoso",
         description: "Cura envenenamiento y enfermedades",
         output: { itemId: ItemId.SWAMP_ANTIDOTE, quantity: 2 },
@@ -78,7 +79,7 @@ export class BiomeRecipesCatalog {
         successRate: 0.85,
       },
       {
-        id: "reed_basket",
+        id: RecipeId.REED_BASKET,
         name: "Cesta de Juncos",
         description: "Cesta ligera que aumenta capacidad de inventario",
         output: { itemId: ItemId.REED_BASKET, quantity: 1 },
@@ -91,7 +92,7 @@ export class BiomeRecipesCatalog {
         successRate: 0.9,
       },
       {
-        id: "clay_pottery",
+        id: RecipeId.CLAY_POTTERY,
         name: "Cerámica de Arcilla",
         description: "Vasija para almacenar agua y alimentos",
         output: { itemId: ItemId.CLAY_POT, quantity: 1 },
@@ -110,7 +111,7 @@ export class BiomeRecipesCatalog {
 
     mountainous: [
       {
-        id: "mountain_pickaxe",
+        id: RecipeId.MOUNTAIN_PICKAXE,
         name: "Pico de Montaña",
         description: "Pico reforzado especial para minar en montañas",
         output: { itemId: ItemId.MOUNTAIN_PICKAXE, quantity: 1 },
@@ -129,7 +130,7 @@ export class BiomeRecipesCatalog {
         successRate: 0.75,
       },
       {
-        id: "gem_jewelry",
+        id: RecipeId.GEM_JEWELRY,
         name: "Joyería de Gemas",
         description: "Ornamento valioso hecho con gemas raras",
         output: { itemId: ItemId.GEM_NECKLACE, quantity: 1 },
@@ -146,7 +147,7 @@ export class BiomeRecipesCatalog {
         successRate: 0.8,
       },
       {
-        id: "reinforced_rope",
+        id: RecipeId.REINFORCED_ROPE,
         name: "Cuerda Reforzada",
         description: "Cuerda extra fuerte para escalada",
         output: { itemId: ItemId.CLIMBING_ROPE, quantity: 1 },
@@ -162,7 +163,7 @@ export class BiomeRecipesCatalog {
 
     forest: [
       {
-        id: "healing_salve",
+        id: RecipeId.HEALING_SALVE,
         name: "Ungüento Curativo",
         description: "Bálsamo que acelera la curación de heridas",
         output: { itemId: ItemId.HEALING_SALVE, quantity: 2 },
@@ -180,7 +181,7 @@ export class BiomeRecipesCatalog {
         successRate: 0.85,
       },
       {
-        id: "honey_bread",
+        id: RecipeId.HONEY_BREAD,
         name: "Pan de Miel",
         description: "Pan dulce y nutritivo",
         output: { itemId: ItemId.HONEY_BREAD, quantity: 2 },
@@ -197,7 +198,7 @@ export class BiomeRecipesCatalog {
         successRate: 0.95,
       },
       {
-        id: "pine_torch",
+        id: RecipeId.PINE_TORCH,
         name: "Antorcha de Pino",
         description: "Antorcha que arde más tiempo",
         output: { itemId: ItemId.PINE_TORCH, quantity: 3 },
@@ -214,7 +215,7 @@ export class BiomeRecipesCatalog {
 
     grassland: [
       {
-        id: "cotton_cloth",
+        id: RecipeId.COTTON_CLOTH,
         name: "Tela de Algodón",
         description: "Tela suave y cómoda de alta calidad",
         output: { itemId: ItemId.COTTON_CLOTH, quantity: 2 },
@@ -227,7 +228,7 @@ export class BiomeRecipesCatalog {
         successRate: 0.9,
       },
       {
-        id: "flower_dye",
+        id: RecipeId.FLOWER_DYE,
         name: "Tinte de Flores",
         description: "Tinte natural para teñir telas",
         output: { itemId: ItemId.FLOWER_DYE, quantity: 3 },
@@ -240,7 +241,7 @@ export class BiomeRecipesCatalog {
         successRate: 0.95,
       },
       {
-        id: "wheat_beer",
+        id: RecipeId.WHEAT_BEER,
         name: "Cerveza de Trigo",
         description: "Bebida fermentada que restaura moral",
         output: { itemId: ItemId.WHEAT_BEER, quantity: 2 },
@@ -260,7 +261,7 @@ export class BiomeRecipesCatalog {
 
     village: [
       {
-        id: "recycled_tools",
+        id: RecipeId.RECYCLED_TOOLS,
         name: "Herramientas Recicladas",
         description: "Herramientas hechas con chatarra",
         output: { itemId: ItemId.SCRAP_TOOL, quantity: 1 },
@@ -274,7 +275,7 @@ export class BiomeRecipesCatalog {
         successRate: 0.85,
       },
       {
-        id: "cultivated_seeds",
+        id: RecipeId.CULTIVATED_SEEDS,
         name: "Semillas Cultivadas",
         description: "Semillas mejoradas para agricultura",
         output: { itemId: ItemId.QUALITY_SEEDS, quantity: 5 },
@@ -287,7 +288,7 @@ export class BiomeRecipesCatalog {
         successRate: 0.8,
       },
       {
-        id: "community_meal",
+        id: RecipeId.COMMUNITY_MEAL,
         name: "Comida Comunitaria",
         description: "Gran cantidad de comida para compartir",
         output: { itemId: ItemId.COMMUNITY_MEAL, quantity: 1 },

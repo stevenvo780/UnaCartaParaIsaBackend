@@ -12,6 +12,7 @@ import { WeatherType } from "../../constants/AmbientEnums";
 import { ActivityType } from "../../constants/MovementEnums";
 import { AnimalType } from "../../constants/AnimalEnums";
 import { BuildingType } from "../../constants/BuildingEnums";
+import { SystemProperty } from "../../constants/SystemEnums";
 
 export type ResourcesState = NonNullable<GameState["resources"]>;
 
@@ -221,7 +222,7 @@ export type SimulationCommand =
   | { type: SimulationCommandType.SET_TIME_SCALE; multiplier: number }
   | {
       type: SimulationCommandType.APPLY_RESOURCE_DELTA;
-      delta: Partial<GameResources["materials"]>;
+      delta: Partial<GameResources[SystemProperty.MATERIALS]>;
     }
   | {
       type: SimulationCommandType.GATHER_RESOURCE;
