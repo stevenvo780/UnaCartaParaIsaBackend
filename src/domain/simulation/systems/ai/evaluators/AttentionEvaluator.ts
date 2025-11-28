@@ -113,7 +113,7 @@ export function evaluateDefaultExploration(
       priority: 0.35,
       targetZoneId: best,
       data: {
-        explorationType: ExplorationType.DEFAULT,
+        explorationType: SearchType.DEFAULT,
       },
       createdAt: now,
       expiresAt: now + 6000,

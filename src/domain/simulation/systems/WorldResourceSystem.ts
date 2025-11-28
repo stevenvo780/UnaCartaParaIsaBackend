@@ -1,4 +1,5 @@
 import { logger } from "@/infrastructure/utils/logger";
+import { SpatialGrid } from "../../../utils/SpatialGrid";
 import { GameEventType, simulationEvents } from "../core/events";
 import { getResourceConfig } from "../../../infrastructure/services/world/config/WorldResourceConfigs";
 import type {
@@ -21,10 +22,7 @@ import { optional } from "inversify";
 @injectable()
 export class WorldResourceSystem {
   private gameState: GameState;
-  private regenerationTimers = new Map<string, number>();
-  private readonly REGENERATION_CHECK_INTERVAL = 5000;
-  private lastRegenerationCheck = 0;
-  private resources = new Map<string, WorldResourceInstance>();
+  private spatialGrid: SpatialGrid<string>;
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
@@ -37,6 +35,17 @@ export class WorldResourceSystem {
     if (!this.gameState.worldResources) {
       this.gameState.worldResources = {};
     }
+    // Initialize spatial grid with world dimensions (defaulting to 3200x3200 if not specified)
+    // Cell size of 100 is a reasonable balance for resource density
+    this.spatialGrid = new SpatialGrid(3200, 3200, 100);
+
+    // Index existing resources if any
+    if (this.gameState.worldResources) {
+      for (const resource of Object.values(this.gameState.worldResources)) {
+        this.resources.set(resource.id, resource);
+        this.spatialGrid.insert(resource.id, resource.position);
+      }
+    }
   }
 
   public update(_dt: number): void {
@@ -48,7 +57,7 @@ export class WorldResourceSystem {
       this.lastRegenerationCheck = now;
     }
 
-    this.updateSpatialIndex();
+    // No need for explicit updateSpatialIndex as we update on add/remove
     this.dirtyTracker?.markDirty("worldResources");
 
     const duration = performance.now() - startTime;
@@ -72,6 +81,7 @@ export class WorldResourceSystem {
     if (this.gameState.worldResources) {
       this.gameState.worldResources[resource.id] = resource;
     }
+    this.spatialGrid.insert(resource.id, resource.position);
   }
 
   public removeResource(id: string): void {
@@ -79,6 +89,7 @@ export class WorldResourceSystem {
     if (this.gameState.worldResources) {
       delete this.gameState.worldResources[id];
     }
+    this.spatialGrid.remove(id);
   }
 
   private checkRegeneration(now: number): void {
@@ -108,7 +119,7 @@ export class WorldResourceSystem {
     }
   }
 
-  private updateSpatialIndex(): void {}
+  private updateSpatialIndex(): void { }
 
   public getResourcesInRadius(
     x: number,
@@ -116,10 +127,11 @@ export class WorldResourceSystem {
     radius: number,
   ): WorldResourceInstance[] {
     const result: WorldResourceInstance[] = [];
-    for (const resource of this.resources.values()) {
-      const dx = resource.position.x - x;
-      const dy = resource.position.y - y;
-      if (dx * dx + dy * dy <= radius * radius) {
+    const nearbyIds = this.spatialGrid.queryRadius({ x, y }, radius);
+
+    for (const { entity: id } of nearbyIds) {
+      const resource = this.resources.get(id);
+      if (resource) {
         result.push(resource);
       }
     }
@@ -131,24 +143,41 @@ export class WorldResourceSystem {
     y: number,
     type?: WorldResourceType,
   ): WorldResourceInstance | undefined {
-    let nearest: WorldResourceInstance | undefined;
-    let minDistSq = Infinity;
+    // Optimization: Start with a small radius and expand if not found
+    // This avoids checking all resources in the world
+    const searchRadii = [200, 500, 1000, 2000];
 
-    for (const resource of this.resources.values()) {
-      if (type && resource.type !== type) continue;
-      if (resource.state === ResourceState.DEPLETED) continue;
+    for (const radius of searchRadii) {
+      const nearbyIds = this.spatialGrid.queryRadius({ x, y }, radius);
 
-      const dx = resource.position.x - x;
-      const dy = resource.position.y - y;
-      const distSq = dx * dx + dy * dy;
+      let nearest: WorldResourceInstance | undefined;
+      let minDistSq = Infinity;
+      let found = false;
 
-      if (distSq < minDistSq) {
-        minDistSq = distSq;
-        nearest = resource;
+      for (const { entity: id, distance } of nearbyIds) {
+        const resource = this.resources.get(id);
+        if (!resource) continue;
+
+        if (type && resource.type !== type) continue;
+        if (resource.state === ResourceState.DEPLETED) continue;
+
+        // Use the distance from spatial query if accurate enough, or recompute
+        // SpatialGrid returns distance, so we can use it directly or square it
+        const distSq = distance * distance;
+
+        if (distSq < minDistSq) {
+          minDistSq = distSq;
+          nearest = resource;
+          found = true;
+        }
       }
+
+      if (found) return nearest;
     }
 
-    return nearest;
+    // Fallback to full search if not found in largest radius (unlikely but safe)
+    // Or just return undefined to avoid O(N) spike
+    return undefined;
   }
 
   public spawnResourcesInWorld(worldConfig: {
@@ -461,7 +490,7 @@ export class WorldResourceSystem {
 
     const yieldState =
       resource.state === ResourceState.DEPLETED &&
-      previousState === ResourceState.HARVESTED_PARTIAL
+        previousState === ResourceState.HARVESTED_PARTIAL
         ? ResourceState.HARVESTED_PARTIAL
         : ResourceState.PRISTINE;
 
@@ -477,7 +506,7 @@ export class WorldResourceSystem {
     ) {
       harvestAmount = Math.floor(
         Math.random() * (yields.amountMax - yields.amountMin + 1) +
-          yields.amountMin,
+        yields.amountMin,
       );
 
       if (yields?.secondaryYields) {
@@ -491,7 +520,7 @@ export class WorldResourceSystem {
 
           const amount = Math.floor(
             Math.random() * (secondary.amountMax - secondary.amountMin + 1) +
-              secondary.amountMin,
+            secondary.amountMin,
           );
 
           if (amount > 0) {

@@ -9,6 +9,7 @@ import {
   SearchType,
 } from "../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
+import { TimeOfDayPhase } from "../../../../../shared/constants/TimeEnums";
 
 /**
  * Role-based threshold modifiers for individual needs.
