@@ -169,12 +169,20 @@ export class SnapshotManager {
           };
         }
 
+        // Get agent inventory from InventorySystem
+        const inventory = this.runner.inventorySystem?.getAgentInventory(agent.id);
+
+        // Get equipped weapon from EnhancedCraftingSystem
+        const equippedWeapon = this.runner.enhancedCraftingSystem?.getEquippedWeapon(agent.id);
+
         return {
           ...agent,
           needs: needs ? { ...needs } : undefined,
           role: role ? { ...role } : undefined,
           ai,
           history,
+          inventory: inventory ? { ...inventory } : undefined,
+          equippedWeapon,
         };
       });
     }
@@ -310,6 +318,12 @@ export class SnapshotManager {
           };
         }
 
+        // Get agent inventory from InventorySystem
+        const inventory = this.runner.inventorySystem?.getAgentInventory(agent.id);
+
+        // Get equipped weapon from EnhancedCraftingSystem
+        const equippedWeapon = this.runner.enhancedCraftingSystem?.getEquippedWeapon(agent.id);
+
         return {
           ...agent,
           needs: needs ? { ...needs } : undefined,
@@ -317,6 +331,8 @@ export class SnapshotManager {
           ai,
           crafting,
           history,
+          inventory: inventory ? { ...inventory } : undefined,
+          equippedWeapon,
         };
       });
     }
