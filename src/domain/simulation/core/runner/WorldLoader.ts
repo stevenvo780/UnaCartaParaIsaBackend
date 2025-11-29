@@ -5,8 +5,9 @@ import type { BuildingLabel } from "../../../types/simulation/buildings";
 import type { SimulationRunner } from "../SimulationRunner";
 import { LifeStage, Sex } from "../../../types/simulation/agents";
 import { TileType } from "../../../../shared/constants/TileTypeEnums";
-import { ZoneType } from "../../../../shared/constants/ZoneEnums";
+import { StockpileType, ZoneType } from "../../../../shared/constants/ZoneEnums";
 import { BuildingType } from "../../../../shared/constants/BuildingEnums";
+import { ResourceType } from "../../../../shared/constants/ResourceEnums";
 
 export class WorldLoader {
   constructor(private runner: SimulationRunner) { }
@@ -223,11 +224,14 @@ export class WorldLoader {
             y: (this.runner.state.worldSize?.height ?? 2048) / 2,
           };
         }
-        if (!this.runner.movementSystem.hasMovementState(agent.id)) {
+        const hasState = this.runner.movementSystem.hasMovementState(agent.id);
+        logger.info(`🚶 [WorldLoader] ${agent.id}: hasMovementState=${hasState}, pos=${agent.position.x.toFixed(0)},${agent.position.y.toFixed(0)}`);
+        if (!hasState) {
           this.runner.movementSystem.initializeEntityMovement(
             agent.id,
             agent.position,
           );
+          logger.info(`🚶 [WorldLoader] ${agent.id}: Movement state initialized`);
         }
       } catch (err) {
         logger.warn(
@@ -391,10 +395,23 @@ export class WorldLoader {
 
     this.runner.state.zones.push(houseZone, workbenchZone, storageZone);
 
+    // Create stockpile with initial resources for crafting
+    const stockpile = this.runner.inventorySystem.createStockpile(
+      storageZone.id,
+      StockpileType.GENERAL,
+      200,
+    );
+
+    // Add initial resources to stockpile
+    this.runner.inventorySystem.addToStockpile(stockpile.id, ResourceType.WOOD, 50);
+    this.runner.inventorySystem.addToStockpile(stockpile.id, ResourceType.STONE, 30);
+    this.runner.inventorySystem.addToStockpile(stockpile.id, ResourceType.FOOD, 40);
+    this.runner.inventorySystem.addToStockpile(stockpile.id, ResourceType.WATER, 40);
+
     logger.info(`🏠 Initial infrastructure created:`);
     logger.info(`   - Family house (shelter) at (${baseX}, ${baseY})`);
     logger.info(`   - Workbench at (${baseX + 100}, ${baseY})`);
-    logger.info(`   - Storage zone`);
+    logger.info(`   - Storage zone with stockpile (id=${stockpile.id})`);
     logger.info(`   - Rest zone (inside house)`);
     logger.info(`   - Kitchen zone (inside house)`);
     logger.info(`📦 Starting resources: wood=50, stone=30, food=40, water=40`);

@@ -106,7 +106,7 @@ import { AIActionPlanner } from "./ai/core/AIActionPlanner";
 import { AIActionExecutor } from "./ai/core/AIActionExecutor";
 import { AIUrgentGoals } from "./ai/core/AIUrgentGoals";
 import { AIZoneHandler } from "./ai/core/AIZoneHandler";
-import { EquipmentSystem } from "../../../simulation/systems/EquipmentSystem";
+import { EquipmentSystem, equipmentSystem } from "../../../simulation/systems/EquipmentSystem";
 import { toolStorage } from "../../../simulation/systems/ToolStorageSystem";
 import { EquipmentSlot } from "../../../shared/constants/EquipmentEnums";
 import { GameEventType } from "../core/events";
@@ -332,7 +332,8 @@ export class AISystem extends EventEmitter {
     this.gpuService = gpuService;
     this.agentRegistry = agentRegistry;
     this.animalRegistry = animalRegistry;
-    this.equipmentSystem = new EquipmentSystem();
+    // Use the singleton equipmentSystem so weapons crafted by EnhancedCraftingSystem are visible
+    this.equipmentSystem = equipmentSystem;
     this.config = {
       updateIntervalMs: 50,
       enablePersonality: true,
@@ -1610,10 +1611,15 @@ export class AISystem extends EventEmitter {
         if (this.craftingZoneCache !== null) {
           return this.craftingZoneCache;
         }
-        const zone = this.gameState.zones?.find(
-          (z) => z.type === ZoneType.WORK || z.type === ZoneType.STORAGE,
-        );
+        // Prefer WORK zones for crafting (workbench), then fallback to STORAGE
+        let zone = this.gameState.zones?.find((z) => z.type === ZoneType.WORK);
+        if (!zone) {
+          zone = this.gameState.zones?.find((z) => z.type === ZoneType.STORAGE);
+        }
         this.craftingZoneCache = zone?.id;
+        logger.debug(
+          `🔧 [CraftZone] Suggested zone: ${this.craftingZoneCache} (type=${zone?.type})`,
+        );
         return this.craftingZoneCache;
       },
       canCraftWeapon: (id: string, weaponId: string): boolean => {

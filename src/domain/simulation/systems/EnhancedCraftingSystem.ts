@@ -11,6 +11,8 @@ import type { ResourceType } from "../../types/simulation/economy";
 import { itemToInventoryResource } from "../../types/simulation/resourceMapping";
 import { toolStorage } from "../../../simulation/systems/ToolStorageSystem";
 import { logger } from "../../../infrastructure/utils/logger";
+import { equipmentSystem } from "../../../simulation/systems/EquipmentSystem";
+import { EquipmentSlot } from "../../../shared/constants/EquipmentEnums";
 
 interface EnhancedCraftingConfig {
   requireWorkstation: boolean;
@@ -133,6 +135,8 @@ export class EnhancedCraftingSystem {
     const success =
       Math.random() < Math.max(this.config.minSuccessRate, successRate);
 
+    logger.info(`⚒️ [finishJob] ${job.agentId}: Recipe=${recipe.id}, success=${success}`);
+
     if (success) {
       this.applyOutput(job.agentId, recipe);
     }
@@ -156,10 +160,12 @@ export class EnhancedCraftingSystem {
    */
   private applyOutput(agentId: string, recipe: CraftingRecipe): void {
     const output = recipe.output.itemId;
+    logger.info(`⚒️ [applyOutput] ${agentId}: Output=${output}`);
 
     if (BASE_WEAPONS.includes(output as WeaponId)) {
       const currentWeapon = this.equippedWeapons.get(agentId);
       if (currentWeapon) {
+        logger.info(`⚒️ [applyOutput] ${agentId}: Already has ${currentWeapon}, depositing ${output}`);
         toolStorage.depositTool(output, recipe.output.quantity);
         simulationEvents.emit(GameEventType.ITEM_CRAFTED, {
           agentId,
@@ -170,7 +176,11 @@ export class EnhancedCraftingSystem {
         return;
       }
 
+      logger.info(`⚒️ [applyOutput] ${agentId}: Equipping weapon ${output}`);
       this.equippedWeapons.set(agentId, output as WeaponId);
+      // Also register in the global equipment system so AISystem can see it
+      equipmentSystem.equipItem(agentId, EquipmentSlot.MAIN_HAND, output);
+      logger.info(`⚒️ [applyOutput] ${agentId}: Weapon registered in equipmentSystem`);
       return;
     }
 
@@ -194,6 +204,11 @@ export class EnhancedCraftingSystem {
     
     // Get total settlement resources as fallback
     const stockpileResources = this.inventorySystem.getTotalStockpileResources();
+    const allStockpiles = this.inventorySystem.getAllStockpiles();
+    
+    logger.debug(
+      `🔨 [Craft] ${agentId}: Checking ingredients - stockpiles=${allStockpiles.length}, wood=${stockpileResources.wood}, stone=${stockpileResources.stone}, inv.wood=${inventory?.wood ?? 0}, inv.stone=${inventory?.stone ?? 0}`,
+    );
 
     for (const ingredient of recipe.ingredients) {
       const key = this.mapToResourceKey(ingredient.itemId);

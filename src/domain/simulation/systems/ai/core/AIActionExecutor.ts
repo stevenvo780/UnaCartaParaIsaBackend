@@ -125,13 +125,19 @@ export class AIActionExecutor {
 
   private executeMove(action: AgentAction): void {
     const movement = this.deps.movementSystem;
-    if (!movement) return;
+    if (!movement) {
+      logger.warn(`🚶 [executeMove] ${action.agentId}: No movement system!`);
+      return;
+    }
 
     if (action.targetZoneId) {
-      if (movement.isMovingToZone(action.agentId, action.targetZoneId)) {
+      const alreadyMoving = movement.isMovingToZone(action.agentId, action.targetZoneId);
+      logger.debug(`🚶 [executeMove] ${action.agentId}: targetZone=${action.targetZoneId}, alreadyMoving=${alreadyMoving}`);
+      if (alreadyMoving) {
         return;
       }
-      movement.moveToZone(action.agentId, action.targetZoneId);
+      const result = movement.moveToZone(action.agentId, action.targetZoneId);
+      logger.info(`🚶 [executeMove] ${action.agentId}: moveToZone result=${result}`);
     } else if (action.targetPosition) {
       if (
         movement.isMovingToPosition(
@@ -425,11 +431,18 @@ export class AIActionExecutor {
   }
 
   private executeCraft(action: AgentAction): void {
+    logger.info(
+      `⚒️ [executeCraft] ${action.agentId}: itemType=${action.data?.itemType}, itemId=${action.data?.itemId}`,
+    );
     if (
       this.deps.craftingSystem &&
       action.data?.itemType === ItemCategory.WEAPON
     ) {
+      logger.info(`⚒️ [executeCraft] ${action.agentId}: Calling craftBestWeapon`);
       const weaponId = this.deps.craftingSystem.craftBestWeapon(action.agentId);
+      logger.info(
+        `⚒️ [executeCraft] ${action.agentId}: craftBestWeapon returned ${weaponId}`,
+      );
       simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
         agentId: action.agentId,
         actionType: ActionType.CRAFT,
@@ -437,6 +450,9 @@ export class AIActionExecutor {
         data: { weaponId },
       });
     } else {
+      logger.warn(
+        `⚒️ [executeCraft] ${action.agentId}: Skipped - itemType mismatch (${action.data?.itemType} !== ${ItemCategory.WEAPON})`,
+      );
       simulationEvents.emit(GameEventType.AGENT_ACTION_COMPLETE, {
         agentId: action.agentId,
         actionType: ActionType.CRAFT,

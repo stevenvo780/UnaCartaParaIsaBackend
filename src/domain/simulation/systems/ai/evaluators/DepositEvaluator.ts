@@ -117,7 +117,7 @@ export function evaluateDepositGoals(
           hasFood: agentInv.food > 0,
         },
         createdAt: now,
-        expiresAt: now + 4000,
+        expiresAt: now + 20000, // 20 seconds - enough time for pathfinding and movement
       },
     ];
   } catch (error) {

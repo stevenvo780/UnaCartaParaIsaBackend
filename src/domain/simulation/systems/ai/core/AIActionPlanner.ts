@@ -707,8 +707,37 @@ export class AIActionPlanner {
     timestamp: number,
   ): AgentAction | null {
     if (!goal.targetZoneId) {
+      logger.debug(`🔨 [planCraft] ${agentId}: No targetZoneId in goal`);
       return null;
     }
+
+    const agentPos = this.getPosition(agentId);
+    const zone = this.deps.gameState.zones?.find((z) => z.id === goal.targetZoneId);
+
+    // Check if agent is already in the crafting zone
+    if (agentPos && zone?.bounds) {
+      const inZone =
+        agentPos.x >= zone.bounds.x &&
+        agentPos.x <= zone.bounds.x + zone.bounds.width &&
+        agentPos.y >= zone.bounds.y &&
+        agentPos.y <= zone.bounds.y + zone.bounds.height;
+
+      if (inZone) {
+        // Agent is in zone - execute craft action
+        logger.info(`🔨 [planCraft] ${agentId}: IN ZONE, executing CRAFT action`);
+        return {
+          actionType: ActionType.CRAFT,
+          agentId,
+          targetZoneId: goal.targetZoneId,
+          timestamp,
+          data: goal.data, // Pass itemType and itemId
+        };
+      } else {
+        logger.debug(`🔨 [planCraft] ${agentId}: Moving to zone ${goal.targetZoneId} (pos=${agentPos.x.toFixed(0)},${agentPos.y.toFixed(0)})`);
+      }
+    }
+
+    // Agent needs to move to crafting zone first
     return {
       actionType: ActionType.MOVE,
       agentId,
@@ -734,6 +763,7 @@ export class AIActionPlanner {
       );
       targetZoneId = storageZone?.id ?? workZone?.id;
       if (!targetZoneId) {
+        logger.debug(`📦 [planDeposit] ${agentId}: No target zone found`);
         return null;
       }
     }
@@ -748,12 +778,17 @@ export class AIActionPlanner {
         agentPos.y <= zone.bounds.y + zone.bounds.height;
 
       if (inZone) {
+        logger.info(`📦 [planDeposit] ${agentId}: IN ZONE ${targetZoneId} - executing DEPOSIT`);
         return {
           actionType: ActionType.DEPOSIT,
           agentId,
           targetZoneId,
           timestamp,
         };
+      } else {
+        logger.debug(
+          `📦 [planDeposit] ${agentId}: NOT in zone ${targetZoneId} (pos=${agentPos.x.toFixed(0)},${agentPos.y.toFixed(0)} zone=${zone.bounds.x},${zone.bounds.y}+${zone.bounds.width}x${zone.bounds.height})`,
+        );
       }
     }
 
@@ -778,13 +813,6 @@ export class AIActionPlanner {
     if (!agentPos) {
       return null;
     }
-
-    const distToTarget = Math.hypot(
-      agentPos.x - goal.targetPosition.x,
-      agentPos.y - goal.targetPosition.y,
-    );
-
-
 
     return {
       actionType: ActionType.MOVE,

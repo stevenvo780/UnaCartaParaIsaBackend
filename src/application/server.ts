@@ -111,8 +111,10 @@ async function initializeFreshWorld(): Promise<void> {
       tileSize: 32,
       biomeMap: [],
     })
-    .then(() => {
+    .then(async () => {
       logger.info("🌍 Backend: World resources initialized");
+      await simulationRunner.ensureInitialFamily();
+      logger.info("✅ Backend: Initial family ensured");
       simulationRunner.start();
       logger.info("✅ Backend: Simulation started and running");
     });

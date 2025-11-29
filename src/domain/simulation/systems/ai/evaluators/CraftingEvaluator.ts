@@ -89,7 +89,7 @@ export function evaluateCrafting(
           roleNeedsWeapon: needsWeaponForJob, // Pass this for tier calculation
         },
         createdAt: now,
-        expiresAt: now + 10000, // 10 seconds to complete
+        expiresAt: now + 60000, // 60 seconds to complete (enough time to walk to zone)
       },
     ];
   } catch (error) {

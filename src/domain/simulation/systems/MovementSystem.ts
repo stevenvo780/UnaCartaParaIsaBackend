@@ -43,6 +43,8 @@ export interface EntityMovementState {
   fatigue: number;
   lastIdleWander?: number;
   isPathfinding?: boolean;
+  /** Timestamp when pathfinding started - used to timeout stuck pathfinding */
+  pathfindingStartTime?: number;
   /** Timestamp when the agent arrived at destination - used to prevent immediate idle wander */
   lastArrivalTime?: number;
 }
@@ -553,17 +555,39 @@ export class MovementSystem extends EventEmitter {
     }
   }
 
+  // Timeout for pathfinding - if stuck for more than 10 seconds, reset
+  private readonly PATHFINDING_TIMEOUT_MS = 10000;
+
   public moveToZone(entityId: string, targetZoneId: string): boolean {
     const state = this.movementStates.get(entityId);
     const targetZone = this.gameState.zones.find((z) => z.id === targetZoneId);
 
-    if (!state || !targetZone) return false;
-    if (state.isPathfinding) return false;
+    if (!state || !targetZone) {
+      logger.warn(`🚶 [moveToZone] ${entityId}: state=${!!state}, zone=${!!targetZone}`);
+      return false;
+    }
+    
+    // Check if pathfinding is stuck (timeout protection)
+    const now = Date.now();
+    if (state.isPathfinding) {
+      if (state.pathfindingStartTime && 
+          now - state.pathfindingStartTime > this.PATHFINDING_TIMEOUT_MS) {
+        logger.warn(`[MovementSystem] ${entityId}: Pathfinding timeout, resetting state`);
+        state.isPathfinding = false;
+        state.pathfindingStartTime = undefined;
+      } else {
+        logger.debug(`🚶 [moveToZone] ${entityId}: Already pathfinding, skipping`);
+        return false;
+      }
+    }
 
     state.isPathfinding = true;
+    state.pathfindingStartTime = now;
 
     const targetX = targetZone.bounds.x + targetZone.bounds.width / 2;
     const targetY = targetZone.bounds.y + targetZone.bounds.height / 2;
+    
+    logger.info(`🚶 [moveToZone] ${entityId}: Enqueueing pathfinding to zone ${targetZoneId} (target=${targetX.toFixed(0)},${targetY.toFixed(0)})`);
 
     this.enqueuePathfinding(
       entityId,
@@ -571,9 +595,10 @@ export class MovementSystem extends EventEmitter {
       { x: targetX, y: targetY },
       (pathResult) => {
         state.isPathfinding = false;
+        state.pathfindingStartTime = undefined;
         if (!pathResult.success || pathResult.path.length === 0) {
           logger.warn(
-            `Pathfinding failed for ${entityId} to zone ${targetZoneId}`,
+            `🚶 [moveToZone] Pathfinding FAILED for ${entityId} to zone ${targetZoneId}`,
           );
 
           simulationEvents.emit(GameEventType.PATHFINDING_FAILED, {
@@ -591,6 +616,8 @@ export class MovementSystem extends EventEmitter {
           });
           return;
         }
+
+        logger.info(`🚶 [moveToZone] ${entityId}: Pathfinding SUCCESS, path length=${pathResult.path.length}, distance=${pathResult.distance.toFixed(0)}`);
 
         const now = Date.now();
         const travelTime = estimateTravelTime(
