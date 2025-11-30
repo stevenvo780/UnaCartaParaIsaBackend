@@ -12,7 +12,7 @@
  * @module shared/constants/AgentSystemEnums
  */
 
-// Re-export from existing files for compatibility
+
 export {
   GoalType,
   ActionType,

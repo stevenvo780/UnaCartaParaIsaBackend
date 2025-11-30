@@ -320,7 +320,7 @@ export class WorldLoader {
 
     const defaultBiome = "Grassland";
 
-    // Clear existing zones to prevent duplicates on reload
+
     this.runner.state.zones = [];
 
     const houseZone: Zone = {
@@ -351,7 +351,7 @@ export class WorldLoader {
       id: `zone_workbench_initial_${Date.now()}`,
       type: ZoneType.WORK,
       bounds: {
-        x: baseX + 150, // Increased from +100
+        x: baseX + 150,
         y: baseY,
         width: 40,
         height: 40,
@@ -376,8 +376,8 @@ export class WorldLoader {
       id: `zone_storage_initial_${Date.now()}`,
       type: ZoneType.STORAGE,
       bounds: {
-        x: baseX + 150, // Increased from +100
-        y: baseY + 80, // Increased from +50
+        x: baseX + 150,
+        y: baseY + 80,
         width: 40,
         height: 30,
       },
@@ -395,14 +395,14 @@ export class WorldLoader {
 
     this.runner.state.zones.push(houseZone, workbenchZone, storageZone);
 
-    // Create stockpile with initial resources for crafting
+
     const stockpile = this.runner.inventorySystem.createStockpile(
       storageZone.id,
       StockpileType.GENERAL,
       200,
     );
 
-    // Add initial resources to stockpile
+
     this.runner.inventorySystem.addToStockpile(stockpile.id, ResourceType.WOOD, 50);
     this.runner.inventorySystem.addToStockpile(stockpile.id, ResourceType.STONE, 30);
     this.runner.inventorySystem.addToStockpile(stockpile.id, ResourceType.FOOD, 40);

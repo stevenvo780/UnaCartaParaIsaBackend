@@ -21,7 +21,7 @@ import type { AgentRole } from "../../../types/simulation/roles";
 import type { Inventory, Stockpile } from "../../../types/simulation/economy";
 import type { Task } from "../../../types/simulation/tasks";
 import type { SettlementDemand } from "../../../types/simulation/governance";
-import type { Quest } from "../../../types/simulation/quests";
+
 import type { NeedsSystem } from "../needs/NeedsSystem";
 import type { RoleSystem } from "../RoleSystem";
 import type { WorldResourceSystem } from "../WorldResourceSystem";
@@ -33,7 +33,7 @@ import type { TaskSystem } from "../TaskSystem";
 import type { CombatSystem } from "../CombatSystem";
 import type { AnimalSystem } from "../animals/AnimalSystem";
 import type { MovementSystem } from "../movement/MovementSystem";
-import type { QuestSystem } from "../QuestSystem";
+
 import type { TimeSystem } from "../TimeSystem";
 import type { SharedKnowledgeSystem } from "./SharedKnowledgeSystem";
 import type { AgentRegistry } from "../../core/AgentRegistry";
@@ -58,7 +58,7 @@ export interface AIContextSystems {
   combatSystem?: CombatSystem;
   animalSystem?: AnimalSystem;
   movementSystem?: MovementSystem;
-  questSystem?: QuestSystem;
+
   timeSystem?: TimeSystem;
   sharedKnowledgeSystem?: SharedKnowledgeSystem;
 }
@@ -97,7 +97,7 @@ export class AIContextAdapter implements IAIContext {
   private readonly callbacks: AIContextCallbacks;
   private readonly config: AIContextCacheConfig;
 
-  // Caches
+
   private activeAgentIdsCache: string[] | null = null;
   private activeAgentIdsCacheTime = 0;
   private suggestedCraftZoneCache: string | null = null;
@@ -113,9 +113,9 @@ export class AIContextAdapter implements IAIContext {
     this.config = config;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Core State
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   get gameState(): GameState {
     return this.systems.gameState;
@@ -125,9 +125,9 @@ export class AIContextAdapter implements IAIContext {
     return Date.now();
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Agent Queries
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   getPosition(agentId: string): Position | null {
     return this.systems.agentRegistry.getPosition(agentId) ?? null;
@@ -146,7 +146,7 @@ export class AIContextAdapter implements IAIContext {
   }
 
   getStrategy(_agentId: string): "peaceful" | "tit_for_tat" | "bully" {
-    // Default strategy - can be overridden by AISystem
+
     return "tit_for_tat";
   }
 
@@ -195,13 +195,13 @@ export class AIContextAdapter implements IAIContext {
   }
 
   getStats(_agentId: string): Record<string, number> | null {
-    // Could be extended to pull from a stats system
+
     return null;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Resource Queries
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   findNearestResource(
     agentId: string,
@@ -243,9 +243,9 @@ export class AIContextAdapter implements IAIContext {
     return this.systems.inventorySystem?.getAllStockpiles() ?? [];
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Zone Queries
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   getCurrentZone(entityId: string): string | null {
     const pos = this.getPosition(entityId);
@@ -275,7 +275,7 @@ export class AIContextAdapter implements IAIContext {
       return this.suggestedCraftZoneCache;
     }
 
-    // Find first work zone (used for crafting)
+
     const zones = this.systems.gameState.zones ?? [];
     const craftZone = zones.find(
       (z) => z.type === "work" || String(z.type) === "crafting",
@@ -290,9 +290,9 @@ export class AIContextAdapter implements IAIContext {
     return zones.filter((z) => types.includes(z.type)).map((z) => z.id);
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Equipment & Crafting
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   getEquipped(agentId: string): string | null {
     return (
@@ -306,7 +306,7 @@ export class AIContextAdapter implements IAIContext {
   canCraftWeapon(agentId: string, weaponId: string): boolean {
     const cs = this.systems.craftingSystem;
     if (!cs) return false;
-    // Use type assertion for dynamic method access
+
     const maybeCraft = cs as unknown as {
       canCraftWeapon?: (id: string, wid: string) => boolean;
     };
@@ -343,9 +343,9 @@ export class AIContextAdapter implements IAIContext {
     return false;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Combat
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   getEnemies(agentId: string, threshold?: number): string[] {
     return this.callbacks.getEnemiesForAgent?.(agentId, threshold) ?? [];
@@ -369,9 +369,9 @@ export class AIContextAdapter implements IAIContext {
     return null;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Tasks & Quests
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   getAvailableTasks(): Task[] {
     return this.systems.taskSystem?.getAvailableCommunityTasks() ?? [];
@@ -381,17 +381,13 @@ export class AIContextAdapter implements IAIContext {
     return this.systems.taskSystem?.claimTask(taskId, agentId) ?? false;
   }
 
-  getActiveQuests(): Quest[] {
-    return this.systems.questSystem?.getActiveQuests() ?? [];
-  }
 
-  getAvailableQuests(): Quest[] {
-    return this.systems.questSystem?.getAvailableQuests() ?? [];
-  }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Colony & Time
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
+
+
 
   getTimeOfDay():
     | "dawn"
@@ -402,7 +398,7 @@ export class AIContextAdapter implements IAIContext {
     | "night"
     | "deep_night" {
     const tod = this.systems.timeSystem?.getCurrentTimeOfDay();
-    // Map TimeSystem values to our expected values
+
     if (tod === "morning") return "morning";
     if (tod === "afternoon") return "midday";
     if (tod === "evening") return "dusk";
@@ -416,7 +412,7 @@ export class AIContextAdapter implements IAIContext {
   }
 
   getActiveDemands(): SettlementDemand[] {
-    // Could be implemented via governance system
+
     return [];
   }
 
@@ -454,9 +450,9 @@ export class AIContextAdapter implements IAIContext {
     };
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Knowledge
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   getKnownResourceAlerts(agentId: string): Array<{
     id: string;
@@ -481,9 +477,9 @@ export class AIContextAdapter implements IAIContext {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Cache Management
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   /**
    * Invalidates all caches. Call when significant state changes occur.

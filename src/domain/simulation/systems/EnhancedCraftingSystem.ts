@@ -177,7 +177,7 @@ export class EnhancedCraftingSystem {
 
       logger.info(`⚒️ [applyOutput] ${agentId}: Equipping weapon ${output}`);
       this.equippedWeapons.set(agentId, output as WeaponId);
-      // Also register in the global equipment system so AISystem can see it
+
       equipmentSystem.equipItem(agentId, EquipmentSlot.MAIN_HAND, output);
       logger.info(`⚒️ [applyOutput] ${agentId}: Weapon registered in equipmentSystem`);
       return;
@@ -198,10 +198,10 @@ export class EnhancedCraftingSystem {
    * First checks agent inventory, then falls back to settlement stockpiles.
    */
   private hasIngredients(agentId: string, recipe: CraftingRecipe): boolean {
-    // First try agent's inventory
+
     const inventory = this.inventorySystem.getAgentInventory(agentId);
     
-    // Get total settlement resources as fallback
+
     const stockpileResources = this.inventorySystem.getTotalStockpileResources();
     const allStockpiles = this.inventorySystem.getAllStockpiles();
     
@@ -215,7 +215,7 @@ export class EnhancedCraftingSystem {
         return false;
       }
       
-      // Check agent inventory first, then stockpile
+
       const haveInInventory = inventory?.[key] ?? 0;
       const haveInStockpile = stockpileResources[key] ?? 0;
       const totalAvailable = haveInInventory + haveInStockpile;
@@ -241,7 +241,7 @@ export class EnhancedCraftingSystem {
 
       let remaining = ingredient.quantity;
 
-      // First consume from agent inventory
+
       const inventory = this.inventorySystem.getAgentInventory(agentId);
       if (inventory) {
         const fromAgent = Math.min(inventory[key] ?? 0, remaining);
@@ -251,7 +251,7 @@ export class EnhancedCraftingSystem {
         }
       }
 
-      // If still need more, consume from stockpiles
+
       if (remaining > 0) {
         const stockpiles = this.inventorySystem.getAllStockpiles();
         for (const stockpile of stockpiles) {
@@ -342,7 +342,7 @@ export class EnhancedCraftingSystem {
    * Initializes basic recipes for all agents if not yet initialized.
    */
   public getAllKnownRecipes(): Record<string, string[]> {
-    // Ensure all agents have their recipe maps initialized
+
     for (const agent of this.state.agents) {
       if (!this.knownRecipes.has(agent.id)) {
         this.getOrCreateRecipeMap(agent.id);

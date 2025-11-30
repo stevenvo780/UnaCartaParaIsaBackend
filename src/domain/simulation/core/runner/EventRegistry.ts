@@ -8,7 +8,7 @@ import { logger } from "../../../../infrastructure/utils/logger";
 import type { SimulationRunner } from "../SimulationRunner";
 import { ResourceType } from "../../../../shared/constants/ResourceEnums";
 import { RoleType } from "../../../../shared/constants/RoleEnums";
-import { TaskType } from "../../../../shared/constants/TaskEnums";
+
 import { LifeStage } from "../../../../shared/constants/AgentEnums";
 import { ActionType } from "../../../../shared/constants/AIEnums";
 
@@ -168,17 +168,8 @@ export class EventRegistry {
         harvesterId?: string;
         position?: { x: number; y: number };
       }) => {
-        if (data.harvesterId) {
-          this.runner.questSystem.handleEvent({
-            type: GameEventType.RESOURCE_GATHERED,
-            entityId: data.harvesterId,
-            timestamp: Date.now(),
-            data: {
-              resourceType: data.resourceType,
-              amount: 1,
-            },
-          });
-        }
+
+        void data;
       },
     );
 
@@ -190,22 +181,8 @@ export class EventRegistry {
         label: string;
         completedAt: number;
       }) => {
-        const job = this.runner.buildingSystem.getConstructionJob(data.jobId);
-        if (job?.taskId) {
-          const task = this.runner.taskSystem.getTask(job.taskId);
-          if (task && task.contributors) {
-            task.contributors.forEach((_contribution, agentId) => {
-              this.runner.questSystem.handleEvent({
-                type: GameEventType.BUILDING_CONSTRUCTED,
-                entityId: agentId,
-                timestamp: Date.now(),
-                data: {
-                  structureType: data.label,
-                },
-              });
-            });
-          }
-        }
+
+        void data;
       },
     );
 
@@ -270,23 +247,8 @@ export class EventRegistry {
         label: string;
         completesAt: number;
       }) => {
-        const job = this.runner.buildingSystem.getConstructionJob(data.jobId);
-        if (job?.taskId) {
-          const task = this.runner.taskSystem.getTask(job.taskId);
-          if (task && task.contributors) {
-            task.contributors.forEach((_contribution, agentId) => {
-              this.runner.questSystem.handleEvent({
-                type: GameEventType.BUILDING_CONSTRUCTION_STARTED,
-                entityId: agentId,
-                timestamp: Date.now(),
-                data: {
-                  structureType: data.label,
-                  jobId: data.jobId,
-                },
-              });
-            });
-          }
-        }
+
+        void data;
       },
     );
 
@@ -382,14 +344,7 @@ export class EventRegistry {
           );
         }
 
-        for (const agentId of data.completedBy) {
-          this.runner.questSystem.handleEvent({
-            type: GameEventType.TASK_COMPLETED,
-            entityId: agentId,
-            timestamp: data.timestamp,
-            data: { taskId: data.taskId },
-          });
-        }
+
       },
     );
 
@@ -516,17 +471,8 @@ export class EventRegistry {
         createdBy?: string;
         timestamp: number;
       }) => {
-        if (
-          data.taskType === TaskType.BUILD_HOUSE ||
-          data.taskType === TaskType.REPAIR_BUILDING
-        ) {
-          this.runner.questSystem.handleEvent({
-            type: GameEventType.TASK_CREATED,
-            entityId: data.createdBy || "system",
-            timestamp: data.timestamp,
-            data: { taskId: data.taskId, taskType: data.taskType },
-          });
-        }
+
+        void data;
       },
     );
 

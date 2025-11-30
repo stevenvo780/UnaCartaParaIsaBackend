@@ -29,7 +29,7 @@ interface BuildingSystemConfig {
   maxMines: number;
   maxWorkbenches: number;
   maxFarms: number;
-  // Maintenance config (merged from BuildingMaintenanceSystem)
+
   usageDegradationRate: number;
   usageDegradationInterval: number;
   abandonmentThreshold: number;
@@ -59,7 +59,7 @@ const DEFAULT_CONFIG: BuildingSystemConfig = {
   maxMines: 4,
   maxWorkbenches: 3,
   maxFarms: 4,
-  // Maintenance defaults (merged from BuildingMaintenanceSystem)
+
   usageDegradationRate: 0.4,
   usageDegradationInterval: 10,
   abandonmentThreshold: 5 * 60 * 1000,
@@ -116,7 +116,7 @@ export class BuildingSystem {
   private readonly constructionJobs = new Map<string, ConstructionJob>();
   private lastDecisionAt = 0;
   private taskSystem?: TaskSystem;
-  // Maintenance state (merged from BuildingMaintenanceSystem)
+
   private readonly buildingStates = new Map<string, BuildingState>();
   private lastMaintenanceUpdate = Date.now();
   private inventorySystem?: InventorySystem;
@@ -141,18 +141,18 @@ export class BuildingSystem {
     this.taskSystem = taskSystem;
     this.inventorySystem = inventorySystem;
 
-    // Bootstrap maintenance for existing buildings
+
     this.bootstrapExistingZones();
     simulationEvents.on(
       GameEventType.BUILDING_CONSTRUCTED,
       (payload: { zoneId: string }): void =>
         this.initializeBuildingState(payload.zoneId),
     );
-    // Handle agent death to cleanup maintenance references
+
     simulationEvents.on(
       GameEventType.AGENT_DEATH,
       (_data: { agentId?: string; entityId?: string }) => {
-        // No cleanup needed for maintenance - buildings persist
+
       },
     );
   }
@@ -169,7 +169,7 @@ export class BuildingSystem {
     const now = this.now();
     this.completeFinishedJobs(now);
 
-    // Maintenance update (merged from BuildingMaintenanceSystem)
+
     if (now - this.lastMaintenanceUpdate >= this.config.maintenanceUpdateIntervalMs) {
       this.lastMaintenanceUpdate = now;
       for (const state of this.buildingStates.values()) {
@@ -352,7 +352,7 @@ export class BuildingSystem {
 
     const zoneId = `zone_${label}_${Math.random().toString(36).slice(2)}`;
 
-    // Determine biome
+
     const tileX = Math.floor(validatedPosition.x / TILE_SIZE);
     const tileY = Math.floor(validatedPosition.y / TILE_SIZE);
     const tile = this.state.terrainTiles?.find(
@@ -376,7 +376,7 @@ export class BuildingSystem {
               : label === "farm"
                 ? BuildingType.FARM
                 : BuildingType.HOUSE,
-      spriteVariant: Math.floor(Math.random() * 3), // Random variant 0-2
+      spriteVariant: Math.floor(Math.random() * 3),
     };
 
     const bounds = {
@@ -550,7 +550,7 @@ export class BuildingSystem {
         continue;
       }
 
-      const PADDING = 20; // Padding to prevent visual overlap
+      const PADDING = 20;
       const hasCollision = this.state.zones?.some((zone) => {
         if (!zone.bounds) return false;
         return !(
@@ -641,9 +641,9 @@ export class BuildingSystem {
     );
   }
 
-  // ============================================================================
-  // MAINTENANCE METHODS (merged from BuildingMaintenanceSystem)
-  // ============================================================================
+
+
+
 
   /**
    * Records building usage to track abandonment and apply usage degradation.

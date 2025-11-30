@@ -555,7 +555,7 @@ export class MovementSystem extends EventEmitter {
     }
   }
 
-  // Timeout for pathfinding - if stuck for more than 10 seconds, reset
+
   private readonly PATHFINDING_TIMEOUT_MS = 10000;
 
   public moveToZone(entityId: string, targetZoneId: string): boolean {
@@ -567,7 +567,7 @@ export class MovementSystem extends EventEmitter {
       return false;
     }
     
-    // Check if pathfinding is stuck (timeout protection)
+
     const now = Date.now();
     if (state.isPathfinding) {
       if (state.pathfindingStartTime && 

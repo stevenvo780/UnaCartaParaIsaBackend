@@ -357,7 +357,7 @@ export class CommandProcessor {
             payload.agentB as string,
             (payload.magnitude as number) || 0.1,
           );
-          // InteractionGameSystem eliminated - interactions handled by SocialSystem
+
         }
         break;
       case SocialCommandType.HOSTILE_ENCOUNTER:
@@ -371,7 +371,7 @@ export class CommandProcessor {
             payload.agentB as string,
             -(payload.magnitude as number) || -0.1,
           );
-          // InteractionGameSystem eliminated - interactions handled by SocialSystem
+
         }
         break;
     }
@@ -409,7 +409,7 @@ export class CommandProcessor {
     switch (command.command) {
       case BuildingCommandType.START_UPGRADE:
         if (payload.zoneId && payload.agentId) {
-          // BuildingMaintenanceSystem merged into BuildingSystem
+
           this.runner.buildingSystem.startUpgrade(
             payload.zoneId as string,
             payload.agentId as string,
@@ -418,7 +418,7 @@ export class CommandProcessor {
         break;
       case BuildingCommandType.CANCEL_UPGRADE:
         if (payload.zoneId) {
-          // BuildingMaintenanceSystem merged into BuildingSystem
+
           this.runner.buildingSystem.cancelUpgrade(
             payload.zoneId as string,
           );

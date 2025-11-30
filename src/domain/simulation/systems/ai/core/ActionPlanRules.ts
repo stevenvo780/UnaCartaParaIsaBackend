@@ -13,7 +13,7 @@ import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
  */
 export interface RangeAction {
   type: "range";
-  executeAction: ActionType; // Action when within range
+  executeAction: ActionType;
   range: number;
 }
 
@@ -23,7 +23,7 @@ export interface RangeAction {
 export interface ZoneAction {
   type: "zone";
   executeAction: ActionType;
-  zoneTypes?: ZoneType[]; // Fallback zone types if goal has no targetZoneId
+  zoneTypes?: ZoneType[];
 }
 
 /**
@@ -51,7 +51,7 @@ export type ActionPlanRule =
  * Declarative mapping: GoalType → how to convert to AgentAction
  */
 export const ACTION_PLAN_RULES: Partial<Record<GoalType, ActionPlanRule>> = {
-  // === RANGE-BASED (harvest/attack if within range) ===
+
   [GoalType.SATISFY_HUNGER]: {
     type: "range",
     executeAction: ActionType.HARVEST,
@@ -88,7 +88,7 @@ export const ACTION_PLAN_RULES: Partial<Record<GoalType, ActionPlanRule>> = {
     range: 50,
   },
 
-  // === ZONE-BASED (enter zone, then execute action) ===
+
   [GoalType.SATISFY_ENERGY]: {
     type: "zone",
     executeAction: ActionType.SLEEP,
@@ -151,7 +151,7 @@ export const ACTION_PLAN_RULES: Partial<Record<GoalType, ActionPlanRule>> = {
     zoneTypes: [ZoneType.SOCIAL],
   },
 
-  // === SIMPLE (just return this action) ===
+
   [GoalType.IDLE]: {
     type: "simple",
     action: ActionType.IDLE,
@@ -161,7 +161,7 @@ export const ACTION_PLAN_RULES: Partial<Record<GoalType, ActionPlanRule>> = {
     action: ActionType.IDLE,
   },
 
-  // === MOVE-ONLY ===
+
   [GoalType.FLEE]: {
     type: "move",
   },

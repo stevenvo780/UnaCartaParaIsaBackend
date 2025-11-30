@@ -24,7 +24,7 @@ export interface SimplifiedGoalPlannerDeps {
   ) => { x: number; y: number } | undefined;
   getAgentRole?: (entityId: string) => { roleType: string } | undefined;
 
-  // Extended context for fullRules
+
   getEnemies?: (entityId: string) => string[] | undefined;
   getNearbyPredators?: (
     entityId: string,
@@ -43,7 +43,7 @@ export interface SimplifiedGoalPlannerDeps {
   getCraftZone?: () => string | undefined;
   hasAvailableWeapons?: () => boolean;
 
-  // Assist context
+
   getNearbyAgentInNeed?: (entityId: string) => {
     id: string;
     need: "water" | "food" | "medical" | "rest" | "social";
@@ -51,11 +51,11 @@ export interface SimplifiedGoalPlannerDeps {
     targetZoneId?: string;
   } | undefined;
 
-  // Trade context
+
   hasExcessResources?: (entityId: string) => boolean;
   getNearestMarketZoneId?: (entityId: string) => string | undefined;
 
-  // Opportunities context
+
   getPreferredResource?: (entityId: string) => string | undefined;
   getNearestPreferredResource?: (entityId: string) => {
     id: string;
@@ -64,13 +64,13 @@ export interface SimplifiedGoalPlannerDeps {
   } | undefined;
   getRoleEfficiency?: (entityId: string) => number;
 
-  // Attention context
+
   getNearbyInspectable?: (entityId: string) => {
     id: string;
     position: { x: number; y: number };
   } | undefined;
 
-  // Quest context
+
   getActiveQuestGoal?: (entityId: string) => {
     questId: string;
     objectiveId: string;
@@ -78,7 +78,7 @@ export interface SimplifiedGoalPlannerDeps {
     targetZoneId?: string;
   } | undefined;
 
-  // Building contribution context
+
   getContributableBuilding?: (entityId: string) => {
     zoneId: string;
     score: number;
@@ -104,7 +104,7 @@ export function planGoalsSimplified(
   const entityId = aiState.entityId;
   const inventory = deps.getAgentInventory?.(entityId);
 
-  // Construir contexto unificado
+
   const ctx: GoalContext = {
     entityId,
     aiState,
@@ -115,17 +115,17 @@ export function planGoalsSimplified(
     roleType: deps.getAgentRole?.(entityId)?.roleType,
     gameState: deps.gameState,
 
-    // Combat context
+
     enemies: deps.getEnemies?.(entityId),
     nearbyPredators: deps.getNearbyPredators?.(entityId),
     isWarrior: deps.isWarrior?.(entityId),
     stats: deps.getEntityStats?.(entityId),
     getEntityPosition: (id: string) => deps.getEntityPosition?.(id) ?? null,
 
-    // Construction context
+
     buildTasks: deps.getBuildTasks?.(entityId),
 
-    // Deposit context
+
     inventoryLoad: inventory
       ? (inventory.wood ?? 0) +
         (inventory.stone ?? 0) +
@@ -137,36 +137,36 @@ export function planGoalsSimplified(
     hasFood: (inventory?.food ?? 0) > 0,
     depositZoneId: deps.getDepositZone?.(entityId),
 
-    // Crafting context
+
     equippedWeapon: deps.getEquippedWeapon?.(entityId),
     canCraftClub: deps.canCraftWeapon?.(entityId, "wooden_club") ?? false,
     canCraftDagger: deps.canCraftWeapon?.(entityId, "stone_dagger") ?? false,
     craftZoneId: deps.getCraftZone?.(),
     hasAvailableWeapons: deps.hasAvailableWeapons?.() ?? false,
 
-    // Assist context
+
     nearbyAgentInNeed: deps.getNearbyAgentInNeed?.(entityId),
 
-    // Trade context
+
     hasExcessResources: deps.hasExcessResources?.(entityId) ?? false,
     nearestMarketZoneId: deps.getNearestMarketZoneId?.(entityId),
 
-    // Opportunities context
+
     preferredResource: deps.getPreferredResource?.(entityId),
     nearestPreferredResource: deps.getNearestPreferredResource?.(entityId),
     roleEfficiency: deps.getRoleEfficiency?.(entityId) ?? 1.0,
 
-    // Attention context
+
     nearbyInspectable: deps.getNearbyInspectable?.(entityId),
 
-    // Quest context
+
     activeQuestGoal: deps.getActiveQuestGoal?.(entityId),
 
-    // Building contribution context
+
     contributableBuilding: deps.getContributableBuilding?.(entityId),
   };
 
-  // Evaluar todas las reglas y retornar goals priorizados
+
   return evaluateRules(rules, ctx, maxGoals);
 }
 

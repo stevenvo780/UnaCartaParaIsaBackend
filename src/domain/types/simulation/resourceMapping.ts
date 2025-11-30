@@ -202,7 +202,7 @@ export function toWorldResources(
  * Handles both direct resource types (wood, stone) and specific items (iron_ore).
  */
 export function itemToWorldResources(itemId: string): WorldResourceType[] {
-  // Direct WorldResourceType mappings
+
   if (isWorldResourceType(itemId)) {
     return [itemId];
   }

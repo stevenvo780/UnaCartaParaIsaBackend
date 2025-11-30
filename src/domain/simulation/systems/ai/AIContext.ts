@@ -17,7 +17,7 @@ import type { SettlementDemand } from "../../../types/simulation/governance";
 import type { Quest } from "../../../types/simulation/quests";
 import type { ResourceType as ResourceTypeImport } from "../../../../shared/constants/ResourceEnums";
 
-// Re-export for convenience
+
 export type ResourceType = ResourceTypeImport;
 
 /**
@@ -59,9 +59,9 @@ export interface AgentLocation extends Position {
  * through a single, consistent interface.
  */
 export interface IAIContext {
-  // ─────────────────────────────────────────────────────────────────────────
-  // Core State
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   /** Current game state */
   readonly gameState: GameState;
@@ -69,9 +69,9 @@ export interface IAIContext {
   /** Current timestamp */
   readonly now: number;
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Agent Queries
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   /** Get agent position by ID */
   getPosition(agentId: string): Position | null;
@@ -100,9 +100,9 @@ export interface IAIContext {
   /** Get agent stats */
   getStats(agentId: string): Record<string, number> | null;
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Resource Queries
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   /** Find nearest resource of a type */
   findNearestResource(
@@ -132,9 +132,9 @@ export interface IAIContext {
   /** Get all stockpiles */
   getAllStockpiles(): Stockpile[];
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Zone Queries
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   /** Get current zone for entity */
   getCurrentZone(entityId: string): string | null;
@@ -145,9 +145,9 @@ export interface IAIContext {
   /** Get zone IDs by type */
   getZonesByType(types: string[]): string[];
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Equipment & Crafting
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   /** Get equipped item ID */
   getEquipped(agentId: string): string | null;
@@ -167,9 +167,9 @@ export interface IAIContext {
   /** Try to claim a weapon from storage */
   tryClaimWeapon(agentId: string): boolean;
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Combat
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   /** Get enemies for agent above threshold */
   getEnemies(agentId: string, threshold?: number): string[];
@@ -180,9 +180,9 @@ export interface IAIContext {
   /** Get animal position */
   getAnimalPosition(animalId: string): Position | null;
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Tasks & Quests
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   /** Get available community tasks */
   getAvailableTasks(): Task[];
@@ -196,9 +196,9 @@ export interface IAIContext {
   /** Get available quests */
   getAvailableQuests(): Quest[];
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Colony & Time
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   /** Get current time of day */
   getTimeOfDay():
@@ -223,9 +223,9 @@ export interface IAIContext {
     stockpileFillRatio: number;
   } | null;
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Knowledge
-  // ─────────────────────────────────────────────────────────────────────────
+
+
+
 
   /** Get known resource alerts for agent */
   getKnownResourceAlerts(agentId: string): Array<{

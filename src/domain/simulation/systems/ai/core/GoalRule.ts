@@ -11,9 +11,9 @@ import { GoalType } from "../../../../../shared/constants/AIEnums";
 import type { GameState } from "../../../../types/game-types";
 import type { Inventory } from "../../../../types/simulation/economy";
 
-// ============================================================================
-// TIPOS DEL SISTEMA DE REGLAS
-// ============================================================================
+
+
+
 
 /**
  * Contexto unificado para todas las reglas.
@@ -24,44 +24,44 @@ export interface GoalContext {
   aiState: AIState;
   now: number;
 
-  // Datos del agente
+
   needs?: EntityNeedsData;
   inventory?: Inventory;
   position?: { x: number; y: number };
   roleType?: string;
   stats?: Record<string, number> | null;
 
-  // Estado del mundo
+
   gameState?: GameState;
 
-  // Combat context (optional)
+
   enemies?: string[];
   nearbyPredators?: Array<{ id: string; position: { x: number; y: number } }>;
   isWarrior?: boolean;
   combatStrategy?: "peaceful" | "tit_for_tat" | "bully";
 
-  // Construction context (optional)
+
   buildTasks?: Array<{
     id: string;
     zoneId: string;
     score: number;
   }>;
 
-  // Deposit context (optional)
+
   inventoryLoad?: number;
   inventoryCapacity?: number;
   hasWater?: boolean;
   hasFood?: boolean;
   depositZoneId?: string;
 
-  // Crafting context (optional)
+
   equippedWeapon?: string;
   canCraftClub?: boolean;
   canCraftDagger?: boolean;
   craftZoneId?: string;
   hasAvailableWeapons?: boolean;
 
-  // Assist context (optional)
+
   nearbyAgentInNeed?: {
     id: string;
     need: "water" | "food" | "medical" | "rest" | "social";
@@ -69,19 +69,19 @@ export interface GoalContext {
     targetZoneId?: string;
   };
 
-  // Trade context (optional)
+
   hasExcessResources?: boolean;
   nearestMarketZoneId?: string;
 
-  // Work opportunities context (optional)
+
   preferredResource?: string;
   nearestPreferredResource?: { id: string; x: number; y: number };
   roleEfficiency?: number;
 
-  // Attention/Inspection context (optional)
+
   nearbyInspectable?: { id: string; position: { x: number; y: number } };
 
-  // Quest context (optional)
+
   activeQuestGoal?: {
     questId: string;
     objectiveId: string;
@@ -89,13 +89,13 @@ export interface GoalContext {
     targetZoneId?: string;
   };
 
-  // Building contribution context (optional)
+
   contributableBuilding?: {
     zoneId: string;
     score: number;
   };
 
-  // Funciones auxiliares (opcionales - lazy evaluation)
+
   findNearestResource?: (
     entityId: string,
     resourceType: string,
@@ -160,9 +160,9 @@ export interface GoalRule {
   isCritical?: boolean;
 }
 
-// ============================================================================
-// FUNCIONES DE UTILIDAD REUTILIZABLES
-// ============================================================================
+
+
+
 
 /**
  * Calcula utilidad para needs biológicos.
@@ -197,9 +197,9 @@ export function personalityFactor(
   return base;
 }
 
-// ============================================================================
-// MOTOR DE EVALUACIÓN
-// ============================================================================
+
+
+
 
 /**
  * Evalúa todas las reglas contra el contexto y retorna goals ordenados por prioridad.
@@ -216,16 +216,16 @@ export function evaluateRules(
   const goals: AIGoal[] = [];
 
   for (const rule of rules) {
-    // Verificar condición
+
     if (!rule.condition(ctx)) continue;
 
-    // Calcular prioridad
+
     const priority = rule.priority(ctx);
     const minPriority = rule.minPriority ?? 0;
 
     if (priority < minPriority) continue;
 
-    // Crear goal
+
     const goal: AIGoal = {
       id: `${rule.id}_${ctx.entityId}_${ctx.now}`,
       type: rule.goalType,
@@ -237,13 +237,13 @@ export function evaluateRules(
 
     goals.push(goal);
 
-    // Goal crítico: retornar inmediatamente
+
     if (rule.isCritical && priority > 0.9) {
       return [goal];
     }
   }
 
-  // Ordenar por prioridad descendente
+
   goals.sort((a, b) => b.priority - a.priority);
 
   return goals.slice(0, maxGoals);

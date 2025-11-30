@@ -22,7 +22,7 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 import { SystemProperty } from "../../../shared/constants/SystemEnums";
 
-// Resource attraction config (merged from ResourceAttractionSystem)
+
 const DESIRE_THRESHOLDS: Partial<
   Record<NeedType, { high: number; low?: number }>
 > = {
@@ -56,7 +56,7 @@ export class AmbientAwarenessSystem {
   private wellbeingHistory: number[] = [];
   private readonly HISTORY_SIZE = 60;
 
-  // Resource attraction state (merged)
+
   private resourceSnapshot: ResourceAttractionSnapshot;
 
   constructor(
@@ -109,7 +109,7 @@ export class AmbientAwarenessSystem {
 
     this.gameState.ambientMood = this.snapshot;
 
-    // Update resource attraction (merged from ResourceAttractionSystem)
+
     this.updateResourceAttraction(now);
   }
 
@@ -301,7 +301,7 @@ export class AmbientAwarenessSystem {
     }
   }
 
-  // ============ RESOURCE ATTRACTION (merged from ResourceAttractionSystem) ============
+
 
   private updateResourceAttraction(now: number): void {
     const needs = this.needsSystem.getAllNeeds();
@@ -451,5 +451,5 @@ export class AmbientAwarenessSystem {
     }
   }
 
-  // ============ END RESOURCE ATTRACTION ============
+
 }

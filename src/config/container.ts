@@ -22,7 +22,7 @@ import { GameState } from "../domain/types/game-types";
 import { createInitialGameState } from "../domain/simulation/core/defaultState";
 
 import { WorldResourceSystem } from "../domain/simulation/systems/WorldResourceSystem";
-// LivingLegendsSystem eliminated - decorative only
+
 import { LifeCycleSystem } from "../domain/simulation/systems/LifeCycleSystem";
 import { NeedsSystem } from "../domain/simulation/systems/needs/NeedsSystem";
 import { GenealogySystem } from "../domain/simulation/systems/GenealogySystem";
@@ -36,7 +36,7 @@ import { GovernanceSystem } from "../domain/simulation/systems/GovernanceSystem"
 
 import { HouseholdSystem } from "../domain/simulation/systems/HouseholdSystem";
 import { BuildingSystem } from "../domain/simulation/systems/BuildingSystem";
-// BuildingMaintenanceSystem merged into BuildingSystem
+
 import { ProductionSystem } from "../domain/simulation/systems/ProductionSystem";
 import { EnhancedCraftingSystem } from "../domain/simulation/systems/EnhancedCraftingSystem";
 import { AnimalSystem } from "../domain/simulation/systems/animals/AnimalSystem";
@@ -45,20 +45,20 @@ import { CombatSystem } from "../domain/simulation/systems/CombatSystem";
 import { ReputationSystem } from "../domain/simulation/systems/ReputationSystem";
 
 import { RecipeDiscoverySystem } from "../domain/simulation/systems/RecipeDiscoverySystem";
-import { QuestSystem } from "../domain/simulation/systems/QuestSystem";
+
 import { TaskSystem } from "../domain/simulation/systems/TaskSystem";
-// TradeSystem merged into EconomySystem
+
 import { MarriageSystem } from "../domain/simulation/systems/MarriageSystem";
 import { ConflictResolutionSystem } from "../domain/simulation/systems/ConflictResolutionSystem";
-// TradeSystem merged into EconomySystem
-// NormsSystem merged into ConflictResolutionSystem
-// ResourceAttractionSystem merged into AmbientAwarenessSystem
+
+
+
 
 import { AmbientAwarenessSystem } from "../domain/simulation/systems/AmbientAwarenessSystem";
 
 import { TimeSystem } from "../domain/simulation/systems/TimeSystem";
-// InteractionGameSystem eliminated - minimal functionality
-// KnowledgeNetworkSystem eliminated - not used externally
+
+
 import { MovementSystem } from "../domain/simulation/systems/movement/MovementSystem";
 
 import { EntityIndex } from "../domain/simulation/core/EntityIndex";
@@ -92,7 +92,7 @@ container
   .bind<WorldResourceSystem>(TYPES.WorldResourceSystem)
   .to(WorldResourceSystem)
   .inSingletonScope();
-// LivingLegendsSystem binding removed - decorative only
+
 container
   .bind<LifeCycleSystem>(TYPES.LifeCycleSystem)
   .to(LifeCycleSystem)
@@ -117,7 +117,7 @@ container
   .bind<EconomySystem>(TYPES.EconomySystem)
   .to(EconomySystem)
   .inSingletonScope();
-// MarketSystem merged into EconomySystem
+
 container
   .bind<VoronoiGenerator>(TYPES.VoronoiGenerator)
   .to(VoronoiGenerator)
@@ -145,7 +145,7 @@ container
   .bind<BuildingSystem>(TYPES.BuildingSystem)
   .to(BuildingSystem)
   .inSingletonScope();
-// BuildingMaintenanceSystem binding removed - merged into BuildingSystem
+
 container
   .bind<ProductionSystem>(TYPES.ProductionSystem)
   .to(ProductionSystem)
@@ -175,12 +175,9 @@ container
   .bind<RecipeDiscoverySystem>(TYPES.RecipeDiscoverySystem)
   .to(RecipeDiscoverySystem)
   .inSingletonScope();
-container
-  .bind<QuestSystem>(TYPES.QuestSystem)
-  .to(QuestSystem)
-  .inSingletonScope();
+
 container.bind<TaskSystem>(TYPES.TaskSystem).to(TaskSystem).inSingletonScope();
-// TradeSystem merged into EconomySystem
+
 container
   .bind<MarriageSystem>(TYPES.MarriageSystem)
   .to(MarriageSystem)
@@ -189,8 +186,8 @@ container
   .bind<ConflictResolutionSystem>(TYPES.ConflictResolutionSystem)
   .to(ConflictResolutionSystem)
   .inSingletonScope();
-// NormsSystem merged into ConflictResolutionSystem
-// ResourceAttractionSystem merged into AmbientAwarenessSystem
+
+
 
 container
   .bind<AmbientAwarenessSystem>(TYPES.AmbientAwarenessSystem)
@@ -198,8 +195,8 @@ container
   .inSingletonScope();
 
 container.bind<TimeSystem>(TYPES.TimeSystem).to(TimeSystem).inSingletonScope();
-// InteractionGameSystem binding removed - minimal functionality
-// KnowledgeNetworkSystem binding removed - not used externally
+
+
 container
   .bind<MovementSystem>(TYPES.MovementSystem)
   .to(MovementSystem)

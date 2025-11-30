@@ -190,13 +190,13 @@ export function getGoalTier(goal: AIGoal, _aiState: AIState): number {
     return PRIORITY_TIERS.OPPORTUNITY;
   }
 
-  // Emergency water/food collection tasks should have SURVIVAL_URGENT tier
+
   if (goal.type === GoalType.WORK) {
     const taskType = goal.data?.taskType as string | undefined;
     if (taskType === 'gather_water' || taskType === 'gather_food') {
-      // High priority (>= 0.85) water/food tasks are emergency-level
+
       if (goal.priority >= 0.85) return PRIORITY_TIERS.SURVIVAL_URGENT;
-      // Medium priority (>= 0.65) are still important
+
       if (goal.priority >= 0.65) return PRIORITY_TIERS.LOGISTICS;
     }
     if (goal.id?.startsWith(GoalPrefix.DEPOSIT)) {
@@ -204,17 +204,17 @@ export function getGoalTier(goal: AIGoal, _aiState: AIState): number {
     }
   }
 
-  // Deposit goals with water/food during emergency should be high priority
-  // Also, when inventory is full, deposit becomes urgent to prevent resource loss
+
+
   if (goal.type === GoalType.DEPOSIT) {
     const data = goal.data as Record<string, unknown> | undefined;
     const hasWater = data?.hasWater as boolean | undefined;
     const hasFood = data?.hasFood as boolean | undefined;
     const inventoryFull = data?.inventoryFull as boolean | undefined;
     
-    // Inventory full = MUST deposit to continue working
+
     if (inventoryFull) {
-      return PRIORITY_TIERS.SURVIVAL_URGENT; // 8.0 - can't gather more without depositing
+      return PRIORITY_TIERS.SURVIVAL_URGENT;
     }
     if ((hasWater || hasFood) && goal.priority >= 0.85) {
       return PRIORITY_TIERS.SURVIVAL_URGENT;
@@ -234,16 +234,16 @@ export function getGoalTier(goal: AIGoal, _aiState: AIState): number {
     return PRIORITY_TIERS.OPPORTUNITY;
   }
 
-  // Craft goals get priority based on role needs
-  // Hunters/guards without weapons get SURVIVAL_URGENT tier - they CANNOT do their job without a weapon
-  // Others get LOGISTICS tier - weapon crafting is important for community defense
+
+
+
   if (goal.type === GoalType.CRAFT) {
     const data = goal.data as Record<string, unknown> | undefined;
     const roleNeedsWeapon = data?.roleNeedsWeapon as boolean | undefined;
     if (roleNeedsWeapon) {
-      return PRIORITY_TIERS.SURVIVAL_URGENT; // 8.0 - hunters MUST craft to do their job
+      return PRIORITY_TIERS.SURVIVAL_URGENT;
     }
-    return PRIORITY_TIERS.LOGISTICS; // 6.0 - weapon crafting is important for community defense
+    return PRIORITY_TIERS.LOGISTICS;
   }
 
   return PRIORITY_TIERS.IDLE;

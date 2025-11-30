@@ -422,7 +422,7 @@ export class AnimalSystem {
     const config = getAnimalConfig(animal.type);
     if (!config) return;
 
-    // Debug: Log animal health status periodically
+
     if (Math.random() < 0.01) {
       const maxHealth = config.maxHealth * animal.genes.health;
       logger.debug(
@@ -467,10 +467,10 @@ export class AnimalSystem {
       }
     }
 
-    // Animals seek food when: hungry (< 80) OR injured (health < maxHealth)
-    // This ensures they keep eating until fully healed
+
+
     const maxHealth = config.maxHealth * animal.genes.health;
-    const needsHealing = animal.health < maxHealth * 0.9; // Below 90% health
+    const needsHealing = animal.health < maxHealth * 0.9;
     const isHungry = animal.needs.hunger < 80;
 
     if (isHungry || needsHealing) {
@@ -485,7 +485,7 @@ export class AnimalSystem {
           prey,
           deltaSeconds,
           (preyId, damage) => {
-            // Predators now deal damage instead of instant kill
+
             this.damageAnimal(preyId, damage || 25, animal.id);
           },
         );
@@ -507,7 +507,7 @@ export class AnimalSystem {
           );
           return;
         } else {
-          // No nearby food resources - try to forage from terrain
+
           const TILE_SIZE = 64;
           const tileX = Math.floor(animal.position.x / TILE_SIZE);
           const tileY = Math.floor(animal.position.y / TILE_SIZE);
@@ -515,19 +515,19 @@ export class AnimalSystem {
           const terrainTile = this.terrainSystem?.getTile(tileX, tileY);
           const terrainType = terrainTile?.assets?.terrain;
 
-          // Animals can eat on: grassland or unknown terrain (wilderness)
-          // If terrain is unknown (not loaded), allow foraging anyway (wilderness has food)
+
+
           const canForage =
-            !terrainType || // Unknown terrain - assume wilderness with food
+            !terrainType ||
             terrainType === TileType.TERRAIN_GRASSLAND ||
-            terrainType === TileType.GRASS; // Both grass types are edible
+            terrainType === TileType.GRASS;
 
           if (canForage) {
             animal.state = AnimalState.EATING;
             if (!animal.stateEndTime) {
               animal.stateEndTime = Date.now() + 2000;
             } else if (Date.now() > animal.stateEndTime) {
-              // Only modify terrain if it's grassland (others regenerate)
+
               if (
                 terrainType === TileType.TERRAIN_GRASSLAND &&
                 this.terrainSystem
@@ -542,7 +542,7 @@ export class AnimalSystem {
             }
             return;
           } else {
-            // Non-vegetated terrain (desert, rock, water) - wander to find food
+
             animal.state = AnimalState.WANDERING;
             AnimalBehavior.wander(animal, 0.7, deltaSeconds);
             return;
@@ -552,7 +552,7 @@ export class AnimalSystem {
       }
     }
 
-    // Animals seek water when: thirsty (< 80) OR injured (for healing)
+
     const isThirsty = animal.needs.thirst < 80;
     if ((isThirsty || needsHealing) && config.consumesWater) {
       animal.state = AnimalState.SEEKING_WATER;
@@ -578,8 +578,8 @@ export class AnimalSystem {
         if (waterTile) {
           this.drinkFromTerrain(animal, waterTile, config, deltaSeconds);
         } else {
-          // No water resource or terrain - allow drinking from "natural water source"
-          // This simulates wilderness water (streams, puddles) for animals far from known resources
+
+
           animal.state = AnimalState.DRINKING;
           if (!animal.stateEndTime) {
             animal.stateEndTime = Date.now() + 2000;
@@ -593,7 +593,7 @@ export class AnimalSystem {
       return;
     }
 
-    // Reproduction: needs high urge, must be mature (age > 20% of lifespan), and healthy
+
     const maturityAge = config.lifespan * 0.2;
     const isMature = animal.age > maturityAge;
     const isHealthyEnough = animal.health > maxHealth * 0.5;
@@ -1049,7 +1049,7 @@ export class AnimalSystem {
     const config = getAnimalConfig(animal.type);
     if (!config) return;
 
-    // Death by health depleted (damage from predators or other causes)
+
     if (animal.health <= 0) {
       this.killAnimal(animal.id, "damage");
       return;
@@ -1110,11 +1110,11 @@ export class AnimalSystem {
       `🗡️ Animal ${animalId} took ${damage} damage (health: ${animal.health.toFixed(1)}) from ${attackerId || "unknown"}`,
     );
 
-    // If health depleted, animal dies
+
     if (animal.health <= 0) {
       this.killAnimal(animalId, "damage");
 
-      // Feed the attacker if it's a predator animal
+
       if (attackerId) {
         const attacker = this.animalRegistry.getAnimal(attackerId);
         if (attacker) {

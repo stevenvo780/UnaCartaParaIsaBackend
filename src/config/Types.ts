@@ -12,14 +12,14 @@ export const TYPES = {
   Logger: Symbol.for("Logger"),
 
   WorldResourceSystem: Symbol.for("WorldResourceSystem"),
-  // LivingLegendsSystem eliminated - decorative only
+
   LifeCycleSystem: Symbol.for("LifeCycleSystem"),
   NeedsSystem: Symbol.for("NeedsSystem"),
   GenealogySystem: Symbol.for("GenealogySystem"),
   SocialSystem: Symbol.for("SocialSystem"),
   InventorySystem: Symbol.for("InventorySystem"),
   EconomySystem: Symbol.for("EconomySystem"),
-  // MarketSystem merged into EconomySystem
+
   RoleSystem: Symbol.for("RoleSystem"),
   AISystem: Symbol.for("AISystem"),
   ResourceReservationSystem: Symbol.for("ResourceReservationSystem"),
@@ -27,7 +27,7 @@ export const TYPES = {
 
   HouseholdSystem: Symbol.for("HouseholdSystem"),
   BuildingSystem: Symbol.for("BuildingSystem"),
-  // BuildingMaintenanceSystem merged into BuildingSystem
+
   ProductionSystem: Symbol.for("ProductionSystem"),
   EnhancedCraftingSystem: Symbol.for("EnhancedCraftingSystem"),
   AnimalSystem: Symbol.for("AnimalSystem"),
@@ -36,19 +36,19 @@ export const TYPES = {
   ReputationSystem: Symbol.for("ReputationSystem"),
 
   RecipeDiscoverySystem: Symbol.for("RecipeDiscoverySystem"),
-  QuestSystem: Symbol.for("QuestSystem"),
+
   TaskSystem: Symbol.for("TaskSystem"),
-  // TradeSystem merged into EconomySystem
+
   MarriageSystem: Symbol.for("MarriageSystem"),
   ConflictResolutionSystem: Symbol.for("ConflictResolutionSystem"),
-  // NormsSystem merged into ConflictResolutionSystem
-  // ResourceAttractionSystem merged into AmbientAwarenessSystem
+
+
 
   AmbientAwarenessSystem: Symbol.for("AmbientAwarenessSystem"),
 
   TimeSystem: Symbol.for("TimeSystem"),
-  // InteractionGameSystem eliminated - minimal functionality
-  // KnowledgeNetworkSystem eliminated - not used externally
+
+
   MovementSystem: Symbol.for("MovementSystem"),
 
   SimulationConfig: Symbol.for("SimulationConfig"),

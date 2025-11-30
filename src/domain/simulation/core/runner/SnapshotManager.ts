@@ -169,10 +169,10 @@ export class SnapshotManager {
           };
         }
 
-        // Get agent inventory from InventorySystem
+
         const inventory = this.runner.inventorySystem?.getAgentInventory(agent.id);
 
-        // Get equipped weapon from EnhancedCraftingSystem
+
         const equippedWeapon = this.runner.enhancedCraftingSystem?.getEquippedWeapon(agent.id);
 
         return {
@@ -193,12 +193,12 @@ export class SnapshotManager {
         : [];
     this.runner.capturedEvents.length = 0;
 
-    // Add enhanced crafting data to state
+
     if (this.runner.enhancedCraftingSystem) {
       const craftingSnapshot = this.runner.enhancedCraftingSystem.getCraftingSnapshot();
       stateSnapshot.enhancedCrafting = craftingSnapshot;
       
-      // DEBUG: Log crafting data every 10 ticks (~2.5 seconds)
+
       if (currentTick % 10 === 0) {
         logger.debug("📦 [Snapshot] enhancedCrafting data:", {
           tick: currentTick,
@@ -208,7 +208,7 @@ export class SnapshotManager {
         });
       }
     } else {
-      // DEBUG: Log if system is missing
+
       if (currentTick % 10 === 0) {
         logger.warn("⚠️ [Snapshot] enhancedCraftingSystem not available");
       }
@@ -247,7 +247,7 @@ export class SnapshotManager {
     snapshotState.genealogy =
       this.runner._genealogySystem?.getSerializedFamilyTree() ?? {};
 
-    // LivingLegendsSystem eliminated - return empty legends
+
     snapshotState.legends = {
       records: new Map(),
       activeLegends: [],
@@ -317,10 +317,10 @@ export class SnapshotManager {
           };
         }
 
-        // Get agent inventory from InventorySystem
+
         const inventory = this.runner.inventorySystem?.getAgentInventory(agent.id);
 
-        // Get equipped weapon from EnhancedCraftingSystem
+
         const equippedWeapon = this.runner.enhancedCraftingSystem?.getEquippedWeapon(agent.id);
 
         return {
@@ -336,7 +336,7 @@ export class SnapshotManager {
       });
     }
 
-    // Add enhanced crafting data to state
+
     if (this.runner.enhancedCraftingSystem) {
       snapshotState.enhancedCrafting =
         this.runner.enhancedCraftingSystem.getCraftingSnapshot();

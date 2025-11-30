@@ -23,7 +23,7 @@ import { StockpileType } from "../../../shared/constants/ZoneEnums";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
 import { getAnimalConfig } from "../../world/config/AnimalConfigs";
 import { WeaponId as CraftingWeaponId } from "../../../shared/constants/CraftingEnums";
-import type { QuestEvent } from "../../types/simulation/quests";
+
 import type { Stockpile } from "../../types/simulation/economy";
 
 /**
@@ -128,7 +128,7 @@ import type { TaskSystem } from "./TaskSystem";
 import type { CombatSystem } from "./CombatSystem";
 import type { AnimalSystem } from "./animals/AnimalSystem";
 import type { MovementSystem } from "./movement/MovementSystem";
-import type { QuestSystem } from "./QuestSystem";
+
 import type { TimeSystem } from "./TimeSystem";
 import type { EntityIndex } from "../core/EntityIndex";
 import type { GPUComputeService } from "../core/GPUComputeService";
@@ -190,7 +190,7 @@ export class AISystem extends EventEmitter {
   private combatSystem?: CombatSystem;
   private animalSystem?: AnimalSystem;
   private _movementSystem?: MovementSystem;
-  private questSystem?: QuestSystem;
+
   // @ts-expect-error Reserved for future use
   private _timeSystem?: TimeSystem;
   // @ts-expect-error Reserved for future use
@@ -288,7 +288,6 @@ export class AISystem extends EventEmitter {
    * @param combatSystem - Optional combat system dependency
    * @param animalSystem - Optional animal system dependency
    * @param movementSystem - Optional movement system dependency
-   * @param questSystem - Optional quest system dependency
    * @param timeSystem - Optional time system dependency
    * @param entityIndex - Optional entity index dependency
    */
@@ -313,7 +312,7 @@ export class AISystem extends EventEmitter {
     @inject(TYPES.CombatSystem) @optional() combatSystem?: CombatSystem,
     @inject(TYPES.AnimalSystem) @optional() animalSystem?: AnimalSystem,
     @inject(TYPES.MovementSystem) @optional() movementSystem?: MovementSystem,
-    @inject(TYPES.QuestSystem) @optional() questSystem?: QuestSystem,
+
     @inject(TYPES.TimeSystem) @optional() timeSystem?: TimeSystem,
     @inject(TYPES.EntityIndex)
     @optional()
@@ -334,7 +333,7 @@ export class AISystem extends EventEmitter {
     this.gpuService = gpuService;
     this.agentRegistry = agentRegistry;
     this.animalRegistry = animalRegistry;
-    // Use the singleton equipmentSystem so weapons crafted by EnhancedCraftingSystem are visible
+
     this.equipmentSystem = equipmentSystem;
     this.config = {
       updateIntervalMs: 50,
@@ -366,7 +365,7 @@ export class AISystem extends EventEmitter {
     this.combatSystem = combatSystem;
     this.animalSystem = animalSystem;
     this._movementSystem = movementSystem;
-    this.questSystem = questSystem;
+
     this._timeSystem = timeSystem;
 
     this.initializeSubsystems();
@@ -539,14 +538,8 @@ export class AISystem extends EventEmitter {
               this.craftingSystem!.craftBestWeapon(agentId),
           }
         : null,
-      questSystem: this.questSystem
-        ? {
-            startQuest: (
-              questId: string,
-            ): { success: boolean; event?: QuestEvent } =>
-              this.questSystem!.startQuest(questId),
-          }
-        : null,
+
+      questSystem: null,
       roleSystem: this.roleSystem
         ? {
             getAgentRole: (agentId: string): { roleType: string } | null => {
@@ -628,7 +621,7 @@ export class AISystem extends EventEmitter {
     combatSystem?: CombatSystem;
     animalSystem?: AnimalSystem;
     movementSystem?: MovementSystem;
-    questSystem?: QuestSystem;
+
     timeSystem?: TimeSystem;
   }): void {
     if (systems.needsSystem) this.needsSystem = systems.needsSystem;
@@ -643,7 +636,7 @@ export class AISystem extends EventEmitter {
     if (systems.combatSystem) this.combatSystem = systems.combatSystem;
     if (systems.animalSystem) this.animalSystem = systems.animalSystem;
     if (systems.movementSystem) this._movementSystem = systems.movementSystem;
-    if (systems.questSystem) this.questSystem = systems.questSystem;
+
     if (systems.timeSystem) this._timeSystem = systems.timeSystem;
 
     this.simplifiedDepsCache = null;
@@ -870,10 +863,10 @@ export class AISystem extends EventEmitter {
         aiState.currentAction = null;
         return;
       } else if (aiState.currentAction) {
-        // Check for high-priority preemption (emergency water/food collection)
-        // Preempt if new goal is:
-        // 1. Very high priority (>= 0.88) - emergency level
-        // 2. Significantly higher than current goal (> 0.05 difference)
+
+
+
+
         const highPriorityGoal = aiState.goalQueue.find(
           (g) =>
             g.priority >= 0.88 &&
@@ -883,15 +876,15 @@ export class AISystem extends EventEmitter {
           logger.info(
             `🚨 [AI] ${agentId}: PREEMPTING current goal (priority=${aiState.currentGoal.priority.toFixed(2)}) with higher priority goal (${highPriorityGoal.type}, priority=${highPriorityGoal.priority.toFixed(2)})`,
           );
-          // Remove the high priority goal from queue
+
           aiState.goalQueue = aiState.goalQueue.filter(
             (g) => g.id !== highPriorityGoal.id,
           );
-          // Save current goal back to queue if not completed
+
           if (aiState.currentGoal) {
             aiState.goalQueue.push(aiState.currentGoal);
           }
-          // Switch to high priority goal
+
           aiState.currentGoal = highPriorityGoal;
           aiState.currentAction = null;
           aiState.lastDecisionTime = now;
@@ -900,7 +893,7 @@ export class AISystem extends EventEmitter {
             newGoal: highPriorityGoal,
             timestamp: now,
           });
-          // Don't return - continue to plan action for new goal
+
         } else {
           return;
         }
@@ -914,7 +907,7 @@ export class AISystem extends EventEmitter {
 
     if (!aiState.currentGoal) {
       if (aiState.goalQueue.length > 0) {
-        // Sort queue by priority (highest first) before taking the next goal
+
         aiState.goalQueue.sort((a, b) => b.priority - a.priority);
         aiState.currentGoal = aiState.goalQueue.shift() ?? null;
         aiState.lastDecisionTime = now;
@@ -1134,7 +1127,7 @@ export class AISystem extends EventEmitter {
     const agentRole = this.roleSystem?.getAgentRole(agentId);
     const role = agentRole?.roleType;
 
-    // Build exclusion set from current goal and queue
+
     const excluded = new Set(excludeTargetIds);
     if (aiState.currentGoal?.targetId) {
       excluded.add(aiState.currentGoal.targetId);
@@ -1143,13 +1136,13 @@ export class AISystem extends EventEmitter {
       if (g.targetId) excluded.add(g.targetId);
     }
 
-    // Special handling for HUNTER role - needs weapon check and animal hunting
+
     if (role === RoleType.HUNTER) {
       const huntGoal = this.generateHunterGoal(agentId, now, excluded);
       if (huntGoal) return huntGoal;
     }
 
-    // For all other roles (including HUNTER fallback), use the generic generator
+
     return generateRoleBasedWorkGoal(
       agentId,
       role,
@@ -1169,14 +1162,14 @@ export class AISystem extends EventEmitter {
     now: number,
     excluded: Set<string>,
   ): AIGoal | null {
-    // Check if hunter has a weapon
+
     const hasWeapon =
       this.equipmentSystem.getEquippedItem(
         agentId,
         EquipmentSlot.MAIN_HAND,
       ) !== undefined;
 
-    // Try to claim a weapon from storage if we don't have one
+
     if (!hasWeapon) {
       const weapon = toolStorage.findToolForRole("hunter");
       if (weapon && toolStorage.claimTool(agentId, weapon)) {
@@ -1192,11 +1185,11 @@ export class AISystem extends EventEmitter {
         logger.debug(
           `⚠️ [AI] ${agentId}: No weapon available, falling back to gathering`,
         );
-        return null; // Fall through to regular gathering
+        return null;
       }
     }
 
-    // Only create HUNT goal if hunter now has a weapon
+
     const canHunt =
       this.equipmentSystem.getEquippedItem(
         agentId,
@@ -1313,24 +1306,24 @@ export class AISystem extends EventEmitter {
     aiState: AIState,
     now: number,
   ): Promise<AIGoal | null> {
-    // 1. Try full rule-based goals (combat, biological, social, cognitive, work)
+
     const simpleDeps = this.getSimplifiedDeps();
     const fullGoals = planGoalsFull(simpleDeps, aiState, now);
 
-    // 2. Evaluate collective needs (community tasks, resource shortages)
+
     const collectiveGoals = this.evaluateCollectiveGoals(aiState, now);
 
-    // 3. Combine individual + collective goals
+
     const allGoals = [...fullGoals, ...collectiveGoals].sort(
       (a, b) => b.priority - a.priority,
     );
 
-    // 4. For biological needs, enrich with resource targeting from legacy system
+
     const needs = this.needsSystem?.getNeeds(agentId);
     if (needs && allGoals.length > 0) {
       const topGoal = allGoals[0];
       
-      // If hunger goal, try to find food target
+
       if (topGoal.type === GoalType.SATISFY_HUNGER && !topGoal.targetPosition) {
         const foodGoal = this.createUrgentFoodGoal(agentId, now);
         if (foodGoal?.targetPosition) {
@@ -1340,7 +1333,7 @@ export class AISystem extends EventEmitter {
         }
       }
       
-      // If thirst goal, try to find water target
+
       if (topGoal.type === GoalType.SATISFY_THIRST && !topGoal.targetPosition) {
         const waterGoal = this.createUrgentWaterGoal(agentId, now);
         if (waterGoal?.targetPosition) {
@@ -1350,7 +1343,7 @@ export class AISystem extends EventEmitter {
         }
       }
       
-      // If rest goal, try to find rest zone
+
       if (topGoal.type === GoalType.REST && !topGoal.targetPosition) {
         const restGoal = this.createUrgentRestGoal(agentId, now);
         if (restGoal?.targetPosition) {
@@ -1360,7 +1353,7 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // 5. Return best goal from combined evaluation
+
     if (allGoals.length > 0) {
       const goal = allGoals[0];
       const jitter = Math.floor(Math.random() * this.GOAL_JITTER_RANGE_MS);
@@ -1433,7 +1426,7 @@ export class AISystem extends EventEmitter {
         return role ? { roleType: role.roleType } : undefined;
       },
 
-      // Combat context
+
       getEnemies: (id: string) =>
         this.combatSystem?.getNearbyEnemies(id, 200) ?? undefined,
       getNearbyPredators: (id: string) => {
@@ -1458,7 +1451,7 @@ export class AISystem extends EventEmitter {
           : null;
       },
 
-      // Construction context
+
       getBuildTasks: (id: string) => {
         const tasks = this.taskSystem?.getActiveTasks() ?? [];
         const pos = this.agentRegistry?.getPosition(id);
@@ -1488,7 +1481,7 @@ export class AISystem extends EventEmitter {
         }>;
       },
 
-      // Deposit context
+
       getDepositZone: (id: string) => {
         const inv = this.inventorySystem?.getAgentInventory(id);
         if (!inv) return undefined;
@@ -1496,11 +1489,11 @@ export class AISystem extends EventEmitter {
           ?.filter((z) => z.type === ZoneType.STORAGE)
           .map((z) => z.id);
         if (storageZones && storageZones.length > 0) return storageZones[0];
-        // Fallback to any work zone
+
         return this.gameState.zones?.find((z) => z.type === ZoneType.WORK)?.id;
       },
 
-      // Crafting context
+
       getEquippedWeapon: (id: string) =>
         this.combatSystem?.getEquipped(id) ?? "unarmed",
       canCraftWeapon: (id: string, weaponId: string) => {

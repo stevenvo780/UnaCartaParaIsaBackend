@@ -26,7 +26,7 @@
  * - NeedsEvaluator, CraftingEvaluator, DepositEvaluator, etc.
  */
 
-// Unified AI Context (replaces multiple *Deps interfaces)
+
 export type {
   IAIContext,
   Position,
@@ -42,7 +42,7 @@ export {
   type AIContextCallbacks,
 } from "./AIContextAdapter";
 
-// Work goal generation helper
+
 export {
   generateRoleBasedWorkGoal,
   type FindResourceFn,
@@ -76,7 +76,7 @@ export {
 
 export { PriorityManager } from "./core/PriorityManager";
 
-// NEW: Simplified Goal Planning System (declarative rules)
+
 export type { GoalRule, GoalContext } from "./core/GoalRule";
 export {
   evaluateRules,
@@ -122,7 +122,7 @@ export {
 
 export * from "./core/ActivityMapper";
 
-// Legacy evaluators - Only keeping the most complex ones
+
 export * from "./evaluators/NeedsEvaluator";
 export * from "./evaluators/CollectiveNeedsEvaluator";
 

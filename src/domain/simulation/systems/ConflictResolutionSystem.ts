@@ -63,7 +63,7 @@ export class ConflictResolutionSystem {
   private readonly MAX_HISTORY = 200;
   private firstConflictTime: number | null = null;
 
-  // Norms state (merged from NormsSystem)
+
   private violations: NormViolation[] = [];
   private sanctionHistory: SanctionRecord[] = [];
   private guardDispatches: GuardDispatch[] = [];
@@ -278,7 +278,7 @@ export class ConflictResolutionSystem {
     this.gameState.conflicts.history = this.getConflictHistory(50);
     this.gameState.conflicts.stats = this.getConflictStats();
 
-    // Update norms state (merged from NormsSystem)
+
     this.updateNormsState();
 
     if (this.gameState.norms) {
@@ -347,7 +347,7 @@ export class ConflictResolutionSystem {
     this.guardDispatches = [];
   }
 
-  // ============ NORMS FUNCTIONALITY (merged from NormsSystem) ============
+
 
   public handleCombatInZone(
     attackerId: string,
@@ -543,5 +543,5 @@ export class ConflictResolutionSystem {
     this.gameState.norms.stats = this.getNormCompliance();
   }
 
-  // ============ END NORMS FUNCTIONALITY ============
+
 }

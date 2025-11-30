@@ -168,7 +168,7 @@ export class WorldResourceSystem {
   ): WorldResourceInstance | undefined {
     const searchRadii = [200, 500, 1000, 2000];
 
-    // Debug: Log total resources in system
+
     if (type === WorldResourceType.WATER_SOURCE) {
       const totalResources = this.resources.size;
       const waterResources = Array.from(this.resources.values()).filter(
@@ -212,7 +212,7 @@ export class WorldResourceSystem {
       if (found) return nearest;
     }
 
-    // Debug: if type is water and we found nothing
+
     if (type === WorldResourceType.WATER_SOURCE) {
       logger.debug(
         `[WorldRes] getNearestResource(water_source): NO WATER FOUND within 2000 units`,
@@ -425,8 +425,8 @@ export class WorldResourceSystem {
           }
         }
 
-        // Spawn water sources in suitable biomes (WETLAND, FOREST, GRASSLAND, VILLAGE)
-        // with a small probability, separate from ocean/water tiles
+
+
         if (!isWaterTile && tile.biome) {
           const waterSuitableBiomes: string[] = [
             BiomeType.WETLAND,
@@ -435,7 +435,7 @@ export class WorldResourceSystem {
             BiomeType.VILLAGE,
           ];
           if (waterSuitableBiomes.includes(tile.biome)) {
-            // Low probability to spawn a freshwater source (pond, well, stream)
+
             const waterSpawnProb =
               tile.biome === BiomeType.WETLAND
                 ? 0.08

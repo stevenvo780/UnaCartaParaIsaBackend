@@ -8,7 +8,7 @@ import { AgentRegistry } from "./AgentRegistry";
 import { WorldGenerationService } from "../../world/worldGenerationService";
 import { logger } from "../../../infrastructure/utils/logger";
 import { WorldResourceSystem } from "../systems/WorldResourceSystem";
-// LivingLegendsSystem eliminated - decorative only
+
 import { LifeCycleSystem } from "../systems/LifeCycleSystem";
 import { NeedsSystem } from "../systems/needs/NeedsSystem";
 import { GenealogySystem } from "../systems/GenealogySystem";
@@ -22,7 +22,7 @@ import { GovernanceSystem } from "../systems/GovernanceSystem";
 
 import { HouseholdSystem } from "../systems/HouseholdSystem";
 import { BuildingSystem } from "../systems/BuildingSystem";
-// BuildingMaintenanceSystem merged into BuildingSystem
+
 import { ProductionSystem } from "../systems/ProductionSystem";
 import { EnhancedCraftingSystem } from "../systems/EnhancedCraftingSystem";
 import { AnimalSystem } from "../systems/animals/AnimalSystem";
@@ -30,22 +30,22 @@ import { ItemGenerationSystem } from "../systems/ItemGenerationSystem";
 import { ReputationSystem } from "../systems/ReputationSystem";
 
 import { RecipeDiscoverySystem } from "../systems/RecipeDiscoverySystem";
-import { QuestSystem } from "../systems/QuestSystem";
+
 import { TaskSystem } from "../systems/TaskSystem";
-// TradeSystem merged into EconomySystem
+
 import { MarriageSystem } from "../systems/MarriageSystem";
 import { ConflictResolutionSystem } from "../systems/ConflictResolutionSystem";
-// NormsSystem merged into ConflictResolutionSystem
+
 import { simulationEvents } from "./events";
 import { BatchedEventEmitter } from "./BatchedEventEmitter";
 import { CombatSystem } from "../systems/CombatSystem";
-// ResourceAttractionSystem merged into AmbientAwarenessSystem
+
 
 import { AmbientAwarenessSystem } from "../systems/AmbientAwarenessSystem";
 
 import { TimeSystem } from "../systems/TimeSystem";
-// InteractionGameSystem eliminated - minimal functionality
-// KnowledgeNetworkSystem eliminated - not used externally
+
+
 import { EntityType } from "../../../shared/constants/EntityEnums";
 import { MovementSystem } from "../systems/movement/MovementSystem";
 
@@ -151,7 +151,7 @@ export class SimulationRunner {
   @inject(TYPES.WorldResourceSystem)
   public readonly worldResourceSystem!: WorldResourceSystem;
 
-  // LivingLegendsSystem eliminated - decorative only
+
 
   @inject(TYPES.LifeCycleSystem)
   public readonly lifeCycleSystem!: LifeCycleSystem;
@@ -183,7 +183,7 @@ export class SimulationRunner {
 
   @inject(TYPES.BuildingSystem) public readonly buildingSystem!: BuildingSystem;
 
-  // BuildingMaintenanceSystem merged into BuildingSystem
+
 
   @inject(TYPES.ProductionSystem)
   public readonly productionSystem!: ProductionSystem;
@@ -204,19 +204,19 @@ export class SimulationRunner {
   @inject(TYPES.RecipeDiscoverySystem)
   public readonly _recipeDiscoverySystem!: RecipeDiscoverySystem;
 
-  @inject(TYPES.QuestSystem) public readonly questSystem!: QuestSystem;
+
 
   @inject(TYPES.TaskSystem) public readonly taskSystem!: TaskSystem;
 
-  // TradeSystem merged into EconomySystem
+
 
   @inject(TYPES.MarriageSystem) public readonly marriageSystem!: MarriageSystem;
 
   @inject(TYPES.ConflictResolutionSystem)
   public readonly conflictResolutionSystem!: ConflictResolutionSystem;
 
-  // NormsSystem merged into ConflictResolutionSystem
-  // ResourceAttractionSystem merged into AmbientAwarenessSystem
+
+
 
   @inject(TYPES.WorldGenerationService)
   public readonly worldGenerationService!: WorldGenerationService;
@@ -226,9 +226,9 @@ export class SimulationRunner {
 
   @inject(TYPES.TimeSystem) public readonly timeSystem!: TimeSystem;
 
-  // InteractionGameSystem eliminated - minimal functionality
 
-  // KnowledgeNetworkSystem eliminated - not used externally
+
+
 
   @inject(TYPES.MovementSystem) public readonly movementSystem!: MovementSystem;
 
@@ -418,7 +418,7 @@ export class SimulationRunner {
       taskSystem: this.taskSystem,
       combatSystem: this.combatSystem,
       animalSystem: this.animalSystem,
-      questSystem: this.questSystem,
+
       timeSystem: this.timeSystem,
     });
 
@@ -614,7 +614,7 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    // MarketSystem merged into EconomySystem - no longer separate
+
 
     this.scheduler.registerSystem({
       name: "ReputationSystem",
@@ -659,7 +659,7 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    // BuildingMaintenanceSystem merged into BuildingSystem
+
 
     this.scheduler.registerSystem({
       name: "EnhancedCraftingSystem",
@@ -682,14 +682,9 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    this.scheduler.registerSystem({
-      name: "QuestSystem",
-      rate: TickRate.SLOW,
-      update: () => this.questSystem.update(),
-      enabled: true,
-    });
 
-    // TradeSystem merged into EconomySystem
+
+
 
     this.scheduler.registerSystem({
       name: "MarriageSystem",
@@ -706,7 +701,7 @@ export class SimulationRunner {
       minEntities: 10,
     });
 
-    // ResourceAttractionSystem merged into AmbientAwarenessSystem
+
 
     this.scheduler.registerSystem({
       name: "AmbientAwarenessSystem",
@@ -715,9 +710,9 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    // InteractionGameSystem eliminated - minimal functionality
 
-    // LivingLegendsSystem eliminated - decorative only
+
+
 
     this.scheduler.registerSystem({
       name: "ItemGenerationSystem",
@@ -733,7 +728,7 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    // NormsSystem merged into ConflictResolutionSystem - no longer separate
+
 
     this.scheduler.registerSystem({
       name: "SharedKnowledgeSystem",
@@ -742,7 +737,7 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    // KnowledgeNetworkSystem eliminated - not used externally
+
 
     this.scheduler.registerSystem({
       name: "ChunkLoadingSystem",

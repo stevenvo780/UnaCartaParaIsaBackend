@@ -18,9 +18,9 @@ import { RoleType } from "../../../../../shared/constants/RoleEnums";
 import type { GoalRule } from "./GoalRule";
 import { needUtility, socialNeedUtility } from "./GoalRule";
 
-// ============================================================================
-// REGLAS BIOLÓGICAS (reemplazan BiologicalDriveEvaluator)
-// ============================================================================
+
+
+
 
 export const hungerRule: GoalRule = {
   id: "bio_hunger",
@@ -32,7 +32,7 @@ export const hungerRule: GoalRule = {
   },
   priority: (ctx) => {
     const utility = needUtility(ctx.needs?.hunger);
-    // Crítico si muy bajo
+
     if ((ctx.needs?.hunger ?? 100) < 15) return 0.95;
     return Math.min(0.9, utility * 0.85);
   },
@@ -56,7 +56,7 @@ export const thirstRule: GoalRule = {
   },
   priority: (ctx) => {
     const utility = needUtility(ctx.needs?.thirst);
-    // Sed es más urgente que hambre
+
     if ((ctx.needs?.thirst ?? 100) < 15) return 0.98;
     return Math.min(0.92, utility * 0.9);
   },
@@ -92,9 +92,9 @@ export const energyRule: GoalRule = {
   }),
 };
 
-// ============================================================================
-// REGLAS SOCIALES (reemplazan SocialDriveEvaluator)
-// ============================================================================
+
+
+
 
 export const socialRule: GoalRule = {
   id: "social_interact",
@@ -141,16 +141,16 @@ export const mentalHealthRule: GoalRule = {
   }),
 };
 
-// ============================================================================
-// REGLAS COGNITIVAS (reemplazan CognitiveDriveEvaluator)
-// ============================================================================
+
+
+
 
 export const workDriveRule: GoalRule = {
   id: "cognitive_work",
   goalType: GoalType.WORK,
   category: "cognitive",
   condition: (ctx) => {
-    // Necesita rol asignado (no IDLE) o alta diligencia
+
     const hasRole = ctx.roleType && ctx.roleType !== RoleType.IDLE;
     const highDiligence = ctx.aiState.personality.diligence > 0.6;
     return hasRole || highDiligence;
@@ -158,14 +158,14 @@ export const workDriveRule: GoalRule = {
   priority: (ctx) => {
     let base = 0.3;
 
-    // Bonus por workEthic
+
     if (ctx.aiState.personality.workEthic === WorkEthic.WORKAHOLIC) base += 0.3;
     if (ctx.aiState.personality.workEthic === WorkEthic.LAZY) base -= 0.2;
 
-    // Bonus por rol asignado
+
     if (ctx.roleType && ctx.roleType !== RoleType.IDLE) base += 0.2;
 
-    // Bonus por diligencia
+
     base += ctx.aiState.personality.diligence * 0.2;
 
     return Math.max(0, Math.min(1, base));
@@ -180,14 +180,14 @@ export const exploreDriveRule: GoalRule = {
   condition: (ctx) => {
     const lastExplore = ctx.aiState.memory.lastExplorationTime ?? 0;
     const timeSinceExplore = ctx.now - lastExplore;
-    // Explorar si hace mucho que no explora o es aventurero
+
     return (
       timeSinceExplore > 60000 ||
       ctx.aiState.personality.explorationType === ExplorationType.ADVENTUROUS
     );
   },
   priority: (ctx) => {
-    // Prioridad base reducida para que trabajo tenga precedencia
+
     let base = 0.15;
 
     if (
@@ -204,10 +204,10 @@ export const exploreDriveRule: GoalRule = {
     if (timeSinceExplore > 60000) base += 0.1;
     if (timeSinceExplore > 300000) base += 0.2;
 
-    // Bonus por curiosidad (reducido)
+
     base += ctx.aiState.personality.curiosity * 0.1;
 
-    // Cap máximo de 0.55 para que trabajo/deposit puedan ganar
+
     return Math.max(0, Math.min(0.55, base));
   },
   minPriority: 0.2,
@@ -219,15 +219,15 @@ export const exploreDriveRule: GoalRule = {
   }),
 };
 
-// ============================================================================
-// REGLA DE EXPLORACIÓN POR DEFECTO (reemplaza AttentionEvaluator.evaluateDefaultExploration)
-// ============================================================================
+
+
+
 
 export const defaultExplorationRule: GoalRule = {
   id: "default_explore",
   goalType: GoalType.EXPLORE,
   category: "exploration",
-  // Siempre disponible como fallback con prioridad muy baja
+
   condition: () => true,
   priority: (ctx) => 0.15 + ctx.aiState.personality.curiosity * 0.05,
   minPriority: 0.1,
@@ -239,9 +239,9 @@ export const defaultExplorationRule: GoalRule = {
   }),
 };
 
-// ============================================================================
-// REGLAS DE REPRODUCCIÓN (reemplazan ReproductionEvaluator)
-// ============================================================================
+
+
+
 
 /**
  * Calcula el drive de reproducción basado en bienestar general.
@@ -268,7 +268,7 @@ function calculateReproductionDrive(
     (thirst / 100) * wWater;
 
   if (drive < 0.8) return 0;
-  return (drive - 0.8) * 5; // Scale 0.8-1.0 to 0-1
+  return (drive - 0.8) * 5;
 }
 
 export const reproductionRule: GoalRule = {
@@ -282,7 +282,7 @@ export const reproductionRule: GoalRule = {
   },
   priority: (ctx) => {
     const drive = calculateReproductionDrive(ctx.needs!, ctx.stats ?? null);
-    // Si hay mate cerca, prioridad completa; si no, reducida para búsqueda
+
     const hasMate = ctx.findPotentialMate?.(ctx.entityId);
     return hasMate ? drive : drive * 0.8;
   },
@@ -309,9 +309,9 @@ export const reproductionRule: GoalRule = {
   },
 };
 
-// ============================================================================
-// REGLAS DE EXPANSIÓN (reemplazan ExpansionEvaluator)
-// ============================================================================
+
+
+
 
 const DEFAULT_INVENTORY_CAPACITY = 50;
 const GATHER_TRIGGER_THRESHOLD = 0.8;
@@ -358,9 +358,9 @@ export const territoryExpansionRule: GoalRule = {
   },
 };
 
-// ============================================================================
-// REGLAS DE COMBATE (reemplazan CombatEvaluator - parcialmente)
-// ============================================================================
+
+
+
 
 const FLEE_COOLDOWN_MS = 5000;
 const fleeCooldowns: Map<string, number> = new Map();
@@ -378,7 +378,7 @@ export const fleeFromEnemyRule: GoalRule = {
   condition: (ctx) => {
     if (!ctx.enemies || ctx.enemies.length === 0) return false;
     if (!ctx.position) return false;
-    if (ctx.isWarrior) return false; // Warriors don't flee
+    if (ctx.isWarrior) return false;
     return canFlee(ctx.entityId, ctx.now);
   },
   priority: (ctx) => {
@@ -391,7 +391,7 @@ export const fleeFromEnemyRule: GoalRule = {
   minPriority: 0.8,
   isCritical: true,
   getData: (ctx) => {
-    // Find nearest enemy and calculate flee direction
+
     const myPos = ctx.position!;
     const nearestEnemy = ctx.enemies![0];
     const enemyPos = ctx.getEntityPosition?.(nearestEnemy);
@@ -425,14 +425,14 @@ export const fleeFromPredatorRule: GoalRule = {
     if (!ctx.nearbyPredators || ctx.nearbyPredators.length === 0) return false;
     if (!ctx.position) return false;
 
-    // Only flee if predator is very close (< 80 units)
+
     const closest = ctx.nearbyPredators[0];
     const dist = Math.hypot(
       closest.position.x - ctx.position.x,
       closest.position.y - ctx.position.y,
     );
 
-    // Warriors can fight predators
+
     if (ctx.isWarrior) return false;
 
     return dist < 80 && canFlee(ctx.entityId, ctx.now);
@@ -443,7 +443,7 @@ export const fleeFromPredatorRule: GoalRule = {
       closest.position.x - ctx.position!.x,
       closest.position.y - ctx.position!.y,
     );
-    // Closer = higher priority
+
     return Math.min(0.9, 0.7 + (80 - dist) / 300);
   },
   minPriority: 0.7,
@@ -477,7 +477,7 @@ export const attackPredatorRule: GoalRule = {
     if (!ctx.nearbyPredators || ctx.nearbyPredators.length === 0) return false;
     if (!ctx.position) return false;
 
-    // Only warriors or high morale agents fight predators
+
     const stats = ctx.stats ?? {};
     const morale = stats.morale ?? 50;
     const health = stats.health ?? 100;
@@ -498,16 +498,16 @@ export const attackPredatorRule: GoalRule = {
   },
 };
 
-// ============================================================================
-// REGLAS DE CONSTRUCCIÓN (reemplazan ConstructionEvaluator)
-// ============================================================================
+
+
+
 
 export const constructionRule: GoalRule = {
   id: "construction",
   goalType: GoalType.CONSTRUCTION,
   category: "work",
   condition: (ctx) => {
-    // Necesita tareas de construcción disponibles
+
     if (!ctx.buildTasks || ctx.buildTasks.length === 0) return false;
     if (!ctx.position) return false;
     return true;
@@ -519,7 +519,7 @@ export const constructionRule: GoalRule = {
   },
   minPriority: 0.35,
   getData: (ctx) => {
-    const best = ctx.buildTasks![0]; // Ya viene ordenado por score
+    const best = ctx.buildTasks![0];
     return {
       targetZoneId: best.zoneId,
       data: {
@@ -530,9 +530,9 @@ export const constructionRule: GoalRule = {
   },
 };
 
-// ============================================================================
-// REGLAS DE DEPÓSITO (reemplazan DepositEvaluator)
-// ============================================================================
+
+
+
 
 export const depositRule: GoalRule = {
   id: "deposit",
@@ -544,7 +544,7 @@ export const depositRule: GoalRule = {
 
     const cap = ctx.inventoryCapacity ?? 50;
     const loadRatio = ctx.inventoryLoad / cap;
-    // Depositar cuando tiene al menos 10% de carga
+
     return loadRatio >= 0.1;
   },
   priority: (ctx) => {
@@ -552,16 +552,16 @@ export const depositRule: GoalRule = {
     const loadRatio = ctx.inventoryLoad! / cap;
     const conscientiousness = ctx.aiState.personality.conscientiousness ?? 0.5;
 
-    // Prioridad alta cuando inventario tiene carga significativa
-    // loadRatio >= 0.3 -> priority >= 0.7
-    // loadRatio >= 0.5 -> priority >= 0.8
-    // loadRatio >= 0.7 -> priority >= 0.9
+
+
+
+
     let priority = 0.5 + loadRatio * 0.5;
 
-    // Bonus por conscientiousness
+
     priority += conscientiousness * 0.1;
 
-    // Bonus crítico por recursos importantes (agua/comida)
+
     if (ctx.hasWater || ctx.hasFood) {
       priority += 0.15;
     }
@@ -579,37 +579,37 @@ export const depositRule: GoalRule = {
   }),
 };
 
-// ============================================================================
-// REGLAS DE CRAFTING (reemplazan CraftingEvaluator)
-// ============================================================================
+
+
+
 
 export const craftWeaponRule: GoalRule = {
   id: "craft_weapon",
   goalType: GoalType.CRAFT,
   category: "work",
   condition: (ctx) => {
-    // Solo craftea si está desarmado
+
     const equipped = ctx.equippedWeapon ?? "unarmed";
     if (equipped !== "unarmed") return false;
 
-    // No craftear si hay armas disponibles en storage
+
     if (ctx.hasAvailableWeapons) return false;
 
-    // Necesita poder craftear algo
+
     if (!ctx.canCraftClub && !ctx.canCraftDagger) return false;
 
-    // Necesita zona de crafting
+
     if (!ctx.craftZoneId) return false;
 
     return true;
   },
   priority: (ctx) => {
-    // Prioridad alta para cazadores/guardias que NECESITAN armas
+
     const role = (ctx.roleType ?? "").toLowerCase();
     const needsWeaponForJob =
       role === "hunter" || role === "guard" || role === "warrior";
 
-    // 0.92 para roles de combate, 0.72 para otros
+
     return needsWeaponForJob ? 0.92 : 0.72;
   },
   minPriority: 0.7,
@@ -630,9 +630,9 @@ export const craftWeaponRule: GoalRule = {
   },
 };
 
-// ============================================================================
-// REGLAS DE ASISTENCIA (reemplazan AssistEvaluator)
-// ============================================================================
+
+
+
 
 export const assistRule: GoalRule = {
   id: "assist",
@@ -658,9 +658,9 @@ export const assistRule: GoalRule = {
   }),
 };
 
-// ============================================================================
-// REGLAS DE COMERCIO (reemplazan TradeEvaluator)
-// ============================================================================
+
+
+
 
 export const tradeRule: GoalRule = {
   id: "trade",
@@ -679,9 +679,9 @@ export const tradeRule: GoalRule = {
   }),
 };
 
-// ============================================================================
-// REGLAS DE OPORTUNIDADES DE TRABAJO (reemplazan OpportunitiesEvaluator)
-// ============================================================================
+
+
+
 
 export const roleWorkRule: GoalRule = {
   id: "role_work",
@@ -689,8 +689,8 @@ export const roleWorkRule: GoalRule = {
   category: "work",
   condition: (ctx) => {
     if (!ctx.roleType) return false;
-    // No trabajar de noche
-    // (el contexto debería filtrar esto antes si es necesario)
+
+
     return true;
   },
   priority: (ctx) => {
@@ -738,9 +738,9 @@ export const huntingRule: GoalRule = {
   }),
 };
 
-// ============================================================================
-// REGLAS DE ATENCIÓN (reemplazan AttentionEvaluator)
-// ============================================================================
+
+
+
 
 export const inspectionRule: GoalRule = {
   id: "inspection",
@@ -762,9 +762,9 @@ export const inspectionRule: GoalRule = {
   }),
 };
 
-// ============================================================================
-// REGLAS DE CONTRIBUCIÓN A EDIFICIOS (reemplazan BuildingContributionEvaluator)
-// ============================================================================
+
+
+
 
 export const buildingContributionRule: GoalRule = {
   id: "building_contribution",
@@ -772,7 +772,7 @@ export const buildingContributionRule: GoalRule = {
   category: "work",
   condition: (ctx) => {
     if (!ctx.contributableBuilding) return false;
-    // Necesita recursos para contribuir
+
     const hasResources =
       (ctx.inventory?.wood ?? 0) > 5 || (ctx.inventory?.stone ?? 0) > 5;
     return hasResources;
@@ -785,13 +785,13 @@ export const buildingContributionRule: GoalRule = {
   }),
 };
 
-// ============================================================================
-// REGLAS DE QUESTS (reemplazan QuestEvaluator)
-// ============================================================================
+
+
+
 
 export const questRule: GoalRule = {
   id: "quest",
-  goalType: GoalType.WORK, // Se sobreescribe en getData
+  goalType: GoalType.WORK,
   category: "work",
   condition: (ctx) => {
     if (!ctx.activeQuestGoal) return false;
@@ -801,7 +801,7 @@ export const questRule: GoalRule = {
   minPriority: 0.5,
   getData: (ctx) => {
     const quest = ctx.activeQuestGoal!;
-    // Mapear goalType string a GoalType enum
+
     let goalType = GoalType.WORK;
     if (quest.goalType === "gather") goalType = GoalType.GATHER;
     if (quest.goalType === "explore") goalType = GoalType.EXPLORE;
@@ -818,9 +818,9 @@ export const questRule: GoalRule = {
   },
 };
 
-// ============================================================================
-// TODAS LAS REGLAS CORE (las más usadas)
-// ============================================================================
+
+
+
 
 /**
  * Reglas core que reemplazan:
@@ -830,18 +830,18 @@ export const questRule: GoalRule = {
  * - AttentionEvaluator (parcialmente)
  */
 export const coreRules: GoalRule[] = [
-  // Biológicas (críticas primero)
+
   thirstRule,
   hungerRule,
   energyRule,
-  // Sociales
+
   mentalHealthRule,
   socialRule,
   funRule,
-  // Cognitivas
+
   workDriveRule,
   exploreDriveRule,
-  // Fallback
+
   defaultExplorationRule,
 ];
 
@@ -850,16 +850,16 @@ export const coreRules: GoalRule[] = [
  * Usar cuando el contexto tiene datos de combat/enemies.
  */
 export const extendedRules: GoalRule[] = [
-  // Combat (crítico primero)
+
   fleeFromEnemyRule,
   fleeFromPredatorRule,
   attackPredatorRule,
-  // Core rules
+
   ...coreRules,
-  // Expansion
+
   gatherExpansionRule,
   territoryExpansionRule,
-  // Reproduction
+
   reproductionRule,
 ];
 
@@ -868,30 +868,30 @@ export const extendedRules: GoalRule[] = [
  * Usar para agentes que necesitan el sistema completo.
  */
 export const fullRules: GoalRule[] = [
-  // Combat (crítico primero)
+
   fleeFromEnemyRule,
   fleeFromPredatorRule,
   attackPredatorRule,
-  // Crafting (alta prioridad para roles de combate)
+
   craftWeaponRule,
-  // Core rules (biological, social, cognitive)
+
   ...coreRules,
-  // Social avanzado
+
   assistRule,
-  // Work
+
   constructionRule,
   depositRule,
   roleWorkRule,
   huntingRule,
   buildingContributionRule,
   tradeRule,
-  // Quests
+
   questRule,
-  // Expansion
+
   gatherExpansionRule,
   territoryExpansionRule,
-  // Exploration
+
   inspectionRule,
-  // Reproduction
+
   reproductionRule,
 ];

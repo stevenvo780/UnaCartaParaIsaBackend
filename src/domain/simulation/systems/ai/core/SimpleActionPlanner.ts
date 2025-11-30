@@ -59,7 +59,7 @@ export class SimpleActionPlanner {
     const timestamp = Date.now();
     const rule = ACTION_PLAN_RULES[goal.type];
 
-    // Handle special cases first (HUNT needs weapon check, EXPLORE needs random pos, WORK needs resource search)
+
     if (goal.type === GoalType.HUNT) {
       return this.handleHunt(agentId, goal, timestamp);
     }
@@ -99,7 +99,7 @@ export class SimpleActionPlanner {
     timestamp: number,
   ): AgentAction | null {
     if (!goal.targetPosition) {
-      // Fallback to zone if no position
+
       if (goal.targetZoneId) {
         return {
           actionType: ActionType.WORK,
@@ -149,19 +149,19 @@ export class SimpleActionPlanner {
     const agentPos = this.getPosition(agentId);
     const zones = this.deps.gameState.zones ?? [];
 
-    // Find target zone
+
     let targetZone = goal.targetZoneId
       ? zones.find((z) => z.id === goal.targetZoneId)
       : undefined;
 
-    // Fallback: find any zone of the right type
+
     if (!targetZone && rule.zoneTypes?.length) {
       targetZone = zones.find((z) =>
         rule.zoneTypes!.includes(z.type as ZoneType),
       );
     }
 
-    // Check if we're already in the zone
+
     if (agentPos && targetZone?.bounds) {
       const inZone =
         agentPos.x >= targetZone.bounds.x &&
@@ -180,7 +180,7 @@ export class SimpleActionPlanner {
       }
     }
 
-    // Need to move to zone
+
     if (targetZone) {
       return {
         actionType: ActionType.MOVE,
@@ -190,7 +190,7 @@ export class SimpleActionPlanner {
       };
     }
 
-    // No zone found, try direct position
+
     if (goal.targetPosition) {
       return {
         actionType: ActionType.MOVE,
@@ -200,7 +200,7 @@ export class SimpleActionPlanner {
       };
     }
 
-    // Ultimate fallback for social goals: socialize in place
+
     if (rule.executeAction === ActionType.SOCIALIZE) {
       return {
         actionType: ActionType.SOCIALIZE,
@@ -224,7 +224,7 @@ export class SimpleActionPlanner {
     const taskType = (goal.data?.taskType as string)?.toLowerCase();
     const resourceType = (goal.data?.resourceType as string)?.toLowerCase();
 
-    // If goal already has a target, use range action logic
+
     if (goal.targetId && goal.targetPosition) {
       const agentPos = this.getPosition(agentId);
       if (agentPos) {
@@ -250,7 +250,7 @@ export class SimpleActionPlanner {
       }
     }
 
-    // If goal has zone, just go there
+
     if (goal.targetZoneId) {
       return {
         actionType: ActionType.WORK,
@@ -261,7 +261,7 @@ export class SimpleActionPlanner {
       };
     }
 
-    // Find resource types to search for
+
     let searchTypes: string[] = [];
     if (taskType && TASK_SEARCH_MAP[taskType]) {
       searchTypes = TASK_SEARCH_MAP[taskType];
@@ -269,7 +269,7 @@ export class SimpleActionPlanner {
       searchTypes = RESOURCE_SEARCH_MAP[resourceType];
     }
 
-    // Search for resources
+
     if (searchTypes.length > 0 && this.deps.findNearestResource) {
       for (const searchType of searchTypes) {
         const resource = this.deps.findNearestResource(agentId, searchType);
@@ -300,7 +300,7 @@ export class SimpleActionPlanner {
       }
     }
 
-    // For food gathering, also try hunting
+
     if (
       (taskType === "gather_food" || resourceType === "food") &&
       this.deps.findNearestHuntableAnimal
@@ -366,7 +366,7 @@ export class SimpleActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
-    // Weapon check
+
     const hasWeapon = this.deps.agentHasWeapon?.(agentId) ?? false;
     if (!hasWeapon) {
       const claimed = this.deps.tryClaimWeapon?.(agentId) ?? false;
@@ -376,7 +376,7 @@ export class SimpleActionPlanner {
       }
     }
 
-    // Track moving animal
+
     let targetId = goal.targetId;
     let targetPosition = goal.targetPosition;
 
@@ -390,7 +390,7 @@ export class SimpleActionPlanner {
       }
     }
 
-    // Find new target if needed
+
     if (!targetId && this.deps.findNearestHuntableAnimal) {
       const nearest = this.deps.findNearestHuntableAnimal(agentId);
       if (nearest) {
@@ -399,7 +399,7 @@ export class SimpleActionPlanner {
       }
     }
 
-    // Attack or move toward target
+
     if (targetId && targetPosition) {
       const agentPos = this.getPosition(agentId);
       if (agentPos) {
@@ -427,7 +427,7 @@ export class SimpleActionPlanner {
       }
     }
 
-    // No target found - explore
+
     return this.handleExplore(agentId, goal, timestamp);
   }
 
@@ -439,7 +439,7 @@ export class SimpleActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
-    // Use provided target if available
+
     if (goal.data?.targetRegionX !== undefined) {
       return {
         actionType: ActionType.MOVE,
@@ -460,7 +460,7 @@ export class SimpleActionPlanner {
       };
     }
 
-    // Generate random explore position
+
     const currentPos = this.getPosition(agentId);
     if (!currentPos) return null;
 
@@ -479,7 +479,7 @@ export class SimpleActionPlanner {
       targetY = currentPos.y + (Math.random() - 0.5) * EXPLORE_RANGE;
     }
 
-    // Clamp to map bounds
+
     targetX = Math.max(50, Math.min(mapWidth - 50, targetX));
     targetY = Math.max(50, Math.min(mapHeight - 50, targetY));
 

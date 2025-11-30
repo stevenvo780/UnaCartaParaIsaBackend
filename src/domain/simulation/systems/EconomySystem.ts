@@ -95,7 +95,7 @@ export class EconomySystem {
   private entityIndex?: EntityIndex;
   private agentRegistry?: AgentRegistry;
 
-  // Market-related state (merged from MarketSystem)
+
   private recentTrades = new Map<string, number>();
   private readonly TRADE_COOLDOWN_MS = 30000;
 
@@ -158,11 +158,11 @@ export class EconomySystem {
       this.lastSalaryPayment = now;
     }
 
-    // Market update (merged from MarketSystem)
+
     this.updateMarket();
   }
 
-  // ============ MARKET FUNCTIONALITY (merged from MarketSystem) ============
+
 
   private updateMarket(): void {
     this.autoTradeAmongAgents();
@@ -342,7 +342,7 @@ export class EconomySystem {
     }
   }
 
-  // ============ END MARKET FUNCTIONALITY ============
+
 
   private cleanupOldResiduals(): void {
     if (this.yieldResiduals.size > 100) {

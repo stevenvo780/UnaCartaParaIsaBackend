@@ -196,7 +196,7 @@ export class DeltaEncoder {
       }
     }
 
-    // Enhanced crafting data - always include if present
+
     if (current.enhancedCrafting) {
       changes.enhancedCrafting = current.enhancedCrafting;
     }

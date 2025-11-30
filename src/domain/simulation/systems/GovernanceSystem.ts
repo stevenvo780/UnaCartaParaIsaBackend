@@ -331,7 +331,7 @@ export class GovernanceSystem {
     const stats = this.getSettlementStats();
     const now = Date.now();
 
-    // Check and resolve/create food demands
+
     const foodPolicy = this.policies.get(GovernancePolicyId.FOOD_SECURITY);
     if (foodPolicy?.enabled) {
       const foodThreshold = foodPolicy.threshold.foodPerCapita ?? 5;
@@ -340,7 +340,7 @@ export class GovernanceSystem {
       );
 
       if (stats.foodPerCapita >= foodThreshold && activeFoodDemand) {
-        // Resolve the demand when threshold is met
+
         activeFoodDemand.resolvedAt = now;
         this.recordEvent({
           timestamp: now,
@@ -363,18 +363,18 @@ export class GovernanceSystem {
       }
     }
 
-    // Check and resolve/create water demands
+
     const waterPolicy = this.policies.get(GovernancePolicyId.WATER_SUPPLY);
     if (waterPolicy?.enabled) {
       const waterEmergencyThreshold = waterPolicy.threshold.waterPerCapita ?? 8;
-      // Resolution threshold is higher to ensure preventive storage
+
       const waterSafeThreshold = 15;
       const activeWaterDemand = Array.from(this.demands.values()).find(
         (d) => d.type === DemandType.WATER_SHORTAGE && !d.resolvedAt,
       );
 
       if (stats.waterPerCapita >= waterSafeThreshold && activeWaterDemand) {
-        // Resolve the demand only when safe storage threshold is met
+
         activeWaterDemand.resolvedAt = now;
         this.recordEvent({
           timestamp: now,
@@ -452,7 +452,7 @@ export class GovernanceSystem {
       `🏛️ [GOVERNANCE] Demand created: ${type} (priority: ${modifiedPriority}) - ${reason}`,
     );
 
-    // Push updated snapshot so AISystem can see the new demand
+
     this.pushSnapshot();
 
     if (this.config.autoGenerateProjects) {
@@ -500,9 +500,9 @@ export class GovernanceSystem {
 
     this.applyDemandEffect(demand.type, solution);
 
-    // Resource shortage demands (FOOD_SHORTAGE, WATER_SHORTAGE) are NOT resolved immediately
-    // because they require agents to gather resources over time.
-    // They will be resolved when the policy condition is met again (e.g., waterPerCapita >= threshold).
+
+
+
     const ongoingDemandTypes = [DemandType.FOOD_SHORTAGE, DemandType.WATER_SHORTAGE];
     if (!ongoingDemandTypes.includes(demand.type)) {
       demand.resolvedAt = Date.now();
@@ -768,7 +768,7 @@ export class GovernanceSystem {
     const snapshot = this.getSnapshot();
     this.state.governance = snapshot;
 
-    // Debug: log demands in snapshot
+
     if (snapshot.demands.length > 0) {
       const demandTypes = snapshot.demands.map((d) => d.type).join(", ");
       logger.debug(`🏛️ [GOVERNANCE] Snapshot pushed: demands=[${demandTypes}]`);

@@ -178,7 +178,7 @@ export class AnimalBehavior {
       !animal.currentTarget ||
       animal.currentTarget.type !== AnimalTargetType.FOOD
     ) {
-      // Prioritize wounded prey (health < 50%)
+
       const prey = availablePrey
         .filter((p) => config.preyTypes!.includes(p.type) && !p.isDead)
         .sort((a, b) => {
@@ -188,7 +188,7 @@ export class AnimalBehavior {
           const bMaxHealth = (bConfig?.maxHealth || 100) * b.genes.health;
           const aHealthPct = a.health / aMaxHealth;
           const bHealthPct = b.health / bMaxHealth;
-          return aHealthPct - bHealthPct; // Prefer lower health
+          return aHealthPct - bHealthPct;
         })[0];
 
       if (prey) {
@@ -216,14 +216,14 @@ export class AnimalBehavior {
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < 25) {
-        // Attack the prey - deal damage based on predator size (proxy for strength)
+
         const attackDamage = (config.attackDamage || 15) * animal.genes.size;
         onDamage(prey.id, attackDamage);
 
-        // Small cooldown between attacks
+
         animal.stateEndTime = Date.now() + 1500;
 
-        // Trigger flee response in prey
+
         prey.state = AnimalState.FLEEING;
         prey.fleeTarget = animal.id;
         prey.needs.fear = 100;

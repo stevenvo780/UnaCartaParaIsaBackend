@@ -457,7 +457,7 @@ export class LifeCycleSystem extends EventEmitter {
       timestamp: now,
     });
 
-    // Child spawns near the mother's position with small random offset
+
     const motherPos = mother.position || { x: 1000, y: 1000 };
     const spawnOffset = {
       x: (RandomUtils.float() - 0.5) * 50,
@@ -865,8 +865,8 @@ export class LifeCycleSystem extends EventEmitter {
     const MAX_ATTEMPTS = 100;
     const SPAWN_RADIUS = 200;
 
-    // Spawn near the initial infrastructure (around x=200, y=150) rather than world center
-    // This ensures new agents are close to workbench, storage, and house zones
+
+
     const baseX = 200;
     const baseY = 150;
 
