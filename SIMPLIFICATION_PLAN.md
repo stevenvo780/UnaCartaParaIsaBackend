@@ -1,76 +1,71 @@
 # Plan de Simplificación de Sistemas
 
-## Estado Actual: 31 Sistemas Principales
+## Estado Actual: ~~31~~ → 28 Sistemas Principales
 
 Tras el análisis, hay oportunidades claras de consolidación y eliminación.
 
+**Progreso:**
+- ✅ InteractionGameSystem: ELIMINADO
+- ✅ LivingLegendsSystem: ELIMINADO  
+- ✅ BuildingMaintenanceSystem: FUSIONADO en BuildingSystem
+- 🔄 SharedKnowledgeSystem: Pendiente (reclasificar como infraestructura)
+- 🔄 RecipeDiscoverySystem: Pendiente (complejo, fusión opcional)
+- 🔄 ItemGenerationSystem + ProductionSystem: Pendiente (complejo)
+- 🔄 QuestSystem + TaskSystem: Pendiente
+- 🔄 GenealogySystem: Pendiente (pequeño, mantener separado)
+- 🔄 MarriageSystem + HouseholdSystem: Pendiente
+
 ---
 
-## 🔴 SISTEMAS A ELIMINAR (No usados o redundantes)
+## 🔴 SISTEMAS ELIMINADOS ✅
 
-### 1. **InteractionGameSystem** (95 líneas) → ELIMINAR
+### 1. **InteractionGameSystem** (95 líneas) → ✅ ELIMINADO
 - **Uso**: Solo en `CommandProcessor` para `startInteraction`
 - **Razón**: Funcionalidad mínima (mini-juegos no implementados)
-- **Acción**: Eliminar completamente
-- **Impacto**: Ninguno real en simulación
+- **Estado**: ✅ Eliminado completamente
 
-### 2. **LivingLegendsSystem** (256 líneas) → ELIMINAR  
+### 2. **LivingLegendsSystem** (256 líneas) → ✅ ELIMINADO
 - **Uso**: Solo en `SnapshotManager` para mostrar leyendas
 - **Razón**: Feature decorativa, no afecta simulación
-- **Acción**: Eliminar o mover lógica a ReputationSystem
-- **Impacto**: Solo cosmético
+- **Estado**: ✅ Eliminado, snapshot devuelve datos vacíos
 
-### 3. **SharedKnowledgeSystem** (343 líneas) → FUSIONAR con AISystem
-- **Uso**: Solo en `AIContextAdapter` para alertas
-- **Razón**: Ya AISystem maneja conocimiento de agentes
-- **Acción**: Mover `getKnownResourceAlerts/ThreatAlerts` a AIContextAdapter
-- **Impacto**: Simplifica dependencias
+### 3. **BuildingMaintenanceSystem** (270 líneas) → ✅ FUSIONADO en BuildingSystem
+- **Similitud**: Mantenimiento es parte del ciclo de vida de edificios
+- **Estado**: ✅ Fusionado en BuildingSystem
 
 ---
 
-## 🟠 SISTEMAS A FUSIONAR
+## 🟠 SISTEMAS PENDIENTES DE FUSIONAR
 
-### 4. **RecipeDiscoverySystem** (350 líneas) → **EnhancedCraftingSystem**
+### 4. **SharedKnowledgeSystem** (343 líneas) → Reclasificar como infraestructura
+- **Uso**: Solo en `AIContextAdapter` para alertas
+- **Decisión**: Mantener como módulo interno de AI, no fusionar
+- **Impacto**: Bajo
+
+### 5. **RecipeDiscoverySystem** (350 líneas) → **EnhancedCraftingSystem**
 - **Similitud**: Ambos manejan recetas y conocimiento de crafting
-- **RecipeDiscovery**: `teachRecipe`, `shareRecipe`, `attemptBiomeDiscovery`
-- **EnhancedCrafting**: `craft`, `getKnownRecipes`, `craftBestWeapon`
-- **Acción**: Fusionar en **CraftingSystem** (420+350 = ~600 líneas)
-- **Reducción**: -1 sistema
+- **Complejidad**: Alta (700+ líneas combinadas)
+- **Estado**: Pendiente (opcional)
 
-### 5. **ItemGenerationSystem** (362 líneas) + **ProductionSystem** (312 líneas) → **WorldResourceSystem**
+### 6. **ItemGenerationSystem** (362 líneas) + **ProductionSystem** (312 líneas) → **WorldResourceSystem**
 - **Similitud**: Ambos generan recursos en el mundo
-- **ItemGeneration**: Spawn de ítems por bioma
-- **Production**: Producción por zonas de trabajo
-- **WorldResource**: Ya maneja recursos con posición
-- **Acción**: Fusionar en **WorldResourceSystem** (797+362+312 = ~1200 líneas)
-- **Reducción**: -2 sistemas
+- **Complejidad**: Alta (1471 líneas combinadas)
+- **Estado**: Pendiente (opcional)
 
-### 6. **QuestSystem** (570 líneas) + **TaskSystem** (589 líneas) → **ObjectivesSystem**
+### 7. **QuestSystem** (570 líneas) + **TaskSystem** (589 líneas) → **ObjectivesSystem**
 - **Similitud**: Ambos manejan "cosas a hacer" con progreso
-- **Quest**: Misiones con objetivos y recompensas
-- **Task**: Tareas de trabajo con progreso y contribuciones
-- **Acción**: Unificar en **ObjectivesSystem**
-- **Concepto**: Objective = { type: "quest"|"task", progress, contributors, rewards? }
-- **Reducción**: -1 sistema
+- **Complejidad**: Alta (1159 líneas combinadas)
+- **Estado**: Pendiente
 
-### 7. **GenealogySystem** (217 líneas) → **SocialSystem**
+### 8. **GenealogySystem** (217 líneas) → **SocialSystem**
 - **Similitud**: Genealogía es un tipo de relación social
-- **Genealogy**: Árbol familiar, ancestros
-- **Social**: Relaciones, afinidad, vínculos
-- **Acción**: Mover lógica de parentesco a SocialSystem
-- **Reducción**: -1 sistema
+- **Decisión**: Mantener separado (pequeño, bien definido)
+- **Estado**: No fusionar
 
-### 8. **MarriageSystem** (457 líneas) + **HouseholdSystem** (390 líneas) → **FamilySystem**
+### 9. **MarriageSystem** (457 líneas) + **HouseholdSystem** (390 líneas) → **FamilySystem**
 - **Similitud**: Ambos manejan unidades familiares
-- **Marriage**: Propuestas, grupos de matrimonio, divorcios
-- **Household**: Hogares, miembros, recursos compartidos
-- **Acción**: Fusionar en **FamilySystem**
-- **Reducción**: -1 sistema
-
-### 9. **BuildingMaintenanceSystem** (270 líneas) → **BuildingSystem**
-- **Similitud**: Mantenimiento es parte del ciclo de vida de edificios
-- **Acción**: Fusionar lógica de degradación/reparación en BuildingSystem
-- **Reducción**: -1 sistema
+- **Complejidad**: Media (847 líneas combinadas)
+- **Estado**: Pendiente
 
 ---
 
