@@ -22,7 +22,6 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 import { SystemProperty } from "../../../shared/constants/SystemEnums";
 
-
 const DESIRE_THRESHOLDS: Partial<
   Record<NeedType, { high: number; low?: number }>
 > = {
@@ -55,7 +54,6 @@ export class AmbientAwarenessSystem {
   private snapshot: AmbientSnapshot;
   private wellbeingHistory: number[] = [];
   private readonly HISTORY_SIZE = 60;
-
 
   private resourceSnapshot: ResourceAttractionSnapshot;
 
@@ -108,7 +106,6 @@ export class AmbientAwarenessSystem {
     };
 
     this.gameState.ambientMood = this.snapshot;
-
 
     this.updateResourceAttraction(now);
   }
@@ -301,8 +298,6 @@ export class AmbientAwarenessSystem {
     }
   }
 
-
-
   private updateResourceAttraction(now: number): void {
     const needs = this.needsSystem.getAllNeeds();
     const desires: NeedDesireSnapshot[] = [];
@@ -450,6 +445,4 @@ export class AmbientAwarenessSystem {
       );
     }
   }
-
-
 }

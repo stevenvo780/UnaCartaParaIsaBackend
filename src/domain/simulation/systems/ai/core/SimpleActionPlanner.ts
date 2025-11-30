@@ -59,7 +59,6 @@ export class SimpleActionPlanner {
     const timestamp = Date.now();
     const rule = ACTION_PLAN_RULES[goal.type];
 
-
     if (goal.type === GoalType.HUNT) {
       return this.handleHunt(agentId, goal, timestamp);
     }
@@ -99,7 +98,6 @@ export class SimpleActionPlanner {
     timestamp: number,
   ): AgentAction | null {
     if (!goal.targetPosition) {
-
       if (goal.targetZoneId) {
         return {
           actionType: ActionType.WORK,
@@ -149,18 +147,15 @@ export class SimpleActionPlanner {
     const agentPos = this.getPosition(agentId);
     const zones = this.deps.gameState.zones ?? [];
 
-
     let targetZone = goal.targetZoneId
       ? zones.find((z) => z.id === goal.targetZoneId)
       : undefined;
-
 
     if (!targetZone && rule.zoneTypes?.length) {
       targetZone = zones.find((z) =>
         rule.zoneTypes!.includes(z.type as ZoneType),
       );
     }
-
 
     if (agentPos && targetZone?.bounds) {
       const inZone =
@@ -180,7 +175,6 @@ export class SimpleActionPlanner {
       }
     }
 
-
     if (targetZone) {
       return {
         actionType: ActionType.MOVE,
@@ -190,7 +184,6 @@ export class SimpleActionPlanner {
       };
     }
 
-
     if (goal.targetPosition) {
       return {
         actionType: ActionType.MOVE,
@@ -199,7 +192,6 @@ export class SimpleActionPlanner {
         timestamp,
       };
     }
-
 
     if (rule.executeAction === ActionType.SOCIALIZE) {
       return {
@@ -223,7 +215,6 @@ export class SimpleActionPlanner {
   ): AgentAction | null {
     const taskType = (goal.data?.taskType as string)?.toLowerCase();
     const resourceType = (goal.data?.resourceType as string)?.toLowerCase();
-
 
     if (goal.targetId && goal.targetPosition) {
       const agentPos = this.getPosition(agentId);
@@ -250,7 +241,6 @@ export class SimpleActionPlanner {
       }
     }
 
-
     if (goal.targetZoneId) {
       return {
         actionType: ActionType.WORK,
@@ -261,14 +251,12 @@ export class SimpleActionPlanner {
       };
     }
 
-
     let searchTypes: string[] = [];
     if (taskType && TASK_SEARCH_MAP[taskType]) {
       searchTypes = TASK_SEARCH_MAP[taskType];
     } else if (resourceType && RESOURCE_SEARCH_MAP[resourceType]) {
       searchTypes = RESOURCE_SEARCH_MAP[resourceType];
     }
-
 
     if (searchTypes.length > 0 && this.deps.findNearestResource) {
       for (const searchType of searchTypes) {
@@ -299,7 +287,6 @@ export class SimpleActionPlanner {
         }
       }
     }
-
 
     if (
       (taskType === "gather_food" || resourceType === "food") &&
@@ -366,7 +353,6 @@ export class SimpleActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
-
     const hasWeapon = this.deps.agentHasWeapon?.(agentId) ?? false;
     if (!hasWeapon) {
       const claimed = this.deps.tryClaimWeapon?.(agentId) ?? false;
@@ -375,7 +361,6 @@ export class SimpleActionPlanner {
         return null;
       }
     }
-
 
     let targetId = goal.targetId;
     let targetPosition = goal.targetPosition;
@@ -390,7 +375,6 @@ export class SimpleActionPlanner {
       }
     }
 
-
     if (!targetId && this.deps.findNearestHuntableAnimal) {
       const nearest = this.deps.findNearestHuntableAnimal(agentId);
       if (nearest) {
@@ -398,7 +382,6 @@ export class SimpleActionPlanner {
         targetPosition = { x: nearest.x, y: nearest.y };
       }
     }
-
 
     if (targetId && targetPosition) {
       const agentPos = this.getPosition(agentId);
@@ -427,7 +410,6 @@ export class SimpleActionPlanner {
       }
     }
 
-
     return this.handleExplore(agentId, goal, timestamp);
   }
 
@@ -439,7 +421,6 @@ export class SimpleActionPlanner {
     goal: AIGoal,
     timestamp: number,
   ): AgentAction | null {
-
     if (goal.data?.targetRegionX !== undefined) {
       return {
         actionType: ActionType.MOVE,
@@ -460,7 +441,6 @@ export class SimpleActionPlanner {
       };
     }
 
-
     const currentPos = this.getPosition(agentId);
     if (!currentPos) return null;
 
@@ -478,7 +458,6 @@ export class SimpleActionPlanner {
       targetX = currentPos.x + (Math.random() - 0.5) * EXPLORE_RANGE;
       targetY = currentPos.y + (Math.random() - 0.5) * EXPLORE_RANGE;
     }
-
 
     targetX = Math.max(50, Math.min(mapWidth - 50, targetX));
     targetY = Math.max(50, Math.min(mapHeight - 50, targetY));

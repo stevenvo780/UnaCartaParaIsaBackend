@@ -213,7 +213,6 @@ export function generateRoleBasedWorkGoal(
   excludedIds: Set<string>,
   findResource: FindResourceFn,
 ): AIGoal | null {
-
   const configs =
     role && ROLE_GATHER_CONFIGS[role]
       ? ROLE_GATHER_CONFIGS[role]

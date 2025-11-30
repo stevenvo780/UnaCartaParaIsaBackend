@@ -1,10 +1,6 @@
 import { NoiseUtils } from "../../shared/utils/NoiseUtils";
 import { BiomeResolver } from "./generation/BiomeResolver";
-import {
-  WorldGenConfig,
-  TerrainTile,
-  BiomeType,
-} from "./generation/types";
+import { WorldGenConfig, TerrainTile, BiomeType } from "./generation/types";
 import {
   SIMPLE_BIOMES,
   SimpleBiomeConfig,

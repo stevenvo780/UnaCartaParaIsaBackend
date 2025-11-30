@@ -18,7 +18,6 @@ export class AnimalNeeds {
     );
 
     if (Date.now() - animal.lastReproduction > config.reproductionCooldown) {
-
       animal.needs.reproductiveUrge = Math.min(
         100,
         animal.needs.reproductiveUrge + 15.0 * deltaMinutes,

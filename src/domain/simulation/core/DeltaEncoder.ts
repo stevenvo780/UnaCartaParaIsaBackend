@@ -196,7 +196,6 @@ export class DeltaEncoder {
       }
     }
 
-
     if (current.enhancedCrafting) {
       changes.enhancedCrafting = current.enhancedCrafting;
     }

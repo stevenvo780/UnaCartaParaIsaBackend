@@ -17,7 +17,6 @@ import type { SettlementDemand } from "../../../types/simulation/governance";
 import type { Quest } from "../../../types/simulation/quests";
 import type { ResourceType as ResourceTypeImport } from "../../../../shared/constants/ResourceEnums";
 
-
 export type ResourceType = ResourceTypeImport;
 
 /**
@@ -59,19 +58,11 @@ export interface AgentLocation extends Position {
  * through a single, consistent interface.
  */
 export interface IAIContext {
-
-
-
-
   /** Current game state */
   readonly gameState: GameState;
 
   /** Current timestamp */
   readonly now: number;
-
-
-
-
 
   /** Get agent position by ID */
   getPosition(agentId: string): Position | null;
@@ -99,10 +90,6 @@ export interface IAIContext {
 
   /** Get agent stats */
   getStats(agentId: string): Record<string, number> | null;
-
-
-
-
 
   /** Find nearest resource of a type */
   findNearestResource(
@@ -132,10 +119,6 @@ export interface IAIContext {
   /** Get all stockpiles */
   getAllStockpiles(): Stockpile[];
 
-
-
-
-
   /** Get current zone for entity */
   getCurrentZone(entityId: string): string | null;
 
@@ -144,10 +127,6 @@ export interface IAIContext {
 
   /** Get zone IDs by type */
   getZonesByType(types: string[]): string[];
-
-
-
-
 
   /** Get equipped item ID */
   getEquipped(agentId: string): string | null;
@@ -167,10 +146,6 @@ export interface IAIContext {
   /** Try to claim a weapon from storage */
   tryClaimWeapon(agentId: string): boolean;
 
-
-
-
-
   /** Get enemies for agent above threshold */
   getEnemies(agentId: string, threshold?: number): string[];
 
@@ -179,10 +154,6 @@ export interface IAIContext {
 
   /** Get animal position */
   getAnimalPosition(animalId: string): Position | null;
-
-
-
-
 
   /** Get available community tasks */
   getAvailableTasks(): Task[];
@@ -195,10 +166,6 @@ export interface IAIContext {
 
   /** Get available quests */
   getAvailableQuests(): Quest[];
-
-
-
-
 
   /** Get current time of day */
   getTimeOfDay():
@@ -222,10 +189,6 @@ export interface IAIContext {
     waterPerCapita: number;
     stockpileFillRatio: number;
   } | null;
-
-
-
-
 
   /** Get known resource alerts for agent */
   getKnownResourceAlerts(agentId: string): Array<{

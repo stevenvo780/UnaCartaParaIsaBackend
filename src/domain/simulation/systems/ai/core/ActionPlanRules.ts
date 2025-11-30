@@ -51,7 +51,6 @@ export type ActionPlanRule =
  * Declarative mapping: GoalType → how to convert to AgentAction
  */
 export const ACTION_PLAN_RULES: Partial<Record<GoalType, ActionPlanRule>> = {
-
   [GoalType.SATISFY_HUNGER]: {
     type: "range",
     executeAction: ActionType.HARVEST,
@@ -87,7 +86,6 @@ export const ACTION_PLAN_RULES: Partial<Record<GoalType, ActionPlanRule>> = {
     executeAction: ActionType.ATTACK,
     range: 50,
   },
-
 
   [GoalType.SATISFY_ENERGY]: {
     type: "zone",
@@ -151,7 +149,6 @@ export const ACTION_PLAN_RULES: Partial<Record<GoalType, ActionPlanRule>> = {
     zoneTypes: [ZoneType.SOCIAL],
   },
 
-
   [GoalType.IDLE]: {
     type: "simple",
     action: ActionType.IDLE,
@@ -160,7 +157,6 @@ export const ACTION_PLAN_RULES: Partial<Record<GoalType, ActionPlanRule>> = {
     type: "simple",
     action: ActionType.IDLE,
   },
-
 
   [GoalType.FLEE]: {
     type: "move",

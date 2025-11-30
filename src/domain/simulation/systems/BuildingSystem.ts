@@ -141,7 +141,6 @@ export class BuildingSystem {
     this.taskSystem = taskSystem;
     this.inventorySystem = inventorySystem;
 
-
     this.bootstrapExistingZones();
     simulationEvents.on(
       GameEventType.BUILDING_CONSTRUCTED,
@@ -151,9 +150,7 @@ export class BuildingSystem {
 
     simulationEvents.on(
       GameEventType.AGENT_DEATH,
-      (_data: { agentId?: string; entityId?: string }) => {
-
-      },
+      (_data: { agentId?: string; entityId?: string }) => {},
     );
   }
 
@@ -169,8 +166,10 @@ export class BuildingSystem {
     const now = this.now();
     this.completeFinishedJobs(now);
 
-
-    if (now - this.lastMaintenanceUpdate >= this.config.maintenanceUpdateIntervalMs) {
+    if (
+      now - this.lastMaintenanceUpdate >=
+      this.config.maintenanceUpdateIntervalMs
+    ) {
       this.lastMaintenanceUpdate = now;
       for (const state of this.buildingStates.values()) {
         this.applyTimeDeterioration(state, now);
@@ -351,7 +350,6 @@ export class BuildingSystem {
     const TILE_SIZE = 64;
 
     const zoneId = `zone_${label}_${Math.random().toString(36).slice(2)}`;
-
 
     const tileX = Math.floor(validatedPosition.x / TILE_SIZE);
     const tileY = Math.floor(validatedPosition.y / TILE_SIZE);
@@ -640,10 +638,6 @@ export class BuildingSystem {
       `🌾 [BUILDING] Farm completed: spawned ${cropsSpawned} wheat crops at (${bounds.x}, ${bounds.y})`,
     );
   }
-
-
-
-
 
   /**
    * Records building usage to track abandonment and apply usage degradation.

@@ -357,7 +357,6 @@ export class CommandProcessor {
             payload.agentB as string,
             (payload.magnitude as number) || 0.1,
           );
-
         }
         break;
       case SocialCommandType.HOSTILE_ENCOUNTER:
@@ -371,7 +370,6 @@ export class CommandProcessor {
             payload.agentB as string,
             -(payload.magnitude as number) || -0.1,
           );
-
         }
         break;
     }
@@ -409,7 +407,6 @@ export class CommandProcessor {
     switch (command.command) {
       case BuildingCommandType.START_UPGRADE:
         if (payload.zoneId && payload.agentId) {
-
           this.runner.buildingSystem.startUpgrade(
             payload.zoneId as string,
             payload.agentId as string,
@@ -418,10 +415,7 @@ export class CommandProcessor {
         break;
       case BuildingCommandType.CANCEL_UPGRADE:
         if (payload.zoneId) {
-
-          this.runner.buildingSystem.cancelUpgrade(
-            payload.zoneId as string,
-          );
+          this.runner.buildingSystem.cancelUpgrade(payload.zoneId as string);
         }
         break;
       case BuildingCommandType.ENQUEUE_CONSTRUCTION:

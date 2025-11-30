@@ -95,7 +95,6 @@ export class EconomySystem {
   private entityIndex?: EntityIndex;
   private agentRegistry?: AgentRegistry;
 
-
   private recentTrades = new Map<string, number>();
   private readonly TRADE_COOLDOWN_MS = 30000;
 
@@ -158,11 +157,8 @@ export class EconomySystem {
       this.lastSalaryPayment = now;
     }
 
-
     this.updateMarket();
   }
-
-
 
   private updateMarket(): void {
     this.autoTradeAmongAgents();
@@ -341,8 +337,6 @@ export class EconomySystem {
       }
     }
   }
-
-
 
   private cleanupOldResiduals(): void {
     if (this.yieldResiduals.size > 100) {

@@ -237,7 +237,6 @@ export class AnimalBatchProcessor {
       const posOffset = i * 2;
       const needsOffset = i * this.NEED_COUNT;
 
-
       const posX = this.positionBuffer[posOffset];
       const posY = this.positionBuffer[posOffset + 1];
       const hunger = this.needsBuffer[needsOffset + 0];
@@ -246,7 +245,6 @@ export class AnimalBatchProcessor {
       const reproUrge = this.needsBuffer[needsOffset + 3];
       const age = this.ageBuffer[i];
       const health = this.healthBuffer[i];
-
 
       if (Number.isFinite(posX)) animal.position.x = posX;
       if (Number.isFinite(posY)) animal.position.y = posY;

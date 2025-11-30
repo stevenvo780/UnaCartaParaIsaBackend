@@ -5,12 +5,15 @@ import type { BuildingLabel } from "../../../types/simulation/buildings";
 import type { SimulationRunner } from "../SimulationRunner";
 import { LifeStage, Sex } from "../../../types/simulation/agents";
 import { TileType } from "../../../../shared/constants/TileTypeEnums";
-import { StockpileType, ZoneType } from "../../../../shared/constants/ZoneEnums";
+import {
+  StockpileType,
+  ZoneType,
+} from "../../../../shared/constants/ZoneEnums";
 import { BuildingType } from "../../../../shared/constants/BuildingEnums";
 import { ResourceType } from "../../../../shared/constants/ResourceEnums";
 
 export class WorldLoader {
-  constructor(private runner: SimulationRunner) { }
+  constructor(private runner: SimulationRunner) {}
 
   public async initializeWorldResources(worldConfig: {
     width: number;
@@ -225,17 +228,22 @@ export class WorldLoader {
           };
         }
         const hasState = this.runner.movementSystem.hasMovementState(agent.id);
-        logger.info(`🚶 [WorldLoader] ${agent.id}: hasMovementState=${hasState}, pos=${agent.position.x.toFixed(0)},${agent.position.y.toFixed(0)}`);
+        logger.info(
+          `🚶 [WorldLoader] ${agent.id}: hasMovementState=${hasState}, pos=${agent.position.x.toFixed(0)},${agent.position.y.toFixed(0)}`,
+        );
         if (!hasState) {
           this.runner.movementSystem.initializeEntityMovement(
             agent.id,
             agent.position,
           );
-          logger.info(`🚶 [WorldLoader] ${agent.id}: Movement state initialized`);
+          logger.info(
+            `🚶 [WorldLoader] ${agent.id}: Movement state initialized`,
+          );
         }
       } catch (err) {
         logger.warn(
-          `Failed to initialize movement state for agent ${agent.id}: ${err instanceof Error ? err.message : String(err)
+          `Failed to initialize movement state for agent ${agent.id}: ${
+            err instanceof Error ? err.message : String(err)
           }`,
         );
       }
@@ -320,7 +328,6 @@ export class WorldLoader {
 
     const defaultBiome = "Grassland";
 
-
     this.runner.state.zones = [];
 
     const houseZone: Zone = {
@@ -395,18 +402,32 @@ export class WorldLoader {
 
     this.runner.state.zones.push(houseZone, workbenchZone, storageZone);
 
-
     const stockpile = this.runner.inventorySystem.createStockpile(
       storageZone.id,
       StockpileType.GENERAL,
       200,
     );
 
-
-    this.runner.inventorySystem.addToStockpile(stockpile.id, ResourceType.WOOD, 50);
-    this.runner.inventorySystem.addToStockpile(stockpile.id, ResourceType.STONE, 30);
-    this.runner.inventorySystem.addToStockpile(stockpile.id, ResourceType.FOOD, 40);
-    this.runner.inventorySystem.addToStockpile(stockpile.id, ResourceType.WATER, 40);
+    this.runner.inventorySystem.addToStockpile(
+      stockpile.id,
+      ResourceType.WOOD,
+      50,
+    );
+    this.runner.inventorySystem.addToStockpile(
+      stockpile.id,
+      ResourceType.STONE,
+      30,
+    );
+    this.runner.inventorySystem.addToStockpile(
+      stockpile.id,
+      ResourceType.FOOD,
+      40,
+    );
+    this.runner.inventorySystem.addToStockpile(
+      stockpile.id,
+      ResourceType.WATER,
+      40,
+    );
 
     logger.info(`🏠 Initial infrastructure created:`);
     logger.info(`   - Family house (shelter) at (${baseX}, ${baseY})`);

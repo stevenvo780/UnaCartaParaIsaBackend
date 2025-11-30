@@ -331,7 +331,6 @@ export class GovernanceSystem {
     const stats = this.getSettlementStats();
     const now = Date.now();
 
-
     const foodPolicy = this.policies.get(GovernancePolicyId.FOOD_SECURITY);
     if (foodPolicy?.enabled) {
       const foodThreshold = foodPolicy.threshold.foodPerCapita ?? 5;
@@ -340,12 +339,14 @@ export class GovernanceSystem {
       );
 
       if (stats.foodPerCapita >= foodThreshold && activeFoodDemand) {
-
         activeFoodDemand.resolvedAt = now;
         this.recordEvent({
           timestamp: now,
           type: GovernanceEventType.DEMAND_RESOLVED,
-          details: { demandId: activeFoodDemand.id, action: GovernanceProjectType.ASSIGN_HUNTERS },
+          details: {
+            demandId: activeFoodDemand.id,
+            action: GovernanceProjectType.ASSIGN_HUNTERS,
+          },
         });
         logger.info(
           `🏛️ [GOVERNANCE] Food shortage resolved: foodPerCapita=${stats.foodPerCapita.toFixed(1)} >= ${foodThreshold}`,
@@ -363,7 +364,6 @@ export class GovernanceSystem {
       }
     }
 
-
     const waterPolicy = this.policies.get(GovernancePolicyId.WATER_SUPPLY);
     if (waterPolicy?.enabled) {
       const waterEmergencyThreshold = waterPolicy.threshold.waterPerCapita ?? 8;
@@ -374,17 +374,22 @@ export class GovernanceSystem {
       );
 
       if (stats.waterPerCapita >= waterSafeThreshold && activeWaterDemand) {
-
         activeWaterDemand.resolvedAt = now;
         this.recordEvent({
           timestamp: now,
           type: GovernanceEventType.DEMAND_RESOLVED,
-          details: { demandId: activeWaterDemand.id, action: GovernanceProjectType.GATHER_WATER },
+          details: {
+            demandId: activeWaterDemand.id,
+            action: GovernanceProjectType.GATHER_WATER,
+          },
         });
         logger.info(
           `🏛️ [GOVERNANCE] Water shortage resolved: waterPerCapita=${stats.waterPerCapita.toFixed(1)} >= ${waterSafeThreshold} (safe storage)`,
         );
-      } else if (stats.waterPerCapita < waterEmergencyThreshold && !activeWaterDemand) {
+      } else if (
+        stats.waterPerCapita < waterEmergencyThreshold &&
+        !activeWaterDemand
+      ) {
         this.createDemand(
           DemandType.WATER_SHORTAGE,
           9,
@@ -452,7 +457,6 @@ export class GovernanceSystem {
       `🏛️ [GOVERNANCE] Demand created: ${type} (priority: ${modifiedPriority}) - ${reason}`,
     );
 
-
     this.pushSnapshot();
 
     if (this.config.autoGenerateProjects) {
@@ -500,10 +504,10 @@ export class GovernanceSystem {
 
     this.applyDemandEffect(demand.type, solution);
 
-
-
-
-    const ongoingDemandTypes = [DemandType.FOOD_SHORTAGE, DemandType.WATER_SHORTAGE];
+    const ongoingDemandTypes = [
+      DemandType.FOOD_SHORTAGE,
+      DemandType.WATER_SHORTAGE,
+    ];
     if (!ongoingDemandTypes.includes(demand.type)) {
       demand.resolvedAt = Date.now();
       this.recordEvent({
@@ -767,7 +771,6 @@ export class GovernanceSystem {
   private pushSnapshot(): void {
     const snapshot = this.getSnapshot();
     this.state.governance = snapshot;
-
 
     if (snapshot.demands.length > 0) {
       const demandTypes = snapshot.demands.map((d) => d.type).join(", ");

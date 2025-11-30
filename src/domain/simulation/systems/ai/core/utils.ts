@@ -190,11 +190,9 @@ export function getGoalTier(goal: AIGoal, _aiState: AIState): number {
     return PRIORITY_TIERS.OPPORTUNITY;
   }
 
-
   if (goal.type === GoalType.WORK) {
     const taskType = goal.data?.taskType as string | undefined;
-    if (taskType === 'gather_water' || taskType === 'gather_food') {
-
+    if (taskType === "gather_water" || taskType === "gather_food") {
       if (goal.priority >= 0.85) return PRIORITY_TIERS.SURVIVAL_URGENT;
 
       if (goal.priority >= 0.65) return PRIORITY_TIERS.LOGISTICS;
@@ -204,14 +202,11 @@ export function getGoalTier(goal: AIGoal, _aiState: AIState): number {
     }
   }
 
-
-
   if (goal.type === GoalType.DEPOSIT) {
     const data = goal.data as Record<string, unknown> | undefined;
     const hasWater = data?.hasWater as boolean | undefined;
     const hasFood = data?.hasFood as boolean | undefined;
     const inventoryFull = data?.inventoryFull as boolean | undefined;
-    
 
     if (inventoryFull) {
       return PRIORITY_TIERS.SURVIVAL_URGENT;
@@ -233,9 +228,6 @@ export function getGoalTier(goal: AIGoal, _aiState: AIState): number {
   ) {
     return PRIORITY_TIERS.OPPORTUNITY;
   }
-
-
-
 
   if (goal.type === GoalType.CRAFT) {
     const data = goal.data as Record<string, unknown> | undefined;

@@ -8,10 +8,7 @@ import type {
 } from "../../../domain/world/generation/types";
 import { ChunkWorkerPool } from "./ChunkWorkerPool";
 import type { ChunkPoolStats } from "./ChunkWorkerPool";
-import {
-  encodeMsgPack,
-  decodeMessage,
-} from "../../../shared/MessagePackCodec";
+import { encodeMsgPack, decodeMessage } from "../../../shared/MessagePackCodec";
 import { container } from "../../../config/container";
 import { TYPES } from "../../../config/Types";
 import type { AnimalSystem } from "../../../domain/simulation/systems/animals/AnimalSystem";

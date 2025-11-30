@@ -422,7 +422,6 @@ export class AnimalSystem {
     const config = getAnimalConfig(animal.type);
     if (!config) return;
 
-
     if (Math.random() < 0.01) {
       const maxHealth = config.maxHealth * animal.genes.health;
       logger.debug(
@@ -467,8 +466,6 @@ export class AnimalSystem {
       }
     }
 
-
-
     const maxHealth = config.maxHealth * animal.genes.health;
     const needsHealing = animal.health < maxHealth * 0.9;
     const isHungry = animal.needs.hunger < 80;
@@ -485,7 +482,6 @@ export class AnimalSystem {
           prey,
           deltaSeconds,
           (preyId, damage) => {
-
             this.damageAnimal(preyId, damage || 25, animal.id);
           },
         );
@@ -507,15 +503,12 @@ export class AnimalSystem {
           );
           return;
         } else {
-
           const TILE_SIZE = 64;
           const tileX = Math.floor(animal.position.x / TILE_SIZE);
           const tileY = Math.floor(animal.position.y / TILE_SIZE);
 
           const terrainTile = this.terrainSystem?.getTile(tileX, tileY);
           const terrainType = terrainTile?.assets?.terrain;
-
-
 
           const canForage =
             !terrainType ||
@@ -527,7 +520,6 @@ export class AnimalSystem {
             if (!animal.stateEndTime) {
               animal.stateEndTime = Date.now() + 2000;
             } else if (Date.now() > animal.stateEndTime) {
-
               if (
                 terrainType === TileType.TERRAIN_GRASSLAND &&
                 this.terrainSystem
@@ -542,7 +534,6 @@ export class AnimalSystem {
             }
             return;
           } else {
-
             animal.state = AnimalState.WANDERING;
             AnimalBehavior.wander(animal, 0.7, deltaSeconds);
             return;
@@ -551,7 +542,6 @@ export class AnimalSystem {
         return;
       }
     }
-
 
     const isThirsty = animal.needs.thirst < 80;
     if ((isThirsty || needsHealing) && config.consumesWater) {
@@ -578,8 +568,6 @@ export class AnimalSystem {
         if (waterTile) {
           this.drinkFromTerrain(animal, waterTile, config, deltaSeconds);
         } else {
-
-
           animal.state = AnimalState.DRINKING;
           if (!animal.stateEndTime) {
             animal.stateEndTime = Date.now() + 2000;
@@ -592,7 +580,6 @@ export class AnimalSystem {
       }
       return;
     }
-
 
     const maturityAge = config.lifespan * 0.2;
     const isMature = animal.age > maturityAge;
@@ -1049,7 +1036,6 @@ export class AnimalSystem {
     const config = getAnimalConfig(animal.type);
     if (!config) return;
 
-
     if (animal.health <= 0) {
       this.killAnimal(animal.id, "damage");
       return;
@@ -1110,10 +1096,8 @@ export class AnimalSystem {
       `🗡️ Animal ${animalId} took ${damage} damage (health: ${animal.health.toFixed(1)}) from ${attackerId || "unknown"}`,
     );
 
-
     if (animal.health <= 0) {
       this.killAnimal(animalId, "damage");
-
 
       if (attackerId) {
         const attacker = this.animalRegistry.getAnimal(attackerId);

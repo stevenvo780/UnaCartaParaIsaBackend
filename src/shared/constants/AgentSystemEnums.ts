@@ -12,7 +12,6 @@
  * @module shared/constants/AgentSystemEnums
  */
 
-
 export {
   GoalType,
   ActionType,

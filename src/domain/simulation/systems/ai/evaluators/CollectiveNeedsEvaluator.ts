@@ -194,7 +194,6 @@ function calculateCollectiveState(
 
   const activeDemands = ctx.getActiveDemands?.() || [];
 
-
   if (activeDemands.length > 0 && Math.random() < 0.3) {
     const waterDemandExists = activeDemands.some(
       (d) => d.type === DemandType.WATER_SHORTAGE && !d.resolvedAt,
@@ -217,7 +216,6 @@ function calculateCollectiveState(
     stockpileFillRatio: totalCapacity > 0 ? usedCapacity / totalCapacity : 0,
     activeDemands,
   };
-
 
   if (Math.random() < 0.1) {
     logger.debug(
@@ -274,7 +272,6 @@ function getMostNeededResource(
   }
 
   needs.sort((a, b) => b.urgency - a.urgency);
-
 
   if (needs.length > 0 && Math.random() < 0.02) {
     const needsList = needs
@@ -368,7 +365,6 @@ export function evaluateCollectiveNeeds(
 
   const mostNeeded = getMostNeededResource(state, thresholds);
 
-
   if (mostNeeded && Math.random() < 0.05) {
     logger.debug(
       `📊 [Collective] ${aiState.entityId}: mostNeeded=${mostNeeded.resource} urgency=${mostNeeded.urgency.toFixed(2)}, foodPC=${state.foodPerCapita.toFixed(1)}, waterPC=${state.waterPerCapita.toFixed(1)}`,
@@ -381,7 +377,6 @@ export function evaluateCollectiveNeeds(
       .find(
         (t) => (t.metadata?.resourceType as string) === mostNeeded.resource,
       );
-
 
     if (mostNeeded.resource === ResourceTypeEnum.WATER) {
       logger.debug(
@@ -442,14 +437,9 @@ export function evaluateCollectiveNeeds(
     }
   }
 
+  const needsWater =
+    waterDemand || mostNeeded?.resource === ResourceTypeEnum.WATER;
 
-
-
-
-
-
-  const needsWater = waterDemand || (mostNeeded?.resource === ResourceTypeEnum.WATER);
-  
   if (needsWater && ctx.taskSystem) {
     const isGatherer = modifiers.preferredResource === ResourceTypeEnum.WATER;
     const isUrgent = !!waterDemand;
@@ -462,13 +452,9 @@ export function evaluateCollectiveNeeds(
       .getAvailableCommunityTasks()
       .find((t) => (t.metadata?.resourceType as string) === "water");
 
-
-
-
     const canCreateTask = !existingWaterTask && (isUrgent || isGatherer);
-    
-    if (canCreateTask) {
 
+    if (canCreateTask) {
       const newWaterTask = ctx.taskSystem.createTask({
         type: TaskType.GATHER_WATER,
         requiredWork: 100,
@@ -485,7 +471,7 @@ export function evaluateCollectiveNeeds(
         logger.debug(
           `💧 [Collective] ${aiState.entityId}: Created WATER task ${newWaterTask.id} (urgent=${isUrgent})`,
         );
-        const taskPriority = isUrgent ? 0.92 : 0.70;
+        const taskPriority = isUrgent ? 0.92 : 0.7;
         goals.push({
           id: `water_demand_task_${newWaterTask.id}_${now}`,
           type: GoalTypeEnum.WORK,
@@ -501,19 +487,13 @@ export function evaluateCollectiveNeeds(
         });
       }
     } else if (existingWaterTask) {
-
-
-
-
       if (isUrgent || isGatherer) {
-        const joinPriority = isUrgent 
-          ? (isGatherer ? 0.92 : 0.88)
-          : 0.65;
-        
+        const joinPriority = isUrgent ? (isGatherer ? 0.92 : 0.88) : 0.65;
+
         logger.debug(
           `💧 [Collective] ${aiState.entityId}: Joining WATER task ${existingWaterTask.id} (priority=${joinPriority.toFixed(2)}, isGatherer=${isGatherer}, urgent=${isUrgent})`,
         );
-      
+
         goals.push({
           id: `join_water_task_${existingWaterTask.id}_${now}`,
           type: GoalTypeEnum.WORK,
@@ -553,7 +533,6 @@ export function evaluateCollectiveNeeds(
     finalPriority = Math.min(0.85, Math.max(0.3, finalPriority));
 
     const resourceGoalType = getGatherGoalType(mostNeeded.resource);
-
 
     if (mostNeeded.resource === ResourceTypeEnum.WATER) {
       logger.debug(
@@ -595,8 +574,6 @@ export function evaluateCollectiveNeeds(
       if (state.stockpileFillRatio < 0.3) {
         depositPriority += 0.2;
       }
-
-
 
       const isInventoryFull = loadRatio > 0.7;
       if (isInventoryFull) {

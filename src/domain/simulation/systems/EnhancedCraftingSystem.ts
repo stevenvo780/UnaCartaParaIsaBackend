@@ -134,7 +134,9 @@ export class EnhancedCraftingSystem {
     const success =
       Math.random() < Math.max(this.config.minSuccessRate, successRate);
 
-    logger.info(`⚒️ [finishJob] ${job.agentId}: Recipe=${recipe.id}, success=${success}`);
+    logger.info(
+      `⚒️ [finishJob] ${job.agentId}: Recipe=${recipe.id}, success=${success}`,
+    );
 
     if (success) {
       this.applyOutput(job.agentId, recipe);
@@ -164,7 +166,9 @@ export class EnhancedCraftingSystem {
     if (BASE_WEAPONS.includes(output as WeaponId)) {
       const currentWeapon = this.equippedWeapons.get(agentId);
       if (currentWeapon) {
-        logger.info(`⚒️ [applyOutput] ${agentId}: Already has ${currentWeapon}, depositing ${output}`);
+        logger.info(
+          `⚒️ [applyOutput] ${agentId}: Already has ${currentWeapon}, depositing ${output}`,
+        );
         equipmentSystem.depositTool(output, recipe.output.quantity);
         simulationEvents.emit(GameEventType.ITEM_CRAFTED, {
           agentId,
@@ -179,7 +183,9 @@ export class EnhancedCraftingSystem {
       this.equippedWeapons.set(agentId, output as WeaponId);
 
       equipmentSystem.equipItem(agentId, EquipmentSlot.MAIN_HAND, output);
-      logger.info(`⚒️ [applyOutput] ${agentId}: Weapon registered in equipmentSystem`);
+      logger.info(
+        `⚒️ [applyOutput] ${agentId}: Weapon registered in equipmentSystem`,
+      );
       return;
     }
 
@@ -198,13 +204,12 @@ export class EnhancedCraftingSystem {
    * First checks agent inventory, then falls back to settlement stockpiles.
    */
   private hasIngredients(agentId: string, recipe: CraftingRecipe): boolean {
-
     const inventory = this.inventorySystem.getAgentInventory(agentId);
-    
 
-    const stockpileResources = this.inventorySystem.getTotalStockpileResources();
+    const stockpileResources =
+      this.inventorySystem.getTotalStockpileResources();
     const allStockpiles = this.inventorySystem.getAllStockpiles();
-    
+
     logger.debug(
       `🔨 [Craft] ${agentId}: Checking ingredients - stockpiles=${allStockpiles.length}, wood=${stockpileResources.wood}, stone=${stockpileResources.stone}, inv.wood=${inventory?.wood ?? 0}, inv.stone=${inventory?.stone ?? 0}`,
     );
@@ -214,12 +219,11 @@ export class EnhancedCraftingSystem {
       if (!key) {
         return false;
       }
-      
 
       const haveInInventory = inventory?.[key] ?? 0;
       const haveInStockpile = stockpileResources[key] ?? 0;
       const totalAvailable = haveInInventory + haveInStockpile;
-      
+
       if (totalAvailable < ingredient.quantity) {
         logger.debug(
           `🔨 [Craft] ${agentId}: Missing ${ingredient.itemId} (inv=${haveInInventory}, stockpile=${haveInStockpile}, need=${ingredient.quantity})`,
@@ -241,7 +245,6 @@ export class EnhancedCraftingSystem {
 
       let remaining = ingredient.quantity;
 
-
       const inventory = this.inventorySystem.getAgentInventory(agentId);
       if (inventory) {
         const fromAgent = Math.min(inventory[key] ?? 0, remaining);
@@ -250,7 +253,6 @@ export class EnhancedCraftingSystem {
           remaining -= fromAgent;
         }
       }
-
 
       if (remaining > 0) {
         const stockpiles = this.inventorySystem.getAllStockpiles();
@@ -342,13 +344,12 @@ export class EnhancedCraftingSystem {
    * Initializes basic recipes for all agents if not yet initialized.
    */
   public getAllKnownRecipes(): Record<string, string[]> {
-
     for (const agent of this.state.agents) {
       if (!this.knownRecipes.has(agent.id)) {
         this.getOrCreateRecipeMap(agent.id);
       }
     }
-    
+
     const result: Record<string, string[]> = {};
     for (const [agentId, recipes] of this.knownRecipes.entries()) {
       result[agentId] = Array.from(recipes.keys());

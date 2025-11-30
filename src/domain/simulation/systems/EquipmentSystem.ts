@@ -23,10 +23,6 @@ import {
   type EquipmentStats,
 } from "../../data/EquipmentStats";
 
-
-
-
-
 /**
  * A stored tool with quantity tracking.
  */
@@ -91,15 +87,10 @@ export class EquipmentSystem {
   /** Equipment state per agent */
   private equipmentByAgent: Map<string, AgentEquipment> = new Map();
 
-
   /** Available tools: itemId -> quantity */
   private toolStorage = new Map<string, StoredTool>();
   /** Track who has claimed tools: agentId -> itemId */
   private claimedTools = new Map<string, string>();
-
-
-
-
 
   /**
    * Initializes equipment for an agent.
@@ -297,10 +288,6 @@ export class EquipmentSystem {
       });
     }
   }
-
-
-
-
 
   /**
    * Deposits a tool into shared storage.

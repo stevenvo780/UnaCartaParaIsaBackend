@@ -40,11 +40,9 @@ import { simulationEvents } from "./events";
 import { BatchedEventEmitter } from "./BatchedEventEmitter";
 import { CombatSystem } from "../systems/CombatSystem";
 
-
 import { AmbientAwarenessSystem } from "../systems/AmbientAwarenessSystem";
 
 import { TimeSystem } from "../systems/TimeSystem";
-
 
 import { EntityType } from "../../../shared/constants/EntityEnums";
 import { MovementSystem } from "../systems/movement/MovementSystem";
@@ -151,8 +149,6 @@ export class SimulationRunner {
   @inject(TYPES.WorldResourceSystem)
   public readonly worldResourceSystem!: WorldResourceSystem;
 
-
-
   @inject(TYPES.LifeCycleSystem)
   public readonly lifeCycleSystem!: LifeCycleSystem;
 
@@ -183,8 +179,6 @@ export class SimulationRunner {
 
   @inject(TYPES.BuildingSystem) public readonly buildingSystem!: BuildingSystem;
 
-
-
   @inject(TYPES.ProductionSystem)
   public readonly productionSystem!: ProductionSystem;
 
@@ -204,19 +198,12 @@ export class SimulationRunner {
   @inject(TYPES.RecipeDiscoverySystem)
   public readonly _recipeDiscoverySystem!: RecipeDiscoverySystem;
 
-
-
   @inject(TYPES.TaskSystem) public readonly taskSystem!: TaskSystem;
-
-
 
   @inject(TYPES.MarriageSystem) public readonly marriageSystem!: MarriageSystem;
 
   @inject(TYPES.ConflictResolutionSystem)
   public readonly conflictResolutionSystem!: ConflictResolutionSystem;
-
-
-
 
   @inject(TYPES.WorldGenerationService)
   public readonly worldGenerationService!: WorldGenerationService;
@@ -225,10 +212,6 @@ export class SimulationRunner {
   public readonly ambientAwarenessSystem!: AmbientAwarenessSystem;
 
   @inject(TYPES.TimeSystem) public readonly timeSystem!: TimeSystem;
-
-
-
-
 
   @inject(TYPES.MovementSystem) public readonly movementSystem!: MovementSystem;
 
@@ -614,8 +597,6 @@ export class SimulationRunner {
       enabled: true,
     });
 
-
-
     this.scheduler.registerSystem({
       name: "ReputationSystem",
       rate: TickRate.SLOW,
@@ -659,8 +640,6 @@ export class SimulationRunner {
       enabled: true,
     });
 
-
-
     this.scheduler.registerSystem({
       name: "EnhancedCraftingSystem",
       rate: TickRate.SLOW,
@@ -682,10 +661,6 @@ export class SimulationRunner {
       enabled: true,
     });
 
-
-
-
-
     this.scheduler.registerSystem({
       name: "MarriageSystem",
       rate: TickRate.SLOW,
@@ -701,18 +676,12 @@ export class SimulationRunner {
       minEntities: 10,
     });
 
-
-
     this.scheduler.registerSystem({
       name: "AmbientAwarenessSystem",
       rate: TickRate.SLOW,
       update: (delta: number) => this.ambientAwarenessSystem.update(delta),
       enabled: true,
     });
-
-
-
-
 
     this.scheduler.registerSystem({
       name: "ItemGenerationSystem",
@@ -728,16 +697,12 @@ export class SimulationRunner {
       enabled: true,
     });
 
-
-
     this.scheduler.registerSystem({
       name: "SharedKnowledgeSystem",
       rate: TickRate.SLOW,
       update: () => this.sharedKnowledgeSystem.update(),
       enabled: true,
     });
-
-
 
     this.scheduler.registerSystem({
       name: "ChunkLoadingSystem",

@@ -555,7 +555,6 @@ export class MovementSystem extends EventEmitter {
     }
   }
 
-
   private readonly PATHFINDING_TIMEOUT_MS = 10000;
 
   public moveToZone(entityId: string, targetZoneId: string): boolean {
@@ -563,20 +562,27 @@ export class MovementSystem extends EventEmitter {
     const targetZone = this.gameState.zones.find((z) => z.id === targetZoneId);
 
     if (!state || !targetZone) {
-      logger.warn(`🚶 [moveToZone] ${entityId}: state=${!!state}, zone=${!!targetZone}`);
+      logger.warn(
+        `🚶 [moveToZone] ${entityId}: state=${!!state}, zone=${!!targetZone}`,
+      );
       return false;
     }
-    
 
     const now = Date.now();
     if (state.isPathfinding) {
-      if (state.pathfindingStartTime && 
-          now - state.pathfindingStartTime > this.PATHFINDING_TIMEOUT_MS) {
-        logger.warn(`[MovementSystem] ${entityId}: Pathfinding timeout, resetting state`);
+      if (
+        state.pathfindingStartTime &&
+        now - state.pathfindingStartTime > this.PATHFINDING_TIMEOUT_MS
+      ) {
+        logger.warn(
+          `[MovementSystem] ${entityId}: Pathfinding timeout, resetting state`,
+        );
         state.isPathfinding = false;
         state.pathfindingStartTime = undefined;
       } else {
-        logger.debug(`🚶 [moveToZone] ${entityId}: Already pathfinding, skipping`);
+        logger.debug(
+          `🚶 [moveToZone] ${entityId}: Already pathfinding, skipping`,
+        );
         return false;
       }
     }
@@ -586,8 +592,10 @@ export class MovementSystem extends EventEmitter {
 
     const targetX = targetZone.bounds.x + targetZone.bounds.width / 2;
     const targetY = targetZone.bounds.y + targetZone.bounds.height / 2;
-    
-    logger.info(`🚶 [moveToZone] ${entityId}: Enqueueing pathfinding to zone ${targetZoneId} (target=${targetX.toFixed(0)},${targetY.toFixed(0)})`);
+
+    logger.info(
+      `🚶 [moveToZone] ${entityId}: Enqueueing pathfinding to zone ${targetZoneId} (target=${targetX.toFixed(0)},${targetY.toFixed(0)})`,
+    );
 
     this.enqueuePathfinding(
       entityId,
@@ -617,7 +625,9 @@ export class MovementSystem extends EventEmitter {
           return;
         }
 
-        logger.info(`🚶 [moveToZone] ${entityId}: Pathfinding SUCCESS, path length=${pathResult.path.length}, distance=${pathResult.distance.toFixed(0)}`);
+        logger.info(
+          `🚶 [moveToZone] ${entityId}: Pathfinding SUCCESS, path length=${pathResult.path.length}, distance=${pathResult.distance.toFixed(0)}`,
+        );
 
         const now = Date.now();
         const travelTime = estimateTravelTime(

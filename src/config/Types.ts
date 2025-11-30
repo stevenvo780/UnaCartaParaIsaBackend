@@ -42,12 +42,9 @@ export const TYPES = {
   MarriageSystem: Symbol.for("MarriageSystem"),
   ConflictResolutionSystem: Symbol.for("ConflictResolutionSystem"),
 
-
-
   AmbientAwarenessSystem: Symbol.for("AmbientAwarenessSystem"),
 
   TimeSystem: Symbol.for("TimeSystem"),
-
 
   MovementSystem: Symbol.for("MovementSystem"),
 

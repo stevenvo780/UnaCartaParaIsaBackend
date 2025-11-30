@@ -131,13 +131,20 @@ export class AIActionExecutor {
     }
 
     if (action.targetZoneId) {
-      const alreadyMoving = movement.isMovingToZone(action.agentId, action.targetZoneId);
-      logger.debug(`🚶 [executeMove] ${action.agentId}: targetZone=${action.targetZoneId}, alreadyMoving=${alreadyMoving}`);
+      const alreadyMoving = movement.isMovingToZone(
+        action.agentId,
+        action.targetZoneId,
+      );
+      logger.debug(
+        `🚶 [executeMove] ${action.agentId}: targetZone=${action.targetZoneId}, alreadyMoving=${alreadyMoving}`,
+      );
       if (alreadyMoving) {
         return;
       }
       const result = movement.moveToZone(action.agentId, action.targetZoneId);
-      logger.info(`🚶 [executeMove] ${action.agentId}: moveToZone result=${result}`);
+      logger.info(
+        `🚶 [executeMove] ${action.agentId}: moveToZone result=${result}`,
+      );
     } else if (action.targetPosition) {
       if (
         movement.isMovingToPosition(
@@ -438,7 +445,9 @@ export class AIActionExecutor {
       this.deps.craftingSystem &&
       action.data?.itemType === ItemCategory.WEAPON
     ) {
-      logger.info(`⚒️ [executeCraft] ${action.agentId}: Calling craftBestWeapon`);
+      logger.info(
+        `⚒️ [executeCraft] ${action.agentId}: Calling craftBestWeapon`,
+      );
       const weaponId = this.deps.craftingSystem.craftBestWeapon(action.agentId);
       logger.info(
         `⚒️ [executeCraft] ${action.agentId}: craftBestWeapon returned ${weaponId}`,

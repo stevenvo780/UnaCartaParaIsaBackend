@@ -178,7 +178,6 @@ export class AnimalBehavior {
       !animal.currentTarget ||
       animal.currentTarget.type !== AnimalTargetType.FOOD
     ) {
-
       const prey = availablePrey
         .filter((p) => config.preyTypes!.includes(p.type) && !p.isDead)
         .sort((a, b) => {
@@ -216,13 +215,10 @@ export class AnimalBehavior {
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < 25) {
-
         const attackDamage = (config.attackDamage || 15) * animal.genes.size;
         onDamage(prey.id, attackDamage);
 
-
         animal.stateEndTime = Date.now() + 1500;
-
 
         prey.state = AnimalState.FLEEING;
         prey.fleeTarget = animal.id;

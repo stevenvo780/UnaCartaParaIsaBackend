@@ -168,7 +168,6 @@ export class EventRegistry {
         harvesterId?: string;
         position?: { x: number; y: number };
       }) => {
-
         void data;
       },
     );
@@ -181,7 +180,6 @@ export class EventRegistry {
         label: string;
         completedAt: number;
       }) => {
-
         void data;
       },
     );
@@ -247,7 +245,6 @@ export class EventRegistry {
         label: string;
         completesAt: number;
       }) => {
-
         void data;
       },
     );
@@ -343,8 +340,6 @@ export class EventRegistry {
             "task_completed",
           );
         }
-
-
       },
     );
 
@@ -471,7 +466,6 @@ export class EventRegistry {
         createdBy?: string;
         timestamp: number;
       }) => {
-
         void data;
       },
     );

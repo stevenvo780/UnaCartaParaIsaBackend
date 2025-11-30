@@ -457,7 +457,6 @@ export class LifeCycleSystem extends EventEmitter {
       timestamp: now,
     });
 
-
     const motherPos = mother.position || { x: 1000, y: 1000 };
     const spawnOffset = {
       x: (RandomUtils.float() - 0.5) * 50,
@@ -865,20 +864,17 @@ export class LifeCycleSystem extends EventEmitter {
     const MAX_ATTEMPTS = 100;
     const SPAWN_RADIUS = 200;
 
-
-
     const baseX = 200;
     const baseY = 150;
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-      const x =
-        baseX +
-        Math.floor((RandomUtils.float() - 0.5) * SPAWN_RADIUS);
-      const y =
-        baseY +
-        Math.floor((RandomUtils.float() - 0.5) * SPAWN_RADIUS);
+      const x = baseX + Math.floor((RandomUtils.float() - 0.5) * SPAWN_RADIUS);
+      const y = baseY + Math.floor((RandomUtils.float() - 0.5) * SPAWN_RADIUS);
 
-      const position = { x: Math.max(0, Math.min(x, world.width)), y: Math.max(0, Math.min(y, world.height)) };
+      const position = {
+        x: Math.max(0, Math.min(x, world.width)),
+        y: Math.max(0, Math.min(y, world.height)),
+      };
       if (this.isPositionValid(position, world)) {
         return position;
       }

@@ -11,10 +11,6 @@ import { GoalType } from "../../../../../shared/constants/AIEnums";
 import type { GameState } from "../../../../types/game-types";
 import type { Inventory } from "../../../../types/simulation/economy";
 
-
-
-
-
 /**
  * Contexto unificado para todas las reglas.
  * Un solo objeto en lugar de 18 interfaces *Deps diferentes.
@@ -24,22 +20,18 @@ export interface GoalContext {
   aiState: AIState;
   now: number;
 
-
   needs?: EntityNeedsData;
   inventory?: Inventory;
   position?: { x: number; y: number };
   roleType?: string;
   stats?: Record<string, number> | null;
 
-
   gameState?: GameState;
-
 
   enemies?: string[];
   nearbyPredators?: Array<{ id: string; position: { x: number; y: number } }>;
   isWarrior?: boolean;
   combatStrategy?: "peaceful" | "tit_for_tat" | "bully";
-
 
   buildTasks?: Array<{
     id: string;
@@ -47,20 +39,17 @@ export interface GoalContext {
     score: number;
   }>;
 
-
   inventoryLoad?: number;
   inventoryCapacity?: number;
   hasWater?: boolean;
   hasFood?: boolean;
   depositZoneId?: string;
 
-
   equippedWeapon?: string;
   canCraftClub?: boolean;
   canCraftDagger?: boolean;
   craftZoneId?: string;
   hasAvailableWeapons?: boolean;
-
 
   nearbyAgentInNeed?: {
     id: string;
@@ -69,18 +58,14 @@ export interface GoalContext {
     targetZoneId?: string;
   };
 
-
   hasExcessResources?: boolean;
   nearestMarketZoneId?: string;
-
 
   preferredResource?: string;
   nearestPreferredResource?: { id: string; x: number; y: number };
   roleEfficiency?: number;
 
-
   nearbyInspectable?: { id: string; position: { x: number; y: number } };
-
 
   activeQuestGoal?: {
     questId: string;
@@ -89,12 +74,10 @@ export interface GoalContext {
     targetZoneId?: string;
   };
 
-
   contributableBuilding?: {
     zoneId: string;
     score: number;
   };
-
 
   findNearestResource?: (
     entityId: string,
@@ -160,10 +143,6 @@ export interface GoalRule {
   isCritical?: boolean;
 }
 
-
-
-
-
 /**
  * Calcula utilidad para needs biológicos.
  * Umbral de 40: arriba de 40 el agente trabaja, debajo prioriza necesidades.
@@ -197,10 +176,6 @@ export function personalityFactor(
   return base;
 }
 
-
-
-
-
 /**
  * Evalúa todas las reglas contra el contexto y retorna goals ordenados por prioridad.
  *
@@ -216,15 +191,12 @@ export function evaluateRules(
   const goals: AIGoal[] = [];
 
   for (const rule of rules) {
-
     if (!rule.condition(ctx)) continue;
-
 
     const priority = rule.priority(ctx);
     const minPriority = rule.minPriority ?? 0;
 
     if (priority < minPriority) continue;
-
 
     const goal: AIGoal = {
       id: `${rule.id}_${ctx.entityId}_${ctx.now}`,
@@ -237,12 +209,10 @@ export function evaluateRules(
 
     goals.push(goal);
 
-
     if (rule.isCritical && priority > 0.9) {
       return [goal];
     }
   }
-
 
   goals.sort((a, b) => b.priority - a.priority);
 

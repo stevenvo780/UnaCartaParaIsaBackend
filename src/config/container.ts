@@ -51,13 +51,9 @@ import { TaskSystem } from "../domain/simulation/systems/TaskSystem";
 import { MarriageSystem } from "../domain/simulation/systems/MarriageSystem";
 import { ConflictResolutionSystem } from "../domain/simulation/systems/ConflictResolutionSystem";
 
-
-
-
 import { AmbientAwarenessSystem } from "../domain/simulation/systems/AmbientAwarenessSystem";
 
 import { TimeSystem } from "../domain/simulation/systems/TimeSystem";
-
 
 import { MovementSystem } from "../domain/simulation/systems/movement/MovementSystem";
 
@@ -187,15 +183,12 @@ container
   .to(ConflictResolutionSystem)
   .inSingletonScope();
 
-
-
 container
   .bind<AmbientAwarenessSystem>(TYPES.AmbientAwarenessSystem)
   .to(AmbientAwarenessSystem)
   .inSingletonScope();
 
 container.bind<TimeSystem>(TYPES.TimeSystem).to(TimeSystem).inSingletonScope();
-
 
 container
   .bind<MovementSystem>(TYPES.MovementSystem)

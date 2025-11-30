@@ -26,7 +26,6 @@
  * - NeedsEvaluator, CraftingEvaluator, DepositEvaluator, etc.
  */
 
-
 export type {
   IAIContext,
   Position,
@@ -41,7 +40,6 @@ export {
   type AIContextSystems,
   type AIContextCallbacks,
 } from "./AIContextAdapter";
-
 
 export {
   generateRoleBasedWorkGoal,
@@ -75,7 +73,6 @@ export {
 } from "./core/AIZoneHandler";
 
 export { PriorityManager } from "./core/PriorityManager";
-
 
 export type { GoalRule, GoalContext } from "./core/GoalRule";
 export {
@@ -121,7 +118,6 @@ export {
 } from "./core/SimplifiedGoalPlanner";
 
 export * from "./core/ActivityMapper";
-
 
 export * from "./evaluators/NeedsEvaluator";
 export * from "./evaluators/CollectiveNeedsEvaluator";

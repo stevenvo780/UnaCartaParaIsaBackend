@@ -169,11 +169,12 @@ export class SnapshotManager {
           };
         }
 
+        const inventory = this.runner.inventorySystem?.getAgentInventory(
+          agent.id,
+        );
 
-        const inventory = this.runner.inventorySystem?.getAgentInventory(agent.id);
-
-
-        const equippedWeapon = this.runner.enhancedCraftingSystem?.getEquippedWeapon(agent.id);
+        const equippedWeapon =
+          this.runner.enhancedCraftingSystem?.getEquippedWeapon(agent.id);
 
         return {
           ...agent,
@@ -193,22 +194,22 @@ export class SnapshotManager {
         : [];
     this.runner.capturedEvents.length = 0;
 
-
     if (this.runner.enhancedCraftingSystem) {
-      const craftingSnapshot = this.runner.enhancedCraftingSystem.getCraftingSnapshot();
+      const craftingSnapshot =
+        this.runner.enhancedCraftingSystem.getCraftingSnapshot();
       stateSnapshot.enhancedCrafting = craftingSnapshot;
-      
 
       if (currentTick % 10 === 0) {
         logger.debug("📦 [Snapshot] enhancedCrafting data:", {
           tick: currentTick,
           activeJobs: craftingSnapshot.activeJobs?.length || 0,
-          knownRecipesAgents: Object.keys(craftingSnapshot.knownRecipes || {}).length,
-          equippedWeapons: Object.keys(craftingSnapshot.equippedWeapons || {}).length
+          knownRecipesAgents: Object.keys(craftingSnapshot.knownRecipes || {})
+            .length,
+          equippedWeapons: Object.keys(craftingSnapshot.equippedWeapons || {})
+            .length,
         });
       }
     } else {
-
       if (currentTick % 10 === 0) {
         logger.warn("⚠️ [Snapshot] enhancedCraftingSystem not available");
       }
@@ -246,7 +247,6 @@ export class SnapshotManager {
     const snapshotState = cloneGameState(this.runner.state);
     snapshotState.genealogy =
       this.runner._genealogySystem?.getSerializedFamilyTree() ?? {};
-
 
     snapshotState.legends = {
       records: new Map(),
@@ -317,11 +317,12 @@ export class SnapshotManager {
           };
         }
 
+        const inventory = this.runner.inventorySystem?.getAgentInventory(
+          agent.id,
+        );
 
-        const inventory = this.runner.inventorySystem?.getAgentInventory(agent.id);
-
-
-        const equippedWeapon = this.runner.enhancedCraftingSystem?.getEquippedWeapon(agent.id);
+        const equippedWeapon =
+          this.runner.enhancedCraftingSystem?.getEquippedWeapon(agent.id);
 
         return {
           ...agent,
@@ -335,7 +336,6 @@ export class SnapshotManager {
         };
       });
     }
-
 
     if (this.runner.enhancedCraftingSystem) {
       snapshotState.enhancedCrafting =

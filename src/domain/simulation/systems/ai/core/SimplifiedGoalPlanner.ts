@@ -24,7 +24,6 @@ export interface SimplifiedGoalPlannerDeps {
   ) => { x: number; y: number } | undefined;
   getAgentRole?: (entityId: string) => { roleType: string } | undefined;
 
-
   getEnemies?: (entityId: string) => string[] | undefined;
   getNearbyPredators?: (
     entityId: string,
@@ -36,53 +35,54 @@ export interface SimplifiedGoalPlannerDeps {
   ) => Array<{ id: string; zoneId: string; score: number }> | undefined;
   getDepositZone?: (entityId: string) => string | undefined;
   getEquippedWeapon?: (entityId: string) => string | undefined;
-  canCraftWeapon?: (
-    entityId: string,
-    weaponId: string,
-  ) => boolean;
+  canCraftWeapon?: (entityId: string, weaponId: string) => boolean;
   getCraftZone?: () => string | undefined;
   hasAvailableWeapons?: () => boolean;
 
-
-  getNearbyAgentInNeed?: (entityId: string) => {
-    id: string;
-    need: "water" | "food" | "medical" | "rest" | "social";
-    distance: number;
-    targetZoneId?: string;
-  } | undefined;
-
+  getNearbyAgentInNeed?: (entityId: string) =>
+    | {
+        id: string;
+        need: "water" | "food" | "medical" | "rest" | "social";
+        distance: number;
+        targetZoneId?: string;
+      }
+    | undefined;
 
   hasExcessResources?: (entityId: string) => boolean;
   getNearestMarketZoneId?: (entityId: string) => string | undefined;
 
-
   getPreferredResource?: (entityId: string) => string | undefined;
-  getNearestPreferredResource?: (entityId: string) => {
-    id: string;
-    x: number;
-    y: number;
-  } | undefined;
+  getNearestPreferredResource?: (entityId: string) =>
+    | {
+        id: string;
+        x: number;
+        y: number;
+      }
+    | undefined;
   getRoleEfficiency?: (entityId: string) => number;
 
+  getNearbyInspectable?: (entityId: string) =>
+    | {
+        id: string;
+        position: { x: number; y: number };
+      }
+    | undefined;
 
-  getNearbyInspectable?: (entityId: string) => {
-    id: string;
-    position: { x: number; y: number };
-  } | undefined;
+  getActiveQuestGoal?: (entityId: string) =>
+    | {
+        questId: string;
+        objectiveId: string;
+        goalType: string;
+        targetZoneId?: string;
+      }
+    | undefined;
 
-
-  getActiveQuestGoal?: (entityId: string) => {
-    questId: string;
-    objectiveId: string;
-    goalType: string;
-    targetZoneId?: string;
-  } | undefined;
-
-
-  getContributableBuilding?: (entityId: string) => {
-    zoneId: string;
-    score: number;
-  } | undefined;
+  getContributableBuilding?: (entityId: string) =>
+    | {
+        zoneId: string;
+        score: number;
+      }
+    | undefined;
 }
 
 /**
@@ -104,7 +104,6 @@ export function planGoalsSimplified(
   const entityId = aiState.entityId;
   const inventory = deps.getAgentInventory?.(entityId);
 
-
   const ctx: GoalContext = {
     entityId,
     aiState,
@@ -115,16 +114,13 @@ export function planGoalsSimplified(
     roleType: deps.getAgentRole?.(entityId)?.roleType,
     gameState: deps.gameState,
 
-
     enemies: deps.getEnemies?.(entityId),
     nearbyPredators: deps.getNearbyPredators?.(entityId),
     isWarrior: deps.isWarrior?.(entityId),
     stats: deps.getEntityStats?.(entityId),
     getEntityPosition: (id: string) => deps.getEntityPosition?.(id) ?? null,
 
-
     buildTasks: deps.getBuildTasks?.(entityId),
-
 
     inventoryLoad: inventory
       ? (inventory.wood ?? 0) +
@@ -137,35 +133,27 @@ export function planGoalsSimplified(
     hasFood: (inventory?.food ?? 0) > 0,
     depositZoneId: deps.getDepositZone?.(entityId),
 
-
     equippedWeapon: deps.getEquippedWeapon?.(entityId),
     canCraftClub: deps.canCraftWeapon?.(entityId, "wooden_club") ?? false,
     canCraftDagger: deps.canCraftWeapon?.(entityId, "stone_dagger") ?? false,
     craftZoneId: deps.getCraftZone?.(),
     hasAvailableWeapons: deps.hasAvailableWeapons?.() ?? false,
 
-
     nearbyAgentInNeed: deps.getNearbyAgentInNeed?.(entityId),
-
 
     hasExcessResources: deps.hasExcessResources?.(entityId) ?? false,
     nearestMarketZoneId: deps.getNearestMarketZoneId?.(entityId),
-
 
     preferredResource: deps.getPreferredResource?.(entityId),
     nearestPreferredResource: deps.getNearestPreferredResource?.(entityId),
     roleEfficiency: deps.getRoleEfficiency?.(entityId) ?? 1.0,
 
-
     nearbyInspectable: deps.getNearbyInspectable?.(entityId),
-
 
     activeQuestGoal: deps.getActiveQuestGoal?.(entityId),
 
-
     contributableBuilding: deps.getContributableBuilding?.(entityId),
   };
-
 
   return evaluateRules(rules, ctx, maxGoals);
 }

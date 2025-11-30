@@ -41,21 +41,10 @@ export function itemToInventoryResource(itemId: string): ResourceType | null {
   ];
   if (woodItems.includes(itemId)) return ResourceTypeEnum.WOOD;
 
-  const stoneItems = [
-    "coal",
-    "clay",
-    "brick",
-    "obsidian",
-    "flint",
-  ];
+  const stoneItems = ["coal", "clay", "brick", "obsidian", "flint"];
   if (stoneItems.includes(itemId)) return ResourceTypeEnum.STONE;
 
-  const metalItems = [
-    "iron_ore",
-    "copper_ore",
-    "iron_ingot",
-    "copper_ingot",
-  ];
+  const metalItems = ["iron_ore", "copper_ore", "iron_ingot", "copper_ingot"];
   if (metalItems.includes(itemId)) return ResourceTypeEnum.METAL;
 
   const foodItems = [
@@ -202,7 +191,6 @@ export function toWorldResources(
  * Handles both direct resource types (wood, stone) and specific items (iron_ore).
  */
 export function itemToWorldResources(itemId: string): WorldResourceType[] {
-
   if (isWorldResourceType(itemId)) {
     return [itemId];
   }

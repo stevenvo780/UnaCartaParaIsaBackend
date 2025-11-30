@@ -18,10 +18,6 @@ import { RoleType } from "../../../../../shared/constants/RoleEnums";
 import type { GoalRule } from "./GoalRule";
 import { needUtility, socialNeedUtility } from "./GoalRule";
 
-
-
-
-
 export const hungerRule: GoalRule = {
   id: "bio_hunger",
   goalType: GoalType.SATISFY_HUNGER,
@@ -92,10 +88,6 @@ export const energyRule: GoalRule = {
   }),
 };
 
-
-
-
-
 export const socialRule: GoalRule = {
   id: "social_interact",
   goalType: GoalType.SATISFY_SOCIAL,
@@ -141,16 +133,11 @@ export const mentalHealthRule: GoalRule = {
   }),
 };
 
-
-
-
-
 export const workDriveRule: GoalRule = {
   id: "cognitive_work",
   goalType: GoalType.WORK,
   category: "cognitive",
   condition: (ctx) => {
-
     const hasRole = ctx.roleType && ctx.roleType !== RoleType.IDLE;
     const highDiligence = ctx.aiState.personality.diligence > 0.6;
     return hasRole || highDiligence;
@@ -158,13 +145,10 @@ export const workDriveRule: GoalRule = {
   priority: (ctx) => {
     let base = 0.3;
 
-
     if (ctx.aiState.personality.workEthic === WorkEthic.WORKAHOLIC) base += 0.3;
     if (ctx.aiState.personality.workEthic === WorkEthic.LAZY) base -= 0.2;
 
-
     if (ctx.roleType && ctx.roleType !== RoleType.IDLE) base += 0.2;
-
 
     base += ctx.aiState.personality.diligence * 0.2;
 
@@ -187,7 +171,6 @@ export const exploreDriveRule: GoalRule = {
     );
   },
   priority: (ctx) => {
-
     let base = 0.15;
 
     if (
@@ -204,9 +187,7 @@ export const exploreDriveRule: GoalRule = {
     if (timeSinceExplore > 60000) base += 0.1;
     if (timeSinceExplore > 300000) base += 0.2;
 
-
     base += ctx.aiState.personality.curiosity * 0.1;
-
 
     return Math.max(0, Math.min(0.55, base));
   },
@@ -218,10 +199,6 @@ export const exploreDriveRule: GoalRule = {
     },
   }),
 };
-
-
-
-
 
 export const defaultExplorationRule: GoalRule = {
   id: "default_explore",
@@ -238,10 +215,6 @@ export const defaultExplorationRule: GoalRule = {
     },
   }),
 };
-
-
-
-
 
 /**
  * Calcula el drive de reproducción basado en bienestar general.
@@ -309,10 +282,6 @@ export const reproductionRule: GoalRule = {
   },
 };
 
-
-
-
-
 const DEFAULT_INVENTORY_CAPACITY = 50;
 const GATHER_TRIGGER_THRESHOLD = 0.8;
 
@@ -358,10 +327,6 @@ export const territoryExpansionRule: GoalRule = {
   },
 };
 
-
-
-
-
 const FLEE_COOLDOWN_MS = 5000;
 const fleeCooldowns: Map<string, number> = new Map();
 
@@ -391,7 +356,6 @@ export const fleeFromEnemyRule: GoalRule = {
   minPriority: 0.8,
   isCritical: true,
   getData: (ctx) => {
-
     const myPos = ctx.position!;
     const nearestEnemy = ctx.enemies![0];
     const enemyPos = ctx.getEntityPosition?.(nearestEnemy);
@@ -425,13 +389,11 @@ export const fleeFromPredatorRule: GoalRule = {
     if (!ctx.nearbyPredators || ctx.nearbyPredators.length === 0) return false;
     if (!ctx.position) return false;
 
-
     const closest = ctx.nearbyPredators[0];
     const dist = Math.hypot(
       closest.position.x - ctx.position.x,
       closest.position.y - ctx.position.y,
     );
-
 
     if (ctx.isWarrior) return false;
 
@@ -477,7 +439,6 @@ export const attackPredatorRule: GoalRule = {
     if (!ctx.nearbyPredators || ctx.nearbyPredators.length === 0) return false;
     if (!ctx.position) return false;
 
-
     const stats = ctx.stats ?? {};
     const morale = stats.morale ?? 50;
     const health = stats.health ?? 100;
@@ -498,16 +459,11 @@ export const attackPredatorRule: GoalRule = {
   },
 };
 
-
-
-
-
 export const constructionRule: GoalRule = {
   id: "construction",
   goalType: GoalType.CONSTRUCTION,
   category: "work",
   condition: (ctx) => {
-
     if (!ctx.buildTasks || ctx.buildTasks.length === 0) return false;
     if (!ctx.position) return false;
     return true;
@@ -530,10 +486,6 @@ export const constructionRule: GoalRule = {
   },
 };
 
-
-
-
-
 export const depositRule: GoalRule = {
   id: "deposit",
   goalType: GoalType.DEPOSIT,
@@ -552,15 +504,9 @@ export const depositRule: GoalRule = {
     const loadRatio = ctx.inventoryLoad! / cap;
     const conscientiousness = ctx.aiState.personality.conscientiousness ?? 0.5;
 
-
-
-
-
     let priority = 0.5 + loadRatio * 0.5;
 
-
     priority += conscientiousness * 0.1;
-
 
     if (ctx.hasWater || ctx.hasFood) {
       priority += 0.15;
@@ -579,36 +525,26 @@ export const depositRule: GoalRule = {
   }),
 };
 
-
-
-
-
 export const craftWeaponRule: GoalRule = {
   id: "craft_weapon",
   goalType: GoalType.CRAFT,
   category: "work",
   condition: (ctx) => {
-
     const equipped = ctx.equippedWeapon ?? "unarmed";
     if (equipped !== "unarmed") return false;
 
-
     if (ctx.hasAvailableWeapons) return false;
 
-
     if (!ctx.canCraftClub && !ctx.canCraftDagger) return false;
-
 
     if (!ctx.craftZoneId) return false;
 
     return true;
   },
   priority: (ctx) => {
-
     const role = (ctx.roleType ?? "").toLowerCase();
     const needsWeaponForJob =
       role === "hunter" || role === "guard" || role === "warrior";
-
 
     return needsWeaponForJob ? 0.92 : 0.72;
   },
@@ -629,10 +565,6 @@ export const craftWeaponRule: GoalRule = {
     };
   },
 };
-
-
-
-
 
 export const assistRule: GoalRule = {
   id: "assist",
@@ -658,10 +590,6 @@ export const assistRule: GoalRule = {
   }),
 };
 
-
-
-
-
 export const tradeRule: GoalRule = {
   id: "trade",
   goalType: GoalType.WORK,
@@ -679,17 +607,12 @@ export const tradeRule: GoalRule = {
   }),
 };
 
-
-
-
-
 export const roleWorkRule: GoalRule = {
   id: "role_work",
   goalType: GoalType.WORK,
   category: "work",
   condition: (ctx) => {
     if (!ctx.roleType) return false;
-
 
     return true;
   },
@@ -738,10 +661,6 @@ export const huntingRule: GoalRule = {
   }),
 };
 
-
-
-
-
 export const inspectionRule: GoalRule = {
   id: "inspection",
   goalType: GoalType.EXPLORE,
@@ -762,10 +681,6 @@ export const inspectionRule: GoalRule = {
   }),
 };
 
-
-
-
-
 export const buildingContributionRule: GoalRule = {
   id: "building_contribution",
   goalType: GoalType.WORK,
@@ -784,10 +699,6 @@ export const buildingContributionRule: GoalRule = {
     data: { action: "contribute_resources" },
   }),
 };
-
-
-
-
 
 export const questRule: GoalRule = {
   id: "quest",
@@ -818,10 +729,6 @@ export const questRule: GoalRule = {
   },
 };
 
-
-
-
-
 /**
  * Reglas core que reemplazan:
  * - BiologicalDriveEvaluator
@@ -830,7 +737,6 @@ export const questRule: GoalRule = {
  * - AttentionEvaluator (parcialmente)
  */
 export const coreRules: GoalRule[] = [
-
   thirstRule,
   hungerRule,
   energyRule,
@@ -850,7 +756,6 @@ export const coreRules: GoalRule[] = [
  * Usar cuando el contexto tiene datos de combat/enemies.
  */
 export const extendedRules: GoalRule[] = [
-
   fleeFromEnemyRule,
   fleeFromPredatorRule,
   attackPredatorRule,
@@ -868,7 +773,6 @@ export const extendedRules: GoalRule[] = [
  * Usar para agentes que necesitan el sistema completo.
  */
 export const fullRules: GoalRule[] = [
-
   fleeFromEnemyRule,
   fleeFromPredatorRule,
   attackPredatorRule,

@@ -168,7 +168,6 @@ export class WorldResourceSystem {
   ): WorldResourceInstance | undefined {
     const searchRadii = [200, 500, 1000, 2000];
 
-
     if (type === WorldResourceType.WATER_SOURCE) {
       const totalResources = this.resources.size;
       const waterResources = Array.from(this.resources.values()).filter(
@@ -211,7 +210,6 @@ export class WorldResourceSystem {
 
       if (found) return nearest;
     }
-
 
     if (type === WorldResourceType.WATER_SOURCE) {
       logger.debug(
@@ -425,8 +423,6 @@ export class WorldResourceSystem {
           }
         }
 
-
-
         if (!isWaterTile && tile.biome) {
           const waterSuitableBiomes: string[] = [
             BiomeType.WETLAND,
@@ -435,7 +431,6 @@ export class WorldResourceSystem {
             BiomeType.VILLAGE,
           ];
           if (waterSuitableBiomes.includes(tile.biome)) {
-
             const waterSpawnProb =
               tile.biome === BiomeType.WETLAND
                 ? 0.08

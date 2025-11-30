@@ -232,7 +232,6 @@ export class AISystem extends EventEmitter {
   private readonly RESOURCE_CACHE_TTL = 2000;
   private readonly MAX_RESOURCE_SEARCH_RADIUS = 2000;
 
-
   private resourceReservations = new Map<string, string>();
 
   private readonly MAX_DECISION_TIME_MS = 5;
@@ -863,10 +862,6 @@ export class AISystem extends EventEmitter {
         aiState.currentAction = null;
         return;
       } else if (aiState.currentAction) {
-
-
-
-
         const highPriorityGoal = aiState.goalQueue.find(
           (g) =>
             g.priority >= 0.88 &&
@@ -893,7 +888,6 @@ export class AISystem extends EventEmitter {
             newGoal: highPriorityGoal,
             timestamp: now,
           });
-
         } else {
           return;
         }
@@ -907,7 +901,6 @@ export class AISystem extends EventEmitter {
 
     if (!aiState.currentGoal) {
       if (aiState.goalQueue.length > 0) {
-
         aiState.goalQueue.sort((a, b) => b.priority - a.priority);
         aiState.currentGoal = aiState.goalQueue.shift() ?? null;
         aiState.lastDecisionTime = now;
@@ -1127,7 +1120,6 @@ export class AISystem extends EventEmitter {
     const agentRole = this.roleSystem?.getAgentRole(agentId);
     const role = agentRole?.roleType;
 
-
     const excluded = new Set(excludeTargetIds);
     if (aiState.currentGoal?.targetId) {
       excluded.add(aiState.currentGoal.targetId);
@@ -1136,12 +1128,10 @@ export class AISystem extends EventEmitter {
       if (g.targetId) excluded.add(g.targetId);
     }
 
-
     if (role === RoleType.HUNTER) {
       const huntGoal = this.generateHunterGoal(agentId, now, excluded);
       if (huntGoal) return huntGoal;
     }
-
 
     return generateRoleBasedWorkGoal(
       agentId,
@@ -1162,13 +1152,9 @@ export class AISystem extends EventEmitter {
     now: number,
     excluded: Set<string>,
   ): AIGoal | null {
-
     const hasWeapon =
-      this.equipmentSystem.getEquippedItem(
-        agentId,
-        EquipmentSlot.MAIN_HAND,
-      ) !== undefined;
-
+      this.equipmentSystem.getEquippedItem(agentId, EquipmentSlot.MAIN_HAND) !==
+      undefined;
 
     if (!hasWeapon) {
       const weapon = toolStorage.findToolForRole("hunter");
@@ -1189,12 +1175,9 @@ export class AISystem extends EventEmitter {
       }
     }
 
-
     const canHunt =
-      this.equipmentSystem.getEquippedItem(
-        agentId,
-        EquipmentSlot.MAIN_HAND,
-      ) !== undefined;
+      this.equipmentSystem.getEquippedItem(agentId, EquipmentSlot.MAIN_HAND) !==
+      undefined;
 
     if (!canHunt) return null;
 
@@ -1306,23 +1289,18 @@ export class AISystem extends EventEmitter {
     aiState: AIState,
     now: number,
   ): Promise<AIGoal | null> {
-
     const simpleDeps = this.getSimplifiedDeps();
     const fullGoals = planGoalsFull(simpleDeps, aiState, now);
 
-
     const collectiveGoals = this.evaluateCollectiveGoals(aiState, now);
-
 
     const allGoals = [...fullGoals, ...collectiveGoals].sort(
       (a, b) => b.priority - a.priority,
     );
 
-
     const needs = this.needsSystem?.getNeeds(agentId);
     if (needs && allGoals.length > 0) {
       const topGoal = allGoals[0];
-      
 
       if (topGoal.type === GoalType.SATISFY_HUNGER && !topGoal.targetPosition) {
         const foodGoal = this.createUrgentFoodGoal(agentId, now);
@@ -1332,7 +1310,6 @@ export class AISystem extends EventEmitter {
           topGoal.data = { ...topGoal.data, ...foodGoal.data };
         }
       }
-      
 
       if (topGoal.type === GoalType.SATISFY_THIRST && !topGoal.targetPosition) {
         const waterGoal = this.createUrgentWaterGoal(agentId, now);
@@ -1342,7 +1319,6 @@ export class AISystem extends EventEmitter {
           topGoal.data = { ...topGoal.data, ...waterGoal.data };
         }
       }
-      
 
       if (topGoal.type === GoalType.REST && !topGoal.targetPosition) {
         const restGoal = this.createUrgentRestGoal(agentId, now);
@@ -1352,7 +1328,6 @@ export class AISystem extends EventEmitter {
         }
       }
     }
-
 
     if (allGoals.length > 0) {
       const goal = allGoals[0];
@@ -1376,20 +1351,25 @@ export class AISystem extends EventEmitter {
 
     const ctx: CollectiveNeedsContext = {
       gameState: this.gameState,
-      getAgentInventory: (id: string) => this.inventorySystem?.getAgentInventory(id),
+      getAgentInventory: (id: string) =>
+        this.inventorySystem?.getAgentInventory(id),
       getAgentRole: (id: string) => this.roleSystem?.getAgentRole(id),
-      getEntityPosition: (id: string) => this.agentRegistry?.getPosition(id) ?? null,
+      getEntityPosition: (id: string) =>
+        this.agentRegistry?.getPosition(id) ?? null,
       getAllStockpiles: () => this.inventorySystem?.getAllStockpiles() ?? [],
       getActiveDemands: () => {
         const governance = this.gameState.governance;
         if (!governance?.demands) return [];
         return governance.demands.filter((d) => !d.resolvedAt);
       },
-      getPopulation: () => this.gameState.agents?.filter((a) => !a.isDead).length ?? 0,
+      getPopulation: () =>
+        this.gameState.agents?.filter((a) => !a.isDead).length ?? 0,
       taskSystem: {
         createTask: (params) => this.taskSystem!.createTask(params),
-        getAvailableCommunityTasks: () => this.taskSystem!.getAvailableCommunityTasks(),
-        claimTask: (taskId, agentId) => this.taskSystem!.claimTask(taskId, agentId),
+        getAvailableCommunityTasks: () =>
+          this.taskSystem!.getAvailableCommunityTasks(),
+        claimTask: (taskId, agentId) =>
+          this.taskSystem!.claimTask(taskId, agentId),
       },
     };
 
@@ -1426,7 +1406,6 @@ export class AISystem extends EventEmitter {
         return role ? { roleType: role.roleType } : undefined;
       },
 
-
       getEnemies: (id: string) =>
         this.combatSystem?.getNearbyEnemies(id, 200) ?? undefined,
       getNearbyPredators: (id: string) => {
@@ -1451,7 +1430,6 @@ export class AISystem extends EventEmitter {
           : null;
       },
 
-
       getBuildTasks: (id: string) => {
         const tasks = this.taskSystem?.getActiveTasks() ?? [];
         const pos = this.agentRegistry?.getPosition(id);
@@ -1459,8 +1437,7 @@ export class AISystem extends EventEmitter {
 
         return tasks
           .filter(
-            (t) =>
-              t.type === TaskType.BUILD_HOUSE && !t.completed && t.zoneId,
+            (t) => t.type === TaskType.BUILD_HOUSE && !t.completed && t.zoneId,
           )
           .map((t) => {
             const zone = this.gameState.zones?.find((z) => z.id === t.zoneId);
@@ -1481,7 +1458,6 @@ export class AISystem extends EventEmitter {
         }>;
       },
 
-
       getDepositZone: (id: string) => {
         const inv = this.inventorySystem?.getAgentInventory(id);
         if (!inv) return undefined;
@@ -1493,7 +1469,6 @@ export class AISystem extends EventEmitter {
         return this.gameState.zones?.find((z) => z.type === ZoneType.WORK)?.id;
       },
 
-
       getEquippedWeapon: (id: string) =>
         this.combatSystem?.getEquipped(id) ?? "unarmed",
       canCraftWeapon: (id: string, weaponId: string) => {
@@ -1502,13 +1477,18 @@ export class AISystem extends EventEmitter {
           CraftingWeaponId.WOODEN_CLUB,
           CraftingWeaponId.STONE_DAGGER,
         ];
-        if (!validWeaponIds.includes(weaponId as CraftingWeaponId)) return false;
-        return this.craftingSystem.canCraftWeapon(id, weaponId as CraftingWeaponId);
+        if (!validWeaponIds.includes(weaponId as CraftingWeaponId))
+          return false;
+        return this.craftingSystem.canCraftWeapon(
+          id,
+          weaponId as CraftingWeaponId,
+        );
       },
       getCraftZone: () => {
         if (this.craftingZoneCache !== null) return this.craftingZoneCache;
         let zone = this.gameState.zones?.find((z) => z.type === ZoneType.WORK);
-        if (!zone) zone = this.gameState.zones?.find((z) => z.type === ZoneType.STORAGE);
+        if (!zone)
+          zone = this.gameState.zones?.find((z) => z.type === ZoneType.STORAGE);
         this.craftingZoneCache = zone?.id;
         return this.craftingZoneCache;
       },

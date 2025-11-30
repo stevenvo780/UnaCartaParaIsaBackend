@@ -97,7 +97,6 @@ export class AIContextAdapter implements IAIContext {
   private readonly callbacks: AIContextCallbacks;
   private readonly config: AIContextCacheConfig;
 
-
   private activeAgentIdsCache: string[] | null = null;
   private activeAgentIdsCacheTime = 0;
   private suggestedCraftZoneCache: string | null = null;
@@ -113,10 +112,6 @@ export class AIContextAdapter implements IAIContext {
     this.config = config;
   }
 
-
-
-
-
   get gameState(): GameState {
     return this.systems.gameState;
   }
@@ -124,10 +119,6 @@ export class AIContextAdapter implements IAIContext {
   get now(): number {
     return Date.now();
   }
-
-
-
-
 
   getPosition(agentId: string): Position | null {
     return this.systems.agentRegistry.getPosition(agentId) ?? null;
@@ -146,7 +137,6 @@ export class AIContextAdapter implements IAIContext {
   }
 
   getStrategy(_agentId: string): "peaceful" | "tit_for_tat" | "bully" {
-
     return "tit_for_tat";
   }
 
@@ -195,13 +185,8 @@ export class AIContextAdapter implements IAIContext {
   }
 
   getStats(_agentId: string): Record<string, number> | null {
-
     return null;
   }
-
-
-
-
 
   findNearestResource(
     agentId: string,
@@ -243,10 +228,6 @@ export class AIContextAdapter implements IAIContext {
     return this.systems.inventorySystem?.getAllStockpiles() ?? [];
   }
 
-
-
-
-
   getCurrentZone(entityId: string): string | null {
     const pos = this.getPosition(entityId);
     if (!pos) return null;
@@ -275,7 +256,6 @@ export class AIContextAdapter implements IAIContext {
       return this.suggestedCraftZoneCache;
     }
 
-
     const zones = this.systems.gameState.zones ?? [];
     const craftZone = zones.find(
       (z) => z.type === "work" || String(z.type) === "crafting",
@@ -289,10 +269,6 @@ export class AIContextAdapter implements IAIContext {
     const zones = this.systems.gameState.zones ?? [];
     return zones.filter((z) => types.includes(z.type)).map((z) => z.id);
   }
-
-
-
-
 
   getEquipped(agentId: string): string | null {
     return (
@@ -343,10 +319,6 @@ export class AIContextAdapter implements IAIContext {
     return false;
   }
 
-
-
-
-
   getEnemies(agentId: string, threshold?: number): string[] {
     return this.callbacks.getEnemiesForAgent?.(agentId, threshold) ?? [];
   }
@@ -369,10 +341,6 @@ export class AIContextAdapter implements IAIContext {
     return null;
   }
 
-
-
-
-
   getAvailableTasks(): Task[] {
     return this.systems.taskSystem?.getAvailableCommunityTasks() ?? [];
   }
@@ -380,14 +348,6 @@ export class AIContextAdapter implements IAIContext {
   claimTask(taskId: string, agentId: string): boolean {
     return this.systems.taskSystem?.claimTask(taskId, agentId) ?? false;
   }
-
-
-
-
-
-
-
-
 
   getTimeOfDay():
     | "dawn"
@@ -412,7 +372,6 @@ export class AIContextAdapter implements IAIContext {
   }
 
   getActiveDemands(): SettlementDemand[] {
-
     return [];
   }
 
@@ -450,10 +409,6 @@ export class AIContextAdapter implements IAIContext {
     };
   }
 
-
-
-
-
   getKnownResourceAlerts(agentId: string): Array<{
     id: string;
     resourceId: string;
@@ -476,10 +431,6 @@ export class AIContextAdapter implements IAIContext {
       this.systems.sharedKnowledgeSystem?.getKnownThreatAlerts(agentId) ?? []
     );
   }
-
-
-
-
 
   /**
    * Invalidates all caches. Call when significant state changes occur.
