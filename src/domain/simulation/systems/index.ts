@@ -5,26 +5,30 @@
  * Central re-export for all simulation systems.
  * Systems are logically grouped by domain for easy discovery.
  * 
- * TOTAL SYSTEMS: 31 main systems organized in 8 domains
+ * TOTAL SYSTEMS: 28 main systems organized in 8 domains
  * 
  * DOMAIN ORGANIZATION:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │ AGENT (6)        │ AI, Needs, Movement, Role                           │
+ * │ AGENT (4)        │ AI, Needs, Movement, Role                           │
  * │ WORLD (4)        │ WorldResource, Terrain, ChunkLoading, Time          │
- * │ SOCIAL (6)       │ Social, Marriage, Household, Reputation, Genealogy, │
- * │                  │ SharedKnowledge                                     │
+ * │ SOCIAL (5)       │ Social, Marriage, Household, Reputation, Genealogy  │
  * │ ECONOMY (7)      │ Economy, Inventory, EnhancedCrafting, Production,   │
  * │                  │ ResourceReservation, RecipeDiscovery, Equipment     │
  * │ COMBAT (2)       │ Combat, ConflictResolution                          │
  * │ LIFE (2)         │ LifeCycle, Animal                                   │
- * │ BUILDING (2)     │ Building, BuildingMaintenance                       │
+ * │ BUILDING (1)     │ Building (+ maintenance)                            │
  * │ GOVERNANCE (3)   │ Governance, Quest, Task                             │
- * │ MISC (3)         │ AmbientAwareness, InteractionGame, ItemGeneration,  │
- * │                  │ LivingLegends                                       │
+ * │ MISC (2)         │ AmbientAwareness, ItemGeneration                    │
  * └─────────────────────────────────────────────────────────────────────────┘
  * 
+ * MERGED/ELIMINATED:
+ * - InteractionGameSystem → eliminated (minimal functionality)
+ * - LivingLegendsSystem → eliminated (decorative only)
+ * - BuildingMaintenanceSystem → merged into BuildingSystem
+ * - SharedKnowledgeSystem → moved to ai/ (internal infrastructure)
+ * 
  * SUBDIRECTORIES:
- * - ai/        → AI subsystems (planners, validators, evaluators)
+ * - ai/        → AI subsystems (planners, validators, evaluators, SharedKnowledge)
  * - animals/   → AnimalSystem + helpers (behavior, genetics, needs, spawning)
  * - movement/  → MovementSystem + batch processor + helpers
  * - needs/     → NeedsSystem + batch processor
