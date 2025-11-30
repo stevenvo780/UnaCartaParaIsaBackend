@@ -119,26 +119,20 @@ import { simulationEvents } from "../core/events";
 import type { NeedsSystem } from "./NeedsSystem";
 import { RoleSystem } from "./RoleSystem";
 import type { InventorySystem } from "./InventorySystem";
-import type {
-  ResourceAlert,
-  ThreatAlert,
-  SharedKnowledgeSystem,
-} from "./SharedKnowledgeSystem";
+import type { SharedKnowledgeSystem } from "./SharedKnowledgeSystem";
 import type { SocialSystem } from "./SocialSystem";
 import type { EnhancedCraftingSystem } from "./EnhancedCraftingSystem";
 import type { WorldResourceSystem } from "./WorldResourceSystem";
 import type { HouseholdSystem } from "./HouseholdSystem";
 import type { TaskSystem } from "./TaskSystem";
-import type { TaskCreationParams } from "../../types/simulation/tasks";
 import type { CombatSystem } from "./CombatSystem";
 import type { AnimalSystem } from "./AnimalSystem";
 import type { MovementSystem } from "./MovementSystem";
 import type { QuestSystem } from "./QuestSystem";
-import type { TimeSystem, TimeOfDay } from "./TimeSystem";
+import type { TimeSystem } from "./TimeSystem";
 import type { EntityIndex } from "../core/EntityIndex";
 import type { GPUComputeService } from "../core/GPUComputeService";
 import type { AnimalRegistry } from "../core/AnimalRegistry";
-import { TimeOfDayPhase } from "../../../shared/constants/TimeEnums";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
 import { getFrameTime } from "../../../shared/FrameTime";
@@ -175,7 +169,8 @@ export class AISystem extends EventEmitter {
   private config: AISystemConfig;
   private aiStates: Map<string, AIState>;
   private lastUpdate: number = Date.now();
-  private priorityManager: PriorityManager;
+  // @ts-expect-error Reserved for future use
+  private _priorityManager: PriorityManager;
 
   private stateManager!: AIStateManager;
   private goalValidator!: AIGoalValidator;
@@ -196,8 +191,10 @@ export class AISystem extends EventEmitter {
   private animalSystem?: AnimalSystem;
   private _movementSystem?: MovementSystem;
   private questSystem?: QuestSystem;
-  private timeSystem?: TimeSystem;
-  private sharedKnowledgeSystem?: SharedKnowledgeSystem;
+  // @ts-expect-error Reserved for future use
+  private _timeSystem?: TimeSystem;
+  // @ts-expect-error Reserved for future use
+  private _sharedKnowledgeSystem?: SharedKnowledgeSystem;
   private equipmentSystem: EquipmentSystem;
   // @ts-expect-error - Reserved for future use
   private _entityIndex?: EntityIndex;
@@ -219,7 +216,8 @@ export class AISystem extends EventEmitter {
 
   private zoneCache = new Map<string, string | undefined>();
   private craftingZoneCache: string | undefined | null = null;
-  private activeAgentIdsCache: string[] | null = null;
+  // @ts-expect-error Reserved for future use
+  private _activeAgentIdsCache: string[] | null = null;
   private lastCacheInvalidation = 0;
   /**
    * Cache invalidation interval - increased to 2s for better performance.
@@ -233,6 +231,7 @@ export class AISystem extends EventEmitter {
   >();
   private readonly RESOURCE_CACHE_TTL = 2000;
   private readonly MAX_RESOURCE_SEARCH_RADIUS = 2000;
+
 
   private resourceReservations = new Map<string, string>();
 
@@ -350,7 +349,7 @@ export class AISystem extends EventEmitter {
       this.agentRegistry.registerAIStates(this.aiStates);
     }
 
-    this.priorityManager = new PriorityManager(
+    this._priorityManager = new PriorityManager(
       gameState,
       undefined,
       roleSystem,
@@ -368,7 +367,7 @@ export class AISystem extends EventEmitter {
     this.animalSystem = animalSystem;
     this._movementSystem = movementSystem;
     this.questSystem = questSystem;
-    this.timeSystem = timeSystem;
+    this._timeSystem = timeSystem;
 
     this.initializeSubsystems();
 
@@ -645,7 +644,7 @@ export class AISystem extends EventEmitter {
     if (systems.animalSystem) this.animalSystem = systems.animalSystem;
     if (systems.movementSystem) this._movementSystem = systems.movementSystem;
     if (systems.questSystem) this.questSystem = systems.questSystem;
-    if (systems.timeSystem) this.timeSystem = systems.timeSystem;
+    if (systems.timeSystem) this._timeSystem = systems.timeSystem;
 
     this.simplifiedDepsCache = null;
 
@@ -827,7 +826,7 @@ export class AISystem extends EventEmitter {
   private invalidateCache(): void {
     this.zoneCache.clear();
     this.craftingZoneCache = null;
-    this.activeAgentIdsCache = null;
+    this._activeAgentIdsCache = null;
     const now = Date.now();
     for (const [key, value] of this.nearestResourceCache.entries()) {
       if (now - value.timestamp > this.RESOURCE_CACHE_TTL) {
@@ -1557,7 +1556,8 @@ export class AISystem extends EventEmitter {
    * Create urgent social goal when social need is critical
    * Social needs are less critical than survival needs, priority 9
    */
-  private createUrgentSocialGoal(agentId: string, now: number): AIGoal | null {
+  // @ts-expect-error Reserved for future use
+  private _createUrgentSocialGoal(agentId: string, now: number): AIGoal | null {
     return this.urgentGoals.createUrgentSocialGoal(agentId, now);
   }
 
@@ -1565,7 +1565,8 @@ export class AISystem extends EventEmitter {
    * Create urgent fun goal when fun need is critical
    * Fun needs are least critical, priority 8
    */
-  private createUrgentFunGoal(agentId: string, now: number): AIGoal | null {
+  // @ts-expect-error Reserved for future use
+  private _createUrgentFunGoal(agentId: string, now: number): AIGoal | null {
     return this.urgentGoals.createUrgentFunGoal(agentId, now);
   }
 
@@ -1687,7 +1688,7 @@ export class AISystem extends EventEmitter {
    */
   public removeEntityAI(entityId: string): void {
     this.stateManager.removeEntityAI(entityId);
-    this.activeAgentIdsCache = null;
+    this._activeAgentIdsCache = null;
   }
 
   /**
@@ -1698,7 +1699,7 @@ export class AISystem extends EventEmitter {
     this.agentPriorities.clear();
     this.agentStrategies.clear();
     this.playerControlledAgents.clear();
-    this.activeAgentIdsCache = null;
+    this._activeAgentIdsCache = null;
     this.zoneCache.clear();
     this.craftingZoneCache = null;
     this.nearestResourceCache.clear();
@@ -1925,7 +1926,8 @@ export class AISystem extends EventEmitter {
     return nearest;
   }
 
-  private findAgentWithResource(
+  // @ts-expect-error Reserved for future use
+  private _findAgentWithResource(
     entityId: string,
     resourceType: ResourceType.FOOD | ResourceType.WATER,
     minAmount: number,
@@ -1966,7 +1968,8 @@ export class AISystem extends EventEmitter {
     return nearest;
   }
 
-  private findPotentialMate(
+  // @ts-expect-error Reserved for future use
+  private _findPotentialMate(
     entityId: string,
   ): { id: string; x: number; y: number } | null {
     const agent = this.agentRegistry?.getProfile(entityId);
@@ -2003,7 +2006,8 @@ export class AISystem extends EventEmitter {
     return nearest;
   }
 
-  private findNearbyAgent(
+  // @ts-expect-error Reserved for future use
+  private _findNearbyAgent(
     entityId: string,
   ): { id: string; x: number; y: number } | null {
     const agent = this.agentRegistry?.getProfile(entityId);
@@ -2121,7 +2125,8 @@ export class AISystem extends EventEmitter {
    * @param radius - Search radius
    * @returns Array of nearby agents with their distances, sorted by distance
    */
-  private async getNearbyAgentsWithDistancesGPU(
+  // @ts-expect-error Reserved for future use
+  private async _getNearbyAgentsWithDistancesGPU(
     entityId: string,
     radius: number,
   ): Promise<Array<{ id: string; distance: number }>> {
