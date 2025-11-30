@@ -5,26 +5,47 @@
  * Central re-export for all simulation systems.
  * Systems are logically grouped by domain for easy discovery.
  * 
+ * TOTAL SYSTEMS: 31 main systems organized in 8 domains
+ * 
  * DOMAIN ORGANIZATION:
- * - Agent: AI decision-making, needs, movement, roles
- * - World: Resources, terrain, chunks, time, weather
- * - Social: Relationships, families, reputation, knowledge sharing
- * - Economy: Trade, market, inventory, crafting, production
- * - Combat: Fighting, conflict resolution
- * - Life: Lifecycle, animals, genetics
- * - Building: Construction, maintenance
- * - Governance: Quests, tasks, norms, governance
- * - Misc: Ambient awareness, interaction games, legends
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │ AGENT (6)        │ AI, Needs, Movement, Role                           │
+ * │ WORLD (4)        │ WorldResource, Terrain, ChunkLoading, Time          │
+ * │ SOCIAL (6)       │ Social, Marriage, Household, Reputation, Genealogy, │
+ * │                  │ SharedKnowledge                                     │
+ * │ ECONOMY (7)      │ Economy, Inventory, EnhancedCrafting, Production,   │
+ * │                  │ ResourceReservation, RecipeDiscovery, Equipment     │
+ * │ COMBAT (2)       │ Combat, ConflictResolution                          │
+ * │ LIFE (2)         │ LifeCycle, Animal                                   │
+ * │ BUILDING (2)     │ Building, BuildingMaintenance                       │
+ * │ GOVERNANCE (3)   │ Governance, Quest, Task                             │
+ * │ MISC (3)         │ AmbientAwareness, InteractionGame, ItemGeneration,  │
+ * │                  │ LivingLegends                                       │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ * 
+ * SUBDIRECTORIES:
+ * - ai/        → AI subsystems (planners, validators, evaluators)
+ * - animals/   → AnimalSystem + helpers (behavior, genetics, needs, spawning)
+ * - movement/  → MovementSystem + batch processor + helpers
+ * - needs/     → NeedsSystem + batch processor
+ * 
+ * MERGED/ELIMINATED SYSTEMS:
+ * - TradeSystem → EconomySystem
+ * - MarketSystem → EconomySystem
+ * - NormsSystem → ConflictResolutionSystem
+ * - ResourceAttractionSystem → AmbientAwarenessSystem
+ * - ToolStorageSystem → EquipmentSystem
+ * - KnowledgeNetworkSystem → eliminated (unused)
  */
 
 // ============================================================================
 // AGENT SYSTEMS - AI, decision-making, needs, movement
 // ============================================================================
 export { AISystem } from "./AISystem";
-export { NeedsSystem } from "./NeedsSystem";
-export { NeedsBatchProcessor } from "./NeedsBatchProcessor";
-export { MovementSystem } from "./MovementSystem";
-export { MovementBatchProcessor } from "./MovementBatchProcessor";
+export { NeedsSystem } from "./needs/NeedsSystem";
+export { NeedsBatchProcessor } from "./needs/NeedsBatchProcessor";
+export { MovementSystem } from "./movement/MovementSystem";
+export { MovementBatchProcessor } from "./movement/MovementBatchProcessor";
 export { RoleSystem } from "./RoleSystem";
 
 // AI subsystems
@@ -85,8 +106,8 @@ export { ConflictResolutionSystem } from "./ConflictResolutionSystem";
 // LIFE SYSTEMS - Lifecycle, animals
 // ============================================================================
 export { LifeCycleSystem } from "./LifeCycleSystem";
-export { AnimalSystem } from "./AnimalSystem";
-export { AnimalBatchProcessor } from "./AnimalBatchProcessor";
+export { AnimalSystem } from "./animals/AnimalSystem";
+export { AnimalBatchProcessor } from "./animals/AnimalBatchProcessor";
 export * from "./animals/AnimalBehavior";
 
 // ============================================================================

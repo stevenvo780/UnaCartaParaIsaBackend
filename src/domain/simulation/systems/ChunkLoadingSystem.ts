@@ -3,7 +3,7 @@ import { TYPES } from "../../../config/Types";
 import type { GameState } from "../../types/game-types";
 import type { AgentRegistry } from "../core/AgentRegistry";
 import type { WorldGenerationService } from "../../world/worldGenerationService";
-import type { AnimalSystem } from "./AnimalSystem";
+import type { AnimalSystem } from "./animals/AnimalSystem";
 import type { WorldResourceSystem } from "./WorldResourceSystem";
 import { logger } from "../../../infrastructure/utils/logger";
 import type { WorldGenConfig } from "../../world/generation/types";

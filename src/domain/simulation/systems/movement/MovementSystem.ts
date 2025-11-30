@@ -1,18 +1,18 @@
 import { EventEmitter } from "events";
 import { performance } from "node:perf_hooks";
-import { performanceMonitor } from "../core/PerformanceMonitor";
+import { performanceMonitor } from "../../core/PerformanceMonitor";
 import EasyStar from "easystarjs";
-import { GameState, MapElement } from "../../types/game-types";
-import { logger } from "../../../infrastructure/utils/logger";
-import { GameEventType, simulationEvents } from "../core/events";
+import { GameState, MapElement } from "../../../types/game-types";
+import { logger } from "../../../../infrastructure/utils/logger";
+import { GameEventType, simulationEvents } from "../../core/events";
 import { injectable, inject, optional, postConstruct } from "inversify";
-import { TYPES } from "../../../config/Types";
-import type { EntityIndex } from "../core/EntityIndex";
-import type { GPUComputeService } from "../core/GPUComputeService";
-import type { StateDirtyTracker } from "../core/StateDirtyTracker";
-import type { AgentRegistry } from "../core/AgentRegistry";
-import { getFrameTime } from "../../../shared/FrameTime";
-import { WORLD_CONFIG } from "../../../shared/constants/WorldConfig";
+import { TYPES } from "../../../../config/Types";
+import type { EntityIndex } from "../../core/EntityIndex";
+import type { GPUComputeService } from "../../core/GPUComputeService";
+import type { StateDirtyTracker } from "../../core/StateDirtyTracker";
+import type { AgentRegistry } from "../../core/AgentRegistry";
+import { getFrameTime } from "../../../../shared/FrameTime";
+import { WORLD_CONFIG } from "../../../../shared/constants/WorldConfig";
 import {
   estimateTravelTime,
   assessRouteDifficultyByDistance,
@@ -20,12 +20,12 @@ import {
   worldToGrid,
   findAccessibleDestination,
   Difficulty,
-} from "./movement/helpers";
+} from "./helpers";
 import { MovementBatchProcessor } from "./MovementBatchProcessor";
-import { ActivityType } from "../../../shared/constants/MovementEnums";
-import { ActionType } from "../../../shared/constants/AIEnums";
-import { SIM_CONSTANTS } from "../core/SimulationConstants";
-import { TerrainSystem } from "./TerrainSystem";
+import { ActivityType } from "../../../../shared/constants/MovementEnums";
+import { ActionType } from "../../../../shared/constants/AIEnums";
+import { SIM_CONSTANTS } from "../../core/SimulationConstants";
+import { TerrainSystem } from "../TerrainSystem";
 
 export interface EntityMovementState {
   entityId: string;

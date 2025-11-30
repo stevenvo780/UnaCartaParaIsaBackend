@@ -1,32 +1,32 @@
 import { EventEmitter } from "events";
-import { GameState } from "../../types/game-types";
-import { EntityNeedsData, NeedsConfig } from "../../types/simulation/needs";
-import { simulationEvents, GameEventType } from "../core/events";
+import { GameState } from "../../../types/game-types";
+import { EntityNeedsData, NeedsConfig } from "../../../types/simulation/needs";
+import { simulationEvents, GameEventType } from "../../core/events";
 import { logger } from "@/infrastructure/utils/logger";
-import type { ILifeCyclePort } from "../ports";
+import type { ILifeCyclePort } from "../../ports";
 
-import type { InventorySystem } from "./InventorySystem";
-import type { SocialSystem } from "./SocialSystem";
+import type { InventorySystem } from "../InventorySystem";
+import type { SocialSystem } from "../SocialSystem";
 import { NeedsBatchProcessor } from "./NeedsBatchProcessor";
 import { injectable, inject, unmanaged, optional } from "inversify";
-import { TYPES } from "../../../config/Types";
-import type { EntityIndex } from "../core/EntityIndex";
-import type { SharedSpatialIndex } from "../core/SharedSpatialIndex";
-import type { GPUComputeService } from "../core/GPUComputeService";
-import type { AgentRegistry } from "../core/AgentRegistry";
-import type { StateDirtyTracker } from "../core/StateDirtyTracker";
-import { getFrameTime } from "../../../shared/FrameTime";
+import { TYPES } from "../../../../config/Types";
+import type { EntityIndex } from "../../core/EntityIndex";
+import type { SharedSpatialIndex } from "../../core/SharedSpatialIndex";
+import type { GPUComputeService } from "../../core/GPUComputeService";
+import type { AgentRegistry } from "../../core/AgentRegistry";
+import type { StateDirtyTracker } from "../../core/StateDirtyTracker";
+import { getFrameTime } from "../../../../shared/FrameTime";
 import { performance } from "perf_hooks";
-import { performanceMonitor } from "../core/PerformanceMonitor";
-import { FoodCatalog } from "../../data/FoodCatalog";
-import { ResourceType } from "../../../shared/constants/ResourceEnums";
-import { ZoneType } from "../../../shared/constants/ZoneEnums";
-import { NeedType } from "../../../shared/constants/AIEnums";
-import { LifeStage } from "../../../shared/constants/AgentEnums";
-import { ActionType } from "../../../shared/constants/AIEnums";
-import { EntityType } from "../../../shared/constants/EntityEnums";
-import { FoodCategory } from "../../../shared/constants/FoodEnums";
-import type { FoodItem } from "../../types/simulation/food";
+import { performanceMonitor } from "../../core/PerformanceMonitor";
+import { FoodCatalog } from "../../../data/FoodCatalog";
+import { ResourceType } from "../../../../shared/constants/ResourceEnums";
+import { ZoneType } from "../../../../shared/constants/ZoneEnums";
+import { NeedType } from "../../../../shared/constants/AIEnums";
+import { LifeStage } from "../../../../shared/constants/AgentEnums";
+import { ActionType } from "../../../../shared/constants/AIEnums";
+import { EntityType } from "../../../../shared/constants/EntityEnums";
+import { FoodCategory } from "../../../../shared/constants/FoodEnums";
+import type { FoodItem } from "../../../types/simulation/food";
 
 /**
  * System for managing entity needs (hunger, thirst, energy, hygiene, social, fun, mental health).

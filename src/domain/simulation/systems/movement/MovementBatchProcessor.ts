@@ -1,8 +1,8 @@
 import type { EntityMovementState } from "./MovementSystem";
-import { logger } from "../../../infrastructure/utils/logger";
-import type { GPUComputeService } from "../core/GPUComputeService";
+import { logger } from "../../../../infrastructure/utils/logger";
+import type { GPUComputeService } from "../../core/GPUComputeService";
 import { injectable } from "inversify";
-import { performanceMonitor } from "../core/PerformanceMonitor";
+import { performanceMonitor } from "../../core/PerformanceMonitor";
 import { performance } from "node:perf_hooks";
 
 /**

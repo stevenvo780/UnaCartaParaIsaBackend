@@ -1,8 +1,8 @@
 import type { GameState } from "../../../../types/game-types";
 import type { AIGoal, AIState } from "../../../../types/simulation/ai";
 import type { WorldResourceSystem } from "../../WorldResourceSystem";
-import type { NeedsSystem } from "../../NeedsSystem";
-import type { AnimalSystem } from "../../AnimalSystem";
+import type { NeedsSystem } from "../../needs/NeedsSystem";
+import type { AnimalSystem } from "../../animals/AnimalSystem";
 import { isWorldResourceType } from "../../../../types/simulation/resourceMapping";
 import { WorldResourceType } from "../../../../types/simulation/worldResources";
 import { getFrameTime } from "../../../../../shared/FrameTime";

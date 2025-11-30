@@ -1,5 +1,5 @@
 import { GameState } from "../../types/game-types";
-import { NeedsSystem } from "./NeedsSystem";
+import { NeedsSystem } from "./needs/NeedsSystem";
 import type {
   AmbientSnapshot,
   CollectiveWellbeing,

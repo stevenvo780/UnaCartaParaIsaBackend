@@ -1,10 +1,10 @@
-import type { Animal } from "../../types/simulation/animals";
-import { logger } from "../../../infrastructure/utils/logger";
-import { getAnimalConfig } from "../../world/config/AnimalConfigs";
-import type { GPUComputeService } from "../core/GPUComputeService";
+import type { Animal } from "../../../types/simulation/animals";
+import { logger } from "../../../../infrastructure/utils/logger";
+import { getAnimalConfig } from "../../../world/config/AnimalConfigs";
+import type { GPUComputeService } from "../../core/GPUComputeService";
 import { injectable } from "inversify";
 import { performance } from "node:perf_hooks";
-import { performanceMonitor } from "../core/PerformanceMonitor";
+import { performanceMonitor } from "../../core/PerformanceMonitor";
 
 /**
  * Procesador batch optimizado para animales

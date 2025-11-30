@@ -1,28 +1,28 @@
 import { logger } from "@/infrastructure/utils/logger";
-import type { GameState } from "../../types/game-types";
+import type { GameState } from "../../../types/game-types";
 import type {
   Animal,
   AnimalSystemConfig,
-} from "../../types/simulation/animals";
-import type { TerrainTile } from "../../world/generation/types";
-import type { WorldResourceInstance } from "../../types/simulation/worldResources";
-import { getAnimalConfig } from "../../world/config/AnimalConfigs";
-import { AnimalNeeds } from "./animals/AnimalNeeds";
-import { AnimalBehavior } from "./animals/AnimalBehavior";
-import { AnimalSpawning } from "./animals/AnimalSpawning";
-import { simulationEvents, GameEventType } from "../core/events";
-import type { WorldResourceSystem } from "./WorldResourceSystem";
-import type { TerrainSystem } from "./TerrainSystem";
+} from "../../../types/simulation/animals";
+import type { TerrainTile } from "../../../world/generation/types";
+import type { WorldResourceInstance } from "../../../types/simulation/worldResources";
+import { getAnimalConfig } from "../../../world/config/AnimalConfigs";
+import { AnimalNeeds } from "./AnimalNeeds";
+import { AnimalBehavior } from "./AnimalBehavior";
+import { AnimalSpawning } from "./AnimalSpawning";
+import { simulationEvents, GameEventType } from "../../core/events";
+import type { WorldResourceSystem } from "../WorldResourceSystem";
+import type { TerrainSystem } from "../TerrainSystem";
 import { AnimalBatchProcessor } from "./AnimalBatchProcessor";
-import { getFrameTime } from "../../../shared/FrameTime";
+import { getFrameTime } from "../../../../shared/FrameTime";
 import { performance } from "node:perf_hooks";
-import { performanceMonitor } from "../core/PerformanceMonitor";
-import { SIM_CONSTANTS } from "../core/SimulationConstants";
-import { TileType } from "../../../shared/constants/TileTypeEnums";
-import { AnimalState } from "../../../shared/constants/AnimalEnums";
-import { AnimalRegistry } from "../core/AnimalRegistry";
-import type { AgentRegistry } from "../core/AgentRegistry";
-import { WorldResourceType } from "../../../shared/constants/ResourceEnums";
+import { performanceMonitor } from "../../core/PerformanceMonitor";
+import { SIM_CONSTANTS } from "../../core/SimulationConstants";
+import { TileType } from "../../../../shared/constants/TileTypeEnums";
+import { AnimalState } from "../../../../shared/constants/AnimalEnums";
+import { AnimalRegistry } from "../../core/AnimalRegistry";
+import type { AgentRegistry } from "../../core/AgentRegistry";
+import { WorldResourceType } from "../../../../shared/constants/ResourceEnums";
 
 const DEFAULT_CONFIG: AnimalSystemConfig = {
   maxAnimals: SIM_CONSTANTS.MAX_ANIMALS,
@@ -32,9 +32,9 @@ const DEFAULT_CONFIG: AnimalSystemConfig = {
 };
 
 import { injectable, inject, optional, postConstruct } from "inversify";
-import { TYPES } from "../../../config/Types";
-import type { GPUComputeService } from "../core/GPUComputeService";
-import type { StateDirtyTracker } from "../core/StateDirtyTracker";
+import { TYPES } from "../../../../config/Types";
+import type { GPUComputeService } from "../../core/GPUComputeService";
+import type { StateDirtyTracker } from "../../core/StateDirtyTracker";
 
 @injectable()
 export class AnimalSystem {

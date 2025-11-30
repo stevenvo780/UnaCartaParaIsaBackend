@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { EntityNeedsData } from "../../src/domain/types/simulation/needs";
-import { NeedsBatchProcessor } from "../../src/domain/simulation/systems/NeedsBatchProcessor";
+import { NeedsBatchProcessor } from "../../src/domain/simulation/systems/needs/NeedsBatchProcessor";
 import { createMockGPUService } from "../setup";
 
 const createNeeds = (overrides: Partial<EntityNeedsData> = {}): EntityNeedsData => ({

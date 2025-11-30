@@ -10,7 +10,7 @@ import { logger } from "../../../infrastructure/utils/logger";
 import { WorldResourceSystem } from "../systems/WorldResourceSystem";
 import { LivingLegendsSystem } from "../systems/LivingLegendsSystem";
 import { LifeCycleSystem } from "../systems/LifeCycleSystem";
-import { NeedsSystem } from "../systems/NeedsSystem";
+import { NeedsSystem } from "../systems/needs/NeedsSystem";
 import { GenealogySystem } from "../systems/GenealogySystem";
 import { SocialSystem } from "../systems/SocialSystem";
 import { InventorySystem } from "../systems/InventorySystem";
@@ -25,7 +25,7 @@ import { BuildingSystem } from "../systems/BuildingSystem";
 import { BuildingMaintenanceSystem } from "../systems/BuildingMaintenanceSystem";
 import { ProductionSystem } from "../systems/ProductionSystem";
 import { EnhancedCraftingSystem } from "../systems/EnhancedCraftingSystem";
-import { AnimalSystem } from "../systems/AnimalSystem";
+import { AnimalSystem } from "../systems/animals/AnimalSystem";
 import { ItemGenerationSystem } from "../systems/ItemGenerationSystem";
 import { ReputationSystem } from "../systems/ReputationSystem";
 
@@ -47,7 +47,7 @@ import { TimeSystem } from "../systems/TimeSystem";
 import { InteractionGameSystem } from "../systems/InteractionGameSystem";
 // KnowledgeNetworkSystem eliminated - not used externally
 import { EntityType } from "../../../shared/constants/EntityEnums";
-import { MovementSystem } from "../systems/MovementSystem";
+import { MovementSystem } from "../systems/movement/MovementSystem";
 
 import { ChunkLoadingSystem } from "../systems/ChunkLoadingSystem";
 import { SharedKnowledgeSystem } from "../systems/SharedKnowledgeSystem";

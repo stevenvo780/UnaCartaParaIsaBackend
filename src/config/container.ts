@@ -24,7 +24,7 @@ import { createInitialGameState } from "../domain/simulation/core/defaultState";
 import { WorldResourceSystem } from "../domain/simulation/systems/WorldResourceSystem";
 import { LivingLegendsSystem } from "../domain/simulation/systems/LivingLegendsSystem";
 import { LifeCycleSystem } from "../domain/simulation/systems/LifeCycleSystem";
-import { NeedsSystem } from "../domain/simulation/systems/NeedsSystem";
+import { NeedsSystem } from "../domain/simulation/systems/needs/NeedsSystem";
 import { GenealogySystem } from "../domain/simulation/systems/GenealogySystem";
 import { SocialSystem } from "../domain/simulation/systems/SocialSystem";
 import { InventorySystem } from "../domain/simulation/systems/InventorySystem";
@@ -39,7 +39,7 @@ import { BuildingSystem } from "../domain/simulation/systems/BuildingSystem";
 import { BuildingMaintenanceSystem } from "../domain/simulation/systems/BuildingMaintenanceSystem";
 import { ProductionSystem } from "../domain/simulation/systems/ProductionSystem";
 import { EnhancedCraftingSystem } from "../domain/simulation/systems/EnhancedCraftingSystem";
-import { AnimalSystem } from "../domain/simulation/systems/AnimalSystem";
+import { AnimalSystem } from "../domain/simulation/systems/animals/AnimalSystem";
 import { ItemGenerationSystem } from "../domain/simulation/systems/ItemGenerationSystem";
 import { CombatSystem } from "../domain/simulation/systems/CombatSystem";
 import { ReputationSystem } from "../domain/simulation/systems/ReputationSystem";
@@ -59,7 +59,7 @@ import { AmbientAwarenessSystem } from "../domain/simulation/systems/AmbientAwar
 import { TimeSystem } from "../domain/simulation/systems/TimeSystem";
 import { InteractionGameSystem } from "../domain/simulation/systems/InteractionGameSystem";
 // KnowledgeNetworkSystem eliminated - not used externally
-import { MovementSystem } from "../domain/simulation/systems/MovementSystem";
+import { MovementSystem } from "../domain/simulation/systems/movement/MovementSystem";
 
 import { EntityIndex } from "../domain/simulation/core/EntityIndex";
 import { SharedSpatialIndex } from "../domain/simulation/core/SharedSpatialIndex";

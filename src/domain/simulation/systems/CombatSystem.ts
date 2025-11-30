@@ -19,7 +19,7 @@ import { InventorySystem } from "./InventorySystem";
 import { LifeCycleSystem } from "./LifeCycleSystem";
 import { SocialSystem } from "./SocialSystem";
 
-import type { AnimalSystem } from "./AnimalSystem";
+import type { AnimalSystem } from "./animals/AnimalSystem";
 import type { ConflictResolutionSystem } from "./ConflictResolutionSystem";
 import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "node:perf_hooks";
