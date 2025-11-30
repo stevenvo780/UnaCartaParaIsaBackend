@@ -106,7 +106,7 @@ import {
 import { PriorityManager } from "./ai/core/PriorityManager";
 import { AIStateManager } from "./ai/core/AIStateManager";
 import { AIGoalValidator } from "./ai/core/AIGoalValidator";
-import { AIActionPlanner } from "./ai/core/AIActionPlanner";
+import { SimpleActionPlanner } from "./ai/core/SimpleActionPlanner";
 import { AIActionExecutor } from "./ai/core/AIActionExecutor";
 import { AIUrgentGoals } from "./ai/core/AIUrgentGoals";
 import { AIZoneHandler } from "./ai/core/AIZoneHandler";
@@ -179,7 +179,7 @@ export class AISystem extends EventEmitter {
 
   private stateManager!: AIStateManager;
   private goalValidator!: AIGoalValidator;
-  private actionPlanner!: AIActionPlanner;
+  private actionPlanner!: SimpleActionPlanner;
   private actionExecutor!: AIActionExecutor;
   private urgentGoals!: AIUrgentGoals;
   private zoneHandler!: AIZoneHandler;
@@ -406,7 +406,7 @@ export class AISystem extends EventEmitter {
       agentRegistry: this.agentRegistry!,
     });
 
-    this.actionPlanner = new AIActionPlanner({
+    this.actionPlanner = new SimpleActionPlanner({
       gameState: this.gameState,
       agentRegistry: this.agentRegistry!,
       findNearestResource: (

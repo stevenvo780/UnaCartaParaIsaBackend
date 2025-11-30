@@ -54,9 +54,9 @@ export {
   type AIGoalValidatorDeps,
 } from "./core/AIGoalValidator";
 export {
-  AIActionPlanner,
-  type AIActionPlannerDeps,
-} from "./core/AIActionPlanner";
+  SimpleActionPlanner,
+  type SimpleActionPlannerDeps,
+} from "./core/SimpleActionPlanner";
 export {
   AIActionExecutor,
   type AIActionExecutorDeps,
