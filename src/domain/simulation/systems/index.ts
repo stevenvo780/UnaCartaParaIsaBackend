@@ -128,7 +128,7 @@ export { TaskSystem } from "./TaskSystem";
 // MISCELLANEOUS SYSTEMS
 // ============================================================================
 export { AmbientAwarenessSystem } from "./AmbientAwarenessSystem";
-export { InteractionGameSystem } from "./InteractionGameSystem";
+// InteractionGameSystem eliminated - minimal functionality
 export { ItemGenerationSystem } from "./ItemGenerationSystem";
 // KnowledgeNetworkSystem eliminated - not used externally
-export { LivingLegendsSystem } from "./LivingLegendsSystem";
+// LivingLegendsSystem eliminated - decorative only

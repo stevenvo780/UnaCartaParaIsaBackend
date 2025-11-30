@@ -22,7 +22,7 @@ import { GameState } from "../domain/types/game-types";
 import { createInitialGameState } from "../domain/simulation/core/defaultState";
 
 import { WorldResourceSystem } from "../domain/simulation/systems/WorldResourceSystem";
-import { LivingLegendsSystem } from "../domain/simulation/systems/LivingLegendsSystem";
+// LivingLegendsSystem eliminated - decorative only
 import { LifeCycleSystem } from "../domain/simulation/systems/LifeCycleSystem";
 import { NeedsSystem } from "../domain/simulation/systems/needs/NeedsSystem";
 import { GenealogySystem } from "../domain/simulation/systems/GenealogySystem";
@@ -57,7 +57,7 @@ import { ConflictResolutionSystem } from "../domain/simulation/systems/ConflictR
 import { AmbientAwarenessSystem } from "../domain/simulation/systems/AmbientAwarenessSystem";
 
 import { TimeSystem } from "../domain/simulation/systems/TimeSystem";
-import { InteractionGameSystem } from "../domain/simulation/systems/InteractionGameSystem";
+// InteractionGameSystem eliminated - minimal functionality
 // KnowledgeNetworkSystem eliminated - not used externally
 import { MovementSystem } from "../domain/simulation/systems/movement/MovementSystem";
 
@@ -92,10 +92,7 @@ container
   .bind<WorldResourceSystem>(TYPES.WorldResourceSystem)
   .to(WorldResourceSystem)
   .inSingletonScope();
-container
-  .bind<LivingLegendsSystem>(TYPES.LivingLegendsSystem)
-  .to(LivingLegendsSystem)
-  .inSingletonScope();
+// LivingLegendsSystem binding removed - decorative only
 container
   .bind<LifeCycleSystem>(TYPES.LifeCycleSystem)
   .to(LifeCycleSystem)
@@ -204,10 +201,7 @@ container
   .inSingletonScope();
 
 container.bind<TimeSystem>(TYPES.TimeSystem).to(TimeSystem).inSingletonScope();
-container
-  .bind<InteractionGameSystem>(TYPES.InteractionGameSystem)
-  .to(InteractionGameSystem)
-  .inSingletonScope();
+// InteractionGameSystem binding removed - minimal functionality
 // KnowledgeNetworkSystem binding removed - not used externally
 container
   .bind<MovementSystem>(TYPES.MovementSystem)

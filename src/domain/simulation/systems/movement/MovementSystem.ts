@@ -176,7 +176,7 @@ export class MovementSystem extends EventEmitter {
       this.agentRegistry.registerMovement(
         this.movementStates as Map<
           string,
-          import("../core/AgentRegistry").MovementState
+          import("../../core/AgentRegistry").MovementState
         >,
       );
     }

@@ -12,7 +12,7 @@ export const TYPES = {
   Logger: Symbol.for("Logger"),
 
   WorldResourceSystem: Symbol.for("WorldResourceSystem"),
-  LivingLegendsSystem: Symbol.for("LivingLegendsSystem"),
+  // LivingLegendsSystem eliminated - decorative only
   LifeCycleSystem: Symbol.for("LifeCycleSystem"),
   NeedsSystem: Symbol.for("NeedsSystem"),
   GenealogySystem: Symbol.for("GenealogySystem"),
@@ -47,7 +47,7 @@ export const TYPES = {
   AmbientAwarenessSystem: Symbol.for("AmbientAwarenessSystem"),
 
   TimeSystem: Symbol.for("TimeSystem"),
-  InteractionGameSystem: Symbol.for("InteractionGameSystem"),
+  // InteractionGameSystem eliminated - minimal functionality
   // KnowledgeNetworkSystem eliminated - not used externally
   MovementSystem: Symbol.for("MovementSystem"),
 

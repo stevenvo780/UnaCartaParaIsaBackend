@@ -8,7 +8,7 @@ import { AgentRegistry } from "./AgentRegistry";
 import { WorldGenerationService } from "../../world/worldGenerationService";
 import { logger } from "../../../infrastructure/utils/logger";
 import { WorldResourceSystem } from "../systems/WorldResourceSystem";
-import { LivingLegendsSystem } from "../systems/LivingLegendsSystem";
+// LivingLegendsSystem eliminated - decorative only
 import { LifeCycleSystem } from "../systems/LifeCycleSystem";
 import { NeedsSystem } from "../systems/needs/NeedsSystem";
 import { GenealogySystem } from "../systems/GenealogySystem";
@@ -44,7 +44,7 @@ import { CombatSystem } from "../systems/CombatSystem";
 import { AmbientAwarenessSystem } from "../systems/AmbientAwarenessSystem";
 
 import { TimeSystem } from "../systems/TimeSystem";
-import { InteractionGameSystem } from "../systems/InteractionGameSystem";
+// InteractionGameSystem eliminated - minimal functionality
 // KnowledgeNetworkSystem eliminated - not used externally
 import { EntityType } from "../../../shared/constants/EntityEnums";
 import { MovementSystem } from "../systems/movement/MovementSystem";
@@ -151,8 +151,7 @@ export class SimulationRunner {
   @inject(TYPES.WorldResourceSystem)
   public readonly worldResourceSystem!: WorldResourceSystem;
 
-  @inject(TYPES.LivingLegendsSystem)
-  public readonly livingLegendsSystem!: LivingLegendsSystem;
+  // LivingLegendsSystem eliminated - decorative only
 
   @inject(TYPES.LifeCycleSystem)
   public readonly lifeCycleSystem!: LifeCycleSystem;
@@ -228,8 +227,7 @@ export class SimulationRunner {
 
   @inject(TYPES.TimeSystem) public readonly timeSystem!: TimeSystem;
 
-  @inject(TYPES.InteractionGameSystem)
-  public readonly interactionGameSystem!: InteractionGameSystem;
+  // InteractionGameSystem eliminated - minimal functionality
 
   // KnowledgeNetworkSystem eliminated - not used externally
 
@@ -723,19 +721,9 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    this.scheduler.registerSystem({
-      name: "InteractionGameSystem",
-      rate: TickRate.SLOW,
-      update: (delta: number) => this.interactionGameSystem.update(delta),
-      enabled: true,
-    });
+    // InteractionGameSystem eliminated - minimal functionality
 
-    this.scheduler.registerSystem({
-      name: "LivingLegendsSystem",
-      rate: TickRate.SLOW,
-      update: (delta: number) => this.livingLegendsSystem.update(delta),
-      enabled: true,
-    });
+    // LivingLegendsSystem eliminated - decorative only
 
     this.scheduler.registerSystem({
       name: "ItemGenerationSystem",

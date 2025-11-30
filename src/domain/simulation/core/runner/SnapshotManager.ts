@@ -247,11 +247,10 @@ export class SnapshotManager {
     snapshotState.genealogy =
       this.runner._genealogySystem?.getSerializedFamilyTree() ?? {};
 
-    const allLegends = this.runner.livingLegendsSystem.getAllLegends();
-    const activeLegends = this.runner.livingLegendsSystem.getActiveLegends();
+    // LivingLegendsSystem eliminated - return empty legends
     snapshotState.legends = {
-      records: allLegends,
-      activeLegends,
+      records: new Map(),
+      activeLegends: [],
     };
 
     if (!snapshotState.socialGraph) {

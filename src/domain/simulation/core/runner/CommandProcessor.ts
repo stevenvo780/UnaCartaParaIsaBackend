@@ -357,11 +357,7 @@ export class CommandProcessor {
             payload.agentB as string,
             (payload.magnitude as number) || 0.1,
           );
-          this.runner.interactionGameSystem.startInteraction(
-            payload.agentA as string,
-            payload.agentB as string,
-            "friendly",
-          );
+          // InteractionGameSystem eliminated - interactions handled by SocialSystem
         }
         break;
       case SocialCommandType.HOSTILE_ENCOUNTER:
@@ -375,11 +371,7 @@ export class CommandProcessor {
             payload.agentB as string,
             -(payload.magnitude as number) || -0.1,
           );
-          this.runner.interactionGameSystem.startInteraction(
-            payload.agentA as string,
-            payload.agentB as string,
-            "hostile",
-          );
+          // InteractionGameSystem eliminated - interactions handled by SocialSystem
         }
         break;
     }
