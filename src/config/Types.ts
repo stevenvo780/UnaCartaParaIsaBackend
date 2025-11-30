@@ -38,7 +38,7 @@ export const TYPES = {
   RecipeDiscoverySystem: Symbol.for("RecipeDiscoverySystem"),
   QuestSystem: Symbol.for("QuestSystem"),
   TaskSystem: Symbol.for("TaskSystem"),
-  TradeSystem: Symbol.for("TradeSystem"),
+  // TradeSystem merged into EconomySystem
   MarriageSystem: Symbol.for("MarriageSystem"),
   ConflictResolutionSystem: Symbol.for("ConflictResolutionSystem"),
   // NormsSystem merged into ConflictResolutionSystem

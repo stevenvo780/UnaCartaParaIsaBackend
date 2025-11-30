@@ -9,7 +9,6 @@ import { RecipesCatalog } from "../../data/RecipesCatalog";
 import { simulationEvents, GameEventType } from "../core/events";
 import type { ResourceType } from "../../types/simulation/economy";
 import { itemToInventoryResource } from "../../types/simulation/resourceMapping";
-import { toolStorage } from "./ToolStorageSystem";
 import { logger } from "../../../infrastructure/utils/logger";
 import { equipmentSystem } from "./EquipmentSystem";
 import { EquipmentSlot } from "../../../shared/constants/EquipmentEnums";
@@ -166,7 +165,7 @@ export class EnhancedCraftingSystem {
       const currentWeapon = this.equippedWeapons.get(agentId);
       if (currentWeapon) {
         logger.info(`⚒️ [applyOutput] ${agentId}: Already has ${currentWeapon}, depositing ${output}`);
-        toolStorage.depositTool(output, recipe.output.quantity);
+        equipmentSystem.depositTool(output, recipe.output.quantity);
         simulationEvents.emit(GameEventType.ITEM_CRAFTED, {
           agentId,
           itemId: output,

@@ -64,7 +64,7 @@ export { SharedKnowledgeSystem } from "./SharedKnowledgeSystem";
 // ============================================================================
 // ECONOMY SYSTEMS - Trade, market, crafting
 // ============================================================================
-export { TradeSystem } from "./TradeSystem";
+// TradeSystem merged into EconomySystem
 // MarketSystem merged into EconomySystem
 export { EconomySystem } from "./EconomySystem";
 export { InventorySystem } from "./InventorySystem";
@@ -72,8 +72,8 @@ export { EnhancedCraftingSystem } from "./EnhancedCraftingSystem";
 export { ProductionSystem } from "./ProductionSystem";
 export { ResourceReservationSystem } from "./ResourceReservationSystem";
 export { RecipeDiscoverySystem } from "./RecipeDiscoverySystem";
-export { EquipmentSystem, equipmentSystem } from "./EquipmentSystem";
-export { ToolStorageSystem, toolStorage } from "./ToolStorageSystem";
+export { EquipmentSystem, equipmentSystem, toolStorage, TOOL_CATEGORIES, ROLE_TOOL_NEEDS } from "./EquipmentSystem";
+// ToolStorageSystem merged into EquipmentSystem
 
 // ============================================================================
 // COMBAT SYSTEMS - Fighting, conflict

@@ -112,7 +112,7 @@ import { AIUrgentGoals } from "./ai/core/AIUrgentGoals";
 import { AIZoneHandler } from "./ai/core/AIZoneHandler";
 import { generateRoleBasedWorkGoal } from "./ai/core/WorkGoalGenerator";
 import { EquipmentSystem, equipmentSystem } from "./EquipmentSystem";
-import { toolStorage } from "./ToolStorageSystem";
+import { equipmentSystem as toolStorage } from "./EquipmentSystem";
 import { EquipmentSlot } from "../../../shared/constants/EquipmentEnums";
 import { GameEventType } from "../core/events";
 import { simulationEvents } from "../core/events";

@@ -32,7 +32,7 @@ import { ReputationSystem } from "../systems/ReputationSystem";
 import { RecipeDiscoverySystem } from "../systems/RecipeDiscoverySystem";
 import { QuestSystem } from "../systems/QuestSystem";
 import { TaskSystem } from "../systems/TaskSystem";
-import { TradeSystem } from "../systems/TradeSystem";
+// TradeSystem merged into EconomySystem
 import { MarriageSystem } from "../systems/MarriageSystem";
 import { ConflictResolutionSystem } from "../systems/ConflictResolutionSystem";
 // NormsSystem merged into ConflictResolutionSystem
@@ -210,7 +210,7 @@ export class SimulationRunner {
 
   @inject(TYPES.TaskSystem) public readonly taskSystem!: TaskSystem;
 
-  @inject(TYPES.TradeSystem) public readonly tradeSystem!: TradeSystem;
+  // TradeSystem merged into EconomySystem
 
   @inject(TYPES.MarriageSystem) public readonly marriageSystem!: MarriageSystem;
 
@@ -698,13 +698,7 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    this.scheduler.registerSystem({
-      name: "TradeSystem",
-      rate: TickRate.SLOW,
-      update: () => this.tradeSystem.update(),
-      enabled: true,
-      minEntities: 10,
-    });
+    // TradeSystem merged into EconomySystem
 
     this.scheduler.registerSystem({
       name: "MarriageSystem",

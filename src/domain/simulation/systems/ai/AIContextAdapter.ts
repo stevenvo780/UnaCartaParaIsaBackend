@@ -37,8 +37,7 @@ import type { QuestSystem } from "../QuestSystem";
 import type { TimeSystem } from "../TimeSystem";
 import type { SharedKnowledgeSystem } from "../SharedKnowledgeSystem";
 import type { AgentRegistry } from "../../core/AgentRegistry";
-import type { EquipmentSystem } from "../EquipmentSystem";
-import { toolStorage } from "../ToolStorageSystem";
+import { equipmentSystem, type EquipmentSystem } from "../EquipmentSystem";
 import { EquipmentSlot } from "../../../../shared/constants/EquipmentEnums";
 
 /**
@@ -315,7 +314,7 @@ export class AIContextAdapter implements IAIContext {
   }
 
   hasAvailableWeapons(): boolean {
-    return toolStorage.findToolForRole("hunter") !== null;
+    return equipmentSystem.findToolForRole("hunter") !== undefined;
   }
 
   getAttackRange(agentId: string): number {
@@ -332,8 +331,8 @@ export class AIContextAdapter implements IAIContext {
   }
 
   tryClaimWeapon(agentId: string): boolean {
-    const weapon = toolStorage.findToolForRole("hunter");
-    if (weapon && toolStorage.claimTool(agentId, weapon)) {
+    const weapon = equipmentSystem.findToolForRole("hunter");
+    if (weapon && equipmentSystem.claimTool(agentId, weapon)) {
       this.systems.equipmentSystem.equipItem(
         agentId,
         EquipmentSlot.MAIN_HAND,

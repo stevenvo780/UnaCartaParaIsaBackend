@@ -47,9 +47,10 @@ import { ReputationSystem } from "../domain/simulation/systems/ReputationSystem"
 import { RecipeDiscoverySystem } from "../domain/simulation/systems/RecipeDiscoverySystem";
 import { QuestSystem } from "../domain/simulation/systems/QuestSystem";
 import { TaskSystem } from "../domain/simulation/systems/TaskSystem";
-import { TradeSystem } from "../domain/simulation/systems/TradeSystem";
+// TradeSystem merged into EconomySystem
 import { MarriageSystem } from "../domain/simulation/systems/MarriageSystem";
 import { ConflictResolutionSystem } from "../domain/simulation/systems/ConflictResolutionSystem";
+// TradeSystem merged into EconomySystem
 // NormsSystem merged into ConflictResolutionSystem
 // ResourceAttractionSystem merged into AmbientAwarenessSystem
 
@@ -185,10 +186,7 @@ container
   .to(QuestSystem)
   .inSingletonScope();
 container.bind<TaskSystem>(TYPES.TaskSystem).to(TaskSystem).inSingletonScope();
-container
-  .bind<TradeSystem>(TYPES.TradeSystem)
-  .to(TradeSystem)
-  .inSingletonScope();
+// TradeSystem merged into EconomySystem
 container
   .bind<MarriageSystem>(TYPES.MarriageSystem)
   .to(MarriageSystem)
