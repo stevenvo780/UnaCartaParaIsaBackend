@@ -1,6 +1,6 @@
 import { parentPort } from "node:worker_threads";
 import { performance } from "node:perf_hooks";
-import { WorldGenerationService } from "../world/worldGenerationService";
+import { WorldGenerationService } from "../../../domain/world/worldGenerationService";
 import type {
   WorldGenConfig,
   TerrainTile,

@@ -57,7 +57,7 @@ const configMocks = vi.hoisted(() => ({
   })),
 }));
 
-vi.mock("../../src/infrastructure/services/world/config/AnimalConfigs", () => ({
+vi.mock("../../src/domain/world/config/AnimalConfigs", () => ({
   getAnimalConfig: configMocks.getAnimalConfig,
 }));
 

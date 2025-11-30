@@ -8,7 +8,7 @@ import type { TerrainTile } from "../../../world/generation/types";
 import {
   getAnimalConfig,
   getAnimalsForBiome,
-} from "../../../../infrastructure/services/world/config/AnimalConfigs";
+} from "../../../world/config/AnimalConfigs";
 import { AnimalGenetics } from "./AnimalGenetics";
 import { simulationEvents, GameEventType } from "../../core/events";
 import { AnimalState } from "../../../../shared/constants/AnimalEnums";

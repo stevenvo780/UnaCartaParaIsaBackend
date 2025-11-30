@@ -4,11 +4,11 @@ import type { Animal } from "../../../src/domain/types/simulation/animals";
 import {
   getAnimalConfig,
   getAnimalsForBiome,
-} from "../../../src/infrastructure/services/world/config/AnimalConfigs";
+} from "../../../src/domain/world/config/AnimalConfigs";
 import { simulationEvents, GameEventNames } from "../../../src/domain/simulation/core/events";
 
 // Mocks
-vi.mock("../../../src/infrastructure/services/world/config/AnimalConfigs", () => ({
+vi.mock("../../../src/domain/world/config/AnimalConfigs", () => ({
   getAnimalConfig: vi.fn(),
   getAnimalsForBiome: vi.fn(),
 }));

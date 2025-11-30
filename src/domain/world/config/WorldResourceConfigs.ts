@@ -1,10 +1,10 @@
-import type { WorldResourceConfig } from "../../../../domain/types/simulation/worldResources";
+import type { WorldResourceConfig } from "../../types/simulation/worldResources";
 import {
   ResourceType,
   WorldResourceType,
   ResourceInteractionType,
-} from "../../../../shared/constants/ResourceEnums";
-import { BiomeType } from "../../../../shared/constants/BiomeEnums";
+} from "../../../shared/constants/ResourceEnums";
+import { BiomeType } from "../../../shared/constants/BiomeEnums";
 import {
   TreeVariant,
   RockVariant,
@@ -13,7 +13,7 @@ import {
   MushroomVariant,
   WheatVariant,
   TrashVariant,
-} from "../../../../shared/constants/ResourceVariantEnums";
+} from "../../../shared/constants/ResourceVariantEnums";
 
 export const WORLD_RESOURCE_CONFIGS: Record<string, WorldResourceConfig> = {
   [WorldResourceType.TREE]: {

@@ -1,5 +1,5 @@
 import type { Animal } from "../../../types/simulation/animals";
-import { getAnimalConfig } from "../../../../infrastructure/services/world/config/AnimalConfigs";
+import { getAnimalConfig } from "../../../world/config/AnimalConfigs";
 import { AnimalState } from "../../../../shared/constants/AnimalEnums";
 
 export class AnimalNeeds {

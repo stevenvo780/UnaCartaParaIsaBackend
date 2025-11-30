@@ -16,7 +16,7 @@ import { TYPES } from "./Types";
  * @module config
  */
 import { VoronoiGenerator } from "../domain/world/generation/VoronoiGenerator";
-import { WorldGenerationService } from "../infrastructure/services/world/worldGenerationService";
+import { WorldGenerationService } from "../domain/world/worldGenerationService";
 import { SimulationRunner } from "../domain/simulation/core/SimulationRunner";
 import { GameState } from "../domain/types/game-types";
 import { createInitialGameState } from "../domain/simulation/core/defaultState";

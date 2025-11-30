@@ -21,7 +21,7 @@ import { itemToWorldResources } from "../../types/simulation/resourceMapping";
 import type { WorldResourceType } from "../../types/simulation/worldResources";
 import { StockpileType } from "../../../shared/constants/ZoneEnums";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
-import { getAnimalConfig } from "../../../infrastructure/services/world/config/AnimalConfigs";
+import { getAnimalConfig } from "../../world/config/AnimalConfigs";
 import { WeaponId as CraftingWeaponId } from "../../../shared/constants/CraftingEnums";
 import type { QuestEvent } from "../../types/simulation/quests";
 import type { Stockpile } from "../../types/simulation/economy";

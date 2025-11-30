@@ -1,7 +1,7 @@
 import { logger } from "@/infrastructure/utils/logger";
-import { SpatialGrid } from "../../../utils/SpatialGrid";
+import { SpatialGrid } from "../../../shared/utils/SpatialGrid";
 import { GameEventType, simulationEvents } from "../core/events";
-import { getResourceConfig } from "../../../infrastructure/services/world/config/WorldResourceConfigs";
+import { getResourceConfig } from "../../world/config/WorldResourceConfigs";
 import type {
   WorldResourceInstance,
   WorldResourceConfig,

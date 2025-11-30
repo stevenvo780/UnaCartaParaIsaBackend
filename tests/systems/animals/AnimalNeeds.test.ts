@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { AnimalNeeds } from "../../../src/domain/simulation/systems/animals/AnimalNeeds";
 import type { Animal } from "../../../src/domain/types/simulation/animals";
-import { getAnimalConfig } from "../../../src/infrastructure/services/world/config/AnimalConfigs";
+import { getAnimalConfig } from "../../../src/domain/world/config/AnimalConfigs";
 
 // Mock del config
-vi.mock("../../../src/infrastructure/services/world/config/AnimalConfigs", () => ({
+vi.mock("../../../src/domain/world/config/AnimalConfigs", () => ({
   getAnimalConfig: vi.fn(),
 }));
 
@@ -113,8 +113,8 @@ describe("AnimalNeeds", () => {
       AnimalNeeds.updateNeeds(mockAnimal, 1); // 1 minuto
 
       expect(mockAnimal.needs.reproductiveUrge).toBeGreaterThan(0);
-      // 5.0 * deltaMinutes = 5.0 * 1 = 5.0
-      expect(mockAnimal.needs.reproductiveUrge).toBeCloseTo(5.0, 1);
+      // 15.0 * deltaMinutes = 15.0 * 1 = 15.0
+      expect(mockAnimal.needs.reproductiveUrge).toBeCloseTo(15.0, 1);
     });
 
     it("no debe incrementar reproductiveUrge si no ha pasado el cooldown", () => {

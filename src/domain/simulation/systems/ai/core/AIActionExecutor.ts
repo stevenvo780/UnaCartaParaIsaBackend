@@ -1,5 +1,5 @@
 import { logger } from "../../../../../infrastructure/utils/logger";
-import { getAnimalConfig } from "../../../../../infrastructure/services/world/config/AnimalConfigs";
+import { getAnimalConfig } from "../../../../world/config/AnimalConfigs";
 import type { GameState } from "../../../../types/game-types";
 import type { AgentAction } from "../../../../types/simulation/ai";
 import { itemToInventoryResource } from "../../../../types/simulation/resourceMapping";

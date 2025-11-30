@@ -32,7 +32,7 @@ const CHUNK_CONSTANTS = {
 
 import { container } from "../../config/container";
 import { TYPES } from "../../config/Types";
-import { WorldGenerationService } from "../services/world/worldGenerationService";
+import { WorldGenerationService } from "../../domain/world/worldGenerationService";
 import { AnimalSystem } from "../../domain/simulation/systems/AnimalSystem";
 import { WorldResourceSystem } from "../../domain/simulation/systems/WorldResourceSystem";
 

@@ -5,7 +5,7 @@ import { cloneGameState } from "./defaultState";
 import { EntityIndex } from "./EntityIndex";
 import { SharedSpatialIndex } from "./SharedSpatialIndex";
 import { AgentRegistry } from "./AgentRegistry";
-import { WorldGenerationService } from "../../../infrastructure/services/world/worldGenerationService";
+import { WorldGenerationService } from "../../world/worldGenerationService";
 import { logger } from "../../../infrastructure/utils/logger";
 import { WorldResourceSystem } from "../systems/WorldResourceSystem";
 import { LivingLegendsSystem } from "../systems/LivingLegendsSystem";

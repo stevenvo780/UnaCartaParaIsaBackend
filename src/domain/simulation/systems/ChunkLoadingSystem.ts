@@ -2,7 +2,7 @@ import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { GameState } from "../../types/game-types";
 import type { AgentRegistry } from "../core/AgentRegistry";
-import type { WorldGenerationService } from "../../../infrastructure/services/world/worldGenerationService";
+import type { WorldGenerationService } from "../../world/worldGenerationService";
 import type { AnimalSystem } from "./AnimalSystem";
 import type { WorldResourceSystem } from "./WorldResourceSystem";
 import { logger } from "../../../infrastructure/utils/logger";

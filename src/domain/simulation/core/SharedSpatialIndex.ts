@@ -1,4 +1,4 @@
-import { SpatialGrid } from "../../../utils/SpatialGrid";
+import { SpatialGrid } from "../../../shared/utils/SpatialGrid";
 import { performance } from "node:perf_hooks";
 import { performanceMonitor } from "./PerformanceMonitor";
 import type { SimulationEntity } from "./schema";

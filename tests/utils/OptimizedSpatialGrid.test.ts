@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { OptimizedSpatialGrid } from "../../src/utils/OptimizedSpatialGrid";
+import { OptimizedSpatialGrid } from "../../src/shared/utils/OptimizedSpatialGrid";
 
 describe("OptimizedSpatialGrid", () => {
   let grid: OptimizedSpatialGrid<string>;

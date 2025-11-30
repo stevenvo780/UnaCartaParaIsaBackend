@@ -1,5 +1,5 @@
-import type { AnimalConfig } from "../../../../domain/types/simulation/animals";
-import { AnimalType } from "../../../../shared/constants/AnimalEnums";
+import type { AnimalConfig } from "../../types/simulation/animals";
+import { AnimalType } from "../../../shared/constants/AnimalEnums";
 
 export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
   rabbit: {
