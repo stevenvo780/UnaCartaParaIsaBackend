@@ -109,5 +109,5 @@ export { TaskSystem } from "./TaskSystem";
 export { AmbientAwarenessSystem } from "./AmbientAwarenessSystem";
 export { InteractionGameSystem } from "./InteractionGameSystem";
 export { ItemGenerationSystem } from "./ItemGenerationSystem";
-export { KnowledgeNetworkSystem } from "./KnowledgeNetworkSystem";
+// KnowledgeNetworkSystem eliminated - not used externally
 export { LivingLegendsSystem } from "./LivingLegendsSystem";

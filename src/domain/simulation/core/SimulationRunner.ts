@@ -45,7 +45,7 @@ import { AmbientAwarenessSystem } from "../systems/AmbientAwarenessSystem";
 
 import { TimeSystem } from "../systems/TimeSystem";
 import { InteractionGameSystem } from "../systems/InteractionGameSystem";
-import { KnowledgeNetworkSystem } from "../systems/KnowledgeNetworkSystem";
+// KnowledgeNetworkSystem eliminated - not used externally
 import { EntityType } from "../../../shared/constants/EntityEnums";
 import { MovementSystem } from "../systems/MovementSystem";
 
@@ -231,8 +231,7 @@ export class SimulationRunner {
   @inject(TYPES.InteractionGameSystem)
   public readonly interactionGameSystem!: InteractionGameSystem;
 
-  @inject(TYPES.KnowledgeNetworkSystem)
-  public readonly knowledgeNetworkSystem!: KnowledgeNetworkSystem;
+  // KnowledgeNetworkSystem eliminated - not used externally
 
   @inject(TYPES.MovementSystem) public readonly movementSystem!: MovementSystem;
 
@@ -761,12 +760,7 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    this.scheduler.registerSystem({
-      name: "KnowledgeNetworkSystem",
-      rate: TickRate.SLOW,
-      update: (delta: number) => this.knowledgeNetworkSystem.update(delta),
-      enabled: true,
-    });
+    // KnowledgeNetworkSystem eliminated - not used externally
 
     this.scheduler.registerSystem({
       name: "ChunkLoadingSystem",

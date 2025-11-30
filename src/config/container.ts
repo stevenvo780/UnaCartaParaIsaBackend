@@ -58,7 +58,7 @@ import { AmbientAwarenessSystem } from "../domain/simulation/systems/AmbientAwar
 
 import { TimeSystem } from "../domain/simulation/systems/TimeSystem";
 import { InteractionGameSystem } from "../domain/simulation/systems/InteractionGameSystem";
-import { KnowledgeNetworkSystem } from "../domain/simulation/systems/KnowledgeNetworkSystem";
+// KnowledgeNetworkSystem eliminated - not used externally
 import { MovementSystem } from "../domain/simulation/systems/MovementSystem";
 
 import { EntityIndex } from "../domain/simulation/core/EntityIndex";
@@ -208,10 +208,7 @@ container
   .bind<InteractionGameSystem>(TYPES.InteractionGameSystem)
   .to(InteractionGameSystem)
   .inSingletonScope();
-container
-  .bind<KnowledgeNetworkSystem>(TYPES.KnowledgeNetworkSystem)
-  .to(KnowledgeNetworkSystem)
-  .inSingletonScope();
+// KnowledgeNetworkSystem binding removed - not used externally
 container
   .bind<MovementSystem>(TYPES.MovementSystem)
   .to(MovementSystem)

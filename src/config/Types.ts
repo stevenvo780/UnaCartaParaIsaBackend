@@ -48,7 +48,7 @@ export const TYPES = {
 
   TimeSystem: Symbol.for("TimeSystem"),
   InteractionGameSystem: Symbol.for("InteractionGameSystem"),
-  KnowledgeNetworkSystem: Symbol.for("KnowledgeNetworkSystem"),
+  // KnowledgeNetworkSystem eliminated - not used externally
   MovementSystem: Symbol.for("MovementSystem"),
 
   SimulationConfig: Symbol.for("SimulationConfig"),
