@@ -18,7 +18,7 @@ import type { StateDirtyTracker } from "../core/StateDirtyTracker";
 import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
-import { FoodCatalog } from "../../../simulation/data/FoodCatalog";
+import { FoodCatalog } from "../../data/FoodCatalog";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
 import { NeedType } from "../../../shared/constants/AIEnums";

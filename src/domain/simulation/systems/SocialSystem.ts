@@ -1,6 +1,5 @@
 import { GameState } from "../../types/game-types";
-import { SocialConfig } from "../../types/simulation/social";
-import { SocialGroup } from "../../../shared/types/simulation/agents";
+import { SocialConfig, SocialGroup } from "../../types/simulation/social";
 import { simulationEvents, GameEventType } from "../core/events";
 import { logger } from "../../../infrastructure/utils/logger";
 import { getFrameTime } from "../../../shared/FrameTime";

@@ -4,8 +4,8 @@ import {
   RecipeDiscoveryEvent,
 } from "../../types/simulation/recipes";
 import { CraftingRecipe } from "../../types/simulation/crafting";
-import { RecipesCatalog } from "../../../simulation/data/RecipesCatalog";
-import { BiomeRecipesCatalog } from "../../../simulation/data/BiomeRecipesCatalog";
+import { RecipesCatalog } from "../../data/RecipesCatalog";
+import { BiomeRecipesCatalog } from "../../data/BiomeRecipesCatalog";
 
 const BASIC_RECIPES = [
   "wood_to_plank",

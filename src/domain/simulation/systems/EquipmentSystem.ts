@@ -8,13 +8,13 @@
  * @module simulation/systems/EquipmentSystem
  */
 
-import { EquipmentSlot } from "../../shared/constants/EquipmentEnums";
+import { EquipmentSlot } from "../../../shared/constants/EquipmentEnums";
 import {
   getEquipmentStats,
   getBestWeapon,
   ROLE_RECOMMENDED_TOOLS,
   type EquipmentStats,
-} from "../data/EquipmentStats";
+} from "../../data/EquipmentStats";
 
 /**
  * Agent equipment state.

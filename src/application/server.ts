@@ -12,7 +12,7 @@ import type {
   SimulationRequest,
   SimulationSnapshot,
 } from "../shared/types/commands/SimulationCommand";
-import { ChunkStreamServer } from "../infrastructure/services/chunk/chunk/ChunkStreamServer";
+import { ChunkStreamServer } from "../infrastructure/services/chunk/ChunkStreamServer";
 import { logger } from "../infrastructure/utils/logger.js";
 import { WebSocketMessageType } from "../shared/constants/WebSocketEnums";
 import { SimulationRequestType } from "../shared/constants/CommandEnums";

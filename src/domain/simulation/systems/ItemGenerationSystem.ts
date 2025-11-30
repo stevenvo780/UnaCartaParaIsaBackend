@@ -6,7 +6,7 @@ import type {
   ItemGenerationConfig,
 } from "../../types/simulation/itemGeneration";
 import { simulationEvents, GameEventType } from "../core/events";
-import { BaseMaterialsCatalog } from "../../../simulation/data/BaseMaterialsCatalog";
+import { BaseMaterialsCatalog } from "../../data/BaseMaterialsCatalog";
 import type { Item } from "../../types/simulation/items";
 
 const DEFAULT_CONFIG: ItemGenerationConfig = {

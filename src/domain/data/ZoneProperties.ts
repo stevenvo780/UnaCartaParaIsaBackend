@@ -1,5 +1,5 @@
-import type { ZoneType } from "../../domain/types/simulation/zones";
-import type { EntityStats } from "../../domain/simulation/core/schema";
+import type { ZoneType } from "../types/simulation/zones";
+import type { EntityStats } from "../simulation/core/schema";
 import { ZoneSpriteKey } from "../../shared/constants/SpriteEnums";
 
 export interface ZonePropertyConfig {

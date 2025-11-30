@@ -7,7 +7,7 @@
  * @module simulation/data/RecipesCatalog
  */
 
-import type { CraftingRecipe } from "../../domain/types/simulation/crafting";
+import type { CraftingRecipe } from "../types/simulation/crafting";
 import { ItemId } from "../../shared/constants/ItemEnums";
 import { RecipeId } from "../../shared/constants/RecipeEnums";
 import {

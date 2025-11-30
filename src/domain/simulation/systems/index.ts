@@ -72,6 +72,8 @@ export { EnhancedCraftingSystem } from "./EnhancedCraftingSystem";
 export { ProductionSystem } from "./ProductionSystem";
 export { ResourceReservationSystem } from "./ResourceReservationSystem";
 export { RecipeDiscoverySystem } from "./RecipeDiscoverySystem";
+export { EquipmentSystem, equipmentSystem } from "./EquipmentSystem";
+export { ToolStorageSystem, toolStorage } from "./ToolStorageSystem";
 
 // ============================================================================
 // COMBAT SYSTEMS - Fighting, conflict

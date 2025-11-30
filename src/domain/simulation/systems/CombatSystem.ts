@@ -12,7 +12,7 @@ import type {
   CombatWeaponCraftedLog,
   CombatWeaponEquippedLog,
 } from "../../types/simulation/combat";
-import { getWeapon } from "../../../simulation/data/WeaponCatalog";
+import { getWeapon } from "../../data/WeaponCatalog";
 import type { ResourceType } from "../../types/simulation/economy";
 import type { SimulationEntity } from "../core/schema";
 import { InventorySystem } from "./InventorySystem";

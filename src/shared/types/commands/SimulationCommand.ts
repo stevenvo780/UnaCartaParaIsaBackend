@@ -2,7 +2,7 @@ import type {
   GameResources,
   GameState,
 } from "../../../domain/types/game-types";
-import type { AgentTraits } from "../simulation/agents";
+import type { AgentTraits } from "../../../domain/types/simulation/agents";
 import { GameEventType } from "../../constants/EventEnums";
 import { ResourceType, WorldResourceType } from "../../constants/ResourceEnums";
 import { BiomeType } from "../../constants/BiomeEnums";

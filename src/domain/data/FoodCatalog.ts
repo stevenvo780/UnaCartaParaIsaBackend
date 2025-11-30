@@ -1,7 +1,7 @@
 import type {
   FoodItem,
   FoodCategory,
-} from "../../domain/types/simulation/food";
+} from "../types/simulation/food";
 import {
   FoodCategory as FoodCategoryEnum,
   FoodId,

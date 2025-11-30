@@ -12,8 +12,8 @@
  * @module simulation/systems/ToolStorageSystem
  */
 
-import { ItemId } from "../../shared/constants/ItemEnums";
-import { logger } from "../../infrastructure/utils/logger";
+import { ItemId } from "../../../shared/constants/ItemEnums";
+import { logger } from "../../../infrastructure/utils/logger";
 
 /**
  * A stored tool with quantity tracking.

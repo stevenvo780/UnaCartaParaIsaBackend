@@ -37,8 +37,8 @@ import type { QuestSystem } from "../QuestSystem";
 import type { TimeSystem } from "../TimeSystem";
 import type { SharedKnowledgeSystem } from "../SharedKnowledgeSystem";
 import type { AgentRegistry } from "../../core/AgentRegistry";
-import type { EquipmentSystem } from "../../../../simulation/systems/EquipmentSystem";
-import { toolStorage } from "../../../../simulation/systems/ToolStorageSystem";
+import type { EquipmentSystem } from "../EquipmentSystem";
+import { toolStorage } from "../ToolStorageSystem";
 import { EquipmentSlot } from "../../../../shared/constants/EquipmentEnums";
 
 /**

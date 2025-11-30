@@ -5,19 +5,19 @@ import { WebSocketServer, WebSocket } from "ws";
 import type {
   WorldGenConfig,
   TerrainTile,
-} from "../../../../domain/world/generation/types";
+} from "../../../domain/world/generation/types";
 import { ChunkWorkerPool } from "./ChunkWorkerPool";
 import type { ChunkPoolStats } from "./ChunkWorkerPool";
 import {
   encodeMsgPack,
   decodeMessage,
-} from "../../../../shared/MessagePackCodec";
-import { container } from "../../../../config/container";
-import { TYPES } from "../../../../config/Types";
-import type { AnimalSystem } from "../../../../domain/simulation/systems/AnimalSystem";
-import { logger } from "../../../utils/logger";
-import { ChunkMessageType } from "../../../../shared/constants/WebSocketEnums";
-import { UNKNOWN_VALUE as COMMON_UNKNOWN } from "../../../../shared/constants/CommonConstants";
+} from "../../../shared/MessagePackCodec";
+import { container } from "../../../config/container";
+import { TYPES } from "../../../config/Types";
+import type { AnimalSystem } from "../../../domain/simulation/systems/AnimalSystem";
+import { logger } from "../../utils/logger";
+import { ChunkMessageType } from "../../../shared/constants/WebSocketEnums";
+import { UNKNOWN_VALUE as COMMON_UNKNOWN } from "../../../shared/constants/CommonConstants";
 
 interface ChunkRequestMessage {
   type: ChunkMessageType.CHUNK_REQUEST;

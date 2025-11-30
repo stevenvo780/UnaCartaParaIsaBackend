@@ -1,4 +1,4 @@
-import type { Item } from "../../domain/types/simulation/items";
+import type { Item } from "../types/simulation/items";
 import {
   ItemTier,
   ItemCategory,

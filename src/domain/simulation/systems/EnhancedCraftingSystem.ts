@@ -5,13 +5,13 @@ import type {
   CraftingRecipe,
   CraftingJob,
 } from "../../types/simulation/crafting";
-import { RecipesCatalog } from "../../../simulation/data/RecipesCatalog";
+import { RecipesCatalog } from "../../data/RecipesCatalog";
 import { simulationEvents, GameEventType } from "../core/events";
 import type { ResourceType } from "../../types/simulation/economy";
 import { itemToInventoryResource } from "../../types/simulation/resourceMapping";
-import { toolStorage } from "../../../simulation/systems/ToolStorageSystem";
+import { toolStorage } from "./ToolStorageSystem";
 import { logger } from "../../../infrastructure/utils/logger";
-import { equipmentSystem } from "../../../simulation/systems/EquipmentSystem";
+import { equipmentSystem } from "./EquipmentSystem";
 import { EquipmentSlot } from "../../../shared/constants/EquipmentEnums";
 
 interface EnhancedCraftingConfig {
