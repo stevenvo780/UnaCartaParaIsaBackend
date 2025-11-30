@@ -19,7 +19,7 @@ export const TYPES = {
   SocialSystem: Symbol.for("SocialSystem"),
   InventorySystem: Symbol.for("InventorySystem"),
   EconomySystem: Symbol.for("EconomySystem"),
-  MarketSystem: Symbol.for("MarketSystem"),
+  // MarketSystem merged into EconomySystem
   RoleSystem: Symbol.for("RoleSystem"),
   AISystem: Symbol.for("AISystem"),
   ResourceReservationSystem: Symbol.for("ResourceReservationSystem"),
@@ -41,8 +41,8 @@ export const TYPES = {
   TradeSystem: Symbol.for("TradeSystem"),
   MarriageSystem: Symbol.for("MarriageSystem"),
   ConflictResolutionSystem: Symbol.for("ConflictResolutionSystem"),
-  NormsSystem: Symbol.for("NormsSystem"),
-  ResourceAttractionSystem: Symbol.for("ResourceAttractionSystem"),
+  // NormsSystem merged into ConflictResolutionSystem
+  // ResourceAttractionSystem merged into AmbientAwarenessSystem
 
   AmbientAwarenessSystem: Symbol.for("AmbientAwarenessSystem"),
 

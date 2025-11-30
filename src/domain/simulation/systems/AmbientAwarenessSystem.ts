@@ -4,6 +4,11 @@ import type {
   AmbientSnapshot,
   CollectiveWellbeing,
   AmbientState,
+  NeedDesireSnapshot,
+  ResourceAttractionFieldSnapshot,
+  ResourceAttractionSnapshot,
+  ResourceEmergencyRequest,
+  ResourceBiasSnapshot,
 } from "../../types/simulation/ambient";
 import {
   CrisisTrend,
@@ -11,15 +16,48 @@ import {
   WeatherType,
   MusicMood,
 } from "../../../shared/constants/AmbientEnums";
+import { NeedType } from "../../../shared/constants/AIEnums";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../config/Types";
 import { SystemProperty } from "../../../shared/constants/SystemEnums";
 
+// Resource attraction config (merged from ResourceAttractionSystem)
+const DESIRE_THRESHOLDS: Partial<
+  Record<NeedType, { high: number; low?: number }>
+> = {
+  [NeedType.HUNGER]: { high: 60 },
+  [NeedType.THIRST]: { high: 60 },
+  [NeedType.ENERGY]: { high: 0, low: 35 },
+  [NeedType.HYGIENE]: { high: 0, low: 40 },
+};
+
+const RESOURCE_MAPPING: Partial<Record<NeedType, ResourceType | null>> = {
+  [NeedType.HUNGER]: ResourceType.FOOD,
+  [NeedType.THIRST]: ResourceType.WATER,
+  [NeedType.ENERGY]: null,
+  [NeedType.HYGIENE]: ResourceType.WATER,
+};
+
+/**
+ * Unified system for ambient awareness and resource attraction.
+ *
+ * Features (merged from AmbientAwarenessSystem + ResourceAttractionSystem):
+ * - Collective wellbeing calculations (average, variance, trend)
+ * - Ambient mood, lighting, music based on wellbeing
+ * - Resource desire calculations based on agent needs
+ * - Emergency resource requests when needs are critical
+ *
+ * @see NeedsSystem for agent need data
+ */
 @injectable()
 export class AmbientAwarenessSystem {
   private snapshot: AmbientSnapshot;
   private wellbeingHistory: number[] = [];
   private readonly HISTORY_SIZE = 60;
+
+  // Resource attraction state (merged)
+  private resourceSnapshot: ResourceAttractionSnapshot;
 
   constructor(
     @inject(TYPES.GameState) private readonly gameState: GameState,
@@ -43,6 +81,19 @@ export class AmbientAwarenessSystem {
       },
       lastUpdated: Date.now(),
     };
+
+    this.resourceSnapshot = {
+      updatedAt: Date.now(),
+      desires: [],
+      fields: [],
+      stats: {
+        totalDesires: 0,
+        activeZones: 0,
+        attractedSpawns: 0,
+        emergencyRequests: 0,
+      },
+      emergencies: [],
+    };
   }
 
   public update(_deltaMs: number): void {
@@ -57,6 +108,9 @@ export class AmbientAwarenessSystem {
     };
 
     this.gameState.ambientMood = this.snapshot;
+
+    // Update resource attraction (merged from ResourceAttractionSystem)
+    this.updateResourceAttraction(now);
   }
 
   public getSnapshot(): AmbientSnapshot {
@@ -246,4 +300,156 @@ export class AmbientAwarenessSystem {
         return WeatherType.CLEAR;
     }
   }
+
+  // ============ RESOURCE ATTRACTION (merged from ResourceAttractionSystem) ============
+
+  private updateResourceAttraction(now: number): void {
+    const needs = this.needsSystem.getAllNeeds();
+    const desires: NeedDesireSnapshot[] = [];
+    const fieldMap = new Map<
+      string,
+      { total: number; needs: Map<string, number> }
+    >();
+    const emergencies: ResourceEmergencyRequest[] = [];
+
+    for (const [entityId, data] of needs) {
+      const zoneId = "global";
+      (Object.keys(DESIRE_THRESHOLDS) as NeedType[]).forEach((needType) => {
+        const thresholds = DESIRE_THRESHOLDS[needType];
+        const value = data[needType] as number;
+        if (typeof value !== "number") return;
+
+        if (needType === NeedType.ENERGY || needType === NeedType.HYGIENE) {
+          if (
+            thresholds &&
+            typeof thresholds.low === "number" &&
+            value < thresholds.low
+          ) {
+            const intensity = thresholds.low - value;
+            this.addDesire(
+              desires,
+              fieldMap,
+              entityId,
+              needType,
+              zoneId,
+              intensity,
+              now,
+            );
+            if (value < 10) {
+              const resourceType = RESOURCE_MAPPING[needType];
+              if (resourceType) {
+                emergencies.push({
+                  agentId: entityId,
+                  resourceType,
+                  urgency: 1 - value / 100,
+                  zoneId,
+                  timestamp: now,
+                });
+              }
+            }
+          }
+        } else if (thresholds && value > thresholds.high) {
+          const intensity = value - thresholds.high;
+          this.addDesire(
+            desires,
+            fieldMap,
+            entityId,
+            needType,
+            zoneId,
+            intensity,
+            now,
+          );
+          if (value > 95) {
+            const resourceType = RESOURCE_MAPPING[needType];
+            if (resourceType) {
+              emergencies.push({
+                agentId: entityId,
+                resourceType,
+                urgency: value / 100,
+                zoneId,
+                timestamp: now,
+              });
+            }
+          }
+        }
+      });
+    }
+
+    const fields: ResourceAttractionFieldSnapshot[] = [];
+    fieldMap.forEach((data, zoneId) => {
+      const dominantNeeds: ResourceBiasSnapshot[] = Array.from(
+        data.needs.entries(),
+      )
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([resourceType, intensity]) => ({
+          resourceType: resourceType as ResourceType,
+          intensity,
+        }));
+
+      const totalDesire = data.total;
+      const spawnBias = Math.min(
+        1,
+        totalDesire / Math.max(1, desires.length * 10),
+      );
+
+      fields.push({
+        zoneId,
+        totalDesire,
+        spawnBias,
+        lastSpawn: now,
+        dominantNeeds,
+      });
+    });
+
+    fields.sort((a, b) => b.totalDesire - a.totalDesire);
+
+    this.resourceSnapshot = {
+      updatedAt: now,
+      desires: desires.slice(-120),
+      fields,
+      stats: {
+        totalDesires: desires.length,
+        activeZones: fields.length,
+        attractedSpawns: Math.floor(
+          fields.reduce((sum, f) => sum + f.spawnBias, 0) * 10,
+        ),
+        emergencyRequests: emergencies.length,
+      },
+      emergencies: emergencies.slice(0, 20),
+    };
+
+    this.gameState.resourceAttraction = this.resourceSnapshot;
+  }
+
+  public getResourceSnapshot(): ResourceAttractionSnapshot {
+    return this.resourceSnapshot;
+  }
+
+  private addDesire(
+    list: NeedDesireSnapshot[],
+    fieldMap: Map<string, { total: number; needs: Map<string, number> }>,
+    agentId: string,
+    needType: NeedType,
+    zoneId: string,
+    intensity: number,
+    timestamp: number,
+  ): void {
+    list.push({ agentId, needType, intensity, zoneId, timestamp });
+
+    if (!fieldMap.has(zoneId)) {
+      fieldMap.set(zoneId, { total: 0, needs: new Map() });
+    }
+    const record = fieldMap.get(zoneId)!;
+    record.total += intensity;
+    const resourceType = RESOURCE_MAPPING[needType];
+    if (resourceType) {
+      record.needs.set(
+        resourceType,
+        (record.needs.get(resourceType) || 0) + intensity,
+      );
+    }
+  }
+
+  // ============ END RESOURCE ATTRACTION ============
 }

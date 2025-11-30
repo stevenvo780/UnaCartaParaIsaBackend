@@ -2,6 +2,7 @@ import type { GameState, Zone } from "../../types/game-types.js";
 import type {
   EconomyConfig,
   ResourceType,
+  MarketConfig,
 } from "../../types/simulation/economy";
 import { ResourceType as ResourceTypeEnum } from "../../../shared/constants/ResourceEnums";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
@@ -33,6 +34,23 @@ const DEFAULT_ECONOMY_CONFIG: EconomyConfig = {
   },
 };
 
+const DEFAULT_MARKET_CONFIG: MarketConfig = {
+  scarcityThresholds: { low: 20, high: 100 },
+  lowMultiplier: 1.5,
+  highMultiplier: 0.9,
+  normalMultiplier: 1.0,
+  basePrices: {
+    wood: 4,
+    stone: 6,
+    food: 8,
+    water: 2,
+    rare_materials: 25,
+    metal: 15,
+    iron_ore: 10,
+    copper_ore: 12,
+  },
+};
+
 export interface TransactionRecord {
   type: "income" | "expense";
   amount: number;
@@ -47,14 +65,14 @@ import type { EntityIndex } from "../core/EntityIndex";
 import type { AgentRegistry } from "../core/AgentRegistry";
 
 /**
- * System for managing economic activities: resource production, salaries, and work yields.
+ * System for managing economic activities: resource production, salaries, market pricing, and trading.
  *
  * Features:
  * - Resource yield calculations based on work duration
  * - Salary payment system for agents with roles
+ * - Dynamic pricing based on resource scarcity (merged from MarketSystem)
+ * - Automatic trading between agents
  * - Yield residuals for fractional resource accumulation
- * - Integration with role system for work assignments
- * - Divine favor modifiers for production bonuses
  *
  * @see RoleSystem for agent role assignments
  * @see InventorySystem for resource storage
@@ -67,6 +85,7 @@ export class EconomySystem {
   private roleSystem?: RoleSystem;
 
   private config: EconomyConfig;
+  private marketConfig: MarketConfig;
   private yieldResiduals = new Map<string, number>();
   private transactionHistory = new Map<string, TransactionRecord[]>();
   private lastUpdate = Date.now();
@@ -75,6 +94,10 @@ export class EconomySystem {
   private readonly SALARY_INTERVAL_MS = 60000;
   private entityIndex?: EntityIndex;
   private agentRegistry?: AgentRegistry;
+
+  // Market-related state (merged from MarketSystem)
+  private recentTrades = new Map<string, number>();
+  private readonly TRADE_COOLDOWN_MS = 30000;
 
   constructor(
     @inject(TYPES.GameState) state: GameState,
@@ -89,6 +112,7 @@ export class EconomySystem {
     this.entityIndex = entityIndex;
     this.agentRegistry = agentRegistry;
     this.config = DEFAULT_ECONOMY_CONFIG;
+    this.marketConfig = DEFAULT_MARKET_CONFIG;
   }
 
   public getTransactionHistory(agentId: string): TransactionRecord[] {
@@ -133,7 +157,192 @@ export class EconomySystem {
       this.processSalaryPayments();
       this.lastSalaryPayment = now;
     }
+
+    // Market update (merged from MarketSystem)
+    this.updateMarket();
   }
+
+  // ============ MARKET FUNCTIONALITY (merged from MarketSystem) ============
+
+  private updateMarket(): void {
+    this.autoTradeAmongAgents();
+
+    if (!this.state.market) {
+      this.state.market = {
+        orders: [],
+        transactions: [],
+        prices: {},
+      };
+    }
+
+    const prices: Record<string, number> = {};
+    const resourceTypes = [
+      ResourceTypeEnum.WOOD,
+      ResourceTypeEnum.STONE,
+      ResourceTypeEnum.FOOD,
+      ResourceTypeEnum.WATER,
+      ResourceTypeEnum.METAL,
+    ];
+    for (const resource of resourceTypes) {
+      prices[resource] = this.getResourcePrice(resource);
+    }
+    this.state.market.prices = prices;
+  }
+
+  public getResourcePrice(resource: ResourceTypeEnum): number {
+    const scarcity = this.computeScarcityMultiplier(resource);
+    return Math.max(
+      1,
+      Math.round(this.marketConfig.basePrices[resource] * scarcity),
+    );
+  }
+
+  private computeScarcityMultiplier(resource: ResourceTypeEnum): number {
+    let stock = 0;
+    if (this.state.resources) {
+      stock += this.state.resources.materials[resource] || 0;
+    }
+
+    const stats = this.inventorySystem.getSystemStats();
+    stock += stats.stockpiled[resource];
+
+    const { low, high } = this.marketConfig.scarcityThresholds;
+    if (stock < low) return this.marketConfig.lowMultiplier;
+    if (stock > high) return this.marketConfig.highMultiplier;
+    return this.marketConfig.normalMultiplier;
+  }
+
+  public buyResource(
+    buyerId: string,
+    resource: ResourceTypeEnum,
+    amount: number,
+  ): boolean {
+    const price = this.getResourcePrice(resource);
+    const totalCost = price * amount;
+
+    if (!this.canAfford(buyerId, totalCost)) {
+      return false;
+    }
+
+    const added = this.inventorySystem.addResource(buyerId, resource, amount);
+    if (!added) {
+      return false;
+    }
+
+    this.removeMoney(buyerId, totalCost);
+
+    if (this.state.resources) {
+      this.state.resources.currency += totalCost;
+    }
+
+    return true;
+  }
+
+  public sellResource(
+    sellerId: string,
+    resource: ResourceTypeEnum,
+    amount: number,
+  ): number {
+    const removed = this.inventorySystem.removeFromAgent(
+      sellerId,
+      resource,
+      amount,
+    );
+    if (removed <= 0) return 0;
+
+    const price = this.getResourcePrice(resource);
+    const totalValue = price * removed;
+
+    this.addMoney(sellerId, totalValue);
+
+    if (this.state.resources) {
+      this.state.resources.currency = Math.max(
+        0,
+        this.state.resources.currency - totalValue,
+      );
+    }
+
+    return totalValue;
+  }
+
+  private autoTradeAmongAgents(): void {
+    const entities: Array<{ id: string }> = [];
+    if (this.agentRegistry) {
+      for (const profile of this.agentRegistry.getAllProfiles()) {
+        if (!profile.isDead) entities.push(profile);
+      }
+    } else if (this.state.entities) {
+      entities.push(...this.state.entities);
+    }
+    if (entities.length < 2) return;
+
+    const now = Date.now();
+
+    for (const [key, timestamp] of this.recentTrades) {
+      if (now - timestamp > this.TRADE_COOLDOWN_MS) {
+        this.recentTrades.delete(key);
+      }
+    }
+
+    for (let i = 0; i < entities.length; i++) {
+      const seller = entities[i];
+      if (!seller || !seller.id) continue;
+
+      const sellerInv = this.inventorySystem.getAgentInventory(seller.id);
+      if (!sellerInv) continue;
+
+      for (const resource of [
+        ResourceTypeEnum.WOOD,
+        ResourceTypeEnum.STONE,
+        ResourceTypeEnum.FOOD,
+        ResourceTypeEnum.WATER,
+        ResourceTypeEnum.METAL,
+      ]) {
+        const sellerStock = sellerInv[resource] || 0;
+
+        if (sellerStock < 15) continue;
+
+        for (let j = 0; j < entities.length; j++) {
+          if (i === j) continue;
+          const buyer = entities[j];
+          if (!buyer || !buyer.id) continue;
+
+          const tradeKey = [seller.id, buyer.id, resource].sort().join(":");
+          if (this.recentTrades.has(tradeKey)) continue;
+
+          const buyerInv = this.inventorySystem.getAgentInventory(buyer.id);
+
+          if (!buyerInv || (buyerInv[resource] || 0) > 3) continue;
+
+          const tradeAmount = Math.min(5, sellerStock);
+          const price = this.getResourcePrice(resource);
+          const cost = price * tradeAmount;
+
+          if (!this.canAfford(buyer.id, cost)) continue;
+
+          const removed = this.inventorySystem.removeFromAgent(
+            seller.id,
+            resource,
+            tradeAmount,
+          );
+          if (removed > 0) {
+            this.inventorySystem.addResource(buyer.id, resource, removed);
+
+            this.transferMoney(buyer.id, seller.id, cost);
+
+            this.recentTrades.set(tradeKey, now);
+
+            logger.debug(
+              `🔄 [MARKET] Auto-trade: ${seller.id} sold ${removed} ${resource} to ${buyer.id} for ${cost}`,
+            );
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  // ============ END MARKET FUNCTIONALITY ============
 
   private cleanupOldResiduals(): void {
     if (this.yieldResiduals.size > 100) {

@@ -49,7 +49,7 @@ export { WorldResourceSystem } from "./WorldResourceSystem";
 export { TerrainSystem } from "./TerrainSystem";
 export { ChunkLoadingSystem } from "./ChunkLoadingSystem";
 export { TimeSystem } from "./TimeSystem";
-export { ResourceAttractionSystem } from "./ResourceAttractionSystem";
+// ResourceAttractionSystem merged into AmbientAwarenessSystem
 
 // ============================================================================
 // SOCIAL SYSTEMS - Relationships, families, knowledge
@@ -65,7 +65,7 @@ export { SharedKnowledgeSystem } from "./SharedKnowledgeSystem";
 // ECONOMY SYSTEMS - Trade, market, crafting
 // ============================================================================
 export { TradeSystem } from "./TradeSystem";
-export { MarketSystem } from "./MarketSystem";
+// MarketSystem merged into EconomySystem
 export { EconomySystem } from "./EconomySystem";
 export { InventorySystem } from "./InventorySystem";
 export { EnhancedCraftingSystem } from "./EnhancedCraftingSystem";
@@ -99,7 +99,7 @@ export { BuildingMaintenanceSystem } from "./BuildingMaintenanceSystem";
 // GOVERNANCE SYSTEMS - Quests, tasks, norms
 // ============================================================================
 export { GovernanceSystem } from "./GovernanceSystem";
-export { NormsSystem } from "./NormsSystem";
+// NormsSystem merged into ConflictResolutionSystem
 export { QuestSystem } from "./QuestSystem";
 export { TaskSystem } from "./TaskSystem";
 

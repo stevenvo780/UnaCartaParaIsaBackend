@@ -29,7 +29,6 @@ import { GenealogySystem } from "../domain/simulation/systems/GenealogySystem";
 import { SocialSystem } from "../domain/simulation/systems/SocialSystem";
 import { InventorySystem } from "../domain/simulation/systems/InventorySystem";
 import { EconomySystem } from "../domain/simulation/systems/EconomySystem";
-import { MarketSystem } from "../domain/simulation/systems/MarketSystem";
 import { RoleSystem } from "../domain/simulation/systems/RoleSystem";
 import { AISystem } from "../domain/simulation/systems/AISystem";
 import { ResourceReservationSystem } from "../domain/simulation/systems/ResourceReservationSystem";
@@ -51,8 +50,8 @@ import { TaskSystem } from "../domain/simulation/systems/TaskSystem";
 import { TradeSystem } from "../domain/simulation/systems/TradeSystem";
 import { MarriageSystem } from "../domain/simulation/systems/MarriageSystem";
 import { ConflictResolutionSystem } from "../domain/simulation/systems/ConflictResolutionSystem";
-import { NormsSystem } from "../domain/simulation/systems/NormsSystem";
-import { ResourceAttractionSystem } from "../domain/simulation/systems/ResourceAttractionSystem";
+// NormsSystem merged into ConflictResolutionSystem
+// ResourceAttractionSystem merged into AmbientAwarenessSystem
 
 import { AmbientAwarenessSystem } from "../domain/simulation/systems/AmbientAwarenessSystem";
 
@@ -120,10 +119,7 @@ container
   .bind<EconomySystem>(TYPES.EconomySystem)
   .to(EconomySystem)
   .inSingletonScope();
-container
-  .bind<MarketSystem>(TYPES.MarketSystem)
-  .to(MarketSystem)
-  .inSingletonScope();
+// MarketSystem merged into EconomySystem
 container
   .bind<VoronoiGenerator>(TYPES.VoronoiGenerator)
   .to(VoronoiGenerator)
@@ -201,14 +197,8 @@ container
   .bind<ConflictResolutionSystem>(TYPES.ConflictResolutionSystem)
   .to(ConflictResolutionSystem)
   .inSingletonScope();
-container
-  .bind<NormsSystem>(TYPES.NormsSystem)
-  .to(NormsSystem)
-  .inSingletonScope();
-container
-  .bind<ResourceAttractionSystem>(TYPES.ResourceAttractionSystem)
-  .to(ResourceAttractionSystem)
-  .inSingletonScope();
+// NormsSystem merged into ConflictResolutionSystem
+// ResourceAttractionSystem merged into AmbientAwarenessSystem
 
 container
   .bind<AmbientAwarenessSystem>(TYPES.AmbientAwarenessSystem)

@@ -20,7 +20,7 @@ import { LifeCycleSystem } from "./LifeCycleSystem";
 import { SocialSystem } from "./SocialSystem";
 
 import type { AnimalSystem } from "./AnimalSystem";
-import type { NormsSystem } from "./NormsSystem";
+import type { ConflictResolutionSystem } from "./ConflictResolutionSystem";
 import { getFrameTime } from "../../../shared/FrameTime";
 import { performance } from "node:perf_hooks";
 import { performanceMonitor } from "../core/PerformanceMonitor";
@@ -91,7 +91,7 @@ export class CombatSystem {
   private personalCombatHistory = new Map<string, PersonalCombatEvent[]>();
 
   private animalSystem?: AnimalSystem;
-  private normsSystem?: NormsSystem;
+  private conflictResolutionSystem?: ConflictResolutionSystem;
   private sharedSpatialIndex?: SharedSpatialIndex;
   private gpuService?: GPUComputeService;
   private entityIndex?: EntityIndex;
@@ -107,7 +107,9 @@ export class CombatSystem {
     private readonly lifeCycleSystem: LifeCycleSystem,
     @inject(TYPES.SocialSystem) private readonly socialSystem: SocialSystem,
     @inject(TYPES.AnimalSystem) @optional() animalSystem?: AnimalSystem,
-    @inject(TYPES.NormsSystem) @optional() normsSystem?: NormsSystem,
+    @inject(TYPES.ConflictResolutionSystem)
+    @optional()
+    conflictResolutionSystem?: ConflictResolutionSystem,
     @inject(TYPES.SharedSpatialIndex)
     @optional()
     sharedSpatialIndex?: SharedSpatialIndex,
@@ -119,7 +121,7 @@ export class CombatSystem {
     entityIndex?: EntityIndex,
   ) {
     this.animalSystem = animalSystem;
-    this.normsSystem = normsSystem;
+    this.conflictResolutionSystem = conflictResolutionSystem;
     this.sharedSpatialIndex = sharedSpatialIndex;
     this.gpuService = gpuService;
     this.entityIndex = entityIndex;
@@ -554,10 +556,10 @@ export class CombatSystem {
       return;
     }
 
-    if (this.normsSystem && attacker.position) {
+    if (this.conflictResolutionSystem && attacker.position) {
       const zone = this.findZoneAtPosition(attacker.position);
       if (zone) {
-        const violation = this.normsSystem.handleCombatInZone(
+        const violation = this.conflictResolutionSystem.handleCombatInZone(
           attacker.id,
           target.id,
           zone.id,

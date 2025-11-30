@@ -15,7 +15,6 @@ import { GenealogySystem } from "../systems/GenealogySystem";
 import { SocialSystem } from "../systems/SocialSystem";
 import { InventorySystem } from "../systems/InventorySystem";
 import { EconomySystem } from "../systems/EconomySystem";
-import { MarketSystem } from "../systems/MarketSystem";
 import { RoleSystem } from "../systems/RoleSystem";
 import { AISystem } from "../systems/AISystem";
 import { ResourceReservationSystem } from "../systems/ResourceReservationSystem";
@@ -36,11 +35,11 @@ import { TaskSystem } from "../systems/TaskSystem";
 import { TradeSystem } from "../systems/TradeSystem";
 import { MarriageSystem } from "../systems/MarriageSystem";
 import { ConflictResolutionSystem } from "../systems/ConflictResolutionSystem";
-import { NormsSystem } from "../systems/NormsSystem";
+// NormsSystem merged into ConflictResolutionSystem
 import { simulationEvents } from "./events";
 import { BatchedEventEmitter } from "./BatchedEventEmitter";
 import { CombatSystem } from "../systems/CombatSystem";
-import { ResourceAttractionSystem } from "../systems/ResourceAttractionSystem";
+// ResourceAttractionSystem merged into AmbientAwarenessSystem
 
 import { AmbientAwarenessSystem } from "../systems/AmbientAwarenessSystem";
 
@@ -170,8 +169,6 @@ export class SimulationRunner {
 
   @inject(TYPES.EconomySystem) public readonly economySystem!: EconomySystem;
 
-  @inject(TYPES.MarketSystem) public readonly marketSystem!: MarketSystem;
-
   @inject(TYPES.RoleSystem) public readonly roleSystem!: RoleSystem;
 
   @inject(TYPES.AISystem) public readonly aiSystem!: AISystem;
@@ -220,10 +217,8 @@ export class SimulationRunner {
   @inject(TYPES.ConflictResolutionSystem)
   public readonly conflictResolutionSystem!: ConflictResolutionSystem;
 
-  @inject(TYPES.NormsSystem) public readonly _normsSystem!: NormsSystem;
-
-  @inject(TYPES.ResourceAttractionSystem)
-  public readonly resourceAttractionSystem!: ResourceAttractionSystem;
+  // NormsSystem merged into ConflictResolutionSystem
+  // ResourceAttractionSystem merged into AmbientAwarenessSystem
 
   @inject(TYPES.WorldGenerationService)
   public readonly worldGenerationService!: WorldGenerationService;
@@ -623,13 +618,7 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    this.scheduler.registerSystem({
-      name: "MarketSystem",
-      rate: TickRate.SLOW,
-      update: (delta: number) => this.marketSystem.update(delta),
-      enabled: true,
-      minEntities: 10,
-    });
+    // MarketSystem merged into EconomySystem - no longer separate
 
     this.scheduler.registerSystem({
       name: "ReputationSystem",
@@ -732,12 +721,7 @@ export class SimulationRunner {
       minEntities: 10,
     });
 
-    this.scheduler.registerSystem({
-      name: "ResourceAttractionSystem",
-      rate: TickRate.SLOW,
-      update: (delta: number) => this.resourceAttractionSystem.update(delta),
-      enabled: true,
-    });
+    // ResourceAttractionSystem merged into AmbientAwarenessSystem
 
     this.scheduler.registerSystem({
       name: "AmbientAwarenessSystem",
@@ -774,12 +758,7 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    this.scheduler.registerSystem({
-      name: "NormsSystem",
-      rate: TickRate.SLOW,
-      update: () => this._normsSystem.update(),
-      enabled: true,
-    });
+    // NormsSystem merged into ConflictResolutionSystem - no longer separate
 
     this.scheduler.registerSystem({
       name: "SharedKnowledgeSystem",
