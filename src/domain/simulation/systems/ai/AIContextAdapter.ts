@@ -35,7 +35,7 @@ import type { AnimalSystem } from "../animals/AnimalSystem";
 import type { MovementSystem } from "../movement/MovementSystem";
 import type { QuestSystem } from "../QuestSystem";
 import type { TimeSystem } from "../TimeSystem";
-import type { SharedKnowledgeSystem } from "../SharedKnowledgeSystem";
+import type { SharedKnowledgeSystem } from "./SharedKnowledgeSystem";
 import type { AgentRegistry } from "../../core/AgentRegistry";
 import { equipmentSystem, type EquipmentSystem } from "../EquipmentSystem";
 import { EquipmentSlot } from "../../../../shared/constants/EquipmentEnums";

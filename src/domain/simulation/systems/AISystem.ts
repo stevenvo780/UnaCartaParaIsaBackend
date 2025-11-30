@@ -119,7 +119,7 @@ import { simulationEvents } from "../core/events";
 import type { NeedsSystem } from "./needs/NeedsSystem";
 import { RoleSystem } from "./RoleSystem";
 import type { InventorySystem } from "./InventorySystem";
-import type { SharedKnowledgeSystem } from "./SharedKnowledgeSystem";
+import type { SharedKnowledgeSystem } from "./ai/SharedKnowledgeSystem";
 import type { SocialSystem } from "./SocialSystem";
 import type { EnhancedCraftingSystem } from "./EnhancedCraftingSystem";
 import type { WorldResourceSystem } from "./WorldResourceSystem";

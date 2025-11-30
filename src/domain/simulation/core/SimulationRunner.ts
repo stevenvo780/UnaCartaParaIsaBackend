@@ -50,7 +50,7 @@ import { EntityType } from "../../../shared/constants/EntityEnums";
 import { MovementSystem } from "../systems/movement/MovementSystem";
 
 import { ChunkLoadingSystem } from "../systems/ChunkLoadingSystem";
-import { SharedKnowledgeSystem } from "../systems/SharedKnowledgeSystem";
+import { SharedKnowledgeSystem } from "../systems/ai/SharedKnowledgeSystem";
 import { GPUComputeService } from "./GPUComputeService";
 import { StateDirtyTracker } from "./StateDirtyTracker";
 import { MultiRateScheduler } from "./MultiRateScheduler";

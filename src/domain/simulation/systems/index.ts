@@ -80,7 +80,7 @@ export { MarriageSystem } from "./MarriageSystem";
 export { HouseholdSystem } from "./HouseholdSystem";
 export { ReputationSystem } from "./ReputationSystem";
 export { GenealogySystem } from "./GenealogySystem";
-export { SharedKnowledgeSystem } from "./SharedKnowledgeSystem";
+// SharedKnowledgeSystem moved to ai/ as internal infrastructure
 
 // ============================================================================
 // ECONOMY SYSTEMS - Trade, market, crafting
