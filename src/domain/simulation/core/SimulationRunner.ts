@@ -22,7 +22,7 @@ import { GovernanceSystem } from "../systems/GovernanceSystem";
 
 import { HouseholdSystem } from "../systems/HouseholdSystem";
 import { BuildingSystem } from "../systems/BuildingSystem";
-import { BuildingMaintenanceSystem } from "../systems/BuildingMaintenanceSystem";
+// BuildingMaintenanceSystem merged into BuildingSystem
 import { ProductionSystem } from "../systems/ProductionSystem";
 import { EnhancedCraftingSystem } from "../systems/EnhancedCraftingSystem";
 import { AnimalSystem } from "../systems/animals/AnimalSystem";
@@ -183,8 +183,7 @@ export class SimulationRunner {
 
   @inject(TYPES.BuildingSystem) public readonly buildingSystem!: BuildingSystem;
 
-  @inject(TYPES.BuildingMaintenanceSystem)
-  public readonly buildingMaintenanceSystem!: BuildingMaintenanceSystem;
+  // BuildingMaintenanceSystem merged into BuildingSystem
 
   @inject(TYPES.ProductionSystem)
   public readonly productionSystem!: ProductionSystem;
@@ -660,12 +659,7 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    this.scheduler.registerSystem({
-      name: "BuildingMaintenanceSystem",
-      rate: TickRate.SLOW,
-      update: (delta: number) => this.buildingMaintenanceSystem.update(delta),
-      enabled: true,
-    });
+    // BuildingMaintenanceSystem merged into BuildingSystem
 
     this.scheduler.registerSystem({
       name: "EnhancedCraftingSystem",

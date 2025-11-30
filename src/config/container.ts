@@ -36,7 +36,7 @@ import { GovernanceSystem } from "../domain/simulation/systems/GovernanceSystem"
 
 import { HouseholdSystem } from "../domain/simulation/systems/HouseholdSystem";
 import { BuildingSystem } from "../domain/simulation/systems/BuildingSystem";
-import { BuildingMaintenanceSystem } from "../domain/simulation/systems/BuildingMaintenanceSystem";
+// BuildingMaintenanceSystem merged into BuildingSystem
 import { ProductionSystem } from "../domain/simulation/systems/ProductionSystem";
 import { EnhancedCraftingSystem } from "../domain/simulation/systems/EnhancedCraftingSystem";
 import { AnimalSystem } from "../domain/simulation/systems/animals/AnimalSystem";
@@ -145,10 +145,7 @@ container
   .bind<BuildingSystem>(TYPES.BuildingSystem)
   .to(BuildingSystem)
   .inSingletonScope();
-container
-  .bind<BuildingMaintenanceSystem>(TYPES.BuildingMaintenanceSystem)
-  .to(BuildingMaintenanceSystem)
-  .inSingletonScope();
+// BuildingMaintenanceSystem binding removed - merged into BuildingSystem
 container
   .bind<ProductionSystem>(TYPES.ProductionSystem)
   .to(ProductionSystem)

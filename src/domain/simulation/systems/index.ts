@@ -114,7 +114,7 @@ export * from "./animals/AnimalBehavior";
 // BUILDING SYSTEMS - Construction, maintenance
 // ============================================================================
 export { BuildingSystem } from "./BuildingSystem";
-export { BuildingMaintenanceSystem } from "./BuildingMaintenanceSystem";
+// BuildingMaintenanceSystem merged into BuildingSystem
 
 // ============================================================================
 // GOVERNANCE SYSTEMS - Quests, tasks, norms

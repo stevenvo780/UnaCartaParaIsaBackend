@@ -27,7 +27,7 @@ export const TYPES = {
 
   HouseholdSystem: Symbol.for("HouseholdSystem"),
   BuildingSystem: Symbol.for("BuildingSystem"),
-  BuildingMaintenanceSystem: Symbol.for("BuildingMaintenanceSystem"),
+  // BuildingMaintenanceSystem merged into BuildingSystem
   ProductionSystem: Symbol.for("ProductionSystem"),
   EnhancedCraftingSystem: Symbol.for("EnhancedCraftingSystem"),
   AnimalSystem: Symbol.for("AnimalSystem"),

@@ -5,14 +5,20 @@ import { WorldResourceSystem } from "./WorldResourceSystem";
 import {
   BUILDING_COSTS,
   BuildingLabel,
+  BuildingState,
+  calculateRepairCost,
+  getBuildingCondition,
 } from "../../types/simulation/buildings";
 import type { TaskType } from "../../types/simulation/tasks";
+import type { Inventory } from "../../types/simulation/economy";
+import type { InventorySystem } from "./InventorySystem";
 import { logger } from "../../../infrastructure/utils/logger";
 import { ZoneType } from "../../../shared/constants/ZoneEnums";
 import { BuildingType } from "../../../shared/constants/BuildingEnums";
 import { SystemStatus } from "../../../shared/constants/SystemEnums";
 import { ZoneConstructionStatus } from "../../../shared/constants/StatusEnums";
 import { TileType } from "../../../shared/constants/TileTypeEnums";
+import { ResourceType } from "../../../shared/constants/ResourceEnums";
 
 import { TaskSystem } from "./TaskSystem";
 import { TerrainSystem } from "./TerrainSystem";
@@ -23,6 +29,19 @@ interface BuildingSystemConfig {
   maxMines: number;
   maxWorkbenches: number;
   maxFarms: number;
+  // Maintenance config (merged from BuildingMaintenanceSystem)
+  usageDegradationRate: number;
+  usageDegradationInterval: number;
+  abandonmentThreshold: number;
+  normalDeteriorationRate: number;
+  abandonedDeteriorationRate: number;
+  repairEfficiency: number;
+  maxDurabilityDecay: number;
+  perfectRepairCostMultiplier: number;
+  criticalDurabilityThreshold: number;
+  ruinedDurabilityThreshold: number;
+  destructionThreshold: number;
+  maintenanceUpdateIntervalMs: number;
 }
 
 interface ConstructionJob {
@@ -40,6 +59,19 @@ const DEFAULT_CONFIG: BuildingSystemConfig = {
   maxMines: 4,
   maxWorkbenches: 3,
   maxFarms: 4,
+  // Maintenance defaults (merged from BuildingMaintenanceSystem)
+  usageDegradationRate: 0.4,
+  usageDegradationInterval: 10,
+  abandonmentThreshold: 5 * 60 * 1000,
+  normalDeteriorationRate: 0.8,
+  abandonedDeteriorationRate: 1.6,
+  repairEfficiency: 35,
+  maxDurabilityDecay: 1,
+  perfectRepairCostMultiplier: 3,
+  criticalDurabilityThreshold: 30,
+  ruinedDurabilityThreshold: 10,
+  destructionThreshold: 0,
+  maintenanceUpdateIntervalMs: 5_000,
 };
 
 export interface BuildingMetadata {
@@ -62,7 +94,7 @@ import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 
 /**
- * System for managing building construction and placement.
+ * System for managing building construction, placement, and maintenance.
  *
  * Features:
  * - Construction job queue management
@@ -70,6 +102,9 @@ import { TYPES } from "../../../config/Types";
  * - Task system integration for worker assignment
  * - Building limits per type (houses, mines, workbenches)
  * - Zone-based building placement
+ * - Building maintenance and deterioration (merged from BuildingMaintenanceSystem)
+ * - Building repair functionality
+ * - Usage tracking and abandonment detection
  *
  * @see ResourceReservationSystem for material reservation
  * @see TaskSystem for construction task management
@@ -81,6 +116,10 @@ export class BuildingSystem {
   private readonly constructionJobs = new Map<string, ConstructionJob>();
   private lastDecisionAt = 0;
   private taskSystem?: TaskSystem;
+  // Maintenance state (merged from BuildingMaintenanceSystem)
+  private readonly buildingStates = new Map<string, BuildingState>();
+  private lastMaintenanceUpdate = Date.now();
+  private inventorySystem?: InventorySystem;
 
   constructor(
     @inject(TYPES.GameState) private readonly state: GameState,
@@ -93,10 +132,29 @@ export class BuildingSystem {
     @inject(TYPES.TerrainSystem)
     @optional()
     private readonly terrainSystem?: TerrainSystem,
+    @inject(TYPES.InventorySystem)
+    @optional()
+    inventorySystem?: InventorySystem,
   ) {
     this.config = DEFAULT_CONFIG;
     this.now = (): number => Date.now();
     this.taskSystem = taskSystem;
+    this.inventorySystem = inventorySystem;
+
+    // Bootstrap maintenance for existing buildings
+    this.bootstrapExistingZones();
+    simulationEvents.on(
+      GameEventType.BUILDING_CONSTRUCTED,
+      (payload: { zoneId: string }): void =>
+        this.initializeBuildingState(payload.zoneId),
+    );
+    // Handle agent death to cleanup maintenance references
+    simulationEvents.on(
+      GameEventType.AGENT_DEATH,
+      (_data: { agentId?: string; entityId?: string }) => {
+        // No cleanup needed for maintenance - buildings persist
+      },
+    );
   }
 
   public setTaskSystem(taskSystem: TaskSystem): void {
@@ -110,6 +168,14 @@ export class BuildingSystem {
   public update(_deltaMs: number): void {
     const now = this.now();
     this.completeFinishedJobs(now);
+
+    // Maintenance update (merged from BuildingMaintenanceSystem)
+    if (now - this.lastMaintenanceUpdate >= this.config.maintenanceUpdateIntervalMs) {
+      this.lastMaintenanceUpdate = now;
+      for (const state of this.buildingStates.values()) {
+        this.applyTimeDeterioration(state, now);
+      }
+    }
 
     if (now - this.lastDecisionAt < this.config.decisionIntervalMs) {
       return;
@@ -573,5 +639,227 @@ export class BuildingSystem {
     logger.info(
       `🌾 [BUILDING] Farm completed: spawned ${cropsSpawned} wheat crops at (${bounds.x}, ${bounds.y})`,
     );
+  }
+
+  // ============================================================================
+  // MAINTENANCE METHODS (merged from BuildingMaintenanceSystem)
+  // ============================================================================
+
+  /**
+   * Records building usage to track abandonment and apply usage degradation.
+   */
+  public recordUsage(zoneId: string): void {
+    const state = this.buildingStates.get(zoneId);
+    if (!state) return;
+
+    state.lastUsageTime = this.now();
+    state.usageCount += 1;
+    state.isAbandoned = false;
+    state.deteriorationRate = this.config.normalDeteriorationRate;
+
+    if (state.usageCount % this.config.usageDegradationInterval === 0) {
+      this.reduceDurability(state, this.config.usageDegradationRate, "usage");
+    }
+  }
+
+  /**
+   * Repairs a building, consuming resources from agent inventory.
+   */
+  public repairBuilding(
+    zoneId: string,
+    agentId: string,
+    perfectRepair = false,
+  ): boolean {
+    const state = this.buildingStates.get(zoneId);
+    if (!state) return false;
+
+    const zone = this.findZoneById(zoneId);
+    if (!zone) return false;
+
+    if (!this.inventorySystem) return false;
+
+    const inventory = this.inventorySystem.getAgentInventory(agentId) as
+      | Inventory
+      | undefined;
+    if (!inventory) return false;
+
+    const cost = calculateRepairCost(state.durability, perfectRepair);
+    if (!this.hasMaintenanceResources(inventory, cost)) {
+      return false;
+    }
+
+    this.consumeMaintenanceResources(agentId, cost);
+
+    const previousDurability = state.durability;
+    if (perfectRepair) {
+      state.durability = state.maxDurability;
+    } else {
+      state.durability = Math.min(
+        state.maxDurability,
+        state.durability + this.config.repairEfficiency,
+      );
+      state.maxDurability = Math.max(
+        50,
+        state.maxDurability - this.config.maxDurabilityDecay,
+      );
+    }
+
+    state.condition = getBuildingCondition(state.durability);
+    state.lastMaintenanceTime = this.now();
+
+    simulationEvents.emit(GameEventType.BUILDING_REPAIRED, {
+      zoneId,
+      agentId,
+      previousDurability,
+      newDurability: state.durability,
+      perfectRepair,
+    });
+
+    this.syncZoneDurability(zoneId, state);
+    return true;
+  }
+
+  /**
+   * Starts an upgrade process for a building.
+   */
+  public startUpgrade(zoneId: string, _agentId: string): boolean {
+    void _agentId;
+    const state = this.buildingStates.get(zoneId);
+    if (!state) return false;
+
+    state.isUpgrading = true;
+    state.upgradeStartTime = this.now();
+    return true;
+  }
+
+  /**
+   * Cancels an in-progress upgrade.
+   */
+  public cancelUpgrade(zoneId: string): boolean {
+    const state = this.buildingStates.get(zoneId);
+    if (!state || !state.isUpgrading) return false;
+
+    state.isUpgrading = false;
+    state.upgradeStartTime = undefined;
+    return true;
+  }
+
+  /**
+   * Gets the maintenance state for a building.
+   */
+  public getBuildingState(zoneId: string): BuildingState | undefined {
+    return this.buildingStates.get(zoneId);
+  }
+
+  private bootstrapExistingZones(): void {
+    for (const zone of (this.state.zones || []) as MutableZone[]) {
+      if (zone.type === ZoneType.REST || zone.metadata?.building) {
+        this.initializeBuildingState(zone.id);
+      }
+    }
+  }
+
+  private initializeBuildingState(zoneId: string): void {
+    const zone = this.findZoneById(zoneId);
+    if (!zone) return;
+
+    const now = this.now();
+    const state: BuildingState = {
+      zoneId,
+      durability: zone.durability ?? 100,
+      maxDurability: zone.maxDurability ?? 100,
+      condition: getBuildingCondition(zone.durability ?? 100),
+      lastMaintenanceTime: now,
+      lastUsageTime: now,
+      usageCount: 0,
+      isAbandoned: false,
+      timeSinceLastUse: 0,
+      deteriorationRate: this.config.normalDeteriorationRate,
+    };
+
+    this.buildingStates.set(zoneId, state);
+    this.syncZoneDurability(zoneId, state);
+  }
+
+  private applyTimeDeterioration(state: BuildingState, now: number): void {
+    const elapsed = now - state.lastUsageTime;
+    state.timeSinceLastUse = elapsed;
+
+    const wasAbandoned = state.isAbandoned;
+    state.isAbandoned = elapsed > this.config.abandonmentThreshold;
+
+    if (state.isAbandoned && !wasAbandoned) {
+      state.deteriorationRate = this.config.abandonedDeteriorationRate;
+    } else if (!state.isAbandoned && wasAbandoned) {
+      state.deteriorationRate = this.config.normalDeteriorationRate;
+    }
+
+    const damage =
+      (state.deteriorationRate / 3600_000) *
+      this.config.maintenanceUpdateIntervalMs;
+    this.reduceDurability(
+      state,
+      damage,
+      state.isAbandoned ? "abandonment" : "time",
+    );
+  }
+
+  private reduceDurability(
+    state: BuildingState,
+    amount: number,
+    cause: "usage" | "abandonment" | "time",
+  ): void {
+    const previous = state.durability;
+    state.durability = Math.max(0, state.durability - amount);
+    state.condition = getBuildingCondition(state.durability);
+
+    if (state.durability !== previous) {
+      simulationEvents.emit(GameEventType.BUILDING_DAMAGED, {
+        zoneId: state.zoneId,
+        previousDurability: previous,
+        newDurability: state.durability,
+        cause,
+      });
+      this.syncZoneDurability(state.zoneId, state);
+    }
+  }
+
+  private findZoneById(zoneId: string): MutableZone | undefined {
+    return ((this.state.zones || []) as MutableZone[]).find(
+      (z) => z.id === zoneId,
+    );
+  }
+
+  private syncZoneDurability(zoneId: string, state: BuildingState): void {
+    const zone = this.findZoneById(zoneId);
+    if (!zone) return;
+    zone.durability = state.durability;
+    zone.maxDurability = state.maxDurability;
+  }
+
+  private hasMaintenanceResources(
+    inventory: Inventory,
+    cost: Partial<Record<"wood" | "stone", number>>,
+  ): boolean {
+    for (const [resource, amount] of Object.entries(cost)) {
+      if (!amount) continue;
+      const key = resource as "wood" | "stone";
+      if ((inventory[key] ?? 0) < amount) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private consumeMaintenanceResources(
+    agentId: string,
+    cost: Partial<Record<ResourceType, number>>,
+  ): void {
+    if (!this.inventorySystem) return;
+    for (const [resource, amount] of Object.entries(cost)) {
+      if (!amount) continue;
+      const key = resource as ResourceType;
+      this.inventorySystem.removeFromAgent(agentId, key, amount);
+    }
   }
 }
