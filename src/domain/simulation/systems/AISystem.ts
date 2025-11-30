@@ -96,9 +96,13 @@ function describeAction(action: AgentAction): string {
   return parts.join(" ");
 }
 import {
-  planGoals,
-  type AgentGoalPlannerDeps,
-} from "./ai/core/AgentGoalPlanner";
+  planGoalsFull,
+  type SimplifiedGoalPlannerDeps,
+} from "./ai/core/SimplifiedGoalPlanner";
+import {
+  evaluateCollectiveNeeds,
+  type CollectiveNeedsContext,
+} from "./ai/evaluators/CollectiveNeedsEvaluator";
 import { PriorityManager } from "./ai/core/PriorityManager";
 import { AIStateManager } from "./ai/core/AIStateManager";
 import { AIGoalValidator } from "./ai/core/AIGoalValidator";
@@ -106,6 +110,7 @@ import { AIActionPlanner } from "./ai/core/AIActionPlanner";
 import { AIActionExecutor } from "./ai/core/AIActionExecutor";
 import { AIUrgentGoals } from "./ai/core/AIUrgentGoals";
 import { AIZoneHandler } from "./ai/core/AIZoneHandler";
+import { generateRoleBasedWorkGoal } from "./ai/core/WorkGoalGenerator";
 import { EquipmentSystem, equipmentSystem } from "../../../simulation/systems/EquipmentSystem";
 import { toolStorage } from "../../../simulation/systems/ToolStorageSystem";
 import { EquipmentSlot } from "../../../shared/constants/EquipmentEnums";
@@ -268,8 +273,6 @@ export class AISystem extends EventEmitter {
   private _decisionTimeTotalMs = 0;
   private _decisionCount = 0;
   private _goalsCompletedRef = { value: 0 };
-
-  private cachedDeps: AgentGoalPlannerDeps | null = null;
 
   /**
    * Creates a new AI system.
@@ -644,7 +647,7 @@ export class AISystem extends EventEmitter {
     if (systems.questSystem) this.questSystem = systems.questSystem;
     if (systems.timeSystem) this.timeSystem = systems.timeSystem;
 
-    this.cachedDeps = null;
+    this.simplifiedDepsCache = null;
 
     this.initializeSubsystems();
   }
@@ -1119,6 +1122,8 @@ export class AISystem extends EventEmitter {
 
   /**
    * Generates a work goal based on agent's role and colony needs.
+   * Uses the WorkGoalGenerator helper for most roles, with special handling for hunters.
+   *
    * @param excludeTargetIds - Resource IDs to exclude (already in queue)
    */
   private generateWorkGoal(
@@ -1129,9 +1134,8 @@ export class AISystem extends EventEmitter {
   ): AIGoal | null {
     const agentRole = this.roleSystem?.getAgentRole(agentId);
     const role = agentRole?.roleType;
-    const foodTypes = ["berry_bush", "mushroom_patch", "wheat_crop"];
-    const woodTypes = ["tree"];
-    const stoneTypes = ["rock"];
+
+    // Build exclusion set from current goal and queue
     const excluded = new Set(excludeTargetIds);
     if (aiState.currentGoal?.targetId) {
       excluded.add(aiState.currentGoal.targetId);
@@ -1140,281 +1144,90 @@ export class AISystem extends EventEmitter {
       if (g.targetId) excluded.add(g.targetId);
     }
 
+    // Special handling for HUNTER role - needs weapon check and animal hunting
     if (role === RoleType.HUNTER) {
-      // First check if hunter has a weapon - no weapon, no hunt goal
-      const hasWeapon =
-        this.equipmentSystem.getEquippedItem(
+      const huntGoal = this.generateHunterGoal(agentId, now, excluded);
+      if (huntGoal) return huntGoal;
+    }
+
+    // For all other roles (including HUNTER fallback), use the generic generator
+    return generateRoleBasedWorkGoal(
+      agentId,
+      role,
+      now,
+      excluded,
+      (entityId, resourceType) =>
+        this.findNearestResourceForEntity(entityId, resourceType),
+    );
+  }
+
+  /**
+   * Generates a hunt goal for hunters, handling weapon acquisition and animal finding.
+   * Returns null if no hunt is possible, allowing fallback to regular gathering.
+   */
+  private generateHunterGoal(
+    agentId: string,
+    now: number,
+    excluded: Set<string>,
+  ): AIGoal | null {
+    // Check if hunter has a weapon
+    const hasWeapon =
+      this.equipmentSystem.getEquippedItem(
+        agentId,
+        EquipmentSlot.MAIN_HAND,
+      ) !== undefined;
+
+    // Try to claim a weapon from storage if we don't have one
+    if (!hasWeapon) {
+      const weapon = toolStorage.findToolForRole("hunter");
+      if (weapon && toolStorage.claimTool(agentId, weapon)) {
+        this.equipmentSystem.equipItem(
           agentId,
           EquipmentSlot.MAIN_HAND,
-        ) !== undefined;
-
-      // Try to claim a weapon from storage if we don't have one
-      if (!hasWeapon) {
-        const weapon = toolStorage.findToolForRole("hunter");
-        if (weapon && toolStorage.claimTool(agentId, weapon)) {
-          this.equipmentSystem.equipItem(
-            agentId,
-            EquipmentSlot.MAIN_HAND,
-            weapon,
-          );
-          logger.debug(
-            `🗡️ [AI] ${agentId}: Claimed weapon ${weapon} from storage`,
-          );
-        } else {
-          // No weapon available - fall through to food gathering instead of HUNT
-          logger.debug(
-            `⚠️ [AI] ${agentId}: No weapon available, skipping HUNT goal creation`,
-          );
-          // Fall through to food gathering below
-        }
-      }
-
-      // Only create HUNT goal if hunter now has a weapon
-      const canHunt =
-        this.equipmentSystem.getEquippedItem(
-          agentId,
-          EquipmentSlot.MAIN_HAND,
-        ) !== undefined;
-
-      if (canHunt) {
-        const animal = this.findNearestHuntableAnimal(agentId, excluded);
-        logger.debug(
-          `🐺 [AI] ${agentId}: hunter findNearestHuntableAnimal -> ${animal?.id ?? "none"} (type: ${animal?.type ?? "N/A"})`,
+          weapon,
         );
-        if (animal) {
-          logger.debug(
-            `🎯 [AI] ${agentId}: Creating HUNT goal for ${animal.id}`,
-          );
-          return {
-            id: `hunt_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: GoalTypeEnum.HUNT,
-            priority: 0.6,
-            targetId: animal.id,
-            targetPosition: { x: animal.x, y: animal.y },
-            data: {
-              taskType: TaskType.HUNT_ANIMAL,
-              animalType: animal.type,
-            },
-            createdAt: now,
-          };
-        }
-      }
-      for (const foodType of foodTypes) {
-        const resource = this.findNearestResourceForEntity(agentId, foodType);
-        if (resource && !excluded.has(resource.id)) {
-          return {
-            id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: GoalTypeEnum.WORK,
-            priority: 0.5,
-            targetId: resource.id,
-            targetPosition: { x: resource.x, y: resource.y },
-            data: {
-              taskType: TaskType.GATHER_FOOD,
-              resourceType: ResourceType.FOOD,
-            },
-            createdAt: now,
-          };
-        }
+        logger.debug(
+          `🗡️ [AI] ${agentId}: Claimed weapon ${weapon} from storage`,
+        );
+      } else {
+        logger.debug(
+          `⚠️ [AI] ${agentId}: No weapon available, falling back to gathering`,
+        );
+        return null; // Fall through to regular gathering
       }
     }
 
-    if (role === RoleType.LOGGER) {
-      for (const woodType of woodTypes) {
-        const resource = this.findNearestResourceForEntity(agentId, woodType);
-        if (!resource) {
-          logger.debug(`🪵 [AI] ${agentId}: No ${woodType} resources found`);
-        }
-        if (resource && !excluded.has(resource.id)) {
-          logger.debug(
-            `🎯 [AI] ${agentId}: Logger found ${woodType} at (${resource.x}, ${resource.y})`,
-          );
-          return {
-            id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: GoalTypeEnum.WORK,
-            priority: 0.6,
-            targetId: resource.id,
-            targetPosition: { x: resource.x, y: resource.y },
-            data: {
-              taskType: TaskType.GATHER_WOOD,
-              resourceType: ResourceType.WOOD,
-            },
-            createdAt: now,
-          };
-        }
-      }
+    // Only create HUNT goal if hunter now has a weapon
+    const canHunt =
+      this.equipmentSystem.getEquippedItem(
+        agentId,
+        EquipmentSlot.MAIN_HAND,
+      ) !== undefined;
+
+    if (!canHunt) return null;
+
+    const animal = this.findNearestHuntableAnimal(agentId, excluded);
+    if (!animal) {
+      logger.debug(`🐺 [AI] ${agentId}: No huntable animals found`);
+      return null;
     }
 
-    if (role === RoleType.QUARRYMAN) {
-      for (const stoneType of stoneTypes) {
-        const resource = this.findNearestResourceForEntity(agentId, stoneType);
-        if (!resource) {
-          logger.debug(`🪨 [AI] ${agentId}: No ${stoneType} resources found`);
-        }
-        if (resource && !excluded.has(resource.id)) {
-          logger.debug(
-            `🎯 [AI] ${agentId}: Quarryman found ${stoneType} at (${resource.x}, ${resource.y})`,
-          );
-          return {
-            id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: GoalTypeEnum.WORK,
-            priority: 0.6,
-            targetId: resource.id,
-            targetPosition: { x: resource.x, y: resource.y },
-            data: {
-              taskType: TaskType.GATHER_STONE,
-              resourceType: ResourceType.STONE,
-            },
-            createdAt: now,
-          };
-        }
-      }
-    }
+    logger.debug(
+      `🎯 [AI] ${agentId}: Creating HUNT goal for ${animal.id} (${animal.type})`,
+    );
 
-    if (role === RoleType.MINER) {
-      for (const stoneType of stoneTypes) {
-        const resource = this.findNearestResourceForEntity(agentId, stoneType);
-        if (!resource) {
-          logger.debug(
-            `⛏️ [AI] ${agentId}: No ${stoneType} resources found for mining`,
-          );
-        }
-        if (resource && !excluded.has(resource.id)) {
-          logger.debug(
-            `🎯 [AI] ${agentId}: Miner found ${stoneType} at (${resource.x}, ${resource.y})`,
-          );
-          return {
-            id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: GoalTypeEnum.WORK,
-            priority: 0.65,
-            targetId: resource.id,
-            targetPosition: { x: resource.x, y: resource.y },
-            data: {
-              taskType: TaskType.GATHER_METAL,
-              resourceType: ResourceType.METAL,
-            },
-            createdAt: now,
-          };
-        }
-      }
-    }
-
-    if (role === RoleType.CRAFTSMAN) {
-      for (const stoneType of stoneTypes) {
-        const resource = this.findNearestResourceForEntity(agentId, stoneType);
-        if (resource && !excluded.has(resource.id)) {
-          logger.debug(
-            `🔧 [AI] ${agentId}: Craftsman found ${stoneType} for metal at (${resource.x}, ${resource.y})`,
-          );
-          return {
-            id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: GoalTypeEnum.WORK,
-            priority: 0.5,
-            targetId: resource.id,
-            targetPosition: { x: resource.x, y: resource.y },
-            data: {
-              taskType: TaskType.GATHER_METAL,
-              resourceType: ResourceType.METAL,
-            },
-            createdAt: now,
-          };
-        }
-      }
-    }
-
-    if (role === RoleType.GATHERER) {
-      for (const foodType of foodTypes) {
-        const resource = this.findNearestResourceForEntity(agentId, foodType);
-        if (resource && !excluded.has(resource.id)) {
-          return {
-            id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: GoalTypeEnum.WORK,
-            priority: 0.5,
-            targetId: resource.id,
-            targetPosition: { x: resource.x, y: resource.y },
-            data: {
-              taskType: TaskType.GATHER_FOOD,
-              resourceType: ResourceType.FOOD,
-            },
-            createdAt: now,
-          };
-        }
-      }
-    }
-
-    if (role === RoleType.BUILDER) {
-      for (const woodType of woodTypes) {
-        const resource = this.findNearestResourceForEntity(agentId, woodType);
-        if (resource && !excluded.has(resource.id)) {
-          return {
-            id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: GoalTypeEnum.WORK,
-            priority: 0.5,
-            targetId: resource.id,
-            targetPosition: { x: resource.x, y: resource.y },
-            data: {
-              taskType: TaskType.GATHER_WOOD,
-              resourceType: ResourceType.WOOD,
-            },
-            createdAt: now,
-          };
-        }
-      }
-      for (const stoneType of stoneTypes) {
-        const resource = this.findNearestResourceForEntity(agentId, stoneType);
-        if (resource && !excluded.has(resource.id)) {
-          return {
-            id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: GoalTypeEnum.WORK,
-            priority: 0.5,
-            targetId: resource.id,
-            targetPosition: { x: resource.x, y: resource.y },
-            data: {
-              taskType: TaskType.GATHER_STONE,
-              resourceType: ResourceType.STONE,
-            },
-            createdAt: now,
-          };
-        }
-      }
-
-      for (const stoneType of stoneTypes) {
-        const resource = this.findNearestResourceForEntity(agentId, stoneType);
-        if (resource && !excluded.has(resource.id)) {
-          return {
-            id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-            type: GoalTypeEnum.WORK,
-            priority: 0.4,
-            targetId: resource.id,
-            targetPosition: { x: resource.x, y: resource.y },
-            data: {
-              taskType: TaskType.GATHER_METAL,
-              resourceType: ResourceType.METAL,
-            },
-            createdAt: now,
-          };
-        }
-      }
-    }
-
-    for (const foodType of foodTypes) {
-      const resource = this.findNearestResourceForEntity(agentId, foodType);
-      if (resource && !excluded.has(resource.id)) {
-        return {
-          id: `work_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
-          type: GoalTypeEnum.WORK,
-          priority: 0.4,
-          targetId: resource.id,
-          targetPosition: { x: resource.x, y: resource.y },
-          data: {
-            taskType: TaskType.GATHER_FOOD,
-            resourceType: ResourceType.FOOD,
-          },
-          createdAt: now,
-        };
-      }
-    }
-
-    return null;
+    return {
+      id: `hunt_${agentId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
+      type: GoalTypeEnum.HUNT,
+      priority: 0.6,
+      targetId: animal.id,
+      targetPosition: { x: animal.x, y: animal.y },
+      data: {
+        taskType: TaskType.HUNT_ANIMAL,
+        animalType: animal.type,
+      },
+      createdAt: now,
+    };
   }
 
   /**
@@ -1501,48 +1314,94 @@ export class AISystem extends EventEmitter {
     aiState: AIState,
     now: number,
   ): Promise<AIGoal | null> {
+    // 1. Try full rule-based goals (combat, biological, social, cognitive, work)
+    const simpleDeps = this.getSimplifiedDeps();
+    const fullGoals = planGoalsFull(simpleDeps, aiState, now);
+
+    // 2. Evaluate collective needs (community tasks, resource shortages)
+    const collectiveGoals = this.evaluateCollectiveGoals(aiState, now);
+
+    // 3. Combine individual + collective goals
+    const allGoals = [...fullGoals, ...collectiveGoals].sort(
+      (a, b) => b.priority - a.priority,
+    );
+
+    // 4. For biological needs, enrich with resource targeting from legacy system
     const needs = this.needsSystem?.getNeeds(agentId);
-    if (needs) {
-      if (Math.random() < 0.05) {
-        logger.debug(
-          `📊 [AI] ${agentId} needs: h=${needs.hunger.toFixed(0)} t=${needs.thirst.toFixed(0)} e=${needs.energy.toFixed(0)} s=${needs.social.toFixed(0)} f=${needs.fun.toFixed(0)} m=${needs.mentalHealth.toFixed(0)}`,
-        );
-      }
-
-      if (needs.hunger <= 25) {
+    if (needs && allGoals.length > 0) {
+      const topGoal = allGoals[0];
+      
+      // If hunger goal, try to find food target
+      if (topGoal.type === GoalType.SATISFY_HUNGER && !topGoal.targetPosition) {
         const foodGoal = this.createUrgentFoodGoal(agentId, now);
-        if (foodGoal) return foodGoal;
+        if (foodGoal?.targetPosition) {
+          topGoal.targetPosition = foodGoal.targetPosition;
+          topGoal.targetId = foodGoal.targetId;
+          topGoal.data = { ...topGoal.data, ...foodGoal.data };
+        }
       }
-      if (needs.thirst <= 25) {
+      
+      // If thirst goal, try to find water target
+      if (topGoal.type === GoalType.SATISFY_THIRST && !topGoal.targetPosition) {
         const waterGoal = this.createUrgentWaterGoal(agentId, now);
-        if (waterGoal) return waterGoal;
+        if (waterGoal?.targetPosition) {
+          topGoal.targetPosition = waterGoal.targetPosition;
+          topGoal.targetId = waterGoal.targetId;
+          topGoal.data = { ...topGoal.data, ...waterGoal.data };
+        }
       }
-      if (needs.energy < 15) {
+      
+      // If rest goal, try to find rest zone
+      if (topGoal.type === GoalType.REST && !topGoal.targetPosition) {
         const restGoal = this.createUrgentRestGoal(agentId, now);
-        if (restGoal) return restGoal;
-      }
-
-      if (needs.social < 15) {
-        const socialGoal = this.createUrgentSocialGoal(agentId, now);
-        if (socialGoal) return socialGoal;
-      }
-      if (needs.fun < 15) {
-        const funGoal = this.createUrgentFunGoal(agentId, now);
-        if (funGoal) return funGoal;
+        if (restGoal?.targetPosition) {
+          topGoal.targetPosition = restGoal.targetPosition;
+          topGoal.targetZoneId = restGoal.targetZoneId;
+        }
       }
     }
 
-    const deps = this.getDeps();
-
-    const goals = await planGoals(deps, aiState, now);
-    if (goals.length > 0) {
-      const goal = goals[0];
-
+    // 5. Return best goal from combined evaluation
+    if (allGoals.length > 0) {
+      const goal = allGoals[0];
       const jitter = Math.floor(Math.random() * this.GOAL_JITTER_RANGE_MS);
       goal.createdAt = goal.createdAt - jitter;
+      logger.debug(
+        `🎯 [AI] ${agentId}: Using goal ${goal.type} (priority=${goal.priority.toFixed(2)})`,
+      );
       return goal;
     }
+
     return null;
+  }
+
+  /**
+   * Evaluates collective/community goals for an agent.
+   * Creates community tasks for resource shortages and allows agents to join them.
+   */
+  private evaluateCollectiveGoals(aiState: AIState, now: number): AIGoal[] {
+    if (!this.taskSystem) return [];
+
+    const ctx: CollectiveNeedsContext = {
+      gameState: this.gameState,
+      getAgentInventory: (id: string) => this.inventorySystem?.getAgentInventory(id),
+      getAgentRole: (id: string) => this.roleSystem?.getAgentRole(id),
+      getEntityPosition: (id: string) => this.agentRegistry?.getPosition(id) ?? null,
+      getAllStockpiles: () => this.inventorySystem?.getAllStockpiles() ?? [],
+      getActiveDemands: () => {
+        const governance = this.gameState.governance;
+        if (!governance?.demands) return [];
+        return governance.demands.filter((d) => !d.resolvedAt);
+      },
+      getPopulation: () => this.gameState.agents?.filter((a) => !a.isDead).length ?? 0,
+      taskSystem: {
+        createTask: (params) => this.taskSystem!.createTask(params),
+        getAvailableCommunityTasks: () => this.taskSystem!.getAvailableCommunityTasks(),
+        claimTask: (taskId, agentId) => this.taskSystem!.claimTask(taskId, agentId),
+      },
+    };
+
+    return evaluateCollectiveNeeds(ctx, aiState, now);
   }
 
   /**
@@ -1553,256 +1412,118 @@ export class AISystem extends EventEmitter {
    * @param radius - Search radius
    * @returns Array of nearby agents with their distances, sorted by distance
    */
-  private getDeps(): AgentGoalPlannerDeps {
-    if (this.cachedDeps) return this.cachedDeps;
 
-    this.cachedDeps = {
+  /**
+   * Returns simplified dependencies for the rule-based goal planner.
+   * Much lighter than getDeps() - only 5 fields vs 30+.
+   */
+  private simplifiedDepsCache: SimplifiedGoalPlannerDeps | null = null;
+
+  private getSimplifiedDeps(): SimplifiedGoalPlannerDeps {
+    if (this.simplifiedDepsCache) return this.simplifiedDepsCache;
+
+    this.simplifiedDepsCache = {
       gameState: this.gameState,
-      priorityManager: this.priorityManager,
-      agentRegistry: this.agentRegistry!,
-      getEntityNeeds: (
-        id: string,
-      ): ReturnType<AgentGoalPlannerDeps["getEntityNeeds"]> =>
-        this.needsSystem?.getNeeds(id),
-      findNearestResource: (
-        id: string,
-        resourceType: string,
-      ): { id: string; x: number; y: number } | null => {
-        return this.findNearestResourceForEntity(id, resourceType);
-      },
-      findNearestHuntableAnimal: (
-        entityId: string,
-      ): { id: string; x: number; y: number; type: string } | null =>
-        this.findNearestHuntableAnimal(entityId),
-      getAgentRole: (
-        id: string,
-      ): ReturnType<NonNullable<AgentGoalPlannerDeps["getAgentRole"]>> =>
-        this.roleSystem?.getAgentRole(id),
-      getAgentInventory: (
-        id: string,
-      ): ReturnType<NonNullable<AgentGoalPlannerDeps["getAgentInventory"]>> =>
+      getEntityNeeds: (id: string) => this.needsSystem?.getNeeds(id),
+      getAgentInventory: (id: string) =>
         this.inventorySystem?.getAgentInventory(id),
-      getCurrentZone: (id: string): string | undefined => {
-        if (this.zoneCache.has(id)) {
-          return this.zoneCache.get(id);
-        }
-        const agent = this.agentRegistry?.getProfile(id);
-        if (!agent?.position) {
-          this.zoneCache.set(id, undefined);
-          return undefined;
-        }
-        const zone = this.gameState.zones.find((z) => {
-          return (
-            z.bounds &&
-            agent.position &&
-            agent.position.x >= z.bounds.x &&
-            agent.position.x <= z.bounds.x + z.bounds.width &&
-            agent.position.y >= z.bounds.y &&
-            agent.position.y <= z.bounds.y + z.bounds.height
-          );
-        });
-        const zoneId = zone?.id;
-        this.zoneCache.set(id, zoneId);
-        return zoneId;
+      getEntityPosition: (id: string) =>
+        this.agentRegistry?.getPosition(id) ?? undefined,
+      getAgentRole: (id: string) => {
+        const role = this.roleSystem?.getAgentRole(id);
+        return role ? { roleType: role.roleType } : undefined;
       },
-      getEquipped: (id: string): string =>
-        this.combatSystem?.getEquipped(id) || "unarmed",
-      getSuggestedCraftZone: (): string | undefined => {
-        if (this.craftingZoneCache !== null) {
-          return this.craftingZoneCache;
-        }
-        // Prefer WORK zones for crafting (workbench), then fallback to STORAGE
-        let zone = this.gameState.zones?.find((z) => z.type === ZoneType.WORK);
-        if (!zone) {
-          zone = this.gameState.zones?.find((z) => z.type === ZoneType.STORAGE);
-        }
-        this.craftingZoneCache = zone?.id;
-        logger.debug(
-          `🔧 [CraftZone] Suggested zone: ${this.craftingZoneCache} (type=${zone?.type})`,
+
+      // Combat context
+      getEnemies: (id: string) =>
+        this.combatSystem?.getNearbyEnemies(id, 200) ?? undefined,
+      getNearbyPredators: (id: string) => {
+        const pos = this.agentRegistry?.getPosition(id);
+        if (!pos) return undefined;
+        return (
+          this.animalSystem
+            ?.getAnimalsInRadius(pos, 150)
+            .filter((a) => getAnimalConfig(a.type)?.isPredator)
+            .map((a) => ({ id: a.id, position: a.position })) ?? undefined
         );
-        return this.craftingZoneCache;
       },
-      canCraftWeapon: (id: string, weaponId: string): boolean => {
+      isWarrior: (id: string) =>
+        this.roleSystem?.getAgentRole(id)?.roleType === RoleType.GUARD,
+      getEntityStats: (id: string) => {
+        const entity = this.gameState.entities?.find((e) => e.id === id);
+        return entity?.stats
+          ? {
+              health: entity.stats.health ?? 100,
+              morale: entity.stats.morale ?? 60,
+            }
+          : null;
+      },
+
+      // Construction context
+      getBuildTasks: (id: string) => {
+        const tasks = this.taskSystem?.getActiveTasks() ?? [];
+        const pos = this.agentRegistry?.getPosition(id);
+        if (!pos) return undefined;
+
+        return tasks
+          .filter(
+            (t) =>
+              t.type === TaskType.BUILD_HOUSE && !t.completed && t.zoneId,
+          )
+          .map((t) => {
+            const zone = this.gameState.zones?.find((z) => z.id === t.zoneId);
+            if (!zone?.bounds) return null;
+            const cx = zone.bounds.x + zone.bounds.width / 2;
+            const cy = zone.bounds.y + zone.bounds.height / 2;
+            const d = Math.hypot(cx - pos.x, cy - pos.y);
+            const minW = t.requirements?.minWorkers ?? 1;
+            const have = t.contributors?.size ?? 0;
+            const score = Math.max(0, minW - have) * 2 - d / 600;
+            return { id: t.id, zoneId: t.zoneId!, score };
+          })
+          .filter(Boolean)
+          .sort((a, b) => b!.score - a!.score) as Array<{
+          id: string;
+          zoneId: string;
+          score: number;
+        }>;
+      },
+
+      // Deposit context
+      getDepositZone: (id: string) => {
+        const inv = this.inventorySystem?.getAgentInventory(id);
+        if (!inv) return undefined;
+        const storageZones = this.gameState.zones
+          ?.filter((z) => z.type === ZoneType.STORAGE)
+          .map((z) => z.id);
+        if (storageZones && storageZones.length > 0) return storageZones[0];
+        // Fallback to any work zone
+        return this.gameState.zones?.find((z) => z.type === ZoneType.WORK)?.id;
+      },
+
+      // Crafting context
+      getEquippedWeapon: (id: string) =>
+        this.combatSystem?.getEquipped(id) ?? "unarmed",
+      canCraftWeapon: (id: string, weaponId: string) => {
         if (!this.craftingSystem) return false;
         const validWeaponIds: CraftingWeaponId[] = [
           CraftingWeaponId.WOODEN_CLUB,
           CraftingWeaponId.STONE_DAGGER,
         ];
-        if (!validWeaponIds.includes(weaponId as CraftingWeaponId)) {
-          return false;
-        }
-        return this.craftingSystem.canCraftWeapon(
-          id,
-          weaponId as CraftingWeaponId,
-        );
+        if (!validWeaponIds.includes(weaponId as CraftingWeaponId)) return false;
+        return this.craftingSystem.canCraftWeapon(id, weaponId as CraftingWeaponId);
       },
-      hasAvailableWeapons: (): boolean => toolStorage.hasAnyWeapon(),
-      getAllActiveAgentIds: (): string[] => {
-        if (this.activeAgentIdsCache !== null) {
-          return this.activeAgentIdsCache;
-        }
-
-        const activeIds = this.agentRegistry
-          ? this.agentRegistry.getAliveAgentIds()
-          : (this.gameState.agents || [])
-              .filter((a) => !a.isDead)
-              .map((a) => a.id);
-        this.activeAgentIdsCache = activeIds;
-        return activeIds;
+      getCraftZone: () => {
+        if (this.craftingZoneCache !== null) return this.craftingZoneCache;
+        let zone = this.gameState.zones?.find((z) => z.type === ZoneType.WORK);
+        if (!zone) zone = this.gameState.zones?.find((z) => z.type === ZoneType.STORAGE);
+        this.craftingZoneCache = zone?.id;
+        return this.craftingZoneCache;
       },
-      getEntityStats: (id: string): Record<string, number> | null => {
-        const entity = this.gameState.entities?.find((e) => e.id === id);
-        return entity?.stats
-          ? {
-              health: entity.stats.health ?? 100,
-              stamina: entity.stats.stamina ?? 100,
-              attack: entity.stats.attack ?? 10,
-              defense: entity.stats.defense ?? 0,
-            }
-          : null;
-      },
-      getPreferredResourceForRole: (role: string): string | undefined =>
-        this.roleSystem?.getPreferredResourceForRole(role),
-      getStrategy: (id: string): "peaceful" | "tit_for_tat" | "bully" =>
-        this.agentStrategies.get(id) || "peaceful",
-      isWarrior: (id: string): boolean =>
-        this.roleSystem?.getAgentRole(id)?.roleType === RoleType.GUARD,
-      getNearbyPredators: (
-        pos: { x: number; y: number },
-        range: number,
-      ): Array<{ id: string; position: { x: number; y: number } }> => {
-        return (
-          this.animalSystem
-            ?.getAnimalsInRadius(pos, range)
-            .filter((a) => getAnimalConfig(a.type)?.isPredator)
-            .map((a) => ({ id: a.id, position: a.position })) || []
-        );
-      },
-      getEnemiesForAgent: (id: string, threshold?: number): string[] =>
-        this.combatSystem?.getNearbyEnemies(id, threshold) || [],
-      getTasks: (): ReturnType<NonNullable<AgentGoalPlannerDeps["getTasks"]>> =>
-        this.taskSystem?.getActiveTasks() || [],
-      taskSystem: this.taskSystem
-        ? {
-            createTask: (
-              params: TaskCreationParams,
-            ): ReturnType<TaskSystem["createTask"]> =>
-              this.taskSystem!.createTask(params),
-            getAvailableCommunityTasks: (): ReturnType<
-              TaskSystem["getAvailableCommunityTasks"]
-            > => this.taskSystem!.getAvailableCommunityTasks(),
-            claimTask: (taskId: string, agentId: string): boolean =>
-              this.taskSystem!.claimTask(taskId, agentId),
-            releaseTaskClaim: (taskId: string, agentId: string): void =>
-              this.taskSystem!.releaseTaskClaim(taskId, agentId),
-          }
-        : undefined,
-      sharedKnowledgeSystem: this.sharedKnowledgeSystem
-        ? {
-            getKnownResourceAlerts: (agentId: string): ResourceAlert[] => {
-              if (!this.sharedKnowledgeSystem) return [];
-              return this.sharedKnowledgeSystem.getKnownResourceAlerts(agentId);
-            },
-            getKnownThreatAlerts: (agentId: string): ThreatAlert[] => {
-              if (!this.sharedKnowledgeSystem) return [];
-              return this.sharedKnowledgeSystem.getKnownThreatAlerts(agentId);
-            },
-          }
-        : undefined,
-      getActiveQuests: (): ReturnType<
-        NonNullable<AgentGoalPlannerDeps["getActiveQuests"]>
-      > => this.questSystem?.getActiveQuests() || [],
-      getAvailableQuests: (): ReturnType<
-        NonNullable<AgentGoalPlannerDeps["getAvailableQuests"]>
-      > => this.questSystem?.getAvailableQuests() || [],
-      getCurrentTimeOfDay: (): TimeOfDay["phase"] => {
-        return (this.timeSystem?.getCurrentTime().phase ||
-          TimeOfDayPhase.MORNING) as TimeOfDay["phase"];
-      },
-      getNearbyAgentsWithDistances: (
-        entityId: string,
-        radius: number,
-      ): Promise<Array<{ id: string; distance: number }>> =>
-        this.getNearbyAgentsWithDistancesGPU(entityId, radius),
-
-      getAllStockpiles: (): Stockpile[] =>
-        this.inventorySystem?.getAllStockpiles() || [],
-      getActiveDemands: (): ReturnType<
-        NonNullable<AgentGoalPlannerDeps["getActiveDemands"]>
-      > => {
-        const governance = this.gameState.governance;
-        if (!governance || !governance.demands) {
-          // Debug: log when governance or demands is missing
-          if (Math.random() < 0.2) {
-            logger.debug(
-              `[AI] getActiveDemands: governance=${!!governance}, demands=${governance?.demands?.length ?? "N/A"}`,
-            );
-          }
-          return [];
-        }
-        const active = governance.demands.filter(
-          (d: { resolvedAt?: number }) => !d.resolvedAt,
-        );
-        // Debug: log active demands (20% sampling)
-        if (Math.random() < 0.2) {
-          logger.debug(
-            `[AI] getActiveDemands: total=${governance.demands.length}, active=${active.length}, types=${active.map((d) => (d as { type: string }).type).join(",")}`,
-          );
-        }
-        return active;
-      },
-      getPopulation: (): number => {
-        return this.gameState.agents?.filter((a) => !a.isDead).length || 0;
-      },
-      getCollectiveResourceState: (): {
-        foodPerCapita: number;
-        waterPerCapita: number;
-        stockpileFillRatio: number;
-      } => {
-        const stockpiles = this.inventorySystem?.getAllStockpiles() || [];
-        const population =
-          this.gameState.agents?.filter((a) => !a.isDead).length || 1;
-
-        let totalFood = 0;
-        let totalWater = 0;
-        let totalCapacity = 0;
-        let usedCapacity = 0;
-
-        for (const sp of stockpiles) {
-          totalFood += sp.inventory.food || 0;
-          totalWater += sp.inventory.water || 0;
-          totalCapacity += sp.capacity;
-          usedCapacity +=
-            (sp.inventory.food || 0) +
-            (sp.inventory.water || 0) +
-            (sp.inventory.wood || 0) +
-            (sp.inventory.stone || 0);
-        }
-
-        return {
-          foodPerCapita: totalFood / Math.max(1, population),
-          waterPerCapita: totalWater / Math.max(1, population),
-          stockpileFillRatio:
-            totalCapacity > 0 ? usedCapacity / totalCapacity : 0,
-        };
-      },
-      findAgentWithResource: (
-        entityId: string,
-        resourceType: ResourceType.FOOD | ResourceType.WATER,
-        minAmount: number,
-      ): { agentId: string; x: number; y: number } | null =>
-        this.findAgentWithResource(entityId, resourceType, minAmount),
-      findPotentialMate: (
-        entityId: string,
-      ): { id: string; x: number; y: number } | null =>
-        this.findPotentialMate(entityId),
-      findNearbyAgent: (
-        entityId: string,
-      ): { id: string; x: number; y: number } | null =>
-        this.findNearbyAgent(entityId),
+      hasAvailableWeapons: () => toolStorage.hasAnyWeapon(),
     };
 
-    return this.cachedDeps;
+    return this.simplifiedDepsCache;
   }
 
   private createAIState(agentId: string): AIState {

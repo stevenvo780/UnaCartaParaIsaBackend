@@ -7,7 +7,8 @@
  * Structure:
  * - core/: Core AI components (state, planning, validation, execution)
  * - evaluators/: Goal evaluators for different agent behaviors
- * - handlers/: Zone and event handlers (future use)
+ * - AIContext.ts: Unified interface for AI dependencies
+ * - AIContextAdapter.ts: Implementation adapting AISystem to IAIContext
  *
  * Components:
  * - AIStateManager: Manages AI state creation, personality, and memory
@@ -18,10 +19,34 @@
  * - AIZoneHandler: Handles zone arrival and resource deposits
  * - AgentGoalPlanner: High-level goal planning and evaluation
  * - PriorityManager: Manages priority queue for agent processing
+ * - IAIContext: Unified dependency interface
+ * - AIContextAdapter: Bridges AISystem to IAIContext
  *
  * Evaluators:
  * - NeedsEvaluator, CraftingEvaluator, DepositEvaluator, etc.
  */
+
+// Unified AI Context (replaces multiple *Deps interfaces)
+export type {
+  IAIContext,
+  Position,
+  ResourceLocation,
+  AnimalLocation,
+  AgentLocation,
+  AIContextCacheConfig,
+} from "./AIContext";
+export { DEFAULT_CACHE_CONFIG } from "./AIContext";
+export {
+  AIContextAdapter,
+  type AIContextSystems,
+  type AIContextCallbacks,
+} from "./AIContextAdapter";
+
+// Work goal generation helper
+export {
+  generateRoleBasedWorkGoal,
+  type FindResourceFn,
+} from "./core/WorkGoalGenerator";
 
 export { AIStateManager } from "./core/AIStateManager";
 export {
@@ -49,23 +74,57 @@ export {
   type AIZoneNeedsPort,
 } from "./core/AIZoneHandler";
 
-export { planGoals, type AgentGoalPlannerDeps } from "./core/AgentGoalPlanner";
 export { PriorityManager } from "./core/PriorityManager";
+
+// NEW: Simplified Goal Planning System (declarative rules)
+export type { GoalRule, GoalContext } from "./core/GoalRule";
+export {
+  evaluateRules,
+  needUtility,
+  socialNeedUtility,
+  personalityFactor,
+} from "./core/GoalRule";
+export {
+  coreRules,
+  extendedRules,
+  fullRules,
+  hungerRule,
+  thirstRule,
+  energyRule,
+  socialRule,
+  funRule,
+  mentalHealthRule,
+  workDriveRule,
+  exploreDriveRule,
+  defaultExplorationRule,
+  reproductionRule,
+  gatherExpansionRule,
+  territoryExpansionRule,
+  fleeFromEnemyRule,
+  fleeFromPredatorRule,
+  attackPredatorRule,
+  constructionRule,
+  depositRule,
+  craftWeaponRule,
+  assistRule,
+  tradeRule,
+  roleWorkRule,
+  huntingRule,
+  inspectionRule,
+  buildingContributionRule,
+  questRule,
+} from "./core/GoalRules";
+export {
+  planGoalsSimplified,
+  planGoalsFull,
+  type SimplifiedGoalPlannerDeps,
+} from "./core/SimplifiedGoalPlanner";
 
 export * from "./core/ActivityMapper";
 
+// Legacy evaluators - Only keeping the most complex ones
 export * from "./evaluators/NeedsEvaluator";
-export * from "./evaluators/CraftingEvaluator";
-export * from "./evaluators/DepositEvaluator";
-export * from "./evaluators/AssistEvaluator";
-export * from "./evaluators/AttentionEvaluator";
-export * from "./evaluators/BuildingContributionEvaluator";
-export * from "./evaluators/CombatEvaluator";
-export * from "./evaluators/ConstructionEvaluator";
-export * from "./evaluators/ExpansionEvaluator";
-export * from "./evaluators/OpportunitiesEvaluator";
-export * from "./evaluators/QuestEvaluator";
-export * from "./evaluators/TradeEvaluator";
+export * from "./evaluators/CollectiveNeedsEvaluator";
 
 export {
   selectBestZone,
