@@ -1294,4 +1294,148 @@ export class NeedsSystem extends EventEmitter {
   public getFoodsByCategory(category: FoodCategory): FoodItem[] {
     return FoodCatalog.getFoodsByCategory(category);
   }
+
+  // ==========================================================================
+  // ECS INTERFACE METHODS - INeedsSystem
+  // ==========================================================================
+
+  /**
+   * System name for ECS registration
+   */
+  public readonly name = "needs";
+
+  /**
+   * Request consumption of a resource or item to satisfy needs.
+   * Returns HandlerResult for ECS handler compatibility.
+   */
+  public requestConsume(
+    agentId: string,
+    itemIdOrNeedType: string,
+  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+    const needs = this.entityNeeds.get(agentId);
+    
+    if (!needs) {
+      return {
+        status: "failed",
+        system: "needs",
+        message: `No needs data for agent ${agentId}`,
+      };
+    }
+
+    // Try to consume from inventory first
+    if (this.inventorySystem) {
+      const inventory = this.inventorySystem.getAgentInventory(agentId);
+      
+      // If itemIdOrNeedType is a need type, find appropriate resource
+      const needType = itemIdOrNeedType.toLowerCase();
+      
+      if (needType === "hunger" || needType === "food") {
+        if (inventory && inventory.food > 0) {
+          this.inventorySystem.removeFromAgent(agentId, ResourceType.FOOD, 1);
+          this.satisfyNeed(agentId, NeedType.HUNGER, 25);
+          return {
+            status: "completed",
+            system: "needs",
+            message: "Consumed food",
+            data: { needType: "hunger", restored: 25 },
+          };
+        }
+      }
+      
+      if (needType === "thirst" || needType === "water") {
+        if (inventory && inventory.water > 0) {
+          this.inventorySystem.removeFromAgent(agentId, ResourceType.WATER, 1);
+          this.satisfyNeed(agentId, NeedType.THIRST, 25);
+          return {
+            status: "completed",
+            system: "needs",
+            message: "Consumed water",
+            data: { needType: "thirst", restored: 25 },
+          };
+        }
+      }
+    }
+
+    return {
+      status: "failed",
+      system: "needs",
+      message: `No consumable available for ${itemIdOrNeedType}`,
+    };
+  }
+
+  /**
+   * Request rest to restore energy.
+   * Returns HandlerResult for ECS handler compatibility.
+   */
+  public requestRest(
+    agentId: string,
+  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+    const needs = this.entityNeeds.get(agentId);
+    
+    if (!needs) {
+      return {
+        status: "failed",
+        system: "needs",
+        message: `No needs data for agent ${agentId}`,
+      };
+    }
+
+    // Apply energy restoration
+    const energyBefore = needs.energy;
+    this.satisfyNeed(agentId, NeedType.ENERGY, 10);
+    const energyAfter = needs.energy;
+    
+    // Check if rest should continue (energy < 80) or is done
+    if (energyAfter >= 80) {
+      return {
+        status: "completed",
+        system: "needs",
+        message: "Fully rested",
+        data: { energy: energyAfter },
+      };
+    }
+
+    return {
+      status: "in_progress",
+      system: "needs",
+      message: "Resting",
+      data: { 
+        energyBefore, 
+        energyAfter,
+        restored: energyAfter - energyBefore,
+      },
+    };
+  }
+
+  /**
+   * Apply a need change by delta amount.
+   * Returns HandlerResult for ECS handler compatibility.
+   */
+  public applyNeedChange(
+    agentId: string,
+    need: string,
+    delta: number,
+  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+    const success = this.modifyNeed(agentId, need, delta);
+    
+    if (success) {
+      const needs = this.entityNeeds.get(agentId);
+      return {
+        status: "completed",
+        system: "needs",
+        message: `Applied ${delta > 0 ? "+" : ""}${delta} to ${need}`,
+        data: { 
+          need, 
+          delta, 
+          newValue: needs?.[need as keyof EntityNeedsData],
+        },
+      };
+    }
+
+    return {
+      status: "failed",
+      system: "needs",
+      message: `Failed to apply need change for ${agentId}`,
+    };
+  }
 }

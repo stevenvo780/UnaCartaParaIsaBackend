@@ -389,6 +389,9 @@ export class SimulationRunner {
       movementSystem: this.movementSystem,
     });
 
+    // Register systems in SystemRegistry for ECS architecture
+    this.registerSystemsInSystemRegistry();
+
     this.economySystem.setDependencies({
       roleSystem: this.roleSystem,
     });
@@ -490,6 +493,27 @@ export class SimulationRunner {
         );
       },
     });
+  }
+
+  /**
+   * Registers all systems in the AISystem's SystemRegistry for ECS architecture.
+   * This enables handlers to delegate operations to appropriate systems.
+   */
+  private registerSystemsInSystemRegistry(): void {
+    const registry = this.aiSystem.getSystemRegistry();
+    
+    registry.register("movement", this.movementSystem);
+    registry.register("combat", this.combatSystem);
+    registry.register("needs", this.needsSystem);
+    registry.register("inventory", this.inventorySystem);
+    registry.register("social", this.socialSystem);
+    registry.register("crafting", this.enhancedCraftingSystem);
+    if (this.buildingSystem) {
+      registry.register("building", this.buildingSystem);
+    }
+    registry.register("trade", this.economySystem);
+    
+    logger.info("🔧 SimulationRunner: Systems registered in SystemRegistry");
   }
 
   /**

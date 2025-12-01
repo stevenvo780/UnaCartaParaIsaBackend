@@ -9,6 +9,7 @@ import type { StateDirtyTracker } from "../../core/StateDirtyTracker";
 import { performanceMonitor } from "../../core/PerformanceMonitor";
 import type { EntityIndex } from "../../core/EntityIndex";
 import type { SharedSpatialIndex } from "../../core/SharedSpatialIndex";
+import type { HandlerResult, ISocialSystem } from "../agents/SystemRegistry";
 
 import { injectable, inject, optional } from "inversify";
 import type { GPUComputeService } from "../../core/GPUComputeService";
@@ -29,7 +30,8 @@ import type { GPUComputeService } from "../../core/GPUComputeService";
  * @see ReputationSystem for reputation effects
  */
 @injectable()
-export class SocialSystem {
+export class SocialSystem implements ISocialSystem {
+  public readonly name = "social";
   private gameState: GameState;
   private config: SocialConfig;
   private edges = new Map<string, Map<string, number>>();
@@ -727,6 +729,95 @@ export class SocialSystem {
     }
     return serialized;
   }
+
+  // ==================== ECS Interface Methods ====================
+
+  /**
+   * Solicita una interacción social entre dos agentes.
+   * @param agentId - ID del agente que inicia la interacción
+   * @param targetId - ID del agente objetivo
+   * @param type - Tipo de interacción (friendly, hostile, etc.)
+   */
+  public requestInteraction(
+    agentId: string,
+    targetId: string,
+    type: string,
+  ): HandlerResult {
+    // Validar que ambos agentes existen
+    const agents = this.gameState.agents;
+    const agent = agents.find((a) => a.id === agentId);
+    const target = agents.find((a) => a.id === targetId);
+
+    if (!agent || !target) {
+      return {
+        status: "failed",
+        system: "social",
+        message: `Agent or target not found: ${agentId}, ${targetId}`,
+      };
+    }
+
+    // Verificar si hay tregua activa
+    if (this.isTruceActive(agentId, targetId)) {
+      return {
+        status: "failed",
+        system: "social",
+        message: "Truce active between agents",
+      };
+    }
+
+    // Aplicar efectos según tipo de interacción
+    switch (type) {
+      case "friendly":
+      case "socialize":
+        this.registerFriendlyInteraction(agentId, targetId);
+        return {
+          status: "completed",
+          system: "social",
+          message: "Friendly interaction registered",
+          data: { affinityChange: 0.1 },
+        };
+
+      case "hostile":
+        this.addEdge(agentId, targetId, -0.2);
+        this.addInfamy(agentId, 0.1);
+        return {
+          status: "completed",
+          system: "social",
+          message: "Hostile interaction registered",
+          data: { affinityChange: -0.2 },
+        };
+
+      case "assist":
+        this.addEdge(agentId, targetId, 0.15);
+        return {
+          status: "completed",
+          system: "social",
+          message: "Assistance registered",
+          data: { affinityChange: 0.15 },
+        };
+
+      default:
+        // Interacción genérica
+        this.addEdge(agentId, targetId, 0.05);
+        return {
+          status: "completed",
+          system: "social",
+          message: `Interaction type '${type}' processed`,
+          data: { affinityChange: 0.05 },
+        };
+    }
+  }
+
+  /**
+   * Obtiene la relación (afinidad) entre dos agentes.
+   * @param agentId - ID del primer agente
+   * @param targetId - ID del segundo agente
+   * @returns Valor de afinidad entre -1 y 1, o 0 si no hay relación
+   */
+  public getRelationship(agentId: string, targetId: string): number {
+    return this.getAffinityBetween(agentId, targetId);
+  }
+
   public syncToGameState(): void {
     if (!this.gameState.socialGraph) {
       this.gameState.socialGraph = {

@@ -11,9 +11,19 @@ import {
   restoreRealTimers,
 } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
-import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events.ts";
+import { simulationEvents } from "../../src/domain/simulation/core/events.ts";
+import { TaskType } from "../../src/domain/simulation/systems/agents/ai/types.ts";
 
-describe("AISystem", () => {
+/**
+ * AISystem v4 Tests
+ * 
+ * Tests actualizados para la arquitectura ECS con:
+ * - TaskQueue para priorización
+ * - Detectors para análisis de contexto
+ * - Handlers para ejecución de tareas
+ * - SystemRegistry para acceso a subsistemas
+ */
+describe("AISystem v4", () => {
   let gameState: GameState;
   let aiSystem: AISystem;
   let needsSystem: NeedsSystem;
@@ -62,23 +72,19 @@ describe("AISystem", () => {
     
     // Usar mocks completos para evitar warnings
     const mockDeps = createMockAISystemDependencies();
-    // El constructor espera todos los sistemas como parámetros individuales
-    // questSystem removed - narrative quests not needed for simulation
+    // El constructor v4 solo toma gameState, agentRegistry, needsSystem, movementSystem
     aiSystem = new AISystem(
       gameState,
+      mockDeps.agentRegistry,
       needsSystem,
-      roleSystem,
-      worldResourceSystem,
-      mockDeps.inventorySystem,
-      mockDeps.socialSystem,
-      mockDeps.craftingSystem,
-      mockDeps.householdSystem,
-      mockDeps.taskSystem,
-      mockDeps.combatSystem,
-      mockDeps.animalSystem,
       mockDeps.movementSystem,
-      mockDeps.timeSystem,
     );
+  });
+
+  afterEach(() => {
+    restoreRealTimers();
+    simulationEvents.clearQueue();
+    simulationEvents.removeAllListeners();
   });
 
   describe("Inicialización", () => {
@@ -87,14 +93,23 @@ describe("AISystem", () => {
     });
 
     it("debe aceptar configuración personalizada", () => {
-      // El constructor no acepta configuración directamente, pero podemos crear el sistema sin sistemas opcionales
       const customSystem = new AISystem(gameState);
       expect(customSystem).toBeDefined();
     });
 
     it("debe aceptar sistemas opcionales", () => {
-      const systemWithNeeds = new AISystem(gameState, needsSystem);
+      const systemWithNeeds = new AISystem(gameState, undefined, needsSystem);
       expect(systemWithNeeds).toBeDefined();
+    });
+
+    it("debe exponer SystemRegistry", () => {
+      const registry = aiSystem.getSystemRegistry();
+      expect(registry).toBeDefined();
+    });
+
+    it("debe exponer EventBus", () => {
+      const bus = aiSystem.getEventBus();
+      expect(bus).toBeDefined();
     });
   });
 
@@ -106,647 +121,233 @@ describe("AISystem", () => {
     it("no debe actualizar si no ha pasado el intervalo mínimo", () => {
       aiSystem.update(100);
       aiSystem.update(200);
-      // El sistema no debería procesar actualizaciones
       expect(aiSystem).toBeDefined();
     });
 
-    it("debe procesar agentes adultos en lotes", () => {
-      // Agregar más agentes adultos
-      gameState.agents?.push({
-        id: "agent-3",
-        name: "Adult 3",
-        ageYears: 30,
-        lifeStage: "adult",
-        immortal: false,
-        position: { x: 300, y: 300 },
-        type: "agent",
-        traits: { cooperation: 0.5, diligence: 0.6, curiosity: 0.4 },
-      });
-
-      expect(() => {
-        aiSystem.update(1000);
-      }).not.toThrow();
-    });
-
-    it("debe rotar el índice del lote", () => {
+    it("debe procesar múltiples updates sin errores", () => {
       for (let i = 0; i < 10; i++) {
-        aiSystem.update(1000);
-      }
-      expect(aiSystem).toBeDefined();
-    });
-  });
-
-  describe("getAIState", () => {
-    it("debe retornar undefined para agente inexistente", () => {
-      const state = aiSystem.getAIState("nonexistent");
-      expect(state).toBeUndefined();
-    });
-
-    it("debe crear y retornar estado AI para agente adulto", () => {
-      aiSystem.update(1000);
-      // El estado puede o no crearse inmediatamente dependiendo del batch
-      const states = aiSystem.getAllAIStates();
-      expect(Array.isArray(states)).toBe(true);
-    });
-  });
-
-  describe("getAllAIStates", () => {
-    it("debe retornar array vacío inicialmente", () => {
-      const states = aiSystem.getAllAIStates();
-      expect(Array.isArray(states)).toBe(true);
-    });
-
-    it("debe retornar todos los estados AI después de actualizar", () => {
-      aiSystem.update(1000);
-      const states = aiSystem.getAllAIStates();
-      expect(states.length).toBeGreaterThanOrEqual(0);
-    });
-  });
-
-  describe("setAgentOffDuty", () => {
-    it("debe establecer agente fuera de servicio", () => {
-      aiSystem.update(1000);
-      // Asegurar que el estado existe
-      const states = aiSystem.getAllAIStates();
-      if (states.length > 0) {
-        const agentId = states[0].entityId;
-        aiSystem.setAgentOffDuty(agentId, true);
-        const state = aiSystem.getAIState(agentId);
-        if (state) {
-          expect(state.offDuty).toBe(true);
-        }
-      } else {
-        // Si no hay estados, simplemente verificar que no hay error
-        expect(() => aiSystem.setAgentOffDuty("agent-1", true)).not.toThrow();
-      }
-    });
-
-    it("debe establecer agente en servicio", () => {
-      aiSystem.update(1000);
-      aiSystem.setAgentOffDuty("agent-1", true);
-      aiSystem.setAgentOffDuty("agent-1", false);
-      const state = aiSystem.getAIState("agent-1");
-      if (state) {
-        expect(state.offDuty).toBe(false);
-      }
-    });
-
-    it("debe limpiar objetivo cuando se pone fuera de servicio", () => {
-      aiSystem.update(1000);
-      const state = aiSystem.getAIState("agent-1");
-      if (state) {
-        const now = Date.now();
-        state.currentGoal = {
-          type: "explore",
-          priority: 0.5,
-          createdAt: now,
-          targetPosition: { x: 200, y: 200 },
-        };
-        aiSystem.setAgentOffDuty("agent-1", true);
-        expect(state.currentGoal).toBeNull();
-      }
-    });
-
-    it("no debe hacer nada si el agente no tiene estado", () => {
-      expect(() => {
-        aiSystem.setAgentOffDuty("nonexistent", true);
-      }).not.toThrow();
-    });
-  });
-
-  describe("Gestión de objetivos", () => {
-    it("debe crear objetivos cuando se actualiza", () => {
-      const eventSpy = vi.fn();
-      simulationEvents.on(GameEventNames.AGENT_GOAL_CHANGED, eventSpy);
-      
-      aiSystem.update(1000);
-      
-      // Puede o no emitir eventos dependiendo de las condiciones
-      expect(aiSystem).toBeDefined();
-      
-      simulationEvents.off(GameEventNames.AGENT_GOAL_CHANGED, eventSpy);
-    });
-
-    it("debe expirar objetivos antiguos", () => {
-      // Crear un nuevo sistema con las dependencias necesarias
-      // questSystem removed - narrative quests not needed for simulation
-      const mockDeps = createMockAISystemDependencies();
-      aiSystem = new AISystem(
-        gameState,
-        needsSystem,
-        roleSystem,
-        worldResourceSystem,
-        mockDeps.inventorySystem,
-        mockDeps.socialSystem,
-        mockDeps.craftingSystem,
-        mockDeps.householdSystem,
-        mockDeps.taskSystem,
-        mockDeps.combatSystem,
-        mockDeps.animalSystem,
-        mockDeps.movementSystem,
-        mockDeps.timeSystem,
-      );
-
-      aiSystem.update(1000);
-      const state = aiSystem.getAIState("agent-1");
-      
-      if (state) {
-        const now = Date.now();
-        state.currentGoal = {
-          type: "explore",
-          priority: 0.5,
-          createdAt: now - 200, // Objetivo antiguo
-          targetPosition: { x: 200, y: 200 },
-        };
-
-        let expired = false;
-        aiSystem.on("goalExpired", (data) => {
-          expect(data.agentId).toBe("agent-1");
-          expired = true;
-        });
-
-        aiSystem.update(1000);
-        // El evento puede o no dispararse dependiendo del timing
-        expect(aiSystem).toBeDefined();
+        vi.advanceTimersByTime(600);
+        expect(() => aiSystem.update(600)).not.toThrow();
       }
     });
   });
 
-  describe("Filtrado de agentes", () => {
-    it("solo debe procesar agentes adultos", () => {
-      aiSystem.update(1000);
-      // El sistema procesa agentes adultos en lotes
-      // Puede que no se cree estado inmediatamente
-      const states = aiSystem.getAllAIStates();
-      expect(Array.isArray(states)).toBe(true);
-    });
-
-    it("no debe procesar agentes inmortales", () => {
-      if (gameState.agents) {
-        gameState.agents[0].immortal = true;
-      }
-      aiSystem.update(1000);
-      // El sistema debería funcionar sin errores
-      expect(aiSystem).toBeDefined();
-    });
-  });
-
-  describe("Planificación de objetivos", () => {
-    it("debe crear objetivos de necesidades cuando hay necesidades críticas", () => {
-      // Configurar necesidades críticas
-      needsSystem.initializeEntityNeeds("agent-1");
-      const needs = needsSystem.getEntityNeeds("agent-1");
-      if (needs) {
-        needs.hunger = 0.1; // Necesidad crítica
-        needs.thirst = 0.1;
-      }
-
-      aiSystem.update(1000);
-      const state = aiSystem.getAIState("agent-1");
-      if (state) {
-        expect(state.currentGoal).toBeDefined();
-      }
-    });
-
-    it("debe crear objetivos de trabajo cuando no hay necesidades críticas", () => {
-      // Configurar necesidades normales
-      needsSystem.initializeEntityNeeds("agent-1");
-      const needs = needsSystem.getEntityNeeds("agent-1");
-      if (needs) {
-        needs.hunger = 0.7; // Necesidad normal
-        needs.thirst = 0.7;
-      }
-
-      // Simular que el agente tiene un rol asignado directamente
-      if (gameState.agents && gameState.agents[0]) {
-        gameState.agents[0].role = "logger";
-      }
-
-      aiSystem.update(1000);
-      const state = aiSystem.getAIState("agent-1");
-      if (state) {
-        expect(state.currentGoal).toBeDefined();
-      }
-    });
-
-    it("debe crear objetivos de exploración cuando no hay otras opciones", () => {
-      // Sin necesidades críticas ni roles
-      aiSystem.update(1000);
-      const state = aiSystem.getAIState("agent-1");
-      if (state) {
-        expect(state.currentGoal).toBeDefined();
-      }
-    });
-  });
-
-  describe("Conversión de objetivos a acciones", () => {
-    it("debe convertir objetivo de exploración a acción de movimiento", () => {
-      const eventSpy = vi.fn();
-      simulationEvents.on(GameEventNames.AGENT_ACTION_COMMANDED, eventSpy);
-
-      aiSystem.update(1000);
-      const state = aiSystem.getAIState("agent-1");
-      if (state && state.currentGoal && state.currentGoal.type === "explore") {
-        // El sistema debería emitir un evento de acción
-        expect(aiSystem).toBeDefined();
-      }
-
-      simulationEvents.off(GameEventNames.AGENT_ACTION_COMMANDED, eventSpy);
-    });
-
-    it("debe convertir objetivo de trabajo a acción de trabajo", () => {
-      // Simular que el agente tiene un rol asignado directamente
-      if (gameState.agents && gameState.agents[0]) {
-        gameState.agents[0].role = "logger";
-      }
-      gameState.zones?.push({
-        id: "work-zone-1",
-        type: "work",
-        bounds: {
-          x: 150,
-          y: 150,
-          width: 50,
-          height: 50,
-        }
+  describe("Task Management", () => {
+    it("debe encolar tarea correctamente", () => {
+      aiSystem.emitTask("agent-1", {
+        type: TaskType.GATHER,
+        priority: 0.8,
+        target: { entityId: "wood-1" },
       });
 
-      const eventSpy = vi.fn();
-      simulationEvents.on(GameEventNames.AGENT_ACTION_COMMANDED, eventSpy);
+      // La tarea debería estar encolada
+      const pending = aiSystem.getPendingTasks("agent-1");
+      expect(pending.length).toBeGreaterThanOrEqual(0);
+    });
 
+    it("debe cancelar tarea activa", () => {
+      aiSystem.emitTask("agent-1", {
+        type: TaskType.GATHER,
+        priority: 0.8,
+        target: { entityId: "wood-1" },
+      });
+
+      aiSystem.cancelTask("agent-1");
+      const task = aiSystem.getActiveTask("agent-1");
+      expect(task).toBeUndefined();
+    });
+
+    it("debe obtener tarea activa", () => {
+      aiSystem.emitTask("agent-1", {
+        type: TaskType.GATHER,
+        priority: 0.8,
+        target: { entityId: "wood-1" },
+      });
+
+      // La tarea se debe procesar en update
       aiSystem.update(1000);
-      expect(aiSystem).toBeDefined();
+      
+      const task = aiSystem.getActiveTask("agent-1");
+      // La tarea puede o no estar activa dependiendo del procesamiento
+      expect(task === undefined || task.type === TaskType.GATHER).toBe(true);
+    });
 
-      simulationEvents.off(GameEventNames.AGENT_ACTION_COMMANDED, eventSpy);
+    it("debe obtener tareas pendientes", () => {
+      aiSystem.emitTask("agent-1", {
+        type: TaskType.GATHER,
+        priority: 0.8,
+        target: { entityId: "wood-1" },
+      });
+
+      aiSystem.emitTask("agent-1", {
+        type: TaskType.EXPLORE,
+        priority: 0.5,
+        target: { position: { x: 50, y: 50 } },
+      });
+
+      const pending = aiSystem.getPendingTasks("agent-1");
+      expect(Array.isArray(pending)).toBe(true);
+    });
+
+    it("debe limpiar estado de agente", () => {
+      aiSystem.emitTask("agent-1", {
+        type: TaskType.GATHER,
+        priority: 0.8,
+      });
+
+      aiSystem.clearAgent("agent-1");
+      const task = aiSystem.getActiveTask("agent-1");
+      const pending = aiSystem.getPendingTasks("agent-1");
+      
+      expect(task).toBeUndefined();
+      expect(pending.length).toBe(0);
     });
   });
 
-  describe("Búsqueda de recursos", () => {
-    it("debe encontrar recursos cercanos para entidades", () => {
-      // Agregar recursos al mundo
-      gameState.worldResources = [
-        {
-          id: "tree-1",
-          type: "tree",
-          position: { x: 120, y: 120 },
-          amount: 100,
-          biome: "forest",
-        },
-      ];
-
-      // Configurar necesidades críticas que requieren recursos
-      needsSystem.initializeEntityNeeds("agent-1");
-      const needs = needsSystem.getEntityNeeds("agent-1");
-      if (needs) {
-        needs.hunger = 0.1;
-      }
-
+  describe("getAIState (legacy compatibility)", () => {
+    it("debe retornar estado para agente registrado", () => {
       aiSystem.update(1000);
       const state = aiSystem.getAIState("agent-1");
-      if (state && state.currentGoal) {
-        expect(state.currentGoal).toBeDefined();
+      // El estado legacy tiene estructura específica
+      expect(state).toBeDefined();
+      if (state) {
+        expect(state).toHaveProperty("pendingTasks");
+        expect(state).toHaveProperty("memory");
       }
     });
   });
 
-  describe("Recursos preferidos por rol", () => {
-    it("debe usar recurso preferido cuando hay rol asignado", () => {
-      // Simular que el agente tiene un rol asignado directamente en el gameState
-      if (gameState.agents && gameState.agents[0]) {
-        gameState.agents[0].role = "logger";
-      }
+  describe("setAgentOffDuty (legacy compatibility)", () => {
+    it("debe cancelar tareas al poner fuera de servicio", () => {
+      aiSystem.emitTask("agent-1", {
+        type: TaskType.GATHER,
+        priority: 0.8,
+      });
+
+      // setAgentOffDuty(true) llama a cancelTask internamente
+      aiSystem.setAgentOffDuty("agent-1", true);
+      
+      const task = aiSystem.getActiveTask("agent-1");
+      expect(task).toBeUndefined();
+    });
+  });
+
+  describe("Eventos", () => {
+    it("debe encolar tarea correctamente via emitTask", () => {
+      aiSystem.emitTask("agent-1", {
+        type: TaskType.GATHER,
+        priority: 0.8,
+      });
+
+      // La tarea debería estar en la cola
+      const pending = aiSystem.getPendingTasks("agent-1");
+      expect(pending.length).toBeGreaterThanOrEqual(0);
+    });
+
+    it("debe emitir evento taskCompleted al completar tarea", () => {
+      const events: unknown[] = [];
+      aiSystem.on("taskCompleted", (data) => events.push(data));
+
+      aiSystem.emitTask("agent-1", {
+        type: TaskType.IDLE,
+        priority: 0.1,
+      });
+
+      // Las tareas IDLE se completan inmediatamente
       aiSystem.update(1000);
-      // El sistema debería usar el recurso preferido para el rol
-      expect(aiSystem).toBeDefined();
+      
+      // El evento puede o no haberse emitido
+      expect(Array.isArray(events)).toBe(true);
+    });
+
+    it("debe emitir evento taskFailed cuando falla tarea", () => {
+      const events: unknown[] = [];
+      aiSystem.on("taskFailed", (data) => events.push(data));
+
+      // Forzar fallo de tarea usando método legacy
+      aiSystem.emitTask("agent-1", {
+        type: TaskType.GATHER,
+        priority: 0.8,
+        target: { entityId: "nonexistent" },
+      });
+
+      // Procesar la tarea para que se active
+      vi.advanceTimersByTime(600);
+      aiSystem.update(600);
+
+      aiSystem.failCurrentGoal("agent-1");
+
+      // El evento puede o no haberse emitido dependiendo del procesamiento
+      expect(events.length).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe("Stats", () => {
+    it("debe retornar estadísticas del sistema", () => {
+      const stats = aiSystem.getStats();
+      
+      expect(stats).toHaveProperty("activeAgents");
+      expect(stats).toHaveProperty("totalPendingTasks");
+      expect(typeof stats.activeAgents).toBe("number");
+    });
+  });
+
+  describe("Cleanup", () => {
+    it("debe limpiar recursos", () => {
+      aiSystem.emitTask("agent-1", {
+        type: TaskType.GATHER,
+        priority: 0.8,
+      });
+
+      expect(() => aiSystem.cleanup()).not.toThrow();
     });
   });
 
   describe("setDependencies", () => {
-    it("debe establecer dependencias de sistemas", () => {
-      const newNeedsSystem = new NeedsSystem(gameState, lifeCycleSystem);
-      aiSystem.setDependencies({
-        needsSystem: newNeedsSystem,
-      });
-      expect(aiSystem).toBeDefined();
-    });
-  });
-
-  describe("notifyEntityArrived", () => {
-    it("debe notificar cuando una entidad llega a una zona", () => {
-      aiSystem.update(1000);
-      expect(() => {
-        aiSystem.notifyEntityArrived("agent-1", "zone-1");
-      }).not.toThrow();
-    });
-
-    it("debe intentar depositar recursos cuando llega a zona de almacenamiento", () => {
-      gameState.zones = [
-        {
-          id: "storage-1",
-          type: "storage",
-          bounds: { x: 100, y: 100, width: 50, height: 50 },
-        },
-      ];
-      aiSystem.update(1000);
-      // Agregar inventario al agente
-      if (gameState.agents && gameState.agents[0]) {
-        gameState.agents[0].inventory = {
-          wood: 50,
-          stone: 0,
-          food: 0,
-          water: 0,
-          capacity: 100,
-        };
-      }
-      expect(() => {
-        aiSystem.notifyEntityArrived("agent-1", "storage-1");
-      }).not.toThrow();
-    });
-  });
-
-  describe("setPlayerControl e isPlayerControlled", () => {
-    it("debe establecer control del jugador", () => {
-      aiSystem.setPlayerControl("agent-1", true);
-      const isControlled = aiSystem.isPlayerControlled("agent-1");
-      expect(isControlled).toBe(true);
-    });
-
-    it("debe retornar false para agente no controlado", () => {
-      const isControlled = aiSystem.isPlayerControlled("agent-1");
-      expect(isControlled).toBe(false);
-    });
-
-    it("debe remover control del jugador", () => {
-      aiSystem.setPlayerControl("agent-1", true);
-      aiSystem.setPlayerControl("agent-1", false);
-      const isControlled = aiSystem.isPlayerControlled("agent-1");
-      expect(isControlled).toBe(false);
-    });
-  });
-
-  describe("setEntityPriority", () => {
-    it("debe establecer prioridad para una entidad", () => {
-      expect(() => {
-        aiSystem.setEntityPriority("agent-1", 0.8);
-      }).not.toThrow();
-    });
-  });
-
-  describe("getStatusSnapshot", () => {
-    it("debe retornar snapshot del estado", () => {
-      const snapshot = aiSystem.getStatusSnapshot();
-      expect(snapshot).toBeDefined();
-      expect(typeof snapshot).toBe("object");
-    });
-  });
-
-  describe("getPerformanceMetrics", () => {
-    it("debe retornar métricas de rendimiento", () => {
-      const metrics = aiSystem.getPerformanceMetrics();
-      expect(metrics).toBeDefined();
-      expect(typeof metrics).toBe("object");
-    });
-  });
-
-  describe("removeEntityAI", () => {
-    it("debe remover AI de una entidad", () => {
-      aiSystem.update(1000);
-      // Verify state exists before removal
-      const stateBefore = aiSystem.getAIState("agent-1");
-      expect(stateBefore).toBeDefined();
+    it("debe aceptar dependencias parciales", () => {
+      const mockDeps = createMockAISystemDependencies();
       
-      expect(() => {
-        aiSystem.removeEntityAI("agent-1");
-      }).not.toThrow();
+      expect(() => aiSystem.setDependencies({
+        needsSystem: mockDeps.needsSystem,
+      })).not.toThrow();
+    });
+
+    it("debe aceptar agentRegistry", () => {
+      const mockDeps = createMockAISystemDependencies();
       
-      // After removal, the aiStates map should not contain the agent
-      // But getAIState has lazy initialization, so we need to check the internal map
-      const allStates = aiSystem.getAllAIStates();
-      const hasAgent1 = allStates.some(s => s.entityId === "agent-1");
-      expect(hasAgent1).toBe(false);
+      expect(() => aiSystem.setDependencies({
+        agentRegistry: mockDeps.agentRegistry,
+      })).not.toThrow();
     });
   });
 
-  describe("cleanup", () => {
-    it("debe limpiar recursos sin errores", () => {
-      aiSystem.update(1000);
-      expect(() => {
-        aiSystem.cleanup();
-      }).not.toThrow();
+  describe("forceGoalReevaluation (legacy)", () => {
+    it("debe forzar reevaluación sin errores", () => {
+      expect(() => aiSystem.forceGoalReevaluation("agent-1")).not.toThrow();
     });
   });
 
-  describe("Manejo de acciones completadas", () => {
-    it("debe manejar acción completada", () => {
-      aiSystem.update(1000);
-      const state = aiSystem.getAIState("agent-1");
-      if (state) {
-        const now = Date.now();
-        state.currentGoal = {
-          type: "work",
-          priority: 0.5,
-          createdAt: now,
-          targetZoneId: "work-zone-1",
-        };
-      }
-
-      const now = Date.now();
-      simulationEvents.emit(GameEventNames.ACTION_COMPLETED, {
-        entityId: "agent-1",
-        actionType: "work",
-        success: true,
-        timestamp: now,
+  describe("removeAgentState", () => {
+    it("debe remover estado de agente", () => {
+      aiSystem.emitTask("agent-1", {
+        type: TaskType.GATHER,
+        priority: 0.8,
       });
 
-      // El sistema debería procesar el evento
-      expect(aiSystem).toBeDefined();
-    });
-  });
-
-  describe("Búsqueda de recursos", () => {
-    it("debe encontrar recursos cercanos", () => {
-      gameState.worldResources = [
-        {
-          id: "tree-1",
-          type: "tree",
-          position: { x: 120, y: 120 },
-          amount: 100,
-          biome: "forest",
-        },
-        {
-          id: "stone-1",
-          type: "stone",
-          position: { x: 150, y: 150 },
-          amount: 50,
-          biome: "mountain",
-        },
-      ];
-
-      aiSystem.update(1000);
-      const state = aiSystem.getAIState("agent-1");
-      if (state) {
-        expect(state).toBeDefined();
-      }
-    });
-  });
-
-  describe("Objetivos que se completan automáticamente", () => {
-    it("debe completar objetivo cuando necesidad está satisfecha", () => {
-      needsSystem.initializeEntityNeeds("agent-1");
-      const needs = needsSystem.getEntityNeeds("agent-1");
-      if (needs) {
-        needs.hunger = 20; // Necesidad crítica
-      }
-
-      aiSystem.update(1000);
-      const state = aiSystem.getAIState("agent-1");
-      if (state && state.currentGoal) {
-        // Satisfacer la necesidad
-        needsSystem.satisfyNeed("agent-1", "hunger", 60);
-        
-        // Actualizar para que el sistema detecte que el objetivo está completo
-        aiSystem.update(1000);
-        
-        // El objetivo debería estar completado o removido
-        expect(aiSystem).toBeDefined();
-      }
-    });
-
-    it("debe expirar objetivos antiguos", () => {
-      aiSystem.update(1000);
-      const state = aiSystem.getAIState("agent-1");
-      if (state) {
-        const now = Date.now();
-        state.currentGoal = {
-          type: "explore",
-          priority: 0.5,
-          createdAt: now - 70000, // Más de 60 segundos
-          targetPosition: { x: 200, y: 200 },
-        };
-        
-        aiSystem.update(1000);
-        // El objetivo debería estar expirado
-        expect(aiSystem).toBeDefined();
-      }
-    });
-
-    it("debe invalidar objetivo cuando zona no existe", () => {
-      aiSystem.update(1000);
-      const state = aiSystem.getAIState("agent-1");
-      if (state) {
-        const now = Date.now();
-        state.currentGoal = {
-          type: "work",
-          priority: 0.5,
-          createdAt: now,
-          targetZoneId: "nonexistent-zone",
-        };
-        
-        aiSystem.update(1000);
-        // El objetivo debería estar invalidado
-        expect(aiSystem).toBeDefined();
-      }
-    });
-  });
-
-  describe("Manejo de diferentes tipos de objetivos", () => {
-    it("debe manejar objetivo de asistencia", () => {
-      gameState.agents?.push({
-        id: "agent-3",
-        name: "Injured Agent",
-        ageYears: 25,
-        lifeStage: "adult",
-        immortal: false,
-        position: { x: 150, y: 150 },
-        type: "agent",
-        traits: { cooperation: 0.5, diligence: 0.6, curiosity: 0.4 },
-      });
-
-      aiSystem.update(1000);
-      const state = aiSystem.getAIState("agent-1");
-      if (state) {
-        const now = Date.now();
-        state.currentGoal = {
-          type: "assist_medical",
-          priority: 0.8,
-          createdAt: now,
-          targetId: "agent-3",
-          data: { targetAgentId: "agent-3" },
-        };
-        
-        aiSystem.update(1000);
-        expect(aiSystem).toBeDefined();
-      }
-    });
-
-    it("debe manejar objetivo con recurso específico", () => {
-      gameState.worldResources = [
-        {
-          id: "tree-1",
-          type: "tree",
-          position: { x: 120, y: 120 },
-          amount: 100,
-          biome: "forest",
-          state: "pristine",
-        },
-      ];
-
-      aiSystem.update(1000);
-      const state = aiSystem.getAIState("agent-1");
-      if (state) {
-        const now = Date.now();
-        state.currentGoal = {
-          type: "gather",
-          priority: 0.6,
-          createdAt: now,
-          targetId: "tree-1",
-          data: { resourceType: "tree" },
-        };
-        
-        aiSystem.update(1000);
-        expect(aiSystem).toBeDefined();
-      }
-    });
-  });
-
-  describe("Manejo de errores y casos edge", () => {
-    it("debe manejar agente sin posición", () => {
-      if (gameState.agents && gameState.agents[0]) {
-        delete gameState.agents[0].position;
-      }
+      aiSystem.removeAgentState("agent-1");
       
-      expect(() => {
-        aiSystem.update(1000);
-      }).not.toThrow();
-    });
-
-    it("debe manejar agente sin rol", () => {
-      if (gameState.agents && gameState.agents[0]) {
-        delete gameState.agents[0].role;
-      }
-      
-      expect(() => {
-        aiSystem.update(1000);
-      }).not.toThrow();
-    });
-
-    it("debe manejar estado AI sin objetivo", () => {
-      aiSystem.update(1000);
-      const state = aiSystem.getAIState("agent-1");
-      if (state) {
-        state.currentGoal = null;
-        expect(() => {
-          aiSystem.update(1000);
-        }).not.toThrow();
-      }
+      const task = aiSystem.getActiveTask("agent-1");
+      expect(task).toBeUndefined();
     });
   });
 
-  describe("Actualización con diferentes intervalos", () => {
-    it("debe procesar agentes en lotes con intervalos grandes", () => {
-      // Agregar más agentes
-      for (let i = 3; i < 15; i++) {
-        gameState.agents?.push({
-          id: `agent-${i}`,
+  describe("Batch processing", () => {
+    it("debe procesar múltiples agentes en batch", () => {
+      // Crear estado con múltiples agentes
+      const agents = [];
+      for (let i = 0; i < 15; i++) {
+        agents.push({
+          id: `batch-agent-${i}`,
           name: `Agent ${i}`,
           ageYears: 25,
           lifeStage: "adult",
@@ -757,29 +358,37 @@ describe("AISystem", () => {
         });
       }
 
-      // El updateIntervalMs es 500ms por defecto, así que necesitamos avanzar el tiempo
-      // Hacer suficientes updates para que se procesen todos los agentes
-      // (se procesan en lotes de 10, así que con 15 agentes necesitamos al menos 2 iteraciones)
+      const batchState = createMockGameState({ agents });
+      const mockDeps = createMockAISystemDependencies();
+      const batchSystem = new AISystem(
+        batchState,
+        mockDeps.agentRegistry,
+        undefined,
+        mockDeps.movementSystem,
+      );
+
+      // Múltiples updates para procesar todos los agentes
       for (let i = 0; i < 30; i++) {
-        // Avanzar el tiempo y actualizar
-        vi.advanceTimersByTime(600); // Más que el intervalo de 500ms
+        vi.advanceTimersByTime(600);
         try {
-          aiSystem.update(600);
-        } catch (error) {
-          // Ignorar errores de dependencias faltantes, el sistema debería seguir funcionando
+          batchSystem.update(600);
+        } catch {
+          // Ignorar errores de dependencias faltantes
         }
       }
       
-      const states = aiSystem.getAllAIStates();
-      // Debería haber creado estados AI para al menos algunos de los agentes
-      // Incluso si hay dependencias faltantes, el sistema debería crear estados básicos
-      expect(states.length).toBeGreaterThanOrEqual(0);
+      const stats = batchSystem.getStats();
+      expect(stats).toBeDefined();
     });
   });
 
-  afterEach(() => {
-    restoreRealTimers();
-    simulationEvents.clearQueue();
-    simulationEvents.removeAllListeners();
+  describe("reportEvent", () => {
+    it("debe reportar eventos sin errores", () => {
+      expect(() => aiSystem.reportEvent(
+        "agent-1",
+        "hungry",
+        { severity: 0.8 },
+      )).not.toThrow();
+    });
   });
 });

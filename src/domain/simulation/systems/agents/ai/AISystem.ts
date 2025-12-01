@@ -52,16 +52,18 @@ import { TYPES } from "@/config/Types";
 import type { AgentRegistry } from "../AgentRegistry";
 import type { NeedsSystem } from "../needs/NeedsSystem";
 import type { MovementSystem } from "../movement/MovementSystem";
-import { SystemRegistry, AgentStore, EventBus } from "@/domain/simulation/ecs";
+import type { WorldQueryService } from "../../world/WorldQueryService";
+import { SystemRegistry } from "../SystemRegistry";
+import { EventBus } from "@/domain/simulation/core/EventBus";
 
 export interface AISystemDeps {
   gameState: GameState;
   agentRegistry: AgentRegistry;
   needsSystem?: NeedsSystem;
   movementSystem?: MovementSystem;
+  worldQueryService?: WorldQueryService;
 
   systemRegistry?: SystemRegistry;
-  agentStore?: AgentStore;
   eventBus?: EventBus;
 }
 
@@ -148,11 +150,11 @@ export class AISystem extends EventEmitter {
   private gameState: GameState;
   private agentRegistry?: AgentRegistry;
   private needsSystem?: NeedsSystem;
+  private worldQueryService?: WorldQueryService;
   /** @deprecated Use systemRegistry.movement instead */
   private _movementSystem?: MovementSystem;
 
   private systemRegistry: SystemRegistry;
-  private agentStore: AgentStore;
   private eventBus: EventBus;
 
   private taskQueue: TaskQueue;
@@ -166,16 +168,19 @@ export class AISystem extends EventEmitter {
     @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
     @inject(TYPES.NeedsSystem) @optional() needsSystem?: NeedsSystem,
     @inject(TYPES.MovementSystem) @optional() movementSystem?: MovementSystem,
+    @inject(TYPES.WorldQueryService)
+    @optional()
+    worldQueryService?: WorldQueryService,
   ) {
     super();
     this.gameState = gameState;
     this.agentRegistry = agentRegistry;
     this.needsSystem = needsSystem;
     this._movementSystem = movementSystem;
+    this.worldQueryService = worldQueryService;
     this.config = { ...DEFAULT_CONFIG };
 
     this.eventBus = new EventBus();
-    this.agentStore = new AgentStore();
     this.systemRegistry = new SystemRegistry();
 
     this.taskQueue = new TaskQueue({
@@ -203,8 +208,8 @@ export class AISystem extends EventEmitter {
     if (deps.agentRegistry) this.agentRegistry = deps.agentRegistry;
     if (deps.needsSystem) this.needsSystem = deps.needsSystem;
     if (deps.movementSystem) this._movementSystem = deps.movementSystem;
+    if (deps.worldQueryService) this.worldQueryService = deps.worldQueryService;
     if (deps.systemRegistry) this.systemRegistry = deps.systemRegistry;
-    if (deps.agentStore) this.agentStore = deps.agentStore;
     if (deps.eventBus) this.eventBus = deps.eventBus;
   }
 
@@ -222,12 +227,7 @@ export class AISystem extends EventEmitter {
     return this.eventBus;
   }
 
-  /**
-   * Obtiene el AgentStore para acceso externo.
-   */
-  public getAgentStore(): AgentStore {
-    return this.agentStore;
-  }
+
 
   /**
    * @deprecated Use systemRegistry.movement instead
@@ -481,7 +481,6 @@ export class AISystem extends EventEmitter {
       position,
 
       systems: this.systemRegistry,
-      store: this.agentStore,
       events: this.eventBus,
     };
   }
@@ -535,6 +534,7 @@ export class AISystem extends EventEmitter {
 
   /**
    * Construye contexto para detectores.
+   * Usa WorldQueryService para poblar campos espaciales.
    */
   private buildDetectorContext(agentId: string): DetectorContext | null {
     const position = this.agentRegistry?.getPosition(agentId);
@@ -544,12 +544,89 @@ export class AISystem extends EventEmitter {
       agentId,
     ) as DetectorContext["needs"];
 
+    const spatialContext = this.buildSpatialContext(position, agentId);
+
     return {
       agentId,
       position,
       needs,
       now: Date.now(),
+      ...spatialContext,
     };
+  }
+
+  /**
+   * Construye contexto espacial usando WorldQueryService.
+   * Retorna un objeto mutable para luego hacer spread.
+   */
+  private buildSpatialContext(
+    position: { x: number; y: number },
+    agentId: string,
+  ): Record<string, unknown> {
+    if (!this.worldQueryService) return {};
+
+    const wqs = this.worldQueryService;
+    const QUERY_RADIUS = 300;
+    const result: Record<string, unknown> = {};
+
+    const nearestFood = wqs.findNearestFood(position.x, position.y);
+    if (nearestFood && "id" in nearestFood) {
+      result.nearestFood = {
+        id: nearestFood.id,
+        x: nearestFood.position.x,
+        y: nearestFood.position.y,
+      };
+    }
+
+    const nearestWater = wqs.findNearestWater(position.x, position.y);
+    if (nearestWater) {
+      if ("id" in nearestWater) {
+        result.nearestWater = {
+          id: nearestWater.id,
+          x: nearestWater.position.x,
+          y: nearestWater.position.y,
+        };
+      } else if ("worldX" in nearestWater) {
+        result.nearestWater = {
+          id: `tile_${nearestWater.tileX}_${nearestWater.tileY}`,
+          x: nearestWater.worldX,
+          y: nearestWater.worldY,
+        };
+      }
+    }
+
+    const nearbyAgentsResult = wqs.findAgentsInRadius(
+      position.x,
+      position.y,
+      QUERY_RADIUS,
+      { excludeDead: true },
+    );
+    if (nearbyAgentsResult.length > 0) {
+      result.nearbyAgents = nearbyAgentsResult
+        .filter((a) => a.id !== agentId)
+        .map((a) => ({
+          id: a.id,
+          x: a.position.x,
+          y: a.position.y,
+        }));
+    }
+
+    const nearbyAnimals = wqs.findAnimalsInRadius(
+      position.x,
+      position.y,
+      QUERY_RADIUS,
+      { hostile: true, excludeDead: true },
+    );
+    if (nearbyAnimals.length > 0) {
+      result.nearbyPredators = nearbyAnimals.map((a) => ({
+        id: a.id,
+        x: a.position.x,
+        y: a.position.y,
+        type: a.animalType,
+      }));
+    }
+
+    return result;
   }
 
   /**

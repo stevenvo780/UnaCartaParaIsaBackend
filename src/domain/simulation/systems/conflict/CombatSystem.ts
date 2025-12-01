@@ -768,4 +768,208 @@ export class CombatSystem {
       timestamp: Date.now(),
     } as T;
   }
+
+  // ==========================================================================
+  // ECS INTERFACE METHODS - ICombatSystem
+  // ==========================================================================
+
+  /**
+   * System name for ECS registration
+   */
+  public readonly name = "combat";
+
+  /**
+   * Request to attack a target.
+   * Returns HandlerResult for ECS handler compatibility.
+   */
+  public requestAttack(
+    agentId: string,
+    targetId: string,
+  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+    // Find attacker entity
+    const attacker = this.state.entities?.find(e => e.id === agentId);
+    if (!attacker || !attacker.position) {
+      return {
+        status: "failed",
+        system: "combat",
+        message: `Attacker ${agentId} not found`,
+      };
+    }
+
+    // Find target entity
+    let target = this.state.entities?.find(e => e.id === targetId);
+    
+    // Also check animals
+    if (!target && this.animalSystem) {
+      const animal = this.animalSystem.getAnimal(targetId);
+      if (animal) {
+        target = {
+          id: animal.id,
+          type: EntityType.ANIMAL,
+          position: animal.position,
+          stats: { health: animal.health },
+          tags: ["animal"],
+        } as SimulationEntity;
+      }
+    }
+
+    if (!target || !target.position) {
+      return {
+        status: "failed",
+        system: "combat",
+        message: `Target ${targetId} not found`,
+      };
+    }
+
+    // Check range
+    const dx = attacker.position.x - target.position.x;
+    const dy = attacker.position.y - target.position.y;
+    const distSq = dx * dx + dy * dy;
+    const rangeSq = this.config.engagementRadius * this.config.engagementRadius;
+
+    if (distSq > rangeSq) {
+      return {
+        status: "delegated",
+        system: "movement",
+        message: "Target out of range, moving closer",
+        data: { targetPosition: target.position },
+      };
+    }
+
+    // Check cooldown
+    const now = getFrameTime();
+    const lastAttack = this.lastAttackAt.get(agentId) ?? 0;
+    if (now - lastAttack < this.config.baseCooldownMs) {
+      return {
+        status: "in_progress",
+        system: "combat",
+        message: "Attack on cooldown",
+        data: { cooldownRemaining: this.config.baseCooldownMs - (now - lastAttack) },
+      };
+    }
+
+    // Perform attack
+    const weaponId = this.equippedWeapons.get(agentId) ?? WeaponId.UNARMED;
+    const weapon = getWeapon(weaponId);
+    const damage = weapon?.baseDamage ?? 10;
+
+    // Apply damage
+    const targetStats = this.ensureStats(target);
+    const remainingHealth = Math.max(0, (targetStats.health ?? 100) - damage);
+    targetStats.health = remainingHealth;
+
+    this.lastAttackAt.set(agentId, now);
+
+    // Log hit
+    this.appendLog(
+      this.createLogEntry<CombatHitLog>({
+        type: CombatEventType.HIT,
+        attackerId: agentId,
+        targetId,
+        weapon: weaponId,
+        damage,
+        crit: false,
+        remainingHealth,
+      }),
+    );
+
+    simulationEvents.emit(GameEventType.COMBAT_HIT, {
+      attackerId: agentId,
+      targetId,
+      damage,
+      weapon: weaponId,
+    });
+
+    // Check for kill
+    if (targetStats.health <= 0) {
+      this.handleKill(attacker, target, weaponId);
+      return {
+        status: "completed",
+        system: "combat",
+        message: `Killed ${targetId}`,
+        data: { targetId, damage, killed: true },
+      };
+    }
+
+    return {
+      status: "in_progress",
+      system: "combat",
+      message: `Hit ${targetId} for ${damage} damage`,
+      data: { targetId, damage, targetHealth: targetStats.health },
+    };
+  }
+
+  /**
+   * Request to flee from a position/threat.
+   * Returns HandlerResult for ECS handler compatibility.
+   */
+  public requestFlee(
+    agentId: string,
+    fromPosition: { x: number; y: number },
+  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+    // Find agent
+    const agent = this.state.entities?.find(e => e.id === agentId);
+    if (!agent || !agent.position) {
+      return {
+        status: "failed",
+        system: "combat",
+        message: `Agent ${agentId} not found`,
+      };
+    }
+
+    const agentPos = agent.position;
+
+    // Calculate flee direction (opposite of threat)
+    const dx = agentPos.x - fromPosition.x;
+    const dy = agentPos.y - fromPosition.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    if (distance < 1) {
+      // Pick random direction if at same position
+      const angle = Math.random() * Math.PI * 2;
+      const fleeTarget = {
+        x: agentPos.x + Math.cos(angle) * 200,
+        y: agentPos.y + Math.sin(angle) * 200,
+      };
+      
+      return {
+        status: "delegated",
+        system: "movement",
+        message: "Fleeing in random direction",
+        data: { target: fleeTarget },
+      };
+    }
+
+    // Normalize and extend
+    const fleeDistance = 200;
+    const fleeTarget = {
+      x: agentPos.x + (dx / distance) * fleeDistance,
+      y: agentPos.y + (dy / distance) * fleeDistance,
+    };
+
+    return {
+      status: "delegated",
+      system: "movement",
+      message: "Fleeing from threat",
+      data: { target: fleeTarget, fromPosition },
+    };
+  }
+
+  /**
+   * End combat state for an agent.
+   */
+  public endCombat(agentId: string): void {
+    // Remove from active combats if tracked
+    this.lastAttackAt.delete(agentId);
+  }
+
+  /**
+   * Check if agent is in combat.
+   */
+  public isInCombat(agentId: string): boolean {
+    const now = getFrameTime();
+    const lastAttack = this.lastAttackAt.get(agentId);
+    // Consider in combat if attacked within last 10 seconds
+    return lastAttack !== undefined && (now - lastAttack) < 10000;
+  }
 }

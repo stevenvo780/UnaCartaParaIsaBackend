@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { EventBus } from "../../../src/domain/simulation/ecs";
+import { EventBus } from "../../../src/domain/simulation/core/EventBus";
 
 describe("EventBus", () => {
   let eventBus: EventBus;

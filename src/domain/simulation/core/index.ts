@@ -8,3 +8,12 @@ export const simulationRunner = container.get<SimulationRunner>(
 
 export type { SimulationCommand } from "../../../shared/types/commands/SimulationCommand";
 export type { SimulationSnapshot } from "../../../shared/types/commands/SimulationCommand";
+
+export { EventBus } from "./EventBus";
+export type {
+  SystemEvents,
+  EventName,
+  EventData,
+  EventHandler,
+  EventBusConfig,
+} from "./EventBus";

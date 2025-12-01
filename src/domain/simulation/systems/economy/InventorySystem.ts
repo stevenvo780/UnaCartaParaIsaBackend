@@ -641,4 +641,257 @@ export class InventorySystem {
       inAgents: totalInAgents,
     };
   }
+
+  // ==========================================================================
+  // ECS INTERFACE METHODS - IInventorySystem
+  // ==========================================================================
+
+  /**
+   * System name for ECS registration
+   */
+  public readonly name = "inventory";
+
+  /**
+   * Request to gather a resource.
+   * Returns HandlerResult for ECS handler compatibility.
+   */
+  public requestGather(
+    agentId: string,
+    resourceId: string,
+    quantity: number,
+  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+    // Get resource from world resources
+    const resource = this.gameState?.worldResources?.[resourceId];
+    
+    if (!resource) {
+      return {
+        status: "failed",
+        system: "inventory",
+        message: `Resource ${resourceId} not found`,
+      };
+    }
+
+    // Ensure agent has inventory
+    let inventory = this.agentInventories.get(agentId);
+    if (!inventory) {
+      inventory = this.initializeAgentInventory(agentId);
+    }
+
+    // Map world resource type to inventory resource type
+    const resourceTypeMap: Record<string, ResourceType> = {
+      tree: ResourceType.WOOD,
+      wood: ResourceType.WOOD,
+      rock: ResourceType.STONE,
+      stone: ResourceType.STONE,
+      food_source: ResourceType.FOOD,
+      food: ResourceType.FOOD,
+      water_source: ResourceType.WATER,
+      water: ResourceType.WATER,
+      berry_bush: ResourceType.FOOD,
+    };
+
+    const resourceType = resourceTypeMap[resource.type?.toLowerCase()] || ResourceType.WOOD;
+    const actualQuantity = Math.min(quantity, resource.harvestCount ?? quantity);
+    
+    const success = this.addResource(agentId, resourceType, actualQuantity);
+    
+    if (success) {
+      return {
+        status: "completed",
+        system: "inventory",
+        message: `Gathered ${actualQuantity} ${resourceType}`,
+        data: { resourceId, resourceType, quantity: actualQuantity },
+      };
+    }
+
+    return {
+      status: "failed",
+      system: "inventory",
+      message: "Inventory full",
+    };
+  }
+
+  /**
+   * Request to deposit resources to a stockpile.
+   * Returns HandlerResult for ECS handler compatibility.
+   */
+  public requestDeposit(
+    agentId: string,
+    storageId: string,
+    itemId: string,
+  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+    const inventory = this.agentInventories.get(agentId);
+    
+    if (!inventory) {
+      return {
+        status: "failed",
+        system: "inventory",
+        message: `No inventory for agent ${agentId}`,
+      };
+    }
+
+    // Find stockpile
+    let stockpile = this.stockpiles.get(storageId);
+    
+    // If storageId is a zone, find first stockpile in zone
+    if (!stockpile) {
+      const zoneStockpiles = this.getStockpilesInZone(storageId);
+      if (zoneStockpiles.length > 0) {
+        stockpile = zoneStockpiles[0];
+      }
+    }
+
+    if (!stockpile) {
+      return {
+        status: "failed",
+        system: "inventory",
+        message: `Storage ${storageId} not found`,
+      };
+    }
+
+    // Transfer all resources if itemId is 'all'
+    if (itemId === "all") {
+      const transferred = this.transferToStockpile(agentId, stockpile.id, {
+        wood: inventory.wood,
+        stone: inventory.stone,
+        food: inventory.food,
+        water: inventory.water,
+      });
+
+      const totalTransferred = Object.values(transferred).reduce((a, b) => a + b, 0);
+      
+      if (totalTransferred > 0) {
+        return {
+          status: "completed",
+          system: "inventory",
+          message: `Deposited ${totalTransferred} resources`,
+          data: { transferred },
+        };
+      }
+
+      return {
+        status: "failed",
+        system: "inventory",
+        message: "Nothing to deposit",
+      };
+    }
+
+    // Transfer specific resource type
+    const resourceType = itemId as ResourceType;
+    const amount = inventory[resourceType] ?? 0;
+    
+    if (amount <= 0) {
+      return {
+        status: "failed",
+        system: "inventory",
+        message: `No ${itemId} to deposit`,
+      };
+    }
+
+    const transferred = this.transferToStockpile(agentId, stockpile.id, {
+      [resourceType]: amount,
+    });
+
+    if (transferred[resourceType] > 0) {
+      return {
+        status: "completed",
+        system: "inventory",
+        message: `Deposited ${transferred[resourceType]} ${itemId}`,
+        data: { resourceType, amount: transferred[resourceType] },
+      };
+    }
+
+    return {
+      status: "failed",
+      system: "inventory",
+      message: "Deposit failed",
+    };
+  }
+
+  /**
+   * Request to transfer resources between agents.
+   * Returns HandlerResult for ECS handler compatibility.
+   */
+  public requestTransfer(
+    fromAgentId: string,
+    toAgentId: string,
+    itemId: string,
+    quantity: number,
+  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+    const fromInventory = this.agentInventories.get(fromAgentId);
+    let toInventory = this.agentInventories.get(toAgentId);
+
+    if (!fromInventory) {
+      return {
+        status: "failed",
+        system: "inventory",
+        message: `No inventory for agent ${fromAgentId}`,
+      };
+    }
+
+    if (!toInventory) {
+      toInventory = this.initializeAgentInventory(toAgentId);
+    }
+
+    const resourceType = itemId as ResourceType;
+    const available = fromInventory[resourceType] ?? 0;
+    
+    if (available < quantity) {
+      return {
+        status: "failed",
+        system: "inventory",
+        message: `Insufficient ${itemId} (have ${available}, need ${quantity})`,
+      };
+    }
+
+    const removed = this.removeFromAgent(fromAgentId, resourceType, quantity);
+    const added = this.addResource(toAgentId, resourceType, removed);
+
+    if (added) {
+      return {
+        status: "completed",
+        system: "inventory",
+        message: `Transferred ${removed} ${itemId}`,
+        data: { resourceType, quantity: removed },
+      };
+    }
+
+    // Rollback if add failed
+    this.addResource(fromAgentId, resourceType, removed);
+    
+    return {
+      status: "failed",
+      system: "inventory",
+      message: "Transfer failed - recipient inventory full",
+    };
+  }
+
+  /**
+   * Check if agent has a specific item.
+   */
+  public hasItem(agentId: string, itemId: string): boolean {
+    const inventory = this.agentInventories.get(agentId);
+    if (!inventory) return false;
+    
+    const resourceType = itemId as ResourceType;
+    return (inventory[resourceType] ?? 0) > 0;
+  }
+
+  /**
+   * Get available inventory space for an agent.
+   */
+  public getInventorySpace(agentId: string): number {
+    const inventory = this.agentInventories.get(agentId);
+    if (!inventory) return 0;
+    
+    const currentLoad = 
+      inventory.wood + 
+      inventory.stone + 
+      inventory.food + 
+      inventory.water +
+      inventory.rare_materials +
+      inventory.metal;
+    
+    return Math.max(0, inventory.capacity - currentLoad);
+  }
 }

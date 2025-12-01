@@ -4,7 +4,7 @@
  * Registro central de todos los sistemas del juego.
  * Permite a los handlers acceder a sistemas de forma desacoplada.
  *
- * @module domain/simulation/ecs
+ * @module domain/simulation/systems/agents
  */
 
 import { injectable } from "inversify";

@@ -63,6 +63,7 @@ import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
 import type { EntityIndex } from "../../core/EntityIndex";
 import type { AgentRegistry } from "../agents/AgentRegistry";
+import type { HandlerResult, ITradeSystem } from "../agents/SystemRegistry";
 
 /**
  * System for managing economic activities: resource production, salaries, market pricing, and trading.
@@ -78,7 +79,8 @@ import type { AgentRegistry } from "../agents/AgentRegistry";
  * @see InventorySystem for resource storage
  */
 @injectable()
-export class EconomySystem {
+export class EconomySystem implements ITradeSystem {
+  public readonly name = "trade";
   private state: GameState;
   private inventorySystem: InventorySystem;
   private socialSystem: SocialSystem;
@@ -707,5 +709,100 @@ export class EconomySystem {
     });
 
     return true;
+  }
+
+  // ==================== ECS Interface Methods ====================
+
+  /**
+   * Solicita un intercambio comercial entre dos agentes.
+   * @param buyerId - ID del comprador
+   * @param sellerId - ID del vendedor
+   * @param itemId - ID/tipo del recurso a comprar
+   * @param quantity - Cantidad a comprar
+   * @param price - Precio por unidad
+   */
+  public requestTrade(
+    buyerId: string,
+    sellerId: string,
+    itemId: string,
+    quantity: number,
+    price: number,
+  ): HandlerResult {
+    const totalCost = price * quantity;
+
+    // Verificar que el comprador puede pagar
+    if (!this.canAfford(buyerId, totalCost)) {
+      return {
+        status: "failed",
+        system: "trade",
+        message: `Buyer ${buyerId} cannot afford ${totalCost}`,
+        data: { required: totalCost },
+      };
+    }
+
+    // Verificar que el vendedor tiene el recurso
+    if (!this.inventorySystem) {
+      return {
+        status: "failed",
+        system: "trade",
+        message: "Inventory system not available",
+      };
+    }
+
+    const sellerInventory = this.inventorySystem.getAgentInventory(sellerId);
+    if (!sellerInventory) {
+      return {
+        status: "failed",
+        system: "trade",
+        message: `Seller ${sellerId} has no inventory`,
+      };
+    }
+
+    const resourceType = itemId as ResourceType;
+    const available = sellerInventory[resourceType] ?? 0;
+    if (available < quantity) {
+      return {
+        status: "failed",
+        system: "trade",
+        message: `Seller doesn't have enough ${itemId}`,
+        data: { available, requested: quantity },
+      };
+    }
+
+    // Ejecutar transacción
+    // 1. Transferir dinero
+    if (!this.transferMoney(buyerId, sellerId, totalCost)) {
+      return {
+        status: "failed",
+        system: "trade",
+        message: "Money transfer failed",
+      };
+    }
+
+    // 2. Transferir recurso
+    this.inventorySystem.removeFromAgent(sellerId, resourceType, quantity);
+    this.inventorySystem.addResource(buyerId, resourceType, quantity);
+
+    simulationEvents.emit(GameEventType.TRADE_COMPLETED, {
+      buyerId,
+      sellerId,
+      resourceType: itemId,
+      quantity,
+      totalPrice: totalCost,
+      timestamp: Date.now(),
+    });
+
+    return {
+      status: "completed",
+      system: "trade",
+      message: `Trade completed: ${quantity}x ${itemId} for ${totalCost}`,
+      data: {
+        buyerId,
+        sellerId,
+        itemId,
+        quantity,
+        totalCost,
+      },
+    };
   }
 }

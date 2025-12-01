@@ -15,14 +15,10 @@
  */
 
 import { NeedType } from "@/shared/constants/AIEnums";
-import type {
-  HandlerResult,
-  SystemRegistry,
-  AgentStore,
-  EventBus,
-} from "@/domain/simulation/ecs";
+import type { HandlerResult, SystemRegistry } from "../SystemRegistry";
+import type { EventBus } from "@/domain/simulation/core/EventBus";
 
-export type { HandlerResult } from "@/domain/simulation/ecs";
+export type { HandlerResult } from "../SystemRegistry";
 
 /**
  * Tipos de tarea que un agente puede realizar
@@ -240,9 +236,10 @@ export interface HandlerContext {
 
   readonly position: { x: number; y: number };
 
+  /** Registro de sistemas para delegación */
   readonly systems: SystemRegistry;
 
-  readonly store: AgentStore;
+  /** Bus de eventos para comunicación cross-system */
   readonly events: EventBus;
 }
 

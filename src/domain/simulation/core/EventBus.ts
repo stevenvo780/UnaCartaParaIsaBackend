@@ -10,7 +10,7 @@
  * - Manejo de errores en handlers
  * - Debug logging opcional
  *
- * @module domain/simulation/ecs
+ * @module domain/simulation/core
  */
 
 import { injectable } from "inversify";

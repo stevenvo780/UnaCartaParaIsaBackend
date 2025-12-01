@@ -19,6 +19,7 @@ import { SystemStatus } from "../../../../shared/constants/SystemEnums";
 import { ZoneConstructionStatus } from "../../../../shared/constants/StatusEnums";
 import { TileType } from "../../../../shared/constants/TileTypeEnums";
 import { ResourceType } from "../../../../shared/constants/ResourceEnums";
+import type { HandlerResult, IBuildingSystem } from "../agents/SystemRegistry";
 
 import { TaskSystem } from "../objectives/TaskSystem";
 import { TerrainSystem } from "../world/TerrainSystem";
@@ -110,7 +111,8 @@ import { TYPES } from "../../../../config/Types";
  * @see TaskSystem for construction task management
  */
 @injectable()
-export class BuildingSystem {
+export class BuildingSystem implements IBuildingSystem {
+  public readonly name = "building";
   private readonly config: BuildingSystemConfig;
   private readonly now: () => number;
   private readonly constructionJobs = new Map<string, ConstructionJob>();
@@ -855,5 +857,102 @@ export class BuildingSystem {
       const key = resource as ResourceType;
       this.inventorySystem.removeFromAgent(agentId, key, amount);
     }
+  }
+
+  // ==================== ECS Interface Methods ====================
+
+  /**
+   * Solicita la construcción de un edificio.
+   * @param agentId - ID del agente constructor
+   * @param buildingType - Tipo de edificio a construir
+   * @param position - Posición donde construir
+   */
+  public requestBuild(
+    _agentId: string,
+    buildingType: string,
+    position: { x: number; y: number },
+  ): HandlerResult {
+    // Convertir buildingType a BuildingLabel si es posible
+    const label = buildingType as BuildingLabel;
+    const cost = BUILDING_COSTS[label];
+    
+    if (!cost) {
+      return {
+        status: "failed",
+        system: "building",
+        message: `Unknown building type: ${buildingType}`,
+      };
+    }
+
+    // Usar constructBuilding existente
+    const started = this.constructBuilding(label, position);
+    if (!started) {
+      return {
+        status: "failed",
+        system: "building",
+        message: `Failed to start construction of ${buildingType} - insufficient resources or invalid position`,
+      };
+    }
+
+    return {
+      status: "in_progress",
+      system: "building",
+      message: `Started construction of ${buildingType}`,
+      data: { buildingType, position },
+    };
+  }
+
+  /**
+   * Solicita la reparación de un edificio.
+   * @param agentId - ID del agente reparador
+   * @param buildingId - ID de la zona/edificio a reparar
+   */
+  public requestRepair(agentId: string, buildingId: string): HandlerResult {
+    const zone = this.findZoneById(buildingId);
+    if (!zone) {
+      return {
+        status: "failed",
+        system: "building",
+        message: `Building not found: ${buildingId}`,
+      };
+    }
+
+    const buildingState = this.buildingStates.get(buildingId);
+    if (!buildingState) {
+      return {
+        status: "failed",
+        system: "building",
+        message: "Building has no state to repair",
+      };
+    }
+
+    // Ya está al máximo
+    if (buildingState.durability >= buildingState.maxDurability) {
+      return {
+        status: "completed",
+        system: "building",
+        message: "Building is already at max durability",
+      };
+    }
+
+    // Usar repairBuilding existente
+    const repaired = this.repairBuilding(buildingId, agentId, false);
+    if (!repaired) {
+      return {
+        status: "failed",
+        system: "building",
+        message: "Failed to repair - insufficient resources or inventory",
+      };
+    }
+
+    return {
+      status: "completed",
+      system: "building",
+      message: `Repaired building`,
+      data: {
+        newDurability: buildingState.durability,
+        maxDurability: buildingState.maxDurability,
+      },
+    };
   }
 }

@@ -17,6 +17,7 @@ import type {
   TimeSystem,
 } from "../src/domain/simulation/systems/index.js";
 import type { RoleSystem } from "../src/domain/simulation/systems/agents/RoleSystem.js";
+import type { AgentRegistry } from "../src/domain/simulation/systems/agents/AgentRegistry.js";
 
 // Mock TensorFlow para evitar errores de módulo nativo en tests
 vi.mock("@tensorflow/tfjs-node-gpu", () => {
@@ -194,6 +195,15 @@ export function createMockAISystemDependencies() {
       getCurrentTime: vi.fn(() => Date.now()),
       getGameTime: vi.fn(() => 0),
     } as unknown as TimeSystem,
+    agentRegistry: {
+      getPosition: vi.fn(() => ({ x: 10, y: 10 })),
+      getAgent: vi.fn(() => null),
+      getAllAgents: vi.fn(() => []),
+      getAgentIds: vi.fn(() => []),
+      registerAgent: vi.fn(),
+      unregisterAgent: vi.fn(),
+      updateAgentPosition: vi.fn(),
+    } as unknown as AgentRegistry,
   };
 }
 

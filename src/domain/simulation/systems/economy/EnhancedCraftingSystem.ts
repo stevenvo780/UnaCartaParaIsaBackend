@@ -12,6 +12,7 @@ import { itemToInventoryResource } from "@/shared/types/simulation/resourceMappi
 import { logger } from "../../../../infrastructure/utils/logger";
 import { equipmentSystem } from "../agents/EquipmentSystem";
 import { EquipmentSlot } from "../../../../shared/constants/EquipmentEnums";
+import type { HandlerResult, ICraftingSystem } from "../agents/SystemRegistry";
 
 interface EnhancedCraftingConfig {
   requireWorkstation: boolean;
@@ -42,7 +43,8 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../../../config/Types";
 
 @injectable()
-export class EnhancedCraftingSystem {
+export class EnhancedCraftingSystem implements ICraftingSystem {
+  public readonly name = "crafting";
   private readonly config: EnhancedCraftingConfig;
   private readonly now: () => number;
   private readonly knownRecipes = new Map<
@@ -406,6 +408,70 @@ export class EnhancedCraftingSystem {
       this.knownRecipes.set(agentId, map);
     }
     return map;
+  }
+
+  // ==================== ECS Interface Methods ====================
+
+  /**
+   * Verifica si un agente puede craftear una receta.
+   * @param agentId - ID del agente
+   * @param recipeId - ID de la receta
+   */
+  public canCraft(agentId: string, recipeId: string): boolean {
+    const recipe = RecipesCatalog.getRecipeById(recipeId);
+    if (!recipe) return false;
+
+    if (this.config.requireWorkstation && !this.hasCraftingStation()) {
+      return false;
+    }
+
+    return this.hasIngredients(agentId, recipe);
+  }
+
+  /**
+   * Solicita el crafteo de una receta.
+   * @param agentId - ID del agente que crafteará
+   * @param recipeId - ID de la receta a craftear
+   */
+  public requestCraft(agentId: string, recipeId: string): HandlerResult {
+    // Verificar que puede craftear
+    if (!this.canCraft(agentId, recipeId)) {
+      return {
+        status: "failed",
+        system: "crafting",
+        message: `Cannot craft ${recipeId}: missing ingredients or workstation`,
+      };
+    }
+
+    // Iniciar el crafteo
+    const started = this.startCrafting(agentId, recipeId);
+    if (!started) {
+      return {
+        status: "failed",
+        system: "crafting",
+        message: `Failed to start crafting ${recipeId}`,
+      };
+    }
+
+    const job = this.activeJobs.get(agentId);
+    if (job) {
+      return {
+        status: "in_progress",
+        system: "crafting",
+        message: `Started crafting ${recipeId}`,
+        data: {
+          agentId: job.agentId,
+          finishesAt: job.finishesAt,
+          recipeId: job.recipeId,
+        },
+      };
+    }
+
+    return {
+      status: "completed",
+      system: "crafting",
+      message: `Instant crafting of ${recipeId} completed`,
+    };
   }
 }
 

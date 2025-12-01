@@ -1,5 +1,5 @@
 /**
- * @fileoverview Tests para SystemRegistry ECS
+ * @fileoverview Tests para SystemRegistry
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -9,7 +9,7 @@ import {
   type ICombatSystem,
   type INeedsSystem,
   type HandlerResult,
-} from "../../../src/domain/simulation/ecs";
+} from "../../../src/domain/simulation/systems/agents/SystemRegistry";
 
 describe("SystemRegistry", () => {
   let registry: SystemRegistry;
@@ -21,6 +21,7 @@ describe("SystemRegistry", () => {
   describe("register", () => {
     it("should register movement system", () => {
       const movementSystem: IMovementSystem = {
+        name: "movement",
         requestMove: vi.fn().mockReturnValue({
           status: "delegated",
           system: "movement",
@@ -29,7 +30,6 @@ describe("SystemRegistry", () => {
         requestMoveToEntity: vi.fn(),
         stopMovement: vi.fn(),
         isMoving: vi.fn().mockReturnValue(false),
-        getPath: vi.fn(),
       };
 
       registry.register("movement", movementSystem);
@@ -39,14 +39,14 @@ describe("SystemRegistry", () => {
 
     it("should register combat system", () => {
       const combatSystem: ICombatSystem = {
+        name: "combat",
         requestAttack: vi.fn().mockReturnValue({
           status: "delegated",
           system: "combat",
         }),
         requestFlee: vi.fn(),
         isInCombat: vi.fn().mockReturnValue(false),
-        getTarget: vi.fn(),
-        stopCombat: vi.fn(),
+        endCombat: vi.fn(),
       };
 
       registry.register("combat", combatSystem);
@@ -56,14 +56,14 @@ describe("SystemRegistry", () => {
 
     it("should register needs system", () => {
       const needsSystem: INeedsSystem = {
+        name: "needs",
         requestConsume: vi.fn().mockReturnValue({
           status: "delegated",
           system: "needs",
         }),
         requestRest: vi.fn(),
+        applyNeedChange: vi.fn(),
         getNeeds: vi.fn(),
-        getNeed: vi.fn(),
-        satisfyNeed: vi.fn(),
       };
 
       registry.register("needs", needsSystem);
@@ -75,12 +75,12 @@ describe("SystemRegistry", () => {
   describe("unregister", () => {
     it("should unregister system", () => {
       const movementSystem: IMovementSystem = {
+        name: "movement",
         requestMove: vi.fn(),
         requestMoveToZone: vi.fn(),
         requestMoveToEntity: vi.fn(),
         stopMovement: vi.fn(),
         isMoving: vi.fn(),
-        getPath: vi.fn(),
       };
 
       registry.register("movement", movementSystem);
@@ -92,21 +92,24 @@ describe("SystemRegistry", () => {
 
   describe("getRegisteredSystems", () => {
     it("should return list of registered systems", () => {
-      registry.register("movement", {
+      const movementSystem: IMovementSystem = {
+        name: "movement",
         requestMove: vi.fn(),
         requestMoveToZone: vi.fn(),
         requestMoveToEntity: vi.fn(),
         stopMovement: vi.fn(),
         isMoving: vi.fn(),
-        getPath: vi.fn(),
-      });
-      registry.register("combat", {
+      };
+      const combatSystem: ICombatSystem = {
+        name: "combat",
         requestAttack: vi.fn(),
         requestFlee: vi.fn(),
         isInCombat: vi.fn(),
-        getTarget: vi.fn(),
-        stopCombat: vi.fn(),
-      });
+        endCombat: vi.fn(),
+      };
+
+      registry.register("movement", movementSystem);
+      registry.register("combat", combatSystem);
 
       const systems = registry.getRegisteredSystems();
 
@@ -118,27 +121,25 @@ describe("SystemRegistry", () => {
 
   describe("integration", () => {
     it("should allow handlers to delegate to systems", () => {
-      // Create mock movement system
       const mockResult: HandlerResult = {
         status: "delegated",
         system: "movement",
         message: "Movement started",
       };
       const movementSystem: IMovementSystem = {
+        name: "movement",
         requestMove: vi.fn().mockReturnValue(mockResult),
         requestMoveToZone: vi.fn(),
         requestMoveToEntity: vi.fn(),
         stopMovement: vi.fn(),
         isMoving: vi.fn(),
-        getPath: vi.fn(),
       };
 
       registry.register("movement", movementSystem);
 
-      // Simulate handler delegation
-      const result = registry.movement?.requestMove("agent-1", 10, 20);
+      const result = registry.movement?.requestMove("agent-1", { x: 10, y: 20 });
 
-      expect(movementSystem.requestMove).toHaveBeenCalledWith("agent-1", 10, 20);
+      expect(movementSystem.requestMove).toHaveBeenCalledWith("agent-1", { x: 10, y: 20 });
       expect(result?.status).toBe("delegated");
       expect(result?.system).toBe("movement");
     });

@@ -1061,4 +1061,197 @@ export class MovementSystem extends EventEmitter {
   ): EntityMovementState | undefined {
     return this.movementStates.get(entityId);
   }
+
+  // ==========================================================================
+  // ECS INTERFACE METHODS - IMovementSystem
+  // ==========================================================================
+
+  /**
+   * System name for ECS registration
+   */
+  public readonly name = "movement";
+
+  /**
+   * Request movement to a specific position.
+   * Returns HandlerResult for ECS handler compatibility.
+   */
+  public requestMove(
+    agentId: string,
+    target: { x: number; y: number },
+  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+    const state = this.movementStates.get(agentId);
+    
+    if (!state) {
+      return {
+        status: "failed",
+        system: "movement",
+        message: `No movement state for agent ${agentId}`,
+      };
+    }
+
+    // Check if already at target
+    const dx = state.currentPosition.x - target.x;
+    const dy = state.currentPosition.y - target.y;
+    const distSq = dx * dx + dy * dy;
+    
+    if (distSq < 4) { // Within 2 units
+      return {
+        status: "completed",
+        system: "movement",
+        message: "Already at target",
+        data: { position: state.currentPosition },
+      };
+    }
+
+    // Check if already moving to same target
+    if (state.isMoving && state.targetPosition) {
+      const targetDx = state.targetPosition.x - target.x;
+      const targetDy = state.targetPosition.y - target.y;
+      if (targetDx * targetDx + targetDy * targetDy < 4) {
+        return {
+          status: "in_progress",
+          system: "movement",
+          message: "Already moving to target",
+        };
+      }
+    }
+
+    const success = this.moveToPoint(agentId, target.x, target.y);
+    
+    if (success) {
+      return {
+        status: "delegated",
+        system: "movement",
+        message: "Movement started",
+        data: { target },
+      };
+    }
+
+    return {
+      status: "failed",
+      system: "movement",
+      message: "Failed to start movement",
+    };
+  }
+
+  /**
+   * Request movement to a zone.
+   * Returns HandlerResult for ECS handler compatibility.
+   */
+  public requestMoveToZone(
+    agentId: string,
+    zoneId: string,
+  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+    const state = this.movementStates.get(agentId);
+    
+    if (!state) {
+      return {
+        status: "failed",
+        system: "movement",
+        message: `No movement state for agent ${agentId}`,
+      };
+    }
+
+    // Find zone
+    const zone = this.gameState.zones?.find(z => z.id === zoneId);
+    if (!zone) {
+      return {
+        status: "failed",
+        system: "movement",
+        message: `Zone ${zoneId} not found`,
+      };
+    }
+
+    // Check if already in zone
+    const bounds = zone.bounds;
+    if (bounds &&
+        state.currentPosition.x >= bounds.x &&
+        state.currentPosition.x <= bounds.x + bounds.width &&
+        state.currentPosition.y >= bounds.y &&
+        state.currentPosition.y <= bounds.y + bounds.height) {
+      return {
+        status: "completed",
+        system: "movement",
+        message: "Already in zone",
+        data: { zoneId },
+      };
+    }
+
+    // Check if already moving to this zone
+    if (state.isMoving && state.targetZone === zoneId) {
+      return {
+        status: "in_progress",
+        system: "movement",
+        message: "Already moving to zone",
+      };
+    }
+
+    const success = this.moveToZone(agentId, zoneId);
+    
+    if (success) {
+      return {
+        status: "delegated",
+        system: "movement",
+        message: "Movement to zone started",
+        data: { zoneId },
+      };
+    }
+
+    return {
+      status: "failed",
+      system: "movement",
+      message: "Failed to start movement to zone",
+    };
+  }
+
+  /**
+   * Request movement to an entity's position.
+   * Returns HandlerResult for ECS handler compatibility.
+   */
+  public requestMoveToEntity(
+    agentId: string,
+    entityId: string,
+  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+    const state = this.movementStates.get(agentId);
+    
+    if (!state) {
+      return {
+        status: "failed",
+        system: "movement",
+        message: `No movement state for agent ${agentId}`,
+      };
+    }
+
+    // Try to find entity position from various sources
+    let targetPosition: { x: number; y: number } | undefined;
+
+    // Check agents
+    const targetAgent = this.agentRegistry?.getProfile(entityId);
+    if (targetAgent?.position) {
+      targetPosition = targetAgent.position;
+    }
+
+    // Check world resources
+    if (!targetPosition && this.gameState.worldResources?.[entityId]) {
+      targetPosition = this.gameState.worldResources[entityId].position;
+    }
+
+    // Check entities array
+    if (!targetPosition) {
+      const entity = this.gameState.entities?.find(e => e.id === entityId);
+      if (entity?.position) {
+        targetPosition = entity.position;
+      }
+    }
+
+    if (!targetPosition) {
+      return {
+        status: "failed",
+        system: "movement",
+        message: `Entity ${entityId} not found or has no position`,
+      };
+    }
+
+    return this.requestMove(agentId, targetPosition);
+  }
 }
