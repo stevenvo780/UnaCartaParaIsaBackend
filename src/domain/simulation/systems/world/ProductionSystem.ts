@@ -3,7 +3,7 @@ import type { ResourceType } from "@/shared/types/simulation/economy";
 import { InventorySystem } from "../economy/InventorySystem";
 import { LifeCycleSystem } from "../lifecycle/LifeCycleSystem";
 import { WorldResourceSystem } from "./WorldResourceSystem";
-import { TerrainSystem } from "../core/TerrainSystem";
+import { TerrainSystem } from "./TerrainSystem";
 import { simulationEvents, GameEventType } from "../../core/events";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../../core/PerformanceMonitor";

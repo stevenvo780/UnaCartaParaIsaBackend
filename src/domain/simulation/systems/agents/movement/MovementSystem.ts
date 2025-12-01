@@ -25,7 +25,7 @@ import { MovementBatchProcessor } from "./MovementBatchProcessor";
 import { ActivityType } from "../../../../../shared/constants/MovementEnums";
 import { ActionType } from "../../../../../shared/constants/AIEnums";
 import { SIM_CONSTANTS } from "../../../core/SimulationConstants";
-import { TerrainSystem } from "../../core/TerrainSystem";
+import { TerrainSystem } from "../../world/TerrainSystem";
 
 export interface EntityMovementState {
   entityId: string;

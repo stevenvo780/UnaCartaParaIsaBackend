@@ -1,16 +1,16 @@
 import "reflect-metadata";
 import { Container } from "inversify";
-import { TYPES } from "../../../config/Types";
-import { BuildingSystem } from "../../../domain/simulation/systems/structures/BuildingSystem";
-import { TerrainSystem } from "../../../domain/simulation/systems/core/TerrainSystem";
-import { ResourceReservationSystem } from "../../../domain/simulation/systems/economy/ResourceReservationSystem";
+import { TYPES } from "../../src/config/Types";
+import { BuildingSystem } from "../../src/domain/simulation/systems/structures/BuildingSystem";
+import { TerrainSystem } from "../../src/domain/simulation/systems/world/TerrainSystem";
+import { ResourceReservationSystem } from "../../src/domain/simulation/systems/economy/ResourceReservationSystem";
 import {
   GameState,
   SimulationTerrainTile,
-} from "../../../shared/types/game-types";
-import { BiomeType } from "../../../domain/simulation/systems/world/generation/types";
-import { createInitialGameState } from "../../../domain/simulation/core/defaultState";
-import { logger } from "../../../infrastructure/utils/logger";
+} from "../../src/shared/types/game-types";
+import { BiomeType } from "../../src/domain/simulation/systems/world/generation/types";
+import { createInitialGameState } from "../../src/domain/simulation/core/defaultState";
+import { logger } from "../../src/infrastructure/utils/logger";
 
 // Mock Systems
 class MockResourceReservationSystem {

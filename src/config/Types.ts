@@ -63,4 +63,5 @@ export const TYPES = {
   AgentRegistry: Symbol.for("AgentRegistry"),
   AnimalRegistry: Symbol.for("AnimalRegistry"),
   PerformanceMonitor: Symbol.for("PerformanceMonitor"),
+  WorldQueryService: Symbol.for("WorldQueryService"),
 };

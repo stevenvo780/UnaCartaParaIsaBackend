@@ -1,18 +1,18 @@
 import { Container } from "inversify";
-import { TYPES } from "../../../config/Types";
-import { ProductionSystem } from "../../../domain/simulation/systems/world/ProductionSystem";
-import { TerrainSystem } from "../../../domain/simulation/systems/core/TerrainSystem";
-import { InventorySystem } from "../../../domain/simulation/systems/economy/InventorySystem";
-import { LifeCycleSystem } from "../../../domain/simulation/systems/lifecycle/LifeCycleSystem";
-import { WorldResourceSystem } from "../../../domain/simulation/systems/world/WorldResourceSystem";
+import { TYPES } from "../../src/config/Types";
+import { ProductionSystem } from "../../src/domain/simulation/systems/world/ProductionSystem";
+import { TerrainSystem } from "../../src/domain/simulation/systems/world/TerrainSystem";
+import { InventorySystem } from "../../src/domain/simulation/systems/economy/InventorySystem";
+import { LifeCycleSystem } from "../../src/domain/simulation/systems/lifecycle/LifeCycleSystem";
+import { WorldResourceSystem } from "../../src/domain/simulation/systems/world/WorldResourceSystem";
 import {
   GameState,
   Zone,
   SimulationTerrainTile,
-} from "../../../shared/types/game-types";
-import { BiomeType } from "../../../domain/simulation/systems/world/generation/types";
-import { createInitialGameState } from "../../../domain/simulation/core/defaultState";
-import { logger } from "../../../infrastructure/utils/logger";
+} from "../../src/shared/types/game-types";
+import { BiomeType } from "../../src/domain/simulation/systems/world/generation/types";
+import { createInitialGameState } from "../../src/domain/simulation/core/defaultState";
+import { logger } from "../../src/infrastructure/utils/logger";
 
 // Mock dependencies
 const container = new Container();

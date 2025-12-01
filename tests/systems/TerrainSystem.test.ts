@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import type { GameState } from "../../src/shared/types/game-types";
-import { TerrainSystem } from "../../src/domain/simulation/systems/core/TerrainSystem";
+import { TerrainSystem } from "../../src/domain/simulation/systems/world/TerrainSystem";
 import {
   simulationEvents,
   GameEventNames,

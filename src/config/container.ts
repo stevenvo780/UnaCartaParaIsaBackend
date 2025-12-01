@@ -51,6 +51,7 @@ import {
   MovementSystem,
   TerrainSystem,
   ChunkLoadingSystem,
+  WorldQueryService,
 } from "../domain/simulation/systems";
 import { SharedKnowledgeSystem } from "../domain/simulation/systems/agents/ai/SharedKnowledgeSystem";
 
@@ -237,4 +238,9 @@ container
 container
   .bind<AnimalRegistry>(TYPES.AnimalRegistry)
   .to(AnimalRegistry)
+  .inSingletonScope();
+
+container
+  .bind<WorldQueryService>(TYPES.WorldQueryService)
+  .to(WorldQueryService)
   .inSingletonScope();

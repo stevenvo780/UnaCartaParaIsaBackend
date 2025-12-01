@@ -12,7 +12,7 @@ import { AnimalBehavior } from "./AnimalBehavior";
 import { AnimalSpawning } from "./AnimalSpawning";
 import { simulationEvents, GameEventType } from "../../../core/events";
 import type { WorldResourceSystem } from "../WorldResourceSystem";
-import type { TerrainSystem } from "../../core/TerrainSystem";
+import type { TerrainSystem } from "../TerrainSystem";
 import { AnimalBatchProcessor } from "./AnimalBatchProcessor";
 import { getFrameTime } from "../../../../../shared/FrameTime";
 import { performance } from "node:perf_hooks";

@@ -13,7 +13,7 @@ import {
 } from "../../../../shared/constants/ResourceEnums";
 import { BiomeType } from "../../../../shared/constants/BiomeEnums";
 import { TileType } from "../../../../shared/constants/TileTypeEnums";
-import { TerrainSystem } from "../core/TerrainSystem";
+import { TerrainSystem } from "./TerrainSystem";
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../../config/Types";

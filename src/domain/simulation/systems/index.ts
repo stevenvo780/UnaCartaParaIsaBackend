@@ -5,14 +5,14 @@
  * Central re-export for all simulation systems.
  * Systems are logically grouped by domain for easy discovery.
  *
- * TOTAL SYSTEMS: 27 main systems organized in 9 logical domains
+ * TOTAL SYSTEMS: 27 main systems organized in 8 logical domains
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │ DOMAIN           │ SYSTEMS                                             │
  * ├─────────────────────────────────────────────────────────────────────────┤
  * │ AGENTS (5)       │ AI, Needs, Movement, Role, Equipment                │
- * │ WORLD (5)        │ WorldResource, ItemGeneration, Production,          │
- * │                  │ AmbientAwareness, Animal                            │
+ * │ WORLD (7)        │ WorldResource, ItemGeneration, Production, Animal,  │
+ * │                  │ AmbientAwareness, Terrain, ChunkLoading             │
  * │ SOCIAL (5)       │ Social, Marriage, Household, Reputation, Genealogy  │
  * │ ECONOMY (5)      │ Economy, Inventory, EnhancedCrafting,               │
  * │                  │ RecipeDiscovery, ResourceReservation                │
@@ -20,7 +20,7 @@
  * │ STRUCTURES (2)   │ Building, Governance                                │
  * │ LIFECYCLE (1)    │ LifeCycle                                           │
  * │ OBJECTIVES (1)   │ Task                                                │
- * │ CORE (3)         │ Time, ChunkLoading, Terrain (infrastructure)        │
+ * │ CORE (1)         │ Time                                                │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * SUBDIRECTORIES (existing):
@@ -69,7 +69,7 @@ export type { MovementState } from "./agents/AgentRegistry";
 export * from "./agents/ai";
 
 // =============================================================================
-// WORLD - World resources, generation, animals
+// WORLD - World resources, generation, animals, terrain, chunks
 // =============================================================================
 export { WorldResourceSystem } from "./world/WorldResourceSystem";
 export { ItemGenerationSystem } from "./world/ItemGenerationSystem";
@@ -78,6 +78,22 @@ export { AnimalSystem } from "./world/animals/AnimalSystem";
 export { AnimalBatchProcessor } from "./world/animals/AnimalBatchProcessor";
 export { AnimalRegistry } from "./world/animals/AnimalRegistry";
 export * from "./world/animals/AnimalBehavior";
+export { TerrainSystem } from "./world/TerrainSystem";
+export { ChunkLoadingSystem } from "./world/ChunkLoadingSystem";
+export { WorldQueryService } from "./world/WorldQueryService";
+export type {
+  QueryResult,
+  ResourceQueryResult,
+  AnimalQueryResult,
+  AgentQueryResult,
+  TileQueryResult,
+  ZoneQueryResult,
+  WorldEntityResult,
+  QueryOptions,
+  ResourceQueryOptions,
+  AnimalQueryOptions,
+  TileQueryOptions,
+} from "./world/WorldQueryService";
 
 // =============================================================================
 // SOCIAL - Social interactions, family, reputation
@@ -120,8 +136,6 @@ export { LifeCycleSystem } from "./lifecycle/LifeCycleSystem";
 export { TaskSystem } from "./objectives/TaskSystem";
 
 // =============================================================================
-// CORE - Infrastructure systems (time, chunks, terrain)
+// CORE - Time system (kept here as it's infrastructure, not world generation)
 // =============================================================================
 export { TimeSystem } from "./core/TimeSystem";
-export { ChunkLoadingSystem } from "./core/ChunkLoadingSystem";
-export { TerrainSystem } from "./core/TerrainSystem";

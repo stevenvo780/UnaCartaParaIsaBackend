@@ -1,7 +1,7 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../../config/Types";
 import { GameState, SimulationTerrainTile } from "@/shared/types/game-types";
-import { TerrainTile } from "../world/generation/types";
+import { TerrainTile } from "./generation/types";
 import { simulationEvents, GameEventType } from "../../core/events";
 import { logger } from "@/infrastructure/utils/logger";
 import { SystemProperty } from "../../../../shared/constants/SystemEnums";

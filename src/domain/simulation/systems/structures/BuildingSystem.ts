@@ -21,7 +21,7 @@ import { TileType } from "../../../../shared/constants/TileTypeEnums";
 import { ResourceType } from "../../../../shared/constants/ResourceEnums";
 
 import { TaskSystem } from "../objectives/TaskSystem";
-import { TerrainSystem } from "../core/TerrainSystem";
+import { TerrainSystem } from "../world/TerrainSystem";
 
 interface BuildingSystemConfig {
   decisionIntervalMs: number;
