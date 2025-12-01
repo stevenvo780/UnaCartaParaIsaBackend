@@ -4,7 +4,7 @@
  * Resolves inconsistencies between world resource types vs inventory types
  * by providing type-safe, compile-time validated conversions.
  *
- * @module domain/types/simulation/resourceMapping
+ * @module shared/types/simulation/resourceMapping
  */
 
 import type { ResourceType } from "./economy";

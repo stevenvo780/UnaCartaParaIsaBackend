@@ -1,11 +1,11 @@
-import { GameState } from "../../../types/game-types";
+import { GameState } from "@/shared/types/game-types";
 import {
   MarriageGroup,
   MarriageProposal,
   MarriageEvent,
   MarriageConfig,
   MarriageStats,
-} from "../../../types/simulation/marriage";
+} from "@/shared/types/simulation/marriage";
 import { simulationEvents, GameEventType } from "../../core/events";
 import { logger } from "../../../../infrastructure/utils/logger";
 

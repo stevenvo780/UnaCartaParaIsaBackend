@@ -2,7 +2,7 @@ import type {
   ConversationState,
   GameResources,
   GameState,
-} from "../../types/game-types";
+} from "@/shared/types/game-types";
 import { InteractionType } from "../../../shared/constants/InteractionEnums";
 import { WeatherType } from "../../../shared/constants/AmbientEnums";
 

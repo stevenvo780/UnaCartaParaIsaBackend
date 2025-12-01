@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { GameState } from "../src/domain/types/game-types.js";
+import type { GameState } from "../src/shared/types/game-types.js";
 import { createInitialGameState } from "../src/domain/simulation/core/defaultState.js";
 import { EntityIndex } from "../src/domain/simulation/core/EntityIndex.js";
 import type {

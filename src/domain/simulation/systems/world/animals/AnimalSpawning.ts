@@ -3,7 +3,7 @@ import type {
   Animal,
   AnimalType,
   AnimalGenes,
-} from "../../../../types/simulation/animals";
+} from "@/shared/types/simulation/animals";
 import type { TerrainTile } from "../generation/types";
 import {
   getAnimalConfig,

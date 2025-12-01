@@ -16,7 +16,7 @@
 
 import { injectable } from "inversify";
 import { logger } from "@/infrastructure/utils/logger";
-import type { Animal, AnimalNeeds } from "../../../../types/simulation/animals";
+import type { Animal, AnimalNeeds } from "@/shared/types/simulation/animals";
 import {
   AnimalState,
   AnimalType,

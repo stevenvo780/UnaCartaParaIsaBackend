@@ -1,9 +1,9 @@
-import type { GameState, Zone } from "../../../types/game-types.js";
+import type { GameState, Zone } from "@/shared/types/game-types";
 import type {
   EconomyConfig,
   ResourceType,
   MarketConfig,
-} from "../../../types/simulation/economy";
+} from "@/shared/types/simulation/economy";
 import { ResourceType as ResourceTypeEnum } from "../../../../shared/constants/ResourceEnums";
 import { ZoneType } from "../../../../shared/constants/ZoneEnums";
 import { RoleType } from "../../../../shared/constants/RoleEnums";

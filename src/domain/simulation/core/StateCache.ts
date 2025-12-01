@@ -1,4 +1,4 @@
-import type { GameState } from "../../types/game-types";
+import type { GameState } from "@/shared/types/game-types";
 import { cloneGameState, cloneGameStateDelta } from "./defaultState";
 
 /**

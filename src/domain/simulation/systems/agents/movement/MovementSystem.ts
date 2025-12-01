@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import { performance } from "node:perf_hooks";
 import { performanceMonitor } from "../../../core/PerformanceMonitor";
 import EasyStar from "easystarjs";
-import { GameState, MapElement } from "../../../../types/game-types";
+import { GameState, MapElement } from "@/shared/types/game-types";
 import { logger } from "../../../../../infrastructure/utils/logger";
 import { GameEventType, simulationEvents } from "../../../core/events";
 import { injectable, inject, optional, postConstruct } from "inversify";

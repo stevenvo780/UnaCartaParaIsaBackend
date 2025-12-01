@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { EnhancedCraftingSystem } from "../../src/domain/simulation/systems/economy/EnhancedCraftingSystem.ts";
 import { InventorySystem } from "../../src/domain/simulation/systems/economy/InventorySystem.ts";
 import { createMockGameState } from '../setup.ts';
-import type { GameState } from '../../src/domain/types/game-types.ts';
+import type { GameState } from '../../src/shared/types/game-types.ts';
 
 describe('EnhancedCraftingSystem', () => {
   let gameState: GameState;

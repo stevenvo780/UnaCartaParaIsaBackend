@@ -1,5 +1,5 @@
 import { WeaponId } from "../../shared/constants/CraftingEnums";
-import type { Weapon } from "../types/simulation/combat";
+import type { Weapon } from "@/shared/types/simulation/combat";
 
 export const WEAPON_CATALOG: Record<WeaponId, Weapon> = {
   [WeaponId.UNARMED]: {

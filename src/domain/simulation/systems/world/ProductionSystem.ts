@@ -1,5 +1,5 @@
-import type { GameState, Zone } from "../../../types/game-types";
-import type { ResourceType } from "../../../types/simulation/economy";
+import type { GameState, Zone } from "@/shared/types/game-types";
+import type { ResourceType } from "@/shared/types/simulation/economy";
 import { InventorySystem } from "../economy/InventorySystem";
 import { LifeCycleSystem } from "../lifecycle/LifeCycleSystem";
 import { WorldResourceSystem } from "./WorldResourceSystem";

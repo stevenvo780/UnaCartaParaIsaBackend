@@ -1,14 +1,14 @@
 import { InventorySystem } from "./InventorySystem";
-import type { GameState } from "../../../types/game-types";
+import type { GameState } from "@/shared/types/game-types";
 import { WeaponId } from "../../../../shared/constants/CraftingEnums";
 import type {
   CraftingRecipe,
   CraftingJob,
-} from "../../../types/simulation/crafting";
+} from "@/shared/types/simulation/crafting";
 import { RecipesCatalog } from "../../../data/RecipesCatalog";
 import { simulationEvents, GameEventType } from "../../core/events";
-import type { ResourceType } from "../../../types/simulation/economy";
-import { itemToInventoryResource } from "../../../types/simulation/resourceMapping";
+import type { ResourceType } from "@/shared/types/simulation/economy";
+import { itemToInventoryResource } from "@/shared/types/simulation/resourceMapping";
 import { logger } from "../../../../infrastructure/utils/logger";
 import { equipmentSystem } from "../agents/EquipmentSystem";
 import { EquipmentSlot } from "../../../../shared/constants/EquipmentEnums";

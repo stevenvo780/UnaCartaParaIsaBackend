@@ -13,7 +13,7 @@ import type {
   TerrainTile,
   RoadPolyline,
   ObjectLayer,
-} from "../../types/game-types";
+} from "@/shared/types/game-types";
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
 import { EntityStatus } from "../../../shared/constants/EntityStatusEnums";
 import { EntityType } from "../../../shared/constants/EntityEnums";

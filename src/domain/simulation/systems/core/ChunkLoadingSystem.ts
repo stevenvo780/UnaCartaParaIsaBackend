@@ -1,6 +1,6 @@
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
-import type { GameState } from "../../../types/game-types";
+import type { GameState } from "@/shared/types/game-types";
 import type { AgentRegistry } from "../agents/AgentRegistry";
 import type { WorldGenerationService } from "../world/generation/worldGenerationService";
 import type { AnimalSystem } from "../world/animals/AnimalSystem";

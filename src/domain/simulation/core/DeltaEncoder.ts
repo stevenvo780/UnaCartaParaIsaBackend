@@ -1,9 +1,9 @@
-import type { GameState } from "../../types/game-types";
+import type { GameState } from "@/shared/types/game-types";
 import type { SimulationSnapshot } from "../../../shared/types/commands/SimulationCommand";
-import type { AgentProfile } from "../../types/simulation/agents";
+import type { AgentProfile } from "@/shared/types/simulation/agents";
 import type { SimulationEntity } from "../core/schema";
-import type { Animal } from "../../types/simulation/animals";
-import type { EntityNeedsData } from "../../types/simulation/needs";
+import type { Animal } from "@/shared/types/simulation/animals";
+import type { EntityNeedsData } from "@/shared/types/simulation/needs";
 import {
   SnapshotType,
   SystemProperty,

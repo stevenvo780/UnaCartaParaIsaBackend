@@ -1,4 +1,4 @@
-import type { Animal } from "../../../../types/simulation/animals";
+import type { Animal } from "@/shared/types/simulation/animals";
 import { getAnimalConfig } from "../config/AnimalConfigs";
 import { AnimalState } from "../../../../../shared/constants/AnimalEnums";
 

@@ -1,5 +1,5 @@
-import type { GameState } from "../../../types/game-types";
-import type { ResourceCost } from "../../../types/simulation/economy";
+import type { GameState } from "@/shared/types/game-types";
+import type { ResourceCost } from "@/shared/types/simulation/economy";
 import { InventorySystem } from "./InventorySystem";
 import { GameEventType, simulationEvents } from "../../core/events";
 import { logger } from "../../../../infrastructure/utils/logger";

@@ -4,7 +4,7 @@
  * Defines the complete game state structure, including agents, entities,
  * zones, resources, and all simulation subsystems.
  *
- * @module domain/types/game-types
+ * @module shared/types/game-types
  */
 
 import type { WorldResourceInstance } from "./simulation/worldResources";
@@ -17,7 +17,7 @@ import type {
   ResourceAttractionSnapshot,
 } from "./simulation/ambient";
 import type { AgentProfile } from "./simulation/agents";
-import type { SimulationEntity } from "../simulation/core/schema";
+import type { SimulationEntity } from "@/domain/simulation/core/schema";
 import type { SocialGroup } from "./simulation/social";
 import type { MarketOrder, Transaction } from "./simulation/economy";
 import type { AgentRole } from "./simulation/roles";

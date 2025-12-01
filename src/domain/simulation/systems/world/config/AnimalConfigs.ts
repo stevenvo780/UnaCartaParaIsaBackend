@@ -1,4 +1,4 @@
-import type { AnimalConfig } from "../../../../types/simulation/animals";
+import type { AnimalConfig } from "@/shared/types/simulation/animals";
 import { AnimalType } from "../../../../../shared/constants/AnimalEnums";
 
 export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {

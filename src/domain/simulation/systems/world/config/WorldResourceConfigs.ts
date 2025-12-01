@@ -1,4 +1,4 @@
-import type { WorldResourceConfig } from "../../../../types/simulation/worldResources";
+import type { WorldResourceConfig } from "@/shared/types/simulation/worldResources";
 import {
   ResourceType,
   WorldResourceType,

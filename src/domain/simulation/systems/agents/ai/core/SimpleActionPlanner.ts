@@ -5,8 +5,8 @@
  * Replaces 20+ planXXX methods with 4 generic handlers.
  */
 
-import type { GameState } from "../../../../../types/game-types";
-import type { AIGoal, AgentAction } from "../../../../../types/simulation/ai";
+import type { GameState } from "@/shared/types/game-types";
+import type { AIGoal, AgentAction } from "@/shared/types/simulation/ai";
 import { ActionType, GoalType } from "../../../../../../shared/constants/AIEnums";
 import { ZoneType } from "../../../../../../shared/constants/ZoneEnums";
 import type { AgentRegistry } from "../../../agents/AgentRegistry";

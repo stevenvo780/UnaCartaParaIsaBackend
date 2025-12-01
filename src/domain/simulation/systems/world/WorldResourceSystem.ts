@@ -5,8 +5,8 @@ import { getResourceConfig } from "./config/WorldResourceConfigs";
 import type {
   WorldResourceInstance,
   WorldResourceConfig,
-} from "../../../types/simulation/worldResources";
-import type { GameState, Zone } from "../../../types/game-types";
+} from "@/shared/types/simulation/worldResources";
+import type { GameState, Zone } from "@/shared/types/game-types";
 import {
   WorldResourceType,
   ResourceState,

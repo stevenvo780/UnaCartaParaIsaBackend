@@ -1,11 +1,11 @@
 import { logger } from "@/infrastructure/utils/logger";
-import type { GameState } from "../../../../types/game-types";
+import type { GameState } from "@/shared/types/game-types";
 import type {
   Animal,
   AnimalSystemConfig,
-} from "../../../../types/simulation/animals";
+} from "@/shared/types/simulation/animals";
 import type { TerrainTile } from "../generation/types";
-import type { WorldResourceInstance } from "../../../../types/simulation/worldResources";
+import type { WorldResourceInstance } from "@/shared/types/simulation/worldResources";
 import { getAnimalConfig } from "../config/AnimalConfigs";
 import { AnimalNeeds } from "./AnimalNeeds";
 import { AnimalBehavior } from "./AnimalBehavior";

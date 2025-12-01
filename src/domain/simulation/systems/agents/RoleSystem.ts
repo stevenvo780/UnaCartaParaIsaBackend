@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import { logger } from "@/infrastructure/utils/logger";
-import type { GameState } from "../../../types/game-types";
-import type { AgentProfile } from "../../../types/simulation/agents";
+import type { GameState } from "@/shared/types/game-types";
+import type { AgentProfile } from "@/shared/types/simulation/agents";
 import type {
   RoleType,
   RoleConfig,
@@ -9,7 +9,7 @@ import type {
   ShiftSchedule,
   RoleAssignment,
   RoleSystemConfig,
-} from "../../../types/simulation/roles";
+} from "@/shared/types/simulation/roles";
 import {
   WorkShift,
   RoleType as RoleTypeEnum,

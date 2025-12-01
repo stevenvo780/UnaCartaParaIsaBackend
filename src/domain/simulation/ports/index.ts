@@ -11,9 +11,9 @@ import type {
   AgentProfile,
   AgentTraits,
   LifeStage,
-} from "../../types/simulation/agents";
-import type { EntityNeedsData } from "../../types/simulation/needs";
-import type { ResourceType, Inventory } from "../../types/simulation/economy";
+} from "@/shared/types/simulation/agents";
+import type { EntityNeedsData } from "@/shared/types/simulation/needs";
+import type { ResourceType, Inventory } from "@/shared/types/simulation/economy";
 
 /**
  * Port for LifeCycleSystem operations

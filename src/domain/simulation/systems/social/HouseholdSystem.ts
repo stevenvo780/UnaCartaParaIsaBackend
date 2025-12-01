@@ -1,11 +1,11 @@
 import { logger } from "@/infrastructure/utils/logger";
-import type { GameState, Zone } from "../../../types/game-types";
+import type { GameState, Zone } from "@/shared/types/game-types";
 import type {
   Household,
   HouseholdMember,
   HouseholdSystemConfig,
-} from "../../../types/simulation/household";
-import type { ResourceType } from "../../../types/simulation/economy";
+} from "@/shared/types/simulation/household";
+import type { ResourceType } from "@/shared/types/simulation/economy";
 import { simulationEvents, GameEventType } from "../../core/events";
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";

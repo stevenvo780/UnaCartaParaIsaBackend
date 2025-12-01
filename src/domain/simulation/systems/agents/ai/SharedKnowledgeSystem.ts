@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import type { GameState } from "../../../../types/game-types";
+import type { GameState } from "@/shared/types/game-types";
 import { simulationEvents, GameEventType } from "../../../core/events";
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../../config/Types";

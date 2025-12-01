@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
-import { GameState } from "../../../../types/game-types";
-import { EntityNeedsData, NeedsConfig } from "../../../../types/simulation/needs";
+import { GameState } from "@/shared/types/game-types";
+import { EntityNeedsData, NeedsConfig } from "@/shared/types/simulation/needs";
 import { simulationEvents, GameEventType } from "../../../core/events";
 import { logger } from "@/infrastructure/utils/logger";
 import type { ILifeCyclePort } from "../../../ports";
@@ -26,7 +26,7 @@ import { LifeStage } from "../../../../../shared/constants/AgentEnums";
 import { ActionType } from "../../../../../shared/constants/AIEnums";
 import { EntityType } from "../../../../../shared/constants/EntityEnums";
 import { FoodCategory } from "../../../../../shared/constants/FoodEnums";
-import type { FoodItem } from "../../../../types/simulation/food";
+import type { FoodItem } from "@/shared/types/simulation/food";
 
 /**
  * System for managing entity needs (hunger, thirst, energy, hygiene, social, fun, mental health).

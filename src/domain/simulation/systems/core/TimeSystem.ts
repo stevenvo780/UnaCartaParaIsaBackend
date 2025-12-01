@@ -1,5 +1,5 @@
 import { EventEmitter } from "node:events";
-import type { GameState } from "../../../types/game-types.js";
+import type { GameState } from "@/shared/types/game-types";
 import { simulationEvents, GameEventType } from "../../core/events";
 import { injectable, inject, unmanaged } from "inversify";
 import { TYPES } from "../../../../config/Types";

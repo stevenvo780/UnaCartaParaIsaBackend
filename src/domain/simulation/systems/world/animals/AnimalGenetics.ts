@@ -1,4 +1,4 @@
-import type { AnimalGenes } from "../../../../types/simulation/animals";
+import type { AnimalGenes } from "@/shared/types/simulation/animals";
 
 const MUTATION_RATE = 0.1;
 

@@ -1,5 +1,5 @@
 import { logger } from "@/infrastructure/utils/logger";
-import type { Animal } from "../../../../types/simulation/animals";
+import type { Animal } from "@/shared/types/simulation/animals";
 import { getAnimalConfig } from "../config/AnimalConfigs";
 import { AnimalNeeds } from "./AnimalNeeds";
 import { AnimalGenetics } from "./AnimalGenetics";

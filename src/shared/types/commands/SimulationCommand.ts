@@ -1,8 +1,8 @@
 import type {
   GameResources,
   GameState,
-} from "../../../domain/types/game-types";
-import type { AgentTraits } from "../../../domain/types/simulation/agents";
+} from "../../../shared/types/game-types";
+import type { AgentTraits } from "../../../shared/types/simulation/agents";
 import { GameEventType } from "../../constants/EventEnums";
 import { ResourceType, WorldResourceType } from "../../constants/ResourceEnums";
 import { BiomeType } from "../../constants/BiomeEnums";
@@ -215,8 +215,8 @@ import {
   ConflictCommandType,
 } from "../../constants/CommandEnums";
 import { ConflictResolutionChoice } from "../../constants/ConflictEnums";
-import type { TaskType } from "../../../domain/types/simulation/tasks";
-import type { TaskMetadata } from "../../../domain/types/simulation/tasks";
+import type { TaskType } from "../../../shared/types/simulation/tasks";
+import type { TaskMetadata } from "../../../shared/types/simulation/tasks";
 
 export type SimulationCommand =
   | { type: SimulationCommandType.SET_TIME_SCALE; multiplier: number }

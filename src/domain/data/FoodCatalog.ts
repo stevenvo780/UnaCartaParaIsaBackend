@@ -1,4 +1,4 @@
-import type { FoodItem, FoodCategory } from "../types/simulation/food";
+import type { FoodItem, FoodCategory } from "@/shared/types/simulation/food";
 import {
   FoodCategory as FoodCategoryEnum,
   FoodId,

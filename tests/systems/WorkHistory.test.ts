@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { Container } from "inversify";
 import { TYPES } from "../../src/config/Types";
 import { TaskSystem } from "../../src/domain/simulation/systems/objectives/TaskSystem";
-import { GameState } from "../../src/domain/types/game-types";
+import { GameState } from "../../src/shared/types/game-types";
 import { createMockGameState } from "../setup";
 
 describe("Work History Tracking", () => {

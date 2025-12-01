@@ -1,9 +1,9 @@
-import { GameState } from "../../../types/game-types";
+import { GameState } from "@/shared/types/game-types";
 import {
   AgentKnownRecipe,
   RecipeDiscoveryEvent,
-} from "../../../types/simulation/recipes";
-import { CraftingRecipe } from "../../../types/simulation/crafting";
+} from "@/shared/types/simulation/recipes";
+import { CraftingRecipe } from "@/shared/types/simulation/crafting";
 import { RecipesCatalog } from "../../../data/RecipesCatalog";
 import { BiomeRecipesCatalog } from "../../../data/BiomeRecipesCatalog";
 

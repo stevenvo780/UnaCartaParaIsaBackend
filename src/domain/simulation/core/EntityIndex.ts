@@ -1,6 +1,6 @@
-import type { AgentProfile } from "../../types/simulation/agents";
+import type { AgentProfile } from "@/shared/types/simulation/agents";
 import type { SimulationEntity, EntityTraits } from "./schema";
-import type { GameState } from "../../types/game-types";
+import type { GameState } from "@/shared/types/game-types";
 import { injectable } from "inversify";
 import { EntityType } from "../../../shared/constants/EntityEnums";
 

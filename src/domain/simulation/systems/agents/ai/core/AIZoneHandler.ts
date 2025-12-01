@@ -1,6 +1,6 @@
-import type { GameState } from "../../../../../types/game-types";
-import type { AIGoal, AIState } from "../../../../../types/simulation/ai";
-import type { ResourceType } from "../../../../../types/simulation/economy";
+import type { GameState } from "@/shared/types/game-types";
+import type { AIGoal, AIState } from "@/shared/types/simulation/ai";
+import type { ResourceType } from "@/shared/types/simulation/economy";
 import { simulationEvents, GameEventType } from "../../../../core/events";
 import { ZoneType } from "../../../../../../shared/constants/ZoneEnums";
 import { GoalType, ActionType } from "../../../../../../shared/constants/AIEnums";

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import type { Animal } from "../../src/domain/types/simulation/animals";
+import type { Animal } from "../../src/shared/types/simulation/animals";
 import { AnimalBatchProcessor } from "../../src/domain/simulation/systems/world/animals/AnimalBatchProcessor";
 
 const createAnimal = (id: string, overrides: Partial<Animal> = {}): Animal => ({

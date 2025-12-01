@@ -1,4 +1,4 @@
-import type { GameState, Zone } from "../../../types/game-types";
+import type { GameState, Zone } from "@/shared/types/game-types";
 import { simulationEvents, GameEventType } from "../../core/events";
 import { ResourceReservationSystem } from "../economy/ResourceReservationSystem";
 import { WorldResourceSystem } from "../world/WorldResourceSystem";
@@ -8,9 +8,9 @@ import {
   BuildingState,
   calculateRepairCost,
   getBuildingCondition,
-} from "../../../types/simulation/buildings";
-import type { TaskType } from "../../../types/simulation/tasks";
-import type { Inventory } from "../../../types/simulation/economy";
+} from "@/shared/types/simulation/buildings";
+import type { TaskType } from "@/shared/types/simulation/tasks";
+import type { Inventory } from "@/shared/types/simulation/economy";
 import type { InventorySystem } from "../economy/InventorySystem";
 import { logger } from "../../../../infrastructure/utils/logger";
 import { ZoneType } from "../../../../shared/constants/ZoneEnums";

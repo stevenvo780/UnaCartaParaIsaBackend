@@ -1,4 +1,4 @@
-import { GameState } from "../../../types/game-types";
+import { GameState } from "@/shared/types/game-types";
 import {
   TrustEdge,
   ReputationEntry,
@@ -6,7 +6,7 @@ import {
   TrustRelationship,
   ReputationChange,
   SerializedReputationData,
-} from "../../../types/simulation/reputation";
+} from "@/shared/types/simulation/reputation";
 import { simulationEvents, GameEventType } from "../../core/events";
 import { logger } from "../../../../infrastructure/utils/logger";
 

@@ -2,18 +2,18 @@ import type {
   AIState,
   AIGoal,
   GoalType,
-} from "../../../../../types/simulation/ai";
-import type { GameState } from "../../../../../types/game-types";
+} from "@/shared/types/simulation/ai";
+import type { GameState } from "@/shared/types/game-types";
 import type {
   Inventory,
   ResourceType,
-} from "../../../../../types/simulation/economy";
-import type { RoleType } from "../../../../../types/simulation/roles";
-import type { SettlementDemand } from "../../../../../types/simulation/governance";
+} from "@/shared/types/simulation/economy";
+import type { RoleType } from "@/shared/types/simulation/roles";
+import type { SettlementDemand } from "@/shared/types/simulation/governance";
 import type {
   Task,
   TaskCreationParams,
-} from "../../../../../types/simulation/tasks";
+} from "@/shared/types/simulation/tasks";
 import {
   GoalType as GoalTypeEnum,
   NeedType,

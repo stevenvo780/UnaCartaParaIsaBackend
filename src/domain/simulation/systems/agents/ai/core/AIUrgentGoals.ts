@@ -1,11 +1,11 @@
-import type { GameState } from "../../../../../types/game-types";
-import type { AIGoal } from "../../../../../types/simulation/ai";
+import type { GameState } from "@/shared/types/game-types";
+import type { AIGoal } from "@/shared/types/simulation/ai";
 import { GoalType } from "../../../../../../shared/constants/AIEnums";
 import { NeedType } from "../../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../../shared/constants/ResourceEnums";
 import { WorldResourceType } from "../../../../../../shared/constants/ResourceEnums";
 import { ZoneType } from "../../../../../../shared/constants/ZoneEnums";
-import { toInventoryResource } from "../../../../../types/simulation/resourceMapping";
+import { toInventoryResource } from "@/shared/types/simulation/resourceMapping";
 import type { AgentRegistry } from "../../../agents/AgentRegistry";
 import { logger } from "../../../../../../infrastructure/utils/logger";
 

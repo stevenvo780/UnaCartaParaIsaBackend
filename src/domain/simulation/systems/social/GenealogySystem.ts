@@ -1,11 +1,11 @@
-import type { GameState } from "../../../types/game-types";
+import type { GameState } from "@/shared/types/game-types";
 import type {
   Ancestor,
   FamilyTree,
   GenealogyEvent,
   SerializedFamilyTree,
-} from "../../../types/simulation/genealogy";
-import type { AgentProfile } from "../../../types/simulation/agents";
+} from "@/shared/types/simulation/genealogy";
+import type { AgentProfile } from "@/shared/types/simulation/agents";
 
 interface GenealogyConfig {
   mutationRate: number;

@@ -1,6 +1,6 @@
 import { logger } from "../../../../infrastructure/utils/logger";
 import { EventEmitter } from "events";
-import { GameState } from "../../../types/game-types";
+import { GameState } from "@/shared/types/game-types";
 import {
   AgentProfile,
   AgentTraits,
@@ -8,7 +8,7 @@ import {
   LifeStage,
   Sex,
   SocialStatus,
-} from "../../../types/simulation/agents";
+} from "@/shared/types/simulation/agents";
 import { simulationEvents, GameEventType } from "../../core/events";
 import type { SimulationEntity, EntityTraits } from "../../core/schema";
 import { EntityType } from "../../../../shared/constants/EntityEnums";

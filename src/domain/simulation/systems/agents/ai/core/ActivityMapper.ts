@@ -1,4 +1,4 @@
-import type { AIGoal } from "../../../../../types/simulation/ai";
+import type { AIGoal } from "@/shared/types/simulation/ai";
 import { ActivityType } from "../../../../../../shared/constants/MovementEnums";
 import { GoalType, NeedType } from "../../../../../../shared/constants/AIEnums";
 

@@ -3,7 +3,7 @@ import { Container } from "inversify";
 import { TYPES } from "../../src/config/Types";
 import { EconomySystem } from "../../src/domain/simulation/systems/economy/EconomySystem";
 import { CombatSystem } from "../../src/domain/simulation/systems/conflict/CombatSystem";
-import { GameState } from "../../src/domain/types/game-types";
+import { GameState } from "../../src/shared/types/game-types";
 import { createMockGameState } from "../setup";
 import { InventorySystem } from "../../src/domain/simulation/systems/economy/InventorySystem";
 import { SocialSystem } from "../../src/domain/simulation/systems/social/SocialSystem";

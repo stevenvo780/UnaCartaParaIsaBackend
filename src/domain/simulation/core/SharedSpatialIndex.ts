@@ -2,7 +2,7 @@ import { SpatialGrid } from "../../../shared/utils/SpatialGrid";
 import { performance } from "node:perf_hooks";
 import { performanceMonitor } from "./PerformanceMonitor";
 import type { SimulationEntity } from "./schema";
-import type { Animal } from "../../types/simulation/animals";
+import type { Animal } from "@/shared/types/simulation/animals";
 import { injectable } from "inversify";
 
 import { EntityType } from "../../../shared/constants/EntityEnums";

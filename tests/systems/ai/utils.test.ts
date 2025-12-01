@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import type { GameState } from "../../../src/domain/types/game-types";
-import type { AIState, AIGoal } from "../../../src/domain/types/simulation/ai";
+import type { GameState } from "../../../src/shared/types/game-types";
+import type { AIState, AIGoal } from "../../../src/shared/types/simulation/ai";
 import {
   calculateNeedPriority,
   selectBestZone,

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import type { GameState } from "../../src/domain/types/game-types";
+import type { GameState } from "../../src/shared/types/game-types";
 import { WorldResourceSystem } from "../../src/domain/simulation/systems/world/WorldResourceSystem";
 import {
   simulationEvents,

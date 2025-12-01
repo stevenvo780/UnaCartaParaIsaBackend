@@ -38,7 +38,7 @@ const simulationRunner = container.get<SimulationRunner>(
 logger.info("🚀 Backend: Starting simulation initialization process...");
 
 import { storageService } from "../infrastructure/services/storage/storageService";
-import { GameState } from "../domain/types/game-types";
+import { GameState } from "../shared/types/game-types";
 
 let server: ReturnType<typeof app.listen>;
 const simulationWss = new WebSocketServer({ noServer: true });

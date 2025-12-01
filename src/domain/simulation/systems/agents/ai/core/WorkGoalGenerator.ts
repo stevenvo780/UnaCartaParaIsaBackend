@@ -5,7 +5,7 @@
  * Reduces repetitive code in AISystem.ts by ~200 lines.
  */
 
-import type { AIGoal } from "../../../../../types/simulation/ai";
+import type { AIGoal } from "@/shared/types/simulation/ai";
 import { GoalType } from "../../../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../../../shared/constants/ResourceEnums";
 import { TaskType } from "../../../../../../shared/constants/TaskEnums";

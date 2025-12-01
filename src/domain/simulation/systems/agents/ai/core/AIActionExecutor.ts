@@ -1,8 +1,8 @@
 import { logger } from "../../../../../../infrastructure/utils/logger";
 import { getAnimalConfig } from "../../../world/config/AnimalConfigs";
-import type { GameState } from "../../../../../types/game-types";
-import type { AgentAction } from "../../../../../types/simulation/ai";
-import { itemToInventoryResource } from "../../../../../types/simulation/resourceMapping";
+import type { GameState } from "@/shared/types/game-types";
+import type { AgentAction } from "@/shared/types/simulation/ai";
+import { itemToInventoryResource } from "@/shared/types/simulation/resourceMapping";
 import type { NeedsSystem } from "../../needs/NeedsSystem";
 import type { InventorySystem } from "../../../economy/InventorySystem";
 import type { SocialSystem } from "../../../social/SocialSystem";

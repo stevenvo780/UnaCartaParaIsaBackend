@@ -8,12 +8,12 @@
  * to all systems needed for AI operations.
  */
 
-import type { GameState } from "../../../../types/game-types";
-import type { EntityNeedsData } from "../../../../types/simulation/needs";
-import type { AgentRole } from "../../../../types/simulation/roles";
-import type { Inventory, Stockpile } from "../../../../types/simulation/economy";
-import type { Task } from "../../../../types/simulation/tasks";
-import type { SettlementDemand } from "../../../../types/simulation/governance";
+import type { GameState } from "@/shared/types/game-types";
+import type { EntityNeedsData } from "@/shared/types/simulation/needs";
+import type { AgentRole } from "@/shared/types/simulation/roles";
+import type { Inventory, Stockpile } from "@/shared/types/simulation/economy";
+import type { Task } from "@/shared/types/simulation/tasks";
+import type { SettlementDemand } from "@/shared/types/simulation/governance";
 
 import type { ResourceType as ResourceTypeImport } from "../../../../../shared/constants/ResourceEnums";
 

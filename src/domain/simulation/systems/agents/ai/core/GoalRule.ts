@@ -5,11 +5,11 @@
  * Cada regla define: cuándo aplicar, cómo calcular prioridad, qué goal generar.
  */
 
-import type { AIState, AIGoal } from "../../../../../types/simulation/ai";
-import type { EntityNeedsData } from "../../../../../types/simulation/needs";
+import type { AIState, AIGoal } from "@/shared/types/simulation/ai";
+import type { EntityNeedsData } from "@/shared/types/simulation/needs";
 import { GoalType } from "../../../../../../shared/constants/AIEnums";
-import type { GameState } from "../../../../../types/game-types";
-import type { Inventory } from "../../../../../types/simulation/economy";
+import type { GameState } from "@/shared/types/game-types";
+import type { Inventory } from "@/shared/types/simulation/economy";
 
 /**
  * Contexto unificado para todas las reglas.

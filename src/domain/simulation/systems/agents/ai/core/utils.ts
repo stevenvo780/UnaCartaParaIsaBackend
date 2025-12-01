@@ -1,5 +1,5 @@
-import type { GameState } from "../../../../../types/game-types";
-import type { AIGoal, AIState } from "../../../../../types/simulation/ai";
+import type { GameState } from "@/shared/types/game-types";
+import type { AIGoal, AIState } from "@/shared/types/simulation/ai";
 import type { PriorityManager } from "./PriorityManager";
 import {
   GoalType,

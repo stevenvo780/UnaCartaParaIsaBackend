@@ -2,8 +2,8 @@ import {
   Inventory,
   Stockpile,
   ResourceType,
-} from "../../../types/simulation/economy";
-import type { GameState, StockpileSnapshot } from "../../../types/game-types";
+} from "@/shared/types/simulation/economy";
+import type { GameState, StockpileSnapshot } from "@/shared/types/game-types";
 import { logger } from "../../../../infrastructure/utils/logger";
 import { SIMULATION_CONSTANTS } from "../../../../shared/constants/SimulationConstants";
 

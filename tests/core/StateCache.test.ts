@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { StateCache } from "../../src/domain/simulation/core/StateCache";
 import { createMockGameState } from "../setup";
-import type { GameState } from "../../src/domain/types/game-types";
+import type { GameState } from "../../src/shared/types/game-types";
 
 describe("StateCache", () => {
   let stateCache: StateCache;

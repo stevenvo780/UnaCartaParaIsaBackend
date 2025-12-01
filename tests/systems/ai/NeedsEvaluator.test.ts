@@ -4,8 +4,8 @@ import {
   calculateNeedPriority,
   type NeedsEvaluatorDependencies,
 } from "../../../src/domain/simulation/systems/agents/ai/evaluators/NeedsEvaluator.ts";
-import type { AIState } from "../../../src/domain/types/simulation/ai.ts";
-import type { EntityNeedsData } from "../../../src/domain/types/simulation/needs.ts";
+import type { AIState } from "../../../src/shared/types/simulation/ai.ts";
+import type { EntityNeedsData } from "../../../src/shared/types/simulation/needs.ts";
 import { GoalType } from "../../../src/shared/constants/AIEnums";
 import { NeedType } from "../../../src/shared/constants/AIEnums";
 import { ResourceType } from "../../../src/shared/constants/ResourceEnums";

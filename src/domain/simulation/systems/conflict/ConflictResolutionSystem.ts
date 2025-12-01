@@ -1,17 +1,17 @@
-import { GameState } from "../../../types/game-types";
-import type { ConflictState } from "../../../types/game-types";
+import { GameState } from "@/shared/types/game-types";
+import type { ConflictState } from "@/shared/types/game-types";
 import {
   ActiveConflict,
   ConflictRecord,
   MediationAttempt,
   ConflictStats,
-} from "../../../types/simulation/conflict";
+} from "@/shared/types/simulation/conflict";
 import {
   NormViolation,
   SanctionRecord,
   GuardDispatch,
   NormComplianceStats,
-} from "../../../types/simulation/norms";
+} from "@/shared/types/simulation/norms";
 import { simulationEvents, GameEventType } from "../../core/events";
 import {
   ConflictResolutionChoice,

@@ -4,10 +4,10 @@
  * Reduce ~4,000 líneas de evaluadores a ~50 líneas de integración.
  */
 
-import type { AIState, AIGoal } from "../../../../../types/simulation/ai";
-import type { EntityNeedsData } from "../../../../../types/simulation/needs";
-import type { GameState } from "../../../../../types/game-types";
-import type { Inventory } from "../../../../../types/simulation/economy";
+import type { AIState, AIGoal } from "@/shared/types/simulation/ai";
+import type { EntityNeedsData } from "@/shared/types/simulation/needs";
+import type { GameState } from "@/shared/types/game-types";
+import type { Inventory } from "@/shared/types/simulation/economy";
 import type { GoalContext, GoalRule } from "./GoalRule";
 import { evaluateRules } from "./GoalRule";
 import { coreRules, fullRules } from "./GoalRules";

@@ -18,7 +18,7 @@ import { TYPES } from "./Types";
 import { VoronoiGenerator } from "../domain/simulation/systems/world/generation/VoronoiGenerator";
 import { WorldGenerationService } from "../domain/simulation/systems/world/generation/worldGenerationService";
 import { SimulationRunner } from "../domain/simulation/core/SimulationRunner";
-import { GameState } from "../domain/types/game-types";
+import { GameState } from "../shared/types/game-types";
 import { createInitialGameState } from "../domain/simulation/core/defaultState";
 
 // Import all systems from the centralized index

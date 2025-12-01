@@ -1,4 +1,4 @@
-import { GameState } from "../../../types/game-types";
+import { GameState } from "@/shared/types/game-types";
 import { NeedsSystem } from "./needs/NeedsSystem";
 import type {
   AmbientSnapshot,
@@ -9,7 +9,7 @@ import type {
   ResourceAttractionSnapshot,
   ResourceEmergencyRequest,
   ResourceBiasSnapshot,
-} from "../../../types/simulation/ambient";
+} from "@/shared/types/simulation/ambient";
 import {
   CrisisTrend,
   AmbientMood,

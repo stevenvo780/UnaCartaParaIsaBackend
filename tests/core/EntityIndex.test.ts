@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { EntityIndex } from "../../src/domain/simulation/core/EntityIndex";
 import { createMockGameState } from "../setup";
-import type { GameState } from "../../src/domain/types/game-types";
-import type { AgentProfile } from "../../src/domain/types/simulation/agents";
+import type { GameState } from "../../src/shared/types/game-types";
+import type { AgentProfile } from "../../src/shared/types/simulation/agents";
 import type { SimulationEntity } from "../../src/domain/simulation/core/schema";
 
 describe("EntityIndex", () => {

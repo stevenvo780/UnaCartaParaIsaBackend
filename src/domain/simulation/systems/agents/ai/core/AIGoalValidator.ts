@@ -1,10 +1,10 @@
-import type { GameState } from "../../../../../types/game-types";
-import type { AIGoal, AIState } from "../../../../../types/simulation/ai";
+import type { GameState } from "@/shared/types/game-types";
+import type { AIGoal, AIState } from "@/shared/types/simulation/ai";
 import type { WorldResourceSystem } from "../../../world/WorldResourceSystem";
 import type { NeedsSystem } from "../../needs/NeedsSystem";
 import type { AnimalSystem } from "../../../world/animals/AnimalSystem";
-import { isWorldResourceType } from "../../../../../types/simulation/resourceMapping";
-import { WorldResourceType } from "../../../../../types/simulation/worldResources";
+import { isWorldResourceType } from "@/shared/types/simulation/resourceMapping";
+import { WorldResourceType } from "@/shared/types/simulation/worldResources";
 import { getFrameTime } from "../../../../../../shared/FrameTime";
 import {
   NeedType,

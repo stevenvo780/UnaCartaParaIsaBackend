@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { DeltaEncoder } from "../../src/domain/simulation/core/DeltaEncoder";
 import { createMockGameState } from "../setup";
-import type { GameState } from "../../src/domain/types/game-types";
+import type { GameState } from "../../src/shared/types/game-types";
 import type { SimulationSnapshot } from "../../src/shared/types/commands/SimulationCommand";
 
 describe("DeltaEncoder", () => {

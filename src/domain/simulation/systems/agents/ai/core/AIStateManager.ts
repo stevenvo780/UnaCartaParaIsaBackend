@@ -1,9 +1,9 @@
-import type { GameState } from "../../../../../types/game-types";
+import type { GameState } from "@/shared/types/game-types";
 import type {
   AIState,
   AgentPersonality,
-} from "../../../../../types/simulation/ai";
-import type { AgentTraits } from "../../../../../types/simulation/agents";
+} from "@/shared/types/simulation/ai";
+import type { AgentTraits } from "@/shared/types/simulation/agents";
 import { getFrameTime } from "../../../../../../shared/FrameTime";
 import { logger } from "../../../../../../infrastructure/utils/logger";
 import { AgentPriority } from "../../../../../../shared/constants/AIEnums";

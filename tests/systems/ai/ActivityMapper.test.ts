@@ -5,7 +5,7 @@ import {
   activityRequiresZone,
   type ActivityType,
 } from "../../../src/domain/simulation/systems/agents/ai/core/ActivityMapper.ts";
-import type { AIGoal } from "../../../src/domain/types/simulation/ai.ts";
+import type { AIGoal } from "../../../src/shared/types/simulation/ai.ts";
 
 describe("ActivityMapper", () => {
   describe("mapGoalToActivity", () => {

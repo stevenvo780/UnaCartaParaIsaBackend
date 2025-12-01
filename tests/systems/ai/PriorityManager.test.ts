@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { PriorityManager } from "../../../src/domain/simulation/systems/agents/ai/core/PriorityManager";
 import { createMockGameState } from "../../setup";
-import type { GameState } from "../../../src/domain/types/game-types";
+import type { GameState } from "../../../src/shared/types/game-types";
 
 describe("PriorityManager", () => {
   let priorityManager: PriorityManager;

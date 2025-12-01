@@ -1,4 +1,4 @@
-import type { EntityNeedsData } from "../../../../types/simulation/needs";
+import type { EntityNeedsData } from "@/shared/types/simulation/needs";
 import { logger } from "../../../../../infrastructure/utils/logger";
 import type { GPUComputeService } from "../../../core/GPUComputeService";
 import { injectable } from "inversify";

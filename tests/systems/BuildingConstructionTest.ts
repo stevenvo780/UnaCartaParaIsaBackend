@@ -7,7 +7,7 @@ import { ResourceReservationSystem } from "../../../domain/simulation/systems/ec
 import {
   GameState,
   SimulationTerrainTile,
-} from "../../../domain/types/game-types";
+} from "../../../shared/types/game-types";
 import { BiomeType } from "../../../domain/simulation/systems/world/generation/types";
 import { createInitialGameState } from "../../../domain/simulation/core/defaultState";
 import { logger } from "../../../infrastructure/utils/logger";

@@ -1,8 +1,8 @@
-import type { AIState, AIGoal } from "../../../../../types/simulation/ai";
-import type { EntityNeedsData } from "../../../../../types/simulation/needs";
-import type { RoleType } from "../../../../../types/simulation/roles";
+import type { AIState, AIGoal } from "@/shared/types/simulation/ai";
+import type { EntityNeedsData } from "@/shared/types/simulation/needs";
+import type { RoleType } from "@/shared/types/simulation/roles";
 import { RoleType as RoleTypeEnum } from "../../../../../../shared/constants/RoleEnums";
-import type { Inventory } from "../../../../../types/simulation/economy";
+import type { Inventory } from "@/shared/types/simulation/economy";
 import {
   GoalType,
   NeedType,

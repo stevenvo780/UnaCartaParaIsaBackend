@@ -1,5 +1,5 @@
 import { EventEmitter } from "node:events";
-import type { GameState } from "../../types/game-types";
+import type { GameState } from "@/shared/types/game-types";
 import type { ILifeCyclePort } from "../ports";
 import { cloneGameState } from "./defaultState";
 import { EntityIndex } from "./EntityIndex";

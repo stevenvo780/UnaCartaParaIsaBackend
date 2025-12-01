@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import type { EntityNeedsData } from "../../src/domain/types/simulation/needs";
+import type { EntityNeedsData } from "../../src/shared/types/simulation/needs";
 import { NeedsBatchProcessor } from "../../src/domain/simulation/systems/agents/needs/NeedsBatchProcessor";
 import { createMockGPUService } from "../setup";
 

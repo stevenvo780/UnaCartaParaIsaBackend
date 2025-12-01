@@ -1,5 +1,5 @@
-import { GameState, type TaskState } from "../../../types/game-types";
-import { Task, TaskCreationParams } from "../../../types/simulation/tasks";
+import { GameState, type TaskState } from "@/shared/types/game-types";
+import { Task, TaskCreationParams } from "@/shared/types/simulation/tasks";
 import { simulationEvents, GameEventType } from "../../core/events";
 import { getFrameTime } from "../../../../shared/FrameTime";
 

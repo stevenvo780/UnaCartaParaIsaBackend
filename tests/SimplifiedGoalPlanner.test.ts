@@ -21,9 +21,9 @@ import {
 } from "@/domain/simulation/systems/agents/ai/core/GoalRules";
 import { GoalType } from "@/shared/constants/AIEnums";
 import { WorkEthic, ExplorationType } from "@/shared/constants/AgentEnums";
-import type { AIState } from "@/domain/types/simulation/ai";
-import type { EntityNeedsData } from "@/domain/types/simulation/needs";
-import type { GameState } from "@/domain/types/game-types";
+import type { AIState } from "@/shared/types/simulation/ai";
+import type { EntityNeedsData } from "@/shared/types/simulation/needs";
+import type { GameState } from "@/shared/types/game-types";
 
 describe("GoalRule System", () => {
   // Helper para crear AIState de prueba

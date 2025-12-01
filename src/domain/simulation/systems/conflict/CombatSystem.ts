@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { GameState } from "../../../types/game-types";
+import type { GameState } from "@/shared/types/game-types";
 import { simulationEvents, GameEventType } from "../../core/events";
 import { WeaponId } from "../../../../shared/constants/CraftingEnums";
 import { EntityType } from "../../../../shared/constants/EntityEnums";
@@ -11,9 +11,9 @@ import type {
   CombatLogEntry,
   CombatWeaponCraftedLog,
   CombatWeaponEquippedLog,
-} from "../../../types/simulation/combat";
+} from "@/shared/types/simulation/combat";
 import { getWeapon } from "../../../data/WeaponCatalog";
-import type { ResourceType } from "../../../types/simulation/economy";
+import type { ResourceType } from "@/shared/types/simulation/economy";
 import type { SimulationEntity } from "../../core/schema";
 import { InventorySystem } from "../economy/InventorySystem";
 import { LifeCycleSystem } from "../lifecycle/LifeCycleSystem";

@@ -1,13 +1,13 @@
-import type { GameState } from "../../../types/game-types";
+import type { GameState } from "@/shared/types/game-types";
 import type {
   GovernanceEvent,
   GovernancePolicy,
   GovernanceSnapshot,
   SettlementDemand,
   SettlementStats,
-} from "../../../types/simulation/governance";
-import type { ResourceCost } from "../../../types/simulation/economy";
-import type { RoleType } from "../../../types/simulation/roles";
+} from "@/shared/types/simulation/governance";
+import type { ResourceCost } from "@/shared/types/simulation/economy";
+import type { RoleType } from "@/shared/types/simulation/roles";
 import { RoleType as RoleTypeEnum } from "../../../../shared/constants/RoleEnums";
 import {
   DemandType,

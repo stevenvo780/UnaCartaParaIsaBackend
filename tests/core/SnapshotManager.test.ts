@@ -1,9 +1,9 @@
 import { SnapshotManager } from "../../src/domain/simulation/core/runner/SnapshotManager";
-import { AgentProfile } from "../../src/domain/types/simulation/agents";
-import { GameState } from "../../src/domain/types/game-types";
+import { AgentProfile } from "../../src/shared/types/simulation/agents";
+import { GameState } from "../../src/shared/types/game-types";
 import { createMockGameState } from "../setup";
 import { Sex, LifeStage, SocialStatus, ExplorationType, SocialPreference, WorkEthic } from "../../src/shared/constants/AgentEnums";
-import type { AIState } from "../../src/domain/types/simulation/ai";
+import type { AIState } from "../../src/shared/types/simulation/ai";
 import type { SimulationRunner } from "../../src/domain/simulation/core/SimulationRunner";
 
 describe("SnapshotManager", () => {

@@ -28,10 +28,10 @@ import {
   AnimalCommandType,
 } from "../../../../shared/constants/CommandEnums";
 import type { SimulationRunner } from "../SimulationRunner";
-import type { GameResources } from "../../../types/game-types";
-import type { NeedsConfig } from "../../../types/simulation/needs";
-import type { TaskType, TaskMetadata } from "../../../types/simulation/tasks";
-import type { BuildingLabel } from "../../../types/simulation/buildings";
+import type { GameResources } from "@/shared/types/game-types";
+import type { NeedsConfig } from "@/shared/types/simulation/needs";
+import type { TaskType, TaskMetadata } from "@/shared/types/simulation/tasks";
+import type { BuildingLabel } from "@/shared/types/simulation/buildings";
 
 export class CommandProcessor {
   constructor(private runner: SimulationRunner) {}
@@ -153,10 +153,10 @@ export class CommandProcessor {
       {}) as SpawnAgentCommandPayload;
 
     const agentPayload: Partial<
-      import("../../../types/simulation/agents").AgentProfile
+      import("@/shared/types/simulation/agents").AgentProfile
     > = {
       ...(spawnPayload as Partial<
-        import("../../../types/simulation/agents").AgentProfile
+        import("@/shared/types/simulation/agents").AgentProfile
       >),
     };
 

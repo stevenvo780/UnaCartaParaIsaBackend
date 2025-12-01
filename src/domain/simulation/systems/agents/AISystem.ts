@@ -1,13 +1,13 @@
 import { logger } from "../../../../infrastructure/utils/logger";
 import { EventEmitter } from "events";
-import { GameState } from "../../../types/game-types";
+import { GameState } from "@/shared/types/game-types";
 import {
   AIGoal,
   AIGoalData,
   AIState,
   AgentAction,
   GoalType,
-} from "../../../types/simulation/ai";
+} from "@/shared/types/simulation/ai";
 import { ResourceType } from "../../../../shared/constants/ResourceEnums";
 import {
   GoalType as GoalTypeEnum,
@@ -17,14 +17,14 @@ import {
 import { RoleType } from "../../../../shared/constants/RoleEnums";
 import { AgentPriority } from "../../../../shared/constants/AIEnums";
 import { TaskType } from "../../../../shared/constants/TaskEnums";
-import { itemToWorldResources } from "../../../types/simulation/resourceMapping";
-import type { WorldResourceType } from "../../../types/simulation/worldResources";
+import { itemToWorldResources } from "@/shared/types/simulation/resourceMapping";
+import type { WorldResourceType } from "@/shared/types/simulation/worldResources";
 import { StockpileType } from "../../../../shared/constants/ZoneEnums";
 import { ZoneType } from "../../../../shared/constants/ZoneEnums";
 import { getAnimalConfig } from "../world/config/AnimalConfigs";
 import { WeaponId as CraftingWeaponId } from "../../../../shared/constants/CraftingEnums";
 
-import type { Stockpile } from "../../../types/simulation/economy";
+import type { Stockpile } from "@/shared/types/simulation/economy";
 
 /**
  * Generates a human-readable description of an AI goal.

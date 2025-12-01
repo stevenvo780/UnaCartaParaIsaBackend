@@ -1,4 +1,4 @@
-import type { ZoneType } from "../types/simulation/zones";
+import type { ZoneType } from "@/shared/types/simulation/zones";
 import type { EntityStats } from "../simulation/core/schema";
 import { ZoneSpriteKey } from "../../shared/constants/SpriteEnums";
 

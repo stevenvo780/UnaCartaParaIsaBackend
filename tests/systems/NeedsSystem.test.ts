@@ -5,7 +5,7 @@ import {
   setupFakeTimers,
   restoreRealTimers,
 } from "../setup";
-import type { GameState } from "../../src/domain/types/game-types";
+import type { GameState } from "../../src/shared/types/game-types";
 import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events";
 
 const entityId = "agent-1";

@@ -3,7 +3,7 @@ import { container } from "../../src/config/container.ts";
 import { TYPES } from "../../src/config/Types.ts";
 import { SimulationRunner } from "../../src/domain/simulation/core/SimulationRunner.ts";
 import { createMockGameState } from '../setup.ts';
-import type { GameState } from '../../src/domain/types/game-types.ts';
+import type { GameState } from '../../src/shared/types/game-types.ts';
 import type { SimulationCommand } from '../../src/domain/simulation/types.ts';
 import type { LifeCycleSystem } from "../../src/domain/simulation/systems/lifecycle/LifeCycleSystem.ts";
 
