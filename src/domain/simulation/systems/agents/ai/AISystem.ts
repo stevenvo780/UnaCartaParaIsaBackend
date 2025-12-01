@@ -728,6 +728,17 @@ export class AISystem extends EventEmitter {
   public getAIState(agentId: string): LegacyAIState {
     const task = this.activeTask.get(agentId);
     const pendingTasks = this.taskQueue.getTasks(agentId);
+    
+    // Map task params to legacy data format
+    const taskData: Record<string, unknown> = {};
+    if (task?.params) {
+      if (task.params.needType) taskData.need = task.params.needType;
+      if (task.params.resourceType) taskData.resourceType = task.params.resourceType;
+      if (task.params.itemId) taskData.itemId = task.params.itemId;
+      if (task.params.amount) taskData.amount = task.params.amount;
+      if (task.params.reason) taskData.reason = task.params.reason;
+    }
+    
     return {
       currentGoal: task ?? null,
       pendingTasks,
@@ -753,7 +764,7 @@ export class AISystem extends EventEmitter {
         failedTargets: new Map<string, unknown>(),
         lastMemoryCleanup: 0,
       },
-      data: {},
+      data: taskData,
       targetZoneId: task?.target?.zoneId,
     };
   }
