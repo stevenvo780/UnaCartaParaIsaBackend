@@ -203,7 +203,10 @@ export class EventRegistry {
         timestamp: number;
       }) => {
         const aiState = this.runner.aiSystem.getAIState(data.entityId);
-        if (aiState?.currentGoal?.targetZoneId === data.targetZoneId) {
+        // Check if current goal targets the failed zone
+        const currentGoal = aiState?.currentGoal;
+        const goalZoneId = currentGoal?.target?.zoneId;
+        if (goalZoneId === data.targetZoneId) {
           this.runner.aiSystem.failCurrentGoal(data.entityId);
         }
       },
@@ -222,7 +225,12 @@ export class EventRegistry {
         if (task?.contributors) {
           for (const agentId of task.contributors.keys()) {
             const aiState = this.runner.aiSystem.getAIState(agentId);
-            if (aiState?.currentGoal?.data?.taskId === data.taskId) {
+            const currentGoal = aiState?.currentGoal;
+            // Check if current goal references the stalled task
+            const goalTaskId = currentGoal?.params?.taskId as
+              | string
+              | undefined;
+            if (goalTaskId === data.taskId) {
               this.runner.aiSystem.failCurrentGoal(agentId);
             }
           }

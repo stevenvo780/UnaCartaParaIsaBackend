@@ -1,10 +1,7 @@
 import { NoiseUtils } from "../../../../../shared/utils/NoiseUtils";
 import { BiomeResolver } from "./BiomeResolver";
 import { WorldGenConfig, TerrainTile, BiomeType } from "./types";
-import {
-  SIMPLE_BIOMES,
-  SimpleBiomeConfig,
-} from "./SimpleBiomeDefinitions";
+import { SIMPLE_BIOMES, SimpleBiomeConfig } from "./SimpleBiomeDefinitions";
 import seedrandom from "seedrandom";
 
 import { injectable, inject } from "inversify";

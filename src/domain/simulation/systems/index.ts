@@ -46,7 +46,7 @@
 // =============================================================================
 // AGENTS - Agent behavior, AI, needs, movement, roles
 // =============================================================================
-export { AISystem } from "./agents/AISystem";
+// AISystem ahora viene de ./agents/ai (arquitectura v3)
 export { NeedsSystem } from "./agents/needs/NeedsSystem";
 export { NeedsBatchProcessor } from "./agents/needs/NeedsBatchProcessor";
 export { MovementSystem } from "./agents/movement/MovementSystem";
@@ -65,20 +65,8 @@ export { AmbientAwarenessSystem } from "./agents/AmbientAwarenessSystem";
 export { AgentRegistry } from "./agents/AgentRegistry";
 export type { MovementState } from "./agents/AgentRegistry";
 
-// AI subsystems
-export * from "./agents/ai/core/SimplifiedGoalPlanner";
-export * from "./agents/ai/core/GoalRules";
-export * from "./agents/ai/core/ActionPlanRules";
-export * from "./agents/ai/core/SimpleActionPlanner";
-export * from "./agents/ai/core/AIActionExecutor";
-export * from "./agents/ai/core/AIGoalValidator";
-export * from "./agents/ai/core/AIStateManager";
-export * from "./agents/ai/core/AIUrgentGoals";
-export * from "./agents/ai/core/AIZoneHandler";
-export * from "./agents/ai/core/PriorityManager";
-export * from "./agents/ai/core/WorkGoalGenerator";
-export * from "./agents/ai/evaluators/NeedsEvaluator";
-export * from "./agents/ai/evaluators/CollectiveNeedsEvaluator";
+// AI subsystems - Nueva arquitectura v3 (incluye AISystem)
+export * from "./agents/ai";
 
 // =============================================================================
 // WORLD - World resources, generation, animals

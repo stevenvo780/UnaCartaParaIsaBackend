@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { AISystem } from "../../src/domain/simulation/systems/agents/AISystem.ts";
+import { AISystem } from "../../src/domain/simulation/systems/agents/ai/AISystem.ts";
 import { NeedsSystem } from "../../src/domain/simulation/systems/agents/needs/NeedsSystem.ts";
 import { RoleSystem } from "../../src/domain/simulation/systems/agents/RoleSystem.ts";
 import { WorldResourceSystem } from "../../src/domain/simulation/systems/world/WorldResourceSystem.ts";

@@ -1,129 +1,92 @@
 /**
  * AI Subsystem Module Exports
  *
- * This directory contains modular components extracted from the main AISystem
- * to improve maintainability and reduce file size.
+ * ARQUITECTURA v3 (2024-11-30):
+ * =============================
  *
- * Structure:
- * - core/: Core AI components (state, planning, validation, execution)
- * - evaluators/: Goal evaluators for different agent behaviors
- * - AIContext.ts: Unified interface for AI dependencies
- * - AIContextAdapter.ts: Implementation adapting AISystem to IAIContext
+ * Flujo simplificado:
+ * ```
+ * Sistemas externos → emitTask() → TaskQueue → AISystem.update() → Handler
+ * ```
  *
- * Components:
- * - AIStateManager: Manages AI state creation, personality, and memory
- * - AIGoalValidator: Validates and checks goal completion/expiration
- * - AIActionPlanner: Plans actions based on current goals
- * - AIActionExecutor: Executes planned actions
- * - AIUrgentGoals: Creates urgent goals for critical needs
- * - AIZoneHandler: Handles zone arrival and resource deposits
- * - AgentGoalPlanner: High-level goal planning and evaluation
- * - PriorityManager: Manages priority queue for agent processing
- * - IAIContext: Unified dependency interface
- * - AIContextAdapter: Bridges AISystem to IAIContext
+ * Los sistemas (NeedsSystem, CombatSystem, etc.) emiten tareas cuando
+ * detectan condiciones. Las tareas duplicadas ACUMULAN prioridad,
+ * garantizando que eventos urgentes/repetidos se atiendan primero.
  *
- * Evaluators:
- * - NeedsEvaluator, CraftingEvaluator, DepositEvaluator, etc.
+ * @module domain/simulation/systems/agents/ai
  */
 
+// ============================================================================
+// SISTEMA PRINCIPAL
+// ============================================================================
+
+export { AISystem, type AISystemDeps, type AISystemConfig } from "./AISystem";
+
+// ============================================================================
+// TIPOS COMPARTIDOS
+// ============================================================================
+
 export type {
-  IAIContext,
-  Position,
-  ResourceLocation,
-  AnimalLocation,
-  AgentLocation,
-  AIContextCacheConfig,
-} from "./AIContext";
-export { DEFAULT_CACHE_CONFIG } from "./AIContext";
-export {
-  AIContextAdapter,
-  type AIContextSystems,
-  type AIContextCallbacks,
-} from "./AIContextAdapter";
+  AgentTask,
+  TaskTarget,
+  TaskParams,
+} from "@/shared/types/simulation/unifiedTasks";
 
 export {
-  generateRoleBasedWorkGoal,
-  type FindResourceFn,
-} from "./core/WorkGoalGenerator";
+  TaskType,
+  TaskStatus,
+  TASK_PRIORITIES,
+  createTask,
+  isTaskExpired,
+} from "@/shared/types/simulation/unifiedTasks";
 
-export { AIStateManager } from "./core/AIStateManager";
-export {
-  AIGoalValidator,
-  type AIGoalValidatorDeps,
-} from "./core/AIGoalValidator";
-export {
-  SimpleActionPlanner,
-  type SimpleActionPlannerDeps,
-} from "./core/SimpleActionPlanner";
-export {
-  AIActionExecutor,
-  type AIActionExecutorDeps,
-} from "./core/AIActionExecutor";
-export { AIUrgentGoals, type AIUrgentGoalsDeps } from "./core/AIUrgentGoals";
-export {
-  AIZoneHandler,
-  type AIZoneHandlerDeps,
-  type AIZoneInventoryPort,
-  type AIZoneCraftingPort,
-  type AIZoneRolePort,
-  type AIZoneSocialPort,
-  type AIZoneHouseholdPort,
-  type AIZoneNeedsPort,
-} from "./core/AIZoneHandler";
+// Tipos locales
+export type { Task, DetectorContext, HandlerContext } from "./types";
 
-export { PriorityManager } from "./core/PriorityManager";
+// ============================================================================
+// COLA DE TAREAS
+// ============================================================================
 
-export type { GoalRule, GoalContext } from "./core/GoalRule";
-export {
-  evaluateRules,
-  needUtility,
-  socialNeedUtility,
-  personalityFactor,
-} from "./core/GoalRule";
-export {
-  coreRules,
-  extendedRules,
-  fullRules,
-  hungerRule,
-  thirstRule,
-  energyRule,
-  socialRule,
-  funRule,
-  mentalHealthRule,
-  workDriveRule,
-  exploreDriveRule,
-  defaultExplorationRule,
-  reproductionRule,
-  gatherExpansionRule,
-  territoryExpansionRule,
-  fleeFromEnemyRule,
-  fleeFromPredatorRule,
-  attackPredatorRule,
-  constructionRule,
-  depositRule,
-  craftWeaponRule,
-  assistRule,
-  tradeRule,
-  roleWorkRule,
-  huntingRule,
-  inspectionRule,
-  buildingContributionRule,
-} from "./core/GoalRules";
-export {
-  planGoalsSimplified,
-  planGoalsFull,
-  type SimplifiedGoalPlannerDeps,
-} from "./core/SimplifiedGoalPlanner";
+export { TaskQueue, type TaskQueueConfig } from "./TaskQueue";
 
-export * from "./core/ActivityMapper";
+// ============================================================================
+// DETECTORES (observan estado → generan tareas)
+// ============================================================================
 
-export * from "./evaluators/NeedsEvaluator";
-export * from "./evaluators/CollectiveNeedsEvaluator";
+export { ALL_DETECTORS, type Detector } from "./detectors";
+export { detectNeeds } from "./detectors/NeedsDetector";
+export { detectCombat } from "./detectors/CombatDetector";
+export { detectWork } from "./detectors/WorkDetector";
+export { detectInventory } from "./detectors/InventoryDetector";
+export { detectCraft } from "./detectors/CraftDetector";
+export { detectBuild } from "./detectors/BuildDetector";
+export { detectSocial } from "./detectors/SocialDetector";
+export { detectExplore } from "./detectors/ExploreDetector";
+export { detectTrade } from "./detectors/TradeDetector";
+
+// ============================================================================
+// HANDLERS (ejecutan acciones específicas)
+// ============================================================================
 
 export {
-  selectBestZone,
-  getUnexploredZones,
-  prioritizeGoals,
-  getGoalTier,
-  getRecommendedZoneIdsForNeed,
-} from "./core/utils";
+  handleMove,
+  handleGather,
+  handleAttack,
+  handleFlee,
+  handleCraft,
+  handleBuild,
+  handleDeposit,
+  handleSocialize,
+  handleRest,
+  handleExplore,
+  handleTrade,
+  handleConsume,
+  isAtTarget,
+  moveToPosition,
+} from "./handlers";
+
+// ============================================================================
+// UTILIDADES
+// ============================================================================
+
+export { SharedKnowledgeSystem } from "./SharedKnowledgeSystem";

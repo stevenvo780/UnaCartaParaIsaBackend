@@ -1,0 +1,776 @@
+/**
+ * @fileoverview AISystem - Sistema de IA ECS
+ *
+ * Sistema de IA que opera con la arquitectura ECS:
+ * 1. Recibe tareas de otros sistemas via EventBus
+ * 2. Las encola en TaskQueue
+ * 3. Ejecuta handlers que delegan a sistemas via SystemRegistry
+ *
+ * Flujo:
+ * ```
+ * Sistema → EventBus(ai:task) → AISystem.emitTask() → TaskQueue
+ * AISystem.update() → handler() → SystemRegistry.system.method()
+ * ```
+ *
+ * Arquitectura ECS:
+ * - AgentStore: Estado centralizado de componentes
+ * - SystemRegistry: Acceso tipado a sistemas de dominio
+ * - EventBus: Comunicación cross-system
+ * - Handlers: Delegación pura, sin lógica de negocio
+ *
+ * @module domain/simulation/systems/agents/ai
+ */
+
+import { EventEmitter } from "events";
+import { injectable, inject, optional } from "inversify";
+import { logger } from "@/infrastructure/utils/logger";
+import { TaskQueue } from "./TaskQueue";
+import { runAllDetectors } from "./detectors";
+import {
+  handleGather,
+  handleAttack,
+  handleFlee,
+  handleRest,
+  handleConsume,
+  handleSocialize,
+  handleExplore,
+  handleCraft,
+  handleBuild,
+  handleDeposit,
+  handleTrade,
+} from "./handlers";
+import type { DetectorContext, HandlerContext } from "./types";
+import {
+  type AgentTask,
+  TaskType,
+  TaskStatus,
+  TASK_PRIORITIES,
+  createTask,
+} from "@/shared/types/simulation/unifiedTasks";
+import type { GameState } from "@/shared/types/game-types";
+import { TYPES } from "@/config/Types";
+import type { AgentRegistry } from "../AgentRegistry";
+import type { NeedsSystem } from "../needs/NeedsSystem";
+import type { MovementSystem } from "../movement/MovementSystem";
+import { SystemRegistry, AgentStore, EventBus } from "@/domain/simulation/ecs";
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+export interface AISystemDeps {
+  gameState: GameState;
+  agentRegistry: AgentRegistry;
+  needsSystem?: NeedsSystem;
+  movementSystem?: MovementSystem;
+  // ECS
+  systemRegistry?: SystemRegistry;
+  agentStore?: AgentStore;
+  eventBus?: EventBus;
+}
+
+export interface AISystemConfig {
+  /** Intervalo entre updates (ms) */
+  updateInterval: number;
+  /** Boost de prioridad por tarea duplicada */
+  priorityBoost: number;
+  /** Máximo de tareas por agente */
+  maxTasksPerAgent: number;
+  /** Debug logging */
+  debug: boolean;
+}
+
+/**
+ * Estado legacy para compatibilidad con código existente.
+ * @deprecated Este tipo se eliminará cuando se refactoricen los consumidores.
+ */
+export interface LegacyAIState {
+  currentGoal: AgentTask | null;
+  pendingTasks: readonly AgentTask[];
+  goalQueue: unknown[];
+  currentAction: { type: string; target?: unknown } | null;
+  offDuty: boolean;
+  lastDecisionTime: number;
+  personality: Record<string, unknown>;
+  memory: LegacyMemory;
+  data: Record<string, unknown>;
+  targetZoneId?: string;
+}
+
+/**
+ * Memoria legacy para compatibilidad.
+ * @deprecated
+ */
+export interface LegacyMemory {
+  visitedZones: Set<string>;
+  knownResources: Map<string, unknown>;
+  knownAgents: Map<string, unknown>;
+  recentEvents: unknown[];
+  knowledge: Record<string, unknown>;
+  importantLocations: Map<string, unknown>;
+  socialMemory: Map<string, unknown>;
+  shortTerm: unknown[];
+  longTerm: unknown[];
+  // Campos adicionales usados en SnapshotManager/EventRegistry
+  knownResourceLocations: Map<string, unknown>;
+  successfulActivities: Map<string, unknown>;
+  failedAttempts: Map<string, unknown>;
+  failedTargets: Map<string, unknown>;
+  lastMemoryCleanup: number;
+}
+
+const DEFAULT_CONFIG: AISystemConfig = {
+  updateInterval: 100,
+  priorityBoost: 0.1,
+  maxTasksPerAgent: 10,
+  debug: false,
+};
+
+// ============================================================================
+// AI SYSTEM
+// ============================================================================
+
+/**
+ * Sistema de IA unificado.
+ *
+ * Flujo:
+ * ```
+ * Sistemas externos → emitTask() → TaskQueue → update() → Handler → Acción
+ * ```
+ *
+ * Ejemplo de uso:
+ * ```typescript
+ * // Desde NeedsSystem cuando detecta hambre
+ * aiSystem.emitTask(agentId, {
+ *   type: TaskType.SATISFY_NEED,
+ *   priority: 0.8,
+ *   params: { needType: 'hunger' }
+ * });
+ *
+ * // Si se emite 5 veces, la prioridad sube: 0.8 + 5*0.1 = 1.3
+ * // Esto garantiza que necesidades urgentes se atiendan primero
+ * ```
+ */
+@injectable()
+export class AISystem extends EventEmitter {
+  private gameState: GameState;
+  private agentRegistry?: AgentRegistry;
+  private needsSystem?: NeedsSystem;
+  /** @deprecated Use systemRegistry.movement instead */
+  private _movementSystem?: MovementSystem;
+
+  // ECS Components
+  private systemRegistry: SystemRegistry;
+  private agentStore: AgentStore;
+  private eventBus: EventBus;
+
+  private taskQueue: TaskQueue;
+  private config: AISystemConfig;
+
+  // Estado activo por agente
+  private activeTask = new Map<string, AgentTask>();
+  private lastUpdate = new Map<string, number>();
+
+  constructor(
+    @inject(TYPES.GameState) gameState: GameState,
+    @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
+    @inject(TYPES.NeedsSystem) @optional() needsSystem?: NeedsSystem,
+    @inject(TYPES.MovementSystem) @optional() movementSystem?: MovementSystem,
+  ) {
+    super();
+    this.gameState = gameState;
+    this.agentRegistry = agentRegistry;
+    this.needsSystem = needsSystem;
+    this._movementSystem = movementSystem;
+    this.config = { ...DEFAULT_CONFIG };
+
+    // Initialize ECS components
+    this.eventBus = new EventBus();
+    this.agentStore = new AgentStore();
+    this.systemRegistry = new SystemRegistry();
+
+    this.taskQueue = new TaskQueue({
+      maxTasksPerAgent: this.config.maxTasksPerAgent,
+      debug: this.config.debug,
+    });
+
+    // Subscribe to task events from other systems
+    this.eventBus.on("ai:task_emit", (event) => {
+      this.emitTask(event.agentId, {
+        type: event.type as TaskType,
+        priority: event.priority,
+        target: event.target,
+        params: event.params,
+        source: event.source,
+      });
+    });
+
+    logger.info("✅ [AISystem] Initialized (v4 - ECS architecture)");
+  }
+
+  // ==========================================================================
+  // DEPENDENCY INJECTION
+  // ==========================================================================
+
+  /**
+   * Configura dependencias después de la construcción.
+   */
+  public setDependencies(deps: Partial<AISystemDeps>): void {
+    if (deps.agentRegistry) this.agentRegistry = deps.agentRegistry;
+    if (deps.needsSystem) this.needsSystem = deps.needsSystem;
+    if (deps.movementSystem) this._movementSystem = deps.movementSystem;
+    if (deps.systemRegistry) this.systemRegistry = deps.systemRegistry;
+    if (deps.agentStore) this.agentStore = deps.agentStore;
+    if (deps.eventBus) this.eventBus = deps.eventBus;
+  }
+
+  /**
+   * Obtiene el SystemRegistry para acceso externo.
+   */
+  public getSystemRegistry(): SystemRegistry {
+    return this.systemRegistry;
+  }
+
+  /**
+   * Obtiene el EventBus para acceso externo.
+   */
+  public getEventBus(): EventBus {
+    return this.eventBus;
+  }
+
+  /**
+   * Obtiene el AgentStore para acceso externo.
+   */
+  public getAgentStore(): AgentStore {
+    return this.agentStore;
+  }
+
+  /**
+   * @deprecated Use systemRegistry.movement instead
+   * Obtiene el MovementSystem legado.
+   */
+  public getMovementSystem(): MovementSystem | undefined {
+    return this._movementSystem;
+  }
+
+  // ==========================================================================
+  // PUBLIC API - EMIT TASKS
+  // ==========================================================================
+
+  /**
+   * Emite una tarea para un agente.
+   *
+   * Los sistemas externos usan esto para reportar condiciones:
+   * - NeedsSystem: emite SATISFY_NEED cuando hay hambre/sed
+   * - CombatSystem: emite ATTACK cuando el agente es atacado
+   * - RoleSystem: emite GATHER/CRAFT durante horas de trabajo
+   *
+   * Si la tarea ya existe, su prioridad AUMENTA (acumulación).
+   *
+   * @param agentId - ID del agente
+   * @param task - Tarea parcial (type, priority, params opcionales)
+   */
+  public emitTask(
+    agentId: string,
+    task: {
+      type: TaskType;
+      priority: number;
+      target?: {
+        entityId?: string;
+        position?: { x: number; y: number };
+        zoneId?: string;
+      };
+      params?: Record<string, unknown>;
+      source?: string;
+    },
+  ): void {
+    const fullTask = createTask({
+      agentId,
+      type: task.type,
+      priority: task.priority,
+      target: task.target,
+      params: task.params,
+      source: task.source ?? "external",
+    });
+
+    this.taskQueue.enqueue(agentId, fullTask, this.config.priorityBoost);
+
+    if (this.config.debug) {
+      logger.debug(
+        `[AISystem] Task emitted for ${agentId}: ${task.type} (priority: ${task.priority})`,
+      );
+    }
+  }
+
+  /**
+   * Reporte de evento rápido (atajo para eventos comunes).
+   */
+  public reportEvent(
+    agentId: string,
+    event: "attacked" | "damaged" | "hungry" | "thirsty" | "tired",
+    data?: { attackerId?: string; severity?: number },
+  ): void {
+    switch (event) {
+      case "attacked":
+      case "damaged":
+        if (data?.attackerId) {
+          this.emitTask(agentId, {
+            type: TaskType.ATTACK,
+            priority: TASK_PRIORITIES.URGENT,
+            target: { entityId: data.attackerId },
+            params: { reason: "retaliation" },
+            source: `event:${event}`,
+          });
+        }
+        break;
+
+      case "hungry":
+        this.emitTask(agentId, {
+          type: TaskType.SATISFY_NEED,
+          priority: TASK_PRIORITIES.HIGH,
+          params: { needType: "hunger" },
+          source: "event:hungry",
+        });
+        break;
+
+      case "thirsty":
+        this.emitTask(agentId, {
+          type: TaskType.SATISFY_NEED,
+          priority: TASK_PRIORITIES.HIGH,
+          params: { needType: "thirst" },
+          source: "event:thirsty",
+        });
+        break;
+
+      case "tired":
+        this.emitTask(agentId, {
+          type: TaskType.REST,
+          priority: TASK_PRIORITIES.NORMAL,
+          params: { reason: "tired" },
+          source: "event:tired",
+        });
+        break;
+    }
+  }
+
+  // ==========================================================================
+  // UPDATE LOOP
+  // ==========================================================================
+
+  /**
+   * Actualiza la IA de todos los agentes.
+   */
+  public async update(deltaTimeMs: number): Promise<void> {
+    const agents = this.gameState.agents ?? [];
+
+    for (const agent of agents) {
+      if (agent.isDead) continue;
+      this.updateAgent(agent.id, deltaTimeMs);
+    }
+  }
+
+  /**
+   * Actualiza la IA de un agente específico.
+   */
+  public updateAgent(agentId: string, _deltaTimeMs: number): void {
+    const now = Date.now();
+    const last = this.lastUpdate.get(agentId) ?? 0;
+
+    // Throttle
+    if (now - last < this.config.updateInterval) return;
+    this.lastUpdate.set(agentId, now);
+
+    // 1. Ejecutar detectores internos (backup si los sistemas no emiten)
+    this.runDetectors(agentId);
+
+    // 2. Limpiar tareas expiradas
+    this.taskQueue.cleanExpired(agentId);
+
+    // 3. Si no hay tarea activa, tomar la de mayor prioridad
+    if (!this.activeTask.has(agentId)) {
+      const nextTask = this.taskQueue.dequeue(agentId);
+      if (nextTask) {
+        this.activeTask.set(agentId, nextTask);
+        nextTask.status = TaskStatus.ACTIVE;
+
+        if (this.config.debug) {
+          logger.debug(`[AISystem] ${agentId} starting: ${nextTask.type}`);
+        }
+      }
+    }
+
+    // 4. Ejecutar tarea activa
+    const task = this.activeTask.get(agentId);
+    if (task) {
+      this.executeTask(agentId, task);
+    }
+  }
+
+  // ==========================================================================
+  // TASK EXECUTION
+  // ==========================================================================
+
+  /**
+   * Ejecuta una tarea usando el handler apropiado.
+   */
+  private executeTask(agentId: string, task: AgentTask): void {
+    const ctx = this.buildHandlerContext(agentId, task);
+    if (!ctx) {
+      this.failTask(agentId, task, "no context");
+      return;
+    }
+
+    let result: { success: boolean; completed: boolean } | undefined;
+
+    // Dispatch a handler según tipo de tarea
+    switch (task.type) {
+      case TaskType.SATISFY_NEED:
+        result = handleConsume(ctx, {});
+        break;
+
+      case TaskType.REST:
+        result = handleRest(ctx, {});
+        break;
+
+      case TaskType.GATHER:
+        result = handleGather(ctx, {});
+        break;
+
+      case TaskType.ATTACK:
+        result = handleAttack(ctx, {});
+        break;
+
+      case TaskType.FLEE:
+        result = handleFlee(ctx, {});
+        break;
+
+      case TaskType.SOCIALIZE:
+        result = handleSocialize(ctx, {});
+        break;
+
+      case TaskType.EXPLORE:
+        result = handleExplore(ctx, {});
+        break;
+
+      case TaskType.CRAFT:
+        result = handleCraft(ctx, {});
+        break;
+
+      case TaskType.BUILD:
+        result = handleBuild(ctx, {});
+        break;
+
+      case TaskType.DEPOSIT:
+        result = handleDeposit(ctx, {});
+        break;
+
+      case TaskType.TRADE:
+        result = handleTrade(ctx, {});
+        break;
+
+      case TaskType.HUNT:
+        result = handleAttack(ctx, {});
+        break;
+
+      case TaskType.IDLE:
+      default:
+        // Idle no hace nada, solo espera
+        result = { success: true, completed: true };
+        break;
+    }
+
+    // Procesar resultado
+    if (result?.completed) {
+      if (result.success) {
+        this.completeTask(agentId, task);
+      } else {
+        this.failTask(agentId, task, "handler failed");
+      }
+    }
+    // Si no completed, continúa en el próximo tick
+  }
+
+  /**
+   * Construye el contexto para los handlers.
+   * Los handlers reciben acceso a ECS via SystemRegistry.
+   */
+  private buildHandlerContext(
+    agentId: string,
+    task: AgentTask,
+  ): HandlerContext | null {
+    const position = this.agentRegistry?.getPosition(agentId);
+    if (!position) return null;
+
+    return {
+      agentId,
+      task: {
+        id: task.id,
+        agentId: task.agentId ?? agentId,
+        type: task.type as unknown as import("./types").TaskType,
+        priority: task.priority,
+        status: task.status as unknown as import("./types").TaskStatus,
+        target: task.target,
+        params: task.params,
+        source: task.source ?? "ai_system",
+        createdAt: task.createdAt ?? Date.now(),
+        expiresAt: task.expiresAt,
+      },
+      position,
+      // ECS Components
+      systems: this.systemRegistry,
+      store: this.agentStore,
+      events: this.eventBus,
+    };
+  }
+
+  /**
+   * Marca tarea como completada.
+   */
+  private completeTask(agentId: string, task: AgentTask): void {
+    task.status = TaskStatus.COMPLETED;
+    this.activeTask.delete(agentId);
+
+    if (this.config.debug) {
+      logger.debug(`[AISystem] ${agentId} completed: ${task.type}`);
+    }
+
+    this.emit("taskCompleted", { agentId, task });
+  }
+
+  /**
+   * Marca tarea como fallida.
+   */
+  private failTask(agentId: string, task: AgentTask, reason: string): void {
+    task.status = TaskStatus.FAILED;
+    this.activeTask.delete(agentId);
+
+    if (this.config.debug) {
+      logger.debug(`[AISystem] ${agentId} failed: ${task.type} (${reason})`);
+    }
+
+    this.emit("taskFailed", { agentId, task, reason });
+  }
+
+  // ==========================================================================
+  // DETECTORS (backup)
+  // ==========================================================================
+
+  /**
+   * Ejecuta detectores internos como backup.
+   * Los sistemas externos deberían emitir tareas directamente,
+   * pero los detectores sirven como fallback.
+   */
+  private runDetectors(agentId: string): void {
+    const ctx = this.buildDetectorContext(agentId);
+    if (!ctx) return;
+
+    const tasks = runAllDetectors(ctx);
+    for (const task of tasks) {
+      this.taskQueue.enqueue(
+        agentId,
+        task as AgentTask,
+        this.config.priorityBoost,
+      );
+    }
+  }
+
+  /**
+   * Construye contexto para detectores.
+   */
+  private buildDetectorContext(agentId: string): DetectorContext | null {
+    const position = this.agentRegistry?.getPosition(agentId);
+    if (!position) return null;
+
+    const needs: DetectorContext["needs"] = this.needsSystem?.getNeeds(
+      agentId,
+    ) as DetectorContext["needs"];
+
+    return {
+      agentId,
+      position,
+      needs,
+      now: Date.now(),
+    };
+  }
+
+  // ==========================================================================
+  // PUBLIC UTILITIES
+  // ==========================================================================
+
+  /**
+   * Cancela la tarea activa de un agente.
+   */
+  public cancelTask(agentId: string): void {
+    this.activeTask.delete(agentId);
+  }
+
+  /**
+   * Limpia todo el estado de un agente.
+   */
+  public clearAgent(agentId: string): void {
+    this.activeTask.delete(agentId);
+    this.taskQueue.clear(agentId);
+    this.lastUpdate.delete(agentId);
+  }
+
+  /**
+   * Obtiene la tarea activa de un agente.
+   */
+  public getActiveTask(agentId: string): AgentTask | undefined {
+    return this.activeTask.get(agentId);
+  }
+
+  /**
+   * Obtiene las tareas pendientes de un agente.
+   */
+  public getPendingTasks(agentId: string): readonly AgentTask[] {
+    return this.taskQueue.getTasks(agentId);
+  }
+
+  /**
+   * Obtiene estadísticas del sistema.
+   */
+  public getStats(): {
+    activeAgents: number;
+    totalPendingTasks: number;
+  } {
+    const queueStats = this.taskQueue.getStats();
+    return {
+      activeAgents: this.activeTask.size,
+      totalPendingTasks: queueStats.totalTasks,
+    };
+  }
+
+  /**
+   * Cleanup del sistema.
+   */
+  public cleanup(): void {
+    this.activeTask.clear();
+    this.lastUpdate.clear();
+    this.removeAllListeners();
+  }
+
+  // ==========================================================================
+  // LEGACY COMPATIBILITY LAYER
+  // ==========================================================================
+  // TODO: Refactorizar consumidores para usar nueva API basada en tareas
+
+  /**
+   * @deprecated Use getStats() instead
+   */
+  public syncToGameState(): void {
+    // No-op - el nuevo sistema no necesita sincronización manual
+  }
+
+  /**
+   * @deprecated El nuevo sistema usa tareas, no goals
+   */
+  public setGoal(_agentId: string, _goal: unknown): void {
+    // No-op - convertir a emitTask() en consumidores
+  }
+
+  /**
+   * @deprecated El nuevo sistema usa tareas, no goals
+   */
+  public clearGoals(_agentId: string): void {
+    this.clearAgent(_agentId);
+  }
+
+  /**
+   * @deprecated El nuevo sistema usa tareas
+   */
+  public getCurrentGoal(_agentId: string): unknown {
+    return this.activeTask.get(_agentId);
+  }
+
+  /**
+   * @deprecated Use clearAgent()
+   */
+  public removeAgentState(agentId: string): void {
+    this.clearAgent(agentId);
+  }
+
+  /**
+   * @deprecated No longer needed
+   */
+  public restoreAIState(_agentId: string, _state: unknown): void {
+    // No-op - el nuevo sistema no persiste estado complejo
+  }
+
+  /**
+   * @deprecated Called internally in constructor
+   */
+  public initialize(): void {
+    // No-op
+  }
+
+  /**
+   * @deprecated Use getActiveTask() + getPendingTasks()
+   */
+  public getAIState(agentId: string): LegacyAIState {
+    const task = this.activeTask.get(agentId);
+    return {
+      currentGoal: task ?? null,
+      pendingTasks: this.taskQueue.getTasks(agentId),
+      // Legacy fields for compatibility
+      goalQueue: [],
+      currentAction: task ? { type: task.type, target: task.target } : null,
+      offDuty: false,
+      lastDecisionTime: this.lastUpdate.get(agentId) ?? 0,
+      personality: {},
+      memory: {
+        visitedZones: new Set<string>(),
+        knownResources: new Map<string, unknown>(),
+        knownAgents: new Map<string, unknown>(),
+        recentEvents: [],
+        knowledge: {},
+        importantLocations: new Map<string, unknown>(),
+        socialMemory: new Map<string, unknown>(),
+        shortTerm: [],
+        longTerm: [],
+        // Additional legacy fields
+        knownResourceLocations: new Map<string, unknown>(),
+        successfulActivities: new Map<string, unknown>(),
+        failedAttempts: new Map<string, unknown>(),
+        failedTargets: new Map<string, unknown>(),
+        lastMemoryCleanup: 0,
+      },
+      data: {},
+      targetZoneId: task?.target?.zoneId,
+    };
+  }
+
+  /**
+   * @deprecated Use cancelTask()
+   */
+  public setAgentOffDuty(agentId: string, _offDuty: boolean): void {
+    // If offDuty=true, cancel task; else no-op
+    if (_offDuty) {
+      this.cancelTask(agentId);
+    }
+  }
+
+  /**
+   * @deprecated Reevaluación automática por detectores
+   */
+  public forceGoalReevaluation(agentId: string): void {
+    this.runDetectors(agentId);
+  }
+
+  /**
+   * @deprecated Use cancelTask()
+   */
+  public failCurrentGoal(agentId: string): void {
+    const task = this.activeTask.get(agentId);
+    if (task) {
+      this.failTask(agentId, task, "forced_fail");
+    }
+  }
+
+  /**
+   * @deprecated No longer needed - handled internally
+   */
+  public notifyEntityArrived(_agentId: string, _entityId: string): void {
+    // No-op
+  }
+}

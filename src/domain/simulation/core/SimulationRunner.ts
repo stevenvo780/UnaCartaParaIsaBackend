@@ -387,18 +387,9 @@ export class SimulationRunner {
 
     this.aiSystem.setDependencies({
       needsSystem: this.needsSystem,
-      roleSystem: this.roleSystem,
-      worldResourceSystem: this.worldResourceSystem,
-      inventorySystem: this.inventorySystem,
-      socialSystem: this.socialSystem,
-      craftingSystem: this.enhancedCraftingSystem,
       movementSystem: this.movementSystem,
-      householdSystem: this.householdSystem,
-      taskSystem: this.taskSystem,
-      combatSystem: this.combatSystem,
-      animalSystem: this.animalSystem,
-
-      timeSystem: this.timeSystem,
+      // TODO: Refactorizar para que otros sistemas emitan tareas directamente al AISystem
+      // en lugar de pasarlos como dependencias
     });
 
     this.economySystem.setDependencies({
