@@ -5,7 +5,7 @@ import {
   findAccessibleDestination,
   calculateZoneDistance,
   worldToGrid,
-} from "../../../src/domain/simulation/systems/movement/helpers";
+} from "../../../src/domain/simulation/systems/agents/movement/helpers";
 
 describe("movement helpers", () => {
   it("estimateTravelTime incrementa con la fatiga", () => {

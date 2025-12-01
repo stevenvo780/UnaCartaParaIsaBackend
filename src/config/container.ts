@@ -21,49 +21,43 @@ import { SimulationRunner } from "../domain/simulation/core/SimulationRunner";
 import { GameState } from "../domain/types/game-types";
 import { createInitialGameState } from "../domain/simulation/core/defaultState";
 
-import { WorldResourceSystem } from "../domain/simulation/systems/WorldResourceSystem";
-
-import { LifeCycleSystem } from "../domain/simulation/systems/LifeCycleSystem";
-import { NeedsSystem } from "../domain/simulation/systems/needs/NeedsSystem";
-import { GenealogySystem } from "../domain/simulation/systems/GenealogySystem";
-import { SocialSystem } from "../domain/simulation/systems/SocialSystem";
-import { InventorySystem } from "../domain/simulation/systems/InventorySystem";
-import { EconomySystem } from "../domain/simulation/systems/EconomySystem";
-import { RoleSystem } from "../domain/simulation/systems/RoleSystem";
-import { AISystem } from "../domain/simulation/systems/AISystem";
-import { ResourceReservationSystem } from "../domain/simulation/systems/ResourceReservationSystem";
-import { GovernanceSystem } from "../domain/simulation/systems/GovernanceSystem";
-
-import { HouseholdSystem } from "../domain/simulation/systems/HouseholdSystem";
-import { BuildingSystem } from "../domain/simulation/systems/BuildingSystem";
-
-import { ProductionSystem } from "../domain/simulation/systems/ProductionSystem";
-import { EnhancedCraftingSystem } from "../domain/simulation/systems/EnhancedCraftingSystem";
-import { AnimalSystem } from "../domain/simulation/systems/animals/AnimalSystem";
-import { ItemGenerationSystem } from "../domain/simulation/systems/ItemGenerationSystem";
-import { CombatSystem } from "../domain/simulation/systems/CombatSystem";
-import { ReputationSystem } from "../domain/simulation/systems/ReputationSystem";
-
-import { RecipeDiscoverySystem } from "../domain/simulation/systems/RecipeDiscoverySystem";
-
-import { TaskSystem } from "../domain/simulation/systems/TaskSystem";
-
-import { MarriageSystem } from "../domain/simulation/systems/MarriageSystem";
-import { ConflictResolutionSystem } from "../domain/simulation/systems/ConflictResolutionSystem";
-
-import { AmbientAwarenessSystem } from "../domain/simulation/systems/AmbientAwarenessSystem";
-
-import { TimeSystem } from "../domain/simulation/systems/TimeSystem";
-
-import { MovementSystem } from "../domain/simulation/systems/movement/MovementSystem";
+// Import all systems from the centralized index
+import {
+  WorldResourceSystem,
+  LifeCycleSystem,
+  NeedsSystem,
+  GenealogySystem,
+  SocialSystem,
+  InventorySystem,
+  EconomySystem,
+  RoleSystem,
+  AISystem,
+  ResourceReservationSystem,
+  GovernanceSystem,
+  HouseholdSystem,
+  BuildingSystem,
+  ProductionSystem,
+  EnhancedCraftingSystem,
+  AnimalSystem,
+  ItemGenerationSystem,
+  CombatSystem,
+  ReputationSystem,
+  RecipeDiscoverySystem,
+  TaskSystem,
+  MarriageSystem,
+  ConflictResolutionSystem,
+  AmbientAwarenessSystem,
+  TimeSystem,
+  MovementSystem,
+  TerrainSystem,
+  ChunkLoadingSystem,
+} from "../domain/simulation/systems";
+import { SharedKnowledgeSystem } from "../domain/simulation/systems/agents/ai/SharedKnowledgeSystem";
 
 import { EntityIndex } from "../domain/simulation/core/EntityIndex";
 import { SharedSpatialIndex } from "../domain/simulation/core/SharedSpatialIndex";
-import { TerrainSystem } from "../domain/simulation/systems/TerrainSystem";
 import { GPUComputeService } from "../domain/simulation/core/GPUComputeService";
 import { GPUBatchQueryService } from "../domain/simulation/core/GPUBatchQueryService";
-import { ChunkLoadingSystem } from "../domain/simulation/systems/ChunkLoadingSystem";
-import { SharedKnowledgeSystem } from "../domain/simulation/systems/ai/SharedKnowledgeSystem";
 import { AgentRegistry } from "../domain/simulation/core/AgentRegistry";
 import { AnimalRegistry } from "../domain/simulation/core/AnimalRegistry";
 import { StateDirtyTracker } from "../domain/simulation/core/StateDirtyTracker";

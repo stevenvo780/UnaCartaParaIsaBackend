@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { ReputationSystem } from "../../src/domain/simulation/systems/ReputationSystem";
+import { ReputationSystem } from "../../src/domain/simulation/systems/social/ReputationSystem";
 import { createMockGameState } from "../setup";
 import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events";
 import type { GameState } from "../../src/domain/types/game-types";

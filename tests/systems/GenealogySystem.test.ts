@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { GenealogySystem } from "../../src/domain/simulation/systems/GenealogySystem.ts";
+import { GenealogySystem } from "../../src/domain/simulation/systems/social/GenealogySystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 import type { AgentProfile } from "../../src/domain/simulation/types/agents.ts";

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { EconomySystem } from "../../src/domain/simulation/systems/EconomySystem.ts";
-import { InventorySystem } from "../../src/domain/simulation/systems/InventorySystem.ts";
-import { SocialSystem } from "../../src/domain/simulation/systems/SocialSystem.ts";
-import { RoleSystem } from "../../src/domain/simulation/systems/RoleSystem.ts";
+import { EconomySystem } from "../../src/domain/simulation/systems/economy/EconomySystem.ts";
+import { InventorySystem } from "../../src/domain/simulation/systems/economy/InventorySystem.ts";
+import { SocialSystem } from "../../src/domain/simulation/systems/social/SocialSystem.ts";
+import { RoleSystem } from "../../src/domain/simulation/systems/agents/RoleSystem.ts";
 import { createMockGameState, createEntityIndex } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 import { EntityIndex } from "../../src/domain/simulation/core/EntityIndex.ts";

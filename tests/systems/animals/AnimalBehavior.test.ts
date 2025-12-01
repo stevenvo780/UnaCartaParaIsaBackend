@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { AnimalBehavior } from "../../../src/domain/simulation/systems/animals/AnimalBehavior";
+import { AnimalBehavior } from "../../../src/domain/simulation/systems/world/animals/AnimalBehavior";
 import type { Animal } from "../../../src/domain/types/simulation/animals";
 import { getAnimalConfig } from "../../../src/domain/world/config/AnimalConfigs";
 import { simulationEvents, GameEventNames } from "../../../src/domain/simulation/core/events";
-import { AnimalNeeds } from "../../../src/domain/simulation/systems/animals/AnimalNeeds";
+import { AnimalNeeds } from "../../../src/domain/simulation/systems/world/animals/AnimalNeeds";
 
 // Mocks
 vi.mock("../../../src/domain/world/config/AnimalConfigs", () => ({
@@ -386,7 +386,7 @@ describe("AnimalBehavior", () => {
 
       const onOffspringCreated = vi.fn();
       // Mock AnimalGenetics.breedGenes
-      const AnimalGenetics = await import("../../../src/domain/simulation/systems/animals/AnimalGenetics");
+      const AnimalGenetics = await import("../../../src/domain/simulation/systems/world/animals/AnimalGenetics");
       vi.spyOn(AnimalGenetics.AnimalGenetics, "breedGenes").mockReturnValue({
         color: 0x000000,
         size: 1.0,

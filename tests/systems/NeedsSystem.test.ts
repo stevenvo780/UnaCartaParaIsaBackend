@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { NeedsSystem } from "../../src/domain/simulation/systems/needs/NeedsSystem";
+import { NeedsSystem } from "../../src/domain/simulation/systems/agents/needs/NeedsSystem";
 import {
   createMockGameState,
   setupFakeTimers,

@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import type { GameState } from "../../src/domain/types/game-types";
 import type { Animal } from "../../src/domain/types/simulation/animals";
-import { AnimalSystem } from "../../src/domain/simulation/systems/animals/AnimalSystem";
-import { AnimalNeeds } from "../../src/domain/simulation/systems/animals/AnimalNeeds";
-import { AnimalBehavior } from "../../src/domain/simulation/systems/animals/AnimalBehavior";
+import { AnimalSystem } from "../../src/domain/simulation/systems/world/animals/AnimalSystem";
+import { AnimalNeeds } from "../../src/domain/simulation/systems/world/animals/AnimalNeeds";
+import { AnimalBehavior } from "../../src/domain/simulation/systems/world/animals/AnimalBehavior";
 import {
   simulationEvents,
   GameEventNames,

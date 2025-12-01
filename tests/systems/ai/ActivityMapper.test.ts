@@ -4,7 +4,7 @@ import {
   getActivityDuration,
   activityRequiresZone,
   type ActivityType,
-} from "../../../src/domain/simulation/systems/ai/core/ActivityMapper.ts";
+} from "../../../src/domain/simulation/systems/agents/ai/core/ActivityMapper.ts";
 import type { AIGoal } from "../../../src/domain/types/simulation/ai.ts";
 
 describe("ActivityMapper", () => {

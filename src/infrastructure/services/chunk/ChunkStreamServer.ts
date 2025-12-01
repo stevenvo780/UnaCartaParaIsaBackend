@@ -11,7 +11,7 @@ import type { ChunkPoolStats } from "./ChunkWorkerPool";
 import { encodeMsgPack, decodeMessage } from "../../../shared/MessagePackCodec";
 import { container } from "../../../config/container";
 import { TYPES } from "../../../config/Types";
-import type { AnimalSystem } from "../../../domain/simulation/systems/animals/AnimalSystem";
+import type { AnimalSystem } from "../../../domain/simulation/systems/world/animals/AnimalSystem";
 import { logger } from "../../utils/logger";
 import { ChunkMessageType } from "../../../shared/constants/WebSocketEnums";
 import { UNKNOWN_VALUE as COMMON_UNKNOWN } from "../../../shared/constants/CommonConstants";

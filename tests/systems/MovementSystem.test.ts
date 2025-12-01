@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { MovementSystem } from "../../src/domain/simulation/systems/movement/MovementSystem";
+import { MovementSystem } from "../../src/domain/simulation/systems/agents/movement/MovementSystem";
 import { createMockGameState } from "../setup";
 import type { GameState } from "../../src/domain/types/game-types";
 import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events";

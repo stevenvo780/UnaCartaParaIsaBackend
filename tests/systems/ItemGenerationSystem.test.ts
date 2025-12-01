@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { ItemGenerationSystem } from "../../src/domain/simulation/systems/ItemGenerationSystem.ts";
+import { ItemGenerationSystem } from "../../src/domain/simulation/systems/world/ItemGenerationSystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 import { simulationEvents, GameEventNames } from "../../src/domain/simulation/core/events.ts";

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { RoleSystem } from "../../src/domain/simulation/systems/RoleSystem.ts";
+import { RoleSystem } from "../../src/domain/simulation/systems/agents/RoleSystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 import type { RoleType, WorkShift } from "../../src/domain/simulation/types/roles.ts";

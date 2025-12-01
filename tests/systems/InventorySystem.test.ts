@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { InventorySystem } from "../../src/domain/simulation/systems/InventorySystem.ts";
+import { InventorySystem } from "../../src/domain/simulation/systems/economy/InventorySystem.ts";
 import type { ResourceType } from "../../src/domain/simulation/types/economy.ts";
 
 describe("InventorySystem", () => {

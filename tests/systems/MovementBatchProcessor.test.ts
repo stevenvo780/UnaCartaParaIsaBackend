@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { MovementBatchProcessor } from "../../src/domain/simulation/systems/movement/MovementBatchProcessor";
+import { MovementBatchProcessor } from "../../src/domain/simulation/systems/agents/movement/MovementBatchProcessor";
 import { createMockGPUService } from "../setup";
-import type { EntityMovementState } from "../../src/domain/simulation/systems/movement/MovementSystem";
+import type { EntityMovementState } from "../../src/domain/simulation/systems/agents/movement/MovementSystem";
 
 function createMovementState(
   overrides: Partial<EntityMovementState> = {},

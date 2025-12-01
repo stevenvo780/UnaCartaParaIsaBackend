@@ -5,7 +5,7 @@ import { SimulationRunner } from "../../src/domain/simulation/core/SimulationRun
 import { createMockGameState } from '../setup.ts';
 import type { GameState } from '../../src/domain/types/game-types.ts';
 import type { SimulationCommand } from '../../src/domain/simulation/types.ts';
-import type { LifeCycleSystem } from "../../src/domain/simulation/systems/LifeCycleSystem.ts";
+import type { LifeCycleSystem } from "../../src/domain/simulation/systems/lifecycle/LifeCycleSystem.ts";
 
 describe('SimulationRunner', () => {
   let runner: SimulationRunner;

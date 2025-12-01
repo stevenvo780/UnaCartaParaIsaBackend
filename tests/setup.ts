@@ -16,7 +16,7 @@ import type {
   // QuestSystem removed - narrative quests not needed for simulation
   TimeSystem,
 } from "../src/domain/simulation/systems/index.js";
-import type { RoleSystem } from "../src/domain/simulation/systems/RoleSystem.js";
+import type { RoleSystem } from "../src/domain/simulation/systems/agents/RoleSystem.js";
 
 // Mock TensorFlow para evitar errores de módulo nativo en tests
 vi.mock("@tensorflow/tfjs-node-gpu", () => {

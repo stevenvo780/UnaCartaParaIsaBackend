@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { AnimalSpawning } from "../../../src/domain/simulation/systems/animals/AnimalSpawning";
+import { AnimalSpawning } from "../../../src/domain/simulation/systems/world/animals/AnimalSpawning";
 import type { Animal } from "../../../src/domain/types/simulation/animals";
 import {
   getAnimalConfig,

@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { Container } from "inversify";
 import { TYPES } from "../../src/config/Types";
-import { EconomySystem } from "../../src/domain/simulation/systems/EconomySystem";
-import { CombatSystem } from "../../src/domain/simulation/systems/CombatSystem";
+import { EconomySystem } from "../../src/domain/simulation/systems/economy/EconomySystem";
+import { CombatSystem } from "../../src/domain/simulation/systems/conflict/CombatSystem";
 import { GameState } from "../../src/domain/types/game-types";
 import { createMockGameState } from "../setup";
-import { InventorySystem } from "../../src/domain/simulation/systems/InventorySystem";
-import { SocialSystem } from "../../src/domain/simulation/systems/SocialSystem";
-import { LifeCycleSystem } from "../../src/domain/simulation/systems/LifeCycleSystem";
+import { InventorySystem } from "../../src/domain/simulation/systems/economy/InventorySystem";
+import { SocialSystem } from "../../src/domain/simulation/systems/social/SocialSystem";
+import { LifeCycleSystem } from "../../src/domain/simulation/systems/lifecycle/LifeCycleSystem";
 import { EntityIndex } from "../../src/domain/simulation/core/EntityIndex";
 import { AgentRegistry } from "../../src/domain/simulation/core/AgentRegistry";
 import { simulationEvents } from "../../src/domain/events/SimulationEvents";

@@ -5,7 +5,7 @@ import { SimulationRunner } from "../../src/domain/simulation/core/SimulationRun
 import { MultiRateScheduler } from "../../src/domain/simulation/core/MultiRateScheduler"; // Added import
 import { createMockGameState } from '../setup';
 import type { GameState } from '../../src/domain/types/game-types';
-import { TaskSystem } from "../../src/domain/simulation/systems/TaskSystem";
+import { TaskSystem } from "../../src/domain/simulation/systems/objectives/TaskSystem";
 
 describe('SimulationRunner Throttling', () => {
   let runner: SimulationRunner;

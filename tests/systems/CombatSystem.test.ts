@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import type { GameState } from "../../src/domain/types/game-types";
 import type { ResourceType } from "../../src/domain/types/simulation/economy";
-import { CombatSystem } from "../../src/domain/simulation/systems/CombatSystem";
+import { CombatSystem } from "../../src/domain/simulation/systems/conflict/CombatSystem";
 import {
   simulationEvents,
   GameEventNames,

@@ -1,10 +1,10 @@
 import { Container } from "inversify";
 import { TYPES } from "../../../config/Types";
-import { ProductionSystem } from "../../../domain/simulation/systems/ProductionSystem";
-import { TerrainSystem } from "../../../domain/simulation/systems/TerrainSystem";
-import { InventorySystem } from "../../../domain/simulation/systems/InventorySystem";
-import { LifeCycleSystem } from "../../../domain/simulation/systems/LifeCycleSystem";
-import { WorldResourceSystem } from "../../../domain/simulation/systems/WorldResourceSystem";
+import { ProductionSystem } from "../../../domain/simulation/systems/world/ProductionSystem";
+import { TerrainSystem } from "../../../domain/simulation/systems/core/TerrainSystem";
+import { InventorySystem } from "../../../domain/simulation/systems/economy/InventorySystem";
+import { LifeCycleSystem } from "../../../domain/simulation/systems/lifecycle/LifeCycleSystem";
+import { WorldResourceSystem } from "../../../domain/simulation/systems/world/WorldResourceSystem";
 import {
   GameState,
   Zone,

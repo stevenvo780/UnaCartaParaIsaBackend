@@ -46,89 +46,89 @@
 // =============================================================================
 // AGENTS - Agent behavior, AI, needs, movement, roles
 // =============================================================================
-export { AISystem } from "./AISystem";
-export { NeedsSystem } from "./needs/NeedsSystem";
-export { NeedsBatchProcessor } from "./needs/NeedsBatchProcessor";
-export { MovementSystem } from "./movement/MovementSystem";
-export { MovementBatchProcessor } from "./movement/MovementBatchProcessor";
-export { RoleSystem } from "./RoleSystem";
+export { AISystem } from "./agents/AISystem";
+export { NeedsSystem } from "./agents/needs/NeedsSystem";
+export { NeedsBatchProcessor } from "./agents/needs/NeedsBatchProcessor";
+export { MovementSystem } from "./agents/movement/MovementSystem";
+export { MovementBatchProcessor } from "./agents/movement/MovementBatchProcessor";
+export { RoleSystem } from "./agents/RoleSystem";
 export {
   EquipmentSystem,
   equipmentSystem,
   toolStorage,
   TOOL_CATEGORIES,
   ROLE_TOOL_NEEDS,
-} from "./EquipmentSystem";
+} from "./agents/EquipmentSystem";
+export { AmbientAwarenessSystem } from "./agents/AmbientAwarenessSystem";
 
 // AI subsystems
-export * from "./ai/core/SimplifiedGoalPlanner";
-export * from "./ai/core/GoalRules";
-export * from "./ai/core/ActionPlanRules";
-export * from "./ai/core/SimpleActionPlanner";
-export * from "./ai/core/AIActionExecutor";
-export * from "./ai/core/AIGoalValidator";
-export * from "./ai/core/AIStateManager";
-export * from "./ai/core/AIUrgentGoals";
-export * from "./ai/core/AIZoneHandler";
-export * from "./ai/core/PriorityManager";
-export * from "./ai/core/WorkGoalGenerator";
-export * from "./ai/evaluators/NeedsEvaluator";
-export * from "./ai/evaluators/CollectiveNeedsEvaluator";
+export * from "./agents/ai/core/SimplifiedGoalPlanner";
+export * from "./agents/ai/core/GoalRules";
+export * from "./agents/ai/core/ActionPlanRules";
+export * from "./agents/ai/core/SimpleActionPlanner";
+export * from "./agents/ai/core/AIActionExecutor";
+export * from "./agents/ai/core/AIGoalValidator";
+export * from "./agents/ai/core/AIStateManager";
+export * from "./agents/ai/core/AIUrgentGoals";
+export * from "./agents/ai/core/AIZoneHandler";
+export * from "./agents/ai/core/PriorityManager";
+export * from "./agents/ai/core/WorkGoalGenerator";
+export * from "./agents/ai/evaluators/NeedsEvaluator";
+export * from "./agents/ai/evaluators/CollectiveNeedsEvaluator";
 
 // =============================================================================
 // WORLD - World resources, generation, animals
 // =============================================================================
-export { WorldResourceSystem } from "./WorldResourceSystem";
-export { ItemGenerationSystem } from "./ItemGenerationSystem";
-export { ProductionSystem } from "./ProductionSystem";
-export { AmbientAwarenessSystem } from "./AmbientAwarenessSystem";
-export { AnimalSystem } from "./animals/AnimalSystem";
-export { AnimalBatchProcessor } from "./animals/AnimalBatchProcessor";
-export * from "./animals/AnimalBehavior";
+export { WorldResourceSystem } from "./world/WorldResourceSystem";
+export { ItemGenerationSystem } from "./world/ItemGenerationSystem";
+export { ProductionSystem } from "./world/ProductionSystem";
+export { AnimalSystem } from "./world/animals/AnimalSystem";
+export { AnimalBatchProcessor } from "./world/animals/AnimalBatchProcessor";
+export * from "./world/animals/AnimalBehavior";
 
 // =============================================================================
 // SOCIAL - Social interactions, family, reputation
 // =============================================================================
-export { SocialSystem } from "./SocialSystem";
-export { MarriageSystem } from "./MarriageSystem";
-export { HouseholdSystem } from "./HouseholdSystem";
-export { ReputationSystem } from "./ReputationSystem";
-export { GenealogySystem } from "./GenealogySystem";
+export { SocialSystem } from "./social/SocialSystem";
+export { MarriageSystem } from "./social/MarriageSystem";
+export { HouseholdSystem } from "./social/HouseholdSystem";
+export { ReputationSystem } from "./social/ReputationSystem";
+export { GenealogySystem } from "./social/GenealogySystem";
 
 // =============================================================================
 // ECONOMY - Economy, inventory, crafting
 // =============================================================================
-export { EconomySystem } from "./EconomySystem";
-export { InventorySystem } from "./InventorySystem";
-export { EnhancedCraftingSystem } from "./EnhancedCraftingSystem";
-export { RecipeDiscoverySystem } from "./RecipeDiscoverySystem";
-export { ResourceReservationSystem } from "./ResourceReservationSystem";
+export { EconomySystem } from "./economy/EconomySystem";
+export { InventorySystem } from "./economy/InventorySystem";
+export { EnhancedCraftingSystem } from "./economy/EnhancedCraftingSystem";
+export { RecipeDiscoverySystem } from "./economy/RecipeDiscoverySystem";
+export { ResourceReservationSystem } from "./economy/ResourceReservationSystem";
 
 // =============================================================================
 // CONFLICT - Combat and conflict resolution
 // =============================================================================
-export { CombatSystem } from "./CombatSystem";
-export { ConflictResolutionSystem } from "./ConflictResolutionSystem";
+export { CombatSystem } from "./conflict/CombatSystem";
+export { ConflictResolutionSystem } from "./conflict/ConflictResolutionSystem";
 
 // =============================================================================
 // STRUCTURES - Buildings and governance
 // =============================================================================
-export { BuildingSystem } from "./BuildingSystem";
-export { GovernanceSystem } from "./GovernanceSystem";
+export { BuildingSystem } from "./structures/BuildingSystem";
+export { GovernanceSystem } from "./structures/GovernanceSystem";
 
 // =============================================================================
 // LIFECYCLE - Entity lifecycle management
 // =============================================================================
-export { LifeCycleSystem } from "./LifeCycleSystem";
+export { LifeCycleSystem } from "./lifecycle/LifeCycleSystem";
 
 // =============================================================================
 // OBJECTIVES - Tasks and objectives
 // =============================================================================
-export { TaskSystem } from "./TaskSystem";
+export { TaskSystem } from "./objectives/TaskSystem";
 
 // =============================================================================
 // CORE - Infrastructure systems (time, chunks, terrain)
 // =============================================================================
-export { TimeSystem } from "./TimeSystem";
-export { ChunkLoadingSystem } from "./ChunkLoadingSystem";
-export { TerrainSystem } from "./TerrainSystem";
+export { TimeSystem } from "./core/TimeSystem";
+export { ChunkLoadingSystem } from "./core/ChunkLoadingSystem";
+export { TerrainSystem } from "./core/TerrainSystem";

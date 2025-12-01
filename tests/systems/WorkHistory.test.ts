@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { Container } from "inversify";
 import { TYPES } from "../../src/config/Types";
-import { TaskSystem } from "../../src/domain/simulation/systems/TaskSystem";
+import { TaskSystem } from "../../src/domain/simulation/systems/objectives/TaskSystem";
 import { GameState } from "../../src/domain/types/game-types";
 import { createMockGameState } from "../setup";
 

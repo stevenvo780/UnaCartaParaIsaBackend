@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { AnimalGenetics } from "../../../src/domain/simulation/systems/animals/AnimalGenetics";
+import { AnimalGenetics } from "../../../src/domain/simulation/systems/world/animals/AnimalGenetics";
 import type { AnimalGenes } from "../../../src/domain/types/simulation/animals";
 
 describe("AnimalGenetics", () => {

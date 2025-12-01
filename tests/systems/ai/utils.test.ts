@@ -8,11 +8,11 @@ import {
   getGoalTier,
   getRecommendedZoneIdsForNeed,
   getUnexploredZones,
-} from "../../../src/domain/simulation/systems/ai/core/utils";
+} from "../../../src/domain/simulation/systems/agents/ai/core/utils";
 import type {
   PriorityManager,
   GoalDomain,
-} from "../../../src/domain/simulation/systems/ai/core/PriorityManager";
+} from "../../../src/domain/simulation/systems/agents/ai/core/PriorityManager";
 import { createMockGameState } from "../../setup";
 
 function createAIState(overrides: Partial<AIState> = {}): AIState {

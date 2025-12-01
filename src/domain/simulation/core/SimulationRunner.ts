@@ -7,48 +7,44 @@ import { SharedSpatialIndex } from "./SharedSpatialIndex";
 import { AgentRegistry } from "./AgentRegistry";
 import { WorldGenerationService } from "../../world/worldGenerationService";
 import { logger } from "../../../infrastructure/utils/logger";
-import { WorldResourceSystem } from "../systems/WorldResourceSystem";
 
-import { LifeCycleSystem } from "../systems/LifeCycleSystem";
-import { NeedsSystem } from "../systems/needs/NeedsSystem";
-import { GenealogySystem } from "../systems/GenealogySystem";
-import { SocialSystem } from "../systems/SocialSystem";
-import { InventorySystem } from "../systems/InventorySystem";
-import { EconomySystem } from "../systems/EconomySystem";
-import { RoleSystem } from "../systems/RoleSystem";
-import { AISystem } from "../systems/AISystem";
-import { ResourceReservationSystem } from "../systems/ResourceReservationSystem";
-import { GovernanceSystem } from "../systems/GovernanceSystem";
-
-import { HouseholdSystem } from "../systems/HouseholdSystem";
-import { BuildingSystem } from "../systems/BuildingSystem";
-
-import { ProductionSystem } from "../systems/ProductionSystem";
-import { EnhancedCraftingSystem } from "../systems/EnhancedCraftingSystem";
-import { AnimalSystem } from "../systems/animals/AnimalSystem";
-import { ItemGenerationSystem } from "../systems/ItemGenerationSystem";
-import { ReputationSystem } from "../systems/ReputationSystem";
-
-import { RecipeDiscoverySystem } from "../systems/RecipeDiscoverySystem";
-
-import { TaskSystem } from "../systems/TaskSystem";
-
-import { MarriageSystem } from "../systems/MarriageSystem";
-import { ConflictResolutionSystem } from "../systems/ConflictResolutionSystem";
+// Import all systems from the centralized index
+import {
+  WorldResourceSystem,
+  LifeCycleSystem,
+  NeedsSystem,
+  GenealogySystem,
+  SocialSystem,
+  InventorySystem,
+  EconomySystem,
+  RoleSystem,
+  AISystem,
+  ResourceReservationSystem,
+  GovernanceSystem,
+  HouseholdSystem,
+  BuildingSystem,
+  ProductionSystem,
+  EnhancedCraftingSystem,
+  AnimalSystem,
+  ItemGenerationSystem,
+  ReputationSystem,
+  RecipeDiscoverySystem,
+  TaskSystem,
+  MarriageSystem,
+  ConflictResolutionSystem,
+  CombatSystem,
+  AmbientAwarenessSystem,
+  TimeSystem,
+  MovementSystem,
+  ChunkLoadingSystem,
+} from "../systems";
+import { SharedKnowledgeSystem } from "../systems/agents/ai/SharedKnowledgeSystem";
 
 import { simulationEvents } from "./events";
 import { BatchedEventEmitter } from "./BatchedEventEmitter";
-import { CombatSystem } from "../systems/CombatSystem";
-
-import { AmbientAwarenessSystem } from "../systems/AmbientAwarenessSystem";
-
-import { TimeSystem } from "../systems/TimeSystem";
 
 import { EntityType } from "../../../shared/constants/EntityEnums";
-import { MovementSystem } from "../systems/movement/MovementSystem";
 
-import { ChunkLoadingSystem } from "../systems/ChunkLoadingSystem";
-import { SharedKnowledgeSystem } from "../systems/ai/SharedKnowledgeSystem";
 import { GPUComputeService } from "./GPUComputeService";
 import { StateDirtyTracker } from "./StateDirtyTracker";
 import { MultiRateScheduler } from "./MultiRateScheduler";

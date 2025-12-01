@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { planGoalsSimplified } from "@/domain/simulation/systems/ai/core/SimplifiedGoalPlanner";
-import { evaluateRules, needUtility, socialNeedUtility } from "@/domain/simulation/systems/ai/core/GoalRule";
+import { planGoalsSimplified } from "@/domain/simulation/systems/agents/ai/core/SimplifiedGoalPlanner";
+import { evaluateRules, needUtility, socialNeedUtility } from "@/domain/simulation/systems/agents/ai/core/GoalRule";
 import {
   hungerRule,
   thirstRule,
@@ -18,7 +18,7 @@ import {
   constructionRule,
   depositRule,
   craftWeaponRule,
-} from "@/domain/simulation/systems/ai/core/GoalRules";
+} from "@/domain/simulation/systems/agents/ai/core/GoalRules";
 import { GoalType } from "@/shared/constants/AIEnums";
 import { WorkEthic, ExplorationType } from "@/shared/constants/AgentEnums";
 import type { AIState } from "@/domain/types/simulation/ai";

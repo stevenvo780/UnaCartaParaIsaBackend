@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { AmbientAwarenessSystem } from "../../src/domain/simulation/systems/AmbientAwarenessSystem.ts";
-import { NeedsSystem } from "../../src/domain/simulation/systems/needs/NeedsSystem.ts";
-import { LifeCycleSystem } from "../../src/domain/simulation/systems/LifeCycleSystem.ts";
+import { AmbientAwarenessSystem } from "../../src/domain/simulation/systems/agents/AmbientAwarenessSystem.ts";
+import { NeedsSystem } from "../../src/domain/simulation/systems/agents/needs/NeedsSystem.ts";
+import { LifeCycleSystem } from "../../src/domain/simulation/systems/lifecycle/LifeCycleSystem.ts";
 import { createMockGameState } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 

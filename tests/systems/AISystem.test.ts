@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { AISystem } from "../../src/domain/simulation/systems/AISystem.ts";
-import { NeedsSystem } from "../../src/domain/simulation/systems/needs/NeedsSystem.ts";
-import { RoleSystem } from "../../src/domain/simulation/systems/RoleSystem.ts";
-import { WorldResourceSystem } from "../../src/domain/simulation/systems/WorldResourceSystem.ts";
-import { LifeCycleSystem } from "../../src/domain/simulation/systems/LifeCycleSystem.ts";
+import { AISystem } from "../../src/domain/simulation/systems/agents/AISystem.ts";
+import { NeedsSystem } from "../../src/domain/simulation/systems/agents/needs/NeedsSystem.ts";
+import { RoleSystem } from "../../src/domain/simulation/systems/agents/RoleSystem.ts";
+import { WorldResourceSystem } from "../../src/domain/simulation/systems/world/WorldResourceSystem.ts";
+import { LifeCycleSystem } from "../../src/domain/simulation/systems/lifecycle/LifeCycleSystem.ts";
 import {
   createMockGameState,
   createMockAISystemDependencies,

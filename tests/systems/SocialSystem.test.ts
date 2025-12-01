@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { SocialSystem } from "../../src/domain/simulation/systems/SocialSystem.ts";
+import { SocialSystem } from "../../src/domain/simulation/systems/social/SocialSystem.ts";
 import { createMockGameState, createEntityIndex, createMockGPUService } from "../setup.ts";
 import type { GameState } from "../../src/types/game-types.ts";
 import { EntityIndex } from "../../src/domain/simulation/core/EntityIndex.ts";

@@ -1,9 +1,9 @@
 import "reflect-metadata";
 import { Container } from "inversify";
 import { TYPES } from "../../../config/Types";
-import { BuildingSystem } from "../../../domain/simulation/systems/BuildingSystem";
-import { TerrainSystem } from "../../../domain/simulation/systems/TerrainSystem";
-import { ResourceReservationSystem } from "../../../domain/simulation/systems/ResourceReservationSystem";
+import { BuildingSystem } from "../../../domain/simulation/systems/structures/BuildingSystem";
+import { TerrainSystem } from "../../../domain/simulation/systems/core/TerrainSystem";
+import { ResourceReservationSystem } from "../../../domain/simulation/systems/economy/ResourceReservationSystem";
 import {
   GameState,
   SimulationTerrainTile,
