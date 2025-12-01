@@ -65,7 +65,6 @@ export {
   type AIZoneHandlerDeps,
   type AIZoneInventoryPort,
   type AIZoneCraftingPort,
-  type AIZoneQuestPort,
   type AIZoneRolePort,
   type AIZoneSocialPort,
   type AIZoneHouseholdPort,

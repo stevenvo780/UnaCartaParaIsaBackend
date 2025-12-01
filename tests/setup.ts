@@ -13,7 +13,7 @@ import type {
   CombatSystem,
   AnimalSystem,
   MovementSystem,
-  QuestSystem,
+  // QuestSystem removed - narrative quests not needed for simulation
   TimeSystem,
 } from "../src/domain/simulation/systems/index.js";
 import type { RoleSystem } from "../src/domain/simulation/systems/RoleSystem.js";
@@ -189,12 +189,7 @@ export function createMockAISystemDependencies() {
       isMovingToPosition: vi.fn(() => false),
       isMovingToZone: vi.fn(() => false),
     } as unknown as MovementSystem,
-    questSystem: {
-      getActiveQuests: vi.fn(() => []),
-      getAvailableQuests: vi.fn(() => []),
-      startQuest: vi.fn(),
-      completeQuest: vi.fn(),
-    } as unknown as QuestSystem,
+    // questSystem removed - narrative quests not needed for simulation
     timeSystem: {
       getCurrentTime: vi.fn(() => Date.now()),
       getGameTime: vi.fn(() => 0),

@@ -14,7 +14,7 @@ import type { AgentRole } from "../../../types/simulation/roles";
 import type { Inventory, Stockpile } from "../../../types/simulation/economy";
 import type { Task } from "../../../types/simulation/tasks";
 import type { SettlementDemand } from "../../../types/simulation/governance";
-import type { Quest } from "../../../types/simulation/quests";
+
 import type { ResourceType as ResourceTypeImport } from "../../../../shared/constants/ResourceEnums";
 
 export type ResourceType = ResourceTypeImport;
@@ -160,12 +160,6 @@ export interface IAIContext {
 
   /** Claim a task for an agent */
   claimTask(taskId: string, agentId: string): boolean;
-
-  /** Get active quests */
-  getActiveQuests(): Quest[];
-
-  /** Get available quests */
-  getAvailableQuests(): Quest[];
 
   /** Get current time of day */
   getTimeOfDay():

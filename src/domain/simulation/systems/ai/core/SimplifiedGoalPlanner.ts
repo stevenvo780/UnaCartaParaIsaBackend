@@ -68,15 +68,6 @@ export interface SimplifiedGoalPlannerDeps {
       }
     | undefined;
 
-  getActiveQuestGoal?: (entityId: string) =>
-    | {
-        questId: string;
-        objectiveId: string;
-        goalType: string;
-        targetZoneId?: string;
-      }
-    | undefined;
-
   getContributableBuilding?: (entityId: string) =>
     | {
         zoneId: string;
@@ -149,8 +140,6 @@ export function planGoalsSimplified(
     roleEfficiency: deps.getRoleEfficiency?.(entityId) ?? 1.0,
 
     nearbyInspectable: deps.getNearbyInspectable?.(entityId),
-
-    activeQuestGoal: deps.getActiveQuestGoal?.(entityId),
 
     contributableBuilding: deps.getContributableBuilding?.(entityId),
   };

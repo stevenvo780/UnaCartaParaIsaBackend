@@ -700,35 +700,6 @@ export const buildingContributionRule: GoalRule = {
   }),
 };
 
-export const questRule: GoalRule = {
-  id: "quest",
-  goalType: GoalType.WORK,
-  category: "work",
-  condition: (ctx) => {
-    if (!ctx.activeQuestGoal) return false;
-    return true;
-  },
-  priority: (_ctx) => 0.6,
-  minPriority: 0.5,
-  getData: (ctx) => {
-    const quest = ctx.activeQuestGoal!;
-
-    let goalType = GoalType.WORK;
-    if (quest.goalType === "gather") goalType = GoalType.GATHER;
-    if (quest.goalType === "explore") goalType = GoalType.EXPLORE;
-    if (quest.goalType === "combat") goalType = GoalType.COMBAT;
-
-    return {
-      type: goalType,
-      targetZoneId: quest.targetZoneId,
-      data: {
-        questId: quest.questId,
-        objectiveId: quest.objectiveId,
-      },
-    };
-  },
-};
-
 /**
  * Reglas core que reemplazan:
  * - BiologicalDriveEvaluator
@@ -789,8 +760,6 @@ export const fullRules: GoalRule[] = [
   huntingRule,
   buildingContributionRule,
   tradeRule,
-
-  questRule,
 
   gatherExpansionRule,
   territoryExpansionRule,

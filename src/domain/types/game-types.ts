@@ -56,7 +56,7 @@ export interface EconomyState {
 }
 import type { TradeOffer, TradeRecord } from "./simulation/trade";
 import type { MarriageGroup } from "./simulation/marriage";
-import type { Quest } from "./simulation/quests";
+// Quest import removed - narrative quests not needed for simulation
 import type {
   ActiveConflict,
   ConflictRecord,
@@ -288,13 +288,7 @@ export interface MarriageState {
   };
 }
 
-export interface QuestState {
-  active: Quest[];
-  available: Quest[];
-  completed: Quest[];
-  totalCompleted: number;
-  totalExperience: number;
-}
+// QuestState removed - narrative quests not needed for simulation
 
 export interface ConflictState {
   active: ActiveConflict[];
@@ -488,7 +482,7 @@ export interface GameState {
   dialogueState?: DialogueStateSnapshot;
   trade?: TradeState;
   marriage?: MarriageState;
-  quests?: QuestState;
+  // quests removed - narrative quests not needed for simulation
   conflicts?: ConflictState;
   research?: ResearchState;
   recipes?: RecipeState;

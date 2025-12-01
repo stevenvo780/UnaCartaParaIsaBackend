@@ -1,6 +1,6 @@
 # Plan de Simplificación de Sistemas
 
-## Estado Actual: ~~31~~ → 28 Sistemas Principales
+## Estado Actual: ~~31~~ → 27 Sistemas Principales
 
 Tras el análisis, hay oportunidades claras de consolidación y eliminación.
 
@@ -9,9 +9,9 @@ Tras el análisis, hay oportunidades claras de consolidación y eliminación.
 - ✅ LivingLegendsSystem: ELIMINADO  
 - ✅ BuildingMaintenanceSystem: FUSIONADO en BuildingSystem
 - ✅ SharedKnowledgeSystem: MOVIDO a ai/ (infraestructura interna)
+- ✅ QuestSystem: ELIMINADO (misiones narrativas no necesarias para simulación)
 - ⏸️ RecipeDiscoverySystem: POSPUESTO (complejo, fusión opcional)
 - ⏸️ ItemGenerationSystem + ProductionSystem: POSPUESTO (complejo, 1471 líneas)
-- ⏸️ QuestSystem + TaskSystem: POSPUESTO (diferentes propósitos, 1159 líneas)
 - ✅ GenealogySystem: MANTENER SEPARADO (pequeño, bien definido)
 - ⏸️ MarriageSystem + HouseholdSystem: POSPUESTO (APIs incompatibles)
 
@@ -33,14 +33,31 @@ Tras el análisis, hay oportunidades claras de consolidación y eliminación.
 - **Similitud**: Mantenimiento es parte del ciclo de vida de edificios
 - **Estado**: ✅ Fusionado en BuildingSystem
 
+### 4. **QuestSystem** (570 líneas) → ✅ ELIMINADO
+- **Uso**: Misiones narrativas, no esencial para simulación core
+- **Razón**: Usuario decidió eliminar misiones narrativas para enfocarse en simulación
+- **Estado**: ✅ Eliminado completamente (sistema, tests, referencias)
+
 ---
 
 ## 🟠 SISTEMAS PENDIENTES DE FUSIONAR
 
-### 4. **SharedKnowledgeSystem** (343 líneas) → ✅ MOVIDO a ai/
+### 5. **SharedKnowledgeSystem** (343 líneas) → ✅ MOVIDO a ai/
 - **Uso**: Solo en `AIContextAdapter` para alertas
 - **Decisión**: Movido a `systems/ai/` como infraestructura interna
 - **Estado**: ✅ Reclasificado
+
+### 6. **RecipeDiscoverySystem** (350 líneas) → ⏸️ POSPUESTO
+- **Similitud**: Ambos manejan recetas y conocimiento de crafting
+- **Complejidad**: Alta (700+ líneas combinadas)
+- **Estado**: Pospuesto (fusión opcional, no prioritario)
+
+### 7. **ItemGenerationSystem** (362 líneas) + **ProductionSystem** (312 líneas) → ⏸️ POSPUESTO
+- **Similitud**: Ambos generan recursos en el mundo
+- **Complejidad**: Alta (1471 líneas combinadas)
+- **Estado**: Pospuesto (muy complejo, riesgo alto)
+
+### 8. **GenealogySystem** (217 líneas) → ✅ MANTENER SEPARADO
 
 ### 5. **RecipeDiscoverySystem** (350 líneas) → ⏸️ POSPUESTO
 - **Similitud**: Ambos manejan recetas y conocimiento de crafting

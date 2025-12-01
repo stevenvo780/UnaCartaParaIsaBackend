@@ -52,13 +52,6 @@ export interface AIZoneCraftingPort {
 }
 
 /**
- * Minimal interface for quest operations needed by AIZoneHandler.
- */
-export interface AIZoneQuestPort {
-  startQuest(questId: string): void;
-}
-
-/**
  * Minimal interface for role operations needed by AIZoneHandler.
  */
 export interface AIZoneRolePort {
@@ -99,7 +92,8 @@ export interface AIZoneHandlerDeps {
   gameState: GameState;
   inventorySystem: AIZoneInventoryPort | null;
   craftingSystem: AIZoneCraftingPort | null;
-  questSystem: AIZoneQuestPort | null;
+
+  questSystem: null;
   roleSystem: AIZoneRolePort | null;
   socialSystem: AIZoneSocialPort | null;
   householdSystem: AIZoneHouseholdPort | null;
@@ -179,10 +173,6 @@ export class AIZoneHandler {
       zoneId &&
       this.handleBuildingContribution(entityId, zoneId, goal, aiState)
     ) {
-      return;
-    }
-
-    if (this.handleQuestStart(goal, aiState)) {
       return;
     }
 
@@ -512,21 +502,6 @@ export class AIZoneHandler {
           resources: transferred,
         });
       }
-    }
-
-    aiState.currentGoal = null;
-    aiState.currentAction = null;
-    return true;
-  }
-
-  private handleQuestStart(goal: AIGoal, aiState: AIState): boolean {
-    if (goal.data?.action !== ActionType.START_QUEST || !goal.data?.questId) {
-      return false;
-    }
-
-    if (this.deps.questSystem) {
-      const questId = goal.data.questId as string;
-      this.deps.questSystem.startQuest(questId);
     }
 
     aiState.currentGoal = null;

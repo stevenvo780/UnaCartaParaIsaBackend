@@ -67,13 +67,6 @@ export interface GoalContext {
 
   nearbyInspectable?: { id: string; position: { x: number; y: number } };
 
-  activeQuestGoal?: {
-    questId: string;
-    objectiveId: string;
-    goalType: string;
-    targetZoneId?: string;
-  };
-
   contributableBuilding?: {
     zoneId: string;
     score: number;

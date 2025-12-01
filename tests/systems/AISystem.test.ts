@@ -63,6 +63,7 @@ describe("AISystem", () => {
     // Usar mocks completos para evitar warnings
     const mockDeps = createMockAISystemDependencies();
     // El constructor espera todos los sistemas como parámetros individuales
+    // questSystem removed - narrative quests not needed for simulation
     aiSystem = new AISystem(
       gameState,
       needsSystem,
@@ -76,7 +77,6 @@ describe("AISystem", () => {
       mockDeps.combatSystem,
       mockDeps.animalSystem,
       mockDeps.movementSystem,
-      mockDeps.questSystem,
       mockDeps.timeSystem,
     );
   });
@@ -229,6 +229,7 @@ describe("AISystem", () => {
 
     it("debe expirar objetivos antiguos", () => {
       // Crear un nuevo sistema con las dependencias necesarias
+      // questSystem removed - narrative quests not needed for simulation
       const mockDeps = createMockAISystemDependencies();
       aiSystem = new AISystem(
         gameState,
@@ -243,7 +244,6 @@ describe("AISystem", () => {
         mockDeps.combatSystem,
         mockDeps.animalSystem,
         mockDeps.movementSystem,
-        mockDeps.questSystem,
         mockDeps.timeSystem,
       );
 
