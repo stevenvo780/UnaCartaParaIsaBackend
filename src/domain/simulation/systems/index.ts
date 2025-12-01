@@ -61,6 +61,10 @@ export {
 } from "./agents/EquipmentSystem";
 export { AmbientAwarenessSystem } from "./agents/AmbientAwarenessSystem";
 
+// Agent registry (ECS pattern for unified agent state access)
+export { AgentRegistry } from "./agents/AgentRegistry";
+export type { MovementState } from "./agents/AgentRegistry";
+
 // AI subsystems
 export * from "./agents/ai/core/SimplifiedGoalPlanner";
 export * from "./agents/ai/core/GoalRules";
@@ -84,6 +88,7 @@ export { ItemGenerationSystem } from "./world/ItemGenerationSystem";
 export { ProductionSystem } from "./world/ProductionSystem";
 export { AnimalSystem } from "./world/animals/AnimalSystem";
 export { AnimalBatchProcessor } from "./world/animals/AnimalBatchProcessor";
+export { AnimalRegistry } from "./world/animals/AnimalRegistry";
 export * from "./world/animals/AnimalBehavior";
 
 // =============================================================================

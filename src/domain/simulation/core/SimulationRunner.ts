@@ -4,7 +4,7 @@ import type { ILifeCyclePort } from "../ports";
 import { cloneGameState } from "./defaultState";
 import { EntityIndex } from "./EntityIndex";
 import { SharedSpatialIndex } from "./SharedSpatialIndex";
-import { AgentRegistry } from "./AgentRegistry";
+import { AgentRegistry } from "../systems/agents/AgentRegistry";
 import { WorldGenerationService } from "../../world/worldGenerationService";
 import { logger } from "../../../infrastructure/utils/logger";
 

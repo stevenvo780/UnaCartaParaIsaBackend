@@ -16,12 +16,12 @@
 
 import { injectable } from "inversify";
 import { logger } from "@/infrastructure/utils/logger";
-import type { Animal, AnimalNeeds } from "../../types/simulation/animals";
+import type { Animal, AnimalNeeds } from "../../../../types/simulation/animals";
 import {
   AnimalState,
   AnimalType,
   AnimalTargetType,
-} from "../../../shared/constants/AnimalEnums";
+} from "../../../../../shared/constants/AnimalEnums";
 
 /**
  * Grid cell size for spatial indexing (256px cells)

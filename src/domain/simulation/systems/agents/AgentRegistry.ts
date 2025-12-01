@@ -21,11 +21,11 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "@/config/Types";
 import { logger } from "@/infrastructure/utils/logger";
-import type { GameState } from "../../types/game-types";
-import type { AgentProfile } from "../../types/simulation/agents";
-import type { AIState } from "../../types/simulation/ai";
-import type { EntityNeedsData } from "../../types/simulation/needs";
-import type { Inventory } from "../../types/simulation/economy";
+import type { GameState } from "../../../types/game-types";
+import type { AgentProfile } from "../../../types/simulation/agents";
+import type { AIState } from "../../../types/simulation/ai";
+import type { EntityNeedsData } from "../../../types/simulation/needs";
+import type { Inventory } from "../../../types/simulation/economy";
 
 /**
  * Movement state interface (compatible with MovementSystem.EntityMovementState)
