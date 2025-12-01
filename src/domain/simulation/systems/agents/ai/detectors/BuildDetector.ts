@@ -14,22 +14,17 @@ import {
   createTask,
 } from "../types";
 
-// ============================================================================
-// DETECTOR
-// ============================================================================
-
 /**
  * Detecta necesidad de construir
  */
 export function detectBuild(ctx: DetectorContext): Task[] {
   const tasks: Task[] = [];
 
-  // 1. Construcciones pendientes (para builders)
   if (ctx.pendingBuilds?.length) {
     const role = (ctx.roleType ?? "").toLowerCase();
 
     if (role === "builder" || role === "worker") {
-      const best = ctx.pendingBuilds[0]; // Ya ordenadas por prioridad
+      const best = ctx.pendingBuilds[0];
 
       tasks.push(
         createTask({
@@ -47,7 +42,6 @@ export function detectBuild(ctx: DetectorContext): Task[] {
     }
   }
 
-  // 2. Contribuir recursos a edificio
   if (ctx.contributableBuilding) {
     const hasResources =
       (ctx.inventory?.wood ?? 0) > 5 || (ctx.inventory?.stone ?? 0) > 5;
@@ -73,22 +67,16 @@ export function detectBuild(ctx: DetectorContext): Task[] {
   return tasks;
 }
 
-// ============================================================================
-// HELPERS
-// ============================================================================
-
 function calculateBuildPriority(
   ctx: DetectorContext,
   progress: number,
 ): number {
   let priority = TASK_PRIORITIES.NORMAL;
 
-  // Más prioritario si está casi terminado
   if (progress > 0.7) {
     priority += 0.2;
   }
 
-  // Bonus por personalidad
   const conscientiousness = ctx.personality?.diligence ?? 0.5;
   priority += conscientiousness * 0.1;
 

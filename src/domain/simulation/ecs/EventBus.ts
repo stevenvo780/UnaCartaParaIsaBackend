@@ -16,15 +16,10 @@
 import { injectable } from "inversify";
 import { logger } from "@/infrastructure/utils/logger";
 
-// ============================================================================
-// EVENT TYPES
-// ============================================================================
-
 /**
  * Definición de todos los eventos del sistema
  */
 export interface SystemEvents {
-  // Combat Events
   "combat:damage_dealt": {
     attackerId: string;
     targetId: string;
@@ -49,7 +44,6 @@ export interface SystemEvents {
     timestamp: number;
   };
 
-  // Needs Events
   "needs:critical": {
     agentId: string;
     needType: string;
@@ -72,7 +66,6 @@ export interface SystemEvents {
     timestamp: number;
   };
 
-  // Movement Events
   "movement:arrived": {
     agentId: string;
     position: { x: number; y: number };
@@ -92,7 +85,6 @@ export interface SystemEvents {
     timestamp: number;
   };
 
-  // Inventory Events
   "inventory:item_added": {
     agentId: string;
     itemId: string;
@@ -115,7 +107,6 @@ export interface SystemEvents {
     timestamp: number;
   };
 
-  // Social Events
   "social:interaction": {
     agentId: string;
     targetId: string;
@@ -132,7 +123,6 @@ export interface SystemEvents {
     timestamp: number;
   };
 
-  // Economy Events
   "economy:transaction": {
     buyerId: string;
     sellerId: string;
@@ -149,7 +139,6 @@ export interface SystemEvents {
     timestamp: number;
   };
 
-  // AI Events
   "ai:task_started": {
     agentId: string;
     taskType: string;
@@ -185,7 +174,6 @@ export interface SystemEvents {
     timestamp: number;
   };
 
-  // Lifecycle Events
   "lifecycle:agent_spawned": {
     agentId: string;
     position: { x: number; y: number };
@@ -202,10 +190,6 @@ export type EventName = keyof SystemEvents;
 export type EventData<E extends EventName> = SystemEvents[E];
 export type EventHandler<E extends EventName> = (data: EventData<E>) => void;
 
-// ============================================================================
-// EVENT BUS CONFIG
-// ============================================================================
-
 export interface EventBusConfig {
   /** Enable debug logging */
   debug: boolean;
@@ -220,10 +204,6 @@ const DEFAULT_CONFIG: EventBusConfig = {
   maxListeners: 100,
   catchErrors: true,
 };
-
-// ============================================================================
-// EVENT BUS
-// ============================================================================
 
 @injectable()
 export class EventBus {
@@ -265,7 +245,6 @@ export class EventBus {
       logger.debug(`EventBus: Handler registered for ${event}`);
     }
 
-    // Retorna función de unsubscribe
     return () => {
       handlers.delete(handler as EventHandler<EventName>);
       if (this.config.debug) {
@@ -295,7 +274,6 @@ export class EventBus {
   public emit<E extends EventName>(event: E, data: EventData<E>): void {
     const handlers = this.handlers.get(event);
 
-    // Incrementar contador
     this.eventCounts.set(event, (this.eventCounts.get(event) ?? 0) + 1);
 
     if (!handlers || handlers.size === 0) {

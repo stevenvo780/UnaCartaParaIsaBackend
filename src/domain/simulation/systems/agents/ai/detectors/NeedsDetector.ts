@@ -16,19 +16,11 @@ import {
 } from "../types";
 import { NeedType } from "@/shared/constants/AIEnums";
 
-// ============================================================================
-// THRESHOLDS
-// ============================================================================
-
 const THRESHOLDS = {
-  CRITICAL: 15, // Peligro de muerte
-  URGENT: 30, // Necesidad urgente
-  LOW: 50, // Atención recomendada
+  CRITICAL: 15,
+  URGENT: 30,
+  LOW: 50,
 } as const;
-
-// ============================================================================
-// DETECTOR
-// ============================================================================
 
 /**
  * Detecta necesidades biológicas y genera tareas
@@ -38,7 +30,6 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
 
   if (!ctx.needs) return tasks;
 
-  // Hambre
   const hunger = ctx.needs.hunger ?? 100;
   if (hunger < THRESHOLDS.LOW) {
     tasks.push(
@@ -55,7 +46,6 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     );
   }
 
-  // Sed
   const thirst = ctx.needs.thirst ?? 100;
   if (thirst < THRESHOLDS.LOW) {
     tasks.push(
@@ -72,7 +62,6 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     );
   }
 
-  // Energía
   const energy = ctx.needs.energy ?? 100;
   if (energy < THRESHOLDS.LOW) {
     tasks.push(
@@ -86,7 +75,6 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     );
   }
 
-  // Social
   const social = ctx.needs.social ?? 100;
   if (social < THRESHOLDS.LOW && ctx.nearbyAgents?.length) {
     const target = ctx.nearbyAgents[0];
@@ -102,7 +90,6 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     );
   }
 
-  // Diversión
   const fun = ctx.needs.fun ?? 100;
   if (fun < THRESHOLDS.LOW && ctx.nearbyAgents?.length) {
     const target = ctx.nearbyAgents[0];
@@ -118,7 +105,6 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     );
   }
 
-  // Salud mental
   const mentalHealth = ctx.needs.mentalHealth ?? 100;
   if (mentalHealth < THRESHOLDS.LOW) {
     tasks.push(
@@ -134,10 +120,6 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
 
   return tasks;
 }
-
-// ============================================================================
-// HELPERS
-// ============================================================================
 
 /**
  * Calcula prioridad basada en nivel de necesidad

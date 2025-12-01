@@ -15,18 +15,10 @@ import {
   createTask,
 } from "../types";
 
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
 /** Tiempo mínimo entre exploraciones (ms) */
-const EXPLORE_COOLDOWN = 60000; // 1 minuto
+const EXPLORE_COOLDOWN = 60000;
 /** Tiempo largo sin explorar aumenta urgencia */
-const EXPLORE_URGENCY_TIME = 300000; // 5 minutos
-
-// ============================================================================
-// DETECTOR
-// ============================================================================
+const EXPLORE_URGENCY_TIME = 300000;
 
 /**
  * Detecta necesidad de explorar
@@ -34,19 +26,16 @@ const EXPLORE_URGENCY_TIME = 300000; // 5 minutos
 export function detectExplore(ctx: DetectorContext): Task[] {
   const tasks: Task[] = [];
 
-  // 1. Inspeccionar algo cercano e interesante
   const inspectTask = detectInspect(ctx);
   if (inspectTask) {
     tasks.push(inspectTask);
   }
 
-  // 2. Exploración por curiosidad
   const exploreTask = detectCuriosityExplore(ctx);
   if (exploreTask) {
     tasks.push(exploreTask);
   }
 
-  // 3. Búsqueda de recursos (si inventario bajo)
   const resourceScoutTask = detectResourceScout(ctx);
   if (resourceScoutTask) {
     tasks.push(resourceScoutTask);
@@ -54,10 +43,6 @@ export function detectExplore(ctx: DetectorContext): Task[] {
 
   return tasks;
 }
-
-// ============================================================================
-// SUB-DETECTORS
-// ============================================================================
 
 function detectInspect(ctx: DetectorContext): Task | null {
   if (!ctx.nearbyInspectable) return null;
@@ -81,15 +66,12 @@ function detectCuriosityExplore(ctx: DetectorContext): Task | null {
   const lastExplore = ctx.lastExploreTime ?? 0;
   const timeSinceExplore = ctx.now - lastExplore;
 
-  // Cooldown no pasado
   if (timeSinceExplore < EXPLORE_COOLDOWN) return null;
 
   const curiosity = ctx.personality?.curiosity ?? 0.5;
 
-  // Calcular prioridad
   let priority = TASK_PRIORITIES.LOWEST + curiosity * 0.1;
 
-  // Bonus si hace mucho que no explora
   if (timeSinceExplore > EXPLORE_URGENCY_TIME) {
     priority += 0.15;
   }
@@ -107,12 +89,11 @@ function detectCuriosityExplore(ctx: DetectorContext): Task | null {
 }
 
 function detectResourceScout(ctx: DetectorContext): Task | null {
-  // Solo si inventario bajo
   if (!ctx.inventoryCapacity) return null;
 
   const loadRatio = (ctx.inventoryLoad ?? 0) / ctx.inventoryCapacity;
 
-  if (loadRatio > 0.5) return null; // Inventario suficientemente lleno
+  if (loadRatio > 0.5) return null;
 
   const diligence = ctx.personality?.diligence ?? 0.5;
 

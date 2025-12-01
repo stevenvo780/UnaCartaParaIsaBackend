@@ -15,10 +15,6 @@ import {
   successResult,
 } from "../types";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 export interface TradeOffer {
   give: Record<string, number>;
   receive: Record<string, number>;
@@ -40,25 +36,19 @@ export interface TradeHandlerDeps {
   canTrade?: (agentId: string, targetId: string) => boolean;
 }
 
-// ============================================================================
-// HANDLER
-// ============================================================================
-
 /**
  * Maneja el comercio delegando al TradeSystem.
  */
 export function handleTrade(
   ctx: HandlerContext,
-  _deps?: TradeHandlerDeps, // Deprecated, ignorado
+  _deps?: TradeHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
 
-  // Validar tipo
   if (task.type !== TaskType.TRADE) {
     return errorResult("Wrong task type");
   }
 
-  // Validar sistema
   if (!systems.trade) {
     return errorResult("TradeSystem not available");
   }
@@ -76,10 +66,9 @@ export function handleTrade(
     return errorResult("No item specified for trade");
   }
 
-  // Delegar al TradeSystem
   const result = systems.trade.requestTrade(
-    agentId, // buyer
-    sellerId, // seller
+    agentId,
+    sellerId,
     itemId,
     quantity,
     price,

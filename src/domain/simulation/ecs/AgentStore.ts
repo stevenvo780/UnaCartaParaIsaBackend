@@ -31,10 +31,6 @@ import {
   cloneComponent,
 } from "./AgentComponents";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 export interface AgentStoreConfig {
   /** Enable debug logging */
   debug: boolean;
@@ -47,18 +43,12 @@ const DEFAULT_CONFIG: AgentStoreConfig = {
   trackDirty: true,
 };
 
-// ============================================================================
-// AGENT STORE
-// ============================================================================
-
 @injectable()
 export class AgentStore {
   private config: AgentStoreConfig;
 
-  // Almacén principal: agentId -> todos sus componentes
   private entities = new Map<string, Partial<AgentComponents>>();
 
-  // Índices por tipo de componente para acceso rápido
   private healthIndex = new Map<string, HealthComponent>();
   private needsIndex = new Map<string, NeedsComponent>();
   private transformIndex = new Map<string, TransformComponent>();
@@ -70,10 +60,8 @@ export class AgentStore {
   private socialIndex = new Map<string, SocialComponent>();
   private profileIndex = new Map<string, ProfileComponent>();
 
-  // Tracking de cambios para optimización
   private dirtyComponents = new Map<string, Set<ComponentType>>();
 
-  // Cache de queries comunes
   private agentsInCombatCache: string[] | null = null;
   private agentsMovingCache: string[] | null = null;
 
@@ -81,10 +69,6 @@ export class AgentStore {
     this.config = { ...DEFAULT_CONFIG, ...config };
     logger.info("🗄️ AgentStore: Initialized");
   }
-
-  // ==========================================================================
-  // ENTITY MANAGEMENT
-  // ==========================================================================
 
   /**
    * Registra un nuevo agente con componentes iniciales
@@ -100,7 +84,6 @@ export class AgentStore {
 
     this.entities.set(agentId, { id: agentId, ...components });
 
-    // Indexar cada componente
     if (components.health) this.healthIndex.set(agentId, components.health);
     if (components.needs) this.needsIndex.set(agentId, components.needs);
     if (components.transform)
@@ -128,7 +111,6 @@ export class AgentStore {
   public removeAgent(agentId: string): void {
     this.entities.delete(agentId);
 
-    // Limpiar todos los índices
     this.healthIndex.delete(agentId);
     this.needsIndex.delete(agentId);
     this.transformIndex.delete(agentId);
@@ -169,10 +151,6 @@ export class AgentStore {
     return this.entities.size;
   }
 
-  // ==========================================================================
-  // COMPONENT ACCESS - TYPED GETTERS
-  // ==========================================================================
-
   /**
    * Obtiene un componente específico de un agente
    */
@@ -200,19 +178,15 @@ export class AgentStore {
       return;
     }
 
-    // Clonar para inmutabilidad
     const cloned = cloneComponent(value);
 
-    // Actualizar entidad
     (entity as Record<string, unknown>)[component] = cloned;
 
-    // Actualizar índice
     const index = this.getIndexForComponent(component);
     if (index) {
       (index as Map<string, unknown>).set(agentId, cloned);
     }
 
-    // Marcar como dirty
     if (this.config.trackDirty) {
       if (!this.dirtyComponents.has(agentId)) {
         this.dirtyComponents.set(agentId, new Set());
@@ -220,12 +194,10 @@ export class AgentStore {
       this.dirtyComponents.get(agentId)!.add(component);
     }
 
-    // Invalidar caches relevantes
     if (component === "combat") this.agentsInCombatCache = null;
     if (component === "movement") this.agentsMovingCache = null;
   }
 
-  // Getters específicos para acceso rápido
   public getHealth(agentId: string): HealthComponent | undefined {
     return this.healthIndex.get(agentId);
   }
@@ -266,15 +238,10 @@ export class AgentStore {
     return this.profileIndex.get(agentId);
   }
 
-  // Obtener posición (shortcut común)
   public getPosition(agentId: string): { x: number; y: number } | undefined {
     const transform = this.transformIndex.get(agentId);
     return transform ? { x: transform.x, y: transform.y } : undefined;
   }
-
-  // ==========================================================================
-  // SETTERS - Shortcuts for common component updates
-  // ==========================================================================
 
   public setHealth(agentId: string, health: HealthComponent): void {
     this.setComponent(agentId, "health", health);
@@ -315,10 +282,6 @@ export class AgentStore {
   public setProfile(agentId: string, profile: ProfileComponent): void {
     this.setComponent(agentId, "profile", profile);
   }
-
-  // ==========================================================================
-  // QUERIES
-  // ==========================================================================
 
   /**
    * Obtiene agentes que tienen un componente específico
@@ -400,10 +363,6 @@ export class AgentStore {
       .map(([id]) => id);
   }
 
-  // ==========================================================================
-  // DIRTY TRACKING
-  // ==========================================================================
-
   /**
    * Obtiene componentes modificados desde el último clearDirty
    */
@@ -431,10 +390,6 @@ export class AgentStore {
   public clearAllDirty(): void {
     this.dirtyComponents.clear();
   }
-
-  // ==========================================================================
-  // BATCH OPERATIONS
-  // ==========================================================================
 
   /**
    * Actualiza múltiples componentes de un agente de una vez
@@ -468,10 +423,6 @@ export class AgentStore {
     }
     return result as Pick<AgentComponents, K>;
   }
-
-  // ==========================================================================
-  // SERIALIZATION
-  // ==========================================================================
 
   /**
    * Exporta todos los datos para snapshot
@@ -509,10 +460,6 @@ export class AgentStore {
     this.invalidateCaches();
   }
 
-  // ==========================================================================
-  // STATS
-  // ==========================================================================
-
   public getStats(): {
     totalAgents: number;
     agentsInCombat: number;
@@ -526,10 +473,6 @@ export class AgentStore {
       dirtyAgents: this.dirtyComponents.size,
     };
   }
-
-  // ==========================================================================
-  // PRIVATE HELPERS
-  // ==========================================================================
 
   private getIndexForComponent(
     component: ComponentType,

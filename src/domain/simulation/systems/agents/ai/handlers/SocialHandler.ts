@@ -15,10 +15,6 @@ import {
   successResult,
 } from "../types";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 /**
  * @deprecated Use SystemRegistry.social instead
  */
@@ -39,41 +35,32 @@ export interface SocialHandlerDeps {
   isCompatibleForReproduction?: (agentId: string, targetId: string) => boolean;
 }
 
-// ============================================================================
-// HANDLER
-// ============================================================================
-
 /**
  * Maneja interacciones sociales delegando al SocialSystem.
  */
 export function handleSocialize(
   ctx: HandlerContext,
-  _deps?: SocialHandlerDeps, // Deprecated, ignorado
+  _deps?: SocialHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
   const targetId = task.target?.entityId;
 
-  // Validar tipo
   if (task.type !== TaskType.SOCIALIZE && task.type !== TaskType.ASSIST) {
     return errorResult("Wrong task type");
   }
 
-  // Validar sistema
   if (!systems.social) {
     return errorResult("SocialSystem not available");
   }
 
-  // Validar target
   if (!targetId) {
     return errorResult("No social target specified");
   }
 
-  // Determinar tipo de interacción
   const interactionType =
     (task.params?.action as string) ??
     (task.type === TaskType.ASSIST ? "assist" : "chat");
 
-  // Delegar al SocialSystem
   const result = systems.social.requestInteraction(
     agentId,
     targetId,

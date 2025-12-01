@@ -16,10 +16,6 @@ import {
 } from "../types";
 import { moveToPosition, isAtTarget } from "./MoveHandler";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 /**
  * @deprecated Use MovementSystem directly
  */
@@ -34,10 +30,6 @@ export interface ExploreHandlerDeps {
   getExplorationProgress?: (agentId: string) => number;
 }
 
-// ============================================================================
-// HANDLER
-// ============================================================================
-
 /**
  * Maneja la exploración usando MovementSystem.
  *
@@ -46,21 +38,18 @@ export interface ExploreHandlerDeps {
  */
 export function handleExplore(
   ctx: HandlerContext,
-  _deps?: ExploreHandlerDeps, // Deprecated, ignorado
+  _deps?: ExploreHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
 
-  // Validar tipo
   if (task.type !== TaskType.EXPLORE) {
     return errorResult("Wrong task type");
   }
 
-  // Validar sistema de movimiento
   if (!systems.movement) {
     return errorResult("MovementSystem not available");
   }
 
-  // Si hay target específico → ir ahí
   if (task.target?.position) {
     if (isAtTarget(position, task.target.position)) {
       return successResult({
@@ -72,7 +61,6 @@ export function handleExplore(
     return moveToPosition(ctx, task.target.position);
   }
 
-  // Si hay zona target → ir a la zona
   if (task.target?.zoneId) {
     const result = systems.movement.requestMoveToZone(
       agentId,
@@ -93,7 +81,6 @@ export function handleExplore(
     return inProgressResult("movement", "Exploring zone");
   }
 
-  // Sin target → generar posición aleatoria cercana
   const randomOffset = () => (Math.random() - 0.5) * 20;
   const randomTarget = {
     x: position.x + randomOffset(),

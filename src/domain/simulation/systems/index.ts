@@ -43,10 +43,6 @@
  * - KnowledgeNetworkSystem → eliminated (unused)
  */
 
-// =============================================================================
-// AGENTS - Agent behavior, AI, needs, movement, roles
-// =============================================================================
-// AISystem ahora viene de ./agents/ai (arquitectura v3)
 export { NeedsSystem } from "./agents/needs/NeedsSystem";
 export { NeedsBatchProcessor } from "./agents/needs/NeedsBatchProcessor";
 export { MovementSystem } from "./agents/movement/MovementSystem";
@@ -61,16 +57,11 @@ export {
 } from "./agents/EquipmentSystem";
 export { AmbientAwarenessSystem } from "./agents/AmbientAwarenessSystem";
 
-// Agent registry (ECS pattern for unified agent state access)
 export { AgentRegistry } from "./agents/AgentRegistry";
 export type { MovementState } from "./agents/AgentRegistry";
 
-// AI subsystems - Nueva arquitectura v3 (incluye AISystem)
 export * from "./agents/ai";
 
-// =============================================================================
-// WORLD - World resources, generation, animals, terrain, chunks
-// =============================================================================
 export { WorldResourceSystem } from "./world/WorldResourceSystem";
 export { ItemGenerationSystem } from "./world/ItemGenerationSystem";
 export { ProductionSystem } from "./world/ProductionSystem";
@@ -95,47 +86,26 @@ export type {
   TileQueryOptions,
 } from "./world/WorldQueryService";
 
-// =============================================================================
-// SOCIAL - Social interactions, family, reputation
-// =============================================================================
 export { SocialSystem } from "./social/SocialSystem";
 export { MarriageSystem } from "./social/MarriageSystem";
 export { HouseholdSystem } from "./social/HouseholdSystem";
 export { ReputationSystem } from "./social/ReputationSystem";
 export { GenealogySystem } from "./social/GenealogySystem";
 
-// =============================================================================
-// ECONOMY - Economy, inventory, crafting
-// =============================================================================
 export { EconomySystem } from "./economy/EconomySystem";
 export { InventorySystem } from "./economy/InventorySystem";
 export { EnhancedCraftingSystem } from "./economy/EnhancedCraftingSystem";
 export { RecipeDiscoverySystem } from "./economy/RecipeDiscoverySystem";
 export { ResourceReservationSystem } from "./economy/ResourceReservationSystem";
 
-// =============================================================================
-// CONFLICT - Combat and conflict resolution
-// =============================================================================
 export { CombatSystem } from "./conflict/CombatSystem";
 export { ConflictResolutionSystem } from "./conflict/ConflictResolutionSystem";
 
-// =============================================================================
-// STRUCTURES - Buildings and governance
-// =============================================================================
 export { BuildingSystem } from "./structures/BuildingSystem";
 export { GovernanceSystem } from "./structures/GovernanceSystem";
 
-// =============================================================================
-// LIFECYCLE - Entity lifecycle management
-// =============================================================================
 export { LifeCycleSystem } from "./lifecycle/LifeCycleSystem";
 
-// =============================================================================
-// OBJECTIVES - Tasks and objectives
-// =============================================================================
 export { TaskSystem } from "./objectives/TaskSystem";
 
-// =============================================================================
-// CORE - Time system (kept here as it's infrastructure, not world generation)
-// =============================================================================
 export { TimeSystem } from "./core/TimeSystem";

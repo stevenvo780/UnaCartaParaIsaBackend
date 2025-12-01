@@ -15,10 +15,6 @@ import {
   successResult,
 } from "../types";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 /**
  * @deprecated Use SystemRegistry.building instead
  */
@@ -39,25 +35,19 @@ export interface BuildHandlerDeps {
   ) => boolean;
 }
 
-// ============================================================================
-// HANDLER
-// ============================================================================
-
 /**
  * Maneja la construcción delegando al BuildingSystem.
  */
 export function handleBuild(
   ctx: HandlerContext,
-  _deps?: BuildHandlerDeps, // Deprecated, ignorado
+  _deps?: BuildHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
 
-  // Validar tipo
   if (task.type !== TaskType.BUILD) {
     return errorResult("Wrong task type");
   }
 
-  // Validar sistema
   if (!systems.building) {
     return errorResult("BuildingSystem not available");
   }
@@ -65,7 +55,6 @@ export function handleBuild(
   const buildingId = task.target?.entityId;
   const buildingType = task.params?.buildingType as string | undefined;
 
-  // Si tiene buildingId → reparar/contribuir
   if (buildingId) {
     const result = systems.building.requestRepair(agentId, buildingId);
 
@@ -94,7 +83,6 @@ export function handleBuild(
     }
   }
 
-  // Si tiene buildingType y posición → nueva construcción
   if (buildingType) {
     const targetPos = task.target?.position ?? position;
     const result = systems.building.requestBuild(

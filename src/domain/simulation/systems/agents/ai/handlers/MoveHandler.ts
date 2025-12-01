@@ -14,16 +14,8 @@ import type {
 } from "../types";
 import { errorResult, inProgressResult, successResult } from "../types";
 
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
 /** Distancia para considerar que llegó al destino */
 const ARRIVAL_THRESHOLD = 1.5;
-
-// ============================================================================
-// UTILITIES
-// ============================================================================
 
 /**
  * Verifica si el agente está en el target
@@ -50,10 +42,6 @@ export function distance(
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// ============================================================================
-// HANDLER
-// ============================================================================
-
 /**
  * Maneja solicitudes de movimiento delegando al MovementSystem.
  *
@@ -62,26 +50,21 @@ export function distance(
 export function handleMove(ctx: HandlerContext): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
 
-  // Validar que existe MovementSystem
   if (!systems.movement) {
     return errorResult("MovementSystem not available");
   }
 
   const target = task.target;
 
-  // Sin target → error
   if (!target) {
     return errorResult("No movement target specified");
   }
 
-  // Prioridad: position > zoneId > entityId
   if (target.position) {
-    // Ya llegó?
     if (isAtTarget(position, target.position)) {
       return successResult({ arrivedAt: target.position });
     }
 
-    // Delegar al sistema
     const result = systems.movement.requestMove(agentId, target.position);
 
     if (result.status === "failed") {

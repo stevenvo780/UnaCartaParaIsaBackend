@@ -92,7 +92,7 @@ export class StateCache {
       "market",
       "trade",
       "marriage",
-      // "quests" removed - narrative quests not needed for simulation
+
       "conflicts",
       "research",
       "recipes",

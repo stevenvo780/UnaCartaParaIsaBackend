@@ -10,10 +10,6 @@
 import { injectable } from "inversify";
 import { logger } from "@/infrastructure/utils/logger";
 
-// ============================================================================
-// SYSTEM INTERFACES
-// ============================================================================
-
 /**
  * Resultado de una operación de handler
  */
@@ -136,15 +132,10 @@ export interface ITradeSystem extends ISystem {
   ): HandlerResult;
 }
 
-// ============================================================================
-// SYSTEM REGISTRY
-// ============================================================================
-
 @injectable()
 export class SystemRegistry {
   private systems = new Map<string, ISystem>();
 
-  // Sistemas tipados (se asignan al registrar)
   public movement?: IMovementSystem;
   public combat?: ICombatSystem;
   public needs?: INeedsSystem;
@@ -164,7 +155,6 @@ export class SystemRegistry {
   public register<T extends ISystem>(name: string, system: T): void {
     this.systems.set(name, system);
 
-    // Asignar a propiedad tipada si corresponde
     switch (name) {
       case "movement":
         this.movement = system as unknown as IMovementSystem;
@@ -234,7 +224,6 @@ export class SystemRegistry {
 
     this.systems.delete(name);
 
-    // Clear from typed properties
     switch (name) {
       case "movement":
         this.movement = undefined;

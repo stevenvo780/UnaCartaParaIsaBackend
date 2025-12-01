@@ -15,16 +15,8 @@ import {
   createTask,
 } from "../types";
 
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
 /** No trabajar si necesidades críticas */
 const CRITICAL_NEED_THRESHOLD = 15;
-
-// ============================================================================
-// DETECTOR
-// ============================================================================
 
 /**
  * Detecta necesidad de trabajar
@@ -32,10 +24,6 @@ const CRITICAL_NEED_THRESHOLD = 15;
 export function detectWork(ctx: DetectorContext): Task[] {
   const tasks: Task[] = [];
 
-  // No trabajar si:
-  // - No es hora de trabajo
-  // - Está en combate
-  // - Necesidades críticas
   if (!ctx.isWorkHours) return tasks;
   if (ctx.isInCombat) return tasks;
 
@@ -58,7 +46,6 @@ export function detectWork(ctx: DetectorContext): Task[] {
       break;
 
     case "builder":
-      // Construcción se maneja en BuildDetector
       break;
 
     case "warrior":
@@ -67,15 +54,12 @@ export function detectWork(ctx: DetectorContext): Task[] {
       break;
 
     case "crafter":
-      // Crafteo se maneja en CraftDetector
       break;
 
     case "trader":
-      // Comercio se maneja en TradeDetector
       break;
 
     default:
-      // Rol genérico → recolectar si hay recursos
       if (ctx.nearestResource) {
         tasks.push(...detectGatherWork(ctx));
       }
@@ -83,10 +67,6 @@ export function detectWork(ctx: DetectorContext): Task[] {
 
   return tasks;
 }
-
-// ============================================================================
-// SUB-DETECTORS
-// ============================================================================
 
 function detectGatherWork(ctx: DetectorContext): Task[] {
   const tasks: Task[] = [];
@@ -115,11 +95,9 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
 function detectHuntWork(ctx: DetectorContext): Task[] {
   const tasks: Task[] = [];
 
-  // Necesita arma para cazar
   if (!ctx.hasWeapon) return tasks;
 
-  // Buscar presa (puede ser detectada por sistema externo)
-  const priority = calculateWorkPriority(ctx) * 1.1; // Caza ligeramente más prioritaria
+  const priority = calculateWorkPriority(ctx) * 1.1;
 
   tasks.push(
     createTask({
@@ -137,7 +115,6 @@ function detectHuntWork(ctx: DetectorContext): Task[] {
 function detectPatrolWork(ctx: DetectorContext): Task[] {
   const tasks: Task[] = [];
 
-  // Patrullar = explorar con propósito defensivo
   const priority = TASK_PRIORITIES.LOW;
 
   tasks.push(
@@ -153,25 +130,19 @@ function detectPatrolWork(ctx: DetectorContext): Task[] {
   return tasks;
 }
 
-// ============================================================================
-// HELPERS
-// ============================================================================
-
 function calculateWorkPriority(ctx: DetectorContext): number {
   let priority = TASK_PRIORITIES.NORMAL;
 
-  // Bonus por diligencia
   const diligence = ctx.personality?.diligence ?? 0.5;
   priority += diligence * 0.2;
 
-  // Bonus si inventario vacío
   const loadRatio =
     ctx.inventoryLoad && ctx.inventoryCapacity
       ? ctx.inventoryLoad / ctx.inventoryCapacity
       : 0;
 
   if (loadRatio < 0.3) {
-    priority += 0.1; // Más urgente si casi vacío
+    priority += 0.1;
   }
 
   return Math.min(0.9, priority);

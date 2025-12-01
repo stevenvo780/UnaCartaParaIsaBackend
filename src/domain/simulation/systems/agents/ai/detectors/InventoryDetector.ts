@@ -14,16 +14,8 @@ import {
   createTask,
 } from "../types";
 
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-const DEPOSIT_THRESHOLD = 0.7; // Depositar cuando inventario > 70%
-const URGENT_DEPOSIT_THRESHOLD = 0.9; // Urgente cuando > 90%
-
-// ============================================================================
-// DETECTOR
-// ============================================================================
+const DEPOSIT_THRESHOLD = 0.7;
+const URGENT_DEPOSIT_THRESHOLD = 0.9;
 
 /**
  * Detecta necesidad de depositar recursos
@@ -31,7 +23,6 @@ const URGENT_DEPOSIT_THRESHOLD = 0.9; // Urgente cuando > 90%
 export function detectInventory(ctx: DetectorContext): Task[] {
   const tasks: Task[] = [];
 
-  // Necesita inventario y zona de depósito
   if (!ctx.inventoryLoad || !ctx.inventoryCapacity) return tasks;
   if (!ctx.depositZoneId) return tasks;
 

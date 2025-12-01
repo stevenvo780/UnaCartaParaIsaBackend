@@ -16,10 +16,6 @@ import {
 } from "../types";
 import { moveToPosition, isAtTarget } from "./MoveHandler";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 /**
  * @deprecated Use SystemRegistry.needs instead
  */
@@ -37,25 +33,19 @@ export interface ConsumeHandlerDeps {
   ) => boolean;
 }
 
-// ============================================================================
-// HANDLER
-// ============================================================================
-
 /**
  * Maneja el consumo delegando al NeedsSystem.
  */
 export function handleConsume(
   ctx: HandlerContext,
-  _deps?: ConsumeHandlerDeps, // Deprecated, ignorado
+  _deps?: ConsumeHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
 
-  // Validar tipo
   if (task.type !== TaskType.SATISFY_NEED) {
     return errorResult("Wrong task type");
   }
 
-  // Validar sistema
   if (!systems.needs) {
     return errorResult("NeedsSystem not available");
   }
@@ -67,7 +57,6 @@ export function handleConsume(
     return errorResult("No need type specified");
   }
 
-  // Si tiene item específico → consumir directamente
   if (itemId) {
     const result = systems.needs.requestConsume(agentId, itemId);
 
@@ -85,14 +74,11 @@ export function handleConsume(
     return inProgressResult("needs", "Consuming item");
   }
 
-  // Si tiene target position (ir a recurso) → moverse primero
   if (task.target?.position) {
     if (!isAtTarget(position, task.target.position)) {
       return moveToPosition(ctx, task.target.position);
     }
 
-    // Llegó al recurso → el sistema de necesidades debe auto-consumir
-    // Delegar al NeedsSystem para que busque y consuma
     const result = systems.needs.requestConsume(agentId, needType);
 
     if (result.status === "completed") {
@@ -106,7 +92,6 @@ export function handleConsume(
     return inProgressResult("needs", "Consuming at resource location");
   }
 
-  // Sin item ni target → pedir al sistema que busque algo que consumir
   const result = systems.needs.requestConsume(agentId, needType);
 
   if (result.status === "completed") {

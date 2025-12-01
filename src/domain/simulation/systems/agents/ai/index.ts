@@ -16,15 +16,7 @@
  * @module domain/simulation/systems/agents/ai
  */
 
-// ============================================================================
-// SISTEMA PRINCIPAL
-// ============================================================================
-
 export { AISystem, type AISystemDeps, type AISystemConfig } from "./AISystem";
-
-// ============================================================================
-// TIPOS COMPARTIDOS
-// ============================================================================
 
 export type {
   AgentTask,
@@ -40,18 +32,9 @@ export {
   isTaskExpired,
 } from "@/shared/types/simulation/unifiedTasks";
 
-// Tipos locales
 export type { Task, DetectorContext, HandlerContext } from "./types";
 
-// ============================================================================
-// COLA DE TAREAS
-// ============================================================================
-
 export { TaskQueue, type TaskQueueConfig } from "./TaskQueue";
-
-// ============================================================================
-// DETECTORES (observan estado → generan tareas)
-// ============================================================================
 
 export { ALL_DETECTORS, type Detector } from "./detectors";
 export { detectNeeds } from "./detectors/NeedsDetector";
@@ -63,10 +46,6 @@ export { detectBuild } from "./detectors/BuildDetector";
 export { detectSocial } from "./detectors/SocialDetector";
 export { detectExplore } from "./detectors/ExploreDetector";
 export { detectTrade } from "./detectors/TradeDetector";
-
-// ============================================================================
-// HANDLERS (ejecutan acciones específicas)
-// ============================================================================
 
 export {
   handleMove,
@@ -84,9 +63,5 @@ export {
   isAtTarget,
   moveToPosition,
 } from "./handlers";
-
-// ============================================================================
-// UTILIDADES
-// ============================================================================
 
 export { SharedKnowledgeSystem } from "./SharedKnowledgeSystem";

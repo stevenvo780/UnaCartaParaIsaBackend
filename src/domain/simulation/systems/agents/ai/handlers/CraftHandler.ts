@@ -15,10 +15,6 @@ import {
   successResult,
 } from "../types";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 export interface Recipe {
   itemType: string;
   ingredients: Record<string, number>;
@@ -49,25 +45,19 @@ export interface CraftHandlerDeps {
   ) => { id: string; position: { x: number; y: number } } | null;
 }
 
-// ============================================================================
-// HANDLER
-// ============================================================================
-
 /**
  * Maneja el crafteo delegando al CraftingSystem.
  */
 export function handleCraft(
   ctx: HandlerContext,
-  _deps?: CraftHandlerDeps, // Deprecated, ignorado
+  _deps?: CraftHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
 
-  // Validar tipo
   if (task.type !== TaskType.CRAFT) {
     return errorResult("Wrong task type");
   }
 
-  // Validar sistema
   if (!systems.crafting) {
     return errorResult("CraftingSystem not available");
   }
@@ -79,12 +69,10 @@ export function handleCraft(
     return errorResult("No recipe specified");
   }
 
-  // Verificar si puede craftear
   if (!systems.crafting.canCraft(agentId, recipeId)) {
     return errorResult("Cannot craft: missing ingredients or station");
   }
 
-  // Delegar al sistema
   const result = systems.crafting.requestCraft(agentId, recipeId);
 
   switch (result.status) {

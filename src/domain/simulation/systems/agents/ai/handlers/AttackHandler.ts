@@ -15,10 +15,6 @@ import {
   successResult,
 } from "../types";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 /**
  * @deprecated Use SystemRegistry.combat instead
  */
@@ -32,37 +28,28 @@ export interface AttackHandlerDeps {
   isInRange?: (agentId: string, targetId: string, range: number) => boolean;
 }
 
-// ============================================================================
-// HANDLER
-// ============================================================================
-
 /**
  * Maneja el ataque delegando al CombatSystem.
  */
 export function handleAttack(
   ctx: HandlerContext,
-  _deps?: AttackHandlerDeps, // Deprecated, ignorado
+  _deps?: AttackHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
   const targetId = task.target?.entityId;
 
-  // Validar tipo
   if (task.type !== TaskType.ATTACK && task.type !== TaskType.HUNT) {
     return errorResult("Wrong task type");
   }
 
-  // Validar sistema
   if (!systems.combat) {
     return errorResult("CombatSystem not available");
   }
 
-  // Validar target
   if (!targetId) {
     return errorResult("No attack target specified");
   }
 
-  // Delegar completamente al CombatSystem
-  // El sistema se encarga de: verificar rango, mover si es necesario, atacar
   const result = systems.combat.requestAttack(agentId, targetId);
 
   switch (result.status) {
@@ -80,7 +67,6 @@ export function handleAttack(
       return inProgressResult("combat", result.message ?? "Attacking");
 
     case "delegated":
-      // El sistema delegó a movimiento para acercarse
       return inProgressResult(
         result.system,
         result.message ?? "Moving to target",

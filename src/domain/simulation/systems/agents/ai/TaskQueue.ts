@@ -49,17 +49,17 @@ const DEFAULT_CONFIG: TaskQueueConfig = {
  * ```ts
  * const queue = new TaskQueue();
  *
- * // Add a task
+ *
  * queue.enqueue(agentId, {
  *   type: TaskType.GATHER,
  *   priority: 0.6,
  *   params: { resourceType: 'wood' }
  * });
  *
- * // Get next task
+ *
  * const task = queue.dequeue(agentId);
  *
- * // Peek without removing
+ *
  * const nextTask = queue.peek(agentId);
  * ```
  */
@@ -93,7 +93,6 @@ export class TaskQueue {
       this.queues.set(agentId, queue);
     }
 
-    // Check for similar task - if exists, BOOST its priority instead of rejecting
     const existingIndex = this.findSimilarTaskIndex(queue, task);
     if (existingIndex !== -1) {
       const existing = queue[existingIndex];
@@ -105,7 +104,6 @@ export class TaskQueue {
         );
       }
 
-      // Update priority and re-sort
       existing.priority = newPriority;
       queue.splice(existingIndex, 1);
       const newIndex = this.findInsertIndex(queue, newPriority);
@@ -114,13 +112,10 @@ export class TaskQueue {
       return true;
     }
 
-    // Enforce max queue size
     if (queue.length >= this.config.maxTasksPerAgent) {
-      // Remove lowest priority task
       queue.pop();
     }
 
-    // Insert in priority order
     const insertIndex = this.findInsertIndex(queue, task.priority);
     queue.splice(insertIndex, 0, task);
 
@@ -141,12 +136,10 @@ export class TaskQueue {
     const queue = this.queues.get(agentId);
     if (!queue || queue.length === 0) return null;
 
-    // Clean expired tasks first
     if (this.config.autoCleanExpired) {
       this.cleanExpired(agentId);
     }
 
-    // Get first valid task
     while (queue.length > 0) {
       const task = queue.shift();
       if (task && !isTaskTerminal(task) && !isTaskExpired(task)) {
@@ -165,7 +158,6 @@ export class TaskQueue {
     const queue = this.queues.get(agentId);
     if (!queue || queue.length === 0) return null;
 
-    // Find first non-expired, non-terminal task
     for (const task of queue) {
       if (!isTaskTerminal(task) && !isTaskExpired(task)) {
         return task;
@@ -264,7 +256,6 @@ export class TaskQueue {
     const now = Date.now();
     const before = queue.length;
 
-    // Filter out expired and terminal tasks
     const filtered = queue.filter(
       (task) => !isTaskExpired(task, now) && !isTaskTerminal(task),
     );
@@ -308,10 +299,6 @@ export class TaskQueue {
     };
   }
 
-  // ============================================================================
-  // Private Helpers
-  // ============================================================================
-
   /**
    * Find the correct index to insert a task based on priority.
    * Higher priority tasks come first.
@@ -335,7 +322,6 @@ export class TaskQueue {
       if (existing.type !== newTask.type) return false;
       if (isTaskTerminal(existing)) return false;
 
-      // Check target similarity
       const existingTarget = existing.target;
       const newTarget = newTask.target;
 

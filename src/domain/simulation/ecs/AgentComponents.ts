@@ -9,40 +9,28 @@
 
 import type { AgentTask } from "@/shared/types/simulation/unifiedTasks";
 
-// ============================================================================
-// COMPOSITE TYPES
-// ============================================================================
-
 /**
  * Todos los componentes que un agente puede tener.
  * Cada sistema lee/escribe solo sus propios componentes.
  */
 export interface AgentComponents {
-  // Core
   id: string;
   profile: ProfileComponent;
 
-  // Vital
   health: HealthComponent;
   needs: NeedsComponent;
 
-  // Spatial
   transform: TransformComponent;
   movement: MovementComponent;
 
-  // Economy
   inventory: InventoryComponent;
 
-  // Combat
   combat: CombatComponent;
 
-  // Work
   role: RoleComponent;
 
-  // Social
   social: SocialComponent;
 
-  // AI
   ai: AIComponent;
 }
 
@@ -50,10 +38,6 @@ export interface AgentComponents {
  * Tipo para acceder a un componente específico
  */
 export type ComponentType = keyof AgentComponents;
-
-// ============================================================================
-// INDIVIDUAL COMPONENTS
-// ============================================================================
 
 /**
  * Perfil básico del agente
@@ -175,7 +159,7 @@ export interface SocialComponent {
 export interface RelationshipData {
   targetId: string;
   type: "family" | "friend" | "enemy" | "neutral" | "partner";
-  affinity: number; // -100 to 100
+  affinity: number;
   lastInteraction: number;
 }
 
@@ -188,10 +172,6 @@ export interface AIComponent {
   lastDecisionTime: number;
   isProcessing: boolean;
 }
-
-// ============================================================================
-// FACTORY FUNCTIONS
-// ============================================================================
 
 /**
  * Crea componentes por defecto para un nuevo agente
@@ -287,7 +267,7 @@ export function cloneComponent<T>(component: T): T {
   }
   if (typeof component === "object" && component !== null) {
     const cloned = { ...component } as Record<string, unknown>;
-    // Deep clone Maps dentro del objeto
+
     for (const key of Object.keys(cloned)) {
       if (cloned[key] instanceof Map) {
         cloned[key] = new Map(cloned[key] as Map<unknown, unknown>);

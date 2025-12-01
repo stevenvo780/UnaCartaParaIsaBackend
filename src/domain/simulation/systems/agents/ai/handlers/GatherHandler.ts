@@ -16,10 +16,6 @@ import {
 } from "../types";
 import { isAtTarget, moveToPosition } from "./MoveHandler";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 /**
  * @deprecated Use SystemRegistry.inventory instead
  */
@@ -40,43 +36,34 @@ export interface GatherHandlerDeps {
   ) => boolean;
 }
 
-// ============================================================================
-// HANDLER
-// ============================================================================
-
 /**
  * Maneja la recolección delegando al InventorySystem.
  */
 export function handleGather(
   ctx: HandlerContext,
-  _deps?: GatherHandlerDeps, // Deprecated, ignorado
+  _deps?: GatherHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
   const target = task.target;
 
-  // Validar tipo de tarea
   if (task.type !== TaskType.GATHER) {
     return errorResult("Wrong task type");
   }
 
-  // Validar sistema disponible
   if (!systems.inventory) {
     return errorResult("InventorySystem not available");
   }
 
-  // Validar target
   if (!target?.position && !target?.entityId) {
     return errorResult("No gather target specified");
   }
 
-  // Si tiene posición target, verificar si llegó
   if (target.position) {
     if (!isAtTarget(position, target.position)) {
       return moveToPosition(ctx, target.position);
     }
   }
 
-  // Si tiene entityId (recurso específico), moverse hacia él
   if (target.entityId && !target.position) {
     if (!systems.movement) {
       return errorResult("MovementSystem not available");
@@ -96,7 +83,6 @@ export function handleGather(
     }
   }
 
-  // En posición → delegar recolección al sistema
   const resourceId = target.entityId ?? (task.params?.resourceId as string);
   const quantity = (task.params?.amount as number) ?? 1;
 

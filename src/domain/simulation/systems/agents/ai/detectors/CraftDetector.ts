@@ -14,17 +14,12 @@ import {
   createTask,
 } from "../types";
 
-// ============================================================================
-// DETECTOR
-// ============================================================================
-
 /**
  * Detecta necesidad de craftear
  */
 export function detectCraft(ctx: DetectorContext): Task[] {
   const tasks: Task[] = [];
 
-  // Detectar necesidad de arma
   const needsWeapon = detectWeaponNeed(ctx);
   if (needsWeapon) {
     tasks.push(needsWeapon);
@@ -33,21 +28,13 @@ export function detectCraft(ctx: DetectorContext): Task[] {
   return tasks;
 }
 
-// ============================================================================
-// SUB-DETECTORS
-// ============================================================================
-
 function detectWeaponNeed(ctx: DetectorContext): Task | null {
-  // Ya tiene arma
   if (ctx.hasWeapon || ctx.equippedWeapon !== "unarmed") return null;
 
-  // No puede craftear ninguna
   if (!ctx.canCraftClub && !ctx.canCraftDagger) return null;
 
-  // No hay zona de crafteo
   if (!ctx.craftZoneId) return null;
 
-  // Determinar prioridad según rol
   const role = (ctx.roleType ?? "").toLowerCase();
   const needsWeaponForRole =
     role === "hunter" || role === "guard" || role === "warrior";

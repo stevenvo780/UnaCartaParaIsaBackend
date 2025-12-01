@@ -18,17 +18,9 @@ import {
   createTask,
 } from "../types";
 
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-const FLEE_HEALTH_THRESHOLD = 0.2; // Huir si salud < 20%
-const PREDATOR_FLEE_DISTANCE = 80; // Huir si predador más cerca
-const THREAT_ALERT_THRESHOLD = 0.3; // Alertarse si amenaza > 30%
-
-// ============================================================================
-// DETECTOR
-// ============================================================================
+const FLEE_HEALTH_THRESHOLD = 0.2;
+const PREDATOR_FLEE_DISTANCE = 80;
+const THREAT_ALERT_THRESHOLD = 0.3;
 
 /**
  * Detecta situaciones de combate
@@ -36,12 +28,10 @@ const THREAT_ALERT_THRESHOLD = 0.3; // Alertarse si amenaza > 30%
 export function detectCombat(ctx: DetectorContext): Task[] {
   const tasks: Task[] = [];
 
-  // 1. Si fue atacado → contraatacar o huir
   if (ctx.attackerId) {
     const healthRatio = (ctx.health ?? 100) / (ctx.maxHealth ?? 100);
 
     if (healthRatio < FLEE_HEALTH_THRESHOLD) {
-      // Salud muy baja → HUIR
       tasks.push(
         createTask({
           agentId: ctx.agentId,
@@ -53,7 +43,6 @@ export function detectCombat(ctx: DetectorContext): Task[] {
         }),
       );
     } else {
-      // Contraatacar
       tasks.push(
         createTask({
           agentId: ctx.agentId,
@@ -67,19 +56,16 @@ export function detectCombat(ctx: DetectorContext): Task[] {
     }
   }
 
-  // 2. Predadores cercanos
   if (ctx.nearbyPredators?.length) {
     const closest = ctx.nearbyPredators[0];
     const dist = distance(ctx.position, closest);
 
     if (dist < PREDATOR_FLEE_DISTANCE) {
-      // Predador muy cerca
       const isWarrior = ctx.roleType === "warrior" || ctx.roleType === "guard";
       const hasWeapon = ctx.hasWeapon;
       const healthRatio = (ctx.health ?? 100) / (ctx.maxHealth ?? 100);
 
       if (isWarrior && hasWeapon && healthRatio > 0.5) {
-        // Guerrero armado y sano → atacar
         tasks.push(
           createTask({
             agentId: ctx.agentId,
@@ -91,7 +77,6 @@ export function detectCombat(ctx: DetectorContext): Task[] {
           }),
         );
       } else {
-        // No guerrero o débil → huir
         tasks.push(
           createTask({
             agentId: ctx.agentId,
@@ -109,14 +94,12 @@ export function detectCombat(ctx: DetectorContext): Task[] {
     }
   }
 
-  // 3. Enemigos cercanos (no atacando aún)
   if (ctx.nearbyEnemies?.length && !ctx.attackerId) {
     const closest = ctx.nearbyEnemies[0];
     const dist = distance(ctx.position, closest);
     const isWarrior = ctx.roleType === "warrior" || ctx.roleType === "guard";
 
     if (isWarrior && ctx.hasWeapon && dist < 100) {
-      // Guerrero ve enemigo → atacar
       tasks.push(
         createTask({
           agentId: ctx.agentId,
@@ -130,14 +113,12 @@ export function detectCombat(ctx: DetectorContext): Task[] {
     }
   }
 
-  // 4. Nivel de amenaza alto (sin atacante específico)
   if (
     ctx.threatLevel &&
     ctx.threatLevel > THREAT_ALERT_THRESHOLD &&
     !ctx.attackerId
   ) {
     if (ctx.threatLevel > 0.7) {
-      // Amenaza muy alta → huir
       tasks.push(
         createTask({
           agentId: ctx.agentId,
@@ -148,7 +129,6 @@ export function detectCombat(ctx: DetectorContext): Task[] {
         }),
       );
     } else {
-      // Amenaza moderada → alerta (idle defensivo)
       tasks.push(
         createTask({
           agentId: ctx.agentId,
@@ -163,10 +143,6 @@ export function detectCombat(ctx: DetectorContext): Task[] {
 
   return tasks;
 }
-
-// ============================================================================
-// HELPERS
-// ============================================================================
 
 function distance(
   a: { x: number; y: number },

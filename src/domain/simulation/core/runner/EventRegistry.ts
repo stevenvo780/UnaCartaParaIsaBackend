@@ -203,7 +203,7 @@ export class EventRegistry {
         timestamp: number;
       }) => {
         const aiState = this.runner.aiSystem.getAIState(data.entityId);
-        // Check if current goal targets the failed zone
+
         const currentGoal = aiState?.currentGoal;
         const goalZoneId = currentGoal?.target?.zoneId;
         if (goalZoneId === data.targetZoneId) {
@@ -226,7 +226,7 @@ export class EventRegistry {
           for (const agentId of task.contributors.keys()) {
             const aiState = this.runner.aiSystem.getAIState(agentId);
             const currentGoal = aiState?.currentGoal;
-            // Check if current goal references the stalled task
+
             const goalTaskId = currentGoal?.params?.taskId as
               | string
               | undefined;

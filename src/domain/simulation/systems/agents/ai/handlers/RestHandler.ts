@@ -15,10 +15,6 @@ import {
   successResult,
 } from "../types";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 /**
  * @deprecated Use SystemRegistry.needs instead
  */
@@ -32,31 +28,23 @@ export interface RestHandlerDeps {
   getEnergy?: (agentId: string) => number;
 }
 
-// ============================================================================
-// HANDLER
-// ============================================================================
-
 /**
  * Maneja el descanso delegando al NeedsSystem.
  */
 export function handleRest(
   ctx: HandlerContext,
-  _deps?: RestHandlerDeps, // Deprecated, ignorado
+  _deps?: RestHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
 
-  // Validar tipo
   if (task.type !== TaskType.REST) {
     return errorResult("Wrong task type");
   }
 
-  // Validar sistema
   if (!systems.needs) {
     return errorResult("NeedsSystem not available");
   }
 
-  // Delegar completamente al NeedsSystem
-  // El sistema se encarga de: verificar energía, encontrar lugar, descansar
   const result = systems.needs.requestRest(agentId);
 
   switch (result.status) {
@@ -73,7 +61,6 @@ export function handleRest(
       return inProgressResult("needs", result.message ?? "Resting");
 
     case "delegated":
-      // El sistema delegó a movimiento para ir a lugar de descanso
       return inProgressResult(
         result.system,
         result.message ?? "Moving to rest spot",

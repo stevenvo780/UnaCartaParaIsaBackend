@@ -14,21 +14,15 @@ import {
   createTask,
 } from "../types";
 
-// ============================================================================
-// DETECTOR
-// ============================================================================
-
 /**
  * Detecta oportunidades de comercio
  */
 export function detectTrade(ctx: DetectorContext): Task[] {
   const tasks: Task[] = [];
 
-  // Necesita exceso de recursos y mercado cercano
   if (!ctx.hasExcessResources) return tasks;
   if (!ctx.nearestMarketZoneId) return tasks;
 
-  // Rol de trader tiene más prioridad
   const isTrader = (ctx.roleType ?? "").toLowerCase() === "trader";
 
   tasks.push(

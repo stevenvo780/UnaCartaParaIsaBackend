@@ -15,10 +15,6 @@ import {
   successResult,
 } from "../types";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 /**
  * @deprecated Use SystemRegistry.inventory instead
  */
@@ -33,25 +29,19 @@ export interface DepositHandlerDeps {
   getInventoryItems?: (agentId: string) => Record<string, number>;
 }
 
-// ============================================================================
-// HANDLER
-// ============================================================================
-
 /**
  * Maneja el depósito delegando al InventorySystem.
  */
 export function handleDeposit(
   ctx: HandlerContext,
-  _deps?: DepositHandlerDeps, // Deprecated, ignorado
+  _deps?: DepositHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
 
-  // Validar tipo
   if (task.type !== TaskType.DEPOSIT) {
     return errorResult("Wrong task type");
   }
 
-  // Validar sistema
   if (!systems.inventory) {
     return errorResult("InventorySystem not available");
   }
@@ -63,7 +53,6 @@ export function handleDeposit(
     return errorResult("No storage target specified");
   }
 
-  // Delegar al InventorySystem
   const result = systems.inventory.requestDeposit(
     agentId,
     storageId,

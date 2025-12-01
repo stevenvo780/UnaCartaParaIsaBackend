@@ -15,10 +15,6 @@ import {
   successResult,
 } from "../types";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 /**
  * @deprecated Use SystemRegistry.combat instead
  */
@@ -28,35 +24,27 @@ export interface FleeHandlerDeps {
   getDistanceTo?: (agentId: string, targetId: string) => number;
 }
 
-// ============================================================================
-// HANDLER
-// ============================================================================
-
 /**
  * Maneja la huida delegando al CombatSystem.
  */
 export function handleFlee(
   ctx: HandlerContext,
-  _deps?: FleeHandlerDeps, // Deprecated, ignorado
+  _deps?: FleeHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
 
-  // Validar tipo
   if (task.type !== TaskType.FLEE) {
     return errorResult("Wrong task type");
   }
 
-  // Validar sistema
   if (!systems.combat) {
     return errorResult("CombatSystem not available");
   }
 
-  // Sin amenaza → completado
   if (!task.target?.entityId && !task.target?.position) {
     return successResult({ message: "No threat to flee from" });
   }
 
-  // Delegar al CombatSystem
   const fromPosition = task.target?.position ?? position;
   const result = systems.combat.requestFlee(agentId, fromPosition);
 

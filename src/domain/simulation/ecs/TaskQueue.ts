@@ -19,10 +19,6 @@ import type { AgentTask } from "@/shared/types/simulation/unifiedTasks";
 import { EventBus } from "./EventBus";
 import { AgentStore } from "./AgentStore";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 export interface TaskQueueConfig {
   /** Max tasks per agent */
   maxTasksPerAgent: number;
@@ -35,7 +31,7 @@ export interface TaskQueueConfig {
 const DEFAULT_CONFIG: TaskQueueConfig = {
   maxTasksPerAgent: 5,
   debug: false,
-  taskTimeout: 60000, // 1 minute default
+  taskTimeout: 60000,
 };
 
 export interface QueuedTask {
@@ -45,20 +41,14 @@ export interface QueuedTask {
   priority: number;
 }
 
-// ============================================================================
-// TASK QUEUE
-// ============================================================================
-
 @injectable()
 export class TaskQueue {
   private config: TaskQueueConfig;
   private eventBus: EventBus;
   private agentStore: AgentStore;
 
-  // Cola de tareas pendientes por agente
   private pendingTasks = new Map<string, QueuedTask[]>();
 
-  // Tareas activas (una por agente)
   private activeTasks = new Map<string, QueuedTask>();
 
   constructor(
@@ -72,10 +62,6 @@ export class TaskQueue {
 
     logger.info("📋 TaskQueue: Initialized");
   }
-
-  // ==========================================================================
-  // TASK SUBMISSION
-  // ==========================================================================
 
   /**
    * Encola una nueva tarea para un agente
@@ -92,16 +78,13 @@ export class TaskQueue {
       return;
     }
 
-    // Inicializar cola si no existe
     if (!this.pendingTasks.has(agentId)) {
       this.pendingTasks.set(agentId, []);
     }
 
     const queue = this.pendingTasks.get(agentId)!;
 
-    // Verificar límite
     if (queue.length >= this.config.maxTasksPerAgent) {
-      // Reemplazar tarea de menor prioridad si la nueva es más importante
       const lowestPriorityIndex = queue.reduce(
         (minIdx, t, idx, arr) =>
           t.priority < arr[minIdx].priority ? idx : minIdx,
@@ -129,7 +112,6 @@ export class TaskQueue {
       priority,
     };
 
-    // Insertar ordenado por prioridad (mayor primero)
     const insertIndex = queue.findIndex((t) => t.priority < priority);
     if (insertIndex === -1) {
       queue.push(queuedTask);
@@ -137,7 +119,6 @@ export class TaskQueue {
       queue.splice(insertIndex, 0, queuedTask);
     }
 
-    // Emitir evento
     this.eventBus.emit("ai:task_started", {
       agentId,
       taskType: task.type,
@@ -157,22 +138,15 @@ export class TaskQueue {
    * Encola una tarea urgente (se procesa inmediatamente)
    */
   public enqueueUrgent(agentId: string, task: AgentTask): void {
-    // Cancelar tarea activa si existe
     this.cancelActive(agentId);
 
-    // Encolar con máxima prioridad
     this.enqueue(agentId, task, 100);
   }
-
-  // ==========================================================================
-  // TASK PROCESSING
-  // ==========================================================================
 
   /**
    * Obtiene la siguiente tarea a procesar para un agente
    */
   public getNextTask(agentId: string): AgentTask | undefined {
-    // Si ya hay tarea activa, verificar timeout
     const active = this.activeTasks.get(agentId);
     if (active) {
       if (this.isTaskTimedOut(active)) {
@@ -182,7 +156,6 @@ export class TaskQueue {
       }
     }
 
-    // Obtener siguiente de la cola
     const queue = this.pendingTasks.get(agentId);
     if (!queue || queue.length === 0) {
       return undefined;
@@ -204,7 +177,6 @@ export class TaskQueue {
 
     const duration = Date.now() - (active.startedAt || active.queuedAt);
 
-    // Emitir evento de completado
     this.eventBus.emit("ai:task_completed", {
       agentId,
       taskType: active.task.type,
@@ -213,7 +185,6 @@ export class TaskQueue {
       timestamp: Date.now(),
     });
 
-    // Actualizar componente AI del agente
     const ai = this.agentStore.getAI(agentId);
     if (ai) {
       this.agentStore.setComponent(agentId, "ai", {
@@ -241,7 +212,6 @@ export class TaskQueue {
     const active = this.activeTasks.get(agentId);
     if (!active) return;
 
-    // Emitir evento de fallo
     this.eventBus.emit("ai:task_failed", {
       agentId,
       taskType: active.task.type,
@@ -250,7 +220,6 @@ export class TaskQueue {
       timestamp: Date.now(),
     });
 
-    // Actualizar componente AI
     const ai = this.agentStore.getAI(agentId);
     if (ai) {
       this.agentStore.setComponent(agentId, "ai", {
@@ -276,10 +245,6 @@ export class TaskQueue {
   public cancelActive(agentId: string): void {
     this.activeTasks.delete(agentId);
   }
-
-  // ==========================================================================
-  // QUERIES
-  // ==========================================================================
 
   /**
    * Obtiene la tarea activa de un agente
@@ -315,18 +280,12 @@ export class TaskQueue {
    * Verifica si un agente tiene una tarea de tipo específico activa o pendiente
    */
   public hasTaskOfType(agentId: string, taskType: string): boolean {
-    // Verificar activa
     const active = this.activeTasks.get(agentId);
     if (active?.task.type === taskType) return true;
 
-    // Verificar pendientes
     const pending = this.pendingTasks.get(agentId) || [];
     return pending.some((q) => q.task.type === taskType);
   }
-
-  // ==========================================================================
-  // CLEANUP
-  // ==========================================================================
 
   /**
    * Limpia todas las tareas de un agente
@@ -343,10 +302,6 @@ export class TaskQueue {
     this.activeTasks.clear();
     this.pendingTasks.clear();
   }
-
-  // ==========================================================================
-  // PRIVATE HELPERS
-  // ==========================================================================
 
   private isTaskTimedOut(queuedTask: QueuedTask): boolean {
     if (this.config.taskTimeout === 0) return false;

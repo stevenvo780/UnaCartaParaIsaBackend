@@ -21,7 +21,6 @@ import { SimulationRunner } from "../domain/simulation/core/SimulationRunner";
 import { GameState } from "../shared/types/game-types";
 import { createInitialGameState } from "../domain/simulation/core/defaultState";
 
-// Import all systems from the centralized index
 import {
   WorldResourceSystem,
   LifeCycleSystem,

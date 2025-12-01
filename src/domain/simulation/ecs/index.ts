@@ -6,15 +6,9 @@
  * @module domain/simulation/ecs
  */
 
-// ============================================================================
-// COMPONENTS
-// ============================================================================
-
 export type {
-  // Core
   AgentComponents,
   ComponentType,
-  // Individual Components
   ProfileComponent,
   HealthComponent,
   NeedsComponent,
@@ -31,16 +25,8 @@ export type {
 
 export { createDefaultComponents, cloneComponent } from "./AgentComponents";
 
-// ============================================================================
-// STORE
-// ============================================================================
-
 export { AgentStore } from "./AgentStore";
 export type { AgentStoreConfig } from "./AgentStore";
-
-// ============================================================================
-// EVENT BUS
-// ============================================================================
 
 export { EventBus } from "./EventBus";
 export type {
@@ -50,10 +36,6 @@ export type {
   EventHandler,
   EventBusConfig,
 } from "./EventBus";
-
-// ============================================================================
-// SYSTEM REGISTRY
-// ============================================================================
 
 export { SystemRegistry } from "./SystemRegistry";
 export type {
@@ -68,10 +50,6 @@ export type {
   IBuildingSystem,
   ITradeSystem,
 } from "./SystemRegistry";
-
-// ============================================================================
-// TASK QUEUE
-// ============================================================================
 
 export { TaskQueue } from "./TaskQueue";
 export type { TaskQueueConfig, QueuedTask } from "./TaskQueue";

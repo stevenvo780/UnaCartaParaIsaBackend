@@ -42,10 +42,6 @@ import {
 import { AnimalType } from "../../../../shared/constants/AnimalEnums";
 import { BiomeType } from "../../../../shared/constants/BiomeEnums";
 
-// ============================================================================
-// QUERY RESULT TYPES
-// ============================================================================
-
 /**
  * Base interface for all query results
  */
@@ -116,10 +112,6 @@ export type WorldEntityResult =
   | AgentQueryResult
   | ZoneQueryResult;
 
-// ============================================================================
-// QUERY OPTIONS
-// ============================================================================
-
 /**
  * Common query options
  */
@@ -164,10 +156,6 @@ export interface TileQueryOptions {
   hasAsset?: string;
 }
 
-// ============================================================================
-// WORLD QUERY SERVICE
-// ============================================================================
-
 @injectable()
 export class WorldQueryService {
   private tileSize: number = 64;
@@ -192,19 +180,15 @@ export class WorldQueryService {
     }
   }
 
-  // ==========================================================================
-  // RESOURCE QUERIES
-  // ==========================================================================
-
   /**
    * Find the nearest resource to a position
    *
    * @example
    * ```ts
-   * // Find nearest water
+   *
    * const water = worldQuery.findNearestResource(x, y, { type: WorldResourceType.WATER_SOURCE });
    *
-   * // Find nearest harvestable tree
+   *
    * const tree = worldQuery.findNearestResource(x, y, {
    *   type: WorldResourceType.TREE,
    *   excludeDepleted: true
@@ -306,19 +290,15 @@ export class WorldQueryService {
     }));
   }
 
-  // ==========================================================================
-  // ANIMAL QUERIES
-  // ==========================================================================
-
   /**
    * Find the nearest animal to a position
    *
    * @example
    * ```ts
-   * // Find nearest alive animal
+   *
    * const prey = worldQuery.findNearestAnimal(x, y, { excludeDead: true });
    *
-   * // Find nearest deer
+   *
    * const deer = worldQuery.findNearestAnimal(x, y, { type: AnimalType.DEER });
    * ```
    */
@@ -427,10 +407,6 @@ export class WorldQueryService {
     }));
   }
 
-  // ==========================================================================
-  // AGENT QUERIES
-  // ==========================================================================
-
   /**
    * Find the nearest agent to a position
    */
@@ -511,10 +487,6 @@ export class WorldQueryService {
       .sort((a, b) => a.distance - b.distance)
       .slice(0, options.limit ?? Infinity);
   }
-
-  // ==========================================================================
-  // TILE QUERIES
-  // ==========================================================================
 
   /**
    * Get a tile at world coordinates
@@ -598,14 +570,16 @@ export class WorldQueryService {
     y: number,
     radius: number,
   ): TileQueryResult[] {
-    return this.findTilesInArea(x - radius, y - radius, radius * 2, radius * 2, {
-      biome: BiomeType.OCEAN,
-    });
+    return this.findTilesInArea(
+      x - radius,
+      y - radius,
+      radius * 2,
+      radius * 2,
+      {
+        biome: BiomeType.OCEAN,
+      },
+    );
   }
-
-  // ==========================================================================
-  // ZONE QUERIES
-  // ==========================================================================
 
   /**
    * Find the zone containing a position
@@ -703,10 +677,6 @@ export class WorldQueryService {
     };
   }
 
-  // ==========================================================================
-  // UNIFIED QUERIES (search everything)
-  // ==========================================================================
-
   /**
    * Find ANY entity nearest to a position
    * Searches across resources, animals, agents, and zones
@@ -715,9 +685,9 @@ export class WorldQueryService {
    * ```ts
    * const nearest = worldQuery.findNearestEntity(x, y);
    * switch (nearest?.entityType) {
-   *   case 'resource': // handle resource
-   *   case 'animal': // handle animal
-   *   case 'agent': // handle agent
+   *   case 'resource':
+   *   case 'animal':
+   *   case 'agent':
    * }
    * ```
    */
@@ -767,10 +737,6 @@ export class WorldQueryService {
       .slice(0, options.limit ?? Infinity);
   }
 
-  // ==========================================================================
-  // CONVENIENCE METHODS
-  // ==========================================================================
-
   /**
    * Check if a position is walkable
    */
@@ -802,13 +768,11 @@ export class WorldQueryService {
     x: number,
     y: number,
   ): ResourceQueryResult | TileQueryResult | null {
-    // First try resource (pond, well, etc.)
     const waterResource = this.findNearestResource(x, y, {
       type: WorldResourceType.WATER_SOURCE,
       excludeDepleted: true,
     });
 
-    // Also check water tiles (ocean, rivers)
     const waterTiles = this.findWaterTilesNear(x, y, 500);
     const nearestWaterTile = waterTiles.length > 0 ? waterTiles[0] : null;
 
@@ -816,7 +780,6 @@ export class WorldQueryService {
     if (!waterResource) return nearestWaterTile;
     if (!nearestWaterTile) return waterResource;
 
-    // Return the closer one
     const tileDx = nearestWaterTile.worldX - x;
     const tileDy = nearestWaterTile.worldY - y;
     const tileDistance = Math.sqrt(tileDx * tileDx + tileDy * tileDy);

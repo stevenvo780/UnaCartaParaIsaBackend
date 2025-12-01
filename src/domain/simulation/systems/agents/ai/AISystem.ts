@@ -54,16 +54,12 @@ import type { NeedsSystem } from "../needs/NeedsSystem";
 import type { MovementSystem } from "../movement/MovementSystem";
 import { SystemRegistry, AgentStore, EventBus } from "@/domain/simulation/ecs";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 export interface AISystemDeps {
   gameState: GameState;
   agentRegistry: AgentRegistry;
   needsSystem?: NeedsSystem;
   movementSystem?: MovementSystem;
-  // ECS
+
   systemRegistry?: SystemRegistry;
   agentStore?: AgentStore;
   eventBus?: EventBus;
@@ -111,7 +107,7 @@ export interface LegacyMemory {
   socialMemory: Map<string, unknown>;
   shortTerm: unknown[];
   longTerm: unknown[];
-  // Campos adicionales usados en SnapshotManager/EventRegistry
+
   knownResourceLocations: Map<string, unknown>;
   successfulActivities: Map<string, unknown>;
   failedAttempts: Map<string, unknown>;
@@ -126,10 +122,6 @@ const DEFAULT_CONFIG: AISystemConfig = {
   debug: false,
 };
 
-// ============================================================================
-// AI SYSTEM
-// ============================================================================
-
 /**
  * Sistema de IA unificado.
  *
@@ -140,15 +132,15 @@ const DEFAULT_CONFIG: AISystemConfig = {
  *
  * Ejemplo de uso:
  * ```typescript
- * // Desde NeedsSystem cuando detecta hambre
+ *
  * aiSystem.emitTask(agentId, {
  *   type: TaskType.SATISFY_NEED,
  *   priority: 0.8,
  *   params: { needType: 'hunger' }
  * });
  *
- * // Si se emite 5 veces, la prioridad sube: 0.8 + 5*0.1 = 1.3
- * // Esto garantiza que necesidades urgentes se atiendan primero
+ *
+ *
  * ```
  */
 @injectable()
@@ -159,7 +151,6 @@ export class AISystem extends EventEmitter {
   /** @deprecated Use systemRegistry.movement instead */
   private _movementSystem?: MovementSystem;
 
-  // ECS Components
   private systemRegistry: SystemRegistry;
   private agentStore: AgentStore;
   private eventBus: EventBus;
@@ -167,7 +158,6 @@ export class AISystem extends EventEmitter {
   private taskQueue: TaskQueue;
   private config: AISystemConfig;
 
-  // Estado activo por agente
   private activeTask = new Map<string, AgentTask>();
   private lastUpdate = new Map<string, number>();
 
@@ -184,7 +174,6 @@ export class AISystem extends EventEmitter {
     this._movementSystem = movementSystem;
     this.config = { ...DEFAULT_CONFIG };
 
-    // Initialize ECS components
     this.eventBus = new EventBus();
     this.agentStore = new AgentStore();
     this.systemRegistry = new SystemRegistry();
@@ -194,7 +183,6 @@ export class AISystem extends EventEmitter {
       debug: this.config.debug,
     });
 
-    // Subscribe to task events from other systems
     this.eventBus.on("ai:task_emit", (event) => {
       this.emitTask(event.agentId, {
         type: event.type as TaskType,
@@ -207,10 +195,6 @@ export class AISystem extends EventEmitter {
 
     logger.info("✅ [AISystem] Initialized (v4 - ECS architecture)");
   }
-
-  // ==========================================================================
-  // DEPENDENCY INJECTION
-  // ==========================================================================
 
   /**
    * Configura dependencias después de la construcción.
@@ -252,10 +236,6 @@ export class AISystem extends EventEmitter {
   public getMovementSystem(): MovementSystem | undefined {
     return this._movementSystem;
   }
-
-  // ==========================================================================
-  // PUBLIC API - EMIT TASKS
-  // ==========================================================================
 
   /**
    * Emite una tarea para un agente.
@@ -353,10 +333,6 @@ export class AISystem extends EventEmitter {
     }
   }
 
-  // ==========================================================================
-  // UPDATE LOOP
-  // ==========================================================================
-
   /**
    * Actualiza la IA de todos los agentes.
    */
@@ -376,17 +352,13 @@ export class AISystem extends EventEmitter {
     const now = Date.now();
     const last = this.lastUpdate.get(agentId) ?? 0;
 
-    // Throttle
     if (now - last < this.config.updateInterval) return;
     this.lastUpdate.set(agentId, now);
 
-    // 1. Ejecutar detectores internos (backup si los sistemas no emiten)
     this.runDetectors(agentId);
 
-    // 2. Limpiar tareas expiradas
     this.taskQueue.cleanExpired(agentId);
 
-    // 3. Si no hay tarea activa, tomar la de mayor prioridad
     if (!this.activeTask.has(agentId)) {
       const nextTask = this.taskQueue.dequeue(agentId);
       if (nextTask) {
@@ -399,16 +371,11 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // 4. Ejecutar tarea activa
     const task = this.activeTask.get(agentId);
     if (task) {
       this.executeTask(agentId, task);
     }
   }
-
-  // ==========================================================================
-  // TASK EXECUTION
-  // ==========================================================================
 
   /**
    * Ejecuta una tarea usando el handler apropiado.
@@ -422,7 +389,6 @@ export class AISystem extends EventEmitter {
 
     let result: { success: boolean; completed: boolean } | undefined;
 
-    // Dispatch a handler según tipo de tarea
     switch (task.type) {
       case TaskType.SATISFY_NEED:
         result = handleConsume(ctx, {});
@@ -474,12 +440,10 @@ export class AISystem extends EventEmitter {
 
       case TaskType.IDLE:
       default:
-        // Idle no hace nada, solo espera
         result = { success: true, completed: true };
         break;
     }
 
-    // Procesar resultado
     if (result?.completed) {
       if (result.success) {
         this.completeTask(agentId, task);
@@ -487,7 +451,6 @@ export class AISystem extends EventEmitter {
         this.failTask(agentId, task, "handler failed");
       }
     }
-    // Si no completed, continúa en el próximo tick
   }
 
   /**
@@ -516,7 +479,7 @@ export class AISystem extends EventEmitter {
         expiresAt: task.expiresAt,
       },
       position,
-      // ECS Components
+
       systems: this.systemRegistry,
       store: this.agentStore,
       events: this.eventBus,
@@ -550,10 +513,6 @@ export class AISystem extends EventEmitter {
 
     this.emit("taskFailed", { agentId, task, reason });
   }
-
-  // ==========================================================================
-  // DETECTORS (backup)
-  // ==========================================================================
 
   /**
    * Ejecuta detectores internos como backup.
@@ -592,10 +551,6 @@ export class AISystem extends EventEmitter {
       now: Date.now(),
     };
   }
-
-  // ==========================================================================
-  // PUBLIC UTILITIES
-  // ==========================================================================
 
   /**
    * Cancela la tarea activa de un agente.
@@ -650,24 +605,15 @@ export class AISystem extends EventEmitter {
     this.removeAllListeners();
   }
 
-  // ==========================================================================
-  // LEGACY COMPATIBILITY LAYER
-  // ==========================================================================
-  // TODO: Refactorizar consumidores para usar nueva API basada en tareas
-
   /**
    * @deprecated Use getStats() instead
    */
-  public syncToGameState(): void {
-    // No-op - el nuevo sistema no necesita sincronización manual
-  }
+  public syncToGameState(): void {}
 
   /**
    * @deprecated El nuevo sistema usa tareas, no goals
    */
-  public setGoal(_agentId: string, _goal: unknown): void {
-    // No-op - convertir a emitTask() en consumidores
-  }
+  public setGoal(_agentId: string, _goal: unknown): void {}
 
   /**
    * @deprecated El nuevo sistema usa tareas, no goals
@@ -693,16 +639,12 @@ export class AISystem extends EventEmitter {
   /**
    * @deprecated No longer needed
    */
-  public restoreAIState(_agentId: string, _state: unknown): void {
-    // No-op - el nuevo sistema no persiste estado complejo
-  }
+  public restoreAIState(_agentId: string, _state: unknown): void {}
 
   /**
    * @deprecated Called internally in constructor
    */
-  public initialize(): void {
-    // No-op
-  }
+  public initialize(): void {}
 
   /**
    * @deprecated Use getActiveTask() + getPendingTasks()
@@ -712,7 +654,7 @@ export class AISystem extends EventEmitter {
     return {
       currentGoal: task ?? null,
       pendingTasks: this.taskQueue.getTasks(agentId),
-      // Legacy fields for compatibility
+
       goalQueue: [],
       currentAction: task ? { type: task.type, target: task.target } : null,
       offDuty: false,
@@ -728,7 +670,7 @@ export class AISystem extends EventEmitter {
         socialMemory: new Map<string, unknown>(),
         shortTerm: [],
         longTerm: [],
-        // Additional legacy fields
+
         knownResourceLocations: new Map<string, unknown>(),
         successfulActivities: new Map<string, unknown>(),
         failedAttempts: new Map<string, unknown>(),
@@ -744,7 +686,6 @@ export class AISystem extends EventEmitter {
    * @deprecated Use cancelTask()
    */
   public setAgentOffDuty(agentId: string, _offDuty: boolean): void {
-    // If offDuty=true, cancel task; else no-op
     if (_offDuty) {
       this.cancelTask(agentId);
     }
@@ -770,7 +711,5 @@ export class AISystem extends EventEmitter {
   /**
    * @deprecated No longer needed - handled internally
    */
-  public notifyEntityArrived(_agentId: string, _entityId: string): void {
-    // No-op
-  }
+  public notifyEntityArrived(_agentId: string, _entityId: string): void {}
 }

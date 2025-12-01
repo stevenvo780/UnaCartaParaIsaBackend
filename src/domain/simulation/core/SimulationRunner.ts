@@ -8,7 +8,6 @@ import { AgentRegistry } from "../systems/agents/AgentRegistry";
 import { WorldGenerationService } from "../systems/world/generation/worldGenerationService";
 import { logger } from "../../../infrastructure/utils/logger";
 
-// Import all systems from the centralized index
 import {
   WorldResourceSystem,
   LifeCycleSystem,
@@ -388,8 +387,6 @@ export class SimulationRunner {
     this.aiSystem.setDependencies({
       needsSystem: this.needsSystem,
       movementSystem: this.movementSystem,
-      // TODO: Refactorizar para que otros sistemas emitan tareas directamente al AISystem
-      // en lugar de pasarlos como dependencias
     });
 
     this.economySystem.setDependencies({

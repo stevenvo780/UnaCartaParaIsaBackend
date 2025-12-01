@@ -22,25 +22,15 @@ import type {
   EventBus,
 } from "@/domain/simulation/ecs";
 
-// ============================================================================
-// RE-EXPORT HANDLER RESULT FOR CONVENIENCE
-// ============================================================================
-
 export type { HandlerResult } from "@/domain/simulation/ecs";
-
-// ============================================================================
-// TASK TYPES
-// ============================================================================
 
 /**
  * Tipos de tarea que un agente puede realizar
  */
 export enum TaskType {
-  // Necesidades
   SATISFY_NEED = "satisfy_need",
   REST = "rest",
 
-  // Trabajo
   GATHER = "gather",
   DEPOSIT = "deposit",
   CRAFT = "craft",
@@ -48,18 +38,14 @@ export enum TaskType {
   HUNT = "hunt",
   TRADE = "trade",
 
-  // Combate
   ATTACK = "attack",
   FLEE = "flee",
 
-  // Social
   SOCIALIZE = "socialize",
   ASSIST = "assist",
 
-  // Exploración
   EXPLORE = "explore",
 
-  // Default
   IDLE = "idle",
 }
 
@@ -131,17 +117,13 @@ export interface CreateTaskParams {
  * Prioridades estándar de tareas
  */
 export const TASK_PRIORITIES = {
-  CRITICAL: 0.95, // Supervivencia inmediata
-  URGENT: 0.8, // Necesidades urgentes
-  HIGH: 0.6, // Importante
-  NORMAL: 0.4, // Normal
-  LOW: 0.2, // Bajo
-  LOWEST: 0.1, // Mínimo (idle)
+  CRITICAL: 0.95,
+  URGENT: 0.8,
+  HIGH: 0.6,
+  NORMAL: 0.4,
+  LOW: 0.2,
+  LOWEST: 0.1,
 } as const;
-
-// ============================================================================
-// DETECTOR CONTEXT - Solo lectura de estado
-// ============================================================================
 
 /**
  * Contexto de solo lectura que reciben los detectores.
@@ -152,7 +134,6 @@ export interface DetectorContext {
   readonly position: { x: number; y: number };
   readonly now: number;
 
-  // Necesidades (readonly snapshot)
   readonly needs?: Readonly<{
     hunger?: number;
     thirst?: number;
@@ -163,16 +144,13 @@ export interface DetectorContext {
     hygiene?: number;
   }>;
 
-  // Salud
   readonly health?: number;
   readonly maxHealth?: number;
 
-  // Inventario
   readonly inventory?: Readonly<Record<string, number>>;
   readonly inventoryLoad?: number;
   readonly inventoryCapacity?: number;
 
-  // Combate
   readonly isInCombat?: boolean;
   readonly attackerId?: string;
   readonly threatLevel?: number;
@@ -189,15 +167,12 @@ export interface DetectorContext {
     type: string;
   }[];
 
-  // Equipamiento
   readonly hasWeapon?: boolean;
   readonly equippedWeapon?: string;
 
-  // Trabajo
   readonly roleType?: string;
   readonly isWorkHours?: boolean;
 
-  // Social
   readonly nearbyAgents?: readonly { id: string; x: number; y: number }[];
   readonly nearbyAgentInNeed?: {
     id: string;
@@ -206,12 +181,10 @@ export interface DetectorContext {
   };
   readonly potentialMate?: { id: string; x: number; y: number };
 
-  // Crafteo
   readonly canCraftClub?: boolean;
   readonly canCraftDagger?: boolean;
   readonly craftZoneId?: string;
 
-  // Construcción
   readonly pendingBuilds?: readonly {
     id: string;
     zoneId: string;
@@ -219,7 +192,6 @@ export interface DetectorContext {
   }[];
   readonly contributableBuilding?: { zoneId: string };
 
-  // Recursos
   readonly nearestFood?: { id: string; x: number; y: number };
   readonly nearestWater?: { id: string; x: number; y: number };
   readonly nearestResource?: {
@@ -229,14 +201,11 @@ export interface DetectorContext {
     type: string;
   };
 
-  // Zonas
   readonly depositZoneId?: string;
   readonly nearestMarketZoneId?: string;
 
-  // Comercio
   readonly hasExcessResources?: boolean;
 
-  // Exploración
   readonly lastExploreTime?: number;
   readonly visitedZones?: ReadonlySet<string>;
   readonly nearbyInspectable?: {
@@ -244,7 +213,6 @@ export interface DetectorContext {
     position: { x: number; y: number };
   };
 
-  // Personalidad (para ajustar prioridades)
   readonly personality?: Readonly<{
     diligence?: number;
     curiosity?: number;
@@ -252,10 +220,6 @@ export interface DetectorContext {
     sociability?: number;
   }>;
 }
-
-// ============================================================================
-// HANDLER CONTEXT - Acceso a sistemas para delegación
-// ============================================================================
 
 /**
  * Contexto que reciben los handlers.
@@ -271,17 +235,13 @@ export interface DetectorContext {
  * 5. Handler convierte a HandlerExecutionResult
  */
 export interface HandlerContext {
-  // Identificación
   readonly agentId: string;
   readonly task: Task;
 
-  // Estado actual (readonly para validaciones)
   readonly position: { x: number; y: number };
 
-  // Acceso a sistemas via registry
   readonly systems: SystemRegistry;
 
-  // Acceso directo a ECS para queries rápidas
   readonly store: AgentStore;
   readonly events: EventBus;
 }
@@ -302,18 +262,10 @@ export interface HandlerExecutionResult {
   data?: Record<string, unknown>;
 }
 
-// ============================================================================
-// LEGACY COMPATIBILITY - ActionResult (deprecated)
-// ============================================================================
-
 /**
  * @deprecated Use HandlerExecutionResult instead
  */
 export type ActionResult = HandlerExecutionResult;
-
-// ============================================================================
-// FACTORY FUNCTIONS
-// ============================================================================
 
 let taskIdCounter = 0;
 

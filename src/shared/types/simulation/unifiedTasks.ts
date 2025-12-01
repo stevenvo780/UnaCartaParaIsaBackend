@@ -15,11 +15,9 @@ import type { ResourceType } from "../../constants/ResourceEnums";
  * Unified Task Types
  */
 export enum TaskType {
-  // === Needs ===
   SATISFY_NEED = "satisfy_need",
   REST = "rest",
 
-  // === Work ===
   GATHER = "gather",
   CRAFT = "craft",
   BUILD = "build",
@@ -27,18 +25,14 @@ export enum TaskType {
   HUNT = "hunt",
   TRADE = "trade",
 
-  // === Social ===
   SOCIALIZE = "socialize",
   ASSIST = "assist",
 
-  // === Combat ===
   ATTACK = "attack",
   FLEE = "flee",
 
-  // === Exploration ===
   EXPLORE = "explore",
 
-  // === Default ===
   IDLE = "idle",
 }
 
@@ -133,10 +127,6 @@ export interface AgentTask {
   source?: string;
 }
 
-// ============================================================================
-// Primitive Actions - Only 5 types that cover all behaviors
-// ============================================================================
-
 /**
  * Primitive Action Types
  *
@@ -205,10 +195,6 @@ export interface PrimitiveAction {
   timestamp: number;
 }
 
-// ============================================================================
-// Agent AI State (Simplified)
-// ============================================================================
-
 /**
  * Simplified AI State
  *
@@ -249,10 +235,6 @@ export interface AgentAIState {
   };
 }
 
-// ============================================================================
-// Utility Types
-// ============================================================================
-
 /**
  * Task creation parameters (without generated fields)
  */
@@ -262,13 +244,13 @@ export type CreateTaskParams = Omit<AgentTask, "id" | "status" | "createdAt">;
  * Task priority constants
  */
 export const TASK_PRIORITIES = {
-  CRITICAL: 0.95, // Life-threatening (starving, fleeing)
-  URGENT: 0.8, // Needs attention soon
-  HIGH: 0.6, // Important but not urgent
-  NORMAL: 0.4, // Default work priority
-  LOW: 0.2, // Optional/leisure
-  LOWEST: 0.1, // Fallback behavior
-  IDLE: 0.05, // Pure idle
+  CRITICAL: 0.95,
+  URGENT: 0.8,
+  HIGH: 0.6,
+  NORMAL: 0.4,
+  LOW: 0.2,
+  LOWEST: 0.1,
+  IDLE: 0.05,
 } as const;
 
 /**
