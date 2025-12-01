@@ -64,6 +64,7 @@ import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
 import { SharedSpatialIndex } from "../../core/SharedSpatialIndex";
 import type { EntityIndex } from "../../core/EntityIndex";
+import type { ICombatSystem } from "../agents/SystemRegistry";
 
 /**
  * System for managing combat between entities.
@@ -80,7 +81,7 @@ import type { EntityIndex } from "../../core/EntityIndex";
  * @see WeaponCatalog for weapon definitions
  */
 @injectable()
-export class CombatSystem {
+export class CombatSystem implements ICombatSystem {
   private readonly config: CombatConfig;
 
   private lastUpdate = Date.now();

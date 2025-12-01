@@ -10,6 +10,7 @@ import { SIMULATION_CONSTANTS } from "../../../../shared/constants/SimulationCon
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
 import type { AgentRegistry } from "../agents/AgentRegistry";
+import type { IInventorySystem } from "../agents/SystemRegistry";
 import type { StateDirtyTracker } from "../../core/StateDirtyTracker";
 import { performanceMonitor } from "../../core/PerformanceMonitor";
 
@@ -26,7 +27,7 @@ import { performanceMonitor } from "../../core/PerformanceMonitor";
  * @see ResourceType for available resource types
  */
 @injectable()
-export class InventorySystem {
+export class InventorySystem implements IInventorySystem {
   private gameState?: GameState;
   private agentInventories = new Map<string, Inventory>();
   private stockpiles = new Map<string, Stockpile>();

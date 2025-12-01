@@ -60,7 +60,7 @@ export interface INeedsSystem extends ISystem {
   requestConsume(agentId: string, itemId: string): HandlerResult;
   requestRest(agentId: string): HandlerResult;
   applyNeedChange(agentId: string, need: string, delta: number): HandlerResult;
-  getNeeds(agentId: string): Record<string, number> | undefined;
+  getNeeds(agentId: string): Record<string, number | undefined> | undefined;
 }
 
 /**

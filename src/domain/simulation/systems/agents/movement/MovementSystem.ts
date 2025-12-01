@@ -11,6 +11,7 @@ import type { EntityIndex } from "../../../core/EntityIndex";
 import type { GPUComputeService } from "../../../core/GPUComputeService";
 import type { StateDirtyTracker } from "../../../core/StateDirtyTracker";
 import type { AgentRegistry } from "../../agents/AgentRegistry";
+import type { IMovementSystem } from "../../agents/SystemRegistry";
 import { getFrameTime } from "../../../../../shared/FrameTime";
 import { WORLD_CONFIG } from "../../../../../shared/constants/WorldConfig";
 import {
@@ -79,7 +80,7 @@ export interface ZoneDistance {
  * @see EasyStar.js for pathfinding algorithm
  */
 @injectable()
-export class MovementSystem extends EventEmitter {
+export class MovementSystem extends EventEmitter implements IMovementSystem {
   @inject(TYPES.GameState)
   private gameState!: GameState;
   private movementStates = new Map<string, EntityMovementState>();

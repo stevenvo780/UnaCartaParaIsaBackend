@@ -56,6 +56,19 @@ export {
   ROLE_TOOL_NEEDS,
 } from "./agents/EquipmentSystem";
 export { AmbientAwarenessSystem } from "./agents/AmbientAwarenessSystem";
+export { SystemRegistry } from "./agents/SystemRegistry";
+export type {
+  HandlerResult,
+  ISystem,
+  IMovementSystem,
+  ICombatSystem,
+  INeedsSystem,
+  IInventorySystem,
+  ISocialSystem,
+  ICraftingSystem,
+  IBuildingSystem,
+  ITradeSystem,
+} from "./agents/SystemRegistry";
 
 export { AgentRegistry } from "./agents/AgentRegistry";
 export type { MovementState } from "./agents/AgentRegistry";

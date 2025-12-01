@@ -14,6 +14,7 @@ import type { EntityIndex } from "../../../core/EntityIndex";
 import type { SharedSpatialIndex } from "../../../core/SharedSpatialIndex";
 import type { GPUComputeService } from "../../../core/GPUComputeService";
 import type { AgentRegistry } from "../../agents/AgentRegistry";
+import type { INeedsSystem } from "../../agents/SystemRegistry";
 import type { StateDirtyTracker } from "../../../core/StateDirtyTracker";
 import { getFrameTime } from "../../../../../shared/FrameTime";
 import { performance } from "perf_hooks";
@@ -50,7 +51,7 @@ import type { FoodItem } from "@/shared/types/simulation/food";
  * @see InventorySystem for resource storage and consumption
  */
 @injectable()
-export class NeedsSystem extends EventEmitter {
+export class NeedsSystem extends EventEmitter implements INeedsSystem {
   private gameState: GameState;
   private config: NeedsConfig;
   private entityNeeds: Map<string, EntityNeedsData>;
