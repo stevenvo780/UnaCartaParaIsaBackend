@@ -1309,6 +1309,11 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
   /**
    * Request consumption of a resource or item to satisfy needs.
    * Returns HandlerResult for ECS handler compatibility.
+   *
+   * Flow:
+   * 1. Try to consume from inventory first
+   * 2. If inventory empty, try to gather from nearby world resource
+   * 3. After gathering, consume the gathered resource
    */
   public requestConsume(
     agentId: string,
@@ -1329,12 +1334,11 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       };
     }
 
+    const needType = itemIdOrNeedType.toLowerCase();
+
     // Try to consume from inventory first
     if (this.inventorySystem) {
       const inventory = this.inventorySystem.getAgentInventory(agentId);
-
-      // If itemIdOrNeedType is a need type, find appropriate resource
-      const needType = itemIdOrNeedType.toLowerCase();
 
       if (needType === NeedType.HUNGER || needType === ResourceType.FOOD) {
         if (inventory && inventory.food > 0) {
@@ -1343,7 +1347,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
           return {
             status: "completed",
             system: "needs",
-            message: "Consumed food",
+            message: "Consumed food from inventory",
             data: { needType: NeedType.HUNGER, restored: 25 },
           };
         }
@@ -1356,8 +1360,34 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
           return {
             status: "completed",
             system: "needs",
-            message: "Consumed water",
+            message: "Consumed water from inventory",
             data: { needType: NeedType.THIRST, restored: 25 },
+          };
+        }
+      }
+
+      // Inventory empty - try to gather from nearby world resource
+      const gatherResult = this.tryGatherFromNearbyResource(agentId, needType);
+      if (gatherResult.gathered) {
+        // Resource gathered, now consume it
+        if (needType === NeedType.HUNGER || needType === ResourceType.FOOD) {
+          this.inventorySystem.removeFromAgent(agentId, ResourceType.FOOD, 1);
+          this.satisfyNeed(agentId, NeedType.HUNGER, 25);
+          return {
+            status: "completed",
+            system: "needs",
+            message: `Gathered and consumed food from ${gatherResult.resourceId}`,
+            data: { needType: NeedType.HUNGER, restored: 25, source: "world" },
+          };
+        }
+        if (needType === NeedType.THIRST || needType === ResourceType.WATER) {
+          this.inventorySystem.removeFromAgent(agentId, ResourceType.WATER, 1);
+          this.satisfyNeed(agentId, NeedType.THIRST, 25);
+          return {
+            status: "completed",
+            system: "needs",
+            message: `Gathered and consumed water from ${gatherResult.resourceId}`,
+            data: { needType: NeedType.THIRST, restored: 25, source: "world" },
           };
         }
       }
@@ -1368,6 +1398,72 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       system: "needs",
       message: `No consumable available for ${itemIdOrNeedType}`,
     };
+  }
+
+  /**
+   * Try to gather resources from a nearby world resource.
+   * Used when agent inventory is empty but agent is near a resource source.
+   */
+  private tryGatherFromNearbyResource(
+    agentId: string,
+    needType: string,
+  ): { gathered: boolean; resourceId?: string } {
+    if (!this.gameState?.worldResources || !this.inventorySystem) {
+      return { gathered: false };
+    }
+
+    // Get agent position
+    const agent = this.gameState.agents?.find((a) => a.id === agentId);
+    if (!agent || !agent.position) {
+      return { gathered: false };
+    }
+
+    const agentPos = { x: agent.position.x, y: agent.position.y };
+    const GATHER_RANGE = 2; // Tiles within which agent can gather
+
+    // Determine resource type to look for
+    const targetTypes: string[] = [];
+    if (needType === NeedType.HUNGER || needType === ResourceType.FOOD) {
+      targetTypes.push("food_source", "berry_bush", "food");
+    } else if (needType === NeedType.THIRST || needType === ResourceType.WATER) {
+      targetTypes.push("water_source", "water");
+    }
+
+    // Find nearest resource of target type within range
+    let nearestResource: { id: string; distance: number } | null = null;
+
+    for (const [resourceId, resource] of Object.entries(this.gameState.worldResources)) {
+      if (!resource || !targetTypes.includes(resource.type?.toLowerCase() || "")) {
+        continue;
+      }
+
+      const resPos = resource.position || { x: 0, y: 0 };
+      const dx = resPos.x - agentPos.x;
+      const dy = resPos.y - agentPos.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance <= GATHER_RANGE) {
+        if (!nearestResource || distance < nearestResource.distance) {
+          nearestResource = { id: resourceId, distance };
+        }
+      }
+    }
+
+    if (nearestResource) {
+      // Gather from this resource
+      const gatherResult = this.inventorySystem.requestGather(
+        agentId,
+        nearestResource.id,
+        1,
+      );
+
+      if (gatherResult.status === "completed") {
+        console.log(`[NeedsSystem] 🚰 Agent ${agentId} gathered ${needType} from ${nearestResource.id}`);
+        return { gathered: true, resourceId: nearestResource.id };
+      }
+    }
+
+    return { gathered: false };
   }
 
   /**
