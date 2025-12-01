@@ -9,7 +9,7 @@ import { getAnimalConfig, getAnimalsForBiome } from "../config/AnimalConfigs";
 import { AnimalGenetics } from "./AnimalGenetics";
 import { simulationEvents, GameEventType } from "../../../core/events";
 import { AnimalState } from "../../../../../shared/constants/AnimalEnums";
-import { BiomeType } from '../../../../../shared/constants/BiomeEnums';
+import { BiomeType } from "../../../../../shared/constants/BiomeEnums";
 
 export class AnimalSpawning {
   private static nextAnimalId = 1;
@@ -69,7 +69,8 @@ export class AnimalSpawning {
         const animalConfigs = getAnimalsForBiome(biome);
 
         for (const config of animalConfigs) {
-          if (config.isAquatic && isWalkable && biome !== BiomeType.WETLAND) continue;
+          if (config.isAquatic && isWalkable && biome !== BiomeType.WETLAND)
+            continue;
           if (!config.isAquatic && !isWalkable) continue;
 
           const chunkSpawnProb = config.spawnProbability * 0.1;

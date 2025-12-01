@@ -41,7 +41,7 @@ import {
 } from "../../../../shared/constants/ResourceEnums";
 import { AnimalType } from "../../../../shared/constants/AnimalEnums";
 import { BiomeType } from "../../../../shared/constants/BiomeEnums";
-import { EntityType } from '../../../../shared/constants/EntityEnums';
+import { EntityType } from "../../../../shared/constants/EntityEnums";
 
 /**
  * Base interface for all query results

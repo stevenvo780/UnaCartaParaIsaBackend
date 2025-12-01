@@ -501,7 +501,7 @@ export class SimulationRunner {
    */
   private registerSystemsInSystemRegistry(): void {
     const registry = this.aiSystem.getSystemRegistry();
-    
+
     registry.register("movement", this.movementSystem);
     registry.register("combat", this.combatSystem);
     registry.register("needs", this.needsSystem);
@@ -512,7 +512,7 @@ export class SimulationRunner {
       registry.register("building", this.buildingSystem);
     }
     registry.register("trade", this.economySystem);
-    
+
     logger.info("🔧 SimulationRunner: Systems registered in SystemRegistry");
   }
 

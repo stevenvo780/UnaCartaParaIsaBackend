@@ -7,7 +7,7 @@ import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
 import type { StateDirtyTracker } from "../../core/StateDirtyTracker";
 import { performanceMonitor } from "../../core/PerformanceMonitor";
-import { SystemProperty } from '../../../../shared/constants/SystemEnums';
+import { SystemProperty } from "../../../../shared/constants/SystemEnums";
 
 /**
  * System for managing tasks and work assignments.

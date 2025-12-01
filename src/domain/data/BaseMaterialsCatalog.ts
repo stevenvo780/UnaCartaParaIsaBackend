@@ -4,7 +4,7 @@ import {
   ItemCategory,
   ItemId,
 } from "../../shared/constants/ItemEnums";
-import { BiomeType } from '../../shared/constants/BiomeEnums';
+import { BiomeType } from "../../shared/constants/BiomeEnums";
 
 export class BaseMaterialsCatalog {
   private static readonly materials: Item[] = [

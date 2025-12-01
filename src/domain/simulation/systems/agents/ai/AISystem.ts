@@ -55,7 +55,7 @@ import type { MovementSystem } from "../movement/MovementSystem";
 import type { WorldQueryService } from "../../world/WorldQueryService";
 import { SystemRegistry } from "../SystemRegistry";
 import { EventBus } from "@/domain/simulation/core/EventBus";
-import { NeedType } from '../../../../../shared/constants/AIEnums';
+import { NeedType } from "../../../../../shared/constants/AIEnums";
 
 export interface AISystemDeps {
   gameState: GameState;
@@ -227,8 +227,6 @@ export class AISystem extends EventEmitter {
   public getEventBus(): EventBus {
     return this.eventBus;
   }
-
-
 
   /**
    * @deprecated Use systemRegistry.movement instead
@@ -686,12 +684,12 @@ export class AISystem extends EventEmitter {
   /**
    * @deprecated Use getStats() instead
    */
-  public syncToGameState(): void { }
+  public syncToGameState(): void {}
 
   /**
    * @deprecated El nuevo sistema usa tareas, no goals
    */
-  public setGoal(_agentId: string, _goal: unknown): void { }
+  public setGoal(_agentId: string, _goal: unknown): void {}
 
   /**
    * @deprecated El nuevo sistema usa tareas, no goals
@@ -717,12 +715,12 @@ export class AISystem extends EventEmitter {
   /**
    * @deprecated No longer needed
    */
-  public restoreAIState(_agentId: string, _state: unknown): void { }
+  public restoreAIState(_agentId: string, _state: unknown): void {}
 
   /**
    * @deprecated Called internally in constructor
    */
-  public initialize(): void { }
+  public initialize(): void {}
 
   /**
    * @deprecated Use getActiveTask() + getPendingTasks()
@@ -789,5 +787,5 @@ export class AISystem extends EventEmitter {
   /**
    * @deprecated No longer needed - handled internally
    */
-  public notifyEntityArrived(_agentId: string, _entityId: string): void { }
+  public notifyEntityArrived(_agentId: string, _entityId: string): void {}
 }

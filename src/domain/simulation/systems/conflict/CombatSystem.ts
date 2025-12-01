@@ -65,9 +65,9 @@ import { TYPES } from "../../../../config/Types";
 import { SharedSpatialIndex } from "../../core/SharedSpatialIndex";
 import type { EntityIndex } from "../../core/EntityIndex";
 import type { ICombatSystem } from "../agents/SystemRegistry";
-import { QuestStatus } from '../../../../shared/constants/QuestEnums';
-import { SocialStatus } from '../../../../shared/constants/AgentEnums';
-import { ActionType } from '../../../../shared/constants/AIEnums';
+import { QuestStatus } from "../../../../shared/constants/QuestEnums";
+import { SocialStatus } from "../../../../shared/constants/AgentEnums";
+import { ActionType } from "../../../../shared/constants/AIEnums";
 
 /**
  * System for managing combat between entities.
@@ -512,7 +512,8 @@ export class CombatSystem implements ICombatSystem {
     if (target.isDead || target.immortal) return false;
 
     const targetIsAnimal =
-      target.type === EntityType.ANIMAL || target.tags?.includes(EntityType.ANIMAL);
+      target.type === EntityType.ANIMAL ||
+      target.tags?.includes(EntityType.ANIMAL);
     if (targetIsAnimal) return true;
 
     const attackerProfile = this.lifeCycleSystem.getAgent(attacker.id);
@@ -714,7 +715,10 @@ export class CombatSystem implements ICombatSystem {
       }),
     );
 
-    if (target.tags?.includes(EntityType.ANIMAL) || target.type === EntityType.ANIMAL) {
+    if (
+      target.tags?.includes(EntityType.ANIMAL) ||
+      target.type === EntityType.ANIMAL
+    ) {
       simulationEvents.emit(GameEventType.ANIMAL_HUNTED, {
         animalId: target.id,
         hunterId: attacker.id,
@@ -789,9 +793,14 @@ export class CombatSystem implements ICombatSystem {
   public requestAttack(
     agentId: string,
     targetId: string,
-  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+  ): {
+    status: "delegated" | "completed" | "failed" | "in_progress";
+    system: string;
+    message?: string;
+    data?: unknown;
+  } {
     // Find attacker entity
-    const attacker = this.state.entities?.find(e => e.id === agentId);
+    const attacker = this.state.entities?.find((e) => e.id === agentId);
     if (!attacker || !attacker.position) {
       return {
         status: QuestStatus.FAILED,
@@ -801,8 +810,8 @@ export class CombatSystem implements ICombatSystem {
     }
 
     // Find target entity
-    let target = this.state.entities?.find(e => e.id === targetId);
-    
+    let target = this.state.entities?.find((e) => e.id === targetId);
+
     // Also check animals
     if (!target && this.animalSystem) {
       const animal = this.animalSystem.getAnimal(targetId);
@@ -848,7 +857,9 @@ export class CombatSystem implements ICombatSystem {
         status: "in_progress",
         system: "combat",
         message: "Attack on cooldown",
-        data: { cooldownRemaining: this.config.baseCooldownMs - (now - lastAttack) },
+        data: {
+          cooldownRemaining: this.config.baseCooldownMs - (now - lastAttack),
+        },
       };
     }
 
@@ -910,9 +921,14 @@ export class CombatSystem implements ICombatSystem {
   public requestFlee(
     agentId: string,
     fromPosition: { x: number; y: number },
-  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+  ): {
+    status: "delegated" | "completed" | "failed" | "in_progress";
+    system: string;
+    message?: string;
+    data?: unknown;
+  } {
     // Find agent
-    const agent = this.state.entities?.find(e => e.id === agentId);
+    const agent = this.state.entities?.find((e) => e.id === agentId);
     if (!agent || !agent.position) {
       return {
         status: QuestStatus.FAILED,
@@ -927,7 +943,7 @@ export class CombatSystem implements ICombatSystem {
     const dx = agentPos.x - fromPosition.x;
     const dy = agentPos.y - fromPosition.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    
+
     if (distance < 1) {
       // Pick random direction if at same position
       const angle = Math.random() * Math.PI * 2;
@@ -935,7 +951,7 @@ export class CombatSystem implements ICombatSystem {
         x: agentPos.x + Math.cos(angle) * 200,
         y: agentPos.y + Math.sin(angle) * 200,
       };
-      
+
       return {
         status: "delegated",
         system: "movement",
@@ -974,6 +990,6 @@ export class CombatSystem implements ICombatSystem {
     const now = getFrameTime();
     const lastAttack = this.lastAttackAt.get(agentId);
     // Consider in combat if attacked within last 10 seconds
-    return lastAttack !== undefined && (now - lastAttack) < 10000;
+    return lastAttack !== undefined && now - lastAttack < 10000;
   }
 }

@@ -28,7 +28,7 @@ import { ActionType } from "../../../../../shared/constants/AIEnums";
 import { EntityType } from "../../../../../shared/constants/EntityEnums";
 import { FoodCategory } from "../../../../../shared/constants/FoodEnums";
 import type { FoodItem } from "@/shared/types/simulation/food";
-import { QuestStatus } from '../../../../../shared/constants/QuestEnums';
+import { QuestStatus } from "../../../../../shared/constants/QuestEnums";
 
 /**
  * System for managing entity needs (hunger, thirst, energy, hygiene, social, fun, mental health).
@@ -1313,9 +1313,14 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
   public requestConsume(
     agentId: string,
     itemIdOrNeedType: string,
-  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+  ): {
+    status: "delegated" | "completed" | "failed" | "in_progress";
+    system: string;
+    message?: string;
+    data?: unknown;
+  } {
     const needs = this.entityNeeds.get(agentId);
-    
+
     if (!needs) {
       return {
         status: QuestStatus.FAILED,
@@ -1327,10 +1332,10 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     // Try to consume from inventory first
     if (this.inventorySystem) {
       const inventory = this.inventorySystem.getAgentInventory(agentId);
-      
+
       // If itemIdOrNeedType is a need type, find appropriate resource
       const needType = itemIdOrNeedType.toLowerCase();
-      
+
       if (needType === NeedType.HUNGER || needType === ResourceType.FOOD) {
         if (inventory && inventory.food > 0) {
           this.inventorySystem.removeFromAgent(agentId, ResourceType.FOOD, 1);
@@ -1343,7 +1348,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
           };
         }
       }
-      
+
       if (needType === NeedType.THIRST || needType === ResourceType.WATER) {
         if (inventory && inventory.water > 0) {
           this.inventorySystem.removeFromAgent(agentId, ResourceType.WATER, 1);
@@ -1369,11 +1374,14 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
    * Request rest to restore energy.
    * Returns HandlerResult for ECS handler compatibility.
    */
-  public requestRest(
-    agentId: string,
-  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+  public requestRest(agentId: string): {
+    status: "delegated" | "completed" | "failed" | "in_progress";
+    system: string;
+    message?: string;
+    data?: unknown;
+  } {
     const needs = this.entityNeeds.get(agentId);
-    
+
     if (!needs) {
       return {
         status: QuestStatus.FAILED,
@@ -1386,7 +1394,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     const energyBefore = needs.energy;
     this.satisfyNeed(agentId, NeedType.ENERGY, 10);
     const energyAfter = needs.energy;
-    
+
     // Check if rest should continue (energy < 80) or is done
     if (energyAfter >= 80) {
       return {
@@ -1401,8 +1409,8 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       status: "in_progress",
       system: "needs",
       message: "Resting",
-      data: { 
-        energyBefore, 
+      data: {
+        energyBefore,
         energyAfter,
         restored: energyAfter - energyBefore,
       },
@@ -1417,18 +1425,23 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     agentId: string,
     need: string,
     delta: number,
-  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+  ): {
+    status: "delegated" | "completed" | "failed" | "in_progress";
+    system: string;
+    message?: string;
+    data?: unknown;
+  } {
     const success = this.modifyNeed(agentId, need, delta);
-    
+
     if (success) {
       const needs = this.entityNeeds.get(agentId);
       return {
         status: "completed",
         system: "needs",
         message: `Applied ${delta > 0 ? "+" : ""}${delta} to ${need}`,
-        data: { 
-          need, 
-          delta, 
+        data: {
+          need,
+          delta,
           newValue: needs?.[need as keyof EntityNeedsData],
         },
       };

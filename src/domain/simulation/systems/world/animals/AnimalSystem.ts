@@ -35,7 +35,7 @@ import { injectable, inject, optional, postConstruct } from "inversify";
 import { TYPES } from "../../../../../config/Types";
 import type { GPUComputeService } from "../../../core/GPUComputeService";
 import type { StateDirtyTracker } from "../../../core/StateDirtyTracker";
-import { BiomeType } from '../../../../../shared/constants/BiomeEnums';
+import { BiomeType } from "../../../../../shared/constants/BiomeEnums";
 
 @injectable()
 export class AnimalSystem {

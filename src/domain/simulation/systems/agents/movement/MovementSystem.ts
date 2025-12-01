@@ -27,8 +27,8 @@ import { ActivityType } from "../../../../../shared/constants/MovementEnums";
 import { ActionType } from "../../../../../shared/constants/AIEnums";
 import { SIM_CONSTANTS } from "../../../core/SimulationConstants";
 import { TerrainSystem } from "../../world/TerrainSystem";
-import { QuestStatus } from '../../../../../shared/constants/QuestEnums';
-import { MapElementType } from '../../../../../shared/constants/MapElementEnums';
+import { QuestStatus } from "../../../../../shared/constants/QuestEnums";
+import { MapElementType } from "../../../../../shared/constants/MapElementEnums";
 
 export interface EntityMovementState {
   entityId: string;
@@ -1081,9 +1081,14 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
   public requestMove(
     agentId: string,
     target: { x: number; y: number },
-  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+  ): {
+    status: "delegated" | "completed" | "failed" | "in_progress";
+    system: string;
+    message?: string;
+    data?: unknown;
+  } {
     const state = this.movementStates.get(agentId);
-    
+
     if (!state) {
       return {
         status: QuestStatus.FAILED,
@@ -1096,8 +1101,9 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     const dx = state.currentPosition.x - target.x;
     const dy = state.currentPosition.y - target.y;
     const distSq = dx * dx + dy * dy;
-    
-    if (distSq < 4) { // Within 2 units
+
+    if (distSq < 4) {
+      // Within 2 units
       return {
         status: "completed",
         system: "movement",
@@ -1120,7 +1126,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     }
 
     const success = this.moveToPoint(agentId, target.x, target.y);
-    
+
     if (success) {
       return {
         status: "delegated",
@@ -1144,9 +1150,14 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
   public requestMoveToZone(
     agentId: string,
     zoneId: string,
-  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+  ): {
+    status: "delegated" | "completed" | "failed" | "in_progress";
+    system: string;
+    message?: string;
+    data?: unknown;
+  } {
     const state = this.movementStates.get(agentId);
-    
+
     if (!state) {
       return {
         status: QuestStatus.FAILED,
@@ -1156,7 +1167,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     }
 
     // Find zone
-    const zone = this.gameState.zones?.find(z => z.id === zoneId);
+    const zone = this.gameState.zones?.find((z) => z.id === zoneId);
     if (!zone) {
       return {
         status: QuestStatus.FAILED,
@@ -1167,11 +1178,13 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
 
     // Check if already in zone
     const bounds = zone.bounds;
-    if (bounds &&
-        state.currentPosition.x >= bounds.x &&
-        state.currentPosition.x <= bounds.x + bounds.width &&
-        state.currentPosition.y >= bounds.y &&
-        state.currentPosition.y <= bounds.y + bounds.height) {
+    if (
+      bounds &&
+      state.currentPosition.x >= bounds.x &&
+      state.currentPosition.x <= bounds.x + bounds.width &&
+      state.currentPosition.y >= bounds.y &&
+      state.currentPosition.y <= bounds.y + bounds.height
+    ) {
       return {
         status: "completed",
         system: "movement",
@@ -1190,7 +1203,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     }
 
     const success = this.moveToZone(agentId, zoneId);
-    
+
     if (success) {
       return {
         status: "delegated",
@@ -1214,9 +1227,14 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
   public requestMoveToEntity(
     agentId: string,
     entityId: string,
-  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+  ): {
+    status: "delegated" | "completed" | "failed" | "in_progress";
+    system: string;
+    message?: string;
+    data?: unknown;
+  } {
     const state = this.movementStates.get(agentId);
-    
+
     if (!state) {
       return {
         status: QuestStatus.FAILED,
@@ -1241,7 +1259,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
 
     // Check entities array
     if (!targetPosition) {
-      const entity = this.gameState.entities?.find(e => e.id === entityId);
+      const entity = this.gameState.entities?.find((e) => e.id === entityId);
       if (entity?.position) {
         targetPosition = entity.position;
       }

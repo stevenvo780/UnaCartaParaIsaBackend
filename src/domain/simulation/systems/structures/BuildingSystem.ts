@@ -93,8 +93,8 @@ type MutableZone = Zone & {
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
-import { QuestStatus } from '../../../../shared/constants/QuestEnums';
-import { SystemProperty } from '../../../../shared/constants/SystemEnums';
+import { QuestStatus } from "../../../../shared/constants/QuestEnums";
+import { SystemProperty } from "../../../../shared/constants/SystemEnums";
 
 /**
  * System for managing building construction, placement, and maintenance.
@@ -877,7 +877,7 @@ export class BuildingSystem implements IBuildingSystem {
     // Convertir buildingType a BuildingLabel si es posible
     const label = buildingType as BuildingLabel;
     const cost = BUILDING_COSTS[label];
-    
+
     if (!cost) {
       return {
         status: QuestStatus.FAILED,

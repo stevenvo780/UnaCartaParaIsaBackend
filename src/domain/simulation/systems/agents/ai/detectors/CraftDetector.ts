@@ -13,9 +13,9 @@ import {
   TASK_PRIORITIES,
   createTask,
 } from "../types";
-import { RoleType } from '../../../../../../shared/constants/RoleEnums';
-import { SocialStatus } from '../../../../../../shared/constants/AgentEnums';
-import { ItemCategory } from '../../../../../../shared/constants/ItemEnums';
+import { RoleType } from "../../../../../../shared/constants/RoleEnums";
+import { SocialStatus } from "../../../../../../shared/constants/AgentEnums";
+import { ItemCategory } from "../../../../../../shared/constants/ItemEnums";
 
 /**
  * Detecta necesidad de craftear
@@ -40,7 +40,9 @@ function detectWeaponNeed(ctx: DetectorContext): Task | null {
 
   const role = (ctx.roleType ?? "").toLowerCase();
   const needsWeaponForRole =
-    role === RoleType.HUNTER || role === RoleType.GUARD || role === SocialStatus.WARRIOR;
+    role === RoleType.HUNTER ||
+    role === RoleType.GUARD ||
+    role === SocialStatus.WARRIOR;
 
   const weaponToCraft = ctx.canCraftDagger ? "stone_dagger" : "wooden_club";
 

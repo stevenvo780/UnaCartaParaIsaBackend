@@ -8,7 +8,7 @@ import {
   AnimalState,
   AnimalTargetType,
 } from "../../../../../shared/constants/AnimalEnums";
-import { MapElementType } from '../../../../../shared/constants/MapElementEnums';
+import { MapElementType } from "../../../../../shared/constants/MapElementEnums";
 
 const BASE_ANIMAL_SPEED = 60;
 

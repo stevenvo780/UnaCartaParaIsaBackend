@@ -17,8 +17,8 @@ import {
   TASK_PRIORITIES,
   createTask,
 } from "../types";
-import { RoleType } from '../../../../../../shared/constants/RoleEnums';
-import { SocialStatus } from '../../../../../../shared/constants/AgentEnums';
+import { RoleType } from "../../../../../../shared/constants/RoleEnums";
+import { SocialStatus } from "../../../../../../shared/constants/AgentEnums";
 
 const FLEE_HEALTH_THRESHOLD = 0.2;
 const PREDATOR_FLEE_DISTANCE = 80;
@@ -63,7 +63,9 @@ export function detectCombat(ctx: DetectorContext): Task[] {
     const dist = distance(ctx.position, closest);
 
     if (dist < PREDATOR_FLEE_DISTANCE) {
-      const isWarrior = ctx.roleType === SocialStatus.WARRIOR || ctx.roleType === RoleType.GUARD;
+      const isWarrior =
+        ctx.roleType === SocialStatus.WARRIOR ||
+        ctx.roleType === RoleType.GUARD;
       const hasWeapon = ctx.hasWeapon;
       const healthRatio = (ctx.health ?? 100) / (ctx.maxHealth ?? 100);
 
@@ -99,7 +101,8 @@ export function detectCombat(ctx: DetectorContext): Task[] {
   if (ctx.nearbyEnemies?.length && !ctx.attackerId) {
     const closest = ctx.nearbyEnemies[0];
     const dist = distance(ctx.position, closest);
-    const isWarrior = ctx.roleType === SocialStatus.WARRIOR || ctx.roleType === RoleType.GUARD;
+    const isWarrior =
+      ctx.roleType === SocialStatus.WARRIOR || ctx.roleType === RoleType.GUARD;
 
     if (isWarrior && ctx.hasWeapon && dist < 100) {
       tasks.push(

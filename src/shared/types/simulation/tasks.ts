@@ -17,12 +17,12 @@ export interface TaskMetadata {
   maxClaims?: number;
   claimedBy?: string[];
   [key: string]:
-  | string
-  | number
-  | boolean
-  | string[]
-  | ResourceType
-  | undefined;
+    | string
+    | number
+    | boolean
+    | string[]
+    | ResourceType
+    | undefined;
 }
 
 export interface Task {

@@ -22,7 +22,7 @@ import {
   ROLE_RECOMMENDED_TOOLS,
   type EquipmentStats,
 } from "../../../data/EquipmentStats";
-import { RoleType } from '../../../../shared/constants/RoleEnums';
+import { RoleType } from "../../../../shared/constants/RoleEnums";
 
 /**
  * A stored tool with quantity tracking.

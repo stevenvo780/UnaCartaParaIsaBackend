@@ -14,8 +14,8 @@ import {
   TASK_PRIORITIES,
   createTask,
 } from "../types";
-import { RoleType } from '../../../../../../shared/constants/RoleEnums';
-import { SocialStatus } from '../../../../../../shared/constants/AgentEnums';
+import { RoleType } from "../../../../../../shared/constants/RoleEnums";
+import { SocialStatus } from "../../../../../../shared/constants/AgentEnums";
 
 /** No trabajar si necesidades críticas */
 const CRITICAL_NEED_THRESHOLD = 15;

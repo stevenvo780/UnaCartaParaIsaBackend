@@ -13,8 +13,8 @@ import type {
   TaskTarget,
 } from "../types";
 import { errorResult, inProgressResult, successResult } from "../types";
-import { QuestStatus } from '../../../../../../shared/constants/QuestEnums';
-import { ActionType } from '../../../../../../shared/constants/AIEnums';
+import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
+import { ActionType } from "../../../../../../shared/constants/AIEnums";
 
 /** Distancia para considerar que llegó al destino */
 const ARRIVAL_THRESHOLD = 1.5;

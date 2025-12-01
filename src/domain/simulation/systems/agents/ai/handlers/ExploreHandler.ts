@@ -15,7 +15,7 @@ import {
   successResult,
 } from "../types";
 import { moveToPosition, isAtTarget } from "./MoveHandler";
-import { QuestStatus } from '../../../../../../shared/constants/QuestEnums';
+import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
 
 /**
  * @deprecated Use MovementSystem directly
@@ -82,7 +82,7 @@ export function handleExplore(
     return inProgressResult("movement", "Exploring zone");
   }
 
-  const randomOffset = () => (Math.random() - 0.5) * 20;
+  const randomOffset = (): number => (Math.random() - 0.5) * 20;
   const randomTarget = {
     x: position.x + randomOffset(),
     y: position.y + randomOffset(),

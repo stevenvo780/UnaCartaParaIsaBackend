@@ -15,7 +15,7 @@ import {
   createTask,
 } from "../types";
 import { NeedType } from "@/shared/constants/AIEnums";
-import { ZoneType } from '../../../../../../shared/constants/ZoneEnums';
+import { ZoneType } from "../../../../../../shared/constants/ZoneEnums";
 
 const THRESHOLDS = {
   CRITICAL: 15,

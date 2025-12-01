@@ -41,7 +41,7 @@ type MutableZone = Zone & {
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
-import { ActionType } from '../../../../shared/constants/AIEnums';
+import { ActionType } from "../../../../shared/constants/AIEnums";
 
 /**
  * System for managing resource production in designated zones.

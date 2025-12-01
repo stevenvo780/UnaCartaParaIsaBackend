@@ -11,7 +11,7 @@ import { RoleType } from "../../../../shared/constants/RoleEnums";
 
 import { LifeStage } from "../../../../shared/constants/AgentEnums";
 import { ActionType } from "../../../../shared/constants/AIEnums";
-import { TimeOfDayPhase } from '../../../../shared/constants/TimeEnums';
+import { TimeOfDayPhase } from "../../../../shared/constants/TimeEnums";
 
 /**
  * Central registry for simulation event listeners.

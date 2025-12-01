@@ -13,9 +13,9 @@ import type { AgentRegistry } from "../agents/AgentRegistry";
 import type { IInventorySystem } from "../agents/SystemRegistry";
 import type { StateDirtyTracker } from "../../core/StateDirtyTracker";
 import { performanceMonitor } from "../../core/PerformanceMonitor";
-import { QuestStatus } from '../../../../shared/constants/QuestEnums';
-import { SystemProperty } from '../../../../shared/constants/SystemEnums';
-import { EntityType } from '../../../../shared/constants/EntityEnums';
+import { QuestStatus } from "../../../../shared/constants/QuestEnums";
+import { SystemProperty } from "../../../../shared/constants/SystemEnums";
+import { EntityType } from "../../../../shared/constants/EntityEnums";
 
 /**
  * System for managing agent inventories and zone stockpiles.
@@ -663,10 +663,15 @@ export class InventorySystem implements IInventorySystem {
     agentId: string,
     resourceId: string,
     quantity: number,
-  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+  ): {
+    status: "delegated" | "completed" | "failed" | "in_progress";
+    system: string;
+    message?: string;
+    data?: unknown;
+  } {
     // Get resource from world resources
     const resource = this.gameState?.worldResources?.[resourceId];
-    
+
     if (!resource) {
       return {
         status: QuestStatus.FAILED,
@@ -694,11 +699,15 @@ export class InventorySystem implements IInventorySystem {
       berry_bush: ResourceType.FOOD,
     };
 
-    const resourceType = resourceTypeMap[resource.type?.toLowerCase()] || ResourceType.WOOD;
-    const actualQuantity = Math.min(quantity, resource.harvestCount ?? quantity);
-    
+    const resourceType =
+      resourceTypeMap[resource.type?.toLowerCase()] || ResourceType.WOOD;
+    const actualQuantity = Math.min(
+      quantity,
+      resource.harvestCount ?? quantity,
+    );
+
     const success = this.addResource(agentId, resourceType, actualQuantity);
-    
+
     if (success) {
       return {
         status: "completed",
@@ -723,9 +732,14 @@ export class InventorySystem implements IInventorySystem {
     agentId: string,
     storageId: string,
     itemId: string,
-  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+  ): {
+    status: "delegated" | "completed" | "failed" | "in_progress";
+    system: string;
+    message?: string;
+    data?: unknown;
+  } {
     const inventory = this.agentInventories.get(agentId);
-    
+
     if (!inventory) {
       return {
         status: QuestStatus.FAILED,
@@ -736,7 +750,7 @@ export class InventorySystem implements IInventorySystem {
 
     // Find stockpile
     let stockpile = this.stockpiles.get(storageId);
-    
+
     // If storageId is a zone, find first stockpile in zone
     if (!stockpile) {
       const zoneStockpiles = this.getStockpilesInZone(storageId);
@@ -762,8 +776,11 @@ export class InventorySystem implements IInventorySystem {
         water: inventory.water,
       });
 
-      const totalTransferred = Object.values(transferred).reduce((a, b) => a + b, 0);
-      
+      const totalTransferred = Object.values(transferred).reduce(
+        (a, b) => a + b,
+        0,
+      );
+
       if (totalTransferred > 0) {
         return {
           status: "completed",
@@ -783,7 +800,7 @@ export class InventorySystem implements IInventorySystem {
     // Transfer specific resource type
     const resourceType = itemId as ResourceType;
     const amount = inventory[resourceType] ?? 0;
-    
+
     if (amount <= 0) {
       return {
         status: QuestStatus.FAILED,
@@ -821,7 +838,12 @@ export class InventorySystem implements IInventorySystem {
     toAgentId: string,
     itemId: string,
     quantity: number,
-  ): { status: "delegated" | "completed" | "failed" | "in_progress"; system: string; message?: string; data?: unknown } {
+  ): {
+    status: "delegated" | "completed" | "failed" | "in_progress";
+    system: string;
+    message?: string;
+    data?: unknown;
+  } {
     const fromInventory = this.agentInventories.get(fromAgentId);
     let toInventory = this.agentInventories.get(toAgentId);
 
@@ -839,7 +861,7 @@ export class InventorySystem implements IInventorySystem {
 
     const resourceType = itemId as ResourceType;
     const available = fromInventory[resourceType] ?? 0;
-    
+
     if (available < quantity) {
       return {
         status: QuestStatus.FAILED,
@@ -862,7 +884,7 @@ export class InventorySystem implements IInventorySystem {
 
     // Rollback if add failed
     this.addResource(fromAgentId, resourceType, removed);
-    
+
     return {
       status: QuestStatus.FAILED,
       system: SystemProperty.INVENTORY,
@@ -876,7 +898,7 @@ export class InventorySystem implements IInventorySystem {
   public hasItem(agentId: string, itemId: string): boolean {
     const inventory = this.agentInventories.get(agentId);
     if (!inventory) return false;
-    
+
     const resourceType = itemId as ResourceType;
     return (inventory[resourceType] ?? 0) > 0;
   }
@@ -887,15 +909,15 @@ export class InventorySystem implements IInventorySystem {
   public getInventorySpace(agentId: string): number {
     const inventory = this.agentInventories.get(agentId);
     if (!inventory) return 0;
-    
-    const currentLoad = 
-      inventory.wood + 
-      inventory.stone + 
-      inventory.food + 
+
+    const currentLoad =
+      inventory.wood +
+      inventory.stone +
+      inventory.food +
       inventory.water +
       inventory.rare_materials +
       inventory.metal;
-    
+
     return Math.max(0, inventory.capacity - currentLoad);
   }
 }

@@ -4,7 +4,6 @@ import {
   FoodId,
 } from "../../shared/constants/FoodEnums";
 
-
 const gameRandom: { random: () => number } = {
   random: () => Math.random(),
 };

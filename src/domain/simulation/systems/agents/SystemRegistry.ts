@@ -9,7 +9,7 @@
 
 import { injectable } from "inversify";
 import { logger } from "@/infrastructure/utils/logger";
-import { SystemProperty } from '../../../../shared/constants/SystemEnums';
+import { SystemProperty } from "../../../../shared/constants/SystemEnums";
 
 /**
  * Resultado de una operación de handler

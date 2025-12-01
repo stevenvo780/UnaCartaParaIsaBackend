@@ -41,7 +41,7 @@ const BASIC_RECIPE_IDS = [
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../../config/Types";
-import { QuestStatus } from '../../../../shared/constants/QuestEnums';
+import { QuestStatus } from "../../../../shared/constants/QuestEnums";
 
 @injectable()
 export class EnhancedCraftingSystem implements ICraftingSystem {

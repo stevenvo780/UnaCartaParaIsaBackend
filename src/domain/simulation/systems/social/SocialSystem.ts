@@ -13,10 +13,10 @@ import type { HandlerResult, ISocialSystem } from "../agents/SystemRegistry";
 
 import { injectable, inject, optional } from "inversify";
 import type { GPUComputeService } from "../../core/GPUComputeService";
-import { QuestStatus } from '../../../../shared/constants/QuestEnums';
-import { ActionType } from '../../../../shared/constants/AIEnums';
-import { DialogueTone } from '../../../../shared/constants/AmbientEnums';
-import { GoalType } from '../../../../shared/constants/AIEnums';
+import { QuestStatus } from "../../../../shared/constants/QuestEnums";
+import { ActionType } from "../../../../shared/constants/AIEnums";
+import { DialogueTone } from "../../../../shared/constants/AmbientEnums";
+import { GoalType } from "../../../../shared/constants/AIEnums";
 
 /**
  * System for managing social relationships between agents.

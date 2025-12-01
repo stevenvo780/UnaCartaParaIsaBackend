@@ -14,7 +14,7 @@ import {
   inProgressResult,
   successResult,
 } from "../types";
-import { QuestStatus } from '../../../../../../shared/constants/QuestEnums';
+import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
 
 /**
  * @deprecated Use SystemRegistry.inventory instead

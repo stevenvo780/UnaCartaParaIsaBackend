@@ -13,7 +13,7 @@ import {
   ResourceType as ResourceTypeEnum,
   WorldResourceType as WorldResourceTypeEnum,
 } from "../../../shared/constants/ResourceEnums";
-import { MushroomVariant } from '../../constants/ResourceVariantEnums';
+import { MushroomVariant } from "../../constants/ResourceVariantEnums";
 
 /**
  * Maps item IDs to base resource types.

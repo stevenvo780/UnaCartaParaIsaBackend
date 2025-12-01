@@ -9,7 +9,6 @@ import {
   SystemProperty,
 } from "../../../shared/constants/SystemEnums";
 
-
 /**
  * Delta snapshot containing only changes since the last snapshot.
  * Used to reduce WebSocket payload size by sending only modified data.

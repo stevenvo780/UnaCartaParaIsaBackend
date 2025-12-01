@@ -15,7 +15,7 @@ interface GenealogyConfig {
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../../config/Types";
-import { ActionType } from '../../../../shared/constants/AIEnums';
+import { ActionType } from "../../../../shared/constants/AIEnums";
 
 @injectable()
 export class GenealogySystem {

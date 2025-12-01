@@ -15,7 +15,7 @@ import {
   successResult,
 } from "../types";
 import { moveToPosition, isAtTarget } from "./MoveHandler";
-import { QuestStatus } from '../../../../../../shared/constants/QuestEnums';
+import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
 
 /**
  * @deprecated Use SystemRegistry.needs instead

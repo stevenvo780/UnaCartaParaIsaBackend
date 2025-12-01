@@ -5,7 +5,7 @@ import { injectable, inject, unmanaged } from "inversify";
 import { TYPES } from "../../../../config/Types";
 import { TimeOfDayPhase } from "../../../../shared/constants/TimeEnums";
 import { WeatherType } from "../../../../shared/constants/AmbientEnums";
-import { WorkShift } from '../../../../shared/constants/RoleEnums';
+import { WorkShift } from "../../../../shared/constants/RoleEnums";
 
 export interface TimeOfDay {
   hour: number;

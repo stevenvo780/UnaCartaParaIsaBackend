@@ -13,8 +13,8 @@ import {
   TASK_PRIORITIES,
   createTask,
 } from "../types";
-import { RoleType } from '../../../../../../shared/constants/RoleEnums';
-import { ActionType } from '../../../../../../shared/constants/AIEnums';
+import { RoleType } from "../../../../../../shared/constants/RoleEnums";
+import { ActionType } from "../../../../../../shared/constants/AIEnums";
 
 /**
  * Detecta necesidad de construir

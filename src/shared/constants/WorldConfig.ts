@@ -1,6 +1,6 @@
 import { EntityStat } from "./EntityEnums";
 import { ZoneID } from "./ZoneEnums";
-import { ZoneType } from './ZoneEnums';
+import { ZoneType } from "./ZoneEnums";
 
 export const WORLD_CONFIG = {
   WORLD_WIDTH: 4096,

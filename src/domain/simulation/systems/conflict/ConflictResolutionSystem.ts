@@ -40,8 +40,7 @@ const CONFLICT_CONFIG = {
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../../config/Types";
-import { TradeOfferStatus } from '../../../../shared/constants/EconomyEnums';
-
+import { TradeOfferStatus } from "../../../../shared/constants/EconomyEnums";
 
 /**
  * Unified system for conflict resolution and norm enforcement.
@@ -321,7 +320,9 @@ export class ConflictResolutionSystem {
   public getConflictStats(): ConflictStats {
     const totalMediations = this.mediationAttempts.length;
     const successfulMediations = this.mediationAttempts.filter(
-      (m) => m.outcome === TradeOfferStatus.ACCEPTED || m.outcome === ConflictResolution.APOLOGIZED,
+      (m) =>
+        m.outcome === TradeOfferStatus.ACCEPTED ||
+        m.outcome === ConflictResolution.APOLOGIZED,
     ).length;
     const truceAcceptances = this.mediationAttempts.filter(
       (m) => m.outcome === TradeOfferStatus.ACCEPTED,
