@@ -7,6 +7,7 @@ import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
 import type { StateDirtyTracker } from "../../core/StateDirtyTracker";
 import { performanceMonitor } from "../../core/PerformanceMonitor";
+import { SystemProperty } from '../../../../shared/constants/SystemEnums';
 
 /**
  * System for managing tasks and work assignments.
@@ -29,7 +30,7 @@ export class TaskSystem {
   private lastUpdate = 0;
   private tasksDirty = true;
   private statsDirty = true;
-  private cachedStats: TaskState["stats"] = {
+  private cachedStats: TaskState[SystemProperty.STATS] = {
     total: 0,
     active: 0,
     completed: 0,
@@ -577,7 +578,7 @@ export class TaskSystem {
     }));
   }
 
-  private hasStatsChanged(next: TaskState["stats"]): boolean {
+  private hasStatsChanged(next: TaskState[SystemProperty.STATS]): boolean {
     return (
       next.total !== this.cachedStats.total ||
       next.active !== this.cachedStats.active ||

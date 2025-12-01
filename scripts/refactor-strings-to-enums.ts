@@ -59,8 +59,10 @@ function loadReport(): Report {
   const report: Report = JSON.parse(fs.readFileSync(REPORT_PATH, 'utf8'));
 
   console.log('📂 Escaneando archivos de Enums...');
-  scanForEnumFiles(path.join(__dirname, '../src/shared/constants'));
+  // Escanear Frontend PRIMERO
   scanForEnumFiles(path.join(__dirname, '../../UnaCartaParaIsa/src/constants'));
+  // Escanear TODO el backend src para encontrar enums donde sea que estén (domain, shared, etc)
+  scanForEnumFiles(path.join(__dirname, '../src'));
   console.log(`   Encontrados ${enumFileMap.size} Enums en el sistema.`);
 
   return report;
@@ -108,9 +110,20 @@ function getRelativeImportPath(sourceFile: string, targetFile: string): string {
 function addImport(filePath: string, content: string, enumName: string): string {
   // Verificar si ya está importado
   if (new RegExp(`\\b${enumName}\\b`).test(content)) {
-    // Podría estar usado pero no importado (si es lo que estamos arreglando),
-    // o ya importado. Verificamos si hay una sentencia import.
-    if (new RegExp(`import.*\\b${enumName}\\b`).test(content)) {
+    // Verificar si está importado como valor
+    if (new RegExp(`import\\s+.*\\b${enumName}\\b`).test(content)) {
+      // Verificar si es "import type"
+      const typeImportRegex = new RegExp(`import\\s+type\\s+.*\\b${enumName}\\b`);
+      if (typeImportRegex.test(content)) {
+        // Es un import type, necesitamos cambiarlo a import normal o añadir uno nuevo
+        const lines = content.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].includes(`import type`) && lines[i].includes(enumName)) {
+            lines[i] = lines[i].replace('import type', 'import');
+            return lines.join('\n');
+          }
+        }
+      }
       return content;
     }
   }

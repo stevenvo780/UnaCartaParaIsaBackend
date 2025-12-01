@@ -28,6 +28,7 @@ import { ActionType } from "../../../../../shared/constants/AIEnums";
 import { EntityType } from "../../../../../shared/constants/EntityEnums";
 import { FoodCategory } from "../../../../../shared/constants/FoodEnums";
 import type { FoodItem } from "@/shared/types/simulation/food";
+import { QuestStatus } from '../../../../../shared/constants/QuestEnums';
 
 /**
  * System for managing entity needs (hunger, thirst, energy, hygiene, social, fun, mental health).
@@ -1317,7 +1318,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     
     if (!needs) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "needs",
         message: `No needs data for agent ${agentId}`,
       };
@@ -1330,7 +1331,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       // If itemIdOrNeedType is a need type, find appropriate resource
       const needType = itemIdOrNeedType.toLowerCase();
       
-      if (needType === "hunger" || needType === "food") {
+      if (needType === NeedType.HUNGER || needType === ResourceType.FOOD) {
         if (inventory && inventory.food > 0) {
           this.inventorySystem.removeFromAgent(agentId, ResourceType.FOOD, 1);
           this.satisfyNeed(agentId, NeedType.HUNGER, 25);
@@ -1338,12 +1339,12 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
             status: "completed",
             system: "needs",
             message: "Consumed food",
-            data: { needType: "hunger", restored: 25 },
+            data: { needType: NeedType.HUNGER, restored: 25 },
           };
         }
       }
       
-      if (needType === "thirst" || needType === "water") {
+      if (needType === NeedType.THIRST || needType === ResourceType.WATER) {
         if (inventory && inventory.water > 0) {
           this.inventorySystem.removeFromAgent(agentId, ResourceType.WATER, 1);
           this.satisfyNeed(agentId, NeedType.THIRST, 25);
@@ -1351,14 +1352,14 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
             status: "completed",
             system: "needs",
             message: "Consumed water",
-            data: { needType: "thirst", restored: 25 },
+            data: { needType: NeedType.THIRST, restored: 25 },
           };
         }
       }
     }
 
     return {
-      status: "failed",
+      status: QuestStatus.FAILED,
       system: "needs",
       message: `No consumable available for ${itemIdOrNeedType}`,
     };
@@ -1375,7 +1376,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     
     if (!needs) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "needs",
         message: `No needs data for agent ${agentId}`,
       };
@@ -1434,7 +1435,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     }
 
     return {
-      status: "failed",
+      status: QuestStatus.FAILED,
       system: "needs",
       message: `Failed to apply need change for ${agentId}`,
     };

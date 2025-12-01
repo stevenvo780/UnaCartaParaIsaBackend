@@ -4,6 +4,7 @@ import {
   ItemCategory,
   ItemId,
 } from "../../shared/constants/ItemEnums";
+import { BiomeType } from '../../shared/constants/BiomeEnums';
 
 export class BaseMaterialsCatalog {
   private static readonly materials: Item[] = [
@@ -248,7 +249,7 @@ export class BaseMaterialsCatalog {
         spoilTime: 240000,
         value: 6,
       },
-      metadata: { biome: "wetland" },
+      metadata: { biome: BiomeType.WETLAND },
     },
     {
       id: ItemId.REEDS,
@@ -262,7 +263,7 @@ export class BaseMaterialsCatalog {
         maxStack: 100,
         value: 2,
       },
-      metadata: { biome: "wetland" },
+      metadata: { biome: BiomeType.WETLAND },
     },
 
     {
@@ -277,7 +278,7 @@ export class BaseMaterialsCatalog {
         maxStack: 40,
         value: 4,
       },
-      metadata: { biome: "mountainous" },
+      metadata: { biome: BiomeType.MOUNTAINOUS },
     },
     {
       id: ItemId.RARE_GEMS,
@@ -291,7 +292,7 @@ export class BaseMaterialsCatalog {
         maxStack: 10,
         value: 50,
       },
-      metadata: { biome: "mountainous" },
+      metadata: { biome: BiomeType.MOUNTAINOUS },
     },
 
     {
@@ -308,7 +309,7 @@ export class BaseMaterialsCatalog {
         spoilTime: 300000,
         value: 7,
       },
-      metadata: { biome: "forest" },
+      metadata: { biome: BiomeType.FOREST },
     },
     {
       id: ItemId.HONEY,
@@ -322,7 +323,7 @@ export class BaseMaterialsCatalog {
         maxStack: 20,
         value: 10,
       },
-      metadata: { biome: "forest" },
+      metadata: { biome: BiomeType.FOREST },
     },
     {
       id: ItemId.PINE_RESIN,
@@ -336,7 +337,7 @@ export class BaseMaterialsCatalog {
         maxStack: 30,
         value: 5,
       },
-      metadata: { biome: "forest" },
+      metadata: { biome: BiomeType.FOREST },
     },
 
     {
@@ -351,7 +352,7 @@ export class BaseMaterialsCatalog {
         maxStack: 100,
         value: 3,
       },
-      metadata: { biome: "grassland" },
+      metadata: { biome: BiomeType.GRASSLAND },
     },
     {
       id: ItemId.WILDFLOWERS,
@@ -367,7 +368,7 @@ export class BaseMaterialsCatalog {
         spoilTime: 120000,
         value: 2,
       },
-      metadata: { biome: "grassland" },
+      metadata: { biome: BiomeType.GRASSLAND },
     },
 
     {
@@ -382,7 +383,7 @@ export class BaseMaterialsCatalog {
         maxStack: 30,
         value: 3,
       },
-      metadata: { biome: "village" },
+      metadata: { biome: BiomeType.VILLAGE },
     },
     {
       id: ItemId.OLD_TOOLS,
@@ -396,7 +397,7 @@ export class BaseMaterialsCatalog {
         maxStack: 10,
         value: 5,
       },
-      metadata: { biome: "village" },
+      metadata: { biome: BiomeType.VILLAGE },
     },
     {
       id: ItemId.SEEDS,
@@ -410,7 +411,7 @@ export class BaseMaterialsCatalog {
         maxStack: 200,
         value: 1,
       },
-      metadata: { biome: "village" },
+      metadata: { biome: BiomeType.VILLAGE },
     },
   ];
 

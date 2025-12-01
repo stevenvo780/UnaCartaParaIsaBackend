@@ -1,6 +1,7 @@
 import type { ZoneType } from "@/shared/types/simulation/zones";
 import type { EntityStats } from "../simulation/core/schema";
 import { ZoneSpriteKey } from "../../shared/constants/SpriteEnums";
+import { BuildingType } from '../../shared/constants/BuildingEnums';
 
 export interface ZonePropertyConfig {
   name: string;
@@ -366,7 +367,7 @@ export function getZoneProperties(zoneType: ZoneType): ZonePropertyConfig {
       color: "#808080",
       attractiveness: 3,
       effects: {},
-      spriteKey: "house",
+      spriteKey: BuildingType.HOUSE,
       capacity: 2,
     }
   );

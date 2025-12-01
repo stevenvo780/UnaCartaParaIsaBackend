@@ -14,6 +14,7 @@ import {
   inProgressResult,
   successResult,
 } from "../types";
+import { QuestStatus } from '../../../../../../shared/constants/QuestEnums';
 
 /**
  * @deprecated Use SystemRegistry.inventory instead
@@ -68,7 +69,7 @@ export function handleDeposit(
         ...((result.data as object) ?? {}),
       });
 
-    case "failed":
+    case QuestStatus.FAILED:
       return errorResult(result.message ?? "Deposit failed");
 
     case "in_progress":

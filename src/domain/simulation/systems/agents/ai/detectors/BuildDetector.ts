@@ -13,6 +13,8 @@ import {
   TASK_PRIORITIES,
   createTask,
 } from "../types";
+import { RoleType } from '../../../../../../shared/constants/RoleEnums';
+import { ActionType } from '../../../../../../shared/constants/AIEnums';
 
 /**
  * Detecta necesidad de construir
@@ -23,7 +25,7 @@ export function detectBuild(ctx: DetectorContext): Task[] {
   if (ctx.pendingBuilds?.length) {
     const role = (ctx.roleType ?? "").toLowerCase();
 
-    if (role === "builder" || role === "worker") {
+    if (role === RoleType.BUILDER || role === "worker") {
       const best = ctx.pendingBuilds[0];
 
       tasks.push(
@@ -54,7 +56,7 @@ export function detectBuild(ctx: DetectorContext): Task[] {
           priority: TASK_PRIORITIES.NORMAL,
           target: { zoneId: ctx.contributableBuilding.zoneId },
           params: {
-            action: "contribute_resources",
+            action: ActionType.CONTRIBUTE_RESOURCES,
             wood: ctx.inventory?.wood ?? 0,
             stone: ctx.inventory?.stone ?? 0,
           },

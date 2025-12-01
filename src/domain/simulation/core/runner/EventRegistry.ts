@@ -11,6 +11,7 @@ import { RoleType } from "../../../../shared/constants/RoleEnums";
 
 import { LifeStage } from "../../../../shared/constants/AgentEnums";
 import { ActionType } from "../../../../shared/constants/AIEnums";
+import { TimeOfDayPhase } from '../../../../shared/constants/TimeEnums';
 
 /**
  * Central registry for simulation event listeners.
@@ -315,7 +316,7 @@ export class EventRegistry {
         timestamp: number;
       }) => {
         const period = data.time?.phase || "";
-        if (period === "night" || period === "deep_night") {
+        if (period === "night" || period === TimeOfDayPhase.DEEP_NIGHT) {
           for (const agent of this.runner.state.agents) {
             const aiState = this.runner.aiSystem.getAIState(agent.id);
             if (aiState && !aiState.currentGoal && !aiState.offDuty) {

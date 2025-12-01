@@ -14,6 +14,7 @@ import {
   inProgressResult,
   successResult,
 } from "../types";
+import { QuestStatus } from '../../../../../../shared/constants/QuestEnums';
 
 export interface Recipe {
   itemType: string;
@@ -83,7 +84,7 @@ export function handleCraft(
         ...((result.data as object) ?? {}),
       });
 
-    case "failed":
+    case QuestStatus.FAILED:
       return errorResult(result.message ?? "Craft failed");
 
     case "in_progress":

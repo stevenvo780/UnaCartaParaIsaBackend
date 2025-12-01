@@ -27,6 +27,8 @@ import { ActivityType } from "../../../../../shared/constants/MovementEnums";
 import { ActionType } from "../../../../../shared/constants/AIEnums";
 import { SIM_CONSTANTS } from "../../../core/SimulationConstants";
 import { TerrainSystem } from "../../world/TerrainSystem";
+import { QuestStatus } from '../../../../../shared/constants/QuestEnums';
+import { MapElementType } from '../../../../../shared/constants/MapElementEnums';
 
 export interface EntityMovementState {
   entityId: string;
@@ -511,7 +513,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
 
     simulationEvents.emit(GameEventType.MOVEMENT_ACTIVITY_COMPLETED, {
       entityId: state.entityId,
-      activity: "moving",
+      activity: ActivityType.MOVING,
       position: { ...state.currentPosition },
     });
   }
@@ -973,7 +975,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
   private isObstacle(element: MapElement): boolean {
     const type = element.type || "";
     return (
-      type === "obstacle" ||
+      type === MapElementType.OBSTACLE ||
       type === "building" ||
       type === "rock" ||
       type === "tree"
@@ -1084,7 +1086,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     
     if (!state) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "movement",
         message: `No movement state for agent ${agentId}`,
       };
@@ -1129,7 +1131,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     }
 
     return {
-      status: "failed",
+      status: QuestStatus.FAILED,
       system: "movement",
       message: "Failed to start movement",
     };
@@ -1147,7 +1149,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     
     if (!state) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "movement",
         message: `No movement state for agent ${agentId}`,
       };
@@ -1157,7 +1159,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     const zone = this.gameState.zones?.find(z => z.id === zoneId);
     if (!zone) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "movement",
         message: `Zone ${zoneId} not found`,
       };
@@ -1199,7 +1201,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     }
 
     return {
-      status: "failed",
+      status: QuestStatus.FAILED,
       system: "movement",
       message: "Failed to start movement to zone",
     };
@@ -1217,7 +1219,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     
     if (!state) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "movement",
         message: `No movement state for agent ${agentId}`,
       };
@@ -1247,7 +1249,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
 
     if (!targetPosition) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "movement",
         message: `Entity ${entityId} not found or has no position`,
       };

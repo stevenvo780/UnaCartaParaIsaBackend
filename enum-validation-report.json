@@ -3,7 +3,7 @@
     "totalEnums": 145,
     "unusedEnums": 20,
     "unusedMembers": 284,
-    "missingEnumOccurrences": 1394
+    "missingEnumOccurrences": 1389
   },
   "unusedEnums": [
     {
@@ -121,7 +121,7 @@
     {
       "enum": "GoalType",
       "member": "WORK",
-      "file": "src/shared/constants/AIEnums.ts"aw
+      "file": "src/shared/constants/AIEnums.ts"
     },
     {
       "enum": "GoalType",
@@ -1515,7 +1515,7 @@
       "possibleEnums": [
         "QuestStatus"
       ],
-      "count": 62,
+      "count": 61,
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/agents/ai/handlers/AttackHandler.ts",
@@ -1539,12 +1539,12 @@
         },
         {
           "file": "src/domain/simulation/systems/agents/ai/handlers/ConsumeHandler.ts",
-          "line": 103,
+          "line": 88,
           "lineContent": "if (result.status === \"failed\") {"
         },
         {
           "file": "src/domain/simulation/systems/agents/ai/handlers/ConsumeHandler.ts",
-          "line": 116,
+          "line": 101,
           "lineContent": "if (result.status === \"failed\") {"
         },
         {
@@ -1734,57 +1734,52 @@
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 678,
+          "line": 669,
           "lineContent": "status: \"failed\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 717,
+          "line": 709,
           "lineContent": "status: \"failed\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 751,
+          "line": 728,
           "lineContent": "status: \"failed\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 770,
+          "line": 747,
           "lineContent": "status: \"failed\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 789,
+          "line": 774,
           "lineContent": "status: \"failed\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 816,
+          "line": 786,
           "lineContent": "status: \"failed\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 828,
+          "line": 806,
           "lineContent": "status: \"failed\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 848,
+          "line": 827,
           "lineContent": "status: \"failed\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 869,
+          "line": 842,
           "lineContent": "status: \"failed\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 884,
-          "lineContent": "status: \"failed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 906,
+          "line": 864,
           "lineContent": "status: \"failed\","
         },
         {
@@ -1837,7 +1832,7 @@
         "TaskStatus",
         "QuestStatus"
       ],
-      "count": 54,
+      "count": 52,
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/agents/ai/handlers/AttackHandler.ts",
@@ -1876,22 +1871,12 @@
         },
         {
           "file": "src/domain/simulation/systems/agents/ai/handlers/ConsumeHandler.ts",
-          "line": 87,
-          "lineContent": "if (gatherResult.status === \"completed\") {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/ConsumeHandler.ts",
-          "line": 90,
-          "lineContent": "if (consumeResult.status === \"completed\") {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/ConsumeHandler.ts",
-          "line": 99,
+          "line": 84,
           "lineContent": "if (result.status === \"completed\") {"
         },
         {
           "file": "src/domain/simulation/systems/agents/ai/handlers/ConsumeHandler.ts",
-          "line": 112,
+          "line": 97,
           "lineContent": "if (result.status === \"completed\") {"
         },
         {
@@ -2041,22 +2026,22 @@
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 738,
+          "line": 701,
           "lineContent": "status: \"completed\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 808,
+          "line": 766,
           "lineContent": "status: \"completed\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 840,
+          "line": 798,
           "lineContent": "status: \"completed\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 895,
+          "line": 853,
           "lineContent": "status: \"completed\","
         },
         {
@@ -2902,7 +2887,7 @@
       "possibleEnums": [
         "SystemProperty"
       ],
-      "count": 19,
+      "count": 18,
       "occurrences": [
         {
           "file": "src/domain/simulation/core/DeltaEncoder.ts",
@@ -2926,77 +2911,72 @@
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 679,
+          "line": 670,
           "lineContent": "system: \"inventory\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 718,
+          "line": 702,
           "lineContent": "system: \"inventory\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 739,
+          "line": 710,
           "lineContent": "system: \"inventory\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 752,
+          "line": 729,
           "lineContent": "system: \"inventory\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 771,
+          "line": 748,
           "lineContent": "system: \"inventory\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 790,
+          "line": 767,
           "lineContent": "system: \"inventory\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 809,
+          "line": 775,
           "lineContent": "system: \"inventory\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 817,
+          "line": 787,
           "lineContent": "system: \"inventory\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 829,
+          "line": 799,
           "lineContent": "system: \"inventory\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 841,
+          "line": 807,
           "lineContent": "system: \"inventory\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 849,
+          "line": 828,
           "lineContent": "system: \"inventory\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 870,
+          "line": 843,
           "lineContent": "system: \"inventory\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 885,
+          "line": 854,
           "lineContent": "system: \"inventory\","
         },
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 896,
-          "lineContent": "system: \"inventory\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 907,
+          "line": 865,
           "lineContent": "system: \"inventory\","
         }
       ]
@@ -4887,46 +4867,6 @@
       ]
     },
     {
-      "stringLiteral": "storage",
-      "possibleEnums": [
-        "BuildingType",
-        "ZoneType"
-      ],
-      "count": 6,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/ai/AISystem.ts",
-          "line": 569,
-          "lineContent": "(z) => z.type === \"storage\","
-        },
-        {
-          "file": "src/domain/simulation/systems/world/ItemGenerationSystem.ts",
-          "line": 39,
-          "lineContent": "village: \"storage\","
-        },
-        {
-          "file": "src/domain/simulation/systems/world/WorldLoader.ts",
-          "line": 398,
-          "lineContent": "buildingType: \"storage\","
-        },
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 148,
-          "lineContent": "type: \"storage\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 168,
-          "lineContent": "type: \"storage\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 825,
-          "lineContent": "{ type: \"storage\", color: \"#8B4513\" }, // Added storage"
-        }
-      ]
-    },
-    {
       "stringLiteral": "thirst",
       "possibleEnums": [
         "NeedType",
@@ -5223,6 +5163,41 @@
           "file": "../UnaCartaParaIsa/src/constants/index.ts",
           "line": 197,
           "lineContent": "happiness: \"play\","
+        }
+      ]
+    },
+    {
+      "stringLiteral": "storage",
+      "possibleEnums": [
+        "BuildingType",
+        "ZoneType"
+      ],
+      "count": 5,
+      "occurrences": [
+        {
+          "file": "src/domain/simulation/systems/world/ItemGenerationSystem.ts",
+          "line": 39,
+          "lineContent": "village: \"storage\","
+        },
+        {
+          "file": "src/domain/simulation/systems/world/WorldLoader.ts",
+          "line": 398,
+          "lineContent": "buildingType: \"storage\","
+        },
+        {
+          "file": "src/shared/constants/WorldConfig.ts",
+          "line": 148,
+          "lineContent": "type: \"storage\","
+        },
+        {
+          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
+          "line": 168,
+          "lineContent": "type: \"storage\","
+        },
+        {
+          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
+          "line": 825,
+          "lineContent": "{ type: \"storage\", color: \"#8B4513\" }, // Added storage"
         }
       ]
     },
@@ -10340,7 +10315,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 796,
+          "line": 754,
           "lineContent": "if (itemId === \"all\") {"
         }
       ]

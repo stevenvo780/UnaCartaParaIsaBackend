@@ -14,6 +14,7 @@ import {
   inProgressResult,
   successResult,
 } from "../types";
+import { QuestStatus } from '../../../../../../shared/constants/QuestEnums';
 
 /**
  * @deprecated Use SystemRegistry.combat instead
@@ -60,7 +61,7 @@ export function handleAttack(
         ...((result.data as object) ?? {}),
       });
 
-    case "failed":
+    case QuestStatus.FAILED:
       return errorResult(result.message ?? "Attack failed");
 
     case "in_progress":

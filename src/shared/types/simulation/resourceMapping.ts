@@ -13,6 +13,7 @@ import {
   ResourceType as ResourceTypeEnum,
   WorldResourceType as WorldResourceTypeEnum,
 } from "../../../shared/constants/ResourceEnums";
+import { MushroomVariant } from '../../constants/ResourceVariantEnums';
 
 /**
  * Maps item IDs to base resource types.
@@ -232,7 +233,7 @@ export function itemToWorldResources(itemId: string): WorldResourceType[] {
     return [WorldResourceTypeEnum.BERRY_BUSH];
   }
 
-  if (["mushrooms"].includes(itemId)) {
+  if ([MushroomVariant.FULL].includes(itemId as MushroomVariant)) {
     return [WorldResourceTypeEnum.MUSHROOM_PATCH];
   }
 

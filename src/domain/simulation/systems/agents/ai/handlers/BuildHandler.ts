@@ -14,6 +14,7 @@ import {
   inProgressResult,
   successResult,
 } from "../types";
+import { QuestStatus } from '../../../../../../shared/constants/QuestEnums';
 
 /**
  * @deprecated Use SystemRegistry.building instead
@@ -66,7 +67,7 @@ export function handleBuild(
           ...((result.data as object) ?? {}),
         });
 
-      case "failed":
+      case QuestStatus.FAILED:
         return errorResult(result.message ?? "Build failed");
 
       case "in_progress":
@@ -100,7 +101,7 @@ export function handleBuild(
           ...((result.data as object) ?? {}),
         });
 
-      case "failed":
+      case QuestStatus.FAILED:
         return errorResult(result.message ?? "Cannot start construction");
 
       case "in_progress":

@@ -64,6 +64,7 @@ import { TYPES } from "../../../../config/Types";
 import type { EntityIndex } from "../../core/EntityIndex";
 import type { AgentRegistry } from "../agents/AgentRegistry";
 import type { HandlerResult, ITradeSystem } from "../agents/SystemRegistry";
+import { QuestStatus } from '../../../../shared/constants/QuestEnums';
 
 /**
  * System for managing economic activities: resource production, salaries, market pricing, and trading.
@@ -733,7 +734,7 @@ export class EconomySystem implements ITradeSystem {
     // Verificar que el comprador puede pagar
     if (!this.canAfford(buyerId, totalCost)) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "trade",
         message: `Buyer ${buyerId} cannot afford ${totalCost}`,
         data: { required: totalCost },
@@ -743,7 +744,7 @@ export class EconomySystem implements ITradeSystem {
     // Verificar que el vendedor tiene el recurso
     if (!this.inventorySystem) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "trade",
         message: "Inventory system not available",
       };
@@ -752,7 +753,7 @@ export class EconomySystem implements ITradeSystem {
     const sellerInventory = this.inventorySystem.getAgentInventory(sellerId);
     if (!sellerInventory) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "trade",
         message: `Seller ${sellerId} has no inventory`,
       };
@@ -762,7 +763,7 @@ export class EconomySystem implements ITradeSystem {
     const available = sellerInventory[resourceType] ?? 0;
     if (available < quantity) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "trade",
         message: `Seller doesn't have enough ${itemId}`,
         data: { available, requested: quantity },
@@ -773,7 +774,7 @@ export class EconomySystem implements ITradeSystem {
     // 1. Transferir dinero
     if (!this.transferMoney(buyerId, sellerId, totalCost)) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "trade",
         message: "Money transfer failed",
       };

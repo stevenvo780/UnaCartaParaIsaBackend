@@ -15,6 +15,7 @@ interface GenealogyConfig {
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../../config/Types";
+import { ActionType } from '../../../../shared/constants/AIEnums';
 
 @injectable()
 export class GenealogySystem {
@@ -91,7 +92,7 @@ export class GenealogySystem {
     }
 
     this.recordEvent({
-      type: "birth",
+      type: ActionType.BIRTH,
       timestamp: Date.now(),
       agentId: agent.id,
       lineageId,
@@ -208,7 +209,7 @@ export class GenealogySystem {
     }
 
     this.recordEvent({
-      type: "death",
+      type: ActionType.DEATH,
       timestamp: Date.now(),
       agentId,
       lineageId: ancestor.lineageId,

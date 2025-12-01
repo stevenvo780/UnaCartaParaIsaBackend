@@ -17,6 +17,7 @@
 import { NeedType } from "@/shared/constants/AIEnums";
 import type { HandlerResult, SystemRegistry } from "../SystemRegistry";
 import type { EventBus } from "@/domain/simulation/core/EventBus";
+import { QuestStatus } from '../../../../../shared/constants/QuestEnums';
 
 export type { HandlerResult } from "../SystemRegistry";
 
@@ -43,6 +44,23 @@ export enum TaskType {
   EXPLORE = "explore",
 
   IDLE = "idle",
+}
+
+/**
+ * Type representing all possible task type values.
+ */
+export type TaskTypeValue = `${TaskType}`;
+
+/**
+ * Array of all task types for iteration.
+ */
+export const ALL_TASK_TYPES: readonly TaskType[] = Object.values(TaskType) as TaskType[];
+
+/**
+ * Type guard to check if a string is a valid TaskType.
+ */
+export function isTaskType(value: string): value is TaskType {
+  return Object.values(TaskType).includes(value as TaskType);
 }
 
 /**
@@ -311,7 +329,7 @@ export function toExecutionResult(
 ): HandlerExecutionResult {
   return {
     success: result.status === "completed" || result.status === "delegated",
-    completed: result.status === "completed" || result.status === "failed",
+    completed: result.status === "completed" || result.status === QuestStatus.FAILED,
     message: result.message,
     system: result.system,
     data: result.data as Record<string, unknown>,

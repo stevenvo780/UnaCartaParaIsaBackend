@@ -32,6 +32,7 @@ import type { GameResources } from "@/shared/types/game-types";
 import type { NeedsConfig } from "@/shared/types/simulation/needs";
 import type { TaskType, TaskMetadata } from "@/shared/types/simulation/tasks";
 import type { BuildingLabel } from "@/shared/types/simulation/buildings";
+import { ActionType } from '../../../../shared/constants/AIEnums';
 
 export class CommandProcessor {
   constructor(private runner: SimulationRunner) {}
@@ -193,7 +194,7 @@ export class CommandProcessor {
           );
           simulationEvents.emit(GameEventType.AGENT_ACTION_COMMANDED, {
             agentId: command.agentId,
-            action: "move",
+            action: ActionType.MOVE,
             payload,
           });
         }

@@ -13,6 +13,9 @@ import {
   TASK_PRIORITIES,
   createTask,
 } from "../types";
+import { RoleType } from '../../../../../../shared/constants/RoleEnums';
+import { SocialStatus } from '../../../../../../shared/constants/AgentEnums';
+import { ItemCategory } from '../../../../../../shared/constants/ItemEnums';
 
 /**
  * Detecta necesidad de craftear
@@ -37,7 +40,7 @@ function detectWeaponNeed(ctx: DetectorContext): Task | null {
 
   const role = (ctx.roleType ?? "").toLowerCase();
   const needsWeaponForRole =
-    role === "hunter" || role === "guard" || role === "warrior";
+    role === RoleType.HUNTER || role === RoleType.GUARD || role === SocialStatus.WARRIOR;
 
   const weaponToCraft = ctx.canCraftDagger ? "stone_dagger" : "wooden_club";
 
@@ -49,7 +52,7 @@ function detectWeaponNeed(ctx: DetectorContext): Task | null {
       : TASK_PRIORITIES.NORMAL,
     target: { zoneId: ctx.craftZoneId },
     params: {
-      itemType: "weapon",
+      itemType: ItemCategory.WEAPON,
       itemId: weaponToCraft,
       roleNeedsWeapon: needsWeaponForRole,
     },

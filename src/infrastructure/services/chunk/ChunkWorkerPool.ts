@@ -453,7 +453,7 @@ export class ChunkWorkerPool extends EventEmitter {
     envelope: WorkerEnvelope,
     message: WorkerMessage,
   ): void {
-    if (message.type !== "result") return;
+    if (message.type !== WorkerMessageType.RESULT) return;
     const job = envelope.currentJob;
     envelope.currentJob = undefined;
     envelope.busy = false;

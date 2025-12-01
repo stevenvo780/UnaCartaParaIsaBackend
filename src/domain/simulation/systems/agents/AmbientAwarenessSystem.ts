@@ -256,7 +256,7 @@ export class AmbientAwarenessSystem {
 
   private resolvePulseRate(
     mood: AmbientMood,
-    trend: CollectiveWellbeing["trend"],
+    trend: CollectiveWellbeing[SystemProperty.TREND],
   ): number {
     let base = 1;
     switch (mood) {

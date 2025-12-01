@@ -15,6 +15,7 @@ import {
   createTask,
 } from "../types";
 import { NeedType } from "@/shared/constants/AIEnums";
+import { ZoneType } from '../../../../../../shared/constants/ZoneEnums';
 
 const THRESHOLDS = {
   CRITICAL: 15,
@@ -99,7 +100,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
         type: TaskType.SOCIALIZE,
         priority: calculateSocialPriority(fun) * 0.9,
         target: { entityId: target.id, position: target },
-        params: { needType: NeedType.FUN, action: "play" },
+        params: { needType: NeedType.FUN, action: ZoneType.PLAY },
         source: "detector:needs:fun",
       }),
     );

@@ -14,6 +14,8 @@ import {
   TASK_PRIORITIES,
   createTask,
 } from "../types";
+import { RoleType } from '../../../../../../shared/constants/RoleEnums';
+import { SocialStatus } from '../../../../../../shared/constants/AgentEnums';
 
 /** No trabajar si necesidades críticas */
 const CRITICAL_NEED_THRESHOLD = 15;
@@ -36,20 +38,20 @@ export function detectWork(ctx: DetectorContext): Task[] {
   const role = (ctx.roleType ?? "").toLowerCase();
 
   switch (role) {
-    case "gatherer":
+    case RoleType.GATHERER:
     case "worker":
       tasks.push(...detectGatherWork(ctx));
       break;
 
-    case "hunter":
+    case RoleType.HUNTER:
       tasks.push(...detectHuntWork(ctx));
       break;
 
-    case "builder":
+    case RoleType.BUILDER:
       break;
 
-    case "warrior":
-    case "guard":
+    case SocialStatus.WARRIOR:
+    case RoleType.GUARD:
       tasks.push(...detectPatrolWork(ctx));
       break;
 

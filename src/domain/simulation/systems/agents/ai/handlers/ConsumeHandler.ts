@@ -15,6 +15,7 @@ import {
   successResult,
 } from "../types";
 import { moveToPosition, isAtTarget } from "./MoveHandler";
+import { QuestStatus } from '../../../../../../shared/constants/QuestEnums';
 
 /**
  * @deprecated Use SystemRegistry.needs instead
@@ -67,7 +68,7 @@ export function handleConsume(
       });
     }
 
-    if (result.status === "failed") {
+    if (result.status === QuestStatus.FAILED) {
       return errorResult(result.message ?? "Consume failed");
     }
 
@@ -85,7 +86,7 @@ export function handleConsume(
       return successResult({ satisfied: needType });
     }
 
-    if (result.status === "failed") {
+    if (result.status === QuestStatus.FAILED) {
       return errorResult(result.message ?? "No consumable resource available");
     }
 
@@ -98,7 +99,7 @@ export function handleConsume(
     return successResult({ satisfied: needType });
   }
 
-  if (result.status === "failed") {
+  if (result.status === QuestStatus.FAILED) {
     return errorResult(result.message ?? "No consumable available");
   }
 

@@ -359,8 +359,8 @@ export class WorldResourceSystem {
 
         const isWaterTile =
           tile.biome === BiomeType.OCEAN ||
-          tile.assets.terrain.includes("water") ||
-          tile.assets.terrain.includes("ocean");
+          tile.assets.terrain.includes(TileType.WATER) ||
+          tile.assets.terrain.includes(BiomeType.OCEAN);
 
         if (isWaterTile) {
           const waterResourceId = `water_tile_${tile.x}_${tile.y}`;

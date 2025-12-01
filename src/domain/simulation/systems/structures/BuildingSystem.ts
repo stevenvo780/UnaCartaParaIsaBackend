@@ -93,6 +93,8 @@ type MutableZone = Zone & {
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
+import { QuestStatus } from '../../../../shared/constants/QuestEnums';
+import { SystemProperty } from '../../../../shared/constants/SystemEnums';
 
 /**
  * System for managing building construction, placement, and maintenance.
@@ -209,7 +211,7 @@ export class BuildingSystem implements IBuildingSystem {
 
     const mines = zones.filter(
       (z) =>
-        z.metadata?.building === "mine" &&
+        z.metadata?.building === BuildingType.MINE &&
         z.metadata?.underConstruction !== true,
     ).length;
     if (mines < this.config.maxMines && !this.hasActiveJob(BuildingType.MINE)) {
@@ -228,7 +230,7 @@ export class BuildingSystem implements IBuildingSystem {
 
     const farms = zones.filter(
       (z) =>
-        z.metadata?.building === "farm" &&
+        z.metadata?.building === BuildingType.FARM &&
         z.metadata?.underConstruction !== true,
     ).length;
     if (farms < this.config.maxFarms && !this.hasActiveJob(BuildingType.FARM)) {
@@ -360,20 +362,20 @@ export class BuildingSystem implements IBuildingSystem {
     );
     const biome = tile?.biome || "Grassland";
 
-    const metadata: MutableZone["metadata"] = {
+    const metadata: MutableZone[SystemProperty.METADATA] = {
       building: label,
       underConstruction: true,
-      craftingStation: label === "workbench",
-      productionResource: label === "farm" ? "food" : undefined,
+      craftingStation: label === BuildingType.WORKBENCH,
+      productionResource: label === BuildingType.FARM ? "food" : undefined,
       biome: biome,
       buildingType:
-        label === "house"
+        label === BuildingType.HOUSE
           ? BuildingType.HOUSE
-          : label === "workbench"
+          : label === BuildingType.WORKBENCH
             ? BuildingType.WORKBENCH
-            : label === "mine"
+            : label === BuildingType.MINE
               ? BuildingType.MINE
-              : label === "farm"
+              : label === BuildingType.FARM
                 ? BuildingType.FARM
                 : BuildingType.HOUSE,
       spriteVariant: Math.floor(Math.random() * 3),
@@ -878,7 +880,7 @@ export class BuildingSystem implements IBuildingSystem {
     
     if (!cost) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "building",
         message: `Unknown building type: ${buildingType}`,
       };
@@ -888,7 +890,7 @@ export class BuildingSystem implements IBuildingSystem {
     const started = this.constructBuilding(label, position);
     if (!started) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "building",
         message: `Failed to start construction of ${buildingType} - insufficient resources or invalid position`,
       };
@@ -911,7 +913,7 @@ export class BuildingSystem implements IBuildingSystem {
     const zone = this.findZoneById(buildingId);
     if (!zone) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "building",
         message: `Building not found: ${buildingId}`,
       };
@@ -920,7 +922,7 @@ export class BuildingSystem implements IBuildingSystem {
     const buildingState = this.buildingStates.get(buildingId);
     if (!buildingState) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "building",
         message: "Building has no state to repair",
       };
@@ -939,7 +941,7 @@ export class BuildingSystem implements IBuildingSystem {
     const repaired = this.repairBuilding(buildingId, agentId, false);
     if (!repaired) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "building",
         message: "Failed to repair - insufficient resources or inventory",
       };

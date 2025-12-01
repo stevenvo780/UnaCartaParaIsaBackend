@@ -13,6 +13,10 @@ import type { HandlerResult, ISocialSystem } from "../agents/SystemRegistry";
 
 import { injectable, inject, optional } from "inversify";
 import type { GPUComputeService } from "../../core/GPUComputeService";
+import { QuestStatus } from '../../../../shared/constants/QuestEnums';
+import { ActionType } from '../../../../shared/constants/AIEnums';
+import { DialogueTone } from '../../../../shared/constants/AmbientEnums';
+import { GoalType } from '../../../../shared/constants/AIEnums';
 
 /**
  * System for managing social relationships between agents.
@@ -496,7 +500,7 @@ export class SocialSystem implements ISocialSystem {
     simulationEvents.emit(GameEventType.SOCIAL_INTERACTION, {
       agentA: aId,
       agentB: bId,
-      type: "friendly",
+      type: DialogueTone.FRIENDLY,
       timestamp: Date.now(),
     });
   }
@@ -750,7 +754,7 @@ export class SocialSystem implements ISocialSystem {
 
     if (!agent || !target) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "social",
         message: `Agent or target not found: ${agentId}, ${targetId}`,
       };
@@ -759,7 +763,7 @@ export class SocialSystem implements ISocialSystem {
     // Verificar si hay tregua activa
     if (this.isTruceActive(agentId, targetId)) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "social",
         message: "Truce active between agents",
       };
@@ -767,8 +771,8 @@ export class SocialSystem implements ISocialSystem {
 
     // Aplicar efectos según tipo de interacción
     switch (type) {
-      case "friendly":
-      case "socialize":
+      case DialogueTone.FRIENDLY:
+      case ActionType.SOCIALIZE:
         this.registerFriendlyInteraction(agentId, targetId);
         return {
           status: "completed",
@@ -787,7 +791,7 @@ export class SocialSystem implements ISocialSystem {
           data: { affinityChange: -0.2 },
         };
 
-      case "assist":
+      case GoalType.ASSIST:
         this.addEdge(agentId, targetId, 0.15);
         return {
           status: "completed",

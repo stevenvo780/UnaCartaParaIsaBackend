@@ -65,6 +65,9 @@ import { TYPES } from "../../../../config/Types";
 import { SharedSpatialIndex } from "../../core/SharedSpatialIndex";
 import type { EntityIndex } from "../../core/EntityIndex";
 import type { ICombatSystem } from "../agents/SystemRegistry";
+import { QuestStatus } from '../../../../shared/constants/QuestEnums';
+import { SocialStatus } from '../../../../shared/constants/AgentEnums';
+import { ActionType } from '../../../../shared/constants/AIEnums';
 
 /**
  * System for managing combat between entities.
@@ -155,7 +158,7 @@ export class CombatSystem implements ICombatSystem {
 
   private handleAgentBirth(data: { entityId: string }): void {
     const agent = this.lifeCycleSystem.getAgent(data.entityId);
-    if (agent && agent.socialStatus === "warrior") {
+    if (agent && agent.socialStatus === SocialStatus.WARRIOR) {
       this.equip(data.entityId, WeaponId.WOODEN_CLUB);
     }
   }
@@ -191,7 +194,7 @@ export class CombatSystem implements ICombatSystem {
           y: animalY,
           position: { x: animalX, y: animalY },
           isDead: false,
-          tags: ["animal"],
+          tags: [EntityType.ANIMAL],
           stats: {
             health: animal.health,
             stamina: 100,
@@ -509,7 +512,7 @@ export class CombatSystem implements ICombatSystem {
     if (target.isDead || target.immortal) return false;
 
     const targetIsAnimal =
-      target.type === EntityType.ANIMAL || target.tags?.includes("animal");
+      target.type === EntityType.ANIMAL || target.tags?.includes(EntityType.ANIMAL);
     if (targetIsAnimal) return true;
 
     const attackerProfile = this.lifeCycleSystem.getAgent(attacker.id);
@@ -686,13 +689,13 @@ export class CombatSystem implements ICombatSystem {
     this.equippedWeapons.delete(target.id);
 
     this.recordPersonalEvent(attacker.id, {
-      type: "kill",
+      type: CombatEventType.KILL,
       targetId: target.id,
       weaponId,
     });
 
     this.recordPersonalEvent(target.id, {
-      type: "death",
+      type: ActionType.DEATH,
       targetId: attacker.id,
       weaponId,
     });
@@ -711,7 +714,7 @@ export class CombatSystem implements ICombatSystem {
       }),
     );
 
-    if (target.tags?.includes("animal") || target.type === EntityType.ANIMAL) {
+    if (target.tags?.includes(EntityType.ANIMAL) || target.type === EntityType.ANIMAL) {
       simulationEvents.emit(GameEventType.ANIMAL_HUNTED, {
         animalId: target.id,
         hunterId: attacker.id,
@@ -791,7 +794,7 @@ export class CombatSystem implements ICombatSystem {
     const attacker = this.state.entities?.find(e => e.id === agentId);
     if (!attacker || !attacker.position) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "combat",
         message: `Attacker ${agentId} not found`,
       };
@@ -809,14 +812,14 @@ export class CombatSystem implements ICombatSystem {
           type: EntityType.ANIMAL,
           position: animal.position,
           stats: { health: animal.health },
-          tags: ["animal"],
+          tags: [EntityType.ANIMAL],
         } as SimulationEntity;
       }
     }
 
     if (!target || !target.position) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "combat",
         message: `Target ${targetId} not found`,
       };
@@ -912,7 +915,7 @@ export class CombatSystem implements ICombatSystem {
     const agent = this.state.entities?.find(e => e.id === agentId);
     if (!agent || !agent.position) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "combat",
         message: `Agent ${agentId} not found`,
       };

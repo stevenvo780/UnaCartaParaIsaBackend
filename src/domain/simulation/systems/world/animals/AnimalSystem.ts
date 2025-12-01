@@ -35,6 +35,7 @@ import { injectable, inject, optional, postConstruct } from "inversify";
 import { TYPES } from "../../../../../config/Types";
 import type { GPUComputeService } from "../../../core/GPUComputeService";
 import type { StateDirtyTracker } from "../../../core/StateDirtyTracker";
+import { BiomeType } from '../../../../../shared/constants/BiomeEnums';
 
 @injectable()
 export class AnimalSystem {
@@ -876,10 +877,10 @@ export class AnimalSystem {
   private isWaterTerrain(terrainAsset: string | undefined): boolean {
     if (!terrainAsset) return false;
     return (
-      terrainAsset.includes("water") ||
-      terrainAsset.includes("ocean") ||
-      terrainAsset.includes("river") ||
-      terrainAsset.includes("lake")
+      terrainAsset.includes(TileType.WATER) ||
+      terrainAsset.includes(BiomeType.OCEAN) ||
+      terrainAsset.includes(BiomeType.RIVER) ||
+      terrainAsset.includes(BiomeType.LAKE)
     );
   }
 

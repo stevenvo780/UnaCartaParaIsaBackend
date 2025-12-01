@@ -14,6 +14,7 @@ import {
   inProgressResult,
   successResult,
 } from "../types";
+import { QuestStatus } from '../../../../../../shared/constants/QuestEnums';
 
 /**
  * @deprecated Use SystemRegistry.needs instead
@@ -54,7 +55,7 @@ export function handleRest(
         ...((result.data as object) ?? {}),
       });
 
-    case "failed":
+    case QuestStatus.FAILED:
       return errorResult(result.message ?? "Rest failed");
 
     case "in_progress":

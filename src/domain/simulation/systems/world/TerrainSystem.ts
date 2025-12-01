@@ -42,7 +42,7 @@ export class TerrainSystem {
     y: number,
     updates:
       | Partial<SimulationTerrainTile>
-      | { assets: Partial<SimulationTerrainTile["assets"]> },
+      | { assets: Partial<SimulationTerrainTile[SystemProperty.ASSETS]> },
   ): boolean {
     if (!this.gameState.world?.terrain) return false;
 

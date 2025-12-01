@@ -55,6 +55,7 @@ import type { MovementSystem } from "../movement/MovementSystem";
 import type { WorldQueryService } from "../../world/WorldQueryService";
 import { SystemRegistry } from "../SystemRegistry";
 import { EventBus } from "@/domain/simulation/core/EventBus";
+import { NeedType } from '../../../../../shared/constants/AIEnums';
 
 export interface AISystemDeps {
   gameState: GameState;
@@ -138,7 +139,7 @@ const DEFAULT_CONFIG: AISystemConfig = {
  * aiSystem.emitTask(agentId, {
  *   type: TaskType.SATISFY_NEED,
  *   priority: 0.8,
- *   params: { needType: 'hunger' }
+ *   params: { needType: NeedType.HUNGER }
  * });
  *
  *
@@ -308,7 +309,7 @@ export class AISystem extends EventEmitter {
         this.emitTask(agentId, {
           type: TaskType.SATISFY_NEED,
           priority: TASK_PRIORITIES.HIGH,
-          params: { needType: "hunger" },
+          params: { needType: NeedType.HUNGER },
           source: "event:hungry",
         });
         break;
@@ -317,7 +318,7 @@ export class AISystem extends EventEmitter {
         this.emitTask(agentId, {
           type: TaskType.SATISFY_NEED,
           priority: TASK_PRIORITIES.HIGH,
-          params: { needType: "thirst" },
+          params: { needType: NeedType.THIRST },
           source: "event:thirsty",
         });
         break;
@@ -685,12 +686,12 @@ export class AISystem extends EventEmitter {
   /**
    * @deprecated Use getStats() instead
    */
-  public syncToGameState(): void {}
+  public syncToGameState(): void { }
 
   /**
    * @deprecated El nuevo sistema usa tareas, no goals
    */
-  public setGoal(_agentId: string, _goal: unknown): void {}
+  public setGoal(_agentId: string, _goal: unknown): void { }
 
   /**
    * @deprecated El nuevo sistema usa tareas, no goals
@@ -716,12 +717,12 @@ export class AISystem extends EventEmitter {
   /**
    * @deprecated No longer needed
    */
-  public restoreAIState(_agentId: string, _state: unknown): void {}
+  public restoreAIState(_agentId: string, _state: unknown): void { }
 
   /**
    * @deprecated Called internally in constructor
    */
-  public initialize(): void {}
+  public initialize(): void { }
 
   /**
    * @deprecated Use getActiveTask() + getPendingTasks()
@@ -732,7 +733,7 @@ export class AISystem extends EventEmitter {
     return {
       currentGoal: task ?? null,
       pendingTasks,
-      goalQueue: pendingTasks,
+      goalQueue: [...pendingTasks],
       currentAction: task ? { type: task.type, target: task.target } : null,
       offDuty: false,
       lastDecisionTime: this.lastUpdate.get(agentId) ?? 0,
@@ -788,5 +789,5 @@ export class AISystem extends EventEmitter {
   /**
    * @deprecated No longer needed - handled internally
    */
-  public notifyEntityArrived(_agentId: string, _entityId: string): void {}
+  public notifyEntityArrived(_agentId: string, _entityId: string): void { }
 }

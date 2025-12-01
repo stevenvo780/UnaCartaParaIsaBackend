@@ -1,5 +1,6 @@
 import { EntityStat } from "./EntityEnums";
 import { ZoneID } from "./ZoneEnums";
+import { ZoneType } from './ZoneEnums';
 
 export const WORLD_CONFIG = {
   WORLD_WIDTH: 4096,
@@ -209,7 +210,7 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.DEFENSE_TOWER_NORTH,
     name: "Torre de Vigilancia Norte",
-    type: "defense",
+    type: ZoneType.DEFENSE,
     size: ZONE_CONFIG.SMALL,
     color: "#4B0082",
     effects: { safety: 25, courage: 10 },
@@ -218,7 +219,7 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.DIVINE_TEMPLE_CENTER,
     name: "Templo de la Resonancia",
-    type: "spiritual",
+    type: ZoneType.SPIRITUAL,
     size: ZONE_CONFIG.LARGE,
     color: "#FFD700",
     effects: { mentalHealth: 20, stress: -20, resonance: 15 },
@@ -227,7 +228,7 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.MEDICAL_ZONE_HOSPITAL,
     name: "Hospital Central",
-    type: "medical",
+    type: ZoneType.MEDICAL,
     size: ZONE_CONFIG.MEDIUM,
     color: "#FF6B6B",
     effects: { [EntityStat.HEALTH]: 20, comfort: 8, mentalHealth: 5 },
@@ -235,7 +236,7 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.TRAINING_ZONE_GYM,
     name: "Gimnasio de Entrenamiento",
-    type: "training",
+    type: ZoneType.TRAINING,
     size: ZONE_CONFIG.MEDIUM,
     color: "#FFA500",
     effects: { stamina: 15, energy: -5, [EntityStat.HEALTH]: 10 },
@@ -243,7 +244,7 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.KNOWLEDGE_ZONE_LIBRARY,
     name: "Gran Biblioteca",
-    type: "knowledge",
+    type: ZoneType.KNOWLEDGE,
     size: ZONE_CONFIG.MEDIUM,
     color: "#4ECDC4",
     effects: { intelligence: 12, mentalHealth: 8, boredom: -10 },
@@ -251,7 +252,7 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.SPIRITUAL_ZONE_TEMPLE,
     name: "Templo de Serenidad",
-    type: "spiritual",
+    type: ZoneType.SPIRITUAL,
     size: ZONE_CONFIG.SMALL,
     color: "#9B59B6",
     effects: { mentalHealth: 18, stress: -15, socialSkills: 8 },
@@ -268,27 +269,27 @@ export const ZONE_DEFINITIONS = [
 export const ENTITY_STATS = {
   PHYSICAL: [
     { key: EntityStat.HEALTH, icon: "💚", label: "Salud" },
-    { key: "energy", icon: "⚡", label: "Energía" },
-    { key: "stamina", icon: "🏃", label: "Resistencia" },
-    { key: "hunger", icon: "🍖", label: "Hambre" },
-    { key: "thirst", icon: "💧", label: "Sed" },
-    { key: "sleepiness", icon: "😴", label: "Sueño" },
+    { key: EntityStat.ENERGY, icon: "⚡", label: "Energía" },
+    { key: EntityStat.STAMINA, icon: "🏃", label: "Resistencia" },
+    { key: EntityStat.HUNGER, icon: "🍖", label: "Hambre" },
+    { key: EntityStat.THIRST, icon: "💧", label: "Sed" },
+    { key: EntityStat.SLEEPINESS, icon: "😴", label: "Sueño" },
   ],
   MENTAL: [
     { key: "mentalHealth", icon: "🧠", label: "Mental" },
-    { key: "intelligence", icon: "🎓", label: "Inteligencia" },
-    { key: "happiness", icon: "😊", label: "Felicidad" },
-    { key: "stress", icon: "😰", label: "Estrés" },
-    { key: "boredom", icon: "😑", label: "Aburrimiento" },
-    { key: "loneliness", icon: "💔", label: "Soledad" },
+    { key: EntityStat.INTELLIGENCE, icon: "🎓", label: "Inteligencia" },
+    { key: EntityStat.HAPPINESS, icon: "😊", label: "Felicidad" },
+    { key: EntityStat.STRESS, icon: "😰", label: "Estrés" },
+    { key: EntityStat.BOREDOM, icon: "😑", label: "Aburrimiento" },
+    { key: EntityStat.LONELINESS, icon: "💔", label: "Soledad" },
   ],
   SOCIAL: [
     { key: "socialSkills", icon: "👥", label: "Social" },
-    { key: "comfort", icon: "🛋️", label: "Comodidad" },
-    { key: "creativity", icon: "🎨", label: "Creatividad" },
-    { key: "resonance", icon: "🔗", label: "Resonancia" },
-    { key: "courage", icon: "💪", label: "Coraje" },
-    { key: "money", icon: "💰", label: "Dinero" },
+    { key: EntityStat.COMFORT, icon: "🛋️", label: "Comodidad" },
+    { key: EntityStat.CREATIVITY, icon: "🎨", label: "Creatividad" },
+    { key: EntityStat.RESONANCE, icon: "🔗", label: "Resonancia" },
+    { key: EntityStat.COURAGE, icon: "💪", label: "Coraje" },
+    { key: EntityStat.MONEY, icon: "💰", label: "Dinero" },
   ],
   get ALL() {
     return [...this.PHYSICAL, ...this.MENTAL, ...this.SOCIAL];

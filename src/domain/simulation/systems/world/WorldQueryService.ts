@@ -41,6 +41,7 @@ import {
 } from "../../../../shared/constants/ResourceEnums";
 import { AnimalType } from "../../../../shared/constants/AnimalEnums";
 import { BiomeType } from "../../../../shared/constants/BiomeEnums";
+import { EntityType } from '../../../../shared/constants/EntityEnums';
 
 /**
  * Base interface for all query results
@@ -55,7 +56,7 @@ export interface QueryResult {
  * Resource query result
  */
 export interface ResourceQueryResult extends QueryResult {
-  entityType: "resource";
+  entityType: EntityType.RESOURCE;
   resourceType: WorldResourceType;
   state: ResourceState;
   resource: WorldResourceInstance;
@@ -65,7 +66,7 @@ export interface ResourceQueryResult extends QueryResult {
  * Animal query result
  */
 export interface AnimalQueryResult extends QueryResult {
-  entityType: "animal";
+  entityType: EntityType.ANIMAL;
   animalType: AnimalType;
   isDead: boolean;
   animal: Animal;
@@ -75,7 +76,7 @@ export interface AnimalQueryResult extends QueryResult {
  * Agent query result
  */
 export interface AgentQueryResult extends QueryResult {
-  entityType: "agent";
+  entityType: EntityType.AGENT;
   isDead: boolean;
   agent: AgentProfile;
 }
@@ -84,7 +85,7 @@ export interface AgentQueryResult extends QueryResult {
  * Tile query result
  */
 export interface TileQueryResult {
-  entityType: "tile";
+  entityType: EntityType.TILE;
   tileX: number;
   tileY: number;
   worldX: number;
@@ -98,7 +99,7 @@ export interface TileQueryResult {
  * Zone query result
  */
 export interface ZoneQueryResult extends QueryResult {
-  entityType: "zone";
+  entityType: EntityType.ZONE;
   zoneType: string;
   zone: Zone;
 }
@@ -221,7 +222,7 @@ export class WorldQueryService {
       id: resource.id,
       position: resource.position,
       distance,
-      entityType: "resource",
+      entityType: EntityType.RESOURCE as const,
       resourceType: resource.type,
       state: resource.state,
       resource,
@@ -261,7 +262,7 @@ export class WorldQueryService {
           id: resource.id,
           position: resource.position,
           distance,
-          entityType: "resource" as const,
+          entityType: EntityType.RESOURCE as const,
           resourceType: resource.type,
           state: resource.state,
           resource,
@@ -283,7 +284,7 @@ export class WorldQueryService {
       id: resource.id,
       position: resource.position,
       distance: 0,
-      entityType: "resource" as const,
+      entityType: EntityType.RESOURCE as const,
       resourceType: resource.type,
       state: resource.state,
       resource,
@@ -339,7 +340,7 @@ export class WorldQueryService {
       id: nearest.id,
       position: nearest.position,
       distance: Math.sqrt(minDistSq),
-      entityType: "animal",
+      entityType: EntityType.ANIMAL as const,
       animalType: nearest.type,
       isDead: nearest.isDead,
       animal: nearest,
@@ -378,7 +379,7 @@ export class WorldQueryService {
           id: animal.id,
           position: animal.position,
           distance: Math.sqrt(dx * dx + dy * dy),
-          entityType: "animal" as const,
+          entityType: EntityType.ANIMAL as const,
           animalType: animal.type,
           isDead: animal.isDead,
           animal,
@@ -400,7 +401,7 @@ export class WorldQueryService {
       id: animal.id,
       position: animal.position,
       distance: 0,
-      entityType: "animal" as const,
+      entityType: EntityType.ANIMAL as const,
       animalType: animal.type,
       isDead: animal.isDead,
       animal,
@@ -442,7 +443,7 @@ export class WorldQueryService {
       id: nearest.id,
       position: nearest.position,
       distance: Math.sqrt(minDistSq),
-      entityType: "agent",
+      entityType: EntityType.AGENT as const,
       isDead: nearest.isDead ?? false,
       agent: nearest,
     };
@@ -479,7 +480,7 @@ export class WorldQueryService {
           id: agent.id,
           position: agent.position!,
           distance: Math.sqrt(dx * dx + dy * dy),
-          entityType: "agent" as const,
+          entityType: EntityType.AGENT as const,
           isDead: agent.isDead ?? false,
           agent,
         };
@@ -501,7 +502,7 @@ export class WorldQueryService {
     if (!tile) return null;
 
     return {
-      entityType: "tile",
+      entityType: EntityType.TILE as const,
       tileX,
       tileY,
       worldX: tileX * this.tileSize,
@@ -547,7 +548,7 @@ export class WorldQueryService {
         }
 
         results.push({
-          entityType: "tile",
+          entityType: EntityType.TILE as const,
           tileX,
           tileY,
           worldX: tileX * this.tileSize,
@@ -603,7 +604,7 @@ export class WorldQueryService {
           id: zone.id,
           position: { x: centerX, y: centerY },
           distance: Math.sqrt(dx * dx + dy * dy),
-          entityType: "zone",
+          entityType: EntityType.ZONE as const,
           zoneType: zone.type,
           zone,
         };
@@ -628,7 +629,7 @@ export class WorldQueryService {
           y: zone.bounds.y + zone.bounds.height / 2,
         },
         distance: 0,
-        entityType: "zone" as const,
+        entityType: EntityType.ZONE as const,
         zoneType: zone.type,
         zone,
       }));
@@ -671,7 +672,7 @@ export class WorldQueryService {
         y: nearest.bounds.y + nearest.bounds.height / 2,
       },
       distance: Math.sqrt(minDistSq),
-      entityType: "zone",
+      entityType: EntityType.ZONE as const,
       zoneType: nearest.type,
       zone: nearest,
     };
@@ -685,8 +686,8 @@ export class WorldQueryService {
    * ```ts
    * const nearest = worldQuery.findNearestEntity(x, y);
    * switch (nearest?.entityType) {
-   *   case 'resource':
-   *   case 'animal':
+   *   case EntityType.RESOURCE:
+   *   case EntityType.ANIMAL:
    *   case 'agent':
    * }
    * ```

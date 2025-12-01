@@ -4,6 +4,7 @@ import {
   FoodId,
 } from "../../shared/constants/FoodEnums";
 
+
 const gameRandom: { random: () => number } = {
   random: () => Math.random(),
 };
@@ -26,7 +27,7 @@ export class FoodCatalog {
         "Deliciosa tarta casera de manzana, nutritiva y reconfortante",
     },
     {
-      id: "salmon",
+      id: FoodId.SALMON,
       name: "Salmón",
       sprite: "assets/consumable_items/food/88_salmon.png",
       category: FoodCategoryEnum.HEALTHY,
@@ -40,7 +41,7 @@ export class FoodCatalog {
       description: "Salmón fresco rico en omega-3, excelente para la salud",
     },
     {
-      id: "eggsalad",
+      id: FoodId.EGGSALAD,
       name: "Ensalada de Huevo",
       sprite: "assets/consumable_items/food/40_eggsalad.png",
       category: FoodCategoryEnum.HEALTHY,
@@ -81,7 +82,7 @@ export class FoodCatalog {
         "Pizza caliente con queso derretido, irresistible pero grasosa",
     },
     {
-      id: "hotdog",
+      id: FoodId.HOTDOG,
       name: "Hot Dog",
       sprite: "assets/consumable_items/food/54_hotdog.png",
       category: FoodCategoryEnum.JUNK,
@@ -94,7 +95,7 @@ export class FoodCatalog {
       description: "Clásico hot dog de la calle, rápido y sabroso",
     },
     {
-      id: "frenchfries",
+      id: FoodId.FRENCHFRIES,
       name: "Papas Fritas",
       sprite: "assets/consumable_items/food/44_frenchfries.png",
       category: FoodCategoryEnum.JUNK,
@@ -107,7 +108,7 @@ export class FoodCatalog {
       description: "Papas fritas crujientes, perfectas como acompañamiento",
     },
     {
-      id: "chocolate_cake",
+      id: FoodId.CHOCOLATE_CAKE,
       name: "Torta de Chocolate",
       sprite: "assets/consumable_items/food/30_chocolatecake.png",
       category: FoodCategoryEnum.DESSERT,
@@ -135,7 +136,7 @@ export class FoodCatalog {
       description: "Helado cremoso que se derrite, perfecto para el calor",
     },
     {
-      id: "donut",
+      id: FoodId.DONUT,
       name: "Dona",
       sprite: "assets/consumable_items/food/34_donut.png",
       category: FoodCategoryEnum.DESSERT,
@@ -148,7 +149,7 @@ export class FoodCatalog {
       description: "Dona glaseada dulce, irresistible tentación matutina",
     },
     {
-      id: "popcorn",
+      id: FoodId.POPCORN,
       name: "Palomitas",
       sprite: "assets/consumable_items/food/83_popcorn.png",
       category: FoodCategoryEnum.SNACK,
@@ -161,7 +162,7 @@ export class FoodCatalog {
       description: "Palomitas crujientes, perfectas para picar",
     },
     {
-      id: "cookies",
+      id: FoodId.COOKIES,
       name: "Galletas",
       sprite: "assets/consumable_items/food/28_cookies.png",
       category: FoodCategoryEnum.SNACK,

@@ -221,7 +221,7 @@ export class RoleSystem extends EventEmitter {
     for (const role of this.roles.values()) {
       if (
         role.currentShift === this.currentShift &&
-        role.currentShift !== "rest"
+        role.currentShift !== WorkShift.REST
       ) {
         role.experience = Math.min(
           1,
@@ -237,7 +237,7 @@ export class RoleSystem extends EventEmitter {
   }
 
   public updateCurrentShift(timePhase: WorkShift): void {
-    if (this.currentShift !== timePhase && timePhase !== "rest") {
+    if (this.currentShift !== timePhase && timePhase !== WorkShift.REST) {
       const previousShift = this.currentShift;
       this.currentShift = timePhase as WorkShift;
       this.rebuildSchedule();

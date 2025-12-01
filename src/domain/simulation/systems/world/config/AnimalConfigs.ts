@@ -6,7 +6,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     type: AnimalType.RABBIT,
     displayName: "Conejo",
 
-    spriteKey: "rabbit",
+    spriteKey: AnimalType.RABBIT,
     scale: 0.8,
     tint: 0xccaa88,
 
@@ -40,7 +40,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     type: AnimalType.DEER,
     displayName: "Ciervo",
 
-    spriteKey: "deer",
+    spriteKey: AnimalType.DEER,
     scale: 1.2,
     tint: 0xaa8866,
 
@@ -74,7 +74,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     type: AnimalType.BOAR,
     displayName: "Jabalí",
 
-    spriteKey: "boar",
+    spriteKey: AnimalType.BOAR,
     scale: 1.0,
     tint: 0x665544,
 
@@ -108,7 +108,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     type: AnimalType.BIRD,
     displayName: "Pájaro",
 
-    spriteKey: "bird",
+    spriteKey: AnimalType.BIRD,
     scale: 0.6,
     tint: 0x8899aa,
 
@@ -142,7 +142,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     type: AnimalType.FISH,
     displayName: "Pez",
 
-    spriteKey: "fish",
+    spriteKey: AnimalType.FISH,
     scale: 0.7,
     tint: 0x6688aa,
 
@@ -178,7 +178,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     type: AnimalType.WOLF,
     displayName: "Lobo",
 
-    spriteKey: "wolf",
+    spriteKey: AnimalType.WOLF,
     scale: 1.1,
     tint: 0x666666,
 

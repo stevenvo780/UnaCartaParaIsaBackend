@@ -1,5 +1,5 @@
 import { ResourceType } from "../../../shared/constants/ResourceEnums";
-import { TaskType } from "../../../shared/constants/TaskEnums";
+import { TaskType } from "../../../domain/simulation/systems/agents/ai/types";
 
 export { TaskType };
 
@@ -17,12 +17,12 @@ export interface TaskMetadata {
   maxClaims?: number;
   claimedBy?: string[];
   [key: string]:
-    | string
-    | number
-    | boolean
-    | string[]
-    | ResourceType
-    | undefined;
+  | string
+  | number
+  | boolean
+  | string[]
+  | ResourceType
+  | undefined;
 }
 
 export interface Task {

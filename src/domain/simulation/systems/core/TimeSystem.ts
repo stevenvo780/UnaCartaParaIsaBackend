@@ -5,6 +5,7 @@ import { injectable, inject, unmanaged } from "inversify";
 import { TYPES } from "../../../../config/Types";
 import { TimeOfDayPhase } from "../../../../shared/constants/TimeEnums";
 import { WeatherType } from "../../../../shared/constants/AmbientEnums";
+import { WorkShift } from '../../../../shared/constants/RoleEnums';
 
 export interface TimeOfDay {
   hour: number;
@@ -444,10 +445,10 @@ export class TimeSystem extends EventEmitter {
     | "rest" {
     const hour = this.currentTime.hour;
 
-    if (hour >= 7 && hour < 11) return "morning";
-    if (hour >= 11 && hour < 18) return "afternoon";
-    if (hour >= 18 && hour < 21) return "evening";
-    return "night";
+    if (hour >= 7 && hour < 11) return TimeOfDayPhase.MORNING;
+    if (hour >= 11 && hour < 18) return TimeOfDayPhase.AFTERNOON;
+    if (hour >= 18 && hour < 21) return WorkShift.EVENING;
+    return TimeOfDayPhase.NIGHT;
   }
 
   public setTime(hour: number, minute: number = 0): void {

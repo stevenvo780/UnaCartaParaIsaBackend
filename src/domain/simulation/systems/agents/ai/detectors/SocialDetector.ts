@@ -15,6 +15,7 @@ import {
   createTask,
 } from "../types";
 import { NeedType } from "@/shared/constants/AIEnums";
+import { GoalReason } from '../../../../../../shared/constants/AIEnums';
 
 /** Bienestar mínimo para reproducirse */
 const REPRODUCTION_WELLNESS_THRESHOLD = 0.8;
@@ -53,7 +54,7 @@ function detectReproduction(ctx: DetectorContext): Task | null {
     target: { entityId: ctx.potentialMate.id, position: ctx.potentialMate },
     params: {
       action: "find_mate",
-      reason: "reproduction_drive",
+      reason: GoalReason.REPRODUCTION_DRIVE,
     },
     source: "detector:social:reproduction",
   });

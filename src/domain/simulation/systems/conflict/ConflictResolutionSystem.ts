@@ -40,6 +40,8 @@ const CONFLICT_CONFIG = {
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../../config/Types";
+import { TradeOfferStatus } from '../../../../shared/constants/EconomyEnums';
+
 
 /**
  * Unified system for conflict resolution and norm enforcement.
@@ -166,7 +168,7 @@ export class ConflictResolutionSystem {
     choice: ConflictResolutionChoice,
   ): {
     resolved: boolean;
-    resolution: ConflictRecord["resolution"];
+    resolution: ConflictRecord[SystemProperty.RESOLUTION];
     truceBonus?: number;
   } {
     const meta = this.activeCards.get(cardId);
@@ -209,7 +211,7 @@ export class ConflictResolutionSystem {
           ? "accepted"
           : choice === ConflictResolutionChoice.APOLOGIZE
             ? "apologized"
-            : "rejected";
+            : TradeOfferStatus.REJECTED;
     }
 
     if (choice === ConflictResolutionChoice.TRUCE_ACCEPT) {
@@ -232,7 +234,7 @@ export class ConflictResolutionSystem {
     this.activeCards.delete(cardId);
 
     return {
-      resolved: resolution !== "continued",
+      resolved: resolution !== ConflictResolution.CONTINUED,
       [SystemProperty.RESOLUTION]: resolution,
       truceBonus,
     };
@@ -319,10 +321,10 @@ export class ConflictResolutionSystem {
   public getConflictStats(): ConflictStats {
     const totalMediations = this.mediationAttempts.length;
     const successfulMediations = this.mediationAttempts.filter(
-      (m) => m.outcome === "accepted" || m.outcome === "apologized",
+      (m) => m.outcome === TradeOfferStatus.ACCEPTED || m.outcome === ConflictResolution.APOLOGIZED,
     ).length;
     const truceAcceptances = this.mediationAttempts.filter(
-      (m) => m.outcome === "accepted",
+      (m) => m.outcome === TradeOfferStatus.ACCEPTED,
     ).length;
 
     return {

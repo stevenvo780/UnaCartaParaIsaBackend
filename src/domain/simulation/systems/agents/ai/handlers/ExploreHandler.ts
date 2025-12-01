@@ -15,6 +15,7 @@ import {
   successResult,
 } from "../types";
 import { moveToPosition, isAtTarget } from "./MoveHandler";
+import { QuestStatus } from '../../../../../../shared/constants/QuestEnums';
 
 /**
  * @deprecated Use MovementSystem directly
@@ -74,7 +75,7 @@ export function handleExplore(
       });
     }
 
-    if (result.status === "failed") {
+    if (result.status === QuestStatus.FAILED) {
       return errorResult(result.message ?? "Cannot reach exploration zone");
     }
 

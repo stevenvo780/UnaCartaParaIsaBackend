@@ -9,6 +9,7 @@
 
 import { injectable } from "inversify";
 import { logger } from "@/infrastructure/utils/logger";
+import { SystemProperty } from '../../../../shared/constants/SystemEnums';
 
 /**
  * Resultado de una operación de handler
@@ -165,7 +166,7 @@ export class SystemRegistry {
       case "needs":
         this.needs = system as unknown as INeedsSystem;
         break;
-      case "inventory":
+      case SystemProperty.INVENTORY:
         this.inventory = system as unknown as IInventorySystem;
         break;
       case "social":
@@ -234,7 +235,7 @@ export class SystemRegistry {
       case "needs":
         this.needs = undefined;
         break;
-      case "inventory":
+      case SystemProperty.INVENTORY:
         this.inventory = undefined;
         break;
       case "social":

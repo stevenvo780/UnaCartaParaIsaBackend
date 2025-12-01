@@ -22,6 +22,7 @@ import {
   ROLE_RECOMMENDED_TOOLS,
   type EquipmentStats,
 } from "../../../data/EquipmentStats";
+import { RoleType } from '../../../../shared/constants/RoleEnums';
 
 /**
  * A stored tool with quantity tracking.
@@ -392,7 +393,7 @@ export class EquipmentSystem {
    */
   roleRequiresTool(role: string): boolean {
     const key = role.toLowerCase();
-    return key === "hunter" || key === "guard";
+    return key === RoleType.HUNTER || key === RoleType.GUARD;
   }
 
   /**

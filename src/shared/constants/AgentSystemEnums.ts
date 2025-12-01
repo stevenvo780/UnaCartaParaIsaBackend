@@ -50,7 +50,7 @@ export {
   type TaskTypeValue,
   ALL_TASK_TYPES,
   isTaskType,
-} from "./TaskEnums";
+} from "../../domain/simulation/systems/agents/ai/types";
 
 export { CombatEventType } from "./CombatEnums";
 

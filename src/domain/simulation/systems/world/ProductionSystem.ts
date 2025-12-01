@@ -41,6 +41,7 @@ type MutableZone = Zone & {
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
+import { ActionType } from '../../../../shared/constants/AIEnums';
 
 /**
  * System for managing resource production in designated zones.
@@ -101,7 +102,7 @@ export class ProductionSystem {
         simulationEvents.emit(GameEventType.PRODUCTION_WORKER_REMOVED, {
           zoneId,
           workerId: entityId,
-          reason: "death",
+          reason: ActionType.DEATH,
         });
       }
     }

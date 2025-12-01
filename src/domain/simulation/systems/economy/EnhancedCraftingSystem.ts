@@ -41,6 +41,7 @@ const BASIC_RECIPE_IDS = [
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../../config/Types";
+import { QuestStatus } from '../../../../shared/constants/QuestEnums';
 
 @injectable()
 export class EnhancedCraftingSystem implements ICraftingSystem {
@@ -437,7 +438,7 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
     // Verificar que puede craftear
     if (!this.canCraft(agentId, recipeId)) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "crafting",
         message: `Cannot craft ${recipeId}: missing ingredients or workstation`,
       };
@@ -447,7 +448,7 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
     const started = this.startCrafting(agentId, recipeId);
     if (!started) {
       return {
-        status: "failed",
+        status: QuestStatus.FAILED,
         system: "crafting",
         message: `Failed to start crafting ${recipeId}`,
       };

@@ -8,6 +8,7 @@ import {
   AnimalState,
   AnimalTargetType,
 } from "../../../../../shared/constants/AnimalEnums";
+import { MapElementType } from '../../../../../shared/constants/MapElementEnums';
 
 const BASE_ANIMAL_SPEED = 60;
 
@@ -140,7 +141,7 @@ export class AnimalBehavior {
 
         simulationEvents.emit(GameEventType.ANIMAL_CONSUMED_RESOURCE, {
           animalId: animal.id,
-          resourceType: "vegetation",
+          resourceType: MapElementType.VEGETATION,
           amount: consumed,
           position: animal.position,
           biome: animal.biome,

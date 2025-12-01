@@ -13,6 +13,9 @@ import type { AgentRegistry } from "../agents/AgentRegistry";
 import type { IInventorySystem } from "../agents/SystemRegistry";
 import type { StateDirtyTracker } from "../../core/StateDirtyTracker";
 import { performanceMonitor } from "../../core/PerformanceMonitor";
+import { QuestStatus } from '../../../../shared/constants/QuestEnums';
+import { SystemProperty } from '../../../../shared/constants/SystemEnums';
+import { EntityType } from '../../../../shared/constants/EntityEnums';
 
 /**
  * System for managing agent inventories and zone stockpiles.
@@ -666,8 +669,8 @@ export class InventorySystem implements IInventorySystem {
     
     if (!resource) {
       return {
-        status: "failed",
-        system: "inventory",
+        status: QuestStatus.FAILED,
+        system: SystemProperty.INVENTORY,
         message: `Resource ${resourceId} not found`,
       };
     }
@@ -699,15 +702,15 @@ export class InventorySystem implements IInventorySystem {
     if (success) {
       return {
         status: "completed",
-        system: "inventory",
+        system: SystemProperty.INVENTORY,
         message: `Gathered ${actualQuantity} ${resourceType}`,
         data: { resourceId, resourceType, quantity: actualQuantity },
       };
     }
 
     return {
-      status: "failed",
-      system: "inventory",
+      status: QuestStatus.FAILED,
+      system: SystemProperty.INVENTORY,
       message: "Inventory full",
     };
   }
@@ -725,8 +728,8 @@ export class InventorySystem implements IInventorySystem {
     
     if (!inventory) {
       return {
-        status: "failed",
-        system: "inventory",
+        status: QuestStatus.FAILED,
+        system: SystemProperty.INVENTORY,
         message: `No inventory for agent ${agentId}`,
       };
     }
@@ -744,14 +747,14 @@ export class InventorySystem implements IInventorySystem {
 
     if (!stockpile) {
       return {
-        status: "failed",
-        system: "inventory",
+        status: QuestStatus.FAILED,
+        system: SystemProperty.INVENTORY,
         message: `Storage ${storageId} not found`,
       };
     }
 
     // Transfer all resources if itemId is 'all'
-    if (itemId === "all") {
+    if (itemId === EntityType.ALL) {
       const transferred = this.transferToStockpile(agentId, stockpile.id, {
         wood: inventory.wood,
         stone: inventory.stone,
@@ -764,15 +767,15 @@ export class InventorySystem implements IInventorySystem {
       if (totalTransferred > 0) {
         return {
           status: "completed",
-          system: "inventory",
+          system: SystemProperty.INVENTORY,
           message: `Deposited ${totalTransferred} resources`,
           data: { transferred },
         };
       }
 
       return {
-        status: "failed",
-        system: "inventory",
+        status: QuestStatus.FAILED,
+        system: SystemProperty.INVENTORY,
         message: "Nothing to deposit",
       };
     }
@@ -783,8 +786,8 @@ export class InventorySystem implements IInventorySystem {
     
     if (amount <= 0) {
       return {
-        status: "failed",
-        system: "inventory",
+        status: QuestStatus.FAILED,
+        system: SystemProperty.INVENTORY,
         message: `No ${itemId} to deposit`,
       };
     }
@@ -796,15 +799,15 @@ export class InventorySystem implements IInventorySystem {
     if (transferred[resourceType] > 0) {
       return {
         status: "completed",
-        system: "inventory",
+        system: SystemProperty.INVENTORY,
         message: `Deposited ${transferred[resourceType]} ${itemId}`,
         data: { resourceType, amount: transferred[resourceType] },
       };
     }
 
     return {
-      status: "failed",
-      system: "inventory",
+      status: QuestStatus.FAILED,
+      system: SystemProperty.INVENTORY,
       message: "Deposit failed",
     };
   }
@@ -824,8 +827,8 @@ export class InventorySystem implements IInventorySystem {
 
     if (!fromInventory) {
       return {
-        status: "failed",
-        system: "inventory",
+        status: QuestStatus.FAILED,
+        system: SystemProperty.INVENTORY,
         message: `No inventory for agent ${fromAgentId}`,
       };
     }
@@ -839,8 +842,8 @@ export class InventorySystem implements IInventorySystem {
     
     if (available < quantity) {
       return {
-        status: "failed",
-        system: "inventory",
+        status: QuestStatus.FAILED,
+        system: SystemProperty.INVENTORY,
         message: `Insufficient ${itemId} (have ${available}, need ${quantity})`,
       };
     }
@@ -851,7 +854,7 @@ export class InventorySystem implements IInventorySystem {
     if (added) {
       return {
         status: "completed",
-        system: "inventory",
+        system: SystemProperty.INVENTORY,
         message: `Transferred ${removed} ${itemId}`,
         data: { resourceType, quantity: removed },
       };
@@ -861,8 +864,8 @@ export class InventorySystem implements IInventorySystem {
     this.addResource(fromAgentId, resourceType, removed);
     
     return {
-      status: "failed",
-      system: "inventory",
+      status: QuestStatus.FAILED,
+      system: SystemProperty.INVENTORY,
       message: "Transfer failed - recipient inventory full",
     };
   }

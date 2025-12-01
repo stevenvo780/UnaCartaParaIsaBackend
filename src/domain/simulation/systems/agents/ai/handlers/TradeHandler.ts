@@ -14,6 +14,7 @@ import {
   inProgressResult,
   successResult,
 } from "../types";
+import { QuestStatus } from '../../../../../../shared/constants/QuestEnums';
 
 export interface TradeOffer {
   give: Record<string, number>;
@@ -85,7 +86,7 @@ export function handleTrade(
         ...((result.data as object) ?? {}),
       });
 
-    case "failed":
+    case QuestStatus.FAILED:
       return errorResult(result.message ?? "Trade failed");
 
     case "in_progress":

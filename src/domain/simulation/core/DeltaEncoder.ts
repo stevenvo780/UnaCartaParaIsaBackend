@@ -9,6 +9,7 @@ import {
   SystemProperty,
 } from "../../../shared/constants/SystemEnums";
 
+
 /**
  * Delta snapshot containing only changes since the last snapshot.
  * Used to reduce WebSocket payload size by sending only modified data.
@@ -204,8 +205,8 @@ export class DeltaEncoder {
   }
 
   private hasInventoryChanged(
-    prev: GameState["inventory"],
-    current: GameState["inventory"],
+    prev: GameState[SystemProperty.INVENTORY],
+    current: GameState[SystemProperty.INVENTORY],
   ): boolean {
     if (!prev || !current) return true;
 

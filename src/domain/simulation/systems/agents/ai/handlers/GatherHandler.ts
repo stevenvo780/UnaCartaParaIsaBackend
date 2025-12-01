@@ -15,6 +15,7 @@ import {
   successResult,
 } from "../types";
 import { isAtTarget, moveToPosition } from "./MoveHandler";
+import { QuestStatus } from '../../../../../../shared/constants/QuestEnums';
 
 /**
  * @deprecated Use SystemRegistry.inventory instead
@@ -78,7 +79,7 @@ export function handleGather(
       return inProgressResult("movement", "Moving to resource");
     }
 
-    if (moveResult.status === "failed") {
+    if (moveResult.status === QuestStatus.FAILED) {
       return errorResult(moveResult.message ?? "Cannot reach resource");
     }
   }
@@ -99,7 +100,7 @@ export function handleGather(
     });
   }
 
-  if (result.status === "failed") {
+  if (result.status === QuestStatus.FAILED) {
     return errorResult(result.message ?? "Gather failed");
   }
 

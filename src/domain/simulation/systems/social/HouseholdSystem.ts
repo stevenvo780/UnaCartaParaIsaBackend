@@ -5,7 +5,7 @@ import type {
   HouseholdMember,
   HouseholdSystemConfig,
 } from "@/shared/types/simulation/household";
-import type { ResourceType } from "@/shared/types/simulation/economy";
+import { ResourceType } from "@/shared/types/simulation/economy";
 import { simulationEvents, GameEventType } from "../../core/events";
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
@@ -292,10 +292,10 @@ export class HouseholdSystem {
     for (const [res, amount] of Object.entries(resources)) {
       const resource = res as ResourceType;
       if (
-        resource !== "wood" &&
-        resource !== "stone" &&
-        resource !== "food" &&
-        resource !== "water"
+        resource !== ResourceType.WOOD &&
+        resource !== ResourceType.STONE &&
+        resource !== ResourceType.FOOD &&
+        resource !== ResourceType.WATER
       ) {
         continue;
       }
@@ -345,10 +345,10 @@ export class HouseholdSystem {
     for (const [res, amount] of Object.entries(resources)) {
       const resource = res as ResourceType;
       if (
-        resource !== "wood" &&
-        resource !== "stone" &&
-        resource !== "food" &&
-        resource !== "water"
+        resource !== ResourceType.WOOD &&
+        resource !== ResourceType.STONE &&
+        resource !== ResourceType.FOOD &&
+        resource !== ResourceType.WATER
       ) {
         continue;
       }

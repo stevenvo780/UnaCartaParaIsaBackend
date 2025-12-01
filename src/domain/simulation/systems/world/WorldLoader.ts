@@ -395,7 +395,7 @@ export class WorldLoader {
         buildingId: `building_storage_initial_${Date.now()}`,
         builtAt: Date.now(),
         biome: defaultBiome,
-        buildingType: "storage",
+        buildingType: BuildingType.STORAGE,
         spriteVariant: 0,
       },
     };
