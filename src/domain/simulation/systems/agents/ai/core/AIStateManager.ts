@@ -13,7 +13,7 @@ import {
   ExplorationType,
   LifeStage,
 } from "../../../../../../shared/constants/AgentEnums";
-import type { AgentRegistry } from "../../../../core/AgentRegistry";
+import type { AgentRegistry } from "../../../agents/AgentRegistry";
 
 /**
  * Manages AI state creation, retrieval, and cleanup for agents.

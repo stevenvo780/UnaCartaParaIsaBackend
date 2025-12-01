@@ -45,7 +45,7 @@ import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
 import type { EntityIndex } from "../../core/EntityIndex";
 import type { TaskSystem } from "../objectives/TaskSystem";
-import type { AgentRegistry } from "../../core/AgentRegistry";
+import type { AgentRegistry } from "../agents/AgentRegistry";
 
 /**
  * System for managing agent lifecycle: birth, aging, death, and reproduction.

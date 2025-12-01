@@ -95,7 +95,7 @@ const DEMAND_SOLUTIONS: Partial<
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
-import type { AgentRegistry } from "../../core/AgentRegistry";
+import type { AgentRegistry } from "../agents/AgentRegistry";
 
 @injectable()
 export class GovernanceSystem {

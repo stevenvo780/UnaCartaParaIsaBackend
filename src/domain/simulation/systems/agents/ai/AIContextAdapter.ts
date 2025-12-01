@@ -36,7 +36,7 @@ import type { MovementSystem } from "../movement/MovementSystem";
 
 import type { TimeSystem } from "../../core/TimeSystem";
 import type { SharedKnowledgeSystem } from "./SharedKnowledgeSystem";
-import type { AgentRegistry } from "../../../core/AgentRegistry";
+import type { AgentRegistry } from "../../agents/AgentRegistry";
 import { equipmentSystem, type EquipmentSystem } from "../EquipmentSystem";
 import { EquipmentSlot } from "../../../../../shared/constants/EquipmentEnums";
 

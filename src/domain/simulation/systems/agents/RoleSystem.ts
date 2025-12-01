@@ -18,7 +18,7 @@ import {
 import { ResourceType } from "../../../../shared/constants/ResourceEnums";
 import { ZoneType } from "../../../../shared/constants/ZoneEnums";
 import { simulationEvents, GameEventType } from "../../core/events";
-import type { AgentRegistry } from "../../core/AgentRegistry";
+import type { AgentRegistry } from "../agents/AgentRegistry";
 
 const ROLE_DEFINITIONS: RoleConfig[] = [
   {

@@ -10,7 +10,7 @@ import { simulationEvents, GameEventType } from "../../core/events";
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
 import { ZoneType } from "../../../../shared/constants/ZoneEnums";
-import type { AgentRegistry } from "../../core/AgentRegistry";
+import type { AgentRegistry } from "../agents/AgentRegistry";
 
 const DEFAULT_CONFIG: HouseholdSystemConfig = {
   updateIntervalMs: 5000,

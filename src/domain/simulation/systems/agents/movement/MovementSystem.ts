@@ -10,7 +10,7 @@ import { TYPES } from "../../../../../config/Types";
 import type { EntityIndex } from "../../../core/EntityIndex";
 import type { GPUComputeService } from "../../../core/GPUComputeService";
 import type { StateDirtyTracker } from "../../../core/StateDirtyTracker";
-import type { AgentRegistry } from "../../../core/AgentRegistry";
+import type { AgentRegistry } from "../../agents/AgentRegistry";
 import { getFrameTime } from "../../../../../shared/FrameTime";
 import { WORLD_CONFIG } from "../../../../../shared/constants/WorldConfig";
 import {
@@ -176,7 +176,7 @@ export class MovementSystem extends EventEmitter {
       this.agentRegistry.registerMovement(
         this.movementStates as Map<
           string,
-          import("../../../core/AgentRegistry").MovementState
+          import("../../agents/AgentRegistry").MovementState
         >,
       );
     }

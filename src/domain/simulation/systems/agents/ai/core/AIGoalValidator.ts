@@ -15,7 +15,7 @@ import {
   ResourceType,
   ResourceState,
 } from "../../../../../../shared/constants/ResourceEnums";
-import type { AgentRegistry } from "../../../../core/AgentRegistry";
+import type { AgentRegistry } from "../../../agents/AgentRegistry";
 import { logger } from "../../../../../../infrastructure/utils/logger";
 
 export interface AIGoalValidatorDeps {

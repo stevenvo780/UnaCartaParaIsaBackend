@@ -86,7 +86,7 @@ export interface AIZoneNeedsPort {
   } | null;
 }
 
-import type { AgentRegistry } from "../../../../core/AgentRegistry";
+import type { AgentRegistry } from "../../../agents/AgentRegistry";
 
 export interface AIZoneHandlerDeps {
   gameState: GameState;

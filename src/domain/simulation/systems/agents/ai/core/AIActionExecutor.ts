@@ -20,8 +20,8 @@ import {
 import { ItemCategory } from "../../../../../../shared/constants/ItemEnums";
 import { TaskType } from "../../../../../../shared/constants/TaskEnums";
 import { EntityType } from "../../../../../../shared/constants/EntityEnums";
-import type { AgentRegistry } from "../../../../core/AgentRegistry";
-import type { AnimalRegistry } from "../../../../core/AnimalRegistry";
+import type { AgentRegistry } from "../../../agents/AgentRegistry";
+import type { AnimalRegistry } from "../../../world/animals/AnimalRegistry";
 
 export interface AIActionExecutorDeps {
   gameState: GameState;

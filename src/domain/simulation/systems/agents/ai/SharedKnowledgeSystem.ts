@@ -4,7 +4,7 @@ import { simulationEvents, GameEventType } from "../../../core/events";
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../../config/Types";
 import type { SharedSpatialIndex } from "../../../core/SharedSpatialIndex";
-import type { AgentRegistry } from "../../../core/AgentRegistry";
+import type { AgentRegistry } from "../../agents/AgentRegistry";
 import { EntityType } from "../../../../../shared/constants/EntityEnums";
 
 export interface ResourceAlert {

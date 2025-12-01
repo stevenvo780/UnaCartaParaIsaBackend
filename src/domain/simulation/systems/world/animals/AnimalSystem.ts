@@ -20,8 +20,8 @@ import { performanceMonitor } from "../../../core/PerformanceMonitor";
 import { SIM_CONSTANTS } from "../../../core/SimulationConstants";
 import { TileType } from "../../../../../shared/constants/TileTypeEnums";
 import { AnimalState } from "../../../../../shared/constants/AnimalEnums";
-import { AnimalRegistry } from "../../../core/AnimalRegistry";
-import type { AgentRegistry } from "../../../core/AgentRegistry";
+import { AnimalRegistry } from "../../world/animals/AnimalRegistry";
+import type { AgentRegistry } from "../../agents/AgentRegistry";
 import { WorldResourceType } from "../../../../../shared/constants/ResourceEnums";
 
 const DEFAULT_CONFIG: AnimalSystemConfig = {

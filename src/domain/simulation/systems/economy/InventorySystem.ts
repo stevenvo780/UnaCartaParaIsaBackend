@@ -9,7 +9,7 @@ import { SIMULATION_CONSTANTS } from "../../../../shared/constants/SimulationCon
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
-import type { AgentRegistry } from "../../core/AgentRegistry";
+import type { AgentRegistry } from "../agents/AgentRegistry";
 import type { StateDirtyTracker } from "../../core/StateDirtyTracker";
 import { performanceMonitor } from "../../core/PerformanceMonitor";
 

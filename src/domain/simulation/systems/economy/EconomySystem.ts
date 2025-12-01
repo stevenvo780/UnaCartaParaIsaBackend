@@ -62,7 +62,7 @@ export interface TransactionRecord {
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
 import type { EntityIndex } from "../../core/EntityIndex";
-import type { AgentRegistry } from "../../core/AgentRegistry";
+import type { AgentRegistry } from "../agents/AgentRegistry";
 
 /**
  * System for managing economic activities: resource production, salaries, market pricing, and trading.

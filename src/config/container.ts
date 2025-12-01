@@ -58,8 +58,8 @@ import { EntityIndex } from "../domain/simulation/core/EntityIndex";
 import { SharedSpatialIndex } from "../domain/simulation/core/SharedSpatialIndex";
 import { GPUComputeService } from "../domain/simulation/core/GPUComputeService";
 import { GPUBatchQueryService } from "../domain/simulation/core/GPUBatchQueryService";
-import { AgentRegistry } from "../domain/simulation/core/AgentRegistry";
-import { AnimalRegistry } from "../domain/simulation/core/AnimalRegistry";
+import { AgentRegistry } from "../domain/simulation/systems/agents/AgentRegistry";
+import { AnimalRegistry } from "../domain/simulation/systems/world/animals/AnimalRegistry";
 import { StateDirtyTracker } from "../domain/simulation/core/StateDirtyTracker";
 
 export const container = new Container();

@@ -6,7 +6,7 @@ import { ResourceType } from "../../../../../../shared/constants/ResourceEnums";
 import { WorldResourceType } from "../../../../../../shared/constants/ResourceEnums";
 import { ZoneType } from "../../../../../../shared/constants/ZoneEnums";
 import { toInventoryResource } from "../../../../../types/simulation/resourceMapping";
-import type { AgentRegistry } from "../../../../core/AgentRegistry";
+import type { AgentRegistry } from "../../../agents/AgentRegistry";
 import { logger } from "../../../../../../infrastructure/utils/logger";
 
 export interface AIUrgentGoalsDeps {

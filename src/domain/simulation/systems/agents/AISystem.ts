@@ -132,7 +132,7 @@ import type { MovementSystem } from "./movement/MovementSystem";
 import type { TimeSystem } from "../core/TimeSystem";
 import type { EntityIndex } from "../../core/EntityIndex";
 import type { GPUComputeService } from "../../core/GPUComputeService";
-import type { AnimalRegistry } from "../../core/AnimalRegistry";
+import type { AnimalRegistry } from "../world/animals/AnimalRegistry";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../../core/PerformanceMonitor";
 import { getFrameTime } from "../../../../shared/FrameTime";
@@ -146,7 +146,7 @@ interface AISystemConfig {
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
-import type { AgentRegistry } from "../../core/AgentRegistry";
+import type { AgentRegistry } from "../agents/AgentRegistry";
 
 /**
  * AI system for agent decision-making and goal planning.

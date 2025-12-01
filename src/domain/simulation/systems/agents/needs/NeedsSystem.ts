@@ -13,7 +13,7 @@ import { TYPES } from "../../../../../config/Types";
 import type { EntityIndex } from "../../../core/EntityIndex";
 import type { SharedSpatialIndex } from "../../../core/SharedSpatialIndex";
 import type { GPUComputeService } from "../../../core/GPUComputeService";
-import type { AgentRegistry } from "../../../core/AgentRegistry";
+import type { AgentRegistry } from "../../agents/AgentRegistry";
 import type { StateDirtyTracker } from "../../../core/StateDirtyTracker";
 import { getFrameTime } from "../../../../../shared/FrameTime";
 import { performance } from "perf_hooks";

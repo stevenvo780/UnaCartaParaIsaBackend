@@ -9,7 +9,7 @@ import { InventorySystem } from "../../src/domain/simulation/systems/economy/Inv
 import { SocialSystem } from "../../src/domain/simulation/systems/social/SocialSystem";
 import { LifeCycleSystem } from "../../src/domain/simulation/systems/lifecycle/LifeCycleSystem";
 import { EntityIndex } from "../../src/domain/simulation/core/EntityIndex";
-import { AgentRegistry } from "../../src/domain/simulation/core/AgentRegistry";
+import { AgentRegistry } from "../../src/domain/simulation/systems/agents/AgentRegistry";
 import { simulationEvents } from "../../src/domain/events/SimulationEvents";
 
 describe("History Tracking", () => {
