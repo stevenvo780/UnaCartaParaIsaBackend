@@ -2,8 +2,9 @@
 
 /**
  * Script para validar que strings en el sistema no se hayan reemplazado por enums.
+ * También detecta enums y miembros de enums que no se están utilizando.
  * Ignora valores por defecto del sistema como "number", "string", etc.
- * Genera un reporte de qué strings faltan por convertir a enums.
+ * Genera un reporte detallado.
  */
 
 import * as fs from 'fs';
@@ -177,8 +178,11 @@ interface StringOccurrence {
 
 interface EnumValues {
   enumName: string;
-  values: Set<string>;
+  values: Set<string>; // Valores del enum (e.g. "active", "pending")
+  members: Map<string, string>; // NombreMiembro -> Valor (e.g. "ACTIVE" -> "active")
   file: string;
+  usageCount: number; // Uso del Enum como tipo o valor
+  memberUsageCounts: Map<string, number>; // Uso de cada miembro específico
 }
 
 /**
@@ -209,30 +213,36 @@ function getAllFiles(dir: string, fileList: string[] = []): string[] {
 }
 
 /**
- * Extrae todos los valores de los enums de un archivo
+ * Extrae todos los valores y miembros de los enums de un archivo
  */
 function extractEnumValues(filePath: string): EnumValues[] {
   const content = fs.readFileSync(filePath, 'utf8');
   const enums: EnumValues[] = [];
 
   // Buscar enums exportados
-  const enumRegex =
-    /export\s+enum\s+(\w+)\s*\{([^}]+)\}/gs;
+  const enumRegex = /export\s+enum\s+(\w+)\s*\{([^}]+)\}/gs;
   let match;
 
   while ((match = enumRegex.exec(content)) !== null) {
     const enumName = match[1];
     const enumBody = match[2];
     const values = new Set<string>();
+    const members = new Map<string, string>();
+    const memberUsageCounts = new Map<string, number>();
 
-    // Extraer valores del enum (formato: KEY = "value" o KEY = 'value')
-    const valueRegex = /=\s*["']([^"']+)["']/g;
-    let valueMatch;
+    // Extraer miembros y valores del enum (formato: KEY = "value" o KEY = 'value')
+    // También soporta KEY = "value", (con coma)
+    const memberRegex = /([a-zA-Z0-9_]+)\s*=\s*["']([^"']+)["']/g;
+    let memberMatch;
 
-    while ((valueMatch = valueRegex.exec(enumBody)) !== null) {
-      const value = valueMatch[1];
+    while ((memberMatch = memberRegex.exec(enumBody)) !== null) {
+      const memberName = memberMatch[1];
+      const value = memberMatch[2];
+
       if (value && !SYSTEM_DEFAULT_VALUES.has(value)) {
         values.add(value);
+        members.set(memberName, value);
+        memberUsageCounts.set(memberName, 0);
       }
     }
 
@@ -240,7 +250,10 @@ function extractEnumValues(filePath: string): EnumValues[] {
       enums.push({
         enumName,
         values,
+        members,
         file: filePath,
+        usageCount: 0,
+        memberUsageCounts,
       });
     }
   }
@@ -336,7 +349,10 @@ function findAllEnums(backendSrc: string, frontendSrc: string): Map<string, Enum
     enumFiles.forEach((file) => {
       const enums = extractEnumValues(file);
       enums.forEach((enumData) => {
-        enumMap.set(enumData.enumName, enumData);
+        // Si ya existe (e.g. compartido), no lo sobrescribimos para mantener el del backend como fuente
+        if (!enumMap.has(enumData.enumName)) {
+          enumMap.set(enumData.enumName, enumData);
+        }
       });
     });
   }
@@ -345,30 +361,48 @@ function findAllEnums(backendSrc: string, frontendSrc: string): Map<string, Enum
 }
 
 /**
- * Verifica si un string literal está en algún enum
+ * Cuenta los usos de Enums y sus miembros en el código
  */
-function isStringInEnum(
-  stringLiteral: string,
-  enumMap: Map<string, EnumValues>,
-): { found: boolean; enumName?: string; file?: string } {
-  const entries = Array.from(enumMap.entries());
-  for (const [enumName, enumData] of entries) {
-    if (enumData.values.has(stringLiteral)) {
-      return {
-        found: true,
-        enumName,
-        file: enumData.file,
-      };
+function countEnumUsages(
+  filePath: string,
+  content: string,
+  enumMap: Map<string, EnumValues>
+) {
+  // Ignorar el archivo donde se define el enum para no contar la definición como uso
+  // Aunque idealmente deberíamos ignorar solo la definición específica.
+  // Por simplicidad, asumimos que si el archivo contiene "export enum X", esos usos no cuentan.
+
+  enumMap.forEach((enumData, enumName) => {
+    if (filePath === enumData.file) return;
+
+    // 1. Buscar uso del Enum como tipo o valor (e.g. "let x: EnumName" o "EnumName.Member")
+    // Usamos \b para asegurar palabra completa
+    const enumUsageRegex = new RegExp(`\\b${enumName}\\b`, 'g');
+    const matches = content.match(enumUsageRegex);
+    if (matches) {
+      enumData.usageCount += matches.length;
     }
-  }
-  return { found: false };
+
+    // 2. Buscar uso de miembros específicos (e.g. "EnumName.Member")
+    enumData.members.forEach((_, memberName) => {
+      const memberUsageRegex = new RegExp(`\\b${enumName}\\.${memberName}\\b`, 'g');
+      const memberMatches = content.match(memberUsageRegex);
+      if (memberMatches) {
+        const count = memberMatches.length;
+        enumData.memberUsageCounts.set(
+          memberName,
+          (enumData.memberUsageCounts.get(memberName) || 0) + count
+        );
+      }
+    });
+  });
 }
 
 /**
  * Función principal
  */
 function main() {
-  console.log('🔍 Validando strings que deberían ser enums...\n');
+  console.log('🔍 Validando strings y uso de Enums...\n');
 
   // Encontrar todos los enums
   console.log('📚 Extrayendo enums existentes...');
@@ -376,16 +410,22 @@ function main() {
   console.log(`   Encontrados ${enumMap.size} enums\n`);
 
   // Crear un mapa de todos los valores de enum para búsqueda rápida
-  const allEnumValues = new Set<string>();
-  enumMap.forEach((enumData) => {
-    const values = Array.from(enumData.values);
-    values.forEach((value) => allEnumValues.add(value));
+  // Value -> List of Enums containing this value
+  const valueToEnums = new Map<string, string[]>();
+
+  enumMap.forEach((enumData, enumName) => {
+    enumData.values.forEach((value) => {
+      if (!valueToEnums.has(value)) {
+        valueToEnums.set(value, []);
+      }
+      valueToEnums.get(value)!.push(enumName);
+    });
   });
 
-  console.log(`   Total de valores únicos en enums: ${allEnumValues.size}\n`);
+  console.log(`   Total de valores únicos en enums: ${valueToEnums.size}\n`);
 
-  // Buscar strings literales en ambos proyectos
-  console.log('🔎 Buscando strings literales...\n');
+  // Analizar archivos
+  console.log('🔎 Analizando código fuente...\n');
 
   const backendFiles = getAllFiles(BACKEND_SRC);
   const frontendFiles = getAllFiles(FRONTEND_SRC);
@@ -393,130 +433,166 @@ function main() {
 
   console.log(`   Analizando ${allFiles.length} archivos...\n`);
 
-  const allOccurrences: StringOccurrence[] = [];
-  const stringCounts = new Map<string, number>();
+  const missingEnumOccurrences: StringOccurrence[] = [];
 
   allFiles.forEach((filePath) => {
     try {
       const content = fs.readFileSync(filePath, 'utf8');
+
+      // 1. Buscar strings literales que deberían ser enums
       const occurrences = findStringLiterals(filePath, content);
 
       occurrences.forEach((occ) => {
-        allOccurrences.push(occ);
-        stringCounts.set(
-          occ.stringLiteral,
-          (stringCounts.get(occ.stringLiteral) || 0) + 1,
-        );
+        // Solo nos importa si el string coincide EXACTAMENTE con un valor de algún Enum
+        if (valueToEnums.has(occ.stringLiteral)) {
+          missingEnumOccurrences.push(occ);
+        }
       });
+
+      // 2. Contar usos de Enums
+      countEnumUsages(filePath, content, enumMap);
+
     } catch (error) {
       console.error(`   ⚠️  Error leyendo ${filePath}:`, error);
     }
   });
 
-  console.log(`   Encontradas ${allOccurrences.length} ocurrencias de strings literales\n`);
+  // --- REPORTE 1: Strings que deberían ser Enums ---
 
-  // Filtrar strings que NO están en ningún enum
-  const missingEnums = new Map<string, StringOccurrence[]>();
-
-  allOccurrences.forEach((occ) => {
-    if (!allEnumValues.has(occ.stringLiteral)) {
-      if (!missingEnums.has(occ.stringLiteral)) {
-        missingEnums.set(occ.stringLiteral, []);
-      }
-      missingEnums.get(occ.stringLiteral)!.push(occ);
+  // Agrupar por string literal
+  const missingByString = new Map<string, StringOccurrence[]>();
+  missingEnumOccurrences.forEach((occ) => {
+    if (!missingByString.has(occ.stringLiteral)) {
+      missingByString.set(occ.stringLiteral, []);
     }
+    missingByString.get(occ.stringLiteral)!.push(occ);
   });
 
-  // Agrupar por archivo
-  const byFile = new Map<string, StringOccurrence[]>();
-  missingEnums.forEach((occurrences) => {
-    occurrences.forEach((occ) => {
-      if (!byFile.has(occ.file)) {
-        byFile.set(occ.file, []);
-      }
-      byFile.get(occ.file)!.push(occ);
-    });
-  });
+  // Ordenar por frecuencia
+  const sortedMissing = Array.from(missingByString.entries()).sort(
+    (a, b) => b[1].length - a[1].length
+  );
 
-  // Generar reporte
-  console.log('📊 REPORTE DE STRINGS FALTANTES POR CONVERTIR A ENUMS\n');
+  console.log('📊 REPORTE DE USO DE STRINGS LITERALES (POSIBLES ENUMS)\n');
   console.log('='.repeat(80));
-  console.log(`Total de strings únicos sin enum: ${missingEnums.size}`);
-  console.log(`Total de ocurrencias: ${Array.from(missingEnums.values()).reduce((sum, arr) => sum + arr.length, 0)}`);
-  console.log(`Archivos afectados: ${byFile.size}`);
+  console.log(`Total de ocurrencias detectadas: ${missingEnumOccurrences.length}`);
   console.log('='.repeat(80));
   console.log();
 
-  // Ordenar por frecuencia de uso
-  const sortedStrings = Array.from(missingEnums.entries()).sort(
-    (a, b) => b[1].length - a[1].length,
-  );
+  if (sortedMissing.length === 0) {
+    console.log('✅ ¡Excelente! No se detectaron strings literales que deban ser enums.\n');
+  } else {
+    sortedMissing.slice(0, 50).forEach(([stringLiteral, occurrences], index) => {
+      const possibleEnums = valueToEnums.get(stringLiteral) || [];
+      console.log(`${(index + 1).toString().padStart(3, ' ')}. "${stringLiteral}" (${occurrences.length} ocurrencias)`);
+      console.log(`      Posibles Enums: ${possibleEnums.join(', ')}`);
 
-  // Mostrar top 50 strings más usados
-  const topStrings = sortedStrings.slice(0, 50);
-  console.log('🔝 TOP 50 STRINGS MÁS USADOS SIN ENUM:\n');
-
-  topStrings.forEach(([stringLiteral, occurrences], index) => {
-    console.log(`${(index + 1).toString().padStart(3, ' ')}. "${stringLiteral}" (${occurrences.length} ocurrencias)`);
-    
-    // Mostrar algunos ejemplos
-    const examples = occurrences.slice(0, 3);
-    examples.forEach((occ) => {
-      const relativePath = path.relative(
-        path.join(__dirname, '..'),
-        occ.file,
-      );
-      console.log(`      ${relativePath}:${occ.line} (${occ.pattern})`);
+      const examples = occurrences.slice(0, 3);
+      examples.forEach((occ) => {
+        const relativePath = path.relative(path.join(__dirname, '..'), occ.file);
+        console.log(`      ${relativePath}:${occ.line} (${occ.pattern})`);
+      });
+      if (occurrences.length > 3) {
+        console.log(`      ... y ${occurrences.length - 3} más`);
+      }
+      console.log();
     });
-    if (occurrences.length > 3) {
-      console.log(`      ... y ${occurrences.length - 3} más`);
+  }
+
+  // --- REPORTE 2: Enums sin uso ---
+
+  console.log('📉 REPORTE DE ENUMS SIN USO\n');
+  console.log('='.repeat(80));
+
+  const unusedEnums: EnumValues[] = [];
+  const unusedMembers: { enumName: string; member: string; file: string }[] = [];
+
+  enumMap.forEach((enumData) => {
+    if (enumData.usageCount === 0) {
+      unusedEnums.push(enumData);
+    } else {
+      // Si el enum se usa, verificar sus miembros
+      enumData.memberUsageCounts.forEach((count, member) => {
+        if (count === 0) {
+          unusedMembers.push({
+            enumName: enumData.enumName,
+            member: member,
+            file: enumData.file
+          });
+        }
+      });
     }
-    console.log();
   });
 
+  if (unusedEnums.length === 0) {
+    console.log('✅ Todos los Enums definidos parecen estar en uso.\n');
+  } else {
+    console.log(`⚠️  Se encontraron ${unusedEnums.length} Enums que no parecen usarse:\n`);
+    unusedEnums.forEach((e) => {
+      const relativePath = path.relative(path.join(__dirname, '..'), e.file);
+      console.log(`   - ${e.enumName} (en ${relativePath})`);
+    });
+    console.log();
+  }
+
+  // --- REPORTE 3: Miembros de Enum sin uso ---
+
+  console.log('📉 REPORTE DE MIEMBROS DE ENUM SIN USO\n');
+  console.log('='.repeat(80));
+
+  if (unusedMembers.length === 0) {
+    console.log('✅ Todos los miembros de los Enums usados parecen estar en uso.\n');
+  } else {
+    console.log(`⚠️  Se encontraron ${unusedMembers.length} miembros de Enums sin uso explícito:\n`);
+
+    // Agrupar por Enum
+    const membersByEnum = new Map<string, string[]>();
+    unusedMembers.forEach((item) => {
+      if (!membersByEnum.has(item.enumName)) {
+        membersByEnum.set(item.enumName, []);
+      }
+      membersByEnum.get(item.enumName)!.push(item.member);
+    });
+
+    membersByEnum.forEach((members, enumName) => {
+      console.log(`   ${enumName}:`);
+      console.log(`      ${members.join(', ')}`);
+    });
+    console.log();
+  }
+
   // Guardar reporte completo en JSON
-  const reportPath = path.join(__dirname, '../string-to-enum-validation-report.json');
+  const reportPath = path.join(__dirname, '../enum-validation-report.json');
   const report = {
     summary: {
       totalEnums: enumMap.size,
-      totalEnumValues: allEnumValues.size,
-      totalStringOccurrences: allOccurrences.length,
-      missingEnumStrings: missingEnums.size,
-      missingEnumOccurrences: Array.from(missingEnums.values()).reduce(
-        (sum, arr) => sum + arr.length,
-        0,
-      ),
-      filesAffected: byFile.size,
+      unusedEnums: unusedEnums.length,
+      unusedMembers: unusedMembers.length,
+      missingEnumOccurrences: missingEnumOccurrences.length,
     },
-    enums: Array.from(enumMap.entries()).map(([name, data]) => ({
-      name,
-      values: Array.from(data.values),
-      file: path.relative(path.join(__dirname, '..'), data.file),
+    unusedEnums: unusedEnums.map(e => ({
+      name: e.enumName,
+      file: path.relative(path.join(__dirname, '..'), e.file)
     })),
-    missingStrings: sortedStrings.map(([stringLiteral, occurrences]) => ({
+    unusedMembers: unusedMembers.map(m => ({
+      enum: m.enumName,
+      member: m.member,
+      file: path.relative(path.join(__dirname, '..'), m.file)
+    })),
+    missingEnumUsages: sortedMissing.map(([stringLiteral, occurrences]) => ({
       stringLiteral,
+      possibleEnums: valueToEnums.get(stringLiteral),
       count: occurrences.length,
       occurrences: occurrences.map((occ) => ({
         file: path.relative(path.join(__dirname, '..'), occ.file),
         line: occ.line,
-        column: occ.column,
-        pattern: occ.pattern,
         lineContent: occ.lineContent,
       })),
-    })),
-    byFile: Array.from(byFile.entries()).map(([file, occurrences]) => ({
-      file: path.relative(path.join(__dirname, '..'), file),
-      count: occurrences.length,
-      uniqueStrings: Array.from(
-        new Set(occurrences.map((occ) => occ.stringLiteral)),
-      ),
     })),
   };
 
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
   console.log(`\n✅ Reporte completo guardado en: ${reportPath}`);
-  console.log(`\n💡 Revisa el reporte JSON para ver todos los detalles.`);
 }
 
 main();
-
