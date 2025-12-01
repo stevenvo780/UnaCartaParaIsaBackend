@@ -728,11 +728,11 @@ export class AISystem extends EventEmitter {
    */
   public getAIState(agentId: string): LegacyAIState {
     const task = this.activeTask.get(agentId);
+    const pendingTasks = this.taskQueue.getTasks(agentId);
     return {
       currentGoal: task ?? null,
-      pendingTasks: this.taskQueue.getTasks(agentId),
-
-      goalQueue: [],
+      pendingTasks,
+      goalQueue: pendingTasks,
       currentAction: task ? { type: task.type, target: task.target } : null,
       offDuty: false,
       lastDecisionTime: this.lastUpdate.get(agentId) ?? 0,

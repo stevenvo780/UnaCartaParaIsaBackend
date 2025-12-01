@@ -124,23 +124,56 @@ function addImport(filePath: string, content: string, enumName: string): string 
   const importPath = getRelativeImportPath(filePath, enumFilePath);
   const importStatement = `import { ${enumName} } from '${importPath}';`;
 
-  // Insertar después de los últimos imports o al principio
   const lines = content.split('\n');
-  let lastImportIdx = -1;
+  let lastImportLine = -1;
+  let inImportBlock = false;
 
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].trim().startsWith('import ')) {
-      lastImportIdx = i;
-    } else if (lastImportIdx !== -1 && lines[i].trim() !== '') {
-      // Fin de bloque de imports
-      break;
+    const line = lines[i].trim();
+
+    // Ignorar comentarios
+    if (line.startsWith('//') || line.startsWith('/*') || line.startsWith('*')) continue;
+
+    if (inImportBlock) {
+      // Si estamos en un bloque, buscamos el final (generalmente 'from ...;')
+      if (line.includes('from') || line.endsWith(';')) {
+        inImportBlock = false;
+        lastImportLine = i;
+      }
+    } else {
+      if (line.startsWith('import ')) {
+        // Si es una línea simple (import ... from ...;)
+        if ((line.includes('from') && line.endsWith(';')) || (line.endsWith(';') && !line.includes('{'))) {
+          lastImportLine = i;
+        } else {
+          // Es un bloque multilinea
+          inImportBlock = true;
+          // Caso especial: import { A } from 'b'; (todo en una linea pero sin ; al final o algo raro)
+          if (line.includes('from') && line.includes('}')) {
+            inImportBlock = false;
+            lastImportLine = i;
+          }
+        }
+      }
     }
   }
 
-  if (lastImportIdx !== -1) {
-    lines.splice(lastImportIdx + 1, 0, importStatement);
+  if (lastImportLine !== -1) {
+    lines.splice(lastImportLine + 1, 0, importStatement);
   } else {
-    lines.unshift(importStatement);
+    // Si no hay imports, intentar ponerlo después de los comentarios iniciales (shebang, license)
+    let insertIdx = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (line.startsWith('#!') || line.startsWith('//') || line.startsWith('/*') || line.startsWith('*')) {
+        insertIdx = i + 1;
+      } else if (line === '') {
+        continue;
+      } else {
+        break;
+      }
+    }
+    lines.splice(insertIdx, 0, importStatement);
   }
 
   return lines.join('\n');
