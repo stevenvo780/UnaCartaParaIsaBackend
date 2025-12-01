@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { AnimalNeeds } from "../../../src/domain/simulation/systems/world/animals/AnimalNeeds";
 import type { Animal } from "../../../src/domain/types/simulation/animals";
-import { getAnimalConfig } from "../../../src/domain/world/config/AnimalConfigs";
+import { getAnimalConfig } from "../../../src/domain/simulation/systems/world/config/AnimalConfigs";
 
 // Mock del config
-vi.mock("../../../src/domain/world/config/AnimalConfigs", () => ({
+vi.mock("../../../src/domain/simulation/systems/world/config/AnimalConfigs", () => ({
   getAnimalConfig: vi.fn(),
 }));
 

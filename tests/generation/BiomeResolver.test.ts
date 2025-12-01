@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { BiomeResolver } from "../../src/domain/world/generation/BiomeResolver.ts";
-import { BiomeType } from "../../src/domain/world/generation/types.ts";
+import { BiomeResolver } from "../../src/domain/simulation/systems/world/generation/BiomeResolver.ts";
+import { BiomeType } from "../../src/domain/simulation/systems/world/generation/types.ts";
 
 describe("BiomeResolver", () => {
   let resolver: BiomeResolver;

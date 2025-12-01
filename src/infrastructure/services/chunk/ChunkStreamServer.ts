@@ -5,7 +5,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import type {
   WorldGenConfig,
   TerrainTile,
-} from "../../../domain/world/generation/types";
+} from "../../../domain/simulation/systems/world/generation/types";
 import { ChunkWorkerPool } from "./ChunkWorkerPool";
 import type { ChunkPoolStats } from "./ChunkWorkerPool";
 import { encodeMsgPack, decodeMessage } from "../../../shared/MessagePackCodec";

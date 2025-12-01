@@ -8,7 +8,7 @@ import {
   GameState,
   SimulationTerrainTile,
 } from "../../../domain/types/game-types";
-import { BiomeType } from "../../../domain/world/generation/types";
+import { BiomeType } from "../../../domain/simulation/systems/world/generation/types";
 import { createInitialGameState } from "../../../domain/simulation/core/defaultState";
 import { logger } from "../../../infrastructure/utils/logger";
 

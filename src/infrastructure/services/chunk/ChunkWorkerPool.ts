@@ -6,7 +6,7 @@ import { Worker } from "node:worker_threads";
 import type {
   WorldGenConfig,
   TerrainTile,
-} from "../../../domain/world/generation/types";
+} from "../../../domain/simulation/systems/world/generation/types";
 import { WorkerMessageType } from "../../../shared/constants/WebSocketEnums";
 
 interface ChunkWorkerResult {

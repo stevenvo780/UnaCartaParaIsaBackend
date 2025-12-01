@@ -1,5 +1,5 @@
 import { logger } from "../../../../../../infrastructure/utils/logger";
-import { getAnimalConfig } from "../../../../../world/config/AnimalConfigs";
+import { getAnimalConfig } from "../../../world/config/AnimalConfigs";
 import type { GameState } from "../../../../../types/game-types";
 import type { AgentAction } from "../../../../../types/simulation/ai";
 import { itemToInventoryResource } from "../../../../../types/simulation/resourceMapping";
@@ -20,7 +20,7 @@ import {
 import { ItemCategory } from "../../../../../../shared/constants/ItemEnums";
 import { TaskType } from "../../../../../../shared/constants/TaskEnums";
 import { EntityType } from "../../../../../../shared/constants/EntityEnums";
-import type { AgentRegistry } from "../../../agents/AgentRegistry";
+import type { AgentRegistry } from "../../AgentRegistry";
 import type { AnimalRegistry } from "../../../world/animals/AnimalRegistry";
 
 export interface AIActionExecutorDeps {

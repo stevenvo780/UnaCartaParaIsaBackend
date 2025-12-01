@@ -1,4 +1,4 @@
-import { BiomeType } from "../../../shared/constants/BiomeEnums";
+import { BiomeType } from "../../../../../shared/constants/BiomeEnums";
 
 /**
  * Re-export BiomeType enum for backward compatibility.

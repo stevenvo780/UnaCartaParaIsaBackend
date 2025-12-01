@@ -4,9 +4,9 @@ import type {
   Animal,
   AnimalSystemConfig,
 } from "../../../../types/simulation/animals";
-import type { TerrainTile } from "../../../../world/generation/types";
+import type { TerrainTile } from "../generation/types";
 import type { WorldResourceInstance } from "../../../../types/simulation/worldResources";
-import { getAnimalConfig } from "../../../../world/config/AnimalConfigs";
+import { getAnimalConfig } from "../config/AnimalConfigs";
 import { AnimalNeeds } from "./AnimalNeeds";
 import { AnimalBehavior } from "./AnimalBehavior";
 import { AnimalSpawning } from "./AnimalSpawning";

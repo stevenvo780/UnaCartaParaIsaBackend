@@ -8,7 +8,7 @@ import {
 import { createMockGameState } from "../setup";
 
 const mockGetResourceConfig = vi.fn();
-vi.mock("../../src/domain/world/config/WorldResourceConfigs", () => ({
+vi.mock("../../src/domain/simulation/systems/world/config/WorldResourceConfigs", () => ({
   getResourceConfig: (type: string) => mockGetResourceConfig(type),
 }));
 

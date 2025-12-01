@@ -5,7 +5,7 @@ import { cloneGameState } from "./defaultState";
 import { EntityIndex } from "./EntityIndex";
 import { SharedSpatialIndex } from "./SharedSpatialIndex";
 import { AgentRegistry } from "../systems/agents/AgentRegistry";
-import { WorldGenerationService } from "../../world/worldGenerationService";
+import { WorldGenerationService } from "../systems/world/generation/worldGenerationService";
 import { logger } from "../../../infrastructure/utils/logger";
 
 // Import all systems from the centralized index
@@ -65,7 +65,7 @@ import { TYPES } from "../../../config/Types";
 import { CommandProcessor } from "./runner/CommandProcessor";
 import { SnapshotManager } from "./runner/SnapshotManager";
 import { EventRegistry } from "./runner/EventRegistry";
-import { WorldLoader } from "./runner/WorldLoader";
+import { WorldLoader } from "../systems/world/WorldLoader";
 
 /**
  * Main simulation orchestrator and coordinator.

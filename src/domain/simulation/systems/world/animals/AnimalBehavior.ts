@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/utils/logger";
 import type { Animal } from "../../../../types/simulation/animals";
-import { getAnimalConfig } from "../../../../world/config/AnimalConfigs";
+import { getAnimalConfig } from "../config/AnimalConfigs";
 import { AnimalNeeds } from "./AnimalNeeds";
 import { AnimalGenetics } from "./AnimalGenetics";
 import { simulationEvents, GameEventType } from "../../../core/events";

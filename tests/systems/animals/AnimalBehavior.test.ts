@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { AnimalBehavior } from "../../../src/domain/simulation/systems/world/animals/AnimalBehavior";
 import type { Animal } from "../../../src/domain/types/simulation/animals";
-import { getAnimalConfig } from "../../../src/domain/world/config/AnimalConfigs";
+import { getAnimalConfig } from "../../../src/domain/simulation/systems/world/config/AnimalConfigs";
 import { simulationEvents, GameEventNames } from "../../../src/domain/simulation/core/events";
 import { AnimalNeeds } from "../../../src/domain/simulation/systems/world/animals/AnimalNeeds";
 
 // Mocks
-vi.mock("../../../src/domain/world/config/AnimalConfigs", () => ({
+vi.mock("../../../src/domain/simulation/systems/world/config/AnimalConfigs", () => ({
   getAnimalConfig: vi.fn(),
 }));
 

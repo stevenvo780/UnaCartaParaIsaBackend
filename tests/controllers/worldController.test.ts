@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 const mockGenerateChunk = vi.fn();
 const mockSpawnAnimalsForChunk = vi.fn();
 
-vi.mock('../../src/domain/world/worldGenerationService.ts', () => ({
+vi.mock('../../src/domain/simulation/systems/world/generation/worldGenerationService.ts', () => ({
   WorldGenerationService: vi.fn().mockImplementation(() => ({
     generateChunk: mockGenerateChunk,
   })),

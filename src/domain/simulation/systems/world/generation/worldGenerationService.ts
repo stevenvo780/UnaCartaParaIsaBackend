@@ -1,16 +1,16 @@
-import { NoiseUtils } from "../../shared/utils/NoiseUtils";
-import { BiomeResolver } from "./generation/BiomeResolver";
-import { WorldGenConfig, TerrainTile, BiomeType } from "./generation/types";
+import { NoiseUtils } from "../../../../../shared/utils/NoiseUtils";
+import { BiomeResolver } from "./BiomeResolver";
+import { WorldGenConfig, TerrainTile, BiomeType } from "./types";
 import {
   SIMPLE_BIOMES,
   SimpleBiomeConfig,
-} from "./generation/SimpleBiomeDefinitions";
+} from "./SimpleBiomeDefinitions";
 import seedrandom from "seedrandom";
 
 import { injectable, inject } from "inversify";
-import { TYPES } from "../../config/Types";
-import { VoronoiGenerator } from "./generation/VoronoiGenerator";
-import { WorldGenerationStatus } from "../../shared/constants/StatusEnums";
+import { TYPES } from "../../../../../config/Types";
+import { VoronoiGenerator } from "./VoronoiGenerator";
+import { WorldGenerationStatus } from "../../../../../shared/constants/StatusEnums";
 
 /**
  * Service for generating world terrain chunks.

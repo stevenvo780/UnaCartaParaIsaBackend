@@ -4,11 +4,11 @@ import type {
   AnimalType,
   AnimalGenes,
 } from "../../../../types/simulation/animals";
-import type { TerrainTile } from "../../../../world/generation/types";
+import type { TerrainTile } from "../generation/types";
 import {
   getAnimalConfig,
   getAnimalsForBiome,
-} from "../../../../world/config/AnimalConfigs";
+} from "../config/AnimalConfigs";
 import { AnimalGenetics } from "./AnimalGenetics";
 import { simulationEvents, GameEventType } from "../../../core/events";
 import { AnimalState } from "../../../../../shared/constants/AnimalEnums";

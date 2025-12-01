@@ -1,8 +1,8 @@
 import { logger } from "../../../../infrastructure/utils/logger";
 import { Zone } from "../../../types/game-types";
-import { BiomeType } from "../../../world/generation/types";
+import { BiomeType } from "./generation/types";
 import type { BuildingLabel } from "../../../types/simulation/buildings";
-import type { SimulationRunner } from "../SimulationRunner";
+import type { SimulationRunner } from "../../core/SimulationRunner";
 import { LifeStage, Sex } from "../../../types/simulation/agents";
 import { TileType } from "../../../../shared/constants/TileTypeEnums";
 import {

@@ -1,10 +1,10 @@
 import { parentPort } from "node:worker_threads";
 import { performance } from "node:perf_hooks";
-import { WorldGenerationService } from "../../../domain/world/worldGenerationService";
+import { WorldGenerationService } from "../../../domain/simulation/systems/world/generation/worldGenerationService";
 import type {
   WorldGenConfig,
   TerrainTile,
-} from "../../../domain/world/generation/types";
+} from "../../../domain/simulation/systems/world/generation/types";
 import { WorkerMessageType } from "../../../shared/constants/WebSocketEnums";
 
 interface ChunkWorkerRequest {
@@ -25,7 +25,7 @@ interface ChunkWorkerResponse {
   };
 }
 
-import { VoronoiGenerator } from "../../../domain/world/generation/VoronoiGenerator";
+import { VoronoiGenerator } from "../../../domain/simulation/systems/world/generation/VoronoiGenerator";
 
 /**
  * Worker thread for terrain chunk generation.

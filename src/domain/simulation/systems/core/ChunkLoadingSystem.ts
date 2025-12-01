@@ -2,11 +2,11 @@ import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
 import type { GameState } from "../../../types/game-types";
 import type { AgentRegistry } from "../agents/AgentRegistry";
-import type { WorldGenerationService } from "../../../world/worldGenerationService";
+import type { WorldGenerationService } from "../world/generation/worldGenerationService";
 import type { AnimalSystem } from "../world/animals/AnimalSystem";
 import type { WorldResourceSystem } from "../world/WorldResourceSystem";
 import { logger } from "../../../../infrastructure/utils/logger";
-import type { WorldGenConfig } from "../../../world/generation/types";
+import type { WorldGenConfig } from "../world/generation/types";
 import { TileType } from "../../../../shared/constants/TileTypeEnums";
 import { BiomeType } from "../../../../shared/constants/BiomeEnums";
 
