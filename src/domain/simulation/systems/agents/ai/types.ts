@@ -224,6 +224,8 @@ export interface DetectorContext {
 
   readonly lastExploreTime?: number;
   readonly visitedZones?: ReadonlySet<string>;
+  /** Todas las zonas disponibles en el mundo para explorar */
+  readonly allZones?: readonly { id: string; x: number; y: number }[];
   readonly nearbyInspectable?: {
     id: string;
     position: { x: number; y: number };
@@ -235,6 +237,22 @@ export interface DetectorContext {
     aggression?: number;
     sociability?: number;
   }>;
+}
+
+/**
+ * Callbacks para que los handlers actualicen la memoria del agente.
+ */
+export interface MemoryCallbacks {
+  /** Registra que el agente visitó una zona */
+  recordVisitedZone: (zoneId: string) => void;
+  /** Registra una ubicación de recurso conocida */
+  recordKnownResource: (resourceType: string, position: { x: number; y: number }) => void;
+  /** Registra que el agente completó una exploración (actualiza cooldown) */
+  recordExploration: () => void;
+  /** Obtiene las zonas visitadas */
+  getVisitedZones: () => ReadonlySet<string>;
+  /** Obtiene las ubicaciones de recursos conocidas */
+  getKnownResourceLocations: () => ReadonlyMap<string, { x: number; y: number }>;
 }
 
 /**
@@ -261,6 +279,9 @@ export interface HandlerContext {
 
   /** Bus de eventos para comunicación cross-system */
   readonly events: EventBus;
+  
+  /** Callbacks para actualizar la memoria del agente */
+  readonly memory?: MemoryCallbacks;
 }
 
 /**

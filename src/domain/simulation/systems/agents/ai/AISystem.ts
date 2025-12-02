@@ -116,6 +116,7 @@ export interface LegacyMemory {
   failedAttempts: Map<string, unknown>;
   failedTargets: Map<string, unknown>;
   lastMemoryCleanup: number;
+  lastExploreTime: number;
 }
 
 const DEFAULT_CONFIG: AISystemConfig = {
@@ -163,6 +164,9 @@ export class AISystem extends EventEmitter {
 
   private activeTask = new Map<string, AgentTask>();
   private lastUpdate = new Map<string, number>();
+  
+  /** Memoria persistente por agente */
+  private agentMemories = new Map<string, LegacyMemory>();
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
@@ -226,6 +230,72 @@ export class AISystem extends EventEmitter {
    */
   public getEventBus(): EventBus {
     return this.eventBus;
+  }
+
+  /**
+   * Obtiene la memoria persistente de un agente.
+   * Crea una nueva si no existe.
+   */
+  public getAgentMemory(agentId: string): LegacyMemory {
+    let memory = this.agentMemories.get(agentId);
+    if (!memory) {
+      memory = this.createEmptyMemory();
+      this.agentMemories.set(agentId, memory);
+    }
+    return memory;
+  }
+
+  /**
+   * Registra que un agente visitó una zona.
+   */
+  public recordVisitedZone(agentId: string, zoneId: string): void {
+    const memory = this.getAgentMemory(agentId);
+    memory.visitedZones.add(zoneId);
+    logger.debug(`[AISystem] ${agentId} recorded visited zone: ${zoneId}`);
+  }
+
+  /**
+   * Registra una ubicación de recurso conocida.
+   */
+  public recordKnownResource(
+    agentId: string, 
+    resourceType: string, 
+    position: { x: number; y: number }
+  ): void {
+    const memory = this.getAgentMemory(agentId);
+    memory.knownResourceLocations.set(resourceType, position);
+    logger.debug(`[AISystem] ${agentId} recorded resource: ${resourceType} at (${position.x}, ${position.y})`);
+  }
+
+  /**
+   * Registra que el agente completó una exploración.
+   */
+  public recordExploration(agentId: string): void {
+    const memory = this.getAgentMemory(agentId);
+    memory.lastExploreTime = Date.now();
+  }
+
+  /**
+   * Crea una memoria vacía para un agente.
+   */
+  private createEmptyMemory(): LegacyMemory {
+    return {
+      visitedZones: new Set<string>(),
+      knownResources: new Map<string, unknown>(),
+      knownAgents: new Map<string, unknown>(),
+      recentEvents: [],
+      knowledge: {},
+      importantLocations: new Map<string, unknown>(),
+      socialMemory: new Map<string, unknown>(),
+      shortTerm: [],
+      longTerm: [],
+      knownResourceLocations: new Map<string, unknown>(),
+      successfulActivities: new Map<string, unknown>(),
+      failedAttempts: new Map<string, unknown>(),
+      failedTargets: new Map<string, unknown>(),
+      lastMemoryCleanup: Date.now(),
+      lastExploreTime: 0, // 0 para que puedan explorar al inicio
+    };
   }
 
   /**
@@ -467,6 +537,16 @@ export class AISystem extends EventEmitter {
     const position = this.agentRegistry?.getPosition(agentId);
     if (!position) return null;
 
+    // Crear callbacks de memoria para este agente
+    const memory = this.getAgentMemory(agentId);
+    const memoryCallbacks: import("./types").MemoryCallbacks = {
+      recordVisitedZone: (zoneId: string) => this.recordVisitedZone(agentId, zoneId),
+      recordKnownResource: (resourceType: string, pos: { x: number; y: number }) => 
+        this.recordKnownResource(agentId, resourceType, pos),
+      getVisitedZones: () => memory.visitedZones,
+      getKnownResourceLocations: () => memory.knownResourceLocations as Map<string, { x: number; y: number }>,
+    };
+
     return {
       agentId,
       task: {
@@ -485,6 +565,7 @@ export class AISystem extends EventEmitter {
 
       systems: this.systemRegistry,
       events: this.eventBus,
+      memory: memoryCallbacks,
     };
   }
 
@@ -552,6 +633,22 @@ export class AISystem extends EventEmitter {
     ) as DetectorContext["needs"];
 
     const spatialContext = this.buildSpatialContext(position, agentId);
+    
+    // Añadir memoria del agente para exploración
+    const memory = this.getAgentMemory(agentId);
+    const explorationContext: Record<string, unknown> = {
+      visitedZones: memory.visitedZones,
+      lastExploreTime: memory.lastExploreTime,
+    };
+    
+    // Añadir todas las zonas disponibles para exploración
+    if (this.gameState.zones && this.gameState.zones.length > 0) {
+      explorationContext.allZones = this.gameState.zones.map((z) => ({
+        id: z.id,
+        x: z.bounds.x + z.bounds.width / 2, // Centro de la zona
+        y: z.bounds.y + z.bounds.height / 2,
+      }));
+    }
 
     return {
       agentId,
@@ -559,6 +656,7 @@ export class AISystem extends EventEmitter {
       needs,
       now: Date.now(),
       ...spatialContext,
+      ...explorationContext,
     };
   }
 
@@ -754,6 +852,9 @@ export class AISystem extends EventEmitter {
       if (task.params.reason) taskData.reason = task.params.reason;
     }
     
+    // Usar memoria persistente en lugar de crear una nueva
+    const memory = this.getAgentMemory(agentId);
+    
     return {
       currentGoal: task ?? null,
       pendingTasks,
@@ -762,23 +863,7 @@ export class AISystem extends EventEmitter {
       offDuty: false,
       lastDecisionTime: this.lastUpdate.get(agentId) ?? 0,
       personality: {},
-      memory: {
-        visitedZones: new Set<string>(),
-        knownResources: new Map<string, unknown>(),
-        knownAgents: new Map<string, unknown>(),
-        recentEvents: [],
-        knowledge: {},
-        importantLocations: new Map<string, unknown>(),
-        socialMemory: new Map<string, unknown>(),
-        shortTerm: [],
-        longTerm: [],
-
-        knownResourceLocations: new Map<string, unknown>(),
-        successfulActivities: new Map<string, unknown>(),
-        failedAttempts: new Map<string, unknown>(),
-        failedTargets: new Map<string, unknown>(),
-        lastMemoryCleanup: 0,
-      },
+      memory,
       data: taskData,
       targetZoneId: task?.target?.zoneId,
     };

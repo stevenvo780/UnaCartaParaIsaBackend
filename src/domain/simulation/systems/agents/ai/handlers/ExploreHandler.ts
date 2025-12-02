@@ -1,12 +1,13 @@
 /**
  * @fileoverview Handler de Exploración - Delegación a MovementSystem
  *
- * Handler simplificado que usa MovementSystem para explorar.
- * Solo valida y coordina movimiento hacia áreas inexploradas.
+ * Handler que usa MovementSystem para explorar y registra descubrimientos
+ * en la memoria del agente.
  *
  * @module domain/simulation/systems/agents/ai/handlers/ExploreHandler
  */
 
+import { logger } from "@/infrastructure/utils/logger";
 import type { HandlerContext, HandlerExecutionResult } from "../types";
 import {
   TaskType,
@@ -31,17 +32,20 @@ export interface ExploreHandlerDeps {
   getExplorationProgress?: (agentId: string) => number;
 }
 
+/** Radio de exploración al hacer movimientos aleatorios */
+const EXPLORE_RADIUS = 50;
+
 /**
  * Maneja la exploración usando MovementSystem.
- *
- * Nota: La exploración es principalmente movimiento a ubicaciones random.
- * El sistema de memoria del agente trackea las zonas visitadas.
+ * Registra zonas visitadas y recursos descubiertos en la memoria del agente.
  */
 export function handleExplore(
   ctx: HandlerContext,
   _deps?: ExploreHandlerDeps,
 ): HandlerExecutionResult {
-  const { systems, agentId, task, position } = ctx;
+  const { systems, agentId, task, position, memory } = ctx;
+  
+  logger.debug(`[ExploreHandler] ${agentId}: exploring, target=${JSON.stringify(task.target)}, pos=(${Math.round(position.x)},${Math.round(position.y)})`);
 
   if (task.type !== TaskType.EXPLORE) {
     return errorResult("Wrong task type");
@@ -51,8 +55,14 @@ export function handleExplore(
     return errorResult("MovementSystem not available");
   }
 
+  // Exploración hacia posición específica
   if (task.target?.position) {
     if (isAtTarget(position, task.target.position)) {
+      // Registrar la zona visitada si hay memoria disponible
+      if (memory && task.target.zoneId) {
+        memory.recordVisitedZone(task.target.zoneId);
+      }
+      
       return successResult({
         explored: task.target.position,
         message: "Arrived at exploration target",
@@ -62,6 +72,7 @@ export function handleExplore(
     return moveToPosition(ctx, task.target.position);
   }
 
+  // Exploración hacia zona específica
   if (task.target?.zoneId) {
     const result = systems.movement.requestMoveToZone(
       agentId,
@@ -69,6 +80,11 @@ export function handleExplore(
     );
 
     if (result.status === "completed") {
+      // Registrar la zona como visitada
+      if (memory) {
+        memory.recordVisitedZone(task.target.zoneId);
+      }
+      
       return successResult({
         exploredZone: task.target.zoneId,
         message: "Arrived at exploration zone",
@@ -82,11 +98,26 @@ export function handleExplore(
     return inProgressResult("movement", "Exploring zone");
   }
 
-  const randomOffset = (): number => (Math.random() - 0.5) * 20;
-  const randomTarget = {
-    x: position.x + randomOffset(),
-    y: position.y + randomOffset(),
-  };
+  // Sin target específico: exploración aleatoria inteligente
+  // Intenta ir a una dirección que no haya visitado recientemente
+  const randomTarget = generateExploreTarget(position);
 
   return moveToPosition(ctx, randomTarget);
+}
+
+/**
+ * Genera un punto de exploración inteligente.
+ * Intenta moverse en direcciones variadas para cubrir más área.
+ */
+function generateExploreTarget(
+  currentPosition: { x: number; y: number }
+): { x: number; y: number } {
+  // Usar ángulos variados para explorar en diferentes direcciones
+  const angle = Math.random() * Math.PI * 2;
+  const distance = EXPLORE_RADIUS * (0.5 + Math.random() * 0.5);
+  
+  return {
+    x: currentPosition.x + Math.cos(angle) * distance,
+    y: currentPosition.y + Math.sin(angle) * distance,
+  };
 }

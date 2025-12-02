@@ -3,6 +3,7 @@
  *
  * Detecta cuando un agente debería explorar.
  * Cubre: curiosidad, búsqueda de recursos, inspección.
+ * Prioriza zonas no visitadas usando la memoria del agente.
  *
  * @module domain/simulation/systems/agents/ai/detectors/ExploreDetector
  */
@@ -76,19 +77,36 @@ function detectCuriosityExplore(ctx: DetectorContext): Task | null {
     priority += 0.15;
   }
 
+  // Buscar una zona no visitada para explorar
+  const unexploredZone = findUnexploredZone(ctx);
+  
+  // Si hay zonas sin explorar, aumentar la prioridad
+  if (unexploredZone) {
+    priority += 0.1;
+  }
+
   return createTask({
     agentId: ctx.agentId,
     type: TaskType.EXPLORE,
     priority: Math.min(TASK_PRIORITIES.NORMAL, priority),
+    target: unexploredZone ? {
+      zoneId: unexploredZone.id,
+      position: { x: unexploredZone.x, y: unexploredZone.y },
+    } : undefined,
     params: {
       explorationType: "curiosity",
-      reason: "cognitive_drive",
+      reason: unexploredZone ? "discover_new_area" : "cognitive_drive",
     },
     source: "detector:explore:curiosity",
   });
 }
 
 function detectResourceScout(ctx: DetectorContext): Task | null {
+  // Aplicar cooldown de exploración
+  const lastExplore = ctx.lastExploreTime ?? 0;
+  const timeSinceExplore = ctx.now - lastExplore;
+  if (timeSinceExplore < EXPLORE_COOLDOWN) return null;
+
   if (!ctx.inventoryCapacity) return null;
 
   const loadRatio = (ctx.inventoryLoad ?? 0) / ctx.inventoryCapacity;
@@ -97,14 +115,52 @@ function detectResourceScout(ctx: DetectorContext): Task | null {
 
   const diligence = ctx.personality?.diligence ?? 0.5;
 
+  // Buscar una zona no visitada para buscar recursos
+  const unexploredZone = findUnexploredZone(ctx);
+
   return createTask({
     agentId: ctx.agentId,
     type: TaskType.EXPLORE,
     priority: TASK_PRIORITIES.LOW + diligence * 0.15,
+    target: unexploredZone ? {
+      zoneId: unexploredZone.id,
+      position: { x: unexploredZone.x, y: unexploredZone.y },
+    } : undefined,
     params: {
       explorationType: "resource_scout",
       targetResource: "any",
     },
     source: "detector:explore:resources",
   });
+}
+
+/**
+ * Encuentra una zona no visitada para explorar.
+ * Prioriza zonas cercanas que no estén en visitedZones.
+ */
+function findUnexploredZone(ctx: DetectorContext): { id: string; x: number; y: number } | null {
+  const allZones = ctx.allZones;
+  const visitedZones = ctx.visitedZones;
+  
+  if (!allZones || allZones.length === 0) return null;
+  
+  // Filtrar zonas no visitadas
+  const unvisited = allZones.filter(z => !visitedZones?.has(z.id));
+  
+  if (unvisited.length === 0) {
+    // Todas las zonas visitadas, elegir una aleatoria para re-explorar
+    const randomIndex = Math.floor(Math.random() * allZones.length);
+    return allZones[randomIndex];
+  }
+  
+  // Ordenar por distancia al agente y elegir la más cercana
+  const agentPos = ctx.position;
+  unvisited.sort((a, b) => {
+    const distA = Math.hypot(a.x - agentPos.x, a.y - agentPos.y);
+    const distB = Math.hypot(b.x - agentPos.x, b.y - agentPos.y);
+    return distA - distB;
+  });
+  
+  // Retornar la zona no visitada más cercana
+  return unvisited[0];
 }
