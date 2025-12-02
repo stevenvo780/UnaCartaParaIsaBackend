@@ -31,6 +31,9 @@ const THRESHOLDS = {
 
 const PRIORITIES = SIMULATION_CONSTANTS.PRIORITIES;
 
+// Default TTL for needs tasks (15 seconds - gives time to find resources)
+const NEEDS_TASK_TTL_MS = 15000;
+
 /**
  * Router que consulta al NeedsSystem por tareas pendientes.
  * Usa constantes centralizadas de SIMULATION_CONSTANTS.
@@ -72,6 +75,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
           : undefined,
         params: { needType: "hunger", resourceType: "food" },
         source: "needs:hunger",
+        ttlMs: NEEDS_TASK_TTL_MS,
       }),
     );
   }
@@ -89,6 +93,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
           : undefined,
         params: { needType: "thirst", resourceType: "water" },
         source: "needs:thirst",
+        ttlMs: NEEDS_TASK_TTL_MS,
       }),
     );
   }
@@ -103,6 +108,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
         priority: calcPriority(energy),
         params: { needType: "energy", duration: 5000 },
         source: "needs:energy",
+        ttlMs: NEEDS_TASK_TTL_MS,
       }),
     );
   }
@@ -119,6 +125,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
         target: { entityId: target.id, position: target },
         params: { needType: "social" },
         source: "needs:social",
+        ttlMs: NEEDS_TASK_TTL_MS,
       }),
     );
   }
@@ -135,6 +142,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
         target: { entityId: target.id, position: target },
         params: { needType: "fun", action: "play" },
         source: "needs:fun",
+        ttlMs: NEEDS_TASK_TTL_MS,
       }),
     );
   }
@@ -149,6 +157,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
         priority: calcSocialPriority(mentalHealth),
         params: { needType: "mental_health", action: "meditate" },
         source: "needs:mental",
+        ttlMs: NEEDS_TASK_TTL_MS,
       }),
     );
   }

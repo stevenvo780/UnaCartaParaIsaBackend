@@ -754,6 +754,62 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     return !!state?.isMoving;
   }
 
+  /**
+   * Starts a timed activity for an entity.
+   * The activity will automatically complete when the duration expires.
+   *
+   * @param entityId - Entity ID
+   * @param activity - Activity type to start
+   * @param durationMs - Duration in milliseconds (optional, 0 = indefinite)
+   * @returns true if activity started, false if entity not found
+   */
+  public startActivity(
+    entityId: string,
+    activity: ActivityType,
+    durationMs: number = 0,
+  ): boolean {
+    const state = this.movementStates.get(entityId);
+    if (!state) return false;
+
+    // Stop current movement if starting a non-moving activity
+    if (activity !== ActivityType.MOVING) {
+      state.isMoving = false;
+      state.targetPosition = undefined;
+      state.targetZone = undefined;
+      state.currentPath = [];
+    }
+
+    const now = getFrameTime();
+    state.currentActivity = activity;
+    state.activityStartTime = now;
+    state.activityDuration = durationMs > 0 ? durationMs : undefined;
+
+    logger.debug(
+      `[MovementSystem] ${entityId}: started activity ${activity}${durationMs > 0 ? ` for ${durationMs}ms` : ""}`,
+    );
+
+    return true;
+  }
+
+  /**
+   * Gets the current activity of an entity.
+   */
+  public getActivity(entityId: string): ActivityType | undefined {
+    const state = this.movementStates.get(entityId);
+    return state?.currentActivity;
+  }
+
+  /**
+   * Checks if an entity is currently doing a specific activity.
+   */
+  public isDoingActivity(
+    entityId: string,
+    activity: ActivityType,
+  ): boolean {
+    const state = this.movementStates.get(entityId);
+    return state?.currentActivity === activity;
+  }
+
   private async calculatePath(
     from: { x: number; y: number },
     to: { x: number; y: number },
@@ -1019,6 +1075,11 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
   private readonly ARRIVAL_GRACE_PERIOD_MS = 2000;
 
   private maybeStartIdleWander(state: EntityMovementState, now: number): void {
+    // Debug: log state for idle agents (low frequency)
+    if (Math.random() < 0.01 && !state.isMoving) {
+      logger.debug(`[MovementSystem] maybeStartIdleWander ${state.entityId}: isMoving=${state.isMoving}, activity=${state.currentActivity}, lastArrival=${state.lastArrivalTime}, lastWander=${state.lastIdleWander}`);
+    }
+    
     if (state.isMoving || state.currentActivity !== ActivityType.IDLE) return;
 
     if (
@@ -1047,6 +1108,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     const targetX = state.currentPosition.x + Math.cos(angle) * radius;
     const targetY = state.currentPosition.y + Math.sin(angle) * radius;
 
+    logger.debug(`[MovementSystem] ${state.entityId} starting idle wander to (${targetX.toFixed(0)}, ${targetY.toFixed(0)})`);
     this.moveToPoint(state.entityId, targetX, targetY);
     state.lastIdleWander = now;
   }

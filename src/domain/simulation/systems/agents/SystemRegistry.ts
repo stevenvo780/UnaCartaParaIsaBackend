@@ -10,6 +10,7 @@
 import { injectable } from "inversify";
 import { logger } from "@/infrastructure/utils/logger";
 import { SystemProperty } from "../../../../shared/constants/SystemEnums";
+import { ActivityType } from "../../../../shared/constants/MovementEnums";
 
 /**
  * Resultado de una operación de handler
@@ -39,6 +40,8 @@ export interface IMovementSystem extends ISystem {
   requestMoveToEntity(agentId: string, entityId: string): HandlerResult;
   stopMovement(agentId: string): void;
   isMoving(agentId: string): boolean;
+  startActivity(entityId: string, activity: ActivityType, durationMs?: number): boolean;
+  getActivity(entityId: string): ActivityType | undefined;
 }
 
 /**

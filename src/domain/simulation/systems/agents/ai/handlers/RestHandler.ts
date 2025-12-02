@@ -15,6 +15,7 @@ import {
   successResult,
 } from "../types";
 import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
+import { ActivityType } from "../../../../../../shared/constants/MovementEnums";
 
 /**
  * @deprecated Use SystemRegistry.needs instead
@@ -46,16 +47,29 @@ export function handleRest(
     return errorResult("NeedsSystem not available");
   }
 
+  // Start RESTING activity
+  if (systems.movement) {
+    systems.movement.startActivity(agentId, ActivityType.RESTING, 5000);
+  }
+
   const result = systems.needs.requestRest(agentId);
 
   switch (result.status) {
     case "completed":
+      // Stop RESTING activity when done
+      if (systems.movement) {
+        systems.movement.startActivity(agentId, ActivityType.IDLE);
+      }
       return successResult({
         message: result.message ?? "Rested successfully",
         ...((result.data as object) ?? {}),
       });
 
     case QuestStatus.FAILED:
+      // Stop RESTING activity on failure
+      if (systems.movement) {
+        systems.movement.startActivity(agentId, ActivityType.IDLE);
+      }
       return errorResult(result.message ?? "Rest failed");
 
     case "in_progress":
