@@ -151,6 +151,15 @@ export interface ITradeSystem extends ISystem {
   ): HandlerResult;
 }
 
+/**
+ * Sistema de consultas del mundo (WorldQueryService)
+ */
+export interface IWorldQuerySystem extends ISystem {
+  getDirectionToNearestEdge(x: number, y: number): { x: number; y: number; edgeName: string };
+  findNearestWater(x: number, y: number): { worldX: number; worldY: number } | null;
+  hasWaterAt(x: number, y: number): boolean;
+}
+
 @injectable()
 export class SystemRegistry {
   private systems = new Map<string, ISystem>();
@@ -163,6 +172,7 @@ export class SystemRegistry {
   public crafting?: ICraftingSystem;
   public building?: IBuildingSystem;
   public trade?: ITradeSystem;
+  public worldQuery?: IWorldQuerySystem;
 
   constructor() {
     logger.info("🔧 SystemRegistry: Initialized");
@@ -198,6 +208,9 @@ export class SystemRegistry {
         break;
       case "trade":
         this.trade = system as unknown as ITradeSystem;
+        break;
+      case "worldQuery":
+        this.worldQuery = system as unknown as IWorldQuerySystem;
         break;
     }
 
@@ -267,6 +280,9 @@ export class SystemRegistry {
         break;
       case "trade":
         this.trade = undefined;
+        break;
+      case "worldQuery":
+        this.worldQuery = undefined;
         break;
     }
 

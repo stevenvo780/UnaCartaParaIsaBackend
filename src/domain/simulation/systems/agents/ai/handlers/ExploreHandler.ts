@@ -104,7 +104,30 @@ export function handleExplore(
     return inProgressResult("movement", "Exploring zone");
   }
 
-
+  // Si preferEdge=true, explorar hacia el borde del mapa (buscando agua)
+  if (task.params?.preferEdge && systems.worldQuery) {
+    const edgeTarget = systems.worldQuery.getDirectionToNearestEdge(position.x, position.y);
+    
+    // Moverse hacia el borde pero no todo el camino de una vez
+    const distanceToEdge = Math.sqrt(
+      Math.pow(edgeTarget.x - position.x, 2) + Math.pow(edgeTarget.y - position.y, 2)
+    );
+    
+    // Avanzar máximo 150 unidades hacia el borde por tick
+    const stepDistance = Math.min(150, distanceToEdge);
+    const ratio = stepDistance / distanceToEdge;
+    
+    const stepTarget = {
+      x: position.x + (edgeTarget.x - position.x) * ratio,
+      y: position.y + (edgeTarget.y - position.y) * ratio,
+    };
+    
+    logger.debug(
+      `[ExploreHandler] ${agentId}: searching water, moving toward ${edgeTarget.edgeName} edge (${Math.round(stepTarget.x)}, ${Math.round(stepTarget.y)})`
+    );
+    
+    return moveToPosition(ctx, stepTarget);
+  }
 
   const randomTarget = generateExploreTarget(position);
 

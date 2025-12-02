@@ -107,17 +107,37 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
   const thirst = ctx.needs.thirst ?? 100;
   if (thirst < THRESHOLDS.LOW) {
     const waterTarget = getBestResourceTarget(ctx, "water");
-    tasks.push(
-      createTask({
-        agentId: ctx.agentId,
-        type: TaskType.SATISFY_NEED,
-        priority: calcPriority(thirst),
-        target: waterTarget,
-        params: { needType: "thirst", resourceType: "water" },
-        source: "needs:thirst",
-        ttlMs: NEEDS_TASK_TTL_MS,
-      }),
-    );
+    
+    if (waterTarget) {
+      // Agua encontrada cerca - ir a beber
+      tasks.push(
+        createTask({
+          agentId: ctx.agentId,
+          type: TaskType.SATISFY_NEED,
+          priority: calcPriority(thirst),
+          target: waterTarget,
+          params: { needType: "thirst", resourceType: "water" },
+          source: "needs:thirst",
+          ttlMs: NEEDS_TASK_TTL_MS,
+        }),
+      );
+    } else {
+      // No hay agua cercana - explorar hacia el borde del mapa (donde está el océano)
+      // El agente debe descubrir el agua explorando, no saberlo mágicamente
+      tasks.push(
+        createTask({
+          agentId: ctx.agentId,
+          type: TaskType.EXPLORE,
+          priority: calcPriority(thirst),
+          params: { 
+            reason: "searching_water",
+            preferEdge: true, // Indicador para ExploreHandler de ir hacia el borde
+          },
+          source: "needs:thirst:explore",
+          ttlMs: NEEDS_TASK_TTL_MS * 2, // Más tiempo para explorar
+        }),
+      );
+    }
   }
 
 

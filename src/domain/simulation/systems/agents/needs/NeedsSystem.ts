@@ -17,6 +17,7 @@ import type { AgentRegistry } from "../../agents/AgentRegistry";
 import type { INeedsSystem } from "../../agents/SystemRegistry";
 import type { StateDirtyTracker } from "../../../core/StateDirtyTracker";
 import type { WorldQueryService } from "../../world/WorldQueryService";
+import type { TerrainSystem } from "../../world/TerrainSystem";
 import { getFrameTime } from "../../../../../shared/FrameTime";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../../../core/PerformanceMonitor";
@@ -92,6 +93,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
   private spatialIndex?: SharedSpatialIndex;
   private agentRegistry?: AgentRegistry;
   private worldQueryService?: WorldQueryService;
+  private terrainSystem?: TerrainSystem;
 
   private entityActions = new Map<string, string>();
 
@@ -121,6 +123,9 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     @inject(TYPES.WorldQueryService)
     @optional()
     worldQueryService?: WorldQueryService,
+    @inject(TYPES.TerrainSystem)
+    @optional()
+    terrainSystem?: TerrainSystem,
   ) {
     super();
     this.gameState = gameState;
@@ -129,6 +134,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     this.gpuService = gpuService;
     this.agentRegistry = agentRegistry;
     this.worldQueryService = worldQueryService;
+    this.terrainSystem = terrainSystem;
     this.config = {
       decayRates: {
         [NeedType.HUNGER]: 0.2,
@@ -1468,17 +1474,37 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
         );
 
         if (waterTiles.length > 0) {
-          // Agent can drink directly from water tile - no resource consumption
           const nearestTile = waterTiles[0]; // Already sorted by distance
-          logger.info(
-            `[NeedsSystem] 💧 Agent ${agentId} drinking from OCEAN tile at (${nearestTile.worldX}, ${nearestTile.worldY})`,
-          );
+          
+          // Consume water from tile - may convert OCEAN to DIRT if depleted
+          if (this.terrainSystem) {
+            const consumed = this.terrainSystem.consumeWaterFromTile(
+              nearestTile.tileX,
+              nearestTile.tileY,
+            );
+            
+            if (consumed > 0) {
+              logger.info(
+                `[NeedsSystem] 💧 Agent ${agentId} drinking from OCEAN tile at (${nearestTile.worldX}, ${nearestTile.worldY}), consumed ${consumed} water`,
+              );
 
-          // Add water to inventory then consume it
-          if (this.inventorySystem) {
-            this.inventorySystem.addResource(agentId, ResourceType.WATER, 1);
+              // Add water to inventory then consume it
+              if (this.inventorySystem) {
+                this.inventorySystem.addResource(agentId, ResourceType.WATER, 1);
+              }
+              return { gathered: true, resourceId: `ocean_tile_${nearestTile.tileX}_${nearestTile.tileY}` };
+            }
+          } else {
+            // Fallback without TerrainSystem - just drink without consuming tile
+            logger.info(
+              `[NeedsSystem] 💧 Agent ${agentId} drinking from OCEAN tile at (${nearestTile.worldX}, ${nearestTile.worldY})`,
+            );
+
+            if (this.inventorySystem) {
+              this.inventorySystem.addResource(agentId, ResourceType.WATER, 1);
+            }
+            return { gathered: true, resourceId: `ocean_tile_${nearestTile.tileX}_${nearestTile.tileY}` };
           }
-          return { gathered: true, resourceId: `ocean_tile_${nearestTile.worldX}_${nearestTile.worldY}` };
         }
       }
 

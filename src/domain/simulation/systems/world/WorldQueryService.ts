@@ -564,14 +564,16 @@ export class WorldQueryService {
   }
 
   /**
-   * Find water tiles near a position
+   * Find water tiles near a position.
+   * Optimized for OCEAN tiles at map edges - searches edges first.
+   * Results are sorted by distance from the query position.
    */
   public findWaterTilesNear(
     x: number,
     y: number,
     radius: number,
   ): TileQueryResult[] {
-    return this.findTilesInArea(
+    const results = this.findTilesInArea(
       x - radius,
       y - radius,
       radius * 2,
@@ -580,6 +582,17 @@ export class WorldQueryService {
         biome: BiomeType.OCEAN,
       },
     );
+
+    // Sort by distance from query position
+    return results.sort((a, b) => {
+      const distA = Math.sqrt(
+        Math.pow(a.worldX - x, 2) + Math.pow(a.worldY - y, 2),
+      );
+      const distB = Math.sqrt(
+        Math.pow(b.worldX - x, 2) + Math.pow(b.worldY - y, 2),
+      );
+      return distA - distB;
+    });
   }
 
   /**
@@ -763,17 +776,46 @@ export class WorldQueryService {
   }
 
   /**
-   * Find nearest water source (OCEAN/LAKE tiles ONLY - no separate water resources)
-   * Water comes exclusively from biome tiles, not from spawned resources.
+   * Find nearest water source within a reasonable exploration radius.
+   * Uses small radius - agents must EXPLORE to find water, not magically know where it is.
+   * Water is at map edges, so agents will need to explore in that direction.
    */
   public findNearestWater(
     x: number,
     y: number,
   ): TileQueryResult | null {
-    // Solo usamos tiles OCEAN/LAKE del terreno para agua
-    // NO buscamos WATER_SOURCE resources - esos ya no existen
-    const waterTiles = this.findWaterTilesNear(x, y, 500);
+    // Radio pequeño: solo encuentra agua cercana que el agente "puede ver"
+    // Si no hay agua cerca, el agente debe explorar hacia los bordes
+    const waterTiles = this.findWaterTilesNear(x, y, 200);
     return waterTiles.length > 0 ? waterTiles[0] : null;
+  }
+
+  /**
+   * Get the direction to the nearest map edge (where water is).
+   * Used by exploration system to guide thirsty agents toward water.
+   */
+  public getDirectionToNearestEdge(
+    x: number,
+    y: number,
+  ): { x: number; y: number; edgeName: string } {
+    const worldSize = this.gameState.worldSize ?? { width: 2000, height: 2000 };
+    
+    const distToLeft = x;
+    const distToRight = worldSize.width - x;
+    const distToTop = y;
+    const distToBottom = worldSize.height - y;
+    
+    const minDist = Math.min(distToLeft, distToRight, distToTop, distToBottom);
+    
+    if (minDist === distToLeft) {
+      return { x: 0, y: y, edgeName: "west" };
+    } else if (minDist === distToRight) {
+      return { x: worldSize.width, y: y, edgeName: "east" };
+    } else if (minDist === distToTop) {
+      return { x: x, y: 0, edgeName: "north" };
+    } else {
+      return { x: x, y: worldSize.height, edgeName: "south" };
+    }
   }
 
   /**
