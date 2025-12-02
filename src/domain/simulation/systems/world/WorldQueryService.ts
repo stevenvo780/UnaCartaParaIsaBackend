@@ -159,6 +159,7 @@ export interface TileQueryOptions {
 
 @injectable()
 export class WorldQueryService {
+  public readonly name = "worldQuery";
   private tileSize: number = 64;
 
   constructor(

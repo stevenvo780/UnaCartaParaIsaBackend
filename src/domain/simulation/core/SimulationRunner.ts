@@ -37,6 +37,7 @@ import {
   MovementSystem,
   ChunkLoadingSystem,
 } from "../systems";
+import { WorldQueryService } from "../systems/world/WorldQueryService";
 import { SharedKnowledgeSystem } from "../systems/agents/ai/SharedKnowledgeSystem";
 
 import { simulationEvents } from "./events";
@@ -231,6 +232,9 @@ export class SimulationRunner {
 
   @inject(TYPES.StateDirtyTracker)
   public readonly stateDirtyTracker!: StateDirtyTracker;
+
+  @inject(TYPES.WorldQueryService)
+  public readonly worldQueryService!: WorldQueryService;
 
   private readonly INDEX_REBUILD_INTERVAL_FAST = 5;
 
@@ -512,6 +516,7 @@ export class SimulationRunner {
       registry.register("building", this.buildingSystem);
     }
     registry.register("trade", this.economySystem);
+    registry.register("worldQuery", this.worldQueryService);
 
     logger.info("🔧 SimulationRunner: Systems registered in SystemRegistry");
   }
