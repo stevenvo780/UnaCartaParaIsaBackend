@@ -13,12 +13,42 @@ export class BiomeResolver {
     moisture: number,
     elevation: number,
     continentality: number,
+    worldX?: number,
+    worldY?: number,
+    worldWidth?: number,
+    worldHeight?: number,
   ): BiomeType {
-    if (continentality < 0.42) {
+    // OCEAN: Bordes del mapa son océano (si tenemos coordenadas del mundo)
+    if (worldX !== undefined && worldY !== undefined && 
+        worldWidth !== undefined && worldHeight !== undefined) {
+      const edgeDistX = Math.min(worldX, worldWidth - worldX);
+      const edgeDistY = Math.min(worldY, worldHeight - worldY);
+      const edgeDist = Math.min(edgeDistX, edgeDistY);
+      
+      // Si está muy cerca del borde, es océano
+      if (edgeDist < 5) {
+        return BiomeType.OCEAN;
+      }
+      
+      // Zona de playa cerca del borde
+      if (edgeDist < 10 && elevation < 0.4) {
+        return BiomeType.BEACH;
+      }
+    }
+
+    // OCEAN también por continentality muy baja (respaldo)
+    if (continentality < 0.35) {
       return BiomeType.OCEAN;
     }
 
-    if (continentality < 0.48 && elevation < 0.35) {
+    // LAKE: lagos de agua dulce - formados en depresiones con alta humedad
+    // Usando umbrales más realistas basados en los valores observados
+    if (elevation < 0.45 && moisture > 0.52 && continentality < 0.55) {
+      return BiomeType.LAKE;
+    }
+
+    // BEACH: transición entre agua y tierra
+    if (continentality < 0.45 && elevation < 0.4) {
       return BiomeType.BEACH;
     }
 

@@ -359,8 +359,10 @@ export class WorldResourceSystem {
 
         const isWaterTile =
           tile.biome === BiomeType.OCEAN ||
+          tile.biome === BiomeType.LAKE ||
           tile.assets.terrain.includes(TileType.WATER) ||
-          tile.assets.terrain.includes(BiomeType.OCEAN);
+          tile.assets.terrain.includes(BiomeType.OCEAN) ||
+          tile.assets.terrain.includes(BiomeType.LAKE);
 
         if (isWaterTile) {
           const waterResourceId = `water_tile_${tile.x}_${tile.y}`;
@@ -369,6 +371,8 @@ export class WorldResourceSystem {
             continue;
           }
 
+          // Usar el bioma correcto del tile (OCEAN o LAKE)
+          const waterBiome = tile.biome === BiomeType.LAKE ? "lake" : "ocean";
           const resource = this.spawnWaterTileResource(
             waterResourceId,
             {
@@ -376,7 +380,7 @@ export class WorldResourceSystem {
               y: pixelY + tileSize / 2,
             },
             { tileX: tile.x, tileY: tile.y },
-            "ocean",
+            waterBiome,
           );
           if (resource) spawnedCount++;
         }

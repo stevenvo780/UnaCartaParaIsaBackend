@@ -76,22 +76,30 @@ export class WorldGenerationService {
         const globalX = x * chunkSize + j;
         const globalY = y * chunkSize + i;
 
+        // Noise scales optimizadas para generar variedad de terreno y lagos
+        // Escala más alta = más variación local = lagos y depresiones
         const temperature = this.noiseGen.noise2D(
-          globalX * 0.01,
-          globalY * 0.01,
+          globalX * 0.015,
+          globalY * 0.015,
         );
         const moisture = this.noiseGen.noise2D(
-          globalX * 0.01 + 1000,
-          globalY * 0.01 + 1000,
+          globalX * 0.02 + 1000,
+          globalY * 0.02 + 1000,
         );
         const elevation = this.noiseGen.noise2D(
-          globalX * 0.01 + 2000,
-          globalY * 0.01 + 2000,
+          globalX * 0.025 + 2000,
+          globalY * 0.025 + 2000,
         );
+        // Continentality con escala más pequeña para áreas de tierra más grandes
         const continentality = this.noiseGen.noise2D(
-          globalX * 0.005,
-          globalY * 0.005,
+          globalX * 0.008,
+          globalY * 0.008,
         );
+
+        // DEBUG: log primeros tiles para ver valores
+        if (globalX < 3 && globalY < 3) {
+          console.log(`[DEBUG BiomeGen] (${globalX},${globalY}): cont=${((continentality + 1) / 2).toFixed(3)}, elev=${((elevation + 1) / 2).toFixed(3)}, moist=${((moisture + 1) / 2).toFixed(3)}`);
+        }
 
         const biome = this.biomeResolver.resolveBiome(
           (temperature + 1) / 2,
