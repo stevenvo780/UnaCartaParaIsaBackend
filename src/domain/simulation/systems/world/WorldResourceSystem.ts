@@ -277,11 +277,12 @@ export class WorldResourceSystem {
     const config = getResourceConfig(type);
     if (!config) return null;
 
+    // WATER_SOURCE eliminado - el agua proviene SOLO de tiles OCEAN/LAKE del terreno
+    // Los agentes usan WorldQueryService.findWaterTilesNear() para beber
     const validTypes: WorldResourceType[] = [
       WorldResourceType.TREE,
       WorldResourceType.ROCK,
       WorldResourceType.TRASH_PILE,
-      WorldResourceType.WATER_SOURCE,
       WorldResourceType.BERRY_BUSH,
       WorldResourceType.MUSHROOM_PATCH,
       WorldResourceType.WHEAT_CROP,

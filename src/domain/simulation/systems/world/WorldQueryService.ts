@@ -763,31 +763,17 @@ export class WorldQueryService {
   }
 
   /**
-   * Find nearest water source (resource or tile)
+   * Find nearest water source (OCEAN/LAKE tiles ONLY - no separate water resources)
+   * Water comes exclusively from biome tiles, not from spawned resources.
    */
   public findNearestWater(
     x: number,
     y: number,
-  ): ResourceQueryResult | TileQueryResult | null {
-    const waterResource = this.findNearestResource(x, y, {
-      type: WorldResourceType.WATER_SOURCE,
-      excludeDepleted: true,
-    });
-
+  ): TileQueryResult | null {
+    // Solo usamos tiles OCEAN/LAKE del terreno para agua
+    // NO buscamos WATER_SOURCE resources - esos ya no existen
     const waterTiles = this.findWaterTilesNear(x, y, 500);
-    const nearestWaterTile = waterTiles.length > 0 ? waterTiles[0] : null;
-
-    if (!waterResource && !nearestWaterTile) return null;
-    if (!waterResource) return nearestWaterTile;
-    if (!nearestWaterTile) return waterResource;
-
-    const tileDx = nearestWaterTile.worldX - x;
-    const tileDy = nearestWaterTile.worldY - y;
-    const tileDistance = Math.sqrt(tileDx * tileDx + tileDy * tileDy);
-
-    return waterResource.distance < tileDistance
-      ? waterResource
-      : nearestWaterTile;
+    return waterTiles.length > 0 ? waterTiles[0] : null;
   }
 
   /**
