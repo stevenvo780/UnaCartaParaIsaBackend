@@ -2,6 +2,16 @@ import { BiomeType } from "./types";
 import { SIMPLE_BIOMES, SimpleBiomeConfig } from "./SimpleBiomeDefinitions";
 import { logger } from "@/infrastructure/utils/logger";
 
+/**
+ * BiomeResolver — resolves terrain biome from environmental factors.
+ *
+ * Inputs: temperature, moisture, elevation, continentality
+ * Strategy:
+ * - Oceans on low continentality
+ * - Lakes on low elevation + moderate moisture (thresholds relaxed)
+ * - Forced initial lake to guarantee survival in early tiles if no water yet
+ * - Otherwise selects best-fit walkable biome using centered range scoring
+ */
 export class BiomeResolver {
   private biomes: SimpleBiomeConfig[];
   private waterBiomesGenerated = 0;
@@ -12,13 +22,18 @@ export class BiomeResolver {
 
   /**
    * Resolve biome based on environmental factors.
-   * Uses realistic thresholds based on Perlin noise distribution (centered around 0.5).
-   * Lakes appear in low-elevation areas with above-average moisture.
-   * 
+   * Uses realistic thresholds (Perlin noise centered around 0.5).
+   *
    * WATER GENERATION STRATEGY:
    * - OCEAN: continentality < 0.35 (expanded from 0.30)
    * - LAKE: elevation < 0.48 && moisture > 0.50 (relaxed thresholds)
-   * - Guaranteed water: every ~50 tiles, force a LAKE if no water generated
+   * - Guaranteed first water: force a LAKE if none generated and elevation < 0.52
+   *
+   * @param temperature - Normalized temperature [0..1]
+   * @param moisture - Normalized moisture [0..1]
+   * @param elevation - Normalized elevation [0..1]
+   * @param continentality - Normalized inlandness [0..1]
+   * @returns Resolved biome type
    */
   public resolveBiome(
     temperature: number,

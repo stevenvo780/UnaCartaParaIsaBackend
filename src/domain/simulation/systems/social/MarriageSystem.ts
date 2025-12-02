@@ -12,6 +12,20 @@ import { logger } from "../../../../infrastructure/utils/logger";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../../config/Types";
 
+/**
+ * MarriageSystem — group-based marriage and proposal management.
+ *
+ * Responsibilities:
+ * - Maintain marriage groups (poly-size up to `maxGroupSize`)
+ * - Handle proposal lifecycle (propose/accept/reject) with expiration
+ * - Adjust cohesion based on group size and time
+ * - Cleanup on agent death and emit domain events for UI/analytics
+ *
+ * Events emitted: MARRIAGE_PROPOSED, MARRIAGE_ACCEPTED, MARRIAGE_REJECTED,
+ * MARRIAGE_GROUP_FORMED, MARRIAGE_MEMBER_JOINED, MARRIAGE_MEMBER_LEFT,
+ * DIVORCE_INITIATED, DIVORCE_COMPLETED, WIDOWHOOD_REGISTERED
+ */
+
 @injectable()
 export class MarriageSystem {
   private gameState: GameState;
@@ -83,6 +97,15 @@ export class MarriageSystem {
     }
   }
 
+  /**
+   * Proposes marriage from proposer to target.
+   * If proposer already belongs to a group, target joins that group on accept.
+   *
+   * @param proposerId - Agent proposing the marriage
+   * @param targetId - Target agent
+   * @param proposerGroupId - Optional existing group of proposer
+   * @returns True if proposal is registered
+   */
   public proposeMarriage(
     proposerId: string,
     targetId: string,
@@ -117,6 +140,14 @@ export class MarriageSystem {
     return true;
   }
 
+  /**
+   * Accepts a pending proposal for the target.
+   * Creates a new group if proposer had none, or adds to the proposer group.
+   * Emits MARRIAGE_ACCEPTED and related events.
+   *
+   * @param targetId - Target agent accepting
+   * @returns Success flag and resulting group id (if any)
+   */
   public acceptProposal(targetId: string): {
     success: boolean;
     groupId?: string;
@@ -169,6 +200,12 @@ export class MarriageSystem {
     return { success: true, groupId: group.id };
   }
 
+  /**
+   * Rejects a pending proposal for the target and emits MARRIAGE_REJECTED.
+   *
+   * @param targetId - Target agent rejecting
+   * @returns True if proposal existed and was removed
+   */
   public rejectProposal(targetId: string): boolean {
     const proposal = this.pendingProposals.get(targetId);
     if (!proposal) return false;
@@ -185,6 +222,15 @@ export class MarriageSystem {
     return true;
   }
 
+  /**
+   * Initiates divorce for an agent from a group.
+   * Emits DIVORCE_INITIATED and DIVORCE_COMPLETED; group cohesion/membership change.
+   *
+   * @param agentId - Requesting agent id
+   * @param groupId - Group identifier
+   * @param reason - Optional reason (mutual/conflict)
+   * @returns True if initiated
+   */
   public initiateDivorce(
     agentId: string,
     groupId: string,
@@ -229,6 +275,12 @@ export class MarriageSystem {
     return true;
   }
 
+  /**
+   * Handles death of a member inside a marriage group and emits WIDOWHOOD events.
+   *
+   * @param deceasedId - Deceased agent id
+   * @param groupId - Group identifier
+   */
   public handleMemberDeath(deceasedId: string, groupId: string): void {
     const group = this.marriageGroups.get(groupId);
     if (!group) return;

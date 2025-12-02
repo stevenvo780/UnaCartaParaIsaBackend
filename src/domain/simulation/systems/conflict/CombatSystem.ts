@@ -167,6 +167,17 @@ export class CombatSystem implements ICombatSystem {
   public async update(_deltaMs: number): Promise<void> {
     const startTime = performance.now();
     const now = getFrameTime();
+
+    // Debug log every 10 seconds
+    if (now % 10000 < 100) {
+      const validEntities = this.state.entities?.filter(
+        (e) => !e.isDead && e.position,
+      ).length ?? 0;
+      logger.debug(
+        `⚔️ [CombatSystem] update: entities=${validEntities}, combatLogSize=${this.combatLog?.length ?? 0}, equipped=${this.equippedWeapons.size}`,
+      );
+    }
+
     if (now - this.lastUpdate < this.config.decisionIntervalMs) {
       return;
     }
@@ -177,15 +188,6 @@ export class CombatSystem implements ICombatSystem {
 
     const entitiesById = new Map<string, SimulationEntity>();
     const validEntities = entities.filter((e) => !e.isDead && e.position);
-    const activeCombats = this.combatLog?.length ?? 0;
-    const equippedCount = this.equippedWeapons.size;
-
-    // Debug log every 5 seconds
-    if (Math.floor(now / 5000) !== Math.floor((now - _deltaMs) / 5000)) {
-      logger.debug(
-        `⚔️ [CombatSystem] update: entities=${validEntities.length}, combatLogSize=${activeCombats}, equipped=${equippedCount}`,
-      );
-    }
 
     for (const entity of validEntities) {
       entitiesById.set(entity.id, entity);

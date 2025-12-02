@@ -38,6 +38,7 @@ export class HouseholdSystem {
   private config: HouseholdSystemConfig;
   private households = new Map<string, Household>();
   private lastUpdate = Date.now();
+  private lastLogTime = 0;
   private agentRegistry?: AgentRegistry;
 
   constructor(
@@ -57,6 +58,14 @@ export class HouseholdSystem {
     this.lastUpdate = now;
 
     const stats = this.getSystemStats();
+
+    // Debug log every 10 seconds
+    if (now - this.lastLogTime >= 10000) {
+      this.lastLogTime = now;
+      logger.debug(
+        `🏠 [HouseholdSystem] update: households=${this.households.size}, capacity=${stats.capacity}, occupied=${stats.occupied}, free=${stats.free}`,
+      );
+    }
 
     if (stats.occupancy > this.config.highOccupancyThreshold) {
       simulationEvents.emit(GameEventType.HOUSEHOLD_HIGH_OCCUPANCY, {

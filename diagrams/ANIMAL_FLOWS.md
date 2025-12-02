@@ -114,8 +114,8 @@
 │     └── Log estados cada 2 segundos                                         │
 │                                                                              │
 │  2. DECIDIR MODO DE PROCESAMIENTO                                           │
-│     ├── IF liveCount >= BATCH_THRESHOLD (100)                               │
-│     │      └── updateBatch() [GPU-accelerated]                              │
+│     ├── IF liveCount es alto                                                │
+│     │      └── updateBatch() [CPU o GPU según convenga]                     │
 │     └── ELSE                                                                │
 │            └── Procesar individualmente                                     │
 │                                                                              │
@@ -281,8 +281,9 @@
    - Actualización lazy (solo cuando posición cambia >1px)
 
 2. **Batch Processing (AnimalBatchProcessor)**
-   - Float32Array buffers para procesamiento SIMD
-   - Threshold de 100 animales para activar batch
+   - Float32Array buffers para procesamiento vectorizado
+   - GPU opcional via GPUComputeService cuando el volumen es grande (≥ ~1000)
+   - Por debajo de ese umbral, CPU es más eficiente (fallback automático)
    - Realloc threshold 20% para evitar recreación frecuente
 
 3. **Staggered Updates**
@@ -362,22 +363,9 @@ if (terrainTile && terrainTile.assets.terrain === TileType.TERRAIN_GRASSLAND) {
 
 **Estado:** ✅ Diseño intencional
 
-### 4. GPU Threshold Alto para Flee (Severidad: Info)
+### 4. Huida con GPU (opcional)
 
-**Ubicación:** `AnimalSystem.processFleeingAnimalsBatch()` - línea 368
-
-**Código:**
-```typescript
-if (this.gpuService?.isGPUAvailable() && fleeingAnimals.length >= 50) {
-  await this.computeFleeMovementsGPU(fleeingAnimals, deltaSeconds);
-}
-```
-
-**Observación:** Se necesitan 50 animales huyendo simultáneamente para usar GPU.
-
-**Análisis:** Es un threshold conservador. El costo de setup GPU no vale para pocos cálculos. El fallback CPU con `moveAwayFrom()` es O(1) por animal.
-
-**Estado:** ✅ Threshold apropiado
+La huida masiva puede aprovechar GPU cuando hay suficientes entidades y la GPU está disponible. En lotes pequeños, el camino CPU (`moveAwayFrom`) es más eficiente. TensorFlow.js se carga de forma lazy y solo se usa cuando conviene.
 
 ---
 
