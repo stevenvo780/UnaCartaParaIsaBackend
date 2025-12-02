@@ -1452,14 +1452,14 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     }
 
     const agentPos = { x: agent.position.x, y: agent.position.y };
-    const GATHER_RANGE = 2; // Tiles within which agent can gather
+    const GATHER_RANGE = 50; // World units (increased from 2 tiles to support pixel coordinates)
 
     // Determine resource type to look for
     const targetTypes: string[] = [];
     if (needType === NeedType.HUNGER || needType === ResourceType.FOOD) {
       targetTypes.push("food_source", "berry_bush", "food");
     } else if (needType === NeedType.THIRST || needType === ResourceType.WATER) {
-      targetTypes.push("water_source", "water");
+      targetTypes.push("water_source", "water", "water_fresh");
     }
 
     // Find nearest resource of target type within range
@@ -1484,6 +1484,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
 
     if (nearestResource) {
       // Gather from this resource
+      logger.debug(`[NeedsSystem] ${agentId} found resource ${nearestResource.id} at distance ${nearestResource.distance.toFixed(1)}, attempting gather`);
       const gatherResult = this.inventorySystem.requestGather(
         agentId,
         nearestResource.id,
@@ -1491,8 +1492,15 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       );
 
       if (gatherResult.status === "completed") {
-        console.log(`[NeedsSystem] 🚰 Agent ${agentId} gathered ${needType} from ${nearestResource.id}`);
+        logger.info(`[NeedsSystem] 🚰 Agent ${agentId} gathered ${needType} from ${nearestResource.id}`);
         return { gathered: true, resourceId: nearestResource.id };
+      } else {
+        logger.debug(`[NeedsSystem] ${agentId} gather failed: ${gatherResult.status} - ${gatherResult.message}`);
+      }
+    } else {
+      // Log occasionally for debugging
+      if (Math.random() < 0.01) {
+        logger.debug(`[NeedsSystem] ${agentId} no ${needType} resource within ${GATHER_RANGE} of (${agentPos.x.toFixed(0)},${agentPos.y.toFixed(0)})`);
       }
     }
 

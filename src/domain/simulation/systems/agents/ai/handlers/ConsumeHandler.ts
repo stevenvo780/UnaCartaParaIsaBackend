@@ -86,6 +86,12 @@ export function handleConsume(
     const result = systems.needs.requestConsume(agentId, needType);
 
     if (result.status === "completed") {
+      // Record this resource location in memory for future reference
+      const resourceType = task.params?.resourceType as string;
+      if (ctx.memory && resourceType && task.target.position) {
+        ctx.memory.recordKnownResource(resourceType, task.target.position);
+        logger.debug(`[ConsumeHandler] ${agentId}: recorded ${resourceType} at (${task.target.position.x?.toFixed(0)},${task.target.position.y?.toFixed(0)})`);
+      }
       return successResult({ satisfied: needType });
     }
 

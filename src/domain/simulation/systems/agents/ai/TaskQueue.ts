@@ -148,9 +148,7 @@ export class TaskQueue {
       const expired = isTaskExpired(task);
       
       if (terminal || expired) {
-        if (Math.random() < 0.05) {
-          logger.debug(`[TaskQueue] ${agentId} skipped task ${task.type}: terminal=${terminal}, expired=${expired}, expiresAt=${task.expiresAt}, now=${Date.now()}`);
-        }
+        logger.debug(`[TaskQueue] ${agentId} skipped task ${task.type}: terminal=${terminal}, expired=${expired}, expiresAt=${task.expiresAt}, now=${Date.now()}, status=${task.status}`);
         continue;
       }
       

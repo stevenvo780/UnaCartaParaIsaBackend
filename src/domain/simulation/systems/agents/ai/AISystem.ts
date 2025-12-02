@@ -640,6 +640,7 @@ export class AISystem extends EventEmitter {
     const explorationContext: Record<string, unknown> = {
       visitedZones: memory.visitedZones,
       lastExploreTime: memory.lastExploreTime,
+      knownResources: memory.knownResourceLocations,
     };
     
     // Añadir todas las zonas disponibles para exploración

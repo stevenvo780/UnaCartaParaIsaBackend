@@ -226,6 +226,8 @@ export interface DetectorContext {
   readonly visitedZones?: ReadonlySet<string>;
   /** Todas las zonas disponibles en el mundo para explorar */
   readonly allZones?: readonly { id: string; x: number; y: number }[];
+  /** Recursos conocidos por el agente (de exploraciones previas) */
+  readonly knownResources?: ReadonlyMap<string, { x: number; y: number }>;
   readonly nearbyInspectable?: {
     id: string;
     position: { x: number; y: number };

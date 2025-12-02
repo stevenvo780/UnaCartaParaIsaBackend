@@ -35,6 +35,34 @@ const PRIORITIES = SIMULATION_CONSTANTS.PRIORITIES;
 const NEEDS_TASK_TTL_MS = 15000;
 
 /**
+ * Helper: obtiene el mejor recurso (nearestX o knownResources fallback).
+ * Retorna target para la tarea o undefined si no hay recurso.
+ */
+function getBestResourceTarget(
+  ctx: DetectorContext,
+  resourceType: "food" | "water",
+): { entityId: string; position: { x: number; y: number } } | undefined {
+  // Primero: recurso cercano detectado por WorldQueryService
+  if (resourceType === "food" && ctx.nearestFood) {
+    return { entityId: ctx.nearestFood.id, position: ctx.nearestFood };
+  }
+  if (resourceType === "water" && ctx.nearestWater) {
+    return { entityId: ctx.nearestWater.id, position: ctx.nearestWater };
+  }
+
+  // Fallback: recurso conocido en memoria
+  if (ctx.knownResources) {
+    const known = ctx.knownResources.get(resourceType);
+    if (known) {
+      logger.debug(`[NeedsDetector] ${ctx.agentId}: usando recurso conocido ${resourceType} en (${known.x.toFixed(0)},${known.y.toFixed(0)})`);
+      return { entityId: `memory_${resourceType}`, position: known };
+    }
+  }
+
+  return undefined;
+}
+
+/**
  * Router que consulta al NeedsSystem por tareas pendientes.
  * Usa constantes centralizadas de SIMULATION_CONSTANTS.
  */
@@ -46,6 +74,13 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
       logger.debug(`[NeedsDetector] ${ctx.agentId}: no needs data`);
     }
     return [];
+  }
+
+  // Debug log needs periodically
+  if (Math.random() < 0.02) {
+    logger.debug(
+      `[NeedsDetector] ${ctx.agentId}: hunger=${ctx.needs.hunger?.toFixed(0)}, thirst=${ctx.needs.thirst?.toFixed(0)}, energy=${ctx.needs.energy?.toFixed(0)} (thresholds LOW=${THRESHOLDS.LOW})`,
+    );
   }
 
   const tasks: Task[] = [];
@@ -65,14 +100,13 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
   // Hunger
   const hunger = ctx.needs.hunger ?? 100;
   if (hunger < THRESHOLDS.LOW) {
+    const foodTarget = getBestResourceTarget(ctx, "food");
     tasks.push(
       createTask({
         agentId: ctx.agentId,
         type: TaskType.SATISFY_NEED,
         priority: calcPriority(hunger),
-        target: ctx.nearestFood
-          ? { entityId: ctx.nearestFood.id, position: ctx.nearestFood }
-          : undefined,
+        target: foodTarget,
         params: { needType: "hunger", resourceType: "food" },
         source: "needs:hunger",
         ttlMs: NEEDS_TASK_TTL_MS,
@@ -83,14 +117,13 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
   // Thirst
   const thirst = ctx.needs.thirst ?? 100;
   if (thirst < THRESHOLDS.LOW) {
+    const waterTarget = getBestResourceTarget(ctx, "water");
     tasks.push(
       createTask({
         agentId: ctx.agentId,
         type: TaskType.SATISFY_NEED,
         priority: calcPriority(thirst),
-        target: ctx.nearestWater
-          ? { entityId: ctx.nearestWater.id, position: ctx.nearestWater }
-          : undefined,
+        target: waterTarget,
         params: { needType: "thirst", resourceType: "water" },
         source: "needs:thirst",
         ttlMs: NEEDS_TASK_TTL_MS,

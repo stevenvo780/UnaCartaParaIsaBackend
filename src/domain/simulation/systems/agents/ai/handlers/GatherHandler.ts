@@ -94,6 +94,11 @@ export function handleGather(
   const result = systems.inventory.requestGather(agentId, resourceId, quantity);
 
   if (result.status === "completed") {
+    // Record this resource location in memory for future reference
+    const resourceType = task.params?.resourceType as string;
+    if (ctx.memory && resourceType && target.position) {
+      ctx.memory.recordKnownResource(resourceType, target.position);
+    }
     return successResult({
       gathered: resourceId,
       quantity,

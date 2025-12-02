@@ -16,6 +16,7 @@ import { performanceMonitor } from "../../core/PerformanceMonitor";
 import { QuestStatus } from "../../../../shared/constants/QuestEnums";
 import { SystemProperty } from "../../../../shared/constants/SystemEnums";
 import { EntityType } from "../../../../shared/constants/EntityEnums";
+import { ResourceState } from "../../../../shared/constants/ResourceEnums";
 
 /**
  * System for managing agent inventories and zone stockpiles.
@@ -187,7 +188,10 @@ export class InventorySystem implements IInventorySystem {
     amount: number,
   ): boolean {
     const inv = this.agentInventories.get(agentId);
-    if (!inv) return false;
+    if (!inv) {
+      logger.debug(`[InventorySystem] ${agentId}: no inventory found`);
+      return false;
+    }
 
     const currentLoad =
       inv.wood +
@@ -199,7 +203,10 @@ export class InventorySystem implements IInventorySystem {
     const available = inv.capacity - currentLoad;
     const toAdd = Math.min(amount, available);
 
-    if (toAdd <= 0) return false;
+    if (toAdd <= 0) {
+      logger.debug(`[InventorySystem] ${agentId}: inventory full, capacity=${inv.capacity}, currentLoad=${currentLoad}, available=${available}`);
+      return false;
+    }
 
     inv[resource] += toAdd;
     return true;
@@ -680,6 +687,15 @@ export class InventorySystem implements IInventorySystem {
       };
     }
 
+    // Check if resource is depleted
+    if (resource.state === ResourceState.DEPLETED) {
+      return {
+        status: QuestStatus.FAILED,
+        system: SystemProperty.INVENTORY,
+        message: `Resource ${resourceId} is depleted`,
+      };
+    }
+
     // Ensure agent has inventory
     let inventory = this.agentInventories.get(agentId);
     if (!inventory) {
@@ -701,10 +717,11 @@ export class InventorySystem implements IInventorySystem {
 
     const resourceType =
       resourceTypeMap[resource.type?.toLowerCase()] || ResourceType.WOOD;
-    const actualQuantity = Math.min(
-      quantity,
-      resource.harvestCount ?? quantity,
-    );
+
+    // harvestCount is a counter of how many times harvested (0 = fresh resource)
+    // We want to gather the requested quantity, not limit by harvest count
+    // The resource state (DEPLETED) determines if it can be harvested
+    const actualQuantity = quantity;
 
     const success = this.addResource(agentId, resourceType, actualQuantity);
 
