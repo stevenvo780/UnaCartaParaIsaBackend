@@ -8,47 +8,35 @@ export class BiomeResolver {
     this.biomes = SIMPLE_BIOMES;
   }
 
+  /**
+   * Resolve biome based on environmental factors.
+   * Uses realistic thresholds based on Perlin noise distribution (centered around 0.5).
+   * Lakes appear in low-elevation areas with above-average moisture.
+   */
   public resolveBiome(
     temperature: number,
     moisture: number,
     elevation: number,
     continentality: number,
-    worldX?: number,
-    worldY?: number,
-    worldWidth?: number,
-    worldHeight?: number,
   ): BiomeType {
-
-    if (worldX !== undefined && worldY !== undefined && 
-        worldWidth !== undefined && worldHeight !== undefined) {
-      const edgeDistX = Math.min(worldX, worldWidth - worldX);
-      const edgeDistY = Math.min(worldY, worldHeight - worldY);
-      const edgeDist = Math.min(edgeDistX, edgeDistY);
-      
-
-      if (edgeDist < 5) {
-        return BiomeType.OCEAN;
-      }
-      
-
-      if (edgeDist < 10 && elevation < 0.4) {
-        return BiomeType.BEACH;
-      }
-    }
-
-
-    if (continentality < 0.35) {
+    // Ocean: very low continentality (rare)
+    if (continentality < 0.30) {
       return BiomeType.OCEAN;
     }
 
-
-
-    if (elevation < 0.45 && moisture > 0.52 && continentality < 0.55) {
+    // Lake: low elevation + above-average moisture = inland water
+    // Adjusted thresholds for Perlin noise (values center around 0.5)
+    if (elevation < 0.45 && moisture > 0.52) {
       return BiomeType.LAKE;
     }
 
+    // Wetland: moderate-low elevation with high moisture
+    if (elevation < 0.50 && moisture > 0.55) {
+      return BiomeType.WETLAND;
+    }
 
-    if (continentality < 0.45 && elevation < 0.4) {
+    // Beach: transition zone 
+    if (continentality < 0.40 && elevation < 0.40) {
       return BiomeType.BEACH;
     }
 

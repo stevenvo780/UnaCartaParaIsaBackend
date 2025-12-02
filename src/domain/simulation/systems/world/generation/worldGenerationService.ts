@@ -106,10 +106,6 @@ export class WorldGenerationService {
           (moisture + 1) / 2,
           (elevation + 1) / 2,
           (continentality + 1) / 2,
-          globalX,
-          globalY,
-          config.width,
-          config.height,
         );
 
         const biomeConfig = this.biomeMap.get(biome);

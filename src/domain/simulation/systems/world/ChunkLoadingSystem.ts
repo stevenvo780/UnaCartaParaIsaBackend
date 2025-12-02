@@ -223,7 +223,9 @@ export class ChunkLoadingSystem {
 
         if (existingTileIndex === -1 || existingTileIndex === undefined) {
           const tileType: TileType =
-            tile.biome === BiomeType.OCEAN ? TileType.WATER : TileType.GRASS;
+            tile.biome === BiomeType.OCEAN || tile.biome === BiomeType.LAKE
+              ? TileType.WATER
+              : TileType.GRASS;
 
           this.gameState.terrainTiles?.push({
             x: tile.x,

@@ -566,7 +566,7 @@ export class WorldQueryService {
 
   /**
    * Find water tiles near a position.
-   * Optimized for OCEAN tiles at map edges - searches edges first.
+   * Searches for OCEAN and LAKE biomes.
    * Results are sorted by distance from the query position.
    */
   public findWaterTilesNear(
@@ -574,18 +574,27 @@ export class WorldQueryService {
     y: number,
     radius: number,
   ): TileQueryResult[] {
-    const results = this.findTilesInArea(
+    // Search for both OCEAN and LAKE tiles
+    const oceanTiles = this.findTilesInArea(
       x - radius,
       y - radius,
       radius * 2,
       radius * 2,
-      {
-        biome: BiomeType.OCEAN,
-      },
+      { biome: BiomeType.OCEAN },
     );
 
-    // Sort by distance from query position
-    return results.sort((a, b) => {
+    const lakeTiles = this.findTilesInArea(
+      x - radius,
+      y - radius,
+      radius * 2,
+      radius * 2,
+      { biome: BiomeType.LAKE },
+    );
+
+    // Combine and sort by distance from query position
+    const allWaterTiles = [...oceanTiles, ...lakeTiles];
+    
+    return allWaterTiles.sort((a, b) => {
       const distA = Math.sqrt(
         Math.pow(a.worldX - x, 2) + Math.pow(a.worldY - y, 2),
       );

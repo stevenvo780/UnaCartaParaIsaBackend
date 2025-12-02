@@ -17,13 +17,22 @@ describe("BiomeResolver", () => {
 
   describe("resolveBiome", () => {
     it("debe resolver océano para continentality baja", () => {
-      const biome = resolver.resolveBiome(0.5, 0.5, 0.5, 0.3);
+      // continentality < 0.30 = OCEAN
+      const biome = resolver.resolveBiome(0.5, 0.5, 0.5, 0.25);
       expect(biome).toBe(BiomeType.OCEAN);
     });
 
     it("debe resolver playa para continentality y elevación bajas", () => {
-      const biome = resolver.resolveBiome(0.5, 0.5, 0.3, 0.45);
+      // continentality < 0.40 && elevation < 0.40 = BEACH
+      // pero no puede ser OCEAN (continentality >= 0.30)
+      const biome = resolver.resolveBiome(0.5, 0.5, 0.35, 0.35);
       expect(biome).toBe(BiomeType.BEACH);
+    });
+
+    it("debe resolver lago para elevación baja y humedad alta", () => {
+      // elevation < 0.45 && moisture > 0.52 = LAKE
+      const biome = resolver.resolveBiome(0.5, 0.55, 0.40, 0.50);
+      expect(biome).toBe(BiomeType.LAKE);
     });
 
     it("debe resolver bioma basado en temperatura, humedad y elevación", () => {
