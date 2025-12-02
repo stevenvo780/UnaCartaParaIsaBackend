@@ -63,6 +63,11 @@ export function handleExplore(
         memory.recordVisitedZone(task.target.zoneId);
       }
       
+      // Registrar que exploramos para activar cooldown
+      if (memory) {
+        memory.recordExploration();
+      }
+      
       return successResult({
         explored: task.target.position,
         message: "Arrived at exploration target",
@@ -83,6 +88,7 @@ export function handleExplore(
       // Registrar la zona como visitada
       if (memory) {
         memory.recordVisitedZone(task.target.zoneId);
+        memory.recordExploration();
       }
       
       return successResult({

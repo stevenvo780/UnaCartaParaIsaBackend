@@ -543,6 +543,7 @@ export class AISystem extends EventEmitter {
       recordVisitedZone: (zoneId: string) => this.recordVisitedZone(agentId, zoneId),
       recordKnownResource: (resourceType: string, pos: { x: number; y: number }) => 
         this.recordKnownResource(agentId, resourceType, pos),
+      recordExploration: () => this.recordExploration(agentId),
       getVisitedZones: () => memory.visitedZones,
       getKnownResourceLocations: () => memory.knownResourceLocations as Map<string, { x: number; y: number }>,
     };

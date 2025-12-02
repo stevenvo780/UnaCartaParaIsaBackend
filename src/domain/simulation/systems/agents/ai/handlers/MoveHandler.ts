@@ -16,8 +16,8 @@ import { errorResult, inProgressResult, successResult } from "../types";
 import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
 import { ActionType } from "../../../../../../shared/constants/AIEnums";
 
-/** Distancia para considerar que llegó al destino */
-const ARRIVAL_THRESHOLD = 1.5;
+/** Distancia para considerar que llegó al destino (debe ser >= 2 del MovementSystem) */
+const ARRIVAL_THRESHOLD = 3.0;
 
 /**
  * Verifica si el agente está en el target
