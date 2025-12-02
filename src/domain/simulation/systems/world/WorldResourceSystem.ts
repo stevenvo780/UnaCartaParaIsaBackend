@@ -423,20 +423,19 @@ export class WorldResourceSystem {
           }
         }
 
+        // Generar fuentes de agua dulce en biomas húmedos
+        // TODO: Idealmente el agua debería venir solo de tiles OCEAN (lago)
+        // pero el biomeMap del backend no tiene esa info. Por ahora generamos
+        // pozos/fuentes en biomas húmedos para que los agentes puedan beber.
         if (!isWaterTile && tile.biome) {
           const waterSuitableBiomes: string[] = [
             BiomeType.WETLAND,
-            BiomeType.FOREST,
-            BiomeType.GRASSLAND,
             BiomeType.VILLAGE,
           ];
           if (waterSuitableBiomes.includes(tile.biome)) {
+            // Probabilidad muy baja: 1% wetland, 2% village (pozos)
             const waterSpawnProb =
-              tile.biome === BiomeType.WETLAND
-                ? 0.08
-                : tile.biome === BiomeType.VILLAGE
-                  ? 0.04
-                  : 0.02;
+              tile.biome === BiomeType.WETLAND ? 0.01 : 0.02;
             if (Math.random() < waterSpawnProb) {
               const waterResourceId = `water_fresh_${tile.x}_${tile.y}`;
               if (!this.resources.has(waterResourceId)) {

@@ -56,6 +56,7 @@ import type { WorldQueryService } from "../../world/WorldQueryService";
 import { SystemRegistry } from "../SystemRegistry";
 import { EventBus } from "@/domain/simulation/core/EventBus";
 import { NeedType } from "../../../../../shared/constants/AIEnums";
+import type { TimeSystem } from "../../core/TimeSystem";
 
 export interface AISystemDeps {
   gameState: GameState;
@@ -63,6 +64,7 @@ export interface AISystemDeps {
   needsSystem?: NeedsSystem;
   movementSystem?: MovementSystem;
   worldQueryService?: WorldQueryService;
+  timeSystem?: TimeSystem;
 
   systemRegistry?: SystemRegistry;
   eventBus?: EventBus;
@@ -153,6 +155,7 @@ export class AISystem extends EventEmitter {
   private agentRegistry?: AgentRegistry;
   private needsSystem?: NeedsSystem;
   private worldQueryService?: WorldQueryService;
+  private timeSystem?: TimeSystem;
   /** @deprecated Use systemRegistry.movement instead */
   private _movementSystem?: MovementSystem;
 
@@ -176,6 +179,7 @@ export class AISystem extends EventEmitter {
     @inject(TYPES.WorldQueryService)
     @optional()
     worldQueryService?: WorldQueryService,
+    @inject(TYPES.TimeSystem) @optional() timeSystem?: TimeSystem,
   ) {
     super();
     this.gameState = gameState;
@@ -183,6 +187,7 @@ export class AISystem extends EventEmitter {
     this.needsSystem = needsSystem;
     this._movementSystem = movementSystem;
     this.worldQueryService = worldQueryService;
+    this.timeSystem = timeSystem;
     this.config = { ...DEFAULT_CONFIG };
 
     this.eventBus = new EventBus();
@@ -214,6 +219,7 @@ export class AISystem extends EventEmitter {
     if (deps.needsSystem) this.needsSystem = deps.needsSystem;
     if (deps.movementSystem) this._movementSystem = deps.movementSystem;
     if (deps.worldQueryService) this.worldQueryService = deps.worldQueryService;
+    if (deps.timeSystem) this.timeSystem = deps.timeSystem;
     if (deps.systemRegistry) this.systemRegistry = deps.systemRegistry;
     if (deps.eventBus) this.eventBus = deps.eventBus;
   }
@@ -652,11 +658,15 @@ export class AISystem extends EventEmitter {
       }));
     }
 
+    // Determinar horas de trabajo (6:00 - 18:00)
+    const isWorkHours = this.calculateIsWorkHours();
+
     return {
       agentId,
       position,
       needs,
       now: Date.now(),
+      isWorkHours,
       ...spatialContext,
       ...explorationContext,
     };
@@ -702,10 +712,23 @@ export class AISystem extends EventEmitter {
       }
     }
 
+    // Buscar recurso más cercano para trabajo (árbol, roca, etc.)
+    const nearestResource = wqs.findNearestResource(position.x, position.y, {
+      excludeDepleted: true,
+    });
+    if (nearestResource && nearestResource.distance < QUERY_RADIUS) {
+      result.nearestResource = {
+        id: nearestResource.id,
+        x: nearestResource.position.x,
+        y: nearestResource.position.y,
+        type: nearestResource.resourceType,
+      };
+    }
+
     // Debug log ocasional (~2%)
     if (Math.random() < 0.02) {
       logger.debug(
-        `[AISystem] buildSpatial ${agentId}: food=${result.nearestFood ? "found" : "none"}, water=${result.nearestWater ? "found" : "none"}`,
+        `[AISystem] buildSpatial ${agentId}: food=${result.nearestFood ? "found" : "none"}, water=${result.nearestWater ? "found" : "none"}, resource=${result.nearestResource ? "found" : "none"}`,
       );
     }
 
@@ -877,6 +900,27 @@ export class AISystem extends EventEmitter {
   public setAgentOffDuty(agentId: string, _offDuty: boolean): void {
     if (_offDuty) {
       this.cancelTask(agentId);
+    }
+  }
+
+  /**
+   * Determina si es hora de trabajo basándose en el TimeSystem.
+   * Horas de trabajo: 6:00 - 18:00 (día completo)
+   */
+  private calculateIsWorkHours(): boolean {
+    if (!this.timeSystem) {
+      // Sin TimeSystem, asumimos que siempre es hora de trabajo
+      return true;
+    }
+
+    try {
+      const currentTime = this.timeSystem.getCurrentTime();
+      const hour = currentTime.hour;
+      // Horas de trabajo: 6:00 a 18:00
+      return hour >= 6 && hour < 18;
+    } catch {
+      // Si falla, asumimos hora de trabajo
+      return true;
     }
   }
 

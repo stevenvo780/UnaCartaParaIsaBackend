@@ -69,18 +69,7 @@ function getBestResourceTarget(
 export function detectNeeds(ctx: DetectorContext): Task[] {
   // Early exit if no needs context
   if (!ctx.needs) {
-    // Debug log occasionally
-    if (Math.random() < 0.01) {
-      logger.debug(`[NeedsDetector] ${ctx.agentId}: no needs data`);
-    }
     return [];
-  }
-
-  // Debug log needs periodically
-  if (Math.random() < 0.02) {
-    logger.debug(
-      `[NeedsDetector] ${ctx.agentId}: hunger=${ctx.needs.hunger?.toFixed(0)}, thirst=${ctx.needs.thirst?.toFixed(0)}, energy=${ctx.needs.energy?.toFixed(0)} (thresholds LOW=${THRESHOLDS.LOW})`,
-    );
   }
 
   const tasks: Task[] = [];

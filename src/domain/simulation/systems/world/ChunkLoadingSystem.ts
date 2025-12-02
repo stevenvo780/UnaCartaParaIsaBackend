@@ -68,6 +68,7 @@ export class ChunkLoadingSystem {
     this.lastCheckTime = now;
 
     if (!this.worldConfig) {
+      logger.debug(`[ChunkLoadingSystem] update: no worldConfig, skipping`);
       return;
     }
 
@@ -79,10 +80,18 @@ export class ChunkLoadingSystem {
       .map((agent) => ({ position: agent.position! }));
 
     if (activeAgents.length === 0) {
+      logger.debug(`[ChunkLoadingSystem] update: no active agents`);
       return;
     }
 
     const chunksToLoad = this.calculateChunksToLoad(activeAgents);
+    
+    // Log ocasional
+    if (Math.random() < 0.1) {
+      logger.debug(
+        `[ChunkLoadingSystem] update: ${activeAgents.length} agents, ${chunksToLoad.length} chunks to load, ${this.loadedChunks.size} already loaded`,
+      );
+    }
 
     if (chunksToLoad.length === 0) {
       return;
