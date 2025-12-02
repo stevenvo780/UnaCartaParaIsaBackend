@@ -13,9 +13,11 @@ import {
   TASK_PRIORITIES,
   createTask,
 } from "../types";
+import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
 
-const DEPOSIT_THRESHOLD = 0.7;
-const URGENT_DEPOSIT_THRESHOLD = 0.9;
+// Use centralized inventory thresholds
+const DEPOSIT_THRESHOLD = SIMULATION_CONSTANTS.INVENTORY_THRESHOLDS.DEPOSIT_THRESHOLD;
+const URGENT_DEPOSIT_THRESHOLD = SIMULATION_CONSTANTS.INVENTORY_THRESHOLDS.URGENT_DEPOSIT_THRESHOLD;
 
 /**
  * Detecta necesidad de depositar recursos

@@ -135,8 +135,62 @@ export const SIMULATION_CONSTANTS = {
     LOW_THRESHOLD: 30,
     /** Satisfied threshold for needs (70%). */
     SATISFIED_THRESHOLD: 70,
+    /** Urgent threshold (triggers action) = 50% */
+    URGENT_THRESHOLD: 50,
     /** Minimum priority threshold for AI goals. */
     MIN_PRIORITY_THRESHOLD: 0.1,
+  } as const,
+
+  /**
+   * Combat system thresholds.
+   */
+  COMBAT: {
+    /** Health ratio below which agent should flee (20%). */
+    FLEE_HEALTH_THRESHOLD: 0.2,
+    /** Health ratio to trigger threat alert (30%). */
+    THREAT_ALERT_THRESHOLD: 0.3,
+    /** Distance at which to flee from predators (80 units). */
+    PREDATOR_FLEE_DISTANCE: 80,
+    /** Attack cooldown in milliseconds. */
+    ATTACK_COOLDOWN_MS: 1000,
+    /** Damage multiplier base. */
+    BASE_DAMAGE_MULTIPLIER: 1.0,
+  } as const,
+
+  /**
+   * Inventory system thresholds.
+   */
+  INVENTORY_THRESHOLDS: {
+    /** Capacity ratio to trigger deposit (70%). */
+    DEPOSIT_THRESHOLD: 0.7,
+    /** Urgent capacity ratio for immediate deposit (90%). */
+    URGENT_DEPOSIT_THRESHOLD: 0.9,
+  } as const,
+
+  /**
+   * Social system thresholds.
+   */
+  SOCIAL: {
+    /** Wellness threshold for reproduction (80%). */
+    REPRODUCTION_WELLNESS_THRESHOLD: 0.8,
+    /** Minimum social need for interaction (30%). */
+    SOCIAL_INTERACTION_THRESHOLD: 30,
+  } as const,
+
+  /**
+   * AI Priority values.
+   */
+  PRIORITIES: {
+    /** Critical priority (highest). */
+    CRITICAL: 0.95,
+    /** Urgent priority. */
+    URGENT: 0.8,
+    /** High priority. */
+    HIGH: 0.6,
+    /** Normal priority. */
+    NORMAL: 0.4,
+    /** Low priority. */
+    LOW: 0.2,
   } as const,
 
   /**

@@ -16,9 +16,10 @@ import {
 } from "../types";
 import { NeedType } from "@/shared/constants/AIEnums";
 import { GoalReason } from "../../../../../../shared/constants/AIEnums";
+import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
 
-/** Bienestar mínimo para reproducirse */
-const REPRODUCTION_WELLNESS_THRESHOLD = 0.8;
+/** Bienestar mínimo para reproducirse - usa constante centralizada */
+const REPRODUCTION_WELLNESS_THRESHOLD = SIMULATION_CONSTANTS.SOCIAL.REPRODUCTION_WELLNESS_THRESHOLD;
 
 /**
  * Detecta necesidades y oportunidades sociales

@@ -2,7 +2,7 @@
  * @fileoverview Detector de Necesidades - Router Pattern
  *
  * Este detector es un ROUTER PURO que delega la lógica al NeedsSystem.
- * NO reimplementa umbrales ni prioridades - eso vive en el sistema.
+ * NO reimplementa umbrales ni prioridades - usa constantes centralizadas.
  *
  * Flujo:
  * 1. Detector recibe contexto con posición y spatial data
@@ -20,14 +20,20 @@ import {
   createTask,
 } from "../types";
 import { logger } from "@/infrastructure/utils/logger";
+import { SIMULATION_CONSTANTS } from "@/shared/constants/SimulationConstants";
+
+// Use centralized thresholds
+const THRESHOLDS = {
+  CRITICAL: SIMULATION_CONSTANTS.NEEDS.CRITICAL_THRESHOLD,
+  URGENT: SIMULATION_CONSTANTS.NEEDS.LOW_THRESHOLD,
+  LOW: SIMULATION_CONSTANTS.NEEDS.URGENT_THRESHOLD,
+} as const;
+
+const PRIORITIES = SIMULATION_CONSTANTS.PRIORITIES;
 
 /**
  * Router que consulta al NeedsSystem por tareas pendientes.
- * No implementa lógica de umbrales - eso es responsabilidad del sistema.
- * 
- * TODO: En el futuro, este detector debería recibir acceso al sistema
- * via ctx.systems.needs?.getPendingTasks() para eliminar duplicación.
- * Por ahora, mantiene la lógica inline para compatibilidad.
+ * Usa constantes centralizadas de SIMULATION_CONSTANTS.
  */
 export function detectNeeds(ctx: DetectorContext): Task[] {
   // Early exit if no needs context
@@ -40,8 +46,6 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
   }
 
   const tasks: Task[] = [];
-  const THRESHOLDS = { CRITICAL: 15, URGENT: 30, LOW: 50 };
-  const PRIORITIES = { CRITICAL: 0.95, URGENT: 0.8, HIGH: 0.6, NORMAL: 0.4, LOW: 0.2 };
 
   const calcPriority = (v: number) => {
     if (v < THRESHOLDS.CRITICAL) return PRIORITIES.CRITICAL;

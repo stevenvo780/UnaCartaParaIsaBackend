@@ -16,9 +16,10 @@ import {
 } from "../types";
 import { RoleType } from "../../../../../../shared/constants/RoleEnums";
 import { SocialStatus } from "../../../../../../shared/constants/AgentEnums";
+import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
 
-/** No trabajar si necesidades críticas */
-const CRITICAL_NEED_THRESHOLD = 15;
+/** No trabajar si necesidades críticas - usa constante centralizada */
+const CRITICAL_NEED_THRESHOLD = SIMULATION_CONSTANTS.NEEDS.CRITICAL_THRESHOLD;
 
 /**
  * Detecta necesidad de trabajar

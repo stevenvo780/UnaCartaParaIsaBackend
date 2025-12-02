@@ -29,6 +29,7 @@ import { EntityType } from "../../../../../shared/constants/EntityEnums";
 import { FoodCategory } from "../../../../../shared/constants/FoodEnums";
 import type { FoodItem } from "@/shared/types/simulation/food";
 import { QuestStatus } from "../../../../../shared/constants/QuestEnums";
+import { SIMULATION_CONSTANTS } from "../../../../../shared/constants/SimulationConstants";
 
 /**
  * System for managing entity needs (hunger, thirst, energy, hygiene, social, fun, mental health).
@@ -132,8 +133,9 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
         [NeedType.FUN]: 0.15,
         [NeedType.MENTAL_HEALTH]: 0.08,
       },
-      criticalThreshold: 20,
-      emergencyThreshold: 10,
+      // Use centralized thresholds from SIMULATION_CONSTANTS
+      criticalThreshold: SIMULATION_CONSTANTS.NEEDS.CRITICAL_THRESHOLD,
+      emergencyThreshold: SIMULATION_CONSTANTS.NEEDS.EMERGENCY_THRESHOLD,
       updateIntervalMs: 1000,
       allowRespawn: true,
       deathThresholds: {
@@ -447,11 +449,12 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       ? this.findZonesNearPosition(position, 50)
       : [];
 
-    const HUNGER_THRESHOLD = 70;
-    const HUNGER_CRITICAL = 30;
+    // Use centralized thresholds
+    const HUNGER_THRESHOLD = SIMULATION_CONSTANTS.NEEDS.SATISFIED_THRESHOLD;
+    const HUNGER_CRITICAL = SIMULATION_CONSTANTS.NEEDS.LOW_THRESHOLD;
 
-    const THIRST_THRESHOLD = 70;
-    const THIRST_CRITICAL = 30;
+    const THIRST_THRESHOLD = SIMULATION_CONSTANTS.NEEDS.SATISFIED_THRESHOLD;
+    const THIRST_CRITICAL = SIMULATION_CONSTANTS.NEEDS.LOW_THRESHOLD;
 
     if (needs.hunger < HUNGER_THRESHOLD && inv.food > 0) {
       const urgency = needs.hunger < HUNGER_CRITICAL ? 2 : 1;
