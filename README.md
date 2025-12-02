@@ -1,168 +1,124 @@
-# 🎮 Backend de Guardado - Una Carta Para Isa
+# 🎮 Backend de Simulación y Guardado — Una Carta Para Isa
 
-Backend simple para manejar el guardado de partidas sin límites de tamaño.
+Servidor de simulación en tiempo real con WebSockets, almacenamiento de partidas (GCS o local), monitoreo Prometheus/Grafana y aceleración opcional por GPU (TensorFlow.js). Puertos por defecto: HTTP 8080, WS 8080.
 
-## 🚀 Instalación
+## 🚀 Inicio rápido
 
-```bash
-npm install
-```
+- Desarrollo (hot-reload): `npm ci && npm run dev`
+- Build y ejecución: `npm run build && npm start`
+- Docker (CPU): ver `docker-compose.yml` en la raíz del repo
+- Docker (GPU): `docker compose -f docker-compose.gpu.yml up` (requiere runtime NVIDIA)
 
-## 📦 Dependencias
+Servidor en `http://localhost:8080`. WebSockets en `ws://localhost:8080/ws/sim` y `ws://localhost:8080/ws/chunks`.
 
-- `express`: Servidor web
-- `cors`: Permitir peticiones desde el cliente
-- `fs/promises`: Manejo de archivos
+## 🔧 Variables de entorno
 
-## ▶️ Ejecutar
-
-### Servidor solo
-```bash
-npm run server
-```
-
-### Servidor con hot-reload (desarrollo)
-```bash
-npm run server:dev
-```
-
-### Cliente + Servidor (modo full)
-```bash
-npm run dev:full
-```
-
-## 🔧 Configuración
-
-Crea un archivo `.env` en la raíz del proyecto:
+Mínimas recomendadas en `.env`:
 
 ```env
-# Puerto del servidor
-PORT=3001
+# Puerto HTTP (por defecto 8080)
+PORT=8080
 
-# URL del backend (para el cliente)
-VITE_SAVE_API_URL=http://localhost:3001
+# Almacenamiento de partidas (selección automática si no hay credenciales GCP)
+USE_LOCAL_STORAGE=true
+LOCAL_SAVES_PATH=./saves
+
+# Google Cloud Storage (si se usa nube)
+BUCKET_NAME=una-carta-para-isa-saves
+GCP_PROJECT_ID=emergent-enterprises
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+
+# CORS (permitir orígenes)
+ALLOWED_ORIGINS=http://localhost:3000
+
+# NAS opcional (SFTP) para backups
+NAS_ENABLED=false
+NAS_HOST=
+NAS_USER=
+NAS_PASSWORD=
+NAS_PATH=
 ```
 
-## 📡 API Endpoints
+GPU opcional (cuando se usa TensorFlow.js y backend GPU):
 
-### Health Check
-```
-GET /health
-```
-
-### Métricas en tiempo real
-
-| Endpoint              | Descripción                                                   |
-| --------------------- | ------------------------------------------------------------- |
-| `GET /metrics`        | Formato Prometheus 0.0.4 listo para ser scrapeado             |
-| `GET /metrics/runtime`| Snapshot JSON con promedios, máximos y memoria del proceso   |
-
-### Listar guardados
-```
-GET /api/saves
+```env
+TF_FORCE_GPU_ALLOW_GROWTH=true
+TF_CPP_MIN_LOG_LEVEL=2
+CUDA_VISIBLE_DEVICES=0
 ```
 
-### Obtener un guardado
+## 📡 API HTTP
+
+- Health: `GET /health`
+- Guardados: `GET /api/saves`, `GET /api/saves/:id`, `POST /api/saves`, `DELETE /api/saves/:id`
+- Simulación: `GET /api/sim/health`, `GET /api/sim/state`, `POST /api/sim/command`
+- Mundo: `POST /api/world/chunk`
+- Métricas: `GET /metrics` (Prometheus 0.0.4), `GET /metrics/runtime` (JSON)
+
+## 🔌 WebSockets
+
+- `ws://host:8080/ws/sim` — streaming de snapshots de simulación a ~50 Hz (MessagePack). Envía también respuestas a peticiones como `REQUEST_FULL_STATE`, `REQUEST_ENTITY_DETAILS`, `REQUEST_PLAYER_ID`.
+- `ws://host:8080/ws/chunks` — streaming de chunks de terreno asíncronos.
+
+Tipos de mensajes (alto nivel):
+- `TICK` con `payload` snapshot incremental
+- `SNAPSHOT` inicial
+- `RESPONSE` a requests puntuales
+- `ERROR` en formato `{ type: "ERROR", message }`
+
+## 🧠 Arquitectura (resumen)
+
+- Core en TypeScript con DI (Inversify) y scheduler multi-rate (FAST/MEDIUM/SLOW)
+- `SimulationRunner` como estado autoritativo + cola de comandos
+- Sistemas por dominio (IA, Movimiento, Necesidades, Economía, Construcción, etc.)
+- Batch computing opcional con `GPUComputeService` y `GPUBatchQueryService` (lazy-load de TF)
+- Almacenamiento: GCS o filesystem local; NAS SFTP opcional para backups
+- Monitoreo: `PerformanceMonitor` expone métricas de tick, sistemas, subsistemas y memoria
+
+## 🐳 Docker
+
+CPU (imagen ligera): `UnaCartaParaIsaBackend/Dockerfile` — usado por `docker-compose.yml` en la raíz para levantar backend, frontend y monitoreo.
+
+GPU: `UnaCartaParaIsaBackend/Dockerfile.gpu` + `docker-compose.gpu.yml` (requiere drivers NVIDIA y runtime). Expone además el inspector `9229`.
+
+## 📈 Monitoreo
+
+- Prometheus: scrapea `GET /metrics` cada 5s (ver `monitoring/prometheus.yml`)
+- Grafana: dashboards aprovisionados automáticamente (ver `monitoring/grafana/`)
+- Stack listo en la raíz con `docker compose up` (servicios `prometheus` y `grafana`)
+
+Accesos:
+- Backend: `http://localhost:8080`
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3001` (admin/admin)
+
+## 📁 Estructura relevante
+
 ```
-GET /api/saves/:id
-```
-
-### Guardar partida
-```
-POST /api/saves
-Content-Type: application/json
-```
-
-### Eliminar guardado
-```
-DELETE /api/saves/:id
-```
-
-## 📈 Monitoreo en tiempo real
-
-Se añadió un monitor interno que agrega métricas por _tick rate_, sistema y memoria sin afectar el rendimiento.  
-Las métricas se exponen vía `/metrics` (Prometheus) y `/metrics/runtime` (JSON).
-
-### Stack Docker (backend + Prometheus + Grafana)
-
-```bash
-docker compose -f docker-compose.monitoring.yml up
-```
-
-- El contenedor `backend` levanta el servidor en `http://localhost:8080`.
-- Prometheus (http://localhost:9090) scrapea `/metrics` cada 5 s.
-- Grafana queda disponible en http://localhost:3001 (usuario/password `admin`).
-- Se aprovisiona automáticamente un data source de Prometheus y el dashboard `Simulation Runtime Overview`.
-
-> Nota: el primer arranque instala dependencias dentro del contenedor `backend`. Para producción se recomienda construir la imagen oficial y apuntar Prometheus al dominio correspondiente.
-
-## 📁 Estructura de Archivos
-
-```
-server/
-├── index.js          # Servidor Express
-├── saves/            # Directorio de guardados (creado automáticamente)
-│   ├── save_xxx.json
-│   └── save_yyy.json
-└── tsconfig.json     # Configuración TypeScript
-```
-
-## 🔒 Características
-
-- ✅ Sin límite de tamaño (solo limitado por el disco)
-- ✅ Historial completo de guardados (no se eliminan automáticamente)
-- ✅ CORS habilitado para desarrollo
-- ✅ Soporte para JSON grandes (50MB límite)
-- ✅ Fallback automático a localStorage si el servidor no está disponible
-
-## 🔄 Flujo de Guardado
-
-1. El cliente verifica si el backend está disponible
-2. Si está disponible, guarda en el servidor
-3. Si falla, intenta localStorage con optimización
-4. Si localStorage está lleno, limpia datos antiguos
-5. Como último recurso, guarda solo lo esencial
-
-## 🐛 Debug
-
-El servidor imprime información útil:
-```
-🎮 Save server running on http://localhost:3001
-📁 Saves directory: /path/to/server/saves
+src/
+  application/
+    app.ts            # Express + rutas (saves, world, sim, metrics)
+    server.ts         # Entrypoint HTTP + WS (/ws/sim, /ws/chunks)
+  config/             # CONFIG, container DI, tipos
+  domain/simulation/  # Core de simulación y sistemas
+  infrastructure/     # Servicios (storage, chunk streaming, utils)
+  shared/             # Tipos, constantes, MessagePack
 ```
 
-Los logs del cliente mostrarán:
-```
-🌐 Backend de guardado disponible
-💾 Guardando 123.45 KB...
-🌐 Guardado en servidor exitosamente
-```
+## 🧪 Scripts
 
-O si el backend no está disponible:
-```
-💾 Usando localStorage (backend no disponible)
-```
+- `npm run dev` — desarrollo con hot-reload
+- `npm run build && npm start` — build y ejecución (dist)
+- `npm run test` — tests con Vitest
+- `npm run lint[:check|:fix]` — linting
+- `npm run docs` — documentación TypeDoc
 
-## 📝 Notas
+## 📚 Documentación (TypeDoc)
 
-- Los guardados se almacenan en `server/saves/` como archivos JSON
-- **Los guardados NO se eliminan automáticamente** - se mantiene el historial completo
-- El nombre del archivo es `save_{timestamp}.json`
-- El backend es opcional: el juego funciona sin él usando localStorage
-- Con TB de almacenamiento disponible, puedes guardar años de progreso
+Genera documentación navegable a partir de JSDoc/TS:
 
-## 📚 Documentación
-
-El proyecto cuenta con documentación generada automáticamente a partir del código fuente utilizando **TypeDoc**.
-
-### Generar documentación
 ```bash
 npm run docs
 ```
 
-Esto generará un sitio web estático en la carpeta `docs/` con toda la información sobre:
-- Sistemas de Simulación (Producción, IA, Clima, etc.)
-- Estructuras de Datos (Quests, Items, Biomas)
-- Flujos de eventos y arquitectura
-
-Para ver la documentación, abre `docs/index.html` en tu navegador.
+La salida se genera según `typedoc.json`. Abre `docs/index.html` para explorar sistemas, tipos y flujos.

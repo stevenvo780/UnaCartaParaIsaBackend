@@ -166,6 +166,16 @@ export class ReputationSystem {
     this.lastUpdate = now;
     const decay = REPUTATION_CONFIG.decay.perSecond * dt;
 
+    // Debug log every 10 seconds
+    const agentCount = this.reputation.size;
+    let trustEdgesCount = 0;
+    this.trust.forEach((row) => (trustEdgesCount += row.size));
+    if (Math.floor(now / 10000) !== Math.floor((now - dt * 1000) / 10000)) {
+      logger.debug(
+        `🏆 [ReputationSystem] update: agents=${agentCount}, trustEdges=${trustEdgesCount}, avgRep=${this.statsCache.avgReputation.toFixed(2)}`,
+      );
+    }
+
     this.trust.forEach((row) => {
       row.forEach((edge) => {
         edge.value +=

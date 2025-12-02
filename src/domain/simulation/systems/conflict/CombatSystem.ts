@@ -18,6 +18,7 @@ import type { SimulationEntity } from "../../core/schema";
 import { InventorySystem } from "../economy/InventorySystem";
 import { LifeCycleSystem } from "../lifecycle/LifeCycleSystem";
 import { SocialSystem } from "../social/SocialSystem";
+import { logger } from "../../../../infrastructure/utils/logger";
 
 import type { AnimalSystem } from "../world/animals/AnimalSystem";
 import type { ConflictResolutionSystem } from "./ConflictResolutionSystem";
@@ -176,6 +177,15 @@ export class CombatSystem implements ICombatSystem {
 
     const entitiesById = new Map<string, SimulationEntity>();
     const validEntities = entities.filter((e) => !e.isDead && e.position);
+    const activeCombats = this.combatLog?.length ?? 0;
+    const equippedCount = this.equippedWeapons.size;
+
+    // Debug log every 5 seconds
+    if (Math.floor(now / 5000) !== Math.floor((now - _deltaMs) / 5000)) {
+      logger.debug(
+        `⚔️ [CombatSystem] update: entities=${validEntities.length}, combatLogSize=${activeCombats}, equipped=${equippedCount}`,
+      );
+    }
 
     for (const entity of validEntities) {
       entitiesById.set(entity.id, entity);

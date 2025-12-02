@@ -19,6 +19,7 @@ import {
 } from "../../../../shared/constants/ConflictEnums";
 import { SystemProperty } from "../../../../shared/constants/SystemEnums";
 import { ZoneType } from "../../../../shared/constants/ZoneEnums";
+import { logger } from "@/infrastructure/utils/logger";
 
 const CONFLICT_CONFIG = {
   truce: {
@@ -241,6 +242,16 @@ export class ConflictResolutionSystem {
 
   public update(): void {
     const now = Date.now();
+
+    // Debug log every 10 seconds
+    const activeCardsCount = this.activeCards.size;
+    const activeConflictsCount = this.getActiveConflicts().length;
+    if (Math.floor(now / 10000) !== Math.floor((now - 1000) / 10000)) {
+      logger.debug(
+        `⚖️ [ConflictResolutionSystem] update: activeCards=${activeCardsCount}, conflicts=${activeConflictsCount}, historySize=${this.conflictHistory.length}`,
+      );
+    }
+
     const activeCardsEntries: Array<[string, { aId: string; bId: string }]> =
       Array.from(this.activeCards.entries());
     for (const [cardId, meta] of activeCardsEntries) {

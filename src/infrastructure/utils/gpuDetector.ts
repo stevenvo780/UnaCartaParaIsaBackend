@@ -35,22 +35,22 @@ export function getTensorFlow(): unknown {
   tfLoadAttempted = true;
 
   try {
-    cachedTf = require("@tensorflow/tfjs-node-gpu");
-    logger.info("✅ TensorFlow.js GPU loaded successfully");
+    cachedTf = require("@tensorflow/tfjs-node");
+    logger.info("✅ TensorFlow.js CPU loaded successfully");
     return cachedTf;
-  } catch (gpuErr) {
-    logger.debug("TensorFlow GPU not available", {
-      error: gpuErr instanceof Error ? gpuErr.message : String(gpuErr),
+  } catch (cpuErr) {
+    logger.debug("TensorFlow CPU not available", {
+      error: cpuErr instanceof Error ? cpuErr.message : String(cpuErr),
     });
   }
 
   try {
-    cachedTf = require("@tensorflow/tfjs-node");
-    logger.info("✅ TensorFlow.js CPU loaded (fallback)");
+    cachedTf = require("@tensorflow/tfjs-node-gpu");
+    logger.info("✅ TensorFlow.js GPU loaded (if available)");
     return cachedTf;
-  } catch (cpuErr) {
-    logger.debug("TensorFlow CPU also unavailable", {
-      error: cpuErr instanceof Error ? cpuErr.message : String(cpuErr),
+  } catch (gpuErr) {
+    logger.debug("TensorFlow GPU also unavailable", {
+      error: gpuErr instanceof Error ? gpuErr.message : String(gpuErr),
     });
   }
 

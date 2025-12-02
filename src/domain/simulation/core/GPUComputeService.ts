@@ -1,7 +1,7 @@
 import { logger } from "../../../infrastructure/utils/logger";
 import { injectable } from "inversify";
 
-type TF = typeof import("@tensorflow/tfjs-node-gpu");
+type TF = typeof import("@tensorflow/tfjs-node");
 
 /**
  * GPU computation service abstraction using TensorFlow.js.
@@ -68,7 +68,7 @@ export class GPUComputeService {
         "🔄 Lazy-loading TensorFlow GPU module (entity threshold exceeded)...",
       );
 
-      this.tf = await import("@tensorflow/tfjs-node-gpu");
+      this.tf = await import("@tensorflow/tfjs-node");
       await this.tf.ready();
 
       const backend = this.tf.getBackend();

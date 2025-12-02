@@ -1,63 +1,93 @@
-# 🧠 Arquitectura y Flujos del Sistema de IA de Agentes
+# 🧠 IA de Agentes — v4 (ECS + Tareas Unificadas)
+
+Este documento describe la IA actual basada en tareas unificadas, `SystemRegistry` y `EventBus`. Sustituye el modelo legacy de “goals/actions” y `processAgent()`.
+
+Para diagrama detallado ver: `UnaCartaParaIsaBackend/diagrams/AI_FLOWS.md`.
 
 ---
 
-## 📊 Arquitectura del Ciclo de IA
+## Panorama
 
-```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        MULTI-RATE SCHEDULER                                 │
-│  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐                        │
-│  │  FAST 50ms  │   │ MEDIUM 250ms│   │  SLOW 1000ms│                        │
-│  │ ─────────── │   │ ─────────── │   │ ─────────── │                        │
-│  │ Movement    │   │ AISystem    │   │ Economy     │                        │
-│  │ Combat      │   │ Needs       │   │ Market      │                        │
-│  │             │   │ Social      │   │ Governance  │                        │
-│  │             │   │ Household   │   │ Production  │                        │
-│  │             │   │ LifeCycle   │   │ Building    │                        │
-│  │             │   │ Time        │   │ Crafting    │                        │
-│  │             │   │ Role        │   │ WorldRes    │                        │
-│  │             │   │ Task        │   │             │                        │
-│  │             │   │ Animal      │   │             │                        │
-│  └─────────────┘   └─────────────┘   └─────────────┘                        │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          AISystem.update()                                 │
-│  ┌────────────────────────────────────────────────────────────────────────┐ │
-│  │ 1. Proceso por lotes (BATCH_SIZE = 2 agentes/tick)                     │ │
-│  │ 2. Para cada agente:                                                  │ │
-│  │    ├── Verificar si playerControlled → SKIP                           │ │
-│  │    ├── Verificar si offDuty → SKIP                                    │ │
-│  │    ├── Verificar si isDead → SKIP                                     │ │
-│  │    └── processAgent()                                                 │ │
-│  └────────────────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        processAgent(agentId, aiState, now)                 │
-│  ┌────────────────────────────────────────────────────────────────────────┐ │
-│  │ 1. IF currentGoal exists:                                              │ │
-│  │    ├── isGoalCompleted? → completeGoal() → shift queue                 │ │
-│  │    ├── isGoalInvalid? → failGoal() → clear goal                        │ │
-│  │    └── hasCurrentAction? → RETURN (esperar)                            │ │
-│  │                                                                        │ │
-│  │ 2. prePlanGoals() - Llenar cola de objetivos (MAX_QUEUED_GOALS = 3)    │ │
-│  │                                                                        │ │
-│  │ 3. IF no currentGoal:                                                  │ │
-│  │    ├── Tomar de goalQueue si existe                                    │ │
-│  │    └── makeDecision() → planGoals() → seleccionar mejor                │ │
-│  │                                                                        │ │
-│  │ 4. IF currentGoal válido:                                              │ │
-│  │    ├── Validar objetivo antes de ejecutar                              │ │
-│  │    ├── IF isMoving → RETURN                                            │ │
-│  │    ├── planAction() → AIActionPlanner                                  │ │
-│  │    └── executeAction() → AIActionExecutor                              │ │
-│  └────────────────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────┘
-````
+- Emisión de tareas por otros sistemas vía `EventBus("ai:task_emit")`.
+- `AISystem.update()` cada ~100ms (configurable) procesa detectores, cola y handlers.
+- `TaskQueue` gestiona prioridad, expiración y desduplicación por agente.
+- `SystemRegistry` provee acceso tipado a subsistemas (needs, movement, worldQuery, combat, crafting, building, inventory, economy, social, etc.).
+
+---
+
+## Flujo de una tarea
+
+1) Sistema externo emite evento:
+
+```
+eventBus.emit("ai:task_emit", { agentId, type, priority, target?, params?, source? })
+```
+
+2) `AISystem.emitTask()` encola o sube la prioridad (boost acumulativo) si ya existe.
+
+3) En `AISystem.update()`:
+- Ejecuta detectores (hambre/sed/energía/peligro/rol/tiempo)
+- Limpia expiradas del `TaskQueue`
+- Activa `activeTask` si no hay una en curso (dequeue por mayor prioridad)
+- Llama al handler correspondiente
+
+---
+
+## Handlers por tipo de tarea
+
+```
+SATISFY_NEED  → handleConsume    → needs, inventory, worldQuery
+REST          → handleRest       → needs, movement
+GATHER        → handleGather     → movement, worldQuery, inventory, worldResources
+ATTACK/HUNT   → handleAttack     → combat, movement, animals
+FLEE          → handleFlee       → movement
+SOCIALIZE     → handleSocialize  → social
+EXPLORE       → handleExplore    → movement, worldQuery
+CRAFT         → handleCraft      → crafting, inventory
+BUILD         → handleBuild      → building, reservation, worldResources, terrain, task
+DEPOSIT       → handleDeposit    → inventory
+TRADE         → handleTrade      → economy, inventory, social
+IDLE          → (implícito)      → no-op
+```
+
+---
+
+## Consultas espaciales y batch/GPU
+
+- `WorldQueryService` centraliza recursos, animales, agentes, tiles y zonas.
+- `SharedSpatialIndex` (reconstruido por tick) optimiza queries (O(log n + k)).
+- Batch vectorizado con `Float32Array` para movimiento/necesidades/social.
+- GPU opcional vía `GPUComputeService` con lazy-load de TensorFlow.js.
+  - Para operaciones de TF, se usa CPU para N < 1000 y GPU a partir de ≥ 1000 entidades.
+  - `GPUBatchQueryService` accumula queries y decide CPU/GPU según volumen (entidades ≥ 100, queries ≥ 50).
+
+---
+
+## Scheduling y memoria del agente
+
+- `updateInterval`: 100ms por defecto (control por agente con `lastUpdate`).
+- `activeTask[agentId]`: a lo sumo una tarea activa por agente.
+- Reglas básicas: si `isDead` u `offDuty` → no se activan tareas.
+- Memoria ligera por agente: recursos conocidos, zonas visitadas, última exploración.
+
+---
+
+## Eventos relevantes
+
+- Emisión: `AGENT_ACTION_COMPLETE`, `RESOURCE_CONSUMED`, `NEED_CRITICAL`, `NEED_SATISFIED`, `COMBAT_HIT`, `COMBAT_KILL`, `ANIMAL_HUNTED`, `BUILDING_CONSTRUCTION_STARTED`, `BUILDING_CONSTRUCTED`.
+- Recepción (IA): `ai:task_emit` (nuevas tareas desde otros sistemas).
+
+---
+
+## Referencias cruzadas
+
+- Movimiento: `diagrams/MOVEMENT_FLOWS.md` (cola de pathfinding, batch, fatiga)
+- Necesidades: `diagrams/NEEDS_FLOWS.md` (decay/cross-effects, batch)
+- Combate: `diagrams/COMBAT_FLOWS.md` (detección espacial, logging)
+- Economía: `diagrams/ECONOMY_FLOWS.md` (producción, salarios)
+- Construcción: `diagrams/BUILDING_FLOWS.md` (reservas, mantenimiento)
+- Recursos del mundo: `diagrams/WORLDRESOURCE_FLOWS.md` (spawn por chunks, grid)
+- Animales: `diagrams/ANIMAL_FLOWS.md` (spawning, necesidades, batch)
 
 ---
 

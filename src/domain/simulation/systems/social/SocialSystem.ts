@@ -125,6 +125,17 @@ export class SocialSystem implements ISocialSystem {
     this.lastUpdate += deltaTimeMs;
     const now = getFrameTime();
 
+    const agentCount = this.gameState.agents?.filter((a) => !a.isDead).length ?? 0;
+    const edgeCount = this.edges.size;
+    const groupCount = this.groups.length;
+
+    // Debug log every 5 seconds
+    if (Math.floor(now / 5000) !== Math.floor((now - deltaTimeMs) / 5000)) {
+      logger.debug(
+        `👥 [SocialSystem] update: agents=${agentCount}, edges=${edgeCount}, groups=${groupCount}, edgesModified=${this.edgesModified}`,
+      );
+    }
+
     this.updateSpatialGridIncremental();
 
     await this.updateProximity(dt);

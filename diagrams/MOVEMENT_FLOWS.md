@@ -1,4 +1,4 @@
-# 🚶 Auditoría Completa del Sistema de Movimiento
+# 🚶 Sistema de Movimiento — v4
 
 ## 📊 Arquitectura del Sistema de Movimiento
 
@@ -190,10 +190,11 @@
    - Evita bloqueo con muchas solicitudes
    - Deduplica solicitudes por entityId
 
-4. **GPU Batch Processing**
-   - MovementBatchProcessor para >= 5 entidades
-   - Float32Array buffers para eficiencia
-   - Fallback a CPU si GPU no disponible
+4. **Batch + GPU (opcional)**
+   - MovementBatchProcessor siempre usa buffers `Float32Array`
+   - GPUComputeService se activa si hay GPU y entidades ≥ 1000
+   - Por debajo de 1000 entidades, CPU es más eficiente (fallback automático)
+   - TensorFlow.js se carga de forma lazy solo al superar el umbral
 
 5. **Zone Distance Precomputation**
    - precomputeZoneDistances() en init

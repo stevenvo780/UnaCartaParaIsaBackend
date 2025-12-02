@@ -1,4 +1,4 @@
-# 🧠 Auditoría Completa del Sistema de Necesidades
+# 🧠 Sistema de Necesidades — v4
 
 ## 📊 Arquitectura del Sistema de Necesidades
 
@@ -205,9 +205,10 @@
 
 ### Optimizaciones Implementadas
 
-1. **GPU Batch Processing**
-   - NeedsBatchProcessor para >= 5 entidades
-   - Float32Array con 7 necesidades × N entidades
+1. **Batch + GPU (opcional)**
+   - NeedsBatchProcessor opera sobre `Float32Array` (7 necesidades × N)
+   - GPUComputeService se activa si hay GPU y entidades ≥ 1000
+   - Por debajo de 1000, CPU es más eficiente (fallback automático)
    - applyDecayBatch() y applyCrossEffectsBatch() vectorizados
 
 2. **Social Morale GPU Acceleration**

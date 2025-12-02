@@ -182,6 +182,16 @@ export class ResourceReservationSystem {
    */
   public update(): void {
     const now = this.now();
+    // Debug log every 10 seconds to confirm system is running
+    if (now % 10000 < 1000) {
+      const stats = {
+        activeReservations: this.reservations.size,
+        lastCleanup: this.lastCleanup,
+      };
+      logger.debug(
+        `[ResourceReservationSystem] update() | reservations=${stats.activeReservations} | lastCleanup=${stats.lastCleanup}`,
+      );
+    }
     if (now - this.lastCleanup < this.cleanupIntervalMs) return;
     this.lastCleanup = now;
     this.cleanupStaleReservations();

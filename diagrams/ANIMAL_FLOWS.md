@@ -1,4 +1,4 @@
-# 🐾 Auditoría Completa del Sistema de Animales
+# 🐾 Sistema de Animales — v4
 
 ## 📊 Arquitectura del Sistema de Animales
 

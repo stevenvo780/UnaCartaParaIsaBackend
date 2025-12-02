@@ -6,6 +6,7 @@ import { TYPES } from "../../../../../config/Types";
 import type { SharedSpatialIndex } from "../../../core/SharedSpatialIndex";
 import type { AgentRegistry } from "../../agents/AgentRegistry";
 import { EntityType } from "../../../../../shared/constants/EntityEnums";
+import { logger } from "../../../../../infrastructure/utils/logger";
 
 export interface ResourceAlert {
   id: string;
@@ -293,6 +294,14 @@ export class SharedKnowledgeSystem extends EventEmitter {
    */
   public update(): void {
     const now = Date.now();
+
+    // Debug log every 10 seconds
+    if (now % 10000 < 1000) {
+      const stats = this.getStats();
+      logger.debug(
+        `[SharedKnowledgeSystem] update() | resourceAlerts=${stats.activeResourceAlerts} | threatAlerts=${stats.activeThreatAlerts} | agentsNotified=${stats.totalAgentsNotified}`,
+      );
+    }
 
     for (const [id, alert] of this.resourceAlerts.entries()) {
       if (alert.expiresAt < now) {

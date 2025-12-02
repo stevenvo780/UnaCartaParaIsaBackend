@@ -1,4 +1,4 @@
-# 💰 Auditoría Completa del Sistema de Economía
+# 💰 Sistema de Economía — v4
 
 ## 📊 Arquitectura del Sistema de Economía
 

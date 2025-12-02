@@ -697,13 +697,7 @@ export class AISystem extends EventEmitter {
 
     const nearestWater = wqs.findNearestWater(position.x, position.y);
     if (nearestWater) {
-      if ("id" in nearestWater) {
-        result.nearestWater = {
-          id: nearestWater.id,
-          x: nearestWater.position.x,
-          y: nearestWater.position.y,
-        };
-      } else if ("worldX" in nearestWater) {
+      if ("worldX" in nearestWater) {
         result.nearestWater = {
           id: `tile_${nearestWater.tileX}_${nearestWater.tileY}`,
           x: nearestWater.worldX,

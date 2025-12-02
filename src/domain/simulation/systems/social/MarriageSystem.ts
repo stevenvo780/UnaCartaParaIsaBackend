@@ -292,6 +292,15 @@ export class MarriageSystem {
   public update(): void {
     const now = Date.now();
 
+    // Debug log every 10 seconds
+    const marriedGroups = this.marriageGroups.size;
+    const pendingProposals = this.pendingProposals.size;
+    if (Math.floor(now / 10000) !== Math.floor((now - 1000) / 10000)) {
+      logger.debug(
+        `💍 [MarriageSystem] update: groups=${marriedGroups}, pendingProposals=${pendingProposals}`,
+      );
+    }
+
     if (now - this.lastProposalCleanup >= 60000) {
       const proposalsEntries = Array.from(this.pendingProposals.entries());
       for (const [targetId, proposal] of proposalsEntries) {

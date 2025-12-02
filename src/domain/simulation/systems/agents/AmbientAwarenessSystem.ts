@@ -18,6 +18,7 @@ import {
 } from "../../../../shared/constants/AmbientEnums";
 import { NeedType } from "../../../../shared/constants/AIEnums";
 import { ResourceType } from "../../../../shared/constants/ResourceEnums";
+import { logger } from "@/infrastructure/utils/logger";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../../config/Types";
 import { SystemProperty } from "../../../../shared/constants/SystemEnums";
@@ -98,6 +99,13 @@ export class AmbientAwarenessSystem {
     const now = Date.now();
     const wellbeing = this.computeWellbeing();
     const ambientState = this.computeAmbientState(wellbeing);
+
+    // Debug log every 10 seconds
+    if (Math.floor(now / 10000) !== Math.floor((now - 1000) / 10000)) {
+      logger.debug(
+        `🌡️ [AmbientAwarenessSystem] update: wellbeing=${wellbeing.average.toFixed(1)}, variance=${wellbeing.variance.toFixed(2)}, state=${ambientState}`,
+      );
+    }
 
     this.snapshot = {
       wellbeing,

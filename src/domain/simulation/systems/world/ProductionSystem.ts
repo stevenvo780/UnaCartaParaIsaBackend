@@ -11,6 +11,7 @@ import { ResourceType as ResourceTypeEnum } from "../../../../shared/constants/R
 import { ZoneType } from "../../../../shared/constants/ZoneEnums";
 import { StockpileType } from "../../../../shared/constants/ZoneEnums";
 import { TileType } from "../../../../shared/constants/TileTypeEnums";
+import { logger } from "@/infrastructure/utils/logger";
 
 interface ProductionConfig {
   updateIntervalMs: number;
@@ -121,7 +122,21 @@ export class ProductionSystem {
     }
     this.lastUpdate = now;
 
-    for (const zone of (this.state.zones || []) as MutableZone[]) {
+    const zones = (this.state.zones || []) as MutableZone[];
+    const productionZones = zones.filter((z) => this.isProductionZone(z));
+    const totalAssignments = Array.from(this.assignments.values()).reduce(
+      (acc, set) => acc + set.size,
+      0,
+    );
+
+    // Debug log every 10 seconds
+    if (Math.floor(now / 10000) !== Math.floor((now - this.config.updateIntervalMs) / 10000)) {
+      logger.debug(
+        `🏭 [ProductionSystem] update: zones=${zones.length}, productionZones=${productionZones.length}, assignments=${totalAssignments}`,
+      );
+    }
+
+    for (const zone of zones) {
       if (!this.isProductionZone(zone)) continue;
       this.ensureAssignments(zone);
       this.processProduction(zone, now);

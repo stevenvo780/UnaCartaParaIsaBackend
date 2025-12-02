@@ -1,11 +1,11 @@
-type TF = typeof import("@tensorflow/tfjs-node-gpu");
+type TF = typeof import("@tensorflow/tfjs-node");
 let tf: TF | null = null;
 let tfLoadPromise: Promise<TF> | null = null;
 
 async function getTensorFlow(): Promise<TF> {
   if (tf) return tf;
   if (tfLoadPromise) return tfLoadPromise;
-  tfLoadPromise = import("@tensorflow/tfjs-node-gpu").then((module) => {
+  tfLoadPromise = import("@tensorflow/tfjs-node").then((module) => {
     tf = module;
     return tf;
   });

@@ -79,7 +79,7 @@ simulationRunner
     detectGPUAvailability();
 
     server = app.listen(CONFIG.PORT, () => {
-      logger.info(`Save server running on http://localhost:${CONFIG.PORT}`);
+      logger.info(`Backend running on http://localhost:${CONFIG.PORT}`);
       if (!CONFIG.USE_LOCAL_STORAGE) {
         logger.info(`Using GCS bucket: ${CONFIG.BUCKET_NAME}`);
       } else {

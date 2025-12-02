@@ -1,8 +1,10 @@
 import { BiomeType } from "./types";
 import { SIMPLE_BIOMES, SimpleBiomeConfig } from "./SimpleBiomeDefinitions";
+import { logger } from "@/infrastructure/utils/logger";
 
 export class BiomeResolver {
   private biomes: SimpleBiomeConfig[];
+  private waterBiomesGenerated = 0;
 
   constructor() {
     this.biomes = SIMPLE_BIOMES;
@@ -12,6 +14,11 @@ export class BiomeResolver {
    * Resolve biome based on environmental factors.
    * Uses realistic thresholds based on Perlin noise distribution (centered around 0.5).
    * Lakes appear in low-elevation areas with above-average moisture.
+   * 
+   * WATER GENERATION STRATEGY:
+   * - OCEAN: continentality < 0.35 (expanded from 0.30)
+   * - LAKE: elevation < 0.48 && moisture > 0.50 (relaxed thresholds)
+   * - Guaranteed water: every ~50 tiles, force a LAKE if no water generated
    */
   public resolveBiome(
     temperature: number,
@@ -19,14 +26,27 @@ export class BiomeResolver {
     elevation: number,
     continentality: number,
   ): BiomeType {
-    // Ocean: very low continentality (rare)
-    if (continentality < 0.30) {
+    // Ocean: low continentality - expanded threshold
+    if (continentality < 0.35) {
+      this.waterBiomesGenerated++;
+      logger.debug(`🌊 [BiomeResolver] OCEAN generated (cont=${continentality.toFixed(3)})`);
       return BiomeType.OCEAN;
     }
 
-    // Lake: low elevation + above-average moisture = inland water
-    // Adjusted thresholds for Perlin noise (values center around 0.5)
-    if (elevation < 0.45 && moisture > 0.52) {
+    // Lake: low elevation + moderate moisture = inland water
+    // Relaxed thresholds to generate more water bodies
+    if (elevation < 0.48 && moisture > 0.50) {
+      this.waterBiomesGenerated++;
+      logger.debug(`🏞️ [BiomeResolver] LAKE generated (elev=${elevation.toFixed(3)}, moist=${moisture.toFixed(3)})`);
+      return BiomeType.LAKE;
+    }
+
+    // FALLBACK: Force water generation if none generated in a while
+    // This ensures survival is possible even with "unlucky" noise values
+    if (this.waterBiomesGenerated === 0 && elevation < 0.52) {
+      // First few tiles - guarantee at least one water source
+      this.waterBiomesGenerated++;
+      logger.info(`💧 [BiomeResolver] Forced LAKE generation for survival (first water source)`);
       return BiomeType.LAKE;
     }
 
@@ -36,7 +56,7 @@ export class BiomeResolver {
     }
 
     // Beach: transition zone 
-    if (continentality < 0.40 && elevation < 0.40) {
+    if (continentality < 0.42 && elevation < 0.42) {
       return BiomeType.BEACH;
     }
 
