@@ -292,6 +292,17 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     const dtSeconds = (now - this.lastUpdate) / 1000;
     this.lastUpdate = now;
 
+    // Debug: Log needs for first agent periodically
+    if (Math.random() < 0.03) {
+      const firstEntry = this.entityNeeds.entries().next().value;
+      if (firstEntry) {
+        const [agentId, needs] = firstEntry;
+        logger.debug(
+          `[NeedsSystem] ${agentId}: h=${Math.round(needs.hunger)}, t=${Math.round(needs.thirst)}, e=${Math.round(needs.energy)}, dt=${dtSeconds.toFixed(2)}s, size=${this.entityNeeds.size}`
+        );
+      }
+    }
+
     if (this.entityNeeds.size >= this.BATCH_THRESHOLD) {
       await this.updateBatch(dtSeconds, now);
     } else {
@@ -301,6 +312,16 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
 
   private updateTraditional(dtSeconds: number, _now: number): void {
     const startTime = performance.now();
+    // Debug log one agent's needs periodically
+    if (Math.random() < 0.02) {
+      const firstAgent = this.entityNeeds.entries().next().value;
+      if (firstAgent) {
+        const [agentId, needs] = firstAgent;
+        logger.debug(
+          `[NeedsSystem] Agent ${agentId}: h=${Math.round(needs.hunger)}, t=${Math.round(needs.thirst)}, e=${Math.round(needs.energy)}, dt=${dtSeconds.toFixed(2)}s`
+        );
+      }
+    }
     for (const [entityId, needs] of this.entityNeeds.entries()) {
       const entityStartTime = performance.now();
       const action = this.entityActions.get(entityId) || ActionType.IDLE;
@@ -373,6 +394,15 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     }
 
     this.batchProcessor.syncToMap(this.entityNeeds);
+
+    // Debug log every ~10 ticks
+    if (this._tickCounter % 10 === 0 && this.entityNeeds.size > 0) {
+      const first = Array.from(this.entityNeeds.entries())[0];
+      if (first) {
+        const [id, n] = first;
+        logger.debug(`[NeedsSystem] ${id}: h=${n.hunger.toFixed(0)}, t=${n.thirst.toFixed(0)}, e=${n.energy.toFixed(0)}`);
+      }
+    }
 
     await this.applySocialMoraleBoostBatch(entityIdArray);
 
@@ -1548,5 +1578,173 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       system: "needs",
       message: `Failed to apply need change for ${agentId}`,
     };
+  }
+
+  // ============================================================================
+  // TASK GENERATION - Single Source of Truth for needs-based tasks
+  // ============================================================================
+
+  private static readonly THRESHOLDS = {
+    CRITICAL: 15,
+    URGENT: 30,
+    LOW: 50,
+  } as const;
+
+  private static readonly PRIORITIES = {
+    CRITICAL: 0.95,
+    URGENT: 0.8,
+    HIGH: 0.6,
+    NORMAL: 0.4,
+    LOW: 0.2,
+  } as const;
+
+  /**
+   * Generates pending tasks based on agent's need state.
+   * This is the SINGLE SOURCE OF TRUTH for need-based task generation.
+   * Detectors should call this instead of reimplementing threshold logic.
+   *
+   * @param agentId - The agent to check
+   * @param spatialContext - Optional spatial context for target positions
+   * @returns Array of task descriptors ready to be converted to full tasks
+   */
+  public getPendingTasks(
+    agentId: string,
+    spatialContext?: {
+      nearestFood?: { id: string; x: number; y: number };
+      nearestWater?: { id: string; x: number; y: number };
+      nearbyAgents?: readonly { id: string; x: number; y: number }[];
+    },
+  ): Array<{
+    type: string;
+    priority: number;
+    target?: { entityId?: string; position?: { x: number; y: number } };
+    params?: Record<string, unknown>;
+    source: string;
+  }> {
+    const needs = this.entityNeeds.get(agentId);
+    if (!needs) return [];
+
+    const tasks: Array<{
+      type: string;
+      priority: number;
+      target?: { entityId?: string; position?: { x: number; y: number } };
+      params?: Record<string, unknown>;
+      source: string;
+    }> = [];
+
+    // Hunger check
+    if (needs.hunger < NeedsSystem.THRESHOLDS.LOW) {
+      const priority = this.calculatePriority(needs.hunger);
+      tasks.push({
+        type: "satisfy_need",
+        priority,
+        target: spatialContext?.nearestFood
+          ? {
+              entityId: spatialContext.nearestFood.id,
+              position: {
+                x: spatialContext.nearestFood.x,
+                y: spatialContext.nearestFood.y,
+              },
+            }
+          : undefined,
+        params: { needType: NeedType.HUNGER, resourceType: "food" },
+        source: "needs:hunger",
+      });
+    }
+
+    // Thirst check
+    if (needs.thirst < NeedsSystem.THRESHOLDS.LOW) {
+      const priority = this.calculatePriority(needs.thirst);
+      tasks.push({
+        type: "satisfy_need",
+        priority,
+        target: spatialContext?.nearestWater
+          ? {
+              entityId: spatialContext.nearestWater.id,
+              position: {
+                x: spatialContext.nearestWater.x,
+                y: spatialContext.nearestWater.y,
+              },
+            }
+          : undefined,
+        params: { needType: NeedType.THIRST, resourceType: "water" },
+        source: "needs:thirst",
+      });
+    }
+
+    // Energy check
+    if (needs.energy < NeedsSystem.THRESHOLDS.LOW) {
+      const priority = this.calculatePriority(needs.energy);
+      tasks.push({
+        type: "rest",
+        priority,
+        params: { needType: NeedType.ENERGY, duration: 5000 },
+        source: "needs:energy",
+      });
+    }
+
+    // Social check
+    if (
+      needs.social < NeedsSystem.THRESHOLDS.LOW &&
+      spatialContext?.nearbyAgents?.length
+    ) {
+      const target = spatialContext.nearbyAgents[0];
+      tasks.push({
+        type: "socialize",
+        priority: this.calculateSocialPriority(needs.social),
+        target: { entityId: target.id, position: { x: target.x, y: target.y } },
+        params: { needType: NeedType.SOCIAL },
+        source: "needs:social",
+      });
+    }
+
+    // Fun check
+    if (
+      needs.fun < NeedsSystem.THRESHOLDS.LOW &&
+      spatialContext?.nearbyAgents?.length
+    ) {
+      const target = spatialContext.nearbyAgents[0];
+      tasks.push({
+        type: "socialize",
+        priority: this.calculateSocialPriority(needs.fun) * 0.9,
+        target: { entityId: target.id, position: { x: target.x, y: target.y } },
+        params: { needType: NeedType.FUN, action: ZoneType.PLAY },
+        source: "needs:fun",
+      });
+    }
+
+    // Mental health check
+    if (needs.mentalHealth < NeedsSystem.THRESHOLDS.LOW) {
+      tasks.push({
+        type: "rest",
+        priority: this.calculateSocialPriority(needs.mentalHealth),
+        params: { needType: NeedType.MENTAL_HEALTH, action: "meditate" },
+        source: "needs:mental",
+      });
+    }
+
+    return tasks;
+  }
+
+  /**
+   * Calculate priority based on need level
+   */
+  private calculatePriority(value: number): number {
+    if (value < NeedsSystem.THRESHOLDS.CRITICAL)
+      return NeedsSystem.PRIORITIES.CRITICAL;
+    if (value < NeedsSystem.THRESHOLDS.URGENT)
+      return NeedsSystem.PRIORITIES.URGENT;
+    return NeedsSystem.PRIORITIES.HIGH;
+  }
+
+  /**
+   * Calculate priority for social needs (less urgent)
+   */
+  private calculateSocialPriority(value: number): number {
+    if (value < NeedsSystem.THRESHOLDS.CRITICAL)
+      return NeedsSystem.PRIORITIES.HIGH;
+    if (value < NeedsSystem.THRESHOLDS.URGENT)
+      return NeedsSystem.PRIORITIES.NORMAL;
+    return NeedsSystem.PRIORITIES.LOW;
   }
 }

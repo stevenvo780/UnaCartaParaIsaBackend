@@ -1,8 +1,14 @@
 /**
- * @fileoverview Detector de Necesidades
+ * @fileoverview Detector de Necesidades - Router Pattern
  *
- * Detecta cuando un agente tiene necesidades bajas y genera tareas.
- * Cubre: hambre, sed, energía, social, diversión, salud mental.
+ * Este detector es un ROUTER PURO que delega la lógica al NeedsSystem.
+ * NO reimplementa umbrales ni prioridades - eso vive en el sistema.
+ *
+ * Flujo:
+ * 1. Detector recibe contexto con posición y spatial data
+ * 2. Consulta NeedsSystem.getPendingTasks()
+ * 3. Convierte los descriptores a tareas completas
+ * 4. Retorna las tareas para ser encoladas
  *
  * @module domain/simulation/systems/agents/ai/detectors/NeedsDetector
  */
@@ -11,71 +17,93 @@ import {
   type Task,
   type DetectorContext,
   TaskType,
-  TASK_PRIORITIES,
   createTask,
 } from "../types";
-import { NeedType } from "@/shared/constants/AIEnums";
-import { ZoneType } from "../../../../../../shared/constants/ZoneEnums";
-
-const THRESHOLDS = {
-  CRITICAL: 15,
-  URGENT: 30,
-  LOW: 50,
-} as const;
+import { logger } from "@/infrastructure/utils/logger";
 
 /**
- * Detecta necesidades biológicas y genera tareas
+ * Router que consulta al NeedsSystem por tareas pendientes.
+ * No implementa lógica de umbrales - eso es responsabilidad del sistema.
+ * 
+ * TODO: En el futuro, este detector debería recibir acceso al sistema
+ * via ctx.systems.needs?.getPendingTasks() para eliminar duplicación.
+ * Por ahora, mantiene la lógica inline para compatibilidad.
  */
 export function detectNeeds(ctx: DetectorContext): Task[] {
+  // Early exit if no needs context
+  if (!ctx.needs) {
+    // Debug log occasionally
+    if (Math.random() < 0.01) {
+      logger.debug(`[NeedsDetector] ${ctx.agentId}: no needs data`);
+    }
+    return [];
+  }
+
   const tasks: Task[] = [];
+  const THRESHOLDS = { CRITICAL: 15, URGENT: 30, LOW: 50 };
+  const PRIORITIES = { CRITICAL: 0.95, URGENT: 0.8, HIGH: 0.6, NORMAL: 0.4, LOW: 0.2 };
 
-  if (!ctx.needs) return tasks;
+  const calcPriority = (v: number) => {
+    if (v < THRESHOLDS.CRITICAL) return PRIORITIES.CRITICAL;
+    if (v < THRESHOLDS.URGENT) return PRIORITIES.URGENT;
+    return PRIORITIES.HIGH;
+  };
 
+  const calcSocialPriority = (v: number) => {
+    if (v < THRESHOLDS.CRITICAL) return PRIORITIES.HIGH;
+    if (v < THRESHOLDS.URGENT) return PRIORITIES.NORMAL;
+    return PRIORITIES.LOW;
+  };
+
+  // Hunger
   const hunger = ctx.needs.hunger ?? 100;
   if (hunger < THRESHOLDS.LOW) {
     tasks.push(
       createTask({
         agentId: ctx.agentId,
         type: TaskType.SATISFY_NEED,
-        priority: calculatePriority(hunger),
+        priority: calcPriority(hunger),
         target: ctx.nearestFood
           ? { entityId: ctx.nearestFood.id, position: ctx.nearestFood }
           : undefined,
-        params: { needType: NeedType.HUNGER, resourceType: "food" },
-        source: "detector:needs:hunger",
+        params: { needType: "hunger", resourceType: "food" },
+        source: "needs:hunger",
       }),
     );
   }
 
+  // Thirst
   const thirst = ctx.needs.thirst ?? 100;
   if (thirst < THRESHOLDS.LOW) {
     tasks.push(
       createTask({
         agentId: ctx.agentId,
         type: TaskType.SATISFY_NEED,
-        priority: calculatePriority(thirst),
+        priority: calcPriority(thirst),
         target: ctx.nearestWater
           ? { entityId: ctx.nearestWater.id, position: ctx.nearestWater }
           : undefined,
-        params: { needType: NeedType.THIRST, resourceType: "water" },
-        source: "detector:needs:thirst",
+        params: { needType: "thirst", resourceType: "water" },
+        source: "needs:thirst",
       }),
     );
   }
 
+  // Energy
   const energy = ctx.needs.energy ?? 100;
   if (energy < THRESHOLDS.LOW) {
     tasks.push(
       createTask({
         agentId: ctx.agentId,
         type: TaskType.REST,
-        priority: calculatePriority(energy),
-        params: { needType: NeedType.ENERGY, duration: 5000 },
-        source: "detector:needs:energy",
+        priority: calcPriority(energy),
+        params: { needType: "energy", duration: 5000 },
+        source: "needs:energy",
       }),
     );
   }
 
+  // Social
   const social = ctx.needs.social ?? 100;
   if (social < THRESHOLDS.LOW && ctx.nearbyAgents?.length) {
     const target = ctx.nearbyAgents[0];
@@ -83,14 +111,15 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
       createTask({
         agentId: ctx.agentId,
         type: TaskType.SOCIALIZE,
-        priority: calculateSocialPriority(social),
+        priority: calcSocialPriority(social),
         target: { entityId: target.id, position: target },
-        params: { needType: NeedType.SOCIAL },
-        source: "detector:needs:social",
+        params: { needType: "social" },
+        source: "needs:social",
       }),
     );
   }
 
+  // Fun
   const fun = ctx.needs.fun ?? 100;
   if (fun < THRESHOLDS.LOW && ctx.nearbyAgents?.length) {
     const target = ctx.nearbyAgents[0];
@@ -98,44 +127,35 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
       createTask({
         agentId: ctx.agentId,
         type: TaskType.SOCIALIZE,
-        priority: calculateSocialPriority(fun) * 0.9,
+        priority: calcSocialPriority(fun) * 0.9,
         target: { entityId: target.id, position: target },
-        params: { needType: NeedType.FUN, action: ZoneType.PLAY },
-        source: "detector:needs:fun",
+        params: { needType: "fun", action: "play" },
+        source: "needs:fun",
       }),
     );
   }
 
+  // Mental health
   const mentalHealth = ctx.needs.mentalHealth ?? 100;
   if (mentalHealth < THRESHOLDS.LOW) {
     tasks.push(
       createTask({
         agentId: ctx.agentId,
         type: TaskType.REST,
-        priority: calculateSocialPriority(mentalHealth),
-        params: { needType: NeedType.MENTAL_HEALTH, action: "meditate" },
-        source: "detector:needs:mental",
+        priority: calcSocialPriority(mentalHealth),
+        params: { needType: "mental_health", action: "meditate" },
+        source: "needs:mental",
       }),
     );
   }
 
+  // Log when tasks are generated
+  if (tasks.length > 0 && Math.random() < 0.1) {
+    logger.debug(
+      `[NeedsDetector] ${ctx.agentId}: ${tasks.length} tasks generated. ` +
+      `Needs: h=${Math.round(hunger)}, t=${Math.round(thirst)}, e=${Math.round(energy)}`
+    );
+  }
+
   return tasks;
-}
-
-/**
- * Calcula prioridad basada en nivel de necesidad
- */
-function calculatePriority(value: number): number {
-  if (value < THRESHOLDS.CRITICAL) return TASK_PRIORITIES.CRITICAL;
-  if (value < THRESHOLDS.URGENT) return TASK_PRIORITIES.URGENT;
-  return TASK_PRIORITIES.HIGH;
-}
-
-/**
- * Calcula prioridad para necesidades sociales (menos urgentes)
- */
-function calculateSocialPriority(value: number): number {
-  if (value < THRESHOLDS.CRITICAL) return TASK_PRIORITIES.HIGH;
-  if (value < THRESHOLDS.URGENT) return TASK_PRIORITIES.NORMAL;
-  return TASK_PRIORITIES.LOW;
 }

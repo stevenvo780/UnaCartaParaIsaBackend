@@ -16,6 +16,7 @@ import {
 } from "../types";
 import { moveToPosition, isAtTarget } from "./MoveHandler";
 import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
+import { logger } from "@/infrastructure/utils/logger";
 
 /**
  * @deprecated Use SystemRegistry.needs instead
@@ -42,6 +43,8 @@ export function handleConsume(
   _deps?: ConsumeHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
+
+  logger.debug(`[ConsumeHandler] ${agentId}: type=${task.type}, target=${JSON.stringify(task.target)}, pos=(${position?.x?.toFixed(0)},${position?.y?.toFixed(0)})`);
 
   if (task.type !== TaskType.SATISFY_NEED) {
     return errorResult("Wrong task type");

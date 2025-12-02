@@ -62,6 +62,21 @@ export interface INeedsSystem extends ISystem {
   requestRest(agentId: string): HandlerResult;
   applyNeedChange(agentId: string, need: string, delta: number): HandlerResult;
   getNeeds(agentId: string): Record<string, number | undefined> | undefined;
+  /**
+   * Genera tareas pendientes basadas en el estado de necesidades del agente.
+   * El sistema es la única fuente de verdad sobre umbrales y prioridades.
+   */
+  getPendingTasks(agentId: string, spatialContext?: {
+    nearestFood?: { id: string; x: number; y: number };
+    nearestWater?: { id: string; x: number; y: number };
+    nearbyAgents?: readonly { id: string; x: number; y: number }[];
+  }): Array<{
+    type: string;
+    priority: number;
+    target?: { entityId?: string; position?: { x: number; y: number } };
+    params?: Record<string, unknown>;
+    source: string;
+  }>;
 }
 
 /**

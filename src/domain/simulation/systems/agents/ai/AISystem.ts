@@ -338,6 +338,13 @@ export class AISystem extends EventEmitter {
   public async update(deltaTimeMs: number): Promise<void> {
     const agents = this.gameState.agents ?? [];
 
+    // Debug log every ~10 seconds
+    if (Math.random() < 0.04) {
+      logger.debug(
+        `[AISystem] update(): ${agents.length} agents`,
+      );
+    }
+
     for (const agent of agents) {
       if (agent.isDead) continue;
       this.updateAgent(agent.id, deltaTimeMs);
@@ -363,10 +370,7 @@ export class AISystem extends EventEmitter {
       if (nextTask) {
         this.activeTask.set(agentId, nextTask);
         nextTask.status = TaskStatus.ACTIVE;
-
-        if (this.config.debug) {
-          logger.debug(`[AISystem] ${agentId} starting: ${nextTask.type}`);
-        }
+        logger.debug(`[AISystem] ${agentId} ACTIVATED task: ${nextTask.type}`);
       }
     }
 
@@ -529,6 +533,10 @@ export class AISystem extends EventEmitter {
         this.config.priorityBoost,
       );
     }
+    
+    if (tasks.length > 0) {
+      logger.debug(`[AISystem] runDetectors ${agentId}: ${tasks.length} tasks enqueued, types=${tasks.map(t => t.type).join(",")}`);
+    }
   }
 
   /**
@@ -592,6 +600,13 @@ export class AISystem extends EventEmitter {
           y: nearestWater.worldY,
         };
       }
+    }
+
+    // Debug log ocasional (~2%)
+    if (Math.random() < 0.02) {
+      logger.debug(
+        `[AISystem] buildSpatial ${agentId}: food=${result.nearestFood ? "found" : "none"}, water=${result.nearestWater ? "found" : "none"}`,
+      );
     }
 
     const nearbyAgentsResult = wqs.findAgentsInRadius(
