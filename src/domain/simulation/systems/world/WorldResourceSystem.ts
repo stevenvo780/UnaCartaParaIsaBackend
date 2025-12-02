@@ -357,33 +357,9 @@ export class WorldResourceSystem {
         const pixelX = tile.x * tileSize;
         const pixelY = tile.y * tileSize;
 
-        const isWaterTile =
-          tile.biome === BiomeType.OCEAN ||
-          tile.biome === BiomeType.LAKE ||
-          tile.assets.terrain.includes(TileType.WATER) ||
-          tile.assets.terrain.includes(BiomeType.OCEAN) ||
-          tile.assets.terrain.includes(BiomeType.LAKE);
-
-        if (isWaterTile) {
-          const waterResourceId = `water_tile_${tile.x}_${tile.y}`;
-
-          if (this.resources.has(waterResourceId)) {
-            continue;
-          }
-
-
-          const waterBiome = tile.biome === BiomeType.LAKE ? "lake" : "ocean";
-          const resource = this.spawnWaterTileResource(
-            waterResourceId,
-            {
-              x: pixelX + tileSize / 2,
-              y: pixelY + tileSize / 2,
-            },
-            { tileX: tile.x, tileY: tile.y },
-            waterBiome,
-          );
-          if (resource) spawnedCount++;
-        }
+        // Los tiles de agua (OCEAN/LAKE) NO generan recursos separados.
+        // Los agentes usan directamente los tiles de agua del terreno via WorldQueryService.findWaterTilesNear()
+        // Esto evita crear miles de recursos duplicados innecesarios.
 
         if (tile.assets.vegetation) {
           for (const asset of tile.assets.vegetation) {
@@ -427,35 +403,9 @@ export class WorldResourceSystem {
           }
         }
 
-
-
-
-
-        if (!isWaterTile && tile.biome) {
-          const waterSuitableBiomes: string[] = [
-            BiomeType.WETLAND,
-            BiomeType.VILLAGE,
-          ];
-          if (waterSuitableBiomes.includes(tile.biome)) {
-
-            const waterSpawnProb =
-              tile.biome === BiomeType.WETLAND ? 0.01 : 0.02;
-            if (Math.random() < waterSpawnProb) {
-              const waterResourceId = `water_fresh_${tile.x}_${tile.y}`;
-              if (!this.resources.has(waterResourceId)) {
-                const resource = this.spawnFreshWaterResource(
-                  waterResourceId,
-                  {
-                    x: pixelX + tileSize / 2,
-                    y: pixelY + tileSize / 2,
-                  },
-                  tile.biome,
-                );
-                if (resource) spawnedCount++;
-              }
-            }
-          }
-        }
+        // NO generamos water_fresh para biomas terrestres.
+        // El agua solo proviene de tiles OCEAN/LAKE del terreno o estructuras como pozos.
+        // Los agentes usan WorldQueryService.findWaterTilesNear() para encontrar agua.
       }
     }
 
@@ -466,70 +416,6 @@ export class WorldResourceSystem {
     }
 
     return spawnedCount;
-  }
-
-  /**
-   * Spawns a water resource linked to a specific terrain tile.
-   * When depleted, the terrain tile will be converted from water to dirt.
-   */
-  private spawnWaterTileResource(
-    id: string,
-    position: { x: number; y: number },
-    tileCoords: { tileX: number; tileY: number },
-    biome: string,
-  ): WorldResourceInstance | null {
-    const config = getResourceConfig(WorldResourceType.WATER_SOURCE);
-    if (!config) return null;
-
-    const resource: WorldResourceInstance = {
-      id,
-      type: WorldResourceType.WATER_SOURCE,
-      position,
-      state: ResourceState.PRISTINE,
-      harvestCount: 0,
-      lastHarvestTime: 0,
-      biome: biome as BiomeType,
-      spawnedAt: Date.now(),
-
-      linkedTileX: tileCoords.tileX,
-      linkedTileY: tileCoords.tileY,
-    };
-
-    this.addResource(resource);
-
-    simulationEvents.emit(GameEventType.RESOURCE_SPAWNED, { resource });
-
-    return resource;
-  }
-
-  /**
-   * Spawns a freshwater resource (pond, well, stream) in non-ocean biomes.
-   * These are standalone water sources not linked to terrain tiles.
-   */
-  private spawnFreshWaterResource(
-    id: string,
-    position: { x: number; y: number },
-    biome: string,
-  ): WorldResourceInstance | null {
-    const config = getResourceConfig(WorldResourceType.WATER_SOURCE);
-    if (!config) return null;
-
-    const resource: WorldResourceInstance = {
-      id,
-      type: WorldResourceType.WATER_SOURCE,
-      position,
-      state: ResourceState.PRISTINE,
-      harvestCount: 0,
-      lastHarvestTime: 0,
-      biome: biome as BiomeType,
-      spawnedAt: Date.now(),
-    };
-
-    this.addResource(resource);
-
-    simulationEvents.emit(GameEventType.RESOURCE_SPAWNED, { resource });
-
-    return resource;
   }
 
   private mapAssetToResource(asset: string): WorldResourceType | null {

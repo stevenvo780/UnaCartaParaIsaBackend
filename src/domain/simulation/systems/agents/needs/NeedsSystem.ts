@@ -16,6 +16,7 @@ import type { GPUComputeService } from "../../../core/GPUComputeService";
 import type { AgentRegistry } from "../../agents/AgentRegistry";
 import type { INeedsSystem } from "../../agents/SystemRegistry";
 import type { StateDirtyTracker } from "../../../core/StateDirtyTracker";
+import type { WorldQueryService } from "../../world/WorldQueryService";
 import { getFrameTime } from "../../../../../shared/FrameTime";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../../../core/PerformanceMonitor";
@@ -90,6 +91,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
   private entityIndex?: EntityIndex;
   private spatialIndex?: SharedSpatialIndex;
   private agentRegistry?: AgentRegistry;
+  private worldQueryService?: WorldQueryService;
 
   private entityActions = new Map<string, string>();
 
@@ -116,6 +118,9 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     @inject(TYPES.StateDirtyTracker)
     @optional()
     private dirtyTracker?: StateDirtyTracker,
+    @inject(TYPES.WorldQueryService)
+    @optional()
+    worldQueryService?: WorldQueryService,
   ) {
     super();
     this.gameState = gameState;
@@ -123,6 +128,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     this.spatialIndex = spatialIndex;
     this.gpuService = gpuService;
     this.agentRegistry = agentRegistry;
+    this.worldQueryService = worldQueryService;
     this.config = {
       decayRates: {
         [NeedType.HUNGER]: 0.2,
@@ -1434,18 +1440,16 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
   }
 
   /**
-   * Try to gather resources from a nearby world resource.
+   * Try to gather resources from a nearby world resource OR water tile.
    * Used when agent inventory is empty but agent is near a resource source.
+   * 
+   * For water (thirst): Uses WorldQueryService to find OCEAN tiles directly.
+   * The agent drinks from the terrain tile - no resource object needed.
    */
   private tryGatherFromNearbyResource(
     agentId: string,
     needType: string,
   ): { gathered: boolean; resourceId?: string } {
-    if (!this.gameState?.worldResources || !this.inventorySystem) {
-      return { gathered: false };
-    }
-
-
     const agent = this.gameState.agents?.find((a) => a.id === agentId);
     if (!agent || !agent.position) {
       return { gathered: false };
@@ -1454,15 +1458,68 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     const agentPos = { x: agent.position.x, y: agent.position.y };
     const GATHER_RANGE = 50;
 
+    // For THIRST: Search for OCEAN tiles using WorldQueryService
+    if (needType === NeedType.THIRST || needType === ResourceType.WATER) {
+      if (this.worldQueryService) {
+        const waterTiles = this.worldQueryService.findWaterTilesNear(
+          agentPos.x,
+          agentPos.y,
+          GATHER_RANGE,
+        );
 
-    const targetTypes: string[] = [];
-    if (needType === NeedType.HUNGER || needType === ResourceType.FOOD) {
-      targetTypes.push("food_source", "berry_bush", "food");
-    } else if (needType === NeedType.THIRST || needType === ResourceType.WATER) {
-      targetTypes.push("water_source", "water", "water_fresh");
+        if (waterTiles.length > 0) {
+          // Agent can drink directly from water tile - no resource consumption
+          const nearestTile = waterTiles[0]; // Already sorted by distance
+          logger.info(
+            `[NeedsSystem] 💧 Agent ${agentId} drinking from OCEAN tile at (${nearestTile.worldX}, ${nearestTile.worldY})`,
+          );
+
+          // Add water to inventory then consume it
+          if (this.inventorySystem) {
+            this.inventorySystem.addResource(agentId, ResourceType.WATER, 1);
+          }
+          return { gathered: true, resourceId: `ocean_tile_${nearestTile.worldX}_${nearestTile.worldY}` };
+        }
+      }
+
+      // Fallback: check for water resources if WorldQueryService unavailable
+      if (this.gameState?.worldResources && this.inventorySystem) {
+        const targetTypes = ["water_source", "water", "water_fresh"];
+        let nearestResource: { id: string; distance: number } | null = null;
+
+        for (const [resourceId, resource] of Object.entries(this.gameState.worldResources)) {
+          if (!resource || !targetTypes.includes(resource.type?.toLowerCase() || "")) {
+            continue;
+          }
+
+          const resPos = resource.position || { x: 0, y: 0 };
+          const dx = resPos.x - agentPos.x;
+          const dy = resPos.y - agentPos.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance <= GATHER_RANGE && (!nearestResource || distance < nearestResource.distance)) {
+            nearestResource = { id: resourceId, distance };
+          }
+        }
+
+        if (nearestResource) {
+          const gatherResult = this.inventorySystem.requestGather(agentId, nearestResource.id, 1);
+          if (gatherResult.status === "completed") {
+            logger.info(`[NeedsSystem] 🚰 Agent ${agentId} gathered water from ${nearestResource.id}`);
+            return { gathered: true, resourceId: nearestResource.id };
+          }
+        }
+      }
+
+      return { gathered: false };
     }
 
+    // For HUNGER: Search for food resources
+    if (!this.gameState?.worldResources || !this.inventorySystem) {
+      return { gathered: false };
+    }
 
+    const targetTypes = ["food_source", "berry_bush", "food"];
     let nearestResource: { id: string; distance: number } | null = null;
 
     for (const [resourceId, resource] of Object.entries(this.gameState.worldResources)) {
@@ -1483,7 +1540,6 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     }
 
     if (nearestResource) {
-
       logger.debug(`[NeedsSystem] ${agentId} found resource ${nearestResource.id} at distance ${nearestResource.distance.toFixed(1)}, attempting gather`);
       const gatherResult = this.inventorySystem.requestGather(
         agentId,
@@ -1492,15 +1548,10 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       );
 
       if (gatherResult.status === "completed") {
-        logger.info(`[NeedsSystem] 🚰 Agent ${agentId} gathered ${needType} from ${nearestResource.id}`);
+        logger.info(`[NeedsSystem] 🍎 Agent ${agentId} gathered food from ${nearestResource.id}`);
         return { gathered: true, resourceId: nearestResource.id };
       } else {
         logger.debug(`[NeedsSystem] ${agentId} gather failed: ${gatherResult.status} - ${gatherResult.message}`);
-      }
-    } else {
-
-      if (Math.random() < 0.01) {
-        logger.debug(`[NeedsSystem] ${agentId} no ${needType} resource within ${GATHER_RANGE} of (${agentPos.x.toFixed(0)},${agentPos.y.toFixed(0)})`);
       }
     }
 
