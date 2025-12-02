@@ -77,10 +77,10 @@ function detectCuriosityExplore(ctx: DetectorContext): Task | null {
     priority += 0.15;
   }
 
-  // Buscar una zona no visitada para explorar
+
   const unexploredZone = findUnexploredZone(ctx);
   
-  // Si hay zonas sin explorar, aumentar la prioridad
+
   if (unexploredZone) {
     priority += 0.1;
   }
@@ -102,7 +102,7 @@ function detectCuriosityExplore(ctx: DetectorContext): Task | null {
 }
 
 function detectResourceScout(ctx: DetectorContext): Task | null {
-  // Aplicar cooldown de exploración
+
   const lastExplore = ctx.lastExploreTime ?? 0;
   const timeSinceExplore = ctx.now - lastExplore;
   if (timeSinceExplore < EXPLORE_COOLDOWN) return null;
@@ -115,7 +115,7 @@ function detectResourceScout(ctx: DetectorContext): Task | null {
 
   const diligence = ctx.personality?.diligence ?? 0.5;
 
-  // Buscar una zona no visitada para buscar recursos
+
   const unexploredZone = findUnexploredZone(ctx);
 
   return createTask({
@@ -144,16 +144,16 @@ function findUnexploredZone(ctx: DetectorContext): { id: string; x: number; y: n
   
   if (!allZones || allZones.length === 0) return null;
   
-  // Filtrar zonas no visitadas
+
   const unvisited = allZones.filter(z => !visitedZones?.has(z.id));
   
   if (unvisited.length === 0) {
-    // Todas las zonas visitadas, elegir una aleatoria para re-explorar
+
     const randomIndex = Math.floor(Math.random() * allZones.length);
     return allZones[randomIndex];
   }
   
-  // Ordenar por distancia al agente y elegir la más cercana
+
   const agentPos = ctx.position;
   unvisited.sort((a, b) => {
     const distA = Math.hypot(a.x - agentPos.x, a.y - agentPos.y);
@@ -161,6 +161,6 @@ function findUnexploredZone(ctx: DetectorContext): { id: string; x: number; y: n
     return distA - distB;
   });
   
-  // Retornar la zona no visitada más cercana
+
   return unvisited[0];
 }

@@ -712,7 +712,7 @@ export class EconomySystem implements ITradeSystem {
     return true;
   }
 
-  // ==================== ECS Interface Methods ====================
+
 
   /**
    * Solicita un intercambio comercial entre dos agentes.
@@ -731,7 +731,7 @@ export class EconomySystem implements ITradeSystem {
   ): HandlerResult {
     const totalCost = price * quantity;
 
-    // Verificar que el comprador puede pagar
+
     if (!this.canAfford(buyerId, totalCost)) {
       return {
         status: QuestStatus.FAILED,
@@ -741,7 +741,7 @@ export class EconomySystem implements ITradeSystem {
       };
     }
 
-    // Verificar que el vendedor tiene el recurso
+
     if (!this.inventorySystem) {
       return {
         status: QuestStatus.FAILED,
@@ -770,8 +770,8 @@ export class EconomySystem implements ITradeSystem {
       };
     }
 
-    // Ejecutar transacción
-    // 1. Transferir dinero
+
+
     if (!this.transferMoney(buyerId, sellerId, totalCost)) {
       return {
         status: QuestStatus.FAILED,
@@ -780,7 +780,7 @@ export class EconomySystem implements ITradeSystem {
       };
     }
 
-    // 2. Transferir recurso
+
     this.inventorySystem.removeFromAgent(sellerId, resourceType, quantity);
     this.inventorySystem.addResource(buyerId, resourceType, quantity);
 

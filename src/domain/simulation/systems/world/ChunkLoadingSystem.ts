@@ -86,7 +86,7 @@ export class ChunkLoadingSystem {
 
     const chunksToLoad = this.calculateChunksToLoad(activeAgents);
     
-    // Log ocasional
+
     if (Math.random() < 0.1) {
       logger.debug(
         `[ChunkLoadingSystem] update: ${activeAgents.length} agents, ${chunksToLoad.length} chunks to load, ${this.loadedChunks.size} already loaded`,

@@ -734,7 +734,7 @@ export class SocialSystem implements ISocialSystem {
     return serialized;
   }
 
-  // ==================== ECS Interface Methods ====================
+
 
   /**
    * Solicita una interacción social entre dos agentes.
@@ -747,7 +747,7 @@ export class SocialSystem implements ISocialSystem {
     targetId: string,
     type: string,
   ): HandlerResult {
-    // Validar que ambos agentes existen
+
     const agents = this.gameState.agents;
     const agent = agents.find((a) => a.id === agentId);
     const target = agents.find((a) => a.id === targetId);
@@ -760,7 +760,7 @@ export class SocialSystem implements ISocialSystem {
       };
     }
 
-    // Verificar si hay tregua activa
+
     if (this.isTruceActive(agentId, targetId)) {
       return {
         status: QuestStatus.FAILED,
@@ -769,7 +769,7 @@ export class SocialSystem implements ISocialSystem {
       };
     }
 
-    // Aplicar efectos según tipo de interacción
+
     switch (type) {
       case DialogueTone.FRIENDLY:
       case ActionType.SOCIALIZE:
@@ -801,7 +801,7 @@ export class SocialSystem implements ISocialSystem {
         };
 
       default:
-        // Interacción genérica
+
         this.addEdge(agentId, targetId, 0.05);
         return {
           status: "completed",

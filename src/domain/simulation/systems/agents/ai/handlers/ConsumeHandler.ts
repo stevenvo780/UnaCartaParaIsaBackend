@@ -86,7 +86,7 @@ export function handleConsume(
     const result = systems.needs.requestConsume(agentId, needType);
 
     if (result.status === "completed") {
-      // Record this resource location in memory for future reference
+
       const resourceType = task.params?.resourceType as string;
       if (ctx.memory && resourceType && task.target.position) {
         ctx.memory.recordKnownResource(resourceType, task.target.position);
@@ -108,18 +108,18 @@ export function handleConsume(
     return successResult({ satisfied: needType });
   }
 
-  // If consume failed (no resources), mark task as failed so it gets removed
-  // This prevents infinite "eating" loops when there's nothing to eat
+
+
   if (result.status === QuestStatus.FAILED) {
     logger.debug(`[ConsumeHandler] ${agentId}: consume failed - ${result.message}`);
     return errorResult(result.message ?? "No consumable available");
   }
 
-  // Only return in_progress if the system explicitly says it's delegated/in_progress
+
   if (result.status === "in_progress" || result.status === "delegated") {
     return inProgressResult(result.system ?? "needs", result.message ?? "Looking for consumable");
   }
 
-  // Default: fail the task if status is unknown
+
   return errorResult("Consume operation returned unknown status");
 }

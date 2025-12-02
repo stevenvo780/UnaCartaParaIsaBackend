@@ -15,7 +15,7 @@ import {
 } from "../types";
 import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
 
-// Use centralized inventory thresholds
+
 const DEPOSIT_THRESHOLD = SIMULATION_CONSTANTS.INVENTORY_THRESHOLDS.DEPOSIT_THRESHOLD;
 const URGENT_DEPOSIT_THRESHOLD = SIMULATION_CONSTANTS.INVENTORY_THRESHOLDS.URGENT_DEPOSIT_THRESHOLD;
 

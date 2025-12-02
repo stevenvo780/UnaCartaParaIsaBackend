@@ -861,7 +861,7 @@ export class BuildingSystem implements IBuildingSystem {
     }
   }
 
-  // ==================== ECS Interface Methods ====================
+
 
   /**
    * Solicita la construcción de un edificio.
@@ -874,7 +874,7 @@ export class BuildingSystem implements IBuildingSystem {
     buildingType: string,
     position: { x: number; y: number },
   ): HandlerResult {
-    // Convertir buildingType a BuildingLabel si es posible
+
     const label = buildingType as BuildingLabel;
     const cost = BUILDING_COSTS[label];
 
@@ -886,7 +886,7 @@ export class BuildingSystem implements IBuildingSystem {
       };
     }
 
-    // Usar constructBuilding existente
+
     const started = this.constructBuilding(label, position);
     if (!started) {
       return {
@@ -928,7 +928,7 @@ export class BuildingSystem implements IBuildingSystem {
       };
     }
 
-    // Ya está al máximo
+
     if (buildingState.durability >= buildingState.maxDurability) {
       return {
         status: "completed",
@@ -937,7 +937,7 @@ export class BuildingSystem implements IBuildingSystem {
       };
     }
 
-    // Usar repairBuilding existente
+
     const repaired = this.repairBuilding(buildingId, agentId, false);
     if (!repaired) {
       return {

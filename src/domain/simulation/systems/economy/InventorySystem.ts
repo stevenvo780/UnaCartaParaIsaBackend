@@ -653,9 +653,9 @@ export class InventorySystem implements IInventorySystem {
     };
   }
 
-  // ==========================================================================
-  // ECS INTERFACE METHODS - IInventorySystem
-  // ==========================================================================
+
+
+
 
   /**
    * System name for ECS registration
@@ -676,7 +676,7 @@ export class InventorySystem implements IInventorySystem {
     message?: string;
     data?: unknown;
   } {
-    // Get resource from world resources
+
     const resource = this.gameState?.worldResources?.[resourceId];
 
     if (!resource) {
@@ -687,7 +687,7 @@ export class InventorySystem implements IInventorySystem {
       };
     }
 
-    // Check if resource is depleted
+
     if (resource.state === ResourceState.DEPLETED) {
       return {
         status: QuestStatus.FAILED,
@@ -696,13 +696,13 @@ export class InventorySystem implements IInventorySystem {
       };
     }
 
-    // Ensure agent has inventory
+
     let inventory = this.agentInventories.get(agentId);
     if (!inventory) {
       inventory = this.initializeAgentInventory(agentId);
     }
 
-    // Map world resource type to inventory resource type
+
     const resourceTypeMap: Record<string, ResourceType> = {
       tree: ResourceType.WOOD,
       wood: ResourceType.WOOD,
@@ -718,9 +718,9 @@ export class InventorySystem implements IInventorySystem {
     const resourceType =
       resourceTypeMap[resource.type?.toLowerCase()] || ResourceType.WOOD;
 
-    // harvestCount is a counter of how many times harvested (0 = fresh resource)
-    // We want to gather the requested quantity, not limit by harvest count
-    // The resource state (DEPLETED) determines if it can be harvested
+
+
+
     const actualQuantity = quantity;
 
     const success = this.addResource(agentId, resourceType, actualQuantity);
@@ -765,10 +765,10 @@ export class InventorySystem implements IInventorySystem {
       };
     }
 
-    // Find stockpile
+
     let stockpile = this.stockpiles.get(storageId);
 
-    // If storageId is a zone, find first stockpile in zone
+
     if (!stockpile) {
       const zoneStockpiles = this.getStockpilesInZone(storageId);
       if (zoneStockpiles.length > 0) {
@@ -784,7 +784,7 @@ export class InventorySystem implements IInventorySystem {
       };
     }
 
-    // Transfer all resources if itemId is 'all'
+
     if (itemId === EntityType.ALL) {
       const transferred = this.transferToStockpile(agentId, stockpile.id, {
         wood: inventory.wood,
@@ -814,7 +814,7 @@ export class InventorySystem implements IInventorySystem {
       };
     }
 
-    // Transfer specific resource type
+
     const resourceType = itemId as ResourceType;
     const amount = inventory[resourceType] ?? 0;
 
@@ -899,7 +899,7 @@ export class InventorySystem implements IInventorySystem {
       };
     }
 
-    // Rollback if add failed
+
     this.addResource(fromAgentId, resourceType, removed);
 
     return {

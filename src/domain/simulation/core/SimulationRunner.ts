@@ -389,7 +389,7 @@ export class SimulationRunner {
       movementSystem: this.movementSystem,
     });
 
-    // Register systems in SystemRegistry for ECS architecture
+
     this.registerSystemsInSystemRegistry();
 
     this.economySystem.setDependencies({

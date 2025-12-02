@@ -21,7 +21,7 @@ import { RoleType } from "../../../../../../shared/constants/RoleEnums";
 import { SocialStatus } from "../../../../../../shared/constants/AgentEnums";
 import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
 
-// Use centralized combat thresholds
+
 const FLEE_HEALTH_THRESHOLD = SIMULATION_CONSTANTS.COMBAT.FLEE_HEALTH_THRESHOLD;
 const PREDATOR_FLEE_DISTANCE = SIMULATION_CONSTANTS.COMBAT.PREDATOR_FLEE_DISTANCE;
 const THREAT_ALERT_THRESHOLD = SIMULATION_CONSTANTS.COMBAT.THREAT_ALERT_THRESHOLD;

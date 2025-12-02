@@ -771,7 +771,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     const state = this.movementStates.get(entityId);
     if (!state) return false;
 
-    // Stop current movement if starting a non-moving activity
+
     if (activity !== ActivityType.MOVING) {
       state.isMoving = false;
       state.targetPosition = undefined;
@@ -1075,7 +1075,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
   private readonly ARRIVAL_GRACE_PERIOD_MS = 2000;
 
   private maybeStartIdleWander(state: EntityMovementState, now: number): void {
-    // Debug: log state for idle agents (low frequency)
+
     if (Math.random() < 0.01 && !state.isMoving) {
       logger.debug(`[MovementSystem] maybeStartIdleWander ${state.entityId}: isMoving=${state.isMoving}, activity=${state.currentActivity}, lastArrival=${state.lastArrivalTime}, lastWander=${state.lastIdleWander}`);
     }
@@ -1127,9 +1127,9 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     return this.movementStates.get(entityId);
   }
 
-  // ==========================================================================
-  // ECS INTERFACE METHODS - IMovementSystem
-  // ==========================================================================
+
+
+
 
   /**
    * System name for ECS registration
@@ -1159,13 +1159,13 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
       };
     }
 
-    // Check if already at target
+
     const dx = state.currentPosition.x - target.x;
     const dy = state.currentPosition.y - target.y;
     const distSq = dx * dx + dy * dy;
 
     if (distSq < 4) {
-      // Within 2 units
+
       return {
         status: "completed",
         system: "movement",
@@ -1174,7 +1174,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
       };
     }
 
-    // Check if already moving to same target
+
     if (state.isMoving && state.targetPosition) {
       const targetDx = state.targetPosition.x - target.x;
       const targetDy = state.targetPosition.y - target.y;
@@ -1228,7 +1228,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
       };
     }
 
-    // Find zone
+
     const zone = this.gameState.zones?.find((z) => z.id === zoneId);
     if (!zone) {
       return {
@@ -1238,7 +1238,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
       };
     }
 
-    // Check if already in zone
+
     const bounds = zone.bounds;
     if (
       bounds &&
@@ -1255,7 +1255,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
       };
     }
 
-    // Check if already moving to this zone
+
     if (state.isMoving && state.targetZone === zoneId) {
       return {
         status: "in_progress",
@@ -1305,21 +1305,21 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
       };
     }
 
-    // Try to find entity position from various sources
+
     let targetPosition: { x: number; y: number } | undefined;
 
-    // Check agents
+
     const targetAgent = this.agentRegistry?.getProfile(entityId);
     if (targetAgent?.position) {
       targetPosition = targetAgent.position;
     }
 
-    // Check world resources
+
     if (!targetPosition && this.gameState.worldResources?.[entityId]) {
       targetPosition = this.gameState.worldResources[entityId].position;
     }
 
-    // Check entities array
+
     if (!targetPosition) {
       const entity = this.gameState.entities?.find((e) => e.id === entityId);
       if (entity?.position) {

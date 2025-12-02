@@ -55,15 +55,15 @@ export function handleExplore(
     return errorResult("MovementSystem not available");
   }
 
-  // Exploración hacia posición específica
+
   if (task.target?.position) {
     if (isAtTarget(position, task.target.position)) {
-      // Registrar la zona visitada si hay memoria disponible
+
       if (memory && task.target.zoneId) {
         memory.recordVisitedZone(task.target.zoneId);
       }
       
-      // Registrar que exploramos para activar cooldown
+
       if (memory) {
         memory.recordExploration();
       }
@@ -77,7 +77,7 @@ export function handleExplore(
     return moveToPosition(ctx, task.target.position);
   }
 
-  // Exploración hacia zona específica
+
   if (task.target?.zoneId) {
     const result = systems.movement.requestMoveToZone(
       agentId,
@@ -85,7 +85,7 @@ export function handleExplore(
     );
 
     if (result.status === "completed") {
-      // Registrar la zona como visitada
+
       if (memory) {
         memory.recordVisitedZone(task.target.zoneId);
         memory.recordExploration();
@@ -104,8 +104,8 @@ export function handleExplore(
     return inProgressResult("movement", "Exploring zone");
   }
 
-  // Sin target específico: exploración aleatoria inteligente
-  // Intenta ir a una dirección que no haya visitado recientemente
+
+
   const randomTarget = generateExploreTarget(position);
 
   return moveToPosition(ctx, randomTarget);
@@ -118,7 +118,7 @@ export function handleExplore(
 function generateExploreTarget(
   currentPosition: { x: number; y: number }
 ): { x: number; y: number } {
-  // Usar ángulos variados para explorar en diferentes direcciones
+
   const angle = Math.random() * Math.PI * 2;
   const distance = EXPLORE_RADIUS * (0.5 + Math.random() * 0.5);
   

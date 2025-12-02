@@ -300,7 +300,7 @@ export class AISystem extends EventEmitter {
       failedAttempts: new Map<string, unknown>(),
       failedTargets: new Map<string, unknown>(),
       lastMemoryCleanup: Date.now(),
-      lastExploreTime: 0, // 0 para que puedan explorar al inicio
+      lastExploreTime: 0,
     };
   }
 
@@ -414,7 +414,7 @@ export class AISystem extends EventEmitter {
   public async update(deltaTimeMs: number): Promise<void> {
     const agents = this.gameState.agents ?? [];
 
-    // Debug log every ~10 seconds
+
     if (Math.random() < 0.04) {
       logger.debug(
         `[AISystem] update(): ${agents.length} agents`,
@@ -543,7 +543,7 @@ export class AISystem extends EventEmitter {
     const position = this.agentRegistry?.getPosition(agentId);
     if (!position) return null;
 
-    // Crear callbacks de memoria para este agente
+
     const memory = this.getAgentMemory(agentId);
     const memoryCallbacks: import("./types").MemoryCallbacks = {
       recordVisitedZone: (zoneId: string) => this.recordVisitedZone(agentId, zoneId),
@@ -641,7 +641,7 @@ export class AISystem extends EventEmitter {
 
     const spatialContext = this.buildSpatialContext(position, agentId);
     
-    // Añadir memoria del agente para exploración
+
     const memory = this.getAgentMemory(agentId);
     const explorationContext: Record<string, unknown> = {
       visitedZones: memory.visitedZones,
@@ -649,7 +649,7 @@ export class AISystem extends EventEmitter {
       knownResources: memory.knownResourceLocations,
     };
     
-    // Añadir todas las zonas disponibles para exploración
+
     if (this.gameState.zones && this.gameState.zones.length > 0) {
       explorationContext.allZones = this.gameState.zones.map((z) => ({
         id: z.id,
@@ -658,7 +658,7 @@ export class AISystem extends EventEmitter {
       }));
     }
 
-    // Determinar horas de trabajo (6:00 - 18:00)
+
     const isWorkHours = this.calculateIsWorkHours();
 
     return {
@@ -712,7 +712,7 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Buscar recurso más cercano para trabajo (árbol, roca, etc.)
+
     const nearestResource = wqs.findNearestResource(position.x, position.y, {
       excludeDepleted: true,
     });
@@ -725,7 +725,7 @@ export class AISystem extends EventEmitter {
       };
     }
 
-    // Debug log ocasional (~2%)
+
     if (Math.random() < 0.02) {
       logger.debug(
         `[AISystem] buildSpatial ${agentId}: food=${result.nearestFood ? "found" : "none"}, water=${result.nearestWater ? "found" : "none"}, resource=${result.nearestResource ? "found" : "none"}`,
@@ -867,7 +867,7 @@ export class AISystem extends EventEmitter {
     const task = this.activeTask.get(agentId);
     const pendingTasks = this.taskQueue.getTasks(agentId);
     
-    // Map task params to legacy data format
+
     const taskData: Record<string, unknown> = {};
     if (task?.params) {
       if (task.params.needType) taskData.need = task.params.needType;
@@ -877,7 +877,7 @@ export class AISystem extends EventEmitter {
       if (task.params.reason) taskData.reason = task.params.reason;
     }
     
-    // Usar memoria persistente en lugar de crear una nueva
+
     const memory = this.getAgentMemory(agentId);
     
     return {
@@ -909,17 +909,17 @@ export class AISystem extends EventEmitter {
    */
   private calculateIsWorkHours(): boolean {
     if (!this.timeSystem) {
-      // Sin TimeSystem, asumimos que siempre es hora de trabajo
+
       return true;
     }
 
     try {
       const currentTime = this.timeSystem.getCurrentTime();
       const hour = currentTime.hour;
-      // Horas de trabajo: 6:00 a 18:00
+
       return hour >= 6 && hour < 18;
     } catch {
-      // Si falla, asumimos hora de trabajo
+
       return true;
     }
   }

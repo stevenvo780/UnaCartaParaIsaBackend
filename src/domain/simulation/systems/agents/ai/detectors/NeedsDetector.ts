@@ -22,7 +22,7 @@ import {
 import { logger } from "@/infrastructure/utils/logger";
 import { SIMULATION_CONSTANTS } from "@/shared/constants/SimulationConstants";
 
-// Use centralized thresholds
+
 const THRESHOLDS = {
   CRITICAL: SIMULATION_CONSTANTS.NEEDS.CRITICAL_THRESHOLD,
   URGENT: SIMULATION_CONSTANTS.NEEDS.LOW_THRESHOLD,
@@ -31,7 +31,7 @@ const THRESHOLDS = {
 
 const PRIORITIES = SIMULATION_CONSTANTS.PRIORITIES;
 
-// Default TTL for needs tasks (15 seconds - gives time to find resources)
+
 const NEEDS_TASK_TTL_MS = 15000;
 
 /**
@@ -42,7 +42,7 @@ function getBestResourceTarget(
   ctx: DetectorContext,
   resourceType: "food" | "water",
 ): { entityId: string; position: { x: number; y: number } } | undefined {
-  // Primero: recurso cercano detectado por WorldQueryService
+
   if (resourceType === "food" && ctx.nearestFood) {
     return { entityId: ctx.nearestFood.id, position: ctx.nearestFood };
   }
@@ -50,7 +50,7 @@ function getBestResourceTarget(
     return { entityId: ctx.nearestWater.id, position: ctx.nearestWater };
   }
 
-  // Fallback: recurso conocido en memoria
+
   if (ctx.knownResources) {
     const known = ctx.knownResources.get(resourceType);
     if (known) {
@@ -67,7 +67,7 @@ function getBestResourceTarget(
  * Usa constantes centralizadas de SIMULATION_CONSTANTS.
  */
 export function detectNeeds(ctx: DetectorContext): Task[] {
-  // Early exit if no needs context
+
   if (!ctx.needs) {
     return [];
   }
@@ -86,7 +86,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     return PRIORITIES.LOW;
   };
 
-  // Hunger
+
   const hunger = ctx.needs.hunger ?? 100;
   if (hunger < THRESHOLDS.LOW) {
     const foodTarget = getBestResourceTarget(ctx, "food");
@@ -103,7 +103,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     );
   }
 
-  // Thirst
+
   const thirst = ctx.needs.thirst ?? 100;
   if (thirst < THRESHOLDS.LOW) {
     const waterTarget = getBestResourceTarget(ctx, "water");
@@ -120,7 +120,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     );
   }
 
-  // Energy
+
   const energy = ctx.needs.energy ?? 100;
   if (energy < THRESHOLDS.LOW) {
     tasks.push(
@@ -135,7 +135,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     );
   }
 
-  // Social
+
   const social = ctx.needs.social ?? 100;
   if (social < THRESHOLDS.LOW && ctx.nearbyAgents?.length) {
     const target = ctx.nearbyAgents[0];
@@ -152,7 +152,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     );
   }
 
-  // Fun
+
   const fun = ctx.needs.fun ?? 100;
   if (fun < THRESHOLDS.LOW && ctx.nearbyAgents?.length) {
     const target = ctx.nearbyAgents[0];
@@ -169,7 +169,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     );
   }
 
-  // Mental health
+
   const mentalHealth = ctx.needs.mentalHealth ?? 100;
   if (mentalHealth < THRESHOLDS.LOW) {
     tasks.push(
@@ -184,7 +184,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     );
   }
 
-  // Log when tasks are generated
+
   if (tasks.length > 0 && Math.random() < 0.1) {
     logger.debug(
       `[NeedsDetector] ${ctx.agentId}: ${tasks.length} tasks generated. ` +

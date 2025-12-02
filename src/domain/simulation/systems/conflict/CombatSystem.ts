@@ -777,9 +777,9 @@ export class CombatSystem implements ICombatSystem {
     } as T;
   }
 
-  // ==========================================================================
-  // ECS INTERFACE METHODS - ICombatSystem
-  // ==========================================================================
+
+
+
 
   /**
    * System name for ECS registration
@@ -799,7 +799,7 @@ export class CombatSystem implements ICombatSystem {
     message?: string;
     data?: unknown;
   } {
-    // Find attacker entity
+
     const attacker = this.state.entities?.find((e) => e.id === agentId);
     if (!attacker || !attacker.position) {
       return {
@@ -809,10 +809,10 @@ export class CombatSystem implements ICombatSystem {
       };
     }
 
-    // Find target entity
+
     let target = this.state.entities?.find((e) => e.id === targetId);
 
-    // Also check animals
+
     if (!target && this.animalSystem) {
       const animal = this.animalSystem.getAnimal(targetId);
       if (animal) {
@@ -834,7 +834,7 @@ export class CombatSystem implements ICombatSystem {
       };
     }
 
-    // Check range
+
     const dx = attacker.position.x - target.position.x;
     const dy = attacker.position.y - target.position.y;
     const distSq = dx * dx + dy * dy;
@@ -849,7 +849,7 @@ export class CombatSystem implements ICombatSystem {
       };
     }
 
-    // Check cooldown
+
     const now = getFrameTime();
     const lastAttack = this.lastAttackAt.get(agentId) ?? 0;
     if (now - lastAttack < this.config.baseCooldownMs) {
@@ -863,19 +863,19 @@ export class CombatSystem implements ICombatSystem {
       };
     }
 
-    // Perform attack
+
     const weaponId = this.equippedWeapons.get(agentId) ?? WeaponId.UNARMED;
     const weapon = getWeapon(weaponId);
     const damage = weapon?.baseDamage ?? 10;
 
-    // Apply damage
+
     const targetStats = this.ensureStats(target);
     const remainingHealth = Math.max(0, (targetStats.health ?? 100) - damage);
     targetStats.health = remainingHealth;
 
     this.lastAttackAt.set(agentId, now);
 
-    // Log hit
+
     this.appendLog(
       this.createLogEntry<CombatHitLog>({
         type: CombatEventType.HIT,
@@ -895,7 +895,7 @@ export class CombatSystem implements ICombatSystem {
       weapon: weaponId,
     });
 
-    // Check for kill
+
     if (targetStats.health <= 0) {
       this.handleKill(attacker, target, weaponId);
       return {
@@ -927,7 +927,7 @@ export class CombatSystem implements ICombatSystem {
     message?: string;
     data?: unknown;
   } {
-    // Find agent
+
     const agent = this.state.entities?.find((e) => e.id === agentId);
     if (!agent || !agent.position) {
       return {
@@ -939,13 +939,13 @@ export class CombatSystem implements ICombatSystem {
 
     const agentPos = agent.position;
 
-    // Calculate flee direction (opposite of threat)
+
     const dx = agentPos.x - fromPosition.x;
     const dy = agentPos.y - fromPosition.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     if (distance < 1) {
-      // Pick random direction if at same position
+
       const angle = Math.random() * Math.PI * 2;
       const fleeTarget = {
         x: agentPos.x + Math.cos(angle) * 200,
@@ -960,7 +960,7 @@ export class CombatSystem implements ICombatSystem {
       };
     }
 
-    // Normalize and extend
+
     const fleeDistance = 200;
     const fleeTarget = {
       x: agentPos.x + (dx / distance) * fleeDistance,
@@ -979,7 +979,7 @@ export class CombatSystem implements ICombatSystem {
    * End combat state for an agent.
    */
   public endCombat(agentId: string): void {
-    // Remove from active combats if tracked
+
     this.lastAttackAt.delete(agentId);
   }
 
@@ -989,7 +989,7 @@ export class CombatSystem implements ICombatSystem {
   public isInCombat(agentId: string): boolean {
     const now = getFrameTime();
     const lastAttack = this.lastAttackAt.get(agentId);
-    // Consider in combat if attacked within last 10 seconds
+
     return lastAttack !== undefined && now - lastAttack < 10000;
   }
 }

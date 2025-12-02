@@ -411,7 +411,7 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
     return map;
   }
 
-  // ==================== ECS Interface Methods ====================
+
 
   /**
    * Verifica si un agente puede craftear una receta.
@@ -435,7 +435,7 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
    * @param recipeId - ID de la receta a craftear
    */
   public requestCraft(agentId: string, recipeId: string): HandlerResult {
-    // Verificar que puede craftear
+
     if (!this.canCraft(agentId, recipeId)) {
       return {
         status: QuestStatus.FAILED,
@@ -444,7 +444,7 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
       };
     }
 
-    // Iniciar el crafteo
+
     const started = this.startCrafting(agentId, recipeId);
     if (!started) {
       return {

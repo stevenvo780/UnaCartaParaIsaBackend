@@ -47,7 +47,7 @@ export function handleRest(
     return errorResult("NeedsSystem not available");
   }
 
-  // Start RESTING activity
+
   if (systems.movement) {
     systems.movement.startActivity(agentId, ActivityType.RESTING, 5000);
   }
@@ -56,7 +56,7 @@ export function handleRest(
 
   switch (result.status) {
     case "completed":
-      // Stop RESTING activity when done
+
       if (systems.movement) {
         systems.movement.startActivity(agentId, ActivityType.IDLE);
       }
@@ -66,7 +66,7 @@ export function handleRest(
       });
 
     case QuestStatus.FAILED:
-      // Stop RESTING activity on failure
+
       if (systems.movement) {
         systems.movement.startActivity(agentId, ActivityType.IDLE);
       }

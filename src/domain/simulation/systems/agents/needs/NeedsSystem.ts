@@ -133,7 +133,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
         [NeedType.FUN]: 0.15,
         [NeedType.MENTAL_HEALTH]: 0.08,
       },
-      // Use centralized thresholds from SIMULATION_CONSTANTS
+
       criticalThreshold: SIMULATION_CONSTANTS.NEEDS.CRITICAL_THRESHOLD,
       emergencyThreshold: SIMULATION_CONSTANTS.NEEDS.EMERGENCY_THRESHOLD,
       updateIntervalMs: 1000,
@@ -294,7 +294,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     const dtSeconds = (now - this.lastUpdate) / 1000;
     this.lastUpdate = now;
 
-    // Debug: Log needs for first agent periodically
+
     if (Math.random() < 0.03) {
       const firstEntry = this.entityNeeds.entries().next().value;
       if (firstEntry) {
@@ -314,7 +314,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
 
   private updateTraditional(dtSeconds: number, _now: number): void {
     const startTime = performance.now();
-    // Debug log one agent's needs periodically
+
     if (Math.random() < 0.02) {
       const firstAgent = this.entityNeeds.entries().next().value;
       if (firstAgent) {
@@ -397,7 +397,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
 
     this.batchProcessor.syncToMap(this.entityNeeds);
 
-    // Debug log every ~10 ticks
+
     if (this._tickCounter % 10 === 0 && this.entityNeeds.size > 0) {
       const first = Array.from(this.entityNeeds.entries())[0];
       if (first) {
@@ -449,7 +449,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       ? this.findZonesNearPosition(position, 50)
       : [];
 
-    // Use centralized thresholds
+
     const HUNGER_THRESHOLD = SIMULATION_CONSTANTS.NEEDS.SATISFIED_THRESHOLD;
     const HUNGER_CRITICAL = SIMULATION_CONSTANTS.NEEDS.LOW_THRESHOLD;
 
@@ -1330,9 +1330,9 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     return FoodCatalog.getFoodsByCategory(category);
   }
 
-  // ==========================================================================
-  // ECS INTERFACE METHODS - INeedsSystem
-  // ==========================================================================
+
+
+
 
   /**
    * System name for ECS registration
@@ -1369,7 +1369,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
 
     const needType = itemIdOrNeedType.toLowerCase();
 
-    // Try to consume from inventory first
+
     if (this.inventorySystem) {
       const inventory = this.inventorySystem.getAgentInventory(agentId);
 
@@ -1399,10 +1399,10 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
         }
       }
 
-      // Inventory empty - try to gather from nearby world resource
+
       const gatherResult = this.tryGatherFromNearbyResource(agentId, needType);
       if (gatherResult.gathered) {
-        // Resource gathered, now consume it
+
         if (needType === NeedType.HUNGER || needType === ResourceType.FOOD) {
           this.inventorySystem.removeFromAgent(agentId, ResourceType.FOOD, 1);
           this.satisfyNeed(agentId, NeedType.HUNGER, 25);
@@ -1445,16 +1445,16 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       return { gathered: false };
     }
 
-    // Get agent position
+
     const agent = this.gameState.agents?.find((a) => a.id === agentId);
     if (!agent || !agent.position) {
       return { gathered: false };
     }
 
     const agentPos = { x: agent.position.x, y: agent.position.y };
-    const GATHER_RANGE = 50; // World units (increased from 2 tiles to support pixel coordinates)
+    const GATHER_RANGE = 50;
 
-    // Determine resource type to look for
+
     const targetTypes: string[] = [];
     if (needType === NeedType.HUNGER || needType === ResourceType.FOOD) {
       targetTypes.push("food_source", "berry_bush", "food");
@@ -1462,7 +1462,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       targetTypes.push("water_source", "water", "water_fresh");
     }
 
-    // Find nearest resource of target type within range
+
     let nearestResource: { id: string; distance: number } | null = null;
 
     for (const [resourceId, resource] of Object.entries(this.gameState.worldResources)) {
@@ -1483,7 +1483,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     }
 
     if (nearestResource) {
-      // Gather from this resource
+
       logger.debug(`[NeedsSystem] ${agentId} found resource ${nearestResource.id} at distance ${nearestResource.distance.toFixed(1)}, attempting gather`);
       const gatherResult = this.inventorySystem.requestGather(
         agentId,
@@ -1498,7 +1498,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
         logger.debug(`[NeedsSystem] ${agentId} gather failed: ${gatherResult.status} - ${gatherResult.message}`);
       }
     } else {
-      // Log occasionally for debugging
+
       if (Math.random() < 0.01) {
         logger.debug(`[NeedsSystem] ${agentId} no ${needType} resource within ${GATHER_RANGE} of (${agentPos.x.toFixed(0)},${agentPos.y.toFixed(0)})`);
       }
@@ -1527,12 +1527,12 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       };
     }
 
-    // Apply energy restoration
+
     const energyBefore = needs.energy;
     this.satisfyNeed(agentId, NeedType.ENERGY, 10);
     const energyAfter = needs.energy;
 
-    // Check if rest should continue (energy < 80) or is done
+
     if (energyAfter >= 80) {
       return {
         status: "completed",
@@ -1591,9 +1591,9 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     };
   }
 
-  // ============================================================================
-  // TASK GENERATION - Single Source of Truth for needs-based tasks
-  // ============================================================================
+
+
+
 
   private static readonly THRESHOLDS = {
     CRITICAL: 15,
@@ -1643,7 +1643,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       source: string;
     }> = [];
 
-    // Hunger check
+
     if (needs.hunger < NeedsSystem.THRESHOLDS.LOW) {
       const priority = this.calculatePriority(needs.hunger);
       tasks.push({
@@ -1663,7 +1663,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       });
     }
 
-    // Thirst check
+
     if (needs.thirst < NeedsSystem.THRESHOLDS.LOW) {
       const priority = this.calculatePriority(needs.thirst);
       tasks.push({
@@ -1683,7 +1683,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       });
     }
 
-    // Energy check
+
     if (needs.energy < NeedsSystem.THRESHOLDS.LOW) {
       const priority = this.calculatePriority(needs.energy);
       tasks.push({
@@ -1694,7 +1694,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       });
     }
 
-    // Social check
+
     if (
       needs.social < NeedsSystem.THRESHOLDS.LOW &&
       spatialContext?.nearbyAgents?.length
@@ -1709,7 +1709,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       });
     }
 
-    // Fun check
+
     if (
       needs.fun < NeedsSystem.THRESHOLDS.LOW &&
       spatialContext?.nearbyAgents?.length
@@ -1724,7 +1724,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       });
     }
 
-    // Mental health check
+
     if (needs.mentalHealth < NeedsSystem.THRESHOLDS.LOW) {
       tasks.push({
         type: "rest",
