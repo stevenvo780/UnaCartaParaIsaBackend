@@ -15,6 +15,7 @@ import {
   successResult,
 } from "../types";
 import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
+import { logger } from "@/infrastructure/utils/logger";
 
 /**
  * @deprecated Use SystemRegistry.inventory instead
@@ -39,18 +40,25 @@ export function handleDeposit(
 ): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
 
+  logger.debug(`📦 [DepositHandler] ${agentId}: entering handler`);
+
   if (task.type !== TaskType.DEPOSIT) {
+    logger.debug(`📦 [DepositHandler] ${agentId}: wrong task type ${task.type}`);
     return errorResult("Wrong task type");
   }
 
   if (!systems.inventory) {
+    logger.debug(`📦 [DepositHandler] ${agentId}: InventorySystem not available`);
     return errorResult("InventorySystem not available");
   }
 
   const storageId = task.target?.entityId;
   const itemId = task.params?.itemId as string | undefined;
 
+  logger.debug(`📦 [DepositHandler] ${agentId}: storageId=${storageId}, itemId=${itemId}`);
+
   if (!storageId) {
+    logger.debug(`📦 [DepositHandler] ${agentId}: No storage target specified`);
     return errorResult("No storage target specified");
   }
 
@@ -59,6 +67,8 @@ export function handleDeposit(
     storageId,
     itemId ?? "all",
   );
+
+  logger.debug(`📦 [DepositHandler] ${agentId}: requestDeposit result=${result.status}, msg=${result.message}`);
 
   switch (result.status) {
     case "completed":

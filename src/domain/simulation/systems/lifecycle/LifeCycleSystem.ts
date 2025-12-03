@@ -588,8 +588,15 @@ export class LifeCycleSystem extends EventEmitter {
     if (this.inventorySystem) {
       this.inventorySystem.initializeAgentInventory(id);
     }
-    if (profile.position) {
-      this._movementSystem?.moveToPoint(
+    if (profile.position && this._movementSystem) {
+      // Initialize movement state BEFORE attempting to move
+      if (!this._movementSystem.hasMovementState(id)) {
+        this._movementSystem.initializeEntityMovement(id, profile.position);
+        logger.debug(
+          `🚶 [LifeCycleSystem] Movement state initialized for ${id}`,
+        );
+      }
+      this._movementSystem.moveToPoint(
         id,
         profile.position.x,
         profile.position.y,

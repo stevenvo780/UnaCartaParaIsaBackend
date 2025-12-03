@@ -150,6 +150,19 @@ export interface IInventoryPort {
  */
 export interface IMovementPort {
   /**
+   * Checks if an entity has movement state initialized
+   */
+  hasMovementState(entityId: string): boolean;
+
+  /**
+   * Initializes movement state for an entity
+   */
+  initializeEntityMovement(
+    entityId: string,
+    position: { x: number; y: number },
+  ): void;
+
+  /**
    * Starts movement to a zone
    */
   moveToZone(entityId: string, zoneId: string): void;

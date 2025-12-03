@@ -100,6 +100,71 @@ export class WorldLoader {
       width: worldConfig.width * worldConfig.tileSize,
       height: worldConfig.height * worldConfig.tileSize,
     };
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // FIX: Populate world.terrain as 2D array for TerrainSystem/WorldQueryService
+    // Converts flat tiles to SimulationTerrainTile format (assets.terrain)
+    // ═══════════════════════════════════════════════════════════════════════
+    type SimulationTerrainTile = {
+      x: number;
+      y: number;
+      biome: string;
+      assets: { terrain: string; vegetation?: string[]; structures?: string[] };
+      isWalkable: boolean;
+    };
+
+    const terrain2D: SimulationTerrainTile[][] = [];
+    for (let y = 0; y < worldConfig.height; y++) {
+      terrain2D[y] = [];
+      for (let x = 0; x < worldConfig.width; x++) {
+        // Default empty tile (will be overwritten)
+        terrain2D[y][x] = {
+          x,
+          y,
+          biome: "GRASSLAND",
+          assets: { terrain: "grass_default" },
+          isWalkable: true,
+        };
+      }
+    }
+
+    // Populate from generated tiles
+    for (const tile of allTiles) {
+      terrain2D[tile.y][tile.x] = {
+        x: tile.x,
+        y: tile.y,
+        biome: tile.biome,
+        assets: { terrain: tile.assetId },
+        isWalkable: tile.isWalkable,
+      };
+    }
+
+    const mapSeed = this.runner.state.mapSeed;
+    const numericSeed = typeof mapSeed === "number" ? mapSeed : Date.now();
+
+    this.runner.state.world = {
+      ...this.runner.state.world,
+      terrain: terrain2D,
+      config: {
+        width: worldConfig.width,
+        height: worldConfig.height,
+        tileSize: worldConfig.tileSize,
+        seed: numericSeed,
+      },
+    };
+
+    // Count biomes for debug
+    const biomeCounts: Record<string, number> = {};
+    for (const tile of allTiles) {
+      biomeCounts[tile.biome] = (biomeCounts[tile.biome] || 0) + 1;
+    }
+    logger.info(
+      `[WorldLoader] Biome distribution: ${JSON.stringify(biomeCounts)}`,
+    );
+    logger.info(
+      `[WorldLoader] world.terrain populated: ${terrain2D.length}x${terrain2D[0]?.length ?? 0} (${allTiles.length} tiles)`,
+    );
+
     logger.info(
       `Generated ${allTiles.length} terrain tiles. WorldSize: ${this.runner.state.worldSize.width}x${this.runner.state.worldSize.height} pixels.`,
     );

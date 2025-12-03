@@ -1462,15 +1462,20 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     }
 
     const agentPos = { x: agent.position.x, y: agent.position.y };
-    const GATHER_RANGE = 50;
+    // Increased from 50 to 100 to cover at least 1.5 tiles (64px = 1 tile)
+    const GATHER_RANGE = 100;
 
-    // For THIRST: Search for OCEAN tiles using WorldQueryService
+    // For THIRST: Search for OCEAN/LAKE tiles using WorldQueryService
     if (needType === NeedType.THIRST || needType === ResourceType.WATER) {
       if (this.worldQueryService) {
         const waterTiles = this.worldQueryService.findWaterTilesNear(
           agentPos.x,
           agentPos.y,
           GATHER_RANGE,
+        );
+
+        logger.debug(
+          `[NeedsSystem] 🔍 ${agentId} at (${agentPos.x.toFixed(0)}, ${agentPos.y.toFixed(0)}) searching water r=${GATHER_RANGE}: found ${waterTiles.length} tiles`,
         );
 
         if (waterTiles.length > 0) {

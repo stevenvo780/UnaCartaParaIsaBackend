@@ -17,6 +17,7 @@ import {
 import { RoleType } from "../../../../../../shared/constants/RoleEnums";
 import { SocialStatus } from "../../../../../../shared/constants/AgentEnums";
 import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
+import { logger } from "@/infrastructure/utils/logger";
 
 /** No trabajar si necesidades críticas - usa constante centralizada */
 const CRITICAL_NEED_THRESHOLD = SIMULATION_CONSTANTS.NEEDS.CRITICAL_THRESHOLD;
@@ -66,6 +67,12 @@ export function detectWork(ctx: DetectorContext): Task[] {
       if (ctx.nearestResource) {
         tasks.push(...detectGatherWork(ctx));
       }
+  }
+
+  if (tasks.length > 0 && Math.random() < 0.05) {
+    logger.debug(
+      `🔨 [WorkDetector] ${ctx.agentId}: role=${role}, ${tasks.length} tasks`,
+    );
   }
 
   return tasks;

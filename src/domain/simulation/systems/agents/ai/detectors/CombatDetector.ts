@@ -20,7 +20,7 @@ import {
 import { RoleType } from "../../../../../../shared/constants/RoleEnums";
 import { SocialStatus } from "../../../../../../shared/constants/AgentEnums";
 import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
-
+import { logger } from "@/infrastructure/utils/logger";
 
 const FLEE_HEALTH_THRESHOLD = SIMULATION_CONSTANTS.COMBAT.FLEE_HEALTH_THRESHOLD;
 const PREDATOR_FLEE_DISTANCE = SIMULATION_CONSTANTS.COMBAT.PREDATOR_FLEE_DISTANCE;
@@ -146,6 +146,12 @@ export function detectCombat(ctx: DetectorContext): Task[] {
         }),
       );
     }
+  }
+
+  if (tasks.length > 0 && Math.random() < 0.1) {
+    logger.debug(
+      `⚔️ [CombatDetector] ${ctx.agentId}: ${tasks.length} tasks, types=${tasks.map((t) => t.type).join(",")}`,
+    );
   }
 
   return tasks;

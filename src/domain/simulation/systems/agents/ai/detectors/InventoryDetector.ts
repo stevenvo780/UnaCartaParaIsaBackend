@@ -14,7 +14,7 @@ import {
   createTask,
 } from "../types";
 import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
-
+import { logger } from "@/infrastructure/utils/logger";
 
 const DEPOSIT_THRESHOLD = SIMULATION_CONSTANTS.INVENTORY_THRESHOLDS.DEPOSIT_THRESHOLD;
 const URGENT_DEPOSIT_THRESHOLD = SIMULATION_CONSTANTS.INVENTORY_THRESHOLDS.URGENT_DEPOSIT_THRESHOLD;
@@ -26,9 +26,17 @@ export function detectInventory(ctx: DetectorContext): Task[] {
   const tasks: Task[] = [];
 
   if (!ctx.inventoryLoad || !ctx.inventoryCapacity) return tasks;
-  if (!ctx.depositZoneId) return tasks;
 
   const loadRatio = ctx.inventoryLoad / ctx.inventoryCapacity;
+
+  // Log cuando inventario está lleno pero no hay zona de depósito
+  if (loadRatio >= DEPOSIT_THRESHOLD && !ctx.depositZoneId && Math.random() < 0.02) {
+    logger.debug(
+      `📦 [InventoryDetector] ${ctx.agentId}: full (${(loadRatio * 100).toFixed(0)}%) but no depositZone`,
+    );
+  }
+
+  if (!ctx.depositZoneId) return tasks;
 
   if (loadRatio < DEPOSIT_THRESHOLD) return tasks;
 
@@ -51,6 +59,12 @@ export function detectInventory(ctx: DetectorContext): Task[] {
       source: "detector:inventory:deposit",
     }),
   );
+
+  if (tasks.length > 0 && Math.random() < 0.1) {
+    logger.debug(
+      `📦 [InventoryDetector] ${ctx.agentId}: deposit task, load=${(loadRatio * 100).toFixed(0)}%`,
+    );
+  }
 
   return tasks;
 }

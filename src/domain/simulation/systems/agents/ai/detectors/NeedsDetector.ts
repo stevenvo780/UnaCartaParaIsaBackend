@@ -74,6 +74,11 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
 
   const tasks: Task[] = [];
 
+  // Log periódico de necesidades
+  if (Math.random() < 0.02) {
+    logger.debug(`[NeedsDetector] ${ctx.agentId}: h=${ctx.needs.hunger?.toFixed(0)}, t=${ctx.needs.thirst?.toFixed(0)}, e=${ctx.needs.energy?.toFixed(0)}`);
+  }
+
   const calcPriority = (v: number) => {
     if (v < THRESHOLDS.CRITICAL) return PRIORITIES.CRITICAL;
     if (v < THRESHOLDS.URGENT) return PRIORITIES.URGENT;

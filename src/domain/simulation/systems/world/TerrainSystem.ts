@@ -115,8 +115,8 @@ export class TerrainSystem {
     const tile = this.getTile(tileX, tileY);
     if (!tile) return 0;
 
-    // Only OCEAN tiles have water
-    if (tile.biome !== BiomeType.OCEAN) return 0;
+    // Both OCEAN and LAKE tiles have water
+    if (tile.biome !== BiomeType.OCEAN && tile.biome !== BiomeType.LAKE) return 0;
 
     const key = `${tileX},${tileY}`;
     

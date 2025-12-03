@@ -80,9 +80,12 @@ export function handleConsume(
 
   if (task.target?.position) {
     if (!isAtTarget(position, task.target.position)) {
-      return moveToPosition(ctx, task.target.position);
+      const moveResult = moveToPosition(ctx, task.target.position);
+      logger.debug(`[ConsumeHandler] ${agentId}: moveToPosition result=${JSON.stringify({success: moveResult.success, completed: moveResult.completed, msg: moveResult.message})}`);
+      return moveResult;
     }
 
+    logger.debug(`[ConsumeHandler] ${agentId}: arrived at target, consuming ${needType}`);
     const result = systems.needs.requestConsume(agentId, needType);
 
     if (result.status === "completed") {

@@ -17,6 +17,7 @@ import {
 import { NeedType } from "@/shared/constants/AIEnums";
 import { GoalReason } from "../../../../../../shared/constants/AIEnums";
 import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
+import { logger } from "@/infrastructure/utils/logger";
 
 /** Bienestar mínimo para reproducirse - usa constante centralizada */
 const REPRODUCTION_WELLNESS_THRESHOLD = SIMULATION_CONSTANTS.SOCIAL.REPRODUCTION_WELLNESS_THRESHOLD;
@@ -35,6 +36,12 @@ export function detectSocial(ctx: DetectorContext): Task[] {
   const assistTask = detectAssist(ctx);
   if (assistTask) {
     tasks.push(assistTask);
+  }
+
+  if (tasks.length > 0 && Math.random() < 0.05) {
+    logger.debug(
+      `💬 [SocialDetector] ${ctx.agentId}: ${tasks.length} tasks (repro=${!!reproductionTask}, assist=${!!assistTask})`,
+    );
   }
 
   return tasks;

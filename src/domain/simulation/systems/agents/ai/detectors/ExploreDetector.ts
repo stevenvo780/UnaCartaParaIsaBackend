@@ -15,6 +15,7 @@ import {
   TASK_PRIORITIES,
   createTask,
 } from "../types";
+import { logger } from "@/infrastructure/utils/logger";
 
 /** Tiempo mínimo entre exploraciones (ms) */
 const EXPLORE_COOLDOWN = 60000;
@@ -40,6 +41,12 @@ export function detectExplore(ctx: DetectorContext): Task[] {
   const resourceScoutTask = detectResourceScout(ctx);
   if (resourceScoutTask) {
     tasks.push(resourceScoutTask);
+  }
+
+  if (tasks.length > 0 && Math.random() < 0.02) {
+    logger.debug(
+      `🧭 [ExploreDetector] ${ctx.agentId}: ${tasks.length} tasks`,
+    );
   }
 
   return tasks;

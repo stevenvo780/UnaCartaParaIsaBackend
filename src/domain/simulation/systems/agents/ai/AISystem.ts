@@ -658,6 +658,26 @@ export class AISystem extends EventEmitter {
       }));
     }
 
+    // Inventory context - simplified using available methods
+    let inventoryLoad = 0;
+    const inventoryCapacity = 50;
+    let depositZoneId: string | undefined;
+
+    const inventorySystem = this.systemRegistry?.inventory;
+    if (inventorySystem) {
+      const availableSpace = inventorySystem.getInventorySpace(agentId);
+      inventoryLoad = inventoryCapacity - availableSpace;
+    }
+
+    // Find storage zone if inventory is heavy
+    if (inventoryLoad > inventoryCapacity * 0.7 && this.gameState.zones) {
+      const storageZone = this.gameState.zones.find(
+        (z) => z.type === "storage" || z.id.includes("storage"),
+      );
+      if (storageZone) {
+        depositZoneId = storageZone.id;
+      }
+    }
 
     const isWorkHours = this.calculateIsWorkHours();
 
@@ -667,6 +687,9 @@ export class AISystem extends EventEmitter {
       needs,
       now: Date.now(),
       isWorkHours,
+      inventoryLoad,
+      inventoryCapacity,
+      depositZoneId,
       ...spatialContext,
       ...explorationContext,
     };
