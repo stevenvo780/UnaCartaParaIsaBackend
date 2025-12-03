@@ -8,6 +8,7 @@ import { TYPES } from "../../../../config/Types";
 import type { StateDirtyTracker } from "../../core/StateDirtyTracker";
 import { performanceMonitor } from "../../core/PerformanceMonitor";
 import { SystemProperty } from "../../../../shared/constants/SystemEnums";
+import { logger } from "@/infrastructure/utils/logger";
 
 /**
  * System for managing tasks and work assignments.
@@ -28,6 +29,7 @@ export class TaskSystem {
   private tasks = new Map<string, Task>();
   private seq = 0;
   private lastUpdate = 0;
+  private lastLogTime = 0;
   private tasksDirty = true;
   private statsDirty = true;
   private cachedStats: TaskState[SystemProperty.STATS] = {
@@ -54,6 +56,17 @@ export class TaskSystem {
     const dtSec = (now - this.lastUpdate) / 1000;
     if (dtSec < 2) return;
     this.lastUpdate = now;
+
+    // Debug log every 10 seconds
+    if (now - this.lastLogTime >= 10000) {
+      this.lastLogTime = now;
+      const active = [...this.tasks.values()].filter(
+        (t) => !t.completed,
+      ).length;
+      logger.debug(
+        `📋 [TaskSystem] total=${this.tasks.size} active=${active} stalled=${this.cachedStats.stalled}`,
+      );
+    }
 
     const STALLED_THRESHOLD = 300000;
     const MAX_STALLED_AGE = 600000;

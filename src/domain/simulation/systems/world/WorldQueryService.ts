@@ -26,6 +26,7 @@
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
+import { logger } from "@/infrastructure/utils/logger";
 import type { GameState, Zone } from "@/shared/types/game-types";
 import type { WorldResourceInstance } from "@/shared/types/simulation/worldResources";
 import type { Animal } from "@/shared/types/simulation/animals";
@@ -161,6 +162,7 @@ export interface TileQueryOptions {
 export class WorldQueryService {
   public readonly name = "worldQuery";
   private tileSize: number = 64;
+  private _lastWaterDebugLog = 0;
 
   constructor(
     @inject(TYPES.GameState) private gameState: GameState,
@@ -591,6 +593,15 @@ export class WorldQueryService {
       { biome: BiomeType.LAKE },
     );
 
+    // Debug: log water search periodically
+    const now = Date.now();
+    if (!this._lastWaterDebugLog || now - this._lastWaterDebugLog > 30000) {
+      this._lastWaterDebugLog = now;
+      logger.debug(
+        `🌊 [WorldQueryService] findWaterTilesNear(${x.toFixed(0)}, ${y.toFixed(0)}, r=${radius}): ocean=${oceanTiles.length}, lake=${lakeTiles.length}`,
+      );
+    }
+
     // Combine and sort by distance from query position
     const allWaterTiles = [...oceanTiles, ...lakeTiles];
     
@@ -794,9 +805,9 @@ export class WorldQueryService {
     x: number,
     y: number,
   ): TileQueryResult | null {
-    // Radio pequeño: solo encuentra agua cercana que el agente "puede ver"
-    // Si no hay agua cerca, el agente debe explorar hacia los bordes
-    const waterTiles = this.findWaterTilesNear(x, y, 200);
+    // Radio más amplio para encontrar agua (500 unidades = ~15 tiles)
+    // Los agentes deben explorar si no hay agua cerca
+    const waterTiles = this.findWaterTilesNear(x, y, 500);
     return waterTiles.length > 0 ? waterTiles[0] : null;
   }
 

@@ -6,6 +6,7 @@ import { TYPES } from "../../../../config/Types";
 import { TimeOfDayPhase } from "../../../../shared/constants/TimeEnums";
 import { WeatherType } from "../../../../shared/constants/AmbientEnums";
 import { WorkShift } from "../../../../shared/constants/RoleEnums";
+import { logger } from "@/infrastructure/utils/logger";
 
 export interface TimeOfDay {
   hour: number;
@@ -63,6 +64,7 @@ export class TimeSystem extends EventEmitter {
   private currentWeather: WeatherCondition;
   private lastTimeUpdate = 0;
   private lastWeatherChange = 0;
+  private lastLogTime = 0;
   private readonly TIME_UPDATE_INTERVAL = 1000;
 
   constructor(@unmanaged() config?: Partial<TimeConfig>) {
@@ -89,6 +91,14 @@ export class TimeSystem extends EventEmitter {
     ) {
       this.updateWeather();
       this.lastWeatherChange = now;
+    }
+
+    // Debug log every 10 seconds
+    if (now - this.lastLogTime >= 10000) {
+      this.lastLogTime = now;
+      logger.debug(
+        `🕐 [TimeSystem] hour=${this.currentTime.hour}:${this.currentTime.minute.toString().padStart(2, "0")} phase=${this.currentTime.phase} weather=${this.currentWeather.type} light=${this.currentTime.lightLevel.toFixed(2)}`,
+      );
     }
   }
 

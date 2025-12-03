@@ -92,6 +92,7 @@ export class EconomySystem implements ITradeSystem {
   private yieldResiduals = new Map<string, number>();
   private transactionHistory = new Map<string, TransactionRecord[]>();
   private lastUpdate = Date.now();
+  private lastLogTime = 0;
   private readonly UPDATE_INTERVAL_MS = 10000;
   private lastSalaryPayment = 0;
   private readonly SALARY_INTERVAL_MS = 60000;
@@ -158,6 +159,15 @@ export class EconomySystem implements ITradeSystem {
     if (now - this.lastSalaryPayment >= this.SALARY_INTERVAL_MS) {
       this.processSalaryPayments();
       this.lastSalaryPayment = now;
+    }
+
+    // Debug log every 10 seconds
+    if (now - this.lastLogTime >= 10000) {
+      this.lastLogTime = now;
+      const agents = this.state.agents?.length ?? 0;
+      logger.debug(
+        `💰 [EconomySystem] agents=${agents} transactions=${this.transactionHistory.size} residuals=${this.yieldResiduals.size}`,
+      );
     }
 
     this.updateMarket();
