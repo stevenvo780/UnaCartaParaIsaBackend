@@ -456,7 +456,12 @@ export class EconomySystem implements ITradeSystem {
     }
   }
 
+  /**
+   * @deprecated Use ProductionSystem zone-based assignments/output. This method will be removed.
+   * Kept for backward compatibility with older handlers.
+   */
   public handleWorkAction(agentId: string, zoneId: string): void {
+    logger.warn("EconomySystem.handleWorkAction is deprecated; use ProductionSystem assignments/output instead.");
     const zone = this.state.zones.find((z) => z.id === zoneId);
     if (!zone) return;
 

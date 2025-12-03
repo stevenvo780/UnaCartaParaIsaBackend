@@ -50,7 +50,7 @@ export function detectInventory(ctx: DetectorContext): Task[] {
       agentId: ctx.agentId,
       type: TaskType.DEPOSIT,
       priority,
-      target: { zoneId: ctx.depositZoneId },
+      target: { entityId: ctx.depositZoneId, zoneId: ctx.depositZoneId },
       params: {
         loadRatio,
         hasFood: (ctx.inventory?.food ?? 0) > 0,

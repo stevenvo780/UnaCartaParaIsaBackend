@@ -249,7 +249,7 @@ export class LifeCycleSystem extends EventEmitter {
       }
     }
 
-    this.tryBreeding(Date.now());
+    void this.tryBreeding(Date.now());
     this.processHousingAssignments();
 
     const now = Date.now();

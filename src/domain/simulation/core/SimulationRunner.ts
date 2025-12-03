@@ -267,11 +267,7 @@ export class SimulationRunner {
 
     this.commandProcessor = new CommandProcessor(this);
 
-    this.commandProcessor = new CommandProcessor(this);
-
     this.snapshotManager = new SnapshotManager(this);
-
-    this.scheduleAutoSaves();
 
     this.scheduleAutoSaves();
   }
@@ -725,9 +721,9 @@ export class SimulationRunner {
     });
 
     logger.info("📋 All systems registered in multi-rate scheduler", {
-      fast: 3,
-      medium: 8,
-      slow: 30,
+      fast: 2,
+      medium: 9,
+      slow: 15,
     });
   }
 

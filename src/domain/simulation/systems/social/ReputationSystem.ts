@@ -39,8 +39,24 @@ const REPUTATION_CONFIG = {
   },
 } as const;
 
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
+import type { SocialSystem } from "./SocialSystem";
+
+/**
+ * Helper to convert between SocialSystem affinity (-1..1) and trust (0..1).
+ * Keeps backward compatibility for consumers of ReputationSystem.
+ */
+function affinityToTrust(affinity: number): number {
+  const clamped = Math.max(-1, Math.min(1, affinity));
+  return (clamped + 1) / 2; // -1 -> 0, 0 -> 0.5, 1 -> 1
+}
+
+function trustDeltaToAffinityDelta(delta: number): number {
+  // Very conservative mapping: small trust deltas become small affinity deltas
+  // 1 trust unit ~ 2 affinity units, but we scale down to avoid spikes
+  return Math.max(-1, Math.min(1, delta * 2));
+}
 
 /**
  * System for managing agent reputation and trust relationships.
@@ -70,7 +86,10 @@ export class ReputationSystem {
     lastUpdate: 0,
   };
 
-  constructor(@inject(TYPES.GameState) gameState: GameState) {
+  constructor(
+    @inject(TYPES.GameState) gameState: GameState,
+    @inject(TYPES.SocialSystem) @optional() private socialSystem?: SocialSystem,
+  ) {
     this.gameState = gameState;
     this.lastUpdate = Date.now();
   }
@@ -88,6 +107,13 @@ export class ReputationSystem {
   }
 
   public updateTrust(a: string, b: string, delta: number): void {
+    // Prefer SocialSystem as source of truth for pair relationships
+    if (this.socialSystem) {
+      const affinityDelta = trustDeltaToAffinityDelta(delta);
+      this.socialSystem.modifyAffinity(a, b, affinityDelta);
+      return;
+    }
+
     const e = this.getEdge(a, b);
     e.value = Math.max(
       REPUTATION_CONFIG.bounds.min,
@@ -97,6 +123,10 @@ export class ReputationSystem {
   }
 
   public getTrust(a: string, b: string): number {
+    if (this.socialSystem) {
+      const affinity = this.socialSystem.getAffinityBetween(a, b);
+      return affinityToTrust(affinity);
+    }
     return this.getEdge(a, b).value;
   }
 
@@ -176,13 +206,17 @@ export class ReputationSystem {
       );
     }
 
-    this.trust.forEach((row) => {
-      row.forEach((edge) => {
-        edge.value +=
-          (REPUTATION_CONFIG.decay.targetValue - edge.value) * decay;
-        edge.lastUpdated = now;
+    // If SocialSystem is present, it already decays affinities.
+    // Skip decaying local trust map to avoid duplicated effects.
+    if (!this.socialSystem) {
+      this.trust.forEach((row) => {
+        row.forEach((edge) => {
+          edge.value +=
+            (REPUTATION_CONFIG.decay.targetValue - edge.value) * decay;
+          edge.lastUpdated = now;
+        });
       });
-    });
+    }
 
     let totalRep = 0;
     let repCount = 0;
@@ -194,7 +228,16 @@ export class ReputationSystem {
     });
 
     let trustEdges = 0;
-    this.trust.forEach((row) => (trustEdges += row.size));
+    if (this.socialSystem) {
+      // Estimate edges from SocialSystem graph
+      // Note: SocialSystem does not expose edges directly; approximate using gameState relationships snapshot if present
+      trustEdges = Object.values(this.gameState.socialGraph?.relationships || {}).reduce(
+        (acc, targets) => acc + Object.keys(targets).length,
+        0,
+      );
+    } else {
+      this.trust.forEach((row) => (trustEdges += row.size));
+    }
     this.statsCache.agents = this.reputation.size;
     this.statsCache.avgReputation =
       repCount > 0
@@ -222,16 +265,34 @@ export class ReputationSystem {
     this.gameState.reputation.stats = this.getSystemStats();
 
     const allReputations = this.getAllReputations();
-    const trustArray = Array.from(this.trust.entries()).map(
-      ([sourceId, targetMap]) => ({
-        sourceId,
-        targets: Array.from(targetMap.entries()).map(([targetId, edge]) => ({
+    // Build trust array from SocialSystem if available for snapshot
+    let trustArray: Array<{
+      sourceId: string;
+      targets: Array<{ sourceId: string; targetId: string; trust: number }>;
+    }>; 
+    if (this.socialSystem && this.gameState.socialGraph?.relationships) {
+      trustArray = Object.entries(this.gameState.socialGraph.relationships).map(
+        ([sourceId, targets]) => ({
           sourceId,
-          targetId,
-          trust: edge.value,
-        })),
-      }),
-    );
+          targets: Object.entries(targets).map(([targetId, affinity]) => ({
+            sourceId,
+            targetId,
+            trust: affinityToTrust(affinity as number),
+          })),
+        }),
+      );
+    } else {
+      trustArray = Array.from(this.trust.entries()).map(
+        ([sourceId, targetMap]) => ({
+          sourceId,
+          targets: Array.from(targetMap.entries()).map(([targetId, edge]) => ({
+            sourceId,
+            targetId,
+            trust: edge.value,
+          })),
+        }),
+      );
+    }
 
     this.gameState.reputation.reputations = allReputations;
     this.gameState.reputation.trust = trustArray;
@@ -352,9 +413,19 @@ export class ReputationSystem {
   }
 
   public getTrustNetwork(agentId: string): TrustRelationship[] {
+    if (this.socialSystem) {
+      const rel = this.gameState.socialGraph?.relationships?.[agentId];
+      if (!rel) return [];
+      return Object.entries(rel).map(([targetId, affinity]) => ({
+        sourceId: agentId,
+        targetId,
+        trust: affinityToTrust(affinity as number),
+        lastUpdated: Date.now(),
+      }));
+    }
+
     const trustMap = this.trust.get(agentId);
     if (!trustMap) return [];
-
     return Array.from(trustMap.entries()).map(([targetId, edge]) => ({
       sourceId: agentId,
       targetId,
@@ -370,21 +441,37 @@ export class ReputationSystem {
   public serialize(): SerializedReputationData {
     const trustArray: SerializedReputationData["trust"] = [];
 
-    this.trust.forEach((targetMap, sourceId) => {
-      const targets: Array<{
-        targetId: string;
-        value: number;
-        lastUpdated: number;
-      }> = [];
-      targetMap.forEach((edge, targetId) => {
-        targets.push({
-          targetId,
-          value: edge.value,
-          lastUpdated: edge.lastUpdated,
+    if (this.socialSystem && this.gameState.socialGraph?.relationships) {
+      for (const [sourceId, targets] of Object.entries(
+        this.gameState.socialGraph.relationships,
+      )) {
+        const arr: Array<{ targetId: string; value: number; lastUpdated: number }> = [];
+        for (const [targetId, affinity] of Object.entries(targets)) {
+          arr.push({
+            targetId,
+            value: affinityToTrust(affinity as number),
+            lastUpdated: Date.now(),
+          });
+        }
+        trustArray.push({ sourceId, targets: arr });
+      }
+    } else {
+      this.trust.forEach((targetMap, sourceId) => {
+        const targets: Array<{
+          targetId: string;
+          value: number;
+          lastUpdated: number;
+        }> = [];
+        targetMap.forEach((edge, targetId) => {
+          targets.push({
+            targetId,
+            value: edge.value,
+            lastUpdated: edge.lastUpdated,
+          });
         });
+        trustArray.push({ sourceId, targets });
       });
-      trustArray.push({ sourceId, targets });
-    });
+    }
 
     const reputationArray = Array.from(this.reputation.entries()).map(
       ([agentId, entry]) => ({

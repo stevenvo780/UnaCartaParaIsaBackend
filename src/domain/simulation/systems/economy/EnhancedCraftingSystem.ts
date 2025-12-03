@@ -39,19 +39,21 @@ const BASIC_RECIPE_IDS = [
   "wooden_club",
 ];
 
-import { injectable, inject } from "inversify";
+import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
 import { QuestStatus } from "../../../../shared/constants/QuestEnums";
+import { RecipeDiscoverySystem } from "./RecipeDiscoverySystem";
 
 @injectable()
 export class EnhancedCraftingSystem implements ICraftingSystem {
   public readonly name = "crafting";
   private readonly config: EnhancedCraftingConfig;
   private readonly now: () => number;
-  private readonly knownRecipes = new Map<
-    string,
-    Map<string, AgentRecipeState>
-  >();
+  /**
+   * Deprecated local state. Recipe knowledge is centralized in RecipeDiscoverySystem.
+   * Kept only for backward compatibility if discovery system is unavailable in tests.
+   */
+  private readonly knownRecipes = new Map<string, Map<string, AgentRecipeState>>();
   private readonly activeJobs = new Map<string, CraftingJob>();
   private readonly equippedWeapons = new Map<string, WeaponId>();
 
@@ -59,6 +61,9 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
     @inject(TYPES.GameState) private readonly state: GameState,
     @inject(TYPES.InventorySystem)
     private readonly inventorySystem: InventorySystem,
+    @inject(TYPES.RecipeDiscoverySystem)
+    @optional()
+    private readonly recipeDiscovery?: RecipeDiscoverySystem,
   ) {
     this.config = DEFAULT_CONFIG;
     this.now = (): number => Date.now();
@@ -311,9 +316,18 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
     );
   }
 
-  public getKnownRecipes(
-    agentId: string,
-  ): Map<string, AgentRecipeState> | undefined {
+  public getKnownRecipes(agentId: string): Map<string, AgentRecipeState> | undefined {
+    if (this.recipeDiscovery) {
+      const map = new Map<string, AgentRecipeState>();
+      const known = this.recipeDiscovery.getAgentRecipes(agentId);
+      for (const rec of known) {
+        map.set(rec.recipeId, {
+          successRate: rec.successRate,
+          timesUsed: rec.timesUsed,
+        });
+      }
+      return map;
+    }
     return this.knownRecipes.get(agentId);
   }
 
@@ -347,15 +361,24 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
    * Initializes basic recipes for all agents if not yet initialized.
    */
   public getAllKnownRecipes(): Record<string, string[]> {
-    for (const agent of this.state.agents) {
+    const result: Record<string, string[]> = {};
+
+    if (this.recipeDiscovery) {
+      const agents = this.state.agents || [];
+      for (const agent of agents) {
+        const known = this.recipeDiscovery.getAgentRecipes(agent.id);
+        result[agent.id] = known.map((r) => r.recipeId);
+      }
+      return result;
+    }
+
+    const agents = this.state.agents || [];
+    for (const agent of agents) {
       if (!this.knownRecipes.has(agent.id)) {
         this.getOrCreateRecipeMap(agent.id);
       }
-    }
-
-    const result: Record<string, string[]> = {};
-    for (const [agentId, recipes] of this.knownRecipes.entries()) {
-      result[agentId] = Array.from(recipes.keys());
+      const map = this.knownRecipes.get(agent.id)!;
+      result[agent.id] = Array.from(map.keys());
     }
     return result;
   }
@@ -425,6 +448,14 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
     if (this.config.requireWorkstation && !this.hasCraftingStation()) {
       return false;
     }
+
+    // Agent must know the recipe (from RecipeDiscovery), unless it is a basic one
+    const isBasic = BASIC_RECIPE_IDS.includes(recipeId);
+    const knowsRecipe = this.recipeDiscovery
+      ? this.recipeDiscovery.agentKnowsRecipe(agentId, recipeId)
+      : this.getOrCreateRecipeMap(agentId).has(recipeId);
+
+    if (!isBasic && !knowsRecipe) return false;
 
     return this.hasIngredients(agentId, recipe);
   }

@@ -756,13 +756,65 @@ export class AISystem extends EventEmitter {
       { excludeDead: true },
     );
     if (nearbyAgentsResult.length > 0) {
-      result.nearbyAgents = nearbyAgentsResult
-        .filter((a) => a.id !== agentId)
-        .map((a) => ({
-          id: a.id,
-          x: a.position.x,
-          y: a.position.y,
-        }));
+      const otherAgents = nearbyAgentsResult.filter((a) => a.id !== agentId);
+      
+      result.nearbyAgents = otherAgents.map((a) => ({
+        id: a.id,
+        x: a.position.x,
+        y: a.position.y,
+      }));
+
+      // Social context: find potential mate and agent in need
+      const currentAgent = this.agentRegistry?.getProfile(agentId);
+      if (currentAgent) {
+        // Find potential mate (opposite sex, adult, high wellness)
+        const potentialMate = otherAgents.find((a) => {
+          const agent = a.agent;
+          if (!agent || agent.sex === currentAgent.sex) return false;
+          if (agent.lifeStage !== "adult") return false;
+          const needs = agent.needs;
+          if (!needs) return false;
+          const wellness = (needs.hunger + needs.thirst + needs.energy) / 300;
+          return wellness > 0.6;
+        });
+
+        if (potentialMate) {
+          result.potentialMate = {
+            id: potentialMate.id,
+            x: potentialMate.position.x,
+            y: potentialMate.position.y,
+          };
+          if (Math.random() < 0.1) {
+            logger.debug(`💕 [SocialContext] ${agentId} found potentialMate: ${potentialMate.id}`);
+          }
+        }
+
+        // Find nearby agent in need (critical needs)
+        const agentInNeed = otherAgents.find((a) => {
+          const needs = a.agent?.needs;
+          if (!needs) return false;
+          return needs.hunger < 30 || needs.thirst < 30 || needs.energy < 20;
+        });
+
+        if (agentInNeed) {
+          const needs = agentInNeed.agent?.needs;
+          const criticalNeed = needs
+            ? needs.thirst < 30
+              ? "thirst"
+              : needs.hunger < 30
+                ? "hunger"
+                : "energy"
+            : "energy";
+          result.nearbyAgentInNeed = {
+            id: agentInNeed.id,
+            need: criticalNeed,
+            targetZoneId: undefined, // Will be set by zone system if available
+          };
+          if (Math.random() < 0.1) {
+            logger.debug(`🆘 [SocialContext] ${agentId} found agentInNeed: ${agentInNeed.id} (${criticalNeed})`);
+          }
+        }
+      }
     }
 
     const nearbyAnimals = wqs.findAnimalsInRadius(
@@ -797,6 +849,7 @@ export class AISystem extends EventEmitter {
     this.activeTask.delete(agentId);
     this.taskQueue.clear(agentId);
     this.lastUpdate.delete(agentId);
+    this.agentMemories.delete(agentId);
   }
 
   /**

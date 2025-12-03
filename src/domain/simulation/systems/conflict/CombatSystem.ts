@@ -19,6 +19,8 @@ import { InventorySystem } from "../economy/InventorySystem";
 import { LifeCycleSystem } from "../lifecycle/LifeCycleSystem";
 import { SocialSystem } from "../social/SocialSystem";
 import { logger } from "../../../../infrastructure/utils/logger";
+import { equipmentSystem } from "../agents/EquipmentSystem";
+import { EquipmentSlot } from "../../../../shared/constants/EquipmentEnums";
 
 import type { AnimalSystem } from "../world/animals/AnimalSystem";
 import type { ConflictResolutionSystem } from "./ConflictResolutionSystem";
@@ -461,6 +463,9 @@ export class CombatSystem implements ICombatSystem {
   }
 
   public equip(agentId: string, weaponId: WeaponId): void {
+    // Sync with global equipment system
+    equipmentSystem.equipItem(agentId, EquipmentSlot.MAIN_HAND, weaponId);
+    // Keep legacy local map for backward compatibility
     this.equippedWeapons.set(agentId, weaponId);
     simulationEvents.emit(GameEventType.COMBAT_WEAPON_EQUIPPED, {
       agentId,
@@ -476,6 +481,10 @@ export class CombatSystem implements ICombatSystem {
   }
 
   public getEquipped(agentId: string): WeaponId {
+    const item = equipmentSystem.getEquippedItem(agentId, EquipmentSlot.MAIN_HAND);
+    if (item === WeaponId.STONE_DAGGER || item === WeaponId.WOODEN_CLUB || item === WeaponId.UNARMED) {
+      return item as WeaponId;
+    }
     return this.equippedWeapons.get(agentId) ?? WeaponId.UNARMED;
   }
 
