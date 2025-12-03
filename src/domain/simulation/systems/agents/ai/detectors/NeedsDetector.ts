@@ -81,13 +81,13 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     );
   }
 
-  const calcPriority = (v: number) => {
+  const calcPriority = (v: number): number => {
     if (v < THRESHOLDS.CRITICAL) return PRIORITIES.CRITICAL;
     if (v < THRESHOLDS.URGENT) return PRIORITIES.URGENT;
     return PRIORITIES.HIGH;
   };
 
-  const calcSocialPriority = (v: number) => {
+  const calcSocialPriority = (v: number): number => {
     if (v < THRESHOLDS.CRITICAL) return PRIORITIES.HIGH;
     if (v < THRESHOLDS.URGENT) return PRIORITIES.NORMAL;
     return PRIORITIES.LOW;

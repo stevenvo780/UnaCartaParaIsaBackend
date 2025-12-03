@@ -402,7 +402,9 @@ export class SimulationRunner {
     // After migrating, drop local trust edges to avoid duplication
     try {
       this.reputationSystem.clearTrustMap();
-    } catch {}
+    } catch {
+      // Silently ignore if clearTrustMap fails (e.g., already cleared)
+    }
 
     this.eventRegistry.setupEventListeners();
 

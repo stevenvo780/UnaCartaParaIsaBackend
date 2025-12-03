@@ -1,9 +1,9 @@
 {
   "summary": {
-    "totalEnums": 144,
+    "totalEnums": 145,
     "unusedEnums": 30,
-    "unusedMembers": 204,
-    "missingEnumOccurrences": 4
+    "unusedMembers": 206,
+    "missingEnumOccurrences": 1
   },
   "unusedEnums": [
     {
@@ -989,6 +989,16 @@
       "file": "src/shared/constants/ResourceEnums.ts"
     },
     {
+      "enum": "RestoreSource",
+      "member": "INVENTORY",
+      "file": "src/shared/constants/ResourceEnums.ts"
+    },
+    {
+      "enum": "RestoreSource",
+      "member": "STOCKPILE",
+      "file": "src/shared/constants/ResourceEnums.ts"
+    },
+    {
       "enum": "WorldEntityType",
       "member": "PLANT",
       "file": "src/shared/constants/ResourceEnums.ts"
@@ -1150,40 +1160,6 @@
     }
   ],
   "missingEnumUsages": [
-    {
-      "stringLiteral": "world",
-      "possibleEnums": [
-        "PanelName"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1425,
-          "lineContent": "data: { needType: NeedType.HUNGER, restored: 25, source: \"world\" },"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1435,
-          "lineContent": "data: { needType: NeedType.THIRST, restored: 25, source: \"world\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "unarmed",
-      "possibleEnums": [
-        "WeaponId",
-        "EquipmentType"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/data/EquipmentStats.ts",
-          "line": 191,
-          "lineContent": "if (!itemId || itemId === \"unarmed\") {"
-        }
-      ]
-    },
     {
       "stringLiteral": "materials",
       "possibleEnums": [

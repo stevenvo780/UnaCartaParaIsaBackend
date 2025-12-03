@@ -8,6 +8,7 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../../../../config/Types";
 import { VoronoiGenerator } from "./VoronoiGenerator";
 import { WorldGenerationStatus } from "../../../../../shared/constants/StatusEnums";
+import { logger } from "../../../../../infrastructure/utils/logger";
 
 /**
  * Service for generating world terrain chunks.
@@ -95,7 +96,7 @@ export class WorldGenerationService {
         );
 
         if (globalX < 3 && globalY < 3) {
-          console.log(
+          logger.debug(
             `[DEBUG BiomeGen] (${globalX},${globalY}): cont=${((continentality + 1) / 2).toFixed(3)}, elev=${((elevation + 1) / 2).toFixed(3)}, moist=${((moisture + 1) / 2).toFixed(3)}`,
           );
         }
@@ -109,7 +110,7 @@ export class WorldGenerationService {
         if (distFromSpawnCenter < 2.5) {
           // Small lake near spawn
           biome = BiomeType.LAKE;
-          console.log(
+          logger.debug(
             `[OASIS] Forced LAKE at (${globalX}, ${globalY}) dist=${distFromSpawnCenter.toFixed(2)}`,
           );
         } else {
