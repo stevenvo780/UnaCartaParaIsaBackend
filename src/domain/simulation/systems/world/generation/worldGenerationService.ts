@@ -101,12 +101,24 @@ export class WorldGenerationService {
           console.log(`[DEBUG BiomeGen] (${globalX},${globalY}): cont=${((continentality + 1) / 2).toFixed(3)}, elev=${((elevation + 1) / 2).toFixed(3)}, moist=${((moisture + 1) / 2).toFixed(3)}`);
         }
 
-        const biome = this.biomeResolver.resolveBiome(
-          (temperature + 1) / 2,
-          (moisture + 1) / 2,
-          (elevation + 1) / 2,
-          (continentality + 1) / 2,
+        // GUARANTEED WATER: Force a lake cluster near spawn (tiles 5-8, 5-8)
+        // This ensures agents always have accessible water to survive
+        const distFromSpawnCenter = Math.sqrt(
+          Math.pow(globalX - 6, 2) + Math.pow(globalY - 6, 2)
         );
+        let biome: BiomeType;
+        if (distFromSpawnCenter < 2.5) {
+          // Small lake near spawn
+          biome = BiomeType.LAKE;
+          console.log(`[OASIS] Forced LAKE at (${globalX}, ${globalY}) dist=${distFromSpawnCenter.toFixed(2)}`);
+        } else {
+          biome = this.biomeResolver.resolveBiome(
+            (temperature + 1) / 2,
+            (moisture + 1) / 2,
+            (elevation + 1) / 2,
+            (continentality + 1) / 2,
+          );
+        }
 
         const biomeConfig = this.biomeMap.get(biome);
         const assets = this.generateAssetsForTile(
