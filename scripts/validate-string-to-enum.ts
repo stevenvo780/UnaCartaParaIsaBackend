@@ -583,8 +583,10 @@ function main() {
 
   // --- REPORTE 2: Enums sin uso ---
 
-  console.log('📉 REPORTE DE ENUMS SIN USO\n');
+  console.log('📉 REPORTE DE ENUMS SIN USO (INFORMATIVO)\n');
   console.log('='.repeat(80));
+  console.log('ℹ️  Estos enums están definidos pero no se usan en el backend.');
+  console.log('   Pueden estar en uso en el frontend o reservados para futuro uso.\n');
 
   const unusedEnums: EnumValues[] = [];
   const unusedMembers: { enumName: string; member: string; file: string }[] = [];
@@ -609,7 +611,7 @@ function main() {
   if (unusedEnums.length === 0) {
     console.log('✅ Todos los Enums definidos parecen estar en uso.\n');
   } else {
-    console.log(`⚠️  Se encontraron ${unusedEnums.length} Enums que no parecen usarse:\n`);
+    console.log(`📊 ${unusedEnums.length} Enums no usados en backend:\n`);
     unusedEnums.forEach((e) => {
       const relativePath = path.relative(path.join(__dirname, '..'), e.file);
       console.log(`   - ${e.enumName} (en ${relativePath})`);
@@ -619,13 +621,15 @@ function main() {
 
   // --- REPORTE 3: Miembros de Enum sin uso ---
 
-  console.log('📉 REPORTE DE MIEMBROS DE ENUM SIN USO\n');
+  console.log('📉 REPORTE DE MIEMBROS DE ENUM SIN USO (INFORMATIVO)\n');
   console.log('='.repeat(80));
+  console.log('ℹ️  Estos miembros de enums no se usan explícitamente en el backend.');
+  console.log('   Esto es NORMAL - pueden usarse en frontend o estar reservados.\n');
 
   if (unusedMembers.length === 0) {
     console.log('✅ Todos los miembros de los Enums usados parecen estar en uso.\n');
   } else {
-    console.log(`⚠️  Se encontraron ${unusedMembers.length} miembros de Enums sin uso explícito:\n`);
+    console.log(`📊 ${unusedMembers.length} miembros de Enums sin uso en backend:\n`);
 
     // Agrupar por Enum
     const membersByEnum = new Map<string, string[]>();
@@ -674,7 +678,24 @@ function main() {
   };
 
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
-  console.log(`\n✅ Reporte completo guardado en: ${reportPath}`);
+
+  // --- RESUMEN FINAL ---
+  console.log('\n' + '═'.repeat(80));
+  console.log('📋 RESUMEN FINAL');
+  console.log('═'.repeat(80));
+  
+  if (missingEnumOccurrences.length === 0) {
+    console.log('✅ ESTADO: LIMPIO - No hay strings que deban convertirse a enums');
+  } else if (missingEnumOccurrences.length <= 5) {
+    console.log(`⚠️  ESTADO: CASI LIMPIO - ${missingEnumOccurrences.length} string(s) pendiente(s) de revisar`);
+  } else {
+    console.log(`❌ ESTADO: PENDIENTE - ${missingEnumOccurrences.length} strings deben convertirse a enums`);
+  }
+  
+  console.log(`\n   📊 Strings a corregir: ${missingEnumOccurrences.length}`);
+  console.log(`   📚 Enums sin uso (info): ${unusedEnums.length}`);
+  console.log(`   📝 Miembros sin uso (info): ${unusedMembers.length}`);
+  console.log('\n✅ Reporte completo guardado en: ' + reportPath);
 }
 
 main();
