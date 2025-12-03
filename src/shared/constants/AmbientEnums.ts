@@ -105,17 +105,6 @@ export enum DialogueOutcome {
 }
 
 /**
- * Enumeration of dialogue speaker identifiers.
- * Represents who is speaking in dialogue entries.
- */
-export enum DialogueSpeaker {
-  ISA = "ISA",
-  STEV = "STEV",
-  NARRATOR = "narrator",
-  SYSTEM = "system",
-}
-
-/**
  * Enumeration of music mood states.
  */
 export enum MusicMood {

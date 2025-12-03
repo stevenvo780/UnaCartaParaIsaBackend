@@ -47,20 +47,6 @@ export enum StorageFilePrefix {
 export type StorageFilePrefixValue = `${StorageFilePrefix}`;
 
 /**
- * Enumeration of interaction game status values.
- */
-export enum InteractionStatus {
-  STARTED = "started",
-  EXPIRED = "expired",
-  COMPLETED = "completed",
-}
-
-/**
- * Type representing all possible interaction status values.
- */
-export type InteractionStatusValue = `${InteractionStatus}`;
-
-/**
  * Enumeration of handler result status values for ECS handler compatibility.
  * Used across all systems that return handler results.
  */
@@ -90,19 +76,6 @@ export enum WorldGenerationStatus {
 export type WorldGenerationStatusValue = `${WorldGenerationStatus}`;
 
 /**
- * Enumeration of snapshot worker status values.
- */
-export enum SnapshotWorkerStatus {
-  READY = "ready",
-  ERROR = "error",
-}
-
-/**
- * Type representing all possible snapshot worker status values.
- */
-export type SnapshotWorkerStatusValue = `${SnapshotWorkerStatus}`;
-
-/**
  * Enumeration of zone construction status values.
  */
 export enum ZoneConstructionStatus {
@@ -130,22 +103,10 @@ export const ALL_STORAGE_TYPES: readonly StorageType[] = Object.values(
 ) as StorageType[];
 
 /**
- * Array of all interaction statuses for iteration.
- */
-export const ALL_INTERACTION_STATUSES: readonly InteractionStatus[] =
-  Object.values(InteractionStatus) as InteractionStatus[];
-
-/**
  * Array of all world generation statuses for iteration.
  */
 export const ALL_WORLD_GENERATION_STATUSES: readonly WorldGenerationStatus[] =
   Object.values(WorldGenerationStatus) as WorldGenerationStatus[];
-
-/**
- * Array of all snapshot worker statuses for iteration.
- */
-export const ALL_SNAPSHOT_WORKER_STATUSES: readonly SnapshotWorkerStatus[] =
-  Object.values(SnapshotWorkerStatus) as SnapshotWorkerStatus[];
 
 /**
  * Array of all handler result statuses for iteration.
@@ -174,13 +135,6 @@ export function isStorageType(value: string): value is StorageType {
 }
 
 /**
- * Type guard to check if a string is a valid InteractionStatus.
- */
-export function isInteractionStatus(value: string): value is InteractionStatus {
-  return Object.values(InteractionStatus).includes(value as InteractionStatus);
-}
-
-/**
  * Type guard to check if a string is a valid WorldGenerationStatus.
  */
 export function isWorldGenerationStatus(
@@ -188,17 +142,6 @@ export function isWorldGenerationStatus(
 ): value is WorldGenerationStatus {
   return Object.values(WorldGenerationStatus).includes(
     value as WorldGenerationStatus,
-  );
-}
-
-/**
- * Type guard to check if a string is a valid SnapshotWorkerStatus.
- */
-export function isSnapshotWorkerStatus(
-  value: string,
-): value is SnapshotWorkerStatus {
-  return Object.values(SnapshotWorkerStatus).includes(
-    value as SnapshotWorkerStatus,
   );
 }
 

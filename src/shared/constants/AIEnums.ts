@@ -87,16 +87,6 @@ export enum NeedType {
 }
 
 /**
- * Enumeration of agent priority modes.
- * Determines how agents prioritize their goals and actions.
- */
-export enum AgentPriority {
-  SURVIVAL = "survival",
-  NORMAL = "normal",
-  SOCIAL = "social",
-}
-
-/**
  * Enumeration of goal domains.
  * Goal domains categorize goals into different priority categories
  * for the AI priority management system.
@@ -113,37 +103,6 @@ export enum GoalDomain {
   REST = "rest",
   INSPECT = "inspect",
 }
-
-/**
- * Enumeration of goal type prefixes.
- * Used for categorization and pattern matching of goal types.
- */
-export enum GoalPrefix {
-  SATISFY = "satisfy_",
-  ASSIST = "assist_",
-  WORK = "work_",
-  HUNT = "hunt_",
-  DEPOSIT = "deposit_",
-}
-
-/**
- * Enumeration of search types for AI exploration goals.
- * Defines the different modes of searching/exploring the world.
- */
-export enum SearchType {
-  WANDER = "wander",
-  SOCIAL_SEARCH = "social_search",
-  INSPECT = "inspect",
-  DEFAULT = "default",
-  DESPERATE_SEARCH = "desperate_search",
-  FOOD_OR_PREY = "food_or_prey",
-}
-
-/**
- * @deprecated Use SearchType instead. This alias is kept for backward compatibility.
- */
-export const ExplorationType = SearchType;
-export type ExplorationType = SearchType;
 
 /**
  * Enumeration of reasons for goals or actions.
@@ -178,11 +137,6 @@ export type { SocialPreferenceValue } from "./AgentEnums";
  * @deprecated Import from AgentEnums instead.
  */
 export type { WorkEthicValue } from "./AgentEnums";
-
-/**
- * Type representing all possible agent priority values.
- */
-export type AgentPriorityValue = `${AgentPriority}`;
 
 /**
  * Type representing all possible goal domain values.
@@ -229,20 +183,6 @@ export function isActionType(value: string): value is ActionType {
  */
 export function isNeedType(value: string): value is NeedType {
   return Object.values(NeedType).includes(value as NeedType);
-}
-
-/**
- * Array of all agent priorities for iteration.
- */
-export const ALL_AGENT_PRIORITIES: readonly AgentPriority[] = Object.values(
-  AgentPriority,
-) as AgentPriority[];
-
-/**
- * Type guard to check if a string is a valid AgentPriority.
- */
-export function isAgentPriority(value: string): value is AgentPriority {
-  return Object.values(AgentPriority).includes(value as AgentPriority);
 }
 
 /**

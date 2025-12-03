@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { logger } from "../utils/logger";
 import { HttpStatusCode } from "../../shared/constants/HttpStatusCodes";
 
-import { ExplorationType } from "@/shared/constants/AIEnums";
+import { ExplorationType } from "@/shared/constants/AgentEnums";
 /**
  * Request payload for chunk generation endpoint.
  */

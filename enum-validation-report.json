@@ -1,130 +1,70 @@
 {
   "summary": {
-    "totalEnums": 145,
-    "unusedEnums": 30,
+    "totalEnums": 130,
+    "unusedEnums": 15,
     "unusedMembers": 206,
     "missingEnumOccurrences": 1
   },
   "unusedEnums": [
     {
-      "name": "AgentPriority",
-      "file": "src/shared/constants/AIEnums.ts"
-    },
-    {
-      "name": "GoalPrefix",
-      "file": "src/shared/constants/AIEnums.ts"
-    },
-    {
-      "name": "SearchType",
-      "file": "src/shared/constants/AIEnums.ts"
-    },
-    {
-      "name": "ClothingStyle",
-      "file": "src/shared/constants/AgentEnums.ts"
-    },
-    {
-      "name": "AppearanceUpdateReason",
-      "file": "src/shared/constants/AgentEnums.ts"
-    },
-    {
       "name": "AlertSeverity",
-      "file": "src/shared/constants/AlertSeverity.ts"
-    },
-    {
-      "name": "DialogueSpeaker",
-      "file": "src/shared/constants/AmbientEnums.ts"
-    },
-    {
-      "name": "GenerationStyleId",
-      "file": "src/shared/constants/AppearanceEnums.ts"
+      "file": "../UnaCartaParaIsa/src/constants/AlertSeverity.ts"
     },
     {
       "name": "AssetType",
-      "file": "src/shared/constants/AssetEnums.ts"
+      "file": "../UnaCartaParaIsa/src/constants/AssetEnums.ts"
     },
     {
       "name": "AssetCategory",
-      "file": "src/shared/constants/AssetEnums.ts"
+      "file": "../UnaCartaParaIsa/src/constants/AssetEnums.ts"
     },
     {
       "name": "AssetPriority",
-      "file": "src/shared/constants/AssetEnums.ts"
-    },
-    {
-      "name": "BuildingSpriteId",
-      "file": "src/shared/constants/BuildingEnums.ts"
+      "file": "../UnaCartaParaIsa/src/constants/AssetEnums.ts"
     },
     {
       "name": "CharacterSpriteType",
-      "file": "src/shared/constants/CharacterSpriteEnums.ts"
-    },
-    {
-      "name": "ComparisonOperator",
-      "file": "src/shared/constants/ComparisonEnums.ts"
-    },
-    {
-      "name": "FeedbackLoopId",
-      "file": "src/shared/constants/EmergenceEnums.ts"
-    },
-    {
-      "name": "EventChannel",
-      "file": "src/shared/constants/EventChannels.ts"
-    },
-    {
-      "name": "KeyboardKey",
-      "file": "src/shared/constants/KeyboardKeys.ts"
-    },
-    {
-      "name": "KnowledgeEdgeType",
-      "file": "src/shared/constants/KnowledgeEnums.ts"
-    },
-    {
-      "name": "LegendTrend",
-      "file": "src/shared/constants/LegendEnums.ts"
-    },
-    {
-      "name": "LegendTier",
-      "file": "src/shared/constants/LegendEnums.ts"
-    },
-    {
-      "name": "LoadingState",
-      "file": "src/shared/constants/LoadingStates.ts"
-    },
-    {
-      "name": "LogFilterLevel",
-      "file": "src/shared/constants/LogFilterLevels.ts"
-    },
-    {
-      "name": "NotificationType",
-      "file": "src/shared/constants/NotificationTypes.ts"
-    },
-    {
-      "name": "PanelName",
-      "file": "src/shared/constants/PanelNames.ts"
-    },
-    {
-      "name": "QuestStatus",
-      "file": "src/shared/constants/QuestEnums.ts"
-    },
-    {
-      "name": "QuestDialogueStage",
-      "file": "src/shared/constants/QuestEnums.ts"
-    },
-    {
-      "name": "ResearchId",
-      "file": "src/shared/constants/ResearchEnums.ts"
-    },
-    {
-      "name": "InteractionStatus",
-      "file": "src/shared/constants/StatusEnums.ts"
-    },
-    {
-      "name": "SnapshotWorkerStatus",
-      "file": "src/shared/constants/StatusEnums.ts"
+      "file": "../UnaCartaParaIsa/src/constants/CharacterSpriteEnums.ts"
     },
     {
       "name": "InventoryCommandType",
       "file": "../UnaCartaParaIsa/src/constants/CommandTypes.ts"
+    },
+    {
+      "name": "DialogueSpeaker",
+      "file": "../UnaCartaParaIsa/src/constants/DialogueEnums.ts"
+    },
+    {
+      "name": "EventChannel",
+      "file": "../UnaCartaParaIsa/src/constants/EventChannels.ts"
+    },
+    {
+      "name": "KeyboardKey",
+      "file": "../UnaCartaParaIsa/src/constants/KeyboardKeys.ts"
+    },
+    {
+      "name": "LoadingState",
+      "file": "../UnaCartaParaIsa/src/constants/LoadingStates.ts"
+    },
+    {
+      "name": "LogFilterLevel",
+      "file": "../UnaCartaParaIsa/src/constants/LogFilterLevels.ts"
+    },
+    {
+      "name": "NotificationType",
+      "file": "../UnaCartaParaIsa/src/constants/NotificationTypes.ts"
+    },
+    {
+      "name": "PanelName",
+      "file": "../UnaCartaParaIsa/src/constants/PanelNames.ts"
+    },
+    {
+      "name": "QuestStatus",
+      "file": "../UnaCartaParaIsa/src/constants/QuestEnums.ts"
+    },
+    {
+      "name": "QuestDialogueStage",
+      "file": "../UnaCartaParaIsa/src/constants/QuestEnums.ts"
     }
   ],
   "unusedMembers": [

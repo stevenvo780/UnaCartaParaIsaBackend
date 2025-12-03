@@ -63,25 +63,6 @@ export enum WorkEthic {
 }
 
 /**
- * Enumeration of clothing style types for agent appearance.
- */
-export enum ClothingStyle {
-  SIMPLE = "simple",
-  DECORATED = "decorated",
-  ELEGANT = "elegant",
-  RUGGED = "rugged",
-  MYSTICAL = "mystical",
-}
-
-/**
- * Enumeration of reasons for appearance updates.
- */
-export enum AppearanceUpdateReason {
-  AGING = "aging",
-  SOCIAL_GROUP_ASSIGNED = "social_group_assigned",
-}
-
-/**
  * Type representing all possible sex values.
  */
 export type SexValue = `${Sex}`;
@@ -110,11 +91,6 @@ export type SocialPreferenceValue = `${SocialPreference}`;
  * Type representing all possible work ethic values.
  */
 export type WorkEthicValue = `${WorkEthic}`;
-
-/**
- * Type representing all possible clothing style values.
- */
-export type ClothingStyleValue = `${ClothingStyle}`;
 
 /**
  * Array of all sex values for iteration.
@@ -175,18 +151,4 @@ export function isSocialPreference(value: string): value is SocialPreference {
  */
 export function isWorkEthic(value: string): value is WorkEthic {
   return Object.values(WorkEthic).includes(value as WorkEthic);
-}
-
-/**
- * Array of all clothing styles for iteration.
- */
-export const ALL_CLOTHING_STYLES: readonly ClothingStyle[] = Object.values(
-  ClothingStyle,
-) as ClothingStyle[];
-
-/**
- * Type guard to check if a string is a valid ClothingStyle.
- */
-export function isClothingStyle(value: string): value is ClothingStyle {
-  return Object.values(ClothingStyle).includes(value as ClothingStyle);
 }

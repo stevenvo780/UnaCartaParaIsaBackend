@@ -1,6 +1,6 @@
 import { GameState } from "@/shared/types/game-types";
 import type { ConflictState } from "@/shared/types/game-types";
-import { ExplorationType } from "@/shared/constants/AIEnums";
+import { ExplorationType } from "@/shared/constants/AgentEnums";
 import { TradeOfferStatus } from "@/shared/constants/EconomyEnums";
 import {
   ActiveConflict,
