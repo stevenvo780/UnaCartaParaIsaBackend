@@ -1,72 +1,11 @@
 {
   "summary": {
-    "totalEnums": 130,
-    "unusedEnums": 15,
+    "totalEnums": 115,
+    "unusedEnums": 0,
     "unusedMembers": 206,
     "missingEnumOccurrences": 1
   },
-  "unusedEnums": [
-    {
-      "name": "AlertSeverity",
-      "file": "../UnaCartaParaIsa/src/constants/AlertSeverity.ts"
-    },
-    {
-      "name": "AssetType",
-      "file": "../UnaCartaParaIsa/src/constants/AssetEnums.ts"
-    },
-    {
-      "name": "AssetCategory",
-      "file": "../UnaCartaParaIsa/src/constants/AssetEnums.ts"
-    },
-    {
-      "name": "AssetPriority",
-      "file": "../UnaCartaParaIsa/src/constants/AssetEnums.ts"
-    },
-    {
-      "name": "CharacterSpriteType",
-      "file": "../UnaCartaParaIsa/src/constants/CharacterSpriteEnums.ts"
-    },
-    {
-      "name": "InventoryCommandType",
-      "file": "../UnaCartaParaIsa/src/constants/CommandTypes.ts"
-    },
-    {
-      "name": "DialogueSpeaker",
-      "file": "../UnaCartaParaIsa/src/constants/DialogueEnums.ts"
-    },
-    {
-      "name": "EventChannel",
-      "file": "../UnaCartaParaIsa/src/constants/EventChannels.ts"
-    },
-    {
-      "name": "KeyboardKey",
-      "file": "../UnaCartaParaIsa/src/constants/KeyboardKeys.ts"
-    },
-    {
-      "name": "LoadingState",
-      "file": "../UnaCartaParaIsa/src/constants/LoadingStates.ts"
-    },
-    {
-      "name": "LogFilterLevel",
-      "file": "../UnaCartaParaIsa/src/constants/LogFilterLevels.ts"
-    },
-    {
-      "name": "NotificationType",
-      "file": "../UnaCartaParaIsa/src/constants/NotificationTypes.ts"
-    },
-    {
-      "name": "PanelName",
-      "file": "../UnaCartaParaIsa/src/constants/PanelNames.ts"
-    },
-    {
-      "name": "QuestStatus",
-      "file": "../UnaCartaParaIsa/src/constants/QuestEnums.ts"
-    },
-    {
-      "name": "QuestDialogueStage",
-      "file": "../UnaCartaParaIsa/src/constants/QuestEnums.ts"
-    }
-  ],
+  "unusedEnums": [],
   "unusedMembers": [
     {
       "enum": "GoalType",

@@ -380,9 +380,9 @@ function findStringLiterals(
 }
 
 /**
- * Encuentra todos los enums en los directorios de constantes
+ * Encuentra todos los enums en los directorios de constantes (SOLO BACKEND)
  */
-function findAllEnums(backendSrc: string, frontendSrc: string): Map<string, EnumValues> {
+function findAllEnums(backendSrc: string): Map<string, EnumValues> {
   const enumMap = new Map<string, EnumValues>();
 
   // Buscar enums en el backend
@@ -393,21 +393,6 @@ function findAllEnums(backendSrc: string, frontendSrc: string): Map<string, Enum
       const enums = extractEnumValues(file);
       enums.forEach((enumData) => {
         enumMap.set(enumData.enumName, enumData);
-      });
-    });
-  }
-
-  // Buscar enums en el frontend
-  const frontendConstantsDir = path.join(frontendSrc, 'constants');
-  if (fs.existsSync(frontendConstantsDir)) {
-    const enumFiles = getAllFiles(frontendConstantsDir);
-    enumFiles.forEach((file) => {
-      const enums = extractEnumValues(file);
-      enums.forEach((enumData) => {
-        // Si ya existe (e.g. compartido), no lo sobrescribimos para mantener el del backend como fuente
-        if (!enumMap.has(enumData.enumName)) {
-          enumMap.set(enumData.enumName, enumData);
-        }
       });
     });
   }
@@ -459,9 +444,9 @@ function countEnumUsages(
 function main() {
   console.log('🔍 Validando strings y uso de Enums (SOLO BACKEND)...\n');
 
-  // Encontrar todos los enums
+  // Encontrar todos los enums - SOLO DEL BACKEND
   console.log('📚 Extrayendo enums existentes...');
-  const enumMap = findAllEnums(BACKEND_SRC, FRONTEND_SRC);
+  const enumMap = findAllEnums(BACKEND_SRC);
   console.log(`   Encontrados ${enumMap.size} enums\n`);
 
   // Crear un mapa de todos los valores de enum para búsqueda rápida
