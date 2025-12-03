@@ -300,6 +300,7 @@ export class MultiRateScheduler {
    * Executes MEDIUM rate tick (250ms interval).
    * Updates shared frame time and runs all MEDIUM systems.
    * Runs lightweight postTick sync + schedules heavy work via setImmediate.
+   * Note: preTick is NOT called here - only in FAST tick to avoid redundant index rebuilds.
    */
   private async tickMedium(): Promise<void> {
     if (this.isTickingMedium) {
@@ -316,16 +317,7 @@ export class MultiRateScheduler {
       const startTime = performance.now();
       performanceMonitor.beginTick(TickRate.MEDIUM);
 
-      const preTickStart = performance.now();
-      this.hooks.preTick?.();
-      const preTickDuration = performance.now() - preTickStart;
-      if (this.hooks.preTick) {
-        performanceMonitor.recordSystemExecution(
-          TickRate.MEDIUM,
-          "_lifecycle:preTick",
-          preTickDuration,
-        );
-      }
+      // preTick removed - only FAST tick handles index rebuild to avoid redundant work
 
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.mediumSystems, delta, entityCount);
@@ -370,6 +362,7 @@ export class MultiRateScheduler {
    * Executes SLOW rate tick (1000ms interval).
    * Updates shared frame time and runs all SLOW systems.
    * Runs lightweight postTick sync + schedules heavy work via setImmediate.
+   * Note: preTick is NOT called here - only in FAST tick to avoid redundant index rebuilds.
    */
   private async tickSlow(): Promise<void> {
     if (this.isTickingSlow) {
@@ -386,16 +379,7 @@ export class MultiRateScheduler {
       const startTime = performance.now();
       performanceMonitor.beginTick(TickRate.SLOW);
 
-      const preTickStart = performance.now();
-      this.hooks.preTick?.();
-      const preTickDuration = performance.now() - preTickStart;
-      if (this.hooks.preTick) {
-        performanceMonitor.recordSystemExecution(
-          TickRate.SLOW,
-          "_lifecycle:preTick",
-          preTickDuration,
-        );
-      }
+      // preTick removed - only FAST tick handles index rebuild to avoid redundant work
 
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.slowSystems, delta, entityCount);

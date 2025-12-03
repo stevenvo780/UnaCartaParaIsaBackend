@@ -160,13 +160,17 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     );
 
     const worldWidthPx =
-      this.gameState.worldSize?.width ?? WORLD_CONFIG.WORLD_WIDTH;
+      this.gameState?.worldSize?.width ?? WORLD_CONFIG.WORLD_WIDTH;
     const worldHeightPx =
-      this.gameState.worldSize?.height ?? WORLD_CONFIG.WORLD_HEIGHT;
+      this.gameState?.worldSize?.height ?? WORLD_CONFIG.WORLD_HEIGHT;
     this.gridWidth = Math.max(1, Math.ceil(worldWidthPx / this.gridSize));
     this.gridHeight = Math.max(1, Math.ceil(worldHeightPx / this.gridSize));
 
-    this.precomputeZoneDistances();
+    // Defensive: only precompute if zones exist
+    if (this.gameState?.zones?.length > 0) {
+      this.precomputeZoneDistances();
+    }
+    
     this.initializeObstacles();
     this.batchProcessor = new MovementBatchProcessor(this._gpuService);
     if (this._gpuService?.isGPUAvailable()) {

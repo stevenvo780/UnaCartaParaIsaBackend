@@ -398,6 +398,13 @@ export class SimulationRunner {
 
     logger.info("🔗 SimulationRunner: System dependencies configured");
 
+    // One-time migrations to unify duplicated logic between systems
+    this.migrateTrustEdgesToSocial();
+    // After migrating, drop local trust edges to avoid duplication
+    try {
+      this.reputationSystem.clearTrustMap();
+    } catch {}
+
     this.eventRegistry.setupEventListeners();
 
     await this.ensureInitialFamily();
@@ -414,6 +421,38 @@ export class SimulationRunner {
       entitiesCount: this.state.entities?.length ?? 0,
       tickCounter: this.tickCounter,
     });
+  }
+
+  /**
+   * Migrates trust edges from ReputationSystem into SocialSystem's affinity graph.
+   * This unifies pairwise relationship storage and avoids duplicated decay/update logic.
+   *
+   * Safe to call multiple times; it will just re-apply existing edges.
+   */
+  private migrateTrustEdgesToSocial(): void {
+    try {
+      if (!this.socialSystem || !this.reputationSystem) return;
+
+      const data = this.reputationSystem.serialize();
+      if (!data?.trust || data.trust.length === 0) return;
+
+      let migrated = 0;
+      for (const row of data.trust) {
+        const a = row.sourceId;
+        for (const edge of row.targets) {
+          const b = edge.targetId;
+          // trust (0..1) -> affinity (-1..1)
+          const affinity = Math.max(-1, Math.min(1, edge.value * 2 - 1));
+          this.socialSystem.setAffinity(a, b, affinity);
+          migrated++;
+        }
+      }
+      if (migrated > 0) {
+        logger.info(`🔁 Migrated ${migrated} trust edges into SocialSystem`);
+      }
+    } catch (err) {
+      logger.warn("Trust migration failed", { error: err instanceof Error ? err.message : String(err) });
+    }
   }
 
   /**

@@ -231,10 +231,8 @@ export class CombatSystem implements ICombatSystem {
     } else {
       for (const attacker of potentialAttackers) {
         if (!attacker.position) continue;
-        const weaponId = this.getEquipped(attacker.id);
-        const weapon = getWeapon(weaponId);
-
-        const radius = Math.max(this.config.engagementRadius, weapon.range);
+        const stats = equipmentSystem.getMainHandStats(attacker.id);
+        const radius = Math.max(this.config.engagementRadius, stats.attackRange);
         let nearby: SimulationEntity[] = [];
 
         if (this.sharedSpatialIndex) {
@@ -285,11 +283,10 @@ export class CombatSystem implements ICombatSystem {
     const queries = attackers
       .map((attacker) => {
         if (!attacker.position) return null;
-        const weaponId = this.getEquipped(attacker.id);
-        const weapon = getWeapon(weaponId);
+        const stats = equipmentSystem.getMainHandStats(attacker.id);
         return {
           center: attacker.position,
-          radius: Math.max(this.config.engagementRadius, weapon.range),
+          radius: Math.max(this.config.engagementRadius, stats.attackRange),
           attacker,
         };
       })
@@ -564,11 +561,9 @@ export class CombatSystem implements ICombatSystem {
     now: number,
   ): boolean {
     const lastAttack = this.lastAttackAt.get(agentId) ?? 0;
-    let cooldown = this.config.baseCooldownMs;
-    const weapon = getWeapon(weaponId);
-    if (weapon.attackSpeed) {
-      cooldown = weapon.attackSpeed * 1000;
-    }
+    // Use equipment stats: higher attackSpeed => shorter cooldown
+    const stats = equipmentSystem.getMainHandStats(agentId);
+    const cooldown = Math.max(200, Math.round(this.config.baseCooldownMs / Math.max(0.1, stats.attackSpeed)));
     return now - lastAttack >= cooldown;
   }
 
@@ -604,20 +599,17 @@ export class CombatSystem implements ICombatSystem {
       }
     }
 
-    const weapon = getWeapon(weaponId);
     const targetStats = this.ensureStats(target);
     const attackerStats = this.ensureStats(attacker);
     const attackerProfile = this.lifeCycleSystem.getAgent(attacker.id);
     const aggression =
       attackerProfile?.traits?.aggression ?? attacker.traits?.aggression ?? 0.3;
-
-    const base = weapon.baseDamage * (0.8 + Math.random() * 0.4);
+    // Compute damage from equipment stats (unified source)
+    const eqStats = equipmentSystem.getMainHandStats(attacker.id);
+    const base = 10 * eqStats.damageMultiplier * (0.8 + Math.random() * 0.4);
     const scale = 0.5 + aggression * 0.7;
-    const crit = Math.random() < weapon.critChance;
-    const damage = Math.max(
-      1,
-      Math.round(base * scale * (crit ? weapon.critMultiplier : 1)),
-    );
+    const crit = Math.random() < 0.1;
+    const damage = Math.max(1, Math.round(base * scale * (crit ? 1.75 : 1)));
 
     const newHealth = Math.max(0, (targetStats.health ?? 100) - damage);
 
@@ -859,7 +851,9 @@ export class CombatSystem implements ICombatSystem {
     const dx = attacker.position.x - target.position.x;
     const dy = attacker.position.y - target.position.y;
     const distSq = dx * dx + dy * dy;
-    const rangeSq = this.config.engagementRadius * this.config.engagementRadius;
+    const eqStats = equipmentSystem.getMainHandStats(agentId);
+    const range = Math.max(this.config.engagementRadius, eqStats.attackRange);
+    const rangeSq = range * range;
 
     if (distSq > rangeSq) {
       return {
@@ -873,21 +867,22 @@ export class CombatSystem implements ICombatSystem {
 
     const now = getFrameTime();
     const lastAttack = this.lastAttackAt.get(agentId) ?? 0;
-    if (now - lastAttack < this.config.baseCooldownMs) {
+    const cooldownMs = Math.max(200, Math.round(this.config.baseCooldownMs / Math.max(0.1, eqStats.attackSpeed)));
+    if (now - lastAttack < cooldownMs) {
       return {
         status: "in_progress",
         system: "combat",
         message: "Attack on cooldown",
         data: {
-          cooldownRemaining: this.config.baseCooldownMs - (now - lastAttack),
+          cooldownRemaining: cooldownMs - (now - lastAttack),
         },
       };
     }
 
 
     const weaponId = this.equippedWeapons.get(agentId) ?? WeaponId.UNARMED;
-    const weapon = getWeapon(weaponId);
-    const damage = weapon?.baseDamage ?? 10;
+    const base = 10 * eqStats.damageMultiplier * (0.8 + Math.random() * 0.4);
+    const damage = Math.max(1, Math.round(base));
 
 
     const targetStats = this.ensureStats(target);

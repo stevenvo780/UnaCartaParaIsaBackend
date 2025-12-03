@@ -438,6 +438,13 @@ export class ReputationSystem {
     return this.getAllReputations().slice(0, limit);
   }
 
+  /**
+   * Clears internal trust map. Use when SocialSystem is the sole source of pair relations.
+   */
+  public clearTrustMap(): void {
+    this.trust.clear();
+  }
+
   public serialize(): SerializedReputationData {
     const trustArray: SerializedReputationData["trust"] = [];
 

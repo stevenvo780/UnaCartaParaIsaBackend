@@ -139,26 +139,16 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   /**
-   * Sets up a listener for AGENT_DEATH events from NeedsSystem.
-   * Ensures that when an agent dies from starvation/dehydration/exhaustion,
-   * they are properly removed and cleaned up.
+   * @deprecated Death handling centralized in EventRegistry.
+   * This listener was causing duplicate cleanup. Now EventRegistry
+   * handles AGENT_DEATH and calls cleanupAgentState directly.
+   *
+   * Kept as no-op for backwards compatibility with tests.
    */
   private setupDeathListener(): void {
-    simulationEvents.on(
-      GameEventType.AGENT_DEATH,
-      (data: { agentId?: string; entityId?: string; cause?: string }) => {
-        const agentId = data.agentId || data.entityId;
-        if (!agentId) return;
-
-        const agentStillExists = this.agentRegistry?.getProfile(agentId);
-        if (agentStillExists) {
-          logger.debug(
-            `🔄 LifeCycleSystem: Processing deferred death for ${agentId} (${data.cause || "unknown"})`,
-          );
-          this.removeAgent(agentId);
-        }
-      },
-    );
+    // Death handling moved to EventRegistry to avoid duplicate processing.
+    // EventRegistry.ts now handles: markEntityDead, recordDeath, removeEntity
+    // and triggers INVENTORY_DROPPED for cleanup.
   }
 
   public setDependencies(systems: {

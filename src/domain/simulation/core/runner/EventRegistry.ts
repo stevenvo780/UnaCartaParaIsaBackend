@@ -80,9 +80,46 @@ export class EventRegistry {
     this.registerEvent(
       GameEventType.AGENT_DEATH,
       (data: { entityId: string; reason?: string }) => {
-        this.runner.entityIndex.markEntityDead(data.entityId);
-        this.runner._genealogySystem.recordDeath(data.entityId);
-        this.runner.entityIndex.removeEntity(data.entityId);
+        const agentId = data.entityId;
+        
+        // 1. Mark entity as dead in index
+        this.runner.entityIndex.markEntityDead(agentId);
+        
+        // 2. Record death in genealogy
+        this.runner._genealogySystem.recordDeath(agentId);
+        
+        // 3. Cleanup all agent systems (centralized here to avoid duplicate cleanup)
+        this.runner.aiSystem.removeAgentState(agentId);
+        this.runner.needsSystem.removeEntityNeeds(agentId);
+        this.runner.socialSystem.removeRelationships(agentId);
+        this.runner.movementSystem.removeEntityMovement(agentId);
+        this.runner.taskSystem.removeAgentFromAllTasks(agentId);
+        this.runner.roleSystem.removeAgentRole(agentId);
+        this.runner.householdSystem.removeAgentFromHousehold(agentId);
+        
+        // 4. Drop inventory to household/storage (triggers INVENTORY_DROPPED)
+        const inventory = this.runner.inventorySystem.getAgentInventory(agentId);
+        if (inventory && (inventory.wood > 0 || inventory.stone > 0 || inventory.food > 0 || inventory.water > 0)) {
+          const agent = this.runner.agentRegistry.getProfile(agentId);
+          simulationEvents.emit(GameEventType.INVENTORY_DROPPED, {
+            agentId,
+            position: agent?.position,
+            inventory: {
+              wood: inventory.wood,
+              stone: inventory.stone,
+              food: inventory.food,
+              water: inventory.water,
+            },
+            timestamp: Date.now(),
+          });
+        }
+        this.runner.inventorySystem.removeAgentInventory(agentId);
+        
+        // 5. Remove from registries
+        this.runner.agentRegistry.removeAgent(agentId);
+        this.runner.entityIndex.removeEntity(agentId);
+        
+        logger.debug(`☠️ Agent ${agentId} fully cleaned up (reason: ${data.reason || "unknown"})`);
       },
     );
 
