@@ -762,7 +762,7 @@ export class SimulationRunner {
     logger.info("📋 All systems registered in multi-rate scheduler", {
       fast: 2,
       medium: 9,
-      slow: 15,
+      slow: 16,
     });
   }
 
@@ -915,6 +915,7 @@ export class SimulationRunner {
       this.gpuStatsInterval = undefined;
     }
 
+    this.snapshotManager.cleanup();
     this.eventRegistry.cleanup();
   }
 
@@ -1100,7 +1101,7 @@ export class SimulationRunner {
   }
 
   private startGpuStatsLogging(): void {
-    setInterval(() => {
+    this.gpuStatsInterval = setInterval(() => {
       const stats = this.gpuComputeService.getPerformanceStats();
       if (stats.gpuAvailable) {
         logger.debug("GPU Compute Stats:", stats);

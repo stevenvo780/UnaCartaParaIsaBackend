@@ -231,6 +231,7 @@ export class CombatSystem implements ICombatSystem {
     } else {
       for (const attacker of potentialAttackers) {
         if (!attacker.position) continue;
+        const weaponId = this.getEquipped(attacker.id);
         const stats = equipmentSystem.getMainHandStats(attacker.id);
         const radius = Math.max(this.config.engagementRadius, stats.attackRange);
         let nearby: SimulationEntity[] = [];
@@ -557,7 +558,7 @@ export class CombatSystem implements ICombatSystem {
 
   private isOffCooldown(
     agentId: string,
-    weaponId: WeaponId,
+    _weaponId: WeaponId,
     now: number,
   ): boolean {
     const lastAttack = this.lastAttackAt.get(agentId) ?? 0;
