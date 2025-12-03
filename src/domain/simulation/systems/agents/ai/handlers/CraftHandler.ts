@@ -14,7 +14,7 @@ import {
   inProgressResult,
   successResult,
 } from "../types";
-import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 export interface Recipe {
   itemType: string;
@@ -77,20 +77,20 @@ export function handleCraft(
   const result = systems.crafting.requestCraft(agentId, recipeId);
 
   switch (result.status) {
-    case "completed":
+    case HandlerResultStatus.COMPLETED:
       return successResult({
         crafted: recipeId,
         message: result.message,
         ...((result.data as object) ?? {}),
       });
 
-    case QuestStatus.FAILED:
+    case HandlerResultStatus.FAILED:
       return errorResult(result.message ?? "Craft failed");
 
-    case "in_progress":
+    case HandlerResultStatus.IN_PROGRESS:
       return inProgressResult("crafting", result.message ?? "Crafting");
 
-    case "delegated":
+    case HandlerResultStatus.DELEGATED:
       return inProgressResult(
         result.system,
         result.message ?? "Moving to crafting station",

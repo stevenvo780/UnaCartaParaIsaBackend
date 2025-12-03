@@ -11,6 +11,7 @@ import {
 } from "../../../../shared/constants/ZoneEnums";
 import { BuildingType } from "../../../../shared/constants/BuildingEnums";
 import { ResourceType } from "../../../../shared/constants/ResourceEnums";
+import { ControlledEntity } from "@/shared/constants/ControlledEntities";
 
 export class WorldLoader {
   constructor(private runner: SimulationRunner) {}
@@ -179,7 +180,7 @@ export class WorldLoader {
     let isa = this.runner.agentRegistry.getProfile("isa");
     if (!isa) {
       isa = this.runner.lifeCycleSystem.spawnAgent({
-        id: "isa",
+        id: ControlledEntity.ISA,
         name: "Isa",
         sex: Sex.FEMALE,
         ageYears: 25,
@@ -200,7 +201,7 @@ export class WorldLoader {
     let stev = this.runner.agentRegistry.getProfile("stev");
     if (!stev) {
       stev = this.runner.lifeCycleSystem.spawnAgent({
-        id: "stev",
+        id: ControlledEntity.STEV,
         name: "Stev",
         sex: Sex.MALE,
         ageYears: 27,
@@ -235,7 +236,8 @@ export class WorldLoader {
         (a) =>
           a.name === childData.name &&
           a.generation === 1 &&
-          (a.parents?.father === "stev" || a.parents?.mother === "isa"),
+          (a.parents?.father === ControlledEntity.STEV ||
+            a.parents?.mother === ControlledEntity.ISA),
       );
 
       if (!existingChild) {

@@ -13,10 +13,11 @@ import type { HandlerResult, ISocialSystem } from "../agents/SystemRegistry";
 
 import { injectable, inject, optional } from "inversify";
 import type { GPUComputeService } from "../../core/GPUComputeService";
-import { QuestStatus } from "../../../../shared/constants/QuestEnums";
 import { ActionType } from "../../../../shared/constants/AIEnums";
 import { DialogueTone } from "../../../../shared/constants/AmbientEnums";
 import { GoalType } from "../../../../shared/constants/AIEnums";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
+import { GoalDomain } from "@/shared/constants/AIEnums";
 
 /**
  * System for managing social relationships between agents.
@@ -125,7 +126,8 @@ export class SocialSystem implements ISocialSystem {
     this.lastUpdate += deltaTimeMs;
     const now = getFrameTime();
 
-    const agentCount = this.gameState.agents?.filter((a) => !a.isDead).length ?? 0;
+    const agentCount =
+      this.gameState.agents?.filter((a) => !a.isDead).length ?? 0;
     const edgeCount = this.edges.size;
     const groupCount = this.groups.length;
 
@@ -745,8 +747,6 @@ export class SocialSystem implements ISocialSystem {
     return serialized;
   }
 
-
-
   /**
    * Solicita una interacción social entre dos agentes.
    * @param agentId - ID del agente que inicia la interacción
@@ -758,36 +758,33 @@ export class SocialSystem implements ISocialSystem {
     targetId: string,
     type: string,
   ): HandlerResult {
-
     const agents = this.gameState.agents;
     const agent = agents.find((a) => a.id === agentId);
     const target = agents.find((a) => a.id === targetId);
 
     if (!agent || !target) {
       return {
-        status: QuestStatus.FAILED,
-        system: "social",
+        status: HandlerResultStatus.FAILED,
+        system: GoalDomain.SOCIAL,
         message: `Agent or target not found: ${agentId}, ${targetId}`,
       };
     }
 
-
     if (this.isTruceActive(agentId, targetId)) {
       return {
-        status: QuestStatus.FAILED,
-        system: "social",
+        status: HandlerResultStatus.FAILED,
+        system: GoalDomain.SOCIAL,
         message: "Truce active between agents",
       };
     }
-
 
     switch (type) {
       case DialogueTone.FRIENDLY:
       case ActionType.SOCIALIZE:
         this.registerFriendlyInteraction(agentId, targetId);
         return {
-          status: "completed",
-          system: "social",
+          status: HandlerResultStatus.COMPLETED,
+          system: GoalDomain.SOCIAL,
           message: "Friendly interaction registered",
           data: { affinityChange: 0.1 },
         };
@@ -796,8 +793,8 @@ export class SocialSystem implements ISocialSystem {
         this.addEdge(agentId, targetId, -0.2);
         this.addInfamy(agentId, 0.1);
         return {
-          status: "completed",
-          system: "social",
+          status: HandlerResultStatus.COMPLETED,
+          system: GoalDomain.SOCIAL,
           message: "Hostile interaction registered",
           data: { affinityChange: -0.2 },
         };
@@ -805,18 +802,17 @@ export class SocialSystem implements ISocialSystem {
       case GoalType.ASSIST:
         this.addEdge(agentId, targetId, 0.15);
         return {
-          status: "completed",
-          system: "social",
+          status: HandlerResultStatus.COMPLETED,
+          system: GoalDomain.SOCIAL,
           message: "Assistance registered",
           data: { affinityChange: 0.15 },
         };
 
       default:
-
         this.addEdge(agentId, targetId, 0.05);
         return {
-          status: "completed",
-          system: "social",
+          status: HandlerResultStatus.COMPLETED,
+          system: GoalDomain.SOCIAL,
           message: `Interaction type '${type}' processed`,
           data: { affinityChange: 0.05 },
         };

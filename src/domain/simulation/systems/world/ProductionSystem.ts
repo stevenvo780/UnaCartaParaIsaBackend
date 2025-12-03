@@ -130,7 +130,10 @@ export class ProductionSystem {
     );
 
     // Debug log every 10 seconds
-    if (Math.floor(now / 10000) !== Math.floor((now - this.config.updateIntervalMs) / 10000)) {
+    if (
+      Math.floor(now / 10000) !==
+      Math.floor((now - this.config.updateIntervalMs) / 10000)
+    ) {
       logger.debug(
         `🏭 [ProductionSystem] update: zones=${zones.length}, productionZones=${productionZones.length}, assignments=${totalAssignments}`,
       );

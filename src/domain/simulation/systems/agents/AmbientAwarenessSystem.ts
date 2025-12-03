@@ -72,7 +72,7 @@ export class AmbientAwarenessSystem {
         mood: AmbientMood.COMFORTABLE,
       },
       ambientState: {
-        musicMood: "neutral",
+        musicMood: MusicMood.NEUTRAL,
         lightingTint: 0xffffff,
         particleIntensity: 0.5,
         worldPulseRate: 1,
@@ -225,7 +225,7 @@ export class AmbientAwarenessSystem {
     if (wellbeing.mood === AmbientMood.STRESSED) return MusicMood.TENSE;
     if (wellbeing.mood === AmbientMood.CRISIS) return MusicMood.OMINOUS;
     if (wellbeing.mood === AmbientMood.COLLAPSE) return MusicMood.CHAOTIC;
-    return "neutral";
+    return MusicMood.NEUTRAL;
   }
 
   private resolveTint(mood: AmbientMood): number {

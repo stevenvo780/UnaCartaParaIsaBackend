@@ -15,8 +15,8 @@ import {
   successResult,
 } from "../types";
 import { moveToPosition, isAtTarget } from "./MoveHandler";
-import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
 import { logger } from "@/infrastructure/utils/logger";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
  * @deprecated Use SystemRegistry.needs instead
@@ -44,7 +44,9 @@ export function handleConsume(
 ): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
 
-  logger.debug(`[ConsumeHandler] ${agentId}: type=${task.type}, target=${JSON.stringify(task.target)}, pos=(${position?.x?.toFixed(0)},${position?.y?.toFixed(0)})`);
+  logger.debug(
+    `[ConsumeHandler] ${agentId}: type=${task.type}, target=${JSON.stringify(task.target)}, pos=(${position?.x?.toFixed(0)},${position?.y?.toFixed(0)})`,
+  );
 
   if (task.type !== TaskType.SATISFY_NEED) {
     return errorResult("Wrong task type");
@@ -64,14 +66,14 @@ export function handleConsume(
   if (itemId) {
     const result = systems.needs.requestConsume(agentId, itemId);
 
-    if (result.status === "completed") {
+    if (result.status === HandlerResultStatus.COMPLETED) {
       return successResult({
         consumed: itemId,
         satisfied: needType,
       });
     }
 
-    if (result.status === QuestStatus.FAILED) {
+    if (result.status === HandlerResultStatus.FAILED) {
       return errorResult(result.message ?? "Consume failed");
     }
 
@@ -81,24 +83,29 @@ export function handleConsume(
   if (task.target?.position) {
     if (!isAtTarget(position, task.target.position)) {
       const moveResult = moveToPosition(ctx, task.target.position);
-      logger.debug(`[ConsumeHandler] ${agentId}: moveToPosition result=${JSON.stringify({success: moveResult.success, completed: moveResult.completed, msg: moveResult.message})}`);
+      logger.debug(
+        `[ConsumeHandler] ${agentId}: moveToPosition result=${JSON.stringify({ success: moveResult.success, completed: moveResult.completed, msg: moveResult.message })}`,
+      );
       return moveResult;
     }
 
-    logger.debug(`[ConsumeHandler] ${agentId}: arrived at target, consuming ${needType}`);
+    logger.debug(
+      `[ConsumeHandler] ${agentId}: arrived at target, consuming ${needType}`,
+    );
     const result = systems.needs.requestConsume(agentId, needType);
 
-    if (result.status === "completed") {
-
+    if (result.status === HandlerResultStatus.COMPLETED) {
       const resourceType = task.params?.resourceType as string;
       if (ctx.memory && resourceType && task.target.position) {
         ctx.memory.recordKnownResource(resourceType, task.target.position);
-        logger.debug(`[ConsumeHandler] ${agentId}: recorded ${resourceType} at (${task.target.position.x?.toFixed(0)},${task.target.position.y?.toFixed(0)})`);
+        logger.debug(
+          `[ConsumeHandler] ${agentId}: recorded ${resourceType} at (${task.target.position.x?.toFixed(0)},${task.target.position.y?.toFixed(0)})`,
+        );
       }
       return successResult({ satisfied: needType });
     }
 
-    if (result.status === QuestStatus.FAILED) {
+    if (result.status === HandlerResultStatus.FAILED) {
       return errorResult(result.message ?? "No consumable resource available");
     }
 
@@ -107,22 +114,26 @@ export function handleConsume(
 
   const result = systems.needs.requestConsume(agentId, needType);
 
-  if (result.status === "completed") {
+  if (result.status === HandlerResultStatus.COMPLETED) {
     return successResult({ satisfied: needType });
   }
 
-
-
-  if (result.status === QuestStatus.FAILED) {
-    logger.debug(`[ConsumeHandler] ${agentId}: consume failed - ${result.message}`);
+  if (result.status === HandlerResultStatus.FAILED) {
+    logger.debug(
+      `[ConsumeHandler] ${agentId}: consume failed - ${result.message}`,
+    );
     return errorResult(result.message ?? "No consumable available");
   }
 
-
-  if (result.status === "in_progress" || result.status === "delegated") {
-    return inProgressResult(result.system ?? "needs", result.message ?? "Looking for consumable");
+  if (
+    result.status === HandlerResultStatus.IN_PROGRESS ||
+    result.status === HandlerResultStatus.DELEGATED
+  ) {
+    return inProgressResult(
+      result.system ?? "needs",
+      result.message ?? "Looking for consumable",
+    );
   }
-
 
   return errorResult("Consume operation returned unknown status");
 }

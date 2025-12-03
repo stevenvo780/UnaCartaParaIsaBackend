@@ -1,5 +1,7 @@
 import { GameState } from "@/shared/types/game-types";
 import type { ConflictState } from "@/shared/types/game-types";
+import { ExplorationType } from "@/shared/constants/AIEnums";
+import { TradeOfferStatus } from "@/shared/constants/EconomyEnums";
 import {
   ActiveConflict,
   ConflictRecord,
@@ -20,6 +22,8 @@ import {
 import { SystemProperty } from "../../../../shared/constants/SystemEnums";
 import { ZoneType } from "../../../../shared/constants/ZoneEnums";
 import { logger } from "@/infrastructure/utils/logger";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../../config/Types";
 
 const CONFLICT_CONFIG = {
   truce: {
@@ -38,10 +42,6 @@ const CONFLICT_CONFIG = {
     apologizeBonus: 0.2,
   },
 } as const;
-
-import { injectable, inject } from "inversify";
-import { TYPES } from "../../../../config/Types";
-import { TradeOfferStatus } from "../../../../shared/constants/EconomyEnums";
 
 /**
  * Unified system for conflict resolution and norm enforcement.
@@ -135,14 +135,14 @@ export class ConflictResolutionSystem {
       ? "low_health"
       : heavyHit
         ? "heavy_hit"
-        : "default";
+        : ExplorationType.DEFAULT;
 
     const mediation: MediationAttempt = {
       timestamp: Date.now(),
       cardId,
       attackerId: data.attackerId,
       targetId: data.targetId,
-      outcome: "expired",
+      outcome: TradeOfferStatus.EXPIRED,
       reason,
     };
     this.mediationAttempts.push(mediation);

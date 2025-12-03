@@ -1,3 +1,4 @@
+import { ItemCategory } from "@/shared/constants/ItemEnums";
 /**
  * @fileoverview Detector de Comercio
  *
@@ -31,7 +32,7 @@ export function detectTrade(ctx: DetectorContext): Task[] {
       type: TaskType.TRADE,
       priority: isTrader ? TASK_PRIORITIES.NORMAL : TASK_PRIORITIES.LOW,
       target: { zoneId: ctx.nearestMarketZoneId },
-      params: { action: "trade" },
+      params: { action: ItemCategory.TRADE },
       source: "detector:trade",
     }),
   );

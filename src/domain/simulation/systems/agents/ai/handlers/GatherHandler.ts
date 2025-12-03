@@ -15,7 +15,7 @@ import {
   successResult,
 } from "../types";
 import { isAtTarget, moveToPosition } from "./MoveHandler";
-import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
  * @deprecated Use SystemRegistry.inventory instead
@@ -75,11 +75,11 @@ export function handleGather(
       target.entityId,
     );
 
-    if (moveResult.status === "in_progress") {
+    if (moveResult.status === HandlerResultStatus.IN_PROGRESS) {
       return inProgressResult("movement", "Moving to resource");
     }
 
-    if (moveResult.status === QuestStatus.FAILED) {
+    if (moveResult.status === HandlerResultStatus.FAILED) {
       return errorResult(moveResult.message ?? "Cannot reach resource");
     }
   }
@@ -93,8 +93,7 @@ export function handleGather(
 
   const result = systems.inventory.requestGather(agentId, resourceId, quantity);
 
-  if (result.status === "completed") {
-
+  if (result.status === HandlerResultStatus.COMPLETED) {
     const resourceType = task.params?.resourceType as string;
     if (ctx.memory && resourceType && target.position) {
       ctx.memory.recordKnownResource(resourceType, target.position);
@@ -105,7 +104,7 @@ export function handleGather(
     });
   }
 
-  if (result.status === QuestStatus.FAILED) {
+  if (result.status === HandlerResultStatus.FAILED) {
     return errorResult(result.message ?? "Gather failed");
   }
 

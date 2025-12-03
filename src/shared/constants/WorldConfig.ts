@@ -1,7 +1,7 @@
 import { EntityStat } from "./EntityEnums";
-import { ZoneID } from "./ZoneEnums";
-import { ZoneType } from "./ZoneEnums";
+import { ZoneID, ZoneType } from "./ZoneEnums";
 
+import { ResourceType } from "@/shared/constants/ResourceEnums";
 export const WORLD_CONFIG = {
   WORLD_WIDTH: 4096,
   WORLD_HEIGHT: 4096,
@@ -104,7 +104,7 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.FOOD_ZONE_CENTRAL,
     name: "Zona de Alimentación Central",
-    type: "food",
+    type: ZoneType.FOOD,
     size: ZONE_CONFIG.LARGE,
     color: "#00FF00",
     effects: { energy: 10, happiness: 5 },
@@ -112,7 +112,7 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.WATER_ZONE_NORTH,
     name: "Fuente de Agua Norte",
-    type: "water",
+    type: ZoneType.WATER,
     size: ZONE_CONFIG.MEDIUM,
     color: "#00BFFF",
     effects: { energy: 8, comfort: 6 },
@@ -120,7 +120,7 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.REST_ZONE_SOUTH,
     name: "Área de Descanso Sur",
-    type: "rest",
+    type: ZoneType.REST,
     size: ZONE_CONFIG.LARGE,
     color: "#FF00FF",
     effects: { energy: 15, comfort: 10, happiness: 8 },
@@ -128,38 +128,38 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.WORK_ZONE_LOGGING,
     name: "Campamento Maderero",
-    type: "work",
+    type: ZoneType.WORK,
     size: ZONE_CONFIG.MEDIUM,
     color: "#8B4513",
     effects: {},
-    properties: { resource: "wood" },
+    properties: { resource: ResourceType.WOOD },
   },
   {
     id: ZoneID.WORK_ZONE_QUARRY,
     name: "Cantera de Piedra",
-    type: "work",
+    type: ZoneType.WORK,
     size: ZONE_CONFIG.MEDIUM,
     color: "#808080",
     effects: {},
-    properties: { resource: "stone" },
+    properties: { resource: ResourceType.STONE },
   },
   {
     id: ZoneID.STORAGE_GRANARY_01,
     name: "Granero Principal",
-    type: "storage",
+    type: ZoneType.STORAGE,
     size: ZONE_CONFIG.MEDIUM,
     color: "#D2691E",
     effects: { comfort: 5 },
     properties: {
       stockpileId: ZoneID.STORAGE_GRANARY_01,
       capacity: 500,
-      resourceTypes: ["food", "water"],
+      resourceTypes: ["food", ResourceType.WATER],
     },
   },
   {
     id: ZoneID.WATER_WELL_CENTRAL,
     name: "Pozo Central",
-    type: "water",
+    type: ZoneType.WATER,
     size: ZONE_CONFIG.SMALL,
     color: "#1E90FF",
     effects: { energy: 10, comfort: 8 },
@@ -168,7 +168,7 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.FOOD_ZONE_ORCHARD_EAST,
     name: "Huerto del Este",
-    type: "food",
+    type: ZoneType.FOOD,
     size: ZONE_CONFIG.MEDIUM,
     color: "#7CFC00",
     effects: { energy: 12, happiness: 6 },
@@ -176,7 +176,7 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.FOOD_ZONE_FARM_WEST,
     name: "Granja del Oeste",
-    type: "food",
+    type: ZoneType.FOOD,
     size: ZONE_CONFIG.LARGE,
     color: "#32CD32",
     effects: { energy: 15, comfort: 5 },
@@ -184,7 +184,7 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.FOOD_ZONE_GARDEN_SOUTH,
     name: "Jardín del Sur",
-    type: "food",
+    type: ZoneType.FOOD,
     size: ZONE_CONFIG.MEDIUM,
     color: "#00FF7F",
     effects: { energy: 10, mentalHealth: 8 },
@@ -192,7 +192,7 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.WATER_ZONE_LAKE_EAST,
     name: "Lago del Este",
-    type: "water",
+    type: ZoneType.WATER,
     size: ZONE_CONFIG.MEDIUM,
     color: "#00CED1",
     effects: { energy: 12, comfort: 10 },
@@ -201,7 +201,7 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.WATER_ZONE_SPRING_WEST,
     name: "Manantial del Oeste",
-    type: "water",
+    type: ZoneType.WATER,
     size: ZONE_CONFIG.SMALL,
     color: "#20B2AA",
     effects: { energy: 10, [EntityStat.HEALTH]: 5 },
@@ -260,7 +260,7 @@ export const ZONE_DEFINITIONS = [
   {
     id: ZoneID.MARKET_ZONE_PLAZA,
     name: "Plaza del Mercado",
-    type: "market",
+    type: ZoneType.MARKET,
     size: ZONE_CONFIG.LARGE,
     color: "#F39C12",
     effects: { socialSkills: 10, happiness: 6, money: 5 },

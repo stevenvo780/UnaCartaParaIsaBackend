@@ -17,7 +17,10 @@ const DEFAULT_CONFIG: ItemGenerationConfig = {
 
 import { injectable, inject, unmanaged } from "inversify";
 import { TYPES } from "../../../../config/Types";
+import { ZoneType } from "@/shared/constants/ZoneEnums";
 
+import { ResourceType } from "@/shared/constants/ResourceEnums";
+import { BiomeType } from "@/shared/constants/BiomeEnums";
 /**
  * Generates spawn rules based on the base materials catalog.
  *
@@ -31,12 +34,12 @@ function generateDefaultRulesFromCatalog(): GenerationRule[] {
   const materials = BaseMaterialsCatalog.getAllMaterials();
 
   const biomeToZoneType: Record<string, string> = {
-    mystical: "mystical",
-    wetland: "water",
-    mountainous: "work",
-    forest: "food",
-    grassland: "food",
-    village: "storage",
+    mystical: BiomeType.MYSTICAL,
+    wetland: ResourceType.WATER,
+    mountainous: ZoneType.WORK,
+    forest: ZoneType.FOOD,
+    grassland: ZoneType.FOOD,
+    village: ZoneType.STORAGE,
   };
 
   for (const material of materials) {
@@ -56,10 +59,15 @@ function generateDefaultRulesFromCatalog(): GenerationRule[] {
     }
   }
 
-  const basicMaterials = ["wood_log", "stone", "fiber", "water"];
+  const basicMaterials = [
+    "wood_log",
+    ResourceType.STONE,
+    "fiber",
+    ResourceType.WATER,
+  ];
   for (const itemId of basicMaterials) {
     rules.push({
-      zoneType: "food",
+      zoneType: ZoneType.FOOD,
       itemId,
       spawnChance: 0.6,
       minQuantity: 2,
@@ -67,7 +75,7 @@ function generateDefaultRulesFromCatalog(): GenerationRule[] {
       respawnTime: 45000,
     });
     rules.push({
-      zoneType: "work",
+      zoneType: ZoneType.WORK,
       itemId,
       spawnChance: 0.7,
       minQuantity: 3,

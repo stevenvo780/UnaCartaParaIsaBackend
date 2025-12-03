@@ -20,7 +20,8 @@ import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/Simulat
 import { logger } from "@/infrastructure/utils/logger";
 
 /** Bienestar mínimo para reproducirse - usa constante centralizada */
-const REPRODUCTION_WELLNESS_THRESHOLD = SIMULATION_CONSTANTS.SOCIAL.REPRODUCTION_WELLNESS_THRESHOLD;
+const REPRODUCTION_WELLNESS_THRESHOLD =
+  SIMULATION_CONSTANTS.SOCIAL.REPRODUCTION_WELLNESS_THRESHOLD;
 
 /**
  * Detecta necesidades y oportunidades sociales

@@ -231,10 +231,9 @@ export class ReputationSystem {
     if (this.socialSystem) {
       // Estimate edges from SocialSystem graph
       // Note: SocialSystem does not expose edges directly; approximate using gameState relationships snapshot if present
-      trustEdges = Object.values(this.gameState.socialGraph?.relationships || {}).reduce(
-        (acc, targets) => acc + Object.keys(targets).length,
-        0,
-      );
+      trustEdges = Object.values(
+        this.gameState.socialGraph?.relationships || {},
+      ).reduce((acc, targets) => acc + Object.keys(targets).length, 0);
     } else {
       this.trust.forEach((row) => (trustEdges += row.size));
     }
@@ -269,7 +268,7 @@ export class ReputationSystem {
     let trustArray: Array<{
       sourceId: string;
       targets: Array<{ sourceId: string; targetId: string; trust: number }>;
-    }>; 
+    }>;
     if (this.socialSystem && this.gameState.socialGraph?.relationships) {
       trustArray = Object.entries(this.gameState.socialGraph.relationships).map(
         ([sourceId, targets]) => ({
@@ -452,7 +451,11 @@ export class ReputationSystem {
       for (const [sourceId, targets] of Object.entries(
         this.gameState.socialGraph.relationships,
       )) {
-        const arr: Array<{ targetId: string; value: number; lastUpdated: number }> = [];
+        const arr: Array<{
+          targetId: string;
+          value: number;
+          lastUpdated: number;
+        }> = [];
         for (const [targetId, affinity] of Object.entries(targets)) {
           arr.push({
             targetId,

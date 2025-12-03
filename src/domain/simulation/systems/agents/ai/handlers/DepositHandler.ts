@@ -14,8 +14,8 @@ import {
   inProgressResult,
   successResult,
 } from "../types";
-import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
 import { logger } from "@/infrastructure/utils/logger";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
  * @deprecated Use SystemRegistry.inventory instead
@@ -43,19 +43,25 @@ export function handleDeposit(
   logger.debug(`📦 [DepositHandler] ${agentId}: entering handler`);
 
   if (task.type !== TaskType.DEPOSIT) {
-    logger.debug(`📦 [DepositHandler] ${agentId}: wrong task type ${task.type}`);
+    logger.debug(
+      `📦 [DepositHandler] ${agentId}: wrong task type ${task.type}`,
+    );
     return errorResult("Wrong task type");
   }
 
   if (!systems.inventory) {
-    logger.debug(`📦 [DepositHandler] ${agentId}: InventorySystem not available`);
+    logger.debug(
+      `📦 [DepositHandler] ${agentId}: InventorySystem not available`,
+    );
     return errorResult("InventorySystem not available");
   }
 
   const storageId = task.target?.entityId;
   const itemId = task.params?.itemId as string | undefined;
 
-  logger.debug(`📦 [DepositHandler] ${agentId}: storageId=${storageId}, itemId=${itemId}`);
+  logger.debug(
+    `📦 [DepositHandler] ${agentId}: storageId=${storageId}, itemId=${itemId}`,
+  );
 
   if (!storageId) {
     logger.debug(`📦 [DepositHandler] ${agentId}: No storage target specified`);
@@ -68,10 +74,12 @@ export function handleDeposit(
     itemId ?? "all",
   );
 
-  logger.debug(`📦 [DepositHandler] ${agentId}: requestDeposit result=${result.status}, msg=${result.message}`);
+  logger.debug(
+    `📦 [DepositHandler] ${agentId}: requestDeposit result=${result.status}, msg=${result.message}`,
+  );
 
   switch (result.status) {
-    case "completed":
+    case HandlerResultStatus.COMPLETED:
       return successResult({
         storageId,
         deposited: itemId ?? "all",
@@ -79,13 +87,13 @@ export function handleDeposit(
         ...((result.data as object) ?? {}),
       });
 
-    case QuestStatus.FAILED:
+    case HandlerResultStatus.FAILED:
       return errorResult(result.message ?? "Deposit failed");
 
-    case "in_progress":
+    case HandlerResultStatus.IN_PROGRESS:
       return inProgressResult("inventory", result.message ?? "Depositing");
 
-    case "delegated":
+    case HandlerResultStatus.DELEGATED:
       return inProgressResult(
         result.system,
         result.message ?? "Moving to storage",

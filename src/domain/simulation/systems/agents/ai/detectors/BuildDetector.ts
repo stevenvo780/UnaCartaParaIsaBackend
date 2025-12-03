@@ -16,6 +16,7 @@ import {
 import { RoleType } from "../../../../../../shared/constants/RoleEnums";
 import { ActionType } from "../../../../../../shared/constants/AIEnums";
 
+import { GoalType } from "@/shared/constants/AIEnums";
 /**
  * Detecta necesidad de construir
  */
@@ -36,7 +37,7 @@ export function detectBuild(ctx: DetectorContext): Task[] {
           target: { zoneId: best.zoneId },
           params: {
             taskId: best.id,
-            workType: "construction",
+            workType: GoalType.CONSTRUCTION,
           },
           source: "detector:build:construct",
         }),

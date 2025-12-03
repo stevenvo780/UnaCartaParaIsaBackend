@@ -1,6 +1,7 @@
 import type { GameState } from "@/shared/types/game-types";
 import { cloneGameState, cloneGameStateDelta } from "./defaultState";
 
+import { ZoneType } from "@/shared/constants/ZoneEnums";
 /**
  * Intelligent caching system with dirty flags to optimize state cloning.
  * Only re-clones sections that have changed since the last snapshot.
@@ -89,7 +90,7 @@ export class StateCache {
       "worldResources",
       "inventory",
       "socialGraph",
-      "market",
+      ZoneType.MARKET,
       "trade",
       "marriage",
 

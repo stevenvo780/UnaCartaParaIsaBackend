@@ -8,11 +8,9 @@ import { logger } from "../../../../infrastructure/utils/logger";
 import type { SimulationRunner } from "../SimulationRunner";
 import { ResourceType } from "../../../../shared/constants/ResourceEnums";
 import { RoleType } from "../../../../shared/constants/RoleEnums";
-
 import { LifeStage } from "../../../../shared/constants/AgentEnums";
-import { ActionType } from "../../../../shared/constants/AIEnums";
+import { ActionType, NeedType } from "../../../../shared/constants/AIEnums";
 import { TimeOfDayPhase } from "../../../../shared/constants/TimeEnums";
-
 /**
  * Central registry for simulation event listeners.
  *
@@ -81,13 +79,13 @@ export class EventRegistry {
       GameEventType.AGENT_DEATH,
       (data: { entityId: string; reason?: string }) => {
         const agentId = data.entityId;
-        
+
         // 1. Mark entity as dead in index
         this.runner.entityIndex.markEntityDead(agentId);
-        
+
         // 2. Record death in genealogy
         this.runner._genealogySystem.recordDeath(agentId);
-        
+
         // 3. Cleanup all agent systems (centralized here to avoid duplicate cleanup)
         this.runner.aiSystem.removeAgentState(agentId);
         this.runner.needsSystem.removeEntityNeeds(agentId);
@@ -96,10 +94,17 @@ export class EventRegistry {
         this.runner.taskSystem.removeAgentFromAllTasks(agentId);
         this.runner.roleSystem.removeAgentRole(agentId);
         this.runner.householdSystem.removeAgentFromHousehold(agentId);
-        
+
         // 4. Drop inventory to household/storage (triggers INVENTORY_DROPPED)
-        const inventory = this.runner.inventorySystem.getAgentInventory(agentId);
-        if (inventory && (inventory.wood > 0 || inventory.stone > 0 || inventory.food > 0 || inventory.water > 0)) {
+        const inventory =
+          this.runner.inventorySystem.getAgentInventory(agentId);
+        if (
+          inventory &&
+          (inventory.wood > 0 ||
+            inventory.stone > 0 ||
+            inventory.food > 0 ||
+            inventory.water > 0)
+        ) {
           const agent = this.runner.agentRegistry.getProfile(agentId);
           simulationEvents.emit(GameEventType.INVENTORY_DROPPED, {
             agentId,
@@ -114,12 +119,14 @@ export class EventRegistry {
           });
         }
         this.runner.inventorySystem.removeAgentInventory(agentId);
-        
+
         // 5. Remove from registries
         this.runner.agentRegistry.removeAgent(agentId);
         this.runner.entityIndex.removeEntity(agentId);
-        
-        logger.debug(`☠️ Agent ${agentId} fully cleaned up (reason: ${data.reason || "unknown"})`);
+
+        logger.debug(
+          `☠️ Agent ${agentId} fully cleaned up (reason: ${data.reason || "unknown"})`,
+        );
       },
     );
 
@@ -353,7 +360,10 @@ export class EventRegistry {
         timestamp: number;
       }) => {
         const period = data.time?.phase || "";
-        if (period === "night" || period === TimeOfDayPhase.DEEP_NIGHT) {
+        if (
+          period === TimeOfDayPhase.NIGHT ||
+          period === TimeOfDayPhase.DEEP_NIGHT
+        ) {
           for (const agent of this.runner.state.agents) {
             const aiState = this.runner.aiSystem.getAIState(agent.id);
             if (aiState && !aiState.currentGoal && !aiState.offDuty) {
@@ -494,7 +504,7 @@ export class EventRegistry {
         weaponId?: string;
         timestamp: number;
       }) => {
-        this.runner.needsSystem.modifyNeed(data.targetId, "energy", -5);
+        this.runner.needsSystem.modifyNeed(data.targetId, NeedType.ENERGY, -5);
         this.runner.socialSystem.modifyAffinity(
           data.attackerId,
           data.targetId,

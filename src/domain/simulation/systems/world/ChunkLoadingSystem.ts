@@ -85,7 +85,6 @@ export class ChunkLoadingSystem {
     }
 
     const chunksToLoad = this.calculateChunksToLoad(activeAgents);
-    
 
     if (Math.random() < 0.1) {
       logger.debug(

@@ -68,9 +68,10 @@ import { TYPES } from "../../../../config/Types";
 import { SharedSpatialIndex } from "../../core/SharedSpatialIndex";
 import type { EntityIndex } from "../../core/EntityIndex";
 import type { ICombatSystem } from "../agents/SystemRegistry";
-import { QuestStatus } from "../../../../shared/constants/QuestEnums";
 import { SocialStatus } from "../../../../shared/constants/AgentEnums";
 import { ActionType } from "../../../../shared/constants/AIEnums";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
+import { GoalDomain } from "@/shared/constants/AIEnums";
 
 /**
  * System for managing combat between entities.
@@ -172,9 +173,8 @@ export class CombatSystem implements ICombatSystem {
 
     // Debug log every 10 seconds
     if (now % 10000 < 100) {
-      const validEntities = this.state.entities?.filter(
-        (e) => !e.isDead && e.position,
-      ).length ?? 0;
+      const validEntities =
+        this.state.entities?.filter((e) => !e.isDead && e.position).length ?? 0;
       logger.debug(
         `⚔️ [CombatSystem] update: entities=${validEntities}, combatLogSize=${this.combatLog?.length ?? 0}, equipped=${this.equippedWeapons.size}`,
       );
@@ -233,7 +233,10 @@ export class CombatSystem implements ICombatSystem {
         if (!attacker.position) continue;
         const weaponId = this.getEquipped(attacker.id);
         const stats = equipmentSystem.getMainHandStats(attacker.id);
-        const radius = Math.max(this.config.engagementRadius, stats.attackRange);
+        const radius = Math.max(
+          this.config.engagementRadius,
+          stats.attackRange,
+        );
         let nearby: SimulationEntity[] = [];
 
         if (this.sharedSpatialIndex) {
@@ -479,8 +482,15 @@ export class CombatSystem implements ICombatSystem {
   }
 
   public getEquipped(agentId: string): WeaponId {
-    const item = equipmentSystem.getEquippedItem(agentId, EquipmentSlot.MAIN_HAND);
-    if (item === WeaponId.STONE_DAGGER || item === WeaponId.WOODEN_CLUB || item === WeaponId.UNARMED) {
+    const item = equipmentSystem.getEquippedItem(
+      agentId,
+      EquipmentSlot.MAIN_HAND,
+    );
+    if (
+      item === WeaponId.STONE_DAGGER ||
+      item === WeaponId.WOODEN_CLUB ||
+      item === WeaponId.UNARMED
+    ) {
       return item as WeaponId;
     }
     return this.equippedWeapons.get(agentId) ?? WeaponId.UNARMED;
@@ -564,7 +574,10 @@ export class CombatSystem implements ICombatSystem {
     const lastAttack = this.lastAttackAt.get(agentId) ?? 0;
     // Use equipment stats: higher attackSpeed => shorter cooldown
     const stats = equipmentSystem.getMainHandStats(agentId);
-    const cooldown = Math.max(200, Math.round(this.config.baseCooldownMs / Math.max(0.1, stats.attackSpeed)));
+    const cooldown = Math.max(
+      200,
+      Math.round(this.config.baseCooldownMs / Math.max(0.1, stats.attackSpeed)),
+    );
     return now - lastAttack >= cooldown;
   }
 
@@ -791,10 +804,6 @@ export class CombatSystem implements ICombatSystem {
     } as T;
   }
 
-
-
-
-
   /**
    * System name for ECS registration
    */
@@ -808,24 +817,25 @@ export class CombatSystem implements ICombatSystem {
     agentId: string,
     targetId: string,
   ): {
-    status: "delegated" | "completed" | "failed" | "in_progress";
+    status:
+      | HandlerResultStatus.DELEGATED
+      | HandlerResultStatus.COMPLETED
+      | HandlerResultStatus.FAILED
+      | HandlerResultStatus.IN_PROGRESS;
     system: string;
     message?: string;
     data?: unknown;
   } {
-
     const attacker = this.state.entities?.find((e) => e.id === agentId);
     if (!attacker || !attacker.position) {
       return {
-        status: QuestStatus.FAILED,
-        system: "combat",
+        status: HandlerResultStatus.FAILED,
+        system: GoalDomain.COMBAT,
         message: `Attacker ${agentId} not found`,
       };
     }
 
-
     let target = this.state.entities?.find((e) => e.id === targetId);
-
 
     if (!target && this.animalSystem) {
       const animal = this.animalSystem.getAnimal(targetId);
@@ -842,12 +852,11 @@ export class CombatSystem implements ICombatSystem {
 
     if (!target || !target.position) {
       return {
-        status: QuestStatus.FAILED,
-        system: "combat",
+        status: HandlerResultStatus.FAILED,
+        system: GoalDomain.COMBAT,
         message: `Target ${targetId} not found`,
       };
     }
-
 
     const dx = attacker.position.x - target.position.x;
     const dy = attacker.position.y - target.position.y;
@@ -858,21 +867,25 @@ export class CombatSystem implements ICombatSystem {
 
     if (distSq > rangeSq) {
       return {
-        status: "delegated",
+        status: HandlerResultStatus.DELEGATED,
         system: "movement",
         message: "Target out of range, moving closer",
         data: { targetPosition: target.position },
       };
     }
 
-
     const now = getFrameTime();
     const lastAttack = this.lastAttackAt.get(agentId) ?? 0;
-    const cooldownMs = Math.max(200, Math.round(this.config.baseCooldownMs / Math.max(0.1, eqStats.attackSpeed)));
+    const cooldownMs = Math.max(
+      200,
+      Math.round(
+        this.config.baseCooldownMs / Math.max(0.1, eqStats.attackSpeed),
+      ),
+    );
     if (now - lastAttack < cooldownMs) {
       return {
-        status: "in_progress",
-        system: "combat",
+        status: HandlerResultStatus.IN_PROGRESS,
+        system: GoalDomain.COMBAT,
         message: "Attack on cooldown",
         data: {
           cooldownRemaining: cooldownMs - (now - lastAttack),
@@ -880,18 +893,15 @@ export class CombatSystem implements ICombatSystem {
       };
     }
 
-
     const weaponId = this.equippedWeapons.get(agentId) ?? WeaponId.UNARMED;
     const base = 10 * eqStats.damageMultiplier * (0.8 + Math.random() * 0.4);
     const damage = Math.max(1, Math.round(base));
-
 
     const targetStats = this.ensureStats(target);
     const remainingHealth = Math.max(0, (targetStats.health ?? 100) - damage);
     targetStats.health = remainingHealth;
 
     this.lastAttackAt.set(agentId, now);
-
 
     this.appendLog(
       this.createLogEntry<CombatHitLog>({
@@ -912,20 +922,19 @@ export class CombatSystem implements ICombatSystem {
       weapon: weaponId,
     });
 
-
     if (targetStats.health <= 0) {
       this.handleKill(attacker, target, weaponId);
       return {
-        status: "completed",
-        system: "combat",
+        status: HandlerResultStatus.COMPLETED,
+        system: GoalDomain.COMBAT,
         message: `Killed ${targetId}`,
         data: { targetId, damage, killed: true },
       };
     }
 
     return {
-      status: "in_progress",
-      system: "combat",
+      status: HandlerResultStatus.IN_PROGRESS,
+      system: GoalDomain.COMBAT,
       message: `Hit ${targetId} for ${damage} damage`,
       data: { targetId, damage, targetHealth: targetStats.health },
     };
@@ -939,30 +948,31 @@ export class CombatSystem implements ICombatSystem {
     agentId: string,
     fromPosition: { x: number; y: number },
   ): {
-    status: "delegated" | "completed" | "failed" | "in_progress";
+    status:
+      | HandlerResultStatus.DELEGATED
+      | HandlerResultStatus.COMPLETED
+      | HandlerResultStatus.FAILED
+      | HandlerResultStatus.IN_PROGRESS;
     system: string;
     message?: string;
     data?: unknown;
   } {
-
     const agent = this.state.entities?.find((e) => e.id === agentId);
     if (!agent || !agent.position) {
       return {
-        status: QuestStatus.FAILED,
-        system: "combat",
+        status: HandlerResultStatus.FAILED,
+        system: GoalDomain.COMBAT,
         message: `Agent ${agentId} not found`,
       };
     }
 
     const agentPos = agent.position;
 
-
     const dx = agentPos.x - fromPosition.x;
     const dy = agentPos.y - fromPosition.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     if (distance < 1) {
-
       const angle = Math.random() * Math.PI * 2;
       const fleeTarget = {
         x: agentPos.x + Math.cos(angle) * 200,
@@ -970,13 +980,12 @@ export class CombatSystem implements ICombatSystem {
       };
 
       return {
-        status: "delegated",
+        status: HandlerResultStatus.DELEGATED,
         system: "movement",
         message: "Fleeing in random direction",
         data: { target: fleeTarget },
       };
     }
-
 
     const fleeDistance = 200;
     const fleeTarget = {
@@ -985,7 +994,7 @@ export class CombatSystem implements ICombatSystem {
     };
 
     return {
-      status: "delegated",
+      status: HandlerResultStatus.DELEGATED,
       system: "movement",
       message: "Fleeing from threat",
       data: { target: fleeTarget, fromPosition },
@@ -996,7 +1005,6 @@ export class CombatSystem implements ICombatSystem {
    * End combat state for an agent.
    */
   public endCombat(agentId: string): void {
-
     this.lastAttackAt.delete(agentId);
   }
 

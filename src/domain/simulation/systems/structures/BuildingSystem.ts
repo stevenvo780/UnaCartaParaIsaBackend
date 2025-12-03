@@ -93,8 +93,8 @@ type MutableZone = Zone & {
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
-import { QuestStatus } from "../../../../shared/constants/QuestEnums";
 import { SystemProperty } from "../../../../shared/constants/SystemEnums";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
  * System for managing building construction, placement, and maintenance.
@@ -837,11 +837,11 @@ export class BuildingSystem implements IBuildingSystem {
 
   private hasMaintenanceResources(
     inventory: Inventory,
-    cost: Partial<Record<"wood" | "stone", number>>,
+    cost: Partial<Record<ResourceType.WOOD | ResourceType.STONE, number>>,
   ): boolean {
     for (const [resource, amount] of Object.entries(cost)) {
       if (!amount) continue;
-      const key = resource as "wood" | "stone";
+      const key = resource as ResourceType.WOOD | ResourceType.STONE;
       if ((inventory[key] ?? 0) < amount) {
         return false;
       }
@@ -861,8 +861,6 @@ export class BuildingSystem implements IBuildingSystem {
     }
   }
 
-
-
   /**
    * Solicita la construcción de un edificio.
    * @param agentId - ID del agente constructor
@@ -874,30 +872,28 @@ export class BuildingSystem implements IBuildingSystem {
     buildingType: string,
     position: { x: number; y: number },
   ): HandlerResult {
-
     const label = buildingType as BuildingLabel;
     const cost = BUILDING_COSTS[label];
 
     if (!cost) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: "building",
         message: `Unknown building type: ${buildingType}`,
       };
     }
 
-
     const started = this.constructBuilding(label, position);
     if (!started) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: "building",
         message: `Failed to start construction of ${buildingType} - insufficient resources or invalid position`,
       };
     }
 
     return {
-      status: "in_progress",
+      status: HandlerResultStatus.IN_PROGRESS,
       system: "building",
       message: `Started construction of ${buildingType}`,
       data: { buildingType, position },
@@ -913,7 +909,7 @@ export class BuildingSystem implements IBuildingSystem {
     const zone = this.findZoneById(buildingId);
     if (!zone) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: "building",
         message: `Building not found: ${buildingId}`,
       };
@@ -922,33 +918,31 @@ export class BuildingSystem implements IBuildingSystem {
     const buildingState = this.buildingStates.get(buildingId);
     if (!buildingState) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: "building",
         message: "Building has no state to repair",
       };
     }
 
-
     if (buildingState.durability >= buildingState.maxDurability) {
       return {
-        status: "completed",
+        status: HandlerResultStatus.COMPLETED,
         system: "building",
         message: "Building is already at max durability",
       };
     }
 
-
     const repaired = this.repairBuilding(buildingId, agentId, false);
     if (!repaired) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: "building",
         message: "Failed to repair - insufficient resources or inventory",
       };
     }
 
     return {
-      status: "completed",
+      status: HandlerResultStatus.COMPLETED,
       system: "building",
       message: `Repaired building`,
       data: {

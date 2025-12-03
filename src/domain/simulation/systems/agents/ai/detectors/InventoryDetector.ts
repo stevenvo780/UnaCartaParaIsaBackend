@@ -16,8 +16,10 @@ import {
 import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
 import { logger } from "@/infrastructure/utils/logger";
 
-const DEPOSIT_THRESHOLD = SIMULATION_CONSTANTS.INVENTORY_THRESHOLDS.DEPOSIT_THRESHOLD;
-const URGENT_DEPOSIT_THRESHOLD = SIMULATION_CONSTANTS.INVENTORY_THRESHOLDS.URGENT_DEPOSIT_THRESHOLD;
+const DEPOSIT_THRESHOLD =
+  SIMULATION_CONSTANTS.INVENTORY_THRESHOLDS.DEPOSIT_THRESHOLD;
+const URGENT_DEPOSIT_THRESHOLD =
+  SIMULATION_CONSTANTS.INVENTORY_THRESHOLDS.URGENT_DEPOSIT_THRESHOLD;
 
 /**
  * Detecta necesidad de depositar recursos
@@ -30,7 +32,11 @@ export function detectInventory(ctx: DetectorContext): Task[] {
   const loadRatio = ctx.inventoryLoad / ctx.inventoryCapacity;
 
   // Log cuando inventario está lleno pero no hay zona de depósito
-  if (loadRatio >= DEPOSIT_THRESHOLD && !ctx.depositZoneId && Math.random() < 0.02) {
+  if (
+    loadRatio >= DEPOSIT_THRESHOLD &&
+    !ctx.depositZoneId &&
+    Math.random() < 0.02
+  ) {
     logger.debug(
       `📦 [InventoryDetector] ${ctx.agentId}: full (${(loadRatio * 100).toFixed(0)}%) but no depositZone`,
     );

@@ -14,10 +14,10 @@
  * @module domain/simulation/systems/agents/ai/types
  */
 
-import { NeedType } from "@/shared/constants/AIEnums";
+import { NeedType, GoalType, ActionType } from "@/shared/constants/AIEnums";
 import type { HandlerResult, SystemRegistry } from "../SystemRegistry";
 import type { EventBus } from "@/domain/simulation/core/EventBus";
-import { QuestStatus } from "../../../../../shared/constants/QuestEnums";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 export type { HandlerResult } from "../SystemRegistry";
 
@@ -25,7 +25,7 @@ export type { HandlerResult } from "../SystemRegistry";
  * Tipos de tarea que un agente puede realizar
  */
 export enum TaskType {
-  SATISFY_NEED = "satisfy_need",
+  SATISFY_NEED = GoalType.SATISFY_NEED,
   REST = "rest",
 
   GATHER = "gather",
@@ -38,7 +38,7 @@ export enum TaskType {
   ATTACK = "attack",
   FLEE = "flee",
 
-  SOCIALIZE = "socialize",
+  SOCIALIZE = ActionType.SOCIALIZE,
   ASSIST = "assist",
 
   EXPLORE = "explore",
@@ -71,8 +71,8 @@ export function isTaskType(value: string): value is TaskType {
 export enum TaskStatus {
   PENDING = "pending",
   ACTIVE = "active",
-  COMPLETED = "completed",
-  FAILED = "failed",
+  COMPLETED = HandlerResultStatus.COMPLETED,
+  FAILED = HandlerResultStatus.FAILED,
   CANCELLED = "cancelled",
 }
 
@@ -248,13 +248,19 @@ export interface MemoryCallbacks {
   /** Registra que el agente visitó una zona */
   recordVisitedZone: (zoneId: string) => void;
   /** Registra una ubicación de recurso conocida */
-  recordKnownResource: (resourceType: string, position: { x: number; y: number }) => void;
+  recordKnownResource: (
+    resourceType: string,
+    position: { x: number; y: number },
+  ) => void;
   /** Registra que el agente completó una exploración (actualiza cooldown) */
   recordExploration: () => void;
   /** Obtiene las zonas visitadas */
   getVisitedZones: () => ReadonlySet<string>;
   /** Obtiene las ubicaciones de recursos conocidas */
-  getKnownResourceLocations: () => ReadonlyMap<string, { x: number; y: number }>;
+  getKnownResourceLocations: () => ReadonlyMap<
+    string,
+    { x: number; y: number }
+  >;
 }
 
 /**
@@ -281,7 +287,7 @@ export interface HandlerContext {
 
   /** Bus de eventos para comunicación cross-system */
   readonly events: EventBus;
-  
+
   /** Callbacks para actualizar la memoria del agente */
   readonly memory?: MemoryCallbacks;
 }
@@ -353,9 +359,12 @@ export function toExecutionResult(
   result: HandlerResult,
 ): HandlerExecutionResult {
   return {
-    success: result.status === "completed" || result.status === "delegated",
+    success:
+      result.status === HandlerResultStatus.COMPLETED ||
+      result.status === HandlerResultStatus.DELEGATED,
     completed:
-      result.status === "completed" || result.status === QuestStatus.FAILED,
+      result.status === HandlerResultStatus.COMPLETED ||
+      result.status === HandlerResultStatus.FAILED,
     message: result.message,
     system: result.system,
     data: result.data as Record<string, unknown>,

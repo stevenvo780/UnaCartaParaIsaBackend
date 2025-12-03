@@ -16,7 +16,7 @@ import {
 import { RoleType } from "../../../../../../shared/constants/RoleEnums";
 import { SocialStatus } from "../../../../../../shared/constants/AgentEnums";
 import { ItemCategory } from "../../../../../../shared/constants/ItemEnums";
-
+import { WeaponId } from "@/shared/constants/CraftingEnums";
 /**
  * Detecta necesidad de craftear
  */
@@ -32,7 +32,7 @@ export function detectCraft(ctx: DetectorContext): Task[] {
 }
 
 function detectWeaponNeed(ctx: DetectorContext): Task | null {
-  if (ctx.hasWeapon || ctx.equippedWeapon !== "unarmed") return null;
+  if (ctx.hasWeapon || ctx.equippedWeapon !== WeaponId.UNARMED) return null;
 
   if (!ctx.canCraftClub && !ctx.canCraftDagger) return null;
 
@@ -44,7 +44,9 @@ function detectWeaponNeed(ctx: DetectorContext): Task | null {
     role === RoleType.GUARD ||
     role === SocialStatus.WARRIOR;
 
-  const weaponToCraft = ctx.canCraftDagger ? "stone_dagger" : "wooden_club";
+  const weaponToCraft = ctx.canCraftDagger
+    ? "stone_dagger"
+    : WeaponId.WOODEN_CLUB;
 
   return createTask({
     agentId: ctx.agentId,

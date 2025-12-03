@@ -14,8 +14,8 @@ import {
   inProgressResult,
   successResult,
 } from "../types";
-import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
 import { ActivityType } from "../../../../../../shared/constants/MovementEnums";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
  * @deprecated Use SystemRegistry.needs instead
@@ -47,7 +47,6 @@ export function handleRest(
     return errorResult("NeedsSystem not available");
   }
 
-
   if (systems.movement) {
     systems.movement.startActivity(agentId, ActivityType.RESTING, 5000);
   }
@@ -55,8 +54,7 @@ export function handleRest(
   const result = systems.needs.requestRest(agentId);
 
   switch (result.status) {
-    case "completed":
-
+    case HandlerResultStatus.COMPLETED:
       if (systems.movement) {
         systems.movement.startActivity(agentId, ActivityType.IDLE);
       }
@@ -65,17 +63,16 @@ export function handleRest(
         ...((result.data as object) ?? {}),
       });
 
-    case QuestStatus.FAILED:
-
+    case HandlerResultStatus.FAILED:
       if (systems.movement) {
         systems.movement.startActivity(agentId, ActivityType.IDLE);
       }
       return errorResult(result.message ?? "Rest failed");
 
-    case "in_progress":
+    case HandlerResultStatus.IN_PROGRESS:
       return inProgressResult("needs", result.message ?? "Resting");
 
-    case "delegated":
+    case HandlerResultStatus.DELEGATED:
       return inProgressResult(
         result.system,
         result.message ?? "Moving to rest spot",

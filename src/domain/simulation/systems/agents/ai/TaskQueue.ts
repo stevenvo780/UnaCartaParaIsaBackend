@@ -143,15 +143,17 @@ export class TaskQueue {
     while (queue.length > 0) {
       const task = queue.shift();
       if (!task) continue;
-      
+
       const terminal = isTaskTerminal(task);
       const expired = isTaskExpired(task);
-      
+
       if (terminal || expired) {
-        logger.debug(`[TaskQueue] ${agentId} skipped task ${task.type}: terminal=${terminal}, expired=${expired}, expiresAt=${task.expiresAt}, now=${Date.now()}, status=${task.status}`);
+        logger.debug(
+          `[TaskQueue] ${agentId} skipped task ${task.type}: terminal=${terminal}, expired=${expired}, expiresAt=${task.expiresAt}, now=${Date.now()}, status=${task.status}`,
+        );
         continue;
       }
-      
+
       task.status = TaskStatus.ACTIVE;
       return task;
     }

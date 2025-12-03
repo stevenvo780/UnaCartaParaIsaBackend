@@ -1,13 +1,13 @@
 {
   "summary": {
-    "totalEnums": 143,
-    "unusedEnums": 9,
-    "unusedMembers": 251,
-    "missingEnumOccurrences": 528
+    "totalEnums": 144,
+    "unusedEnums": 30,
+    "unusedMembers": 204,
+    "missingEnumOccurrences": 4
   },
   "unusedEnums": [
     {
-      "name": "GoalDomain",
+      "name": "AgentPriority",
       "file": "src/shared/constants/AIEnums.ts"
     },
     {
@@ -19,8 +19,60 @@
       "file": "src/shared/constants/AIEnums.ts"
     },
     {
+      "name": "ClothingStyle",
+      "file": "src/shared/constants/AgentEnums.ts"
+    },
+    {
+      "name": "AppearanceUpdateReason",
+      "file": "src/shared/constants/AgentEnums.ts"
+    },
+    {
+      "name": "AlertSeverity",
+      "file": "src/shared/constants/AlertSeverity.ts"
+    },
+    {
+      "name": "DialogueSpeaker",
+      "file": "src/shared/constants/AmbientEnums.ts"
+    },
+    {
+      "name": "GenerationStyleId",
+      "file": "src/shared/constants/AppearanceEnums.ts"
+    },
+    {
+      "name": "AssetType",
+      "file": "src/shared/constants/AssetEnums.ts"
+    },
+    {
+      "name": "AssetCategory",
+      "file": "src/shared/constants/AssetEnums.ts"
+    },
+    {
+      "name": "AssetPriority",
+      "file": "src/shared/constants/AssetEnums.ts"
+    },
+    {
+      "name": "BuildingSpriteId",
+      "file": "src/shared/constants/BuildingEnums.ts"
+    },
+    {
+      "name": "CharacterSpriteType",
+      "file": "src/shared/constants/CharacterSpriteEnums.ts"
+    },
+    {
+      "name": "ComparisonOperator",
+      "file": "src/shared/constants/ComparisonEnums.ts"
+    },
+    {
       "name": "FeedbackLoopId",
       "file": "src/shared/constants/EmergenceEnums.ts"
+    },
+    {
+      "name": "EventChannel",
+      "file": "src/shared/constants/EventChannels.ts"
+    },
+    {
+      "name": "KeyboardKey",
+      "file": "src/shared/constants/KeyboardKeys.ts"
     },
     {
       "name": "KnowledgeEdgeType",
@@ -29,6 +81,34 @@
     {
       "name": "LegendTrend",
       "file": "src/shared/constants/LegendEnums.ts"
+    },
+    {
+      "name": "LegendTier",
+      "file": "src/shared/constants/LegendEnums.ts"
+    },
+    {
+      "name": "LoadingState",
+      "file": "src/shared/constants/LoadingStates.ts"
+    },
+    {
+      "name": "LogFilterLevel",
+      "file": "src/shared/constants/LogFilterLevels.ts"
+    },
+    {
+      "name": "NotificationType",
+      "file": "src/shared/constants/NotificationTypes.ts"
+    },
+    {
+      "name": "PanelName",
+      "file": "src/shared/constants/PanelNames.ts"
+    },
+    {
+      "name": "QuestStatus",
+      "file": "src/shared/constants/QuestEnums.ts"
+    },
+    {
+      "name": "QuestDialogueStage",
+      "file": "src/shared/constants/QuestEnums.ts"
     },
     {
       "name": "ResearchId",
@@ -41,14 +121,13 @@
     {
       "name": "SnapshotWorkerStatus",
       "file": "src/shared/constants/StatusEnums.ts"
+    },
+    {
+      "name": "InventoryCommandType",
+      "file": "../UnaCartaParaIsa/src/constants/CommandTypes.ts"
     }
   ],
   "unusedMembers": [
-    {
-      "enum": "GoalType",
-      "member": "SATISFY_NEED",
-      "file": "src/shared/constants/AIEnums.ts"
-    },
     {
       "enum": "GoalType",
       "member": "SATISFY_HUNGER",
@@ -76,6 +155,11 @@
     },
     {
       "enum": "GoalType",
+      "member": "WORK",
+      "file": "src/shared/constants/AIEnums.ts"
+    },
+    {
+      "enum": "GoalType",
       "member": "EXPLORE",
       "file": "src/shared/constants/AIEnums.ts"
     },
@@ -91,7 +175,12 @@
     },
     {
       "enum": "GoalType",
-      "member": "CONSTRUCTION",
+      "member": "CRAFT",
+      "file": "src/shared/constants/AIEnums.ts"
+    },
+    {
+      "enum": "GoalType",
+      "member": "DEPOSIT",
       "file": "src/shared/constants/AIEnums.ts"
     },
     {
@@ -111,17 +200,27 @@
     },
     {
       "enum": "GoalType",
-      "member": "INSPECT",
-      "file": "src/shared/constants/AIEnums.ts"
-    },
-    {
-      "enum": "GoalType",
       "member": "FLEE",
       "file": "src/shared/constants/AIEnums.ts"
     },
     {
       "enum": "GoalType",
+      "member": "ATTACK",
+      "file": "src/shared/constants/AIEnums.ts"
+    },
+    {
+      "enum": "GoalType",
       "member": "HUNT",
+      "file": "src/shared/constants/AIEnums.ts"
+    },
+    {
+      "enum": "ActionType",
+      "member": "HARVEST",
+      "file": "src/shared/constants/AIEnums.ts"
+    },
+    {
+      "enum": "ActionType",
+      "member": "EAT",
       "file": "src/shared/constants/AIEnums.ts"
     },
     {
@@ -146,6 +245,11 @@
     },
     {
       "enum": "ActionType",
+      "member": "BUILD",
+      "file": "src/shared/constants/AIEnums.ts"
+    },
+    {
+      "enum": "ActionType",
       "member": "START_QUEST",
       "file": "src/shared/constants/AIEnums.ts"
     },
@@ -165,13 +269,33 @@
       "file": "src/shared/constants/AIEnums.ts"
     },
     {
-      "enum": "AgentPriority",
+      "enum": "GoalDomain",
       "member": "SURVIVAL",
       "file": "src/shared/constants/AIEnums.ts"
     },
     {
-      "enum": "AgentPriority",
-      "member": "SOCIAL",
+      "enum": "GoalDomain",
+      "member": "WORK",
+      "file": "src/shared/constants/AIEnums.ts"
+    },
+    {
+      "enum": "GoalDomain",
+      "member": "FLEE",
+      "file": "src/shared/constants/AIEnums.ts"
+    },
+    {
+      "enum": "GoalDomain",
+      "member": "EXPLORE",
+      "file": "src/shared/constants/AIEnums.ts"
+    },
+    {
+      "enum": "GoalDomain",
+      "member": "REST",
+      "file": "src/shared/constants/AIEnums.ts"
+    },
+    {
+      "enum": "GoalDomain",
+      "member": "INSPECT",
       "file": "src/shared/constants/AIEnums.ts"
     },
     {
@@ -197,11 +321,6 @@
     {
       "enum": "ExplorationType",
       "member": "DESPERATE_SEARCH",
-      "file": "src/shared/constants/AgentEnums.ts"
-    },
-    {
-      "enum": "ExplorationType",
-      "member": "DEFAULT",
       "file": "src/shared/constants/AgentEnums.ts"
     },
     {
@@ -233,21 +352,6 @@
       "enum": "WorkEthic",
       "member": "WORKAHOLIC",
       "file": "src/shared/constants/AgentEnums.ts"
-    },
-    {
-      "enum": "ClothingStyle",
-      "member": "MYSTICAL",
-      "file": "src/shared/constants/AgentEnums.ts"
-    },
-    {
-      "enum": "AppearanceUpdateReason",
-      "member": "SOCIAL_GROUP_ASSIGNED",
-      "file": "src/shared/constants/AgentEnums.ts"
-    },
-    {
-      "enum": "AlertSeverity",
-      "member": "WARN",
-      "file": "src/shared/constants/AlertSeverity.ts"
     },
     {
       "enum": "CrisisSeverity",
@@ -285,6 +389,11 @@
       "file": "src/shared/constants/AmbientEnums.ts"
     },
     {
+      "enum": "DialoguePriority",
+      "member": "URGENT",
+      "file": "src/shared/constants/AmbientEnums.ts"
+    },
+    {
       "enum": "DialogueTone",
       "member": "HAPPY",
       "file": "src/shared/constants/AmbientEnums.ts"
@@ -292,6 +401,11 @@
     {
       "enum": "DialogueTone",
       "member": "SAD",
+      "file": "src/shared/constants/AmbientEnums.ts"
+    },
+    {
+      "enum": "DialogueTone",
+      "member": "WORRIED",
       "file": "src/shared/constants/AmbientEnums.ts"
     },
     {
@@ -350,204 +464,34 @@
       "file": "src/shared/constants/AmbientEnums.ts"
     },
     {
+      "enum": "DialogueCardType",
+      "member": "INTERACTION",
+      "file": "src/shared/constants/AmbientEnums.ts"
+    },
+    {
+      "enum": "DialogueOutcome",
+      "member": "POSITIVE",
+      "file": "src/shared/constants/AmbientEnums.ts"
+    },
+    {
+      "enum": "DialogueOutcome",
+      "member": "NEGATIVE",
+      "file": "src/shared/constants/AmbientEnums.ts"
+    },
+    {
       "enum": "DialogueOutcome",
       "member": "NEUTRAL",
       "file": "src/shared/constants/AmbientEnums.ts"
     },
     {
-      "enum": "DialogueSpeaker",
-      "member": "ISA",
-      "file": "src/shared/constants/AmbientEnums.ts"
-    },
-    {
-      "enum": "DialogueSpeaker",
-      "member": "STEV",
-      "file": "src/shared/constants/AmbientEnums.ts"
-    },
-    {
-      "enum": "DialogueSpeaker",
-      "member": "NARRATOR",
-      "file": "src/shared/constants/AmbientEnums.ts"
-    },
-    {
-      "enum": "DialogueSpeaker",
-      "member": "SYSTEM",
-      "file": "src/shared/constants/AmbientEnums.ts"
+      "enum": "AnimalState",
+      "member": "DEAD",
+      "file": "src/shared/constants/AnimalEnums.ts"
     },
     {
       "enum": "AnimalTargetType",
       "member": "MATE",
       "file": "src/shared/constants/AnimalEnums.ts"
-    },
-    {
-      "enum": "AssetType",
-      "member": "TILEMAP",
-      "file": "src/shared/constants/AssetEnums.ts"
-    },
-    {
-      "enum": "AssetCategory",
-      "member": "STRUCTURE",
-      "file": "src/shared/constants/AssetEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_SHELTER",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_BEDROOM",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_LIVING",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_BATHROOM",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_WORKBENCH",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_KITCHEN",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_OFFICE",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_MEDICAL",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_GYM",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_HOUSE",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_LIBRARY",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_EDUCATION",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_TRAINING",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_KNOWLEDGE",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_SOCIAL",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_RECREATION",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_ENTERTAINMENT",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_FUN",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_PLAY",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_FOOD",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_WATER",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_STORAGE",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_MARKET",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_DEFENSE",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_SECURITY",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_SPIRITUAL",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_ENERGY",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_HYGIENE",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_COMFORT",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_WELL",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "BuildingSpriteId",
-      "member": "AGENT_BUILT_TAVERN",
-      "file": "src/shared/constants/BuildingEnums.ts"
-    },
-    {
-      "enum": "CharacterSpriteType",
-      "member": "ISA_SPRITESHEET",
-      "file": "src/shared/constants/CharacterSpriteEnums.ts"
     },
     {
       "enum": "ResearchCommandType",
@@ -570,39 +514,9 @@
       "file": "src/shared/constants/CommandEnums.ts"
     },
     {
-      "enum": "ComparisonOperator",
-      "member": "ABOVE",
-      "file": "src/shared/constants/ComparisonEnums.ts"
-    },
-    {
-      "enum": "ComparisonOperator",
-      "member": "EQUAL",
-      "file": "src/shared/constants/ComparisonEnums.ts"
-    },
-    {
-      "enum": "ComparisonOperator",
-      "member": "NOT_EQUAL",
-      "file": "src/shared/constants/ComparisonEnums.ts"
-    },
-    {
-      "enum": "ComparisonOperator",
-      "member": "LESS_THAN",
-      "file": "src/shared/constants/ComparisonEnums.ts"
-    },
-    {
-      "enum": "ComparisonOperator",
-      "member": "GREATER_THAN",
-      "file": "src/shared/constants/ComparisonEnums.ts"
-    },
-    {
-      "enum": "ComparisonOperator",
-      "member": "LESS_THAN_OR_EQUAL",
-      "file": "src/shared/constants/ComparisonEnums.ts"
-    },
-    {
-      "enum": "ComparisonOperator",
-      "member": "GREATER_THAN_OR_EQUAL",
-      "file": "src/shared/constants/ComparisonEnums.ts"
+      "enum": "ControlledEntity",
+      "member": "NONE",
+      "file": "src/shared/constants/ControlledEntities.ts"
     },
     {
       "enum": "GodId",
@@ -642,11 +556,6 @@
     {
       "enum": "TradeOfferStatus",
       "member": "PENDING",
-      "file": "src/shared/constants/EconomyEnums.ts"
-    },
-    {
-      "enum": "TradeOfferStatus",
-      "member": "EXPIRED",
       "file": "src/shared/constants/EconomyEnums.ts"
     },
     {
@@ -698,6 +607,11 @@
       "enum": "EntityStatus",
       "member": "DISABLED",
       "file": "src/shared/constants/EntityStatusEnums.ts"
+    },
+    {
+      "enum": "Environment",
+      "member": "DEVELOPMENT",
+      "file": "src/shared/constants/EnvironmentEnums.ts"
     },
     {
       "enum": "Environment",
@@ -841,6 +755,11 @@
     },
     {
       "enum": "InteractionType",
+      "member": "COMFORT",
+      "file": "src/shared/constants/InteractionEnums.ts"
+    },
+    {
+      "enum": "InteractionType",
       "member": "DISTURB",
       "file": "src/shared/constants/InteractionEnums.ts"
     },
@@ -853,6 +772,26 @@
       "enum": "InteractionType",
       "member": "LET_SLEEP",
       "file": "src/shared/constants/InteractionEnums.ts"
+    },
+    {
+      "enum": "ItemRarity",
+      "member": "COMMON",
+      "file": "src/shared/constants/ItemEnums.ts"
+    },
+    {
+      "enum": "ItemRarity",
+      "member": "UNCOMMON",
+      "file": "src/shared/constants/ItemEnums.ts"
+    },
+    {
+      "enum": "ItemRarity",
+      "member": "RARE",
+      "file": "src/shared/constants/ItemEnums.ts"
+    },
+    {
+      "enum": "ItemRarity",
+      "member": "EPIC",
+      "file": "src/shared/constants/ItemEnums.ts"
     },
     {
       "enum": "ItemRarity",
@@ -891,11 +830,6 @@
     },
     {
       "enum": "ItemCategory",
-      "member": "TRADE",
-      "file": "src/shared/constants/ItemEnums.ts"
-    },
-    {
-      "enum": "ItemCategory",
       "member": "SPECIAL",
       "file": "src/shared/constants/ItemEnums.ts"
     },
@@ -910,99 +844,84 @@
       "file": "src/shared/constants/ItemEnums.ts"
     },
     {
-      "enum": "KeyboardKey",
-      "member": "ARROW_UP",
-      "file": "src/shared/constants/KeyboardKeys.ts"
+      "enum": "MapElementType",
+      "member": "FOOD_ZONE",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
-      "enum": "KeyboardKey",
-      "member": "ARROW_DOWN",
-      "file": "src/shared/constants/KeyboardKeys.ts"
+      "enum": "MapElementType",
+      "member": "REST_ZONE",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
-      "enum": "KeyboardKey",
-      "member": "ARROW_LEFT",
-      "file": "src/shared/constants/KeyboardKeys.ts"
+      "enum": "MapElementType",
+      "member": "PLAY_ZONE",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
-      "enum": "KeyboardKey",
-      "member": "ARROW_RIGHT",
-      "file": "src/shared/constants/KeyboardKeys.ts"
+      "enum": "MapElementType",
+      "member": "SOCIAL_ZONE",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
-      "enum": "KeyboardKey",
-      "member": "CTRL",
-      "file": "src/shared/constants/KeyboardKeys.ts"
+      "enum": "MapElementType",
+      "member": "WORK_ZONE",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
-      "enum": "KeyboardKey",
-      "member": "ALT",
-      "file": "src/shared/constants/KeyboardKeys.ts"
+      "enum": "MapElementType",
+      "member": "COMFORT_ZONE",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
-      "enum": "KeyboardKey",
-      "member": "ENTER",
-      "file": "src/shared/constants/KeyboardKeys.ts"
+      "enum": "MapElementType",
+      "member": "DECORATION",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
-      "enum": "KeyboardKey",
-      "member": "ESC",
-      "file": "src/shared/constants/KeyboardKeys.ts"
+      "enum": "MapElementType",
+      "member": "FOOD_VENDOR",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
-      "enum": "KeyboardKey",
-      "member": "SIX",
-      "file": "src/shared/constants/KeyboardKeys.ts"
+      "enum": "MapElementType",
+      "member": "WATER_ZONE",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
-      "enum": "KeyboardKey",
-      "member": "SEVEN",
-      "file": "src/shared/constants/KeyboardKeys.ts"
+      "enum": "MapElementType",
+      "member": "MEDICAL_ZONE",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
-      "enum": "KeyboardKey",
-      "member": "EIGHT",
-      "file": "src/shared/constants/KeyboardKeys.ts"
+      "enum": "MapElementType",
+      "member": "TRAINING_ZONE",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
-      "enum": "KeyboardKey",
-      "member": "NINE",
-      "file": "src/shared/constants/KeyboardKeys.ts"
+      "enum": "MapElementType",
+      "member": "KNOWLEDGE_ZONE",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
-      "enum": "KeyboardKey",
-      "member": "Z",
-      "file": "src/shared/constants/KeyboardKeys.ts"
+      "enum": "MapElementType",
+      "member": "MARKET_ZONE",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
-      "enum": "LegendTier",
-      "member": "LEGENDARY",
-      "file": "src/shared/constants/LegendEnums.ts"
+      "enum": "MapElementType",
+      "member": "SPIRITUAL_ZONE",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
-      "enum": "LegendTier",
-      "member": "RESPECTED",
-      "file": "src/shared/constants/LegendEnums.ts"
+      "enum": "MapElementType",
+      "member": "STORAGE_ZONE",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
-      "enum": "LegendTier",
-      "member": "KNOWN",
-      "file": "src/shared/constants/LegendEnums.ts"
-    },
-    {
-      "enum": "LoadingState",
-      "member": "INITIALIZING",
-      "file": "src/shared/constants/LoadingStates.ts"
-    },
-    {
-      "enum": "LoadingState",
-      "member": "LOADING_DATA",
-      "file": "src/shared/constants/LoadingStates.ts"
-    },
-    {
-      "enum": "LoadingState",
-      "member": "READY",
-      "file": "src/shared/constants/LoadingStates.ts"
+      "enum": "MapElementType",
+      "member": "DEFENSE_ZONE",
+      "file": "src/shared/constants/MapElementEnums.ts"
     },
     {
       "enum": "MapElementType",
@@ -1065,113 +984,18 @@
       "file": "src/shared/constants/MovementEnums.ts"
     },
     {
-      "enum": "NotificationType",
-      "member": "INFO",
-      "file": "src/shared/constants/NotificationTypes.ts"
-    },
-    {
-      "enum": "NotificationType",
-      "member": "WARNING",
-      "file": "src/shared/constants/NotificationTypes.ts"
-    },
-    {
-      "enum": "PanelName",
-      "member": "GAME",
-      "file": "src/shared/constants/PanelNames.ts"
-    },
-    {
-      "enum": "PanelName",
-      "member": "SOCIAL",
-      "file": "src/shared/constants/PanelNames.ts"
-    },
-    {
-      "enum": "PanelName",
-      "member": "WORLD",
-      "file": "src/shared/constants/PanelNames.ts"
-    },
-    {
-      "enum": "PanelName",
-      "member": "ANIMALS",
-      "file": "src/shared/constants/PanelNames.ts"
-    },
-    {
-      "enum": "PanelName",
-      "member": "SYSTEM",
-      "file": "src/shared/constants/PanelNames.ts"
-    },
-    {
-      "enum": "PanelName",
-      "member": "COMBAT",
-      "file": "src/shared/constants/PanelNames.ts"
-    },
-    {
-      "enum": "PanelName",
-      "member": "MARKET",
-      "file": "src/shared/constants/PanelNames.ts"
-    },
-    {
-      "enum": "PanelName",
-      "member": "CRAFTING",
-      "file": "src/shared/constants/PanelNames.ts"
-    },
-    {
-      "enum": "PanelName",
-      "member": "RESEARCH",
-      "file": "src/shared/constants/PanelNames.ts"
-    },
-    {
-      "enum": "QuestStatus",
-      "member": "AVAILABLE",
-      "file": "src/shared/constants/QuestEnums.ts"
-    },
-    {
-      "enum": "QuestStatus",
-      "member": "ACTIVE",
-      "file": "src/shared/constants/QuestEnums.ts"
-    },
-    {
-      "enum": "QuestStatus",
-      "member": "COMPLETED",
-      "file": "src/shared/constants/QuestEnums.ts"
-    },
-    {
-      "enum": "QuestStatus",
-      "member": "NOT_STARTED",
-      "file": "src/shared/constants/QuestEnums.ts"
-    },
-    {
-      "enum": "QuestStatus",
-      "member": "ABANDONED",
-      "file": "src/shared/constants/QuestEnums.ts"
-    },
-    {
-      "enum": "QuestDialogueStage",
-      "member": "INTRO",
-      "file": "src/shared/constants/QuestEnums.ts"
-    },
-    {
-      "enum": "QuestDialogueStage",
-      "member": "PROGRESS",
-      "file": "src/shared/constants/QuestEnums.ts"
-    },
-    {
-      "enum": "QuestDialogueStage",
-      "member": "COMPLETION",
-      "file": "src/shared/constants/QuestEnums.ts"
-    },
-    {
-      "enum": "QuestDialogueStage",
-      "member": "FAILURE",
-      "file": "src/shared/constants/QuestEnums.ts"
-    },
-    {
-      "enum": "WorldEntityType",
-      "member": "TREE",
+      "enum": "ResourceState",
+      "member": "REGENERATING",
       "file": "src/shared/constants/ResourceEnums.ts"
     },
     {
       "enum": "WorldEntityType",
-      "member": "ROCK",
+      "member": "PLANT",
+      "file": "src/shared/constants/ResourceEnums.ts"
+    },
+    {
+      "enum": "WorldEntityType",
+      "member": "PROP",
       "file": "src/shared/constants/ResourceEnums.ts"
     },
     {
@@ -1226,7 +1050,22 @@
     },
     {
       "enum": "SystemProperty",
+      "member": "STATE",
+      "file": "src/shared/constants/SystemEnums.ts"
+    },
+    {
+      "enum": "SystemProperty",
       "member": "CONFIG",
+      "file": "src/shared/constants/SystemEnums.ts"
+    },
+    {
+      "enum": "SystemProperty",
+      "member": "TRAITS",
+      "file": "src/shared/constants/SystemEnums.ts"
+    },
+    {
+      "enum": "SystemProperty",
+      "member": "SEX",
       "file": "src/shared/constants/SystemEnums.ts"
     },
     {
@@ -1238,6 +1077,16 @@
       "enum": "TileType",
       "member": "PATH",
       "file": "src/shared/constants/TileTypeEnums.ts"
+    },
+    {
+      "enum": "ZoneType",
+      "member": "KITCHEN",
+      "file": "src/shared/constants/ZoneEnums.ts"
+    },
+    {
+      "enum": "ZoneType",
+      "member": "LIVING",
+      "file": "src/shared/constants/ZoneEnums.ts"
     },
     {
       "enum": "ZoneType",
@@ -1302,1957 +1151,21 @@
   ],
   "missingEnumUsages": [
     {
-      "stringLiteral": "completed",
+      "stringLiteral": "world",
       "possibleEnums": [
-        "MarketOrderStatus",
-        "QuestStatus",
-        "InteractionStatus"
-      ],
-      "count": 52,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/AttackHandler.ts",
-          "line": 57,
-          "lineContent": "case \"completed\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/AttackHandler.ts",
-          "line": 56,
-          "lineContent": "switch (result.status) {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/BuildHandler.ts",
-          "line": 63,
-          "lineContent": "case \"completed\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/BuildHandler.ts",
-          "line": 96,
-          "lineContent": "case \"completed\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/BuildHandler.ts",
-          "line": 62,
-          "lineContent": "switch (result.status) {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/BuildHandler.ts",
-          "line": 95,
-          "lineContent": "switch (result.status) {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/ConsumeHandler.ts",
-          "line": 64,
-          "lineContent": "if (result.status === \"completed\") {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/ConsumeHandler.ts",
-          "line": 85,
-          "lineContent": "if (result.status === \"completed\") {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/ConsumeHandler.ts",
-          "line": 98,
-          "lineContent": "if (result.status === \"completed\") {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/CraftHandler.ts",
-          "line": 80,
-          "lineContent": "case \"completed\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/CraftHandler.ts",
-          "line": 79,
-          "lineContent": "switch (result.status) {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/DepositHandler.ts",
-          "line": 64,
-          "lineContent": "case \"completed\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/DepositHandler.ts",
-          "line": 63,
-          "lineContent": "switch (result.status) {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/ExploreHandler.ts",
-          "line": 71,
-          "lineContent": "if (result.status === \"completed\") {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/FleeHandler.ts",
-          "line": 53,
-          "lineContent": "case \"completed\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/FleeHandler.ts",
-          "line": 52,
-          "lineContent": "switch (result.status) {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/GatherHandler.ts",
-          "line": 96,
-          "lineContent": "if (result.status === \"completed\") {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/MoveHandler.ts",
-          "line": 86,
-          "lineContent": "if (result.status === \"completed\") {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/MoveHandler.ts",
-          "line": 103,
-          "lineContent": "if (result.status === \"completed\") {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/MoveHandler.ts",
-          "line": 159,
-          "lineContent": "if (result.status === \"completed\") {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/MoveHandler.ts",
-          "line": 185,
-          "lineContent": "if (result.status === \"completed\") {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/RestHandler.ts",
-          "line": 52,
-          "lineContent": "case \"completed\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/RestHandler.ts",
-          "line": 51,
-          "lineContent": "switch (result.status) {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/SocialHandler.ts",
-          "line": 72,
-          "lineContent": "case \"completed\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/SocialHandler.ts",
-          "line": 71,
-          "lineContent": "switch (result.status) {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/TradeHandler.ts",
-          "line": 79,
-          "lineContent": "case \"completed\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/handlers/TradeHandler.ts",
-          "line": 78,
-          "lineContent": "switch (result.status) {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/types.ts",
-          "line": 333,
-          "lineContent": "success: result.status === \"completed\" || result.status === \"delegated\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/types.ts",
-          "line": 335,
-          "lineContent": "result.status === \"completed\" || result.status === QuestStatus.FAILED,"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1108,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1189,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1344,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1357,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1401,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1439,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/conflict/CombatSystem.ts",
-          "line": 902,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/EconomySystem.ts",
-          "line": 797,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/EnhancedCraftingSystem.ts",
-          "line": 472,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 713,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 786,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 818,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/InventorySystem.ts",
-          "line": 878,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/social/SocialSystem.ts",
-          "line": 778,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/social/SocialSystem.ts",
-          "line": 788,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/social/SocialSystem.ts",
-          "line": 797,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/social/SocialSystem.ts",
-          "line": 807,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/structures/BuildingSystem.ts",
-          "line": 934,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/structures/BuildingSystem.ts",
-          "line": 951,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/ui/store/loadingStore.ts",
-          "line": 235,
-          "lineContent": "(phase) => phase.status === \"completed\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/ui/store/loadingStore.ts",
-          "line": 227,
-          "lineContent": "status: \"completed\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/utils/LoadingProgressManager.ts",
-          "line": 248,
-          "lineContent": "(phase) => phase.status === \"completed\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/utils/LoadingProgressManager.ts",
-          "line": 262,
-          "lineContent": "completedPhases: phases.filter((p) => p.status === \"completed\").length,"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "water",
-      "possibleEnums": [
-        "AnimalTargetType",
-        "ItemId",
-        "ResourceType",
-        "TileType",
-        "ZoneType"
-      ],
-      "count": 37,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/ai/detectors/NeedsDetector.ts",
-          "line": 60,
-          "lineContent": "params: { needType: NeedType.THIRST, resourceType: \"water\" },"
-        },
-        {
-          "file": "src/domain/simulation/systems/world/ItemGenerationSystem.ts",
-          "line": 35,
-          "lineContent": "wetland: \"water\","
-        },
-        {
-          "file": "src/domain/simulation/systems/world/animals/AnimalBehavior.ts",
-          "line": 283,
-          "lineContent": "resourceType: \"water\","
-        },
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 115,
-          "lineContent": "type: \"water\","
-        },
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 162,
-          "lineContent": "type: \"water\","
-        },
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 195,
-          "lineContent": "type: \"water\","
-        },
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 204,
-          "lineContent": "type: \"water\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 152,
-          "lineContent": "resourceType: \"water\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 157,
-          "lineContent": "resourceType: \"water\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 137,
-          "lineContent": "type: \"water\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 184,
-          "lineContent": "type: \"water\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 217,
-          "lineContent": "type: \"water\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 226,
-          "lineContent": "type: \"water\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BaseMaterialsCatalog.ts",
-          "line": 151,
-          "lineContent": "id: \"water\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 18,
-          "lineContent": "{ itemId: \"water\", quantity: 2 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 69,
-          "lineContent": "{ itemId: \"water\", quantity: 2 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 99,
-          "lineContent": "{ itemId: \"water\", quantity: 2 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 189,
-          "lineContent": "{ itemId: \"water\", quantity: 1 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 235,
-          "lineContent": "{ itemId: \"water\", quantity: 2 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 248,
-          "lineContent": "{ itemId: \"water\", quantity: 3 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 59,
-          "lineContent": "{ itemId: \"water\", quantity: 3 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 125,
-          "lineContent": "{ itemId: \"water\", quantity: 1 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 168,
-          "lineContent": "{ itemId: \"water\", quantity: 2 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/LayeredWorldRenderer.ts",
-          "line": 188,
-          "lineContent": "if (layer.type === \"terrain\" || layer.type === \"water\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/LayeredWorldRenderer.ts",
-          "line": 335,
-          "lineContent": "placedAsset.asset.type === \"water\" &&"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/LayeredWorldRenderer.ts",
-          "line": 376,
-          "lineContent": "case \"water\":"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/LayeredWorldRenderer.ts",
-          "line": 370,
-          "lineContent": "switch (assetType) {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/SimpleBiomeAssetLoader.ts",
-          "line": 569,
-          "lineContent": "asset.type === \"water\" && asset.biome?.toLowerCase() === type,"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/SimpleBiomeAssetLoader.ts",
-          "line": 321,
-          "lineContent": "type: \"water\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/SimpleBiomeAssetLoader.ts",
-          "line": 647,
-          "lineContent": "water: \"water\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/WorldGenerationPresets.ts",
-          "line": 99,
-          "lineContent": "override?: Partial<WorldGenConfig[\"water\"]>,"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/WorldGenerationPresets.ts",
-          "line": 100,
-          "lineContent": "): WorldGenConfig[\"water\"] => ({"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientNeedsSystem.ts",
-          "line": 426,
-          "lineContent": "thirst: [\"water\"],"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 827,
-          "lineContent": "{ type: \"water\", color: \"#00bfff\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 1016,
-          "lineContent": "type: \"water\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/rendering/chunks/SimpleChunkPresenter.ts",
-          "line": 244,
-          "lineContent": "case \"water\":"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 1593,
-          "lineContent": "rawMaterials.push({ id: \"water\", name: \"💧 Agua\", quantity: grandTotal.water, reserved: 0 });"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "food",
-      "possibleEnums": [
-        "AnimalTargetType",
-        "AssetCategory",
-        "GatherableResource",
-        "ItemCategory",
-        "ResourceType",
-        "ZoneType",
-        "StockpileType"
-      ],
-      "count": 29,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/ai/detectors/NeedsDetector.ts",
-          "line": 44,
-          "lineContent": "params: { needType: NeedType.HUNGER, resourceType: \"food\" },"
-        },
-        {
-          "file": "src/domain/simulation/systems/world/ItemGenerationSystem.ts",
-          "line": 37,
-          "lineContent": "forest: \"food\","
-        },
-        {
-          "file": "src/domain/simulation/systems/world/ItemGenerationSystem.ts",
-          "line": 38,
-          "lineContent": "grassland: \"food\","
-        },
-        {
-          "file": "src/domain/simulation/systems/world/ItemGenerationSystem.ts",
-          "line": 62,
-          "lineContent": "zoneType: \"food\","
-        },
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 107,
-          "lineContent": "type: \"food\","
-        },
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 171,
-          "lineContent": "type: \"food\","
-        },
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 179,
-          "lineContent": "type: \"food\","
-        },
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 187,
-          "lineContent": "type: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 188,
-          "lineContent": "resourceType: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 193,
-          "lineContent": "resourceType: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 198,
-          "lineContent": "resourceType: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 230,
-          "lineContent": "resourceType: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 235,
-          "lineContent": "resourceType: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 269,
-          "lineContent": "resourceType: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 274,
-          "lineContent": "resourceType: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 279,
-          "lineContent": "resourceType: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 129,
-          "lineContent": "type: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 193,
-          "lineContent": "type: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 201,
-          "lineContent": "type: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 209,
-          "lineContent": "type: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/index.ts",
-          "line": 178,
-          "lineContent": "COOKING: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BaseMaterialsCatalog.ts",
-          "line": 95,
-          "lineContent": "category: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BaseMaterialsCatalog.ts",
-          "line": 110,
-          "lineContent": "category: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BaseMaterialsCatalog.ts",
-          "line": 125,
-          "lineContent": "category: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BaseMaterialsCatalog.ts",
-          "line": 140,
-          "lineContent": "category: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BaseMaterialsCatalog.ts",
-          "line": 317,
-          "lineContent": "category: \"food\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientNeedsSystem.ts",
-          "line": 425,
-          "lineContent": "hunger: [\"food\"],"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 826,
-          "lineContent": "{ type: \"food\", color: \"#00ff00\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 1590,
-          "lineContent": "rawMaterials.push({ id: \"food\", name: \"🍖 Comida\", quantity: grandTotal.food, reserved: 0 });"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "isa",
-      "possibleEnums": [
-        "ControlledEntity",
-        "GodId"
-      ],
-      "count": 19,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/world/WorldLoader.ts",
-          "line": 173,
-          "lineContent": "(a.parents?.father === \"stev\" || a.parents?.mother === \"isa\"),"
-        },
-        {
-          "file": "src/domain/simulation/systems/world/WorldLoader.ts",
-          "line": 117,
-          "lineContent": "id: \"isa\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/AnimatedGameEntity.ts",
-          "line": 99,
-          "lineContent": "entityId === \"isa\" ? \"isa_spritesheet\" : CharacterSpriteType.STEV_SPRITESHEET;"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/AnimatedGameEntity.ts",
-          "line": 141,
-          "lineContent": "entityId === \"isa\" ? \"isa_spritesheet\" : CharacterSpriteType.STEV_SPRITESHEET;"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/AnimatedGameEntity.ts",
-          "line": 147,
-          "lineContent": "entityId === \"isa\" ? \"isa_spritesheet\" : CharacterSpriteType.STEV_SPRITESHEET;"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/AnimatedGameEntity.ts",
-          "line": 156,
-          "lineContent": "entityId === \"isa\" ? \"isa_spritesheet\" : CharacterSpriteType.STEV_SPRITESHEET;"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/AnimatedGameEntity.ts",
-          "line": 203,
-          "lineContent": "if (entityId === \"isa\" || entityId === \"stev\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/AnimatedGameEntity.ts",
-          "line": 771,
-          "lineContent": "if (entityId === \"isa\") return CharacterSpriteType.WHOMEN1;"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/AnimatedGameEntity.ts",
-          "line": 800,
-          "lineContent": "if (entityId === \"isa\") return \"whomen1:row0\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/GameEntity.ts",
-          "line": 49,
-          "lineContent": "entityId === \"isa\""
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/core/ActionAnimationSystem.ts",
-          "line": 350,
-          "lineContent": "if (textureKey.includes(\"isa\")) return CharacterSpriteType.ISA_HAPPY;"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/core/ActionAnimationSystem.ts",
-          "line": 350,
-          "lineContent": "if (textureKey.includes(\"isa\")) return CharacterSpriteType.ISA_HAPPY;"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/rendering/PopulationVisualSystem.ts",
-          "line": 242,
-          "lineContent": ".filter((id) => id !== \"isa\" && id !== \"stev\");"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 1113,
-          "lineContent": "if (assetKey.includes(\"isa\")) {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 1113,
-          "lineContent": "if (assetKey.includes(\"isa\")) {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/entities/entities/EntityStateManager.ts",
-          "line": 72,
-          "lineContent": "sprite: entityId === \"isa\" ? \"woman\" : \"man\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/rendering/AgentSpriteManager.ts",
-          "line": 120,
-          "lineContent": "if (entityId === \"isa\" || entityId === \"stev\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/InputManager.ts",
-          "line": 337,
-          "lineContent": "if (this.controlledEntity === ControlledEntity.STEV) return \"isa\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/scenes/MainScene.ts",
-          "line": 769,
-          "lineContent": "mode === \"isa\""
-        }
-      ]
-    },
-    {
-      "stringLiteral": "pending",
-      "possibleEnums": [
-        "TradeOfferStatus",
-        "ResponseStatus"
-      ],
-      "count": 18,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/entities/entities/EntityInitializationCoordinator.ts",
-          "line": 60,
-          "lineContent": "while (this.initializationResults.get(entityId) === \"pending\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/ui/store/loadingStore.ts",
-          "line": 121,
-          "lineContent": "if (phase.status === \"pending\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/ui/store/loadingStore.ts",
-          "line": 52,
-          "lineContent": "status: \"pending\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/ui/store/loadingStore.ts",
-          "line": 58,
-          "lineContent": "status: \"pending\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/ui/store/loadingStore.ts",
-          "line": 64,
-          "lineContent": "status: \"pending\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/ui/store/loadingStore.ts",
-          "line": 70,
-          "lineContent": "status: \"pending\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/ui/store/loadingStore.ts",
-          "line": 76,
-          "lineContent": "status: \"pending\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/ui/store/loadingStore.ts",
-          "line": 82,
-          "lineContent": "status: \"pending\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/ui/store/loadingStore.ts",
-          "line": 88,
-          "lineContent": "status: \"pending\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/ui/store/loadingStore.ts",
-          "line": 94,
-          "lineContent": "status: \"pending\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/utils/LoadingProgressManager.ts",
-          "line": 217,
-          "lineContent": "if (phase.status === \"pending\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/utils/LoadingProgressManager.ts",
-          "line": 39,
-          "lineContent": "status: \"pending\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/utils/LoadingProgressManager.ts",
-          "line": 46,
-          "lineContent": "status: \"pending\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/utils/LoadingProgressManager.ts",
-          "line": 53,
-          "lineContent": "status: \"pending\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/utils/LoadingProgressManager.ts",
-          "line": 60,
-          "lineContent": "status: \"pending\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/utils/LoadingProgressManager.ts",
-          "line": 67,
-          "lineContent": "status: \"pending\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/utils/LoadingProgressManager.ts",
-          "line": 74,
-          "lineContent": "status: \"pending\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/utils/LoadingProgressManager.ts",
-          "line": 81,
-          "lineContent": "status: \"pending\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "stev",
-      "possibleEnums": [
-        "ControlledEntity",
-        "GodId"
-      ],
-      "count": 15,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/world/WorldLoader.ts",
-          "line": 173,
-          "lineContent": "(a.parents?.father === \"stev\" || a.parents?.mother === \"isa\"),"
-        },
-        {
-          "file": "src/domain/simulation/systems/world/WorldLoader.ts",
-          "line": 138,
-          "lineContent": "id: \"stev\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/AnimatedGameEntity.ts",
-          "line": 203,
-          "lineContent": "if (entityId === \"isa\" || entityId === \"stev\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/AnimatedGameEntity.ts",
-          "line": 772,
-          "lineContent": "if (entityId === \"stev\") return CharacterSpriteType.MAN1;"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/AnimatedGameEntity.ts",
-          "line": 801,
-          "lineContent": "if (entityId === \"stev\") return \"man1:row0\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/AnimatedGameEntity.ts",
-          "line": 802,
-          "lineContent": "if (entityId === \"stev\") return \"man1:row0\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/GameEntity.ts",
-          "line": 51,
-          "lineContent": ": entityId === \"stev\""
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/core/ActionAnimationSystem.ts",
-          "line": 351,
-          "lineContent": "if (textureKey.includes(\"stev\")) return CharacterSpriteType.STEV_HAPPY;"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/core/ActionAnimationSystem.ts",
-          "line": 351,
-          "lineContent": "if (textureKey.includes(\"stev\")) return CharacterSpriteType.STEV_HAPPY;"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/rendering/PopulationVisualSystem.ts",
-          "line": 242,
-          "lineContent": ".filter((id) => id !== \"isa\" && id !== \"stev\");"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 1116,
-          "lineContent": "} else if (assetKey.includes(\"stev\")) {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 1116,
-          "lineContent": "} else if (assetKey.includes(\"stev\")) {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/rendering/AgentSpriteManager.ts",
-          "line": 120,
-          "lineContent": "if (entityId === \"isa\" || entityId === \"stev\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/InputManager.ts",
-          "line": 336,
-          "lineContent": "if (this.controlledEntity === ControlledEntity.ISA) return \"stev\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/scenes/MainScene.ts",
-          "line": 771,
-          "lineContent": ": mode === \"stev\""
-        }
-      ]
-    },
-    {
-      "stringLiteral": "fiber",
-      "possibleEnums": [
-        "GatherableResource",
-        "ItemId"
-      ],
-      "count": 14,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BaseMaterialsCatalog.ts",
-          "line": 24,
-          "lineContent": "id: \"fiber\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 86,
-          "lineContent": "{ itemId: \"fiber\", quantity: 5 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 153,
-          "lineContent": "{ itemId: \"fiber\", quantity: 8 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 206,
-          "lineContent": "{ itemId: \"fiber\", quantity: 1 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 269,
-          "lineContent": "{ itemId: \"fiber\", quantity: 3 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 70,
-          "lineContent": "ingredients: [{ itemId: \"fiber\", quantity: 5 }],"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 83,
-          "lineContent": "ingredients: [{ itemId: \"fiber\", quantity: 3 }],"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 186,
-          "lineContent": "{ itemId: \"fiber\", quantity: 2 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 200,
-          "lineContent": "{ itemId: \"fiber\", quantity: 2 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 250,
-          "lineContent": "{ itemId: \"fiber\", quantity: 1 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 264,
-          "lineContent": "{ itemId: \"fiber\", quantity: 2 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 295,
-          "lineContent": "{ itemId: \"fiber\", quantity: 5 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 313,
-          "lineContent": "{ itemId: \"fiber\", quantity: 2 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 329,
-          "lineContent": "{ itemId: \"fiber\", quantity: 3 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "social",
-      "possibleEnums": [
-        "GoalType",
-        "NeedType",
-        "AgentPriority",
-        "GoalDomain",
-        "PanelName",
-        "ZoneType"
-      ],
-      "count": 13,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 172,
-          "lineContent": "case \"social\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 241,
-          "lineContent": "case \"social\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/social/SocialSystem.ts",
-          "line": 758,
-          "lineContent": "system: \"social\","
-        },
-        {
-          "file": "src/domain/simulation/systems/social/SocialSystem.ts",
-          "line": 767,
-          "lineContent": "system: \"social\","
-        },
-        {
-          "file": "src/domain/simulation/systems/social/SocialSystem.ts",
-          "line": 779,
-          "lineContent": "system: \"social\","
-        },
-        {
-          "file": "src/domain/simulation/systems/social/SocialSystem.ts",
-          "line": 789,
-          "lineContent": "system: \"social\","
-        },
-        {
-          "file": "src/domain/simulation/systems/social/SocialSystem.ts",
-          "line": 798,
-          "lineContent": "system: \"social\","
-        },
-        {
-          "file": "src/domain/simulation/systems/social/SocialSystem.ts",
-          "line": 808,
-          "lineContent": "system: \"social\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/index.ts",
-          "line": 168,
-          "lineContent": "SOCIALIZING: \"social\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/index.ts",
-          "line": 175,
-          "lineContent": "DANCING: \"social\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/index.ts",
-          "line": 198,
-          "lineContent": "loneliness: \"social\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 830,
-          "lineContent": "{ type: \"social\", color: \"#ffff00\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 293,
-          "lineContent": "if (activeTab === \"social\") {"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "structure",
-      "possibleEnums": [
-        "AssetCategory",
-        "ItemCategory",
-        "MapElementType"
-      ],
-      "count": 12,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/LayeredWorldRenderer.ts",
-          "line": 210,
-          "lineContent": "if (layer.type === \"structure\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/LayeredWorldRenderer.ts",
-          "line": 281,
-          "lineContent": "if (layer.type === \"structure\" && renderedCount < layer.assets.length) {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/LayeredWorldRenderer.ts",
-          "line": 302,
-          "lineContent": "if (layerType === \"structure\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/LayeredWorldRenderer.ts",
-          "line": 372,
-          "lineContent": "case \"structure\":"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/SimpleBiomeAssetLoader.ts",
-          "line": 255,
-          "lineContent": "type: \"structure\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/SimpleBiomeAssetLoader.ts",
-          "line": 339,
-          "lineContent": "type: \"structure\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 813,
-          "lineContent": "type: \"structure\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/rendering/ZoneRenderer.ts",
-          "line": 331,
-          "lineContent": "metadata.buildingType === \"structure\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/rendering/chunks/SimpleChunkPresenter.ts",
-          "line": 257,
-          "lineContent": "case \"structure\":"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/rendering/chunks/SimpleChunkPresenter.ts",
-          "line": 242,
-          "lineContent": "switch (placed.asset.type) {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/scenes/MainScene.ts",
-          "line": 1618,
-          "lineContent": "entityId.includes(\"structure\") ||"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/scenes/MainScene.ts",
-          "line": 1618,
-          "lineContent": "entityId.includes(\"structure\") ||"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "trade",
-      "possibleEnums": [
-        "ItemCategory"
-      ],
-      "count": 11,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 181,
-          "lineContent": "case \"trade\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 250,
-          "lineContent": "case \"trade\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 159,
-          "lineContent": "switch (name) {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 228,
-          "lineContent": "switch (name) {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/detectors/TradeDetector.ts",
-          "line": 34,
-          "lineContent": "params: { action: \"trade\" },"
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/EconomySystem.ts",
-          "line": 738,
-          "lineContent": "system: \"trade\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/EconomySystem.ts",
-          "line": 748,
-          "lineContent": "system: \"trade\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/EconomySystem.ts",
-          "line": 757,
-          "lineContent": "system: \"trade\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/EconomySystem.ts",
-          "line": 767,
-          "lineContent": "system: \"trade\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/EconomySystem.ts",
-          "line": 778,
-          "lineContent": "system: \"trade\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/EconomySystem.ts",
-          "line": 798,
-          "lineContent": "system: \"trade\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "work",
-      "possibleEnums": [
-        "GoalType",
-        "ActionType",
-        "GoalDomain",
-        "ZoneType"
-      ],
-      "count": 11,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/world/ItemGenerationSystem.ts",
-          "line": 36,
-          "lineContent": "mountainous: \"work\","
-        },
-        {
-          "file": "src/domain/simulation/systems/world/ItemGenerationSystem.ts",
-          "line": 70,
-          "lineContent": "zoneType: \"work\","
-        },
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 131,
-          "lineContent": "type: \"work\","
-        },
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 140,
-          "lineContent": "type: \"work\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 153,
-          "lineContent": "type: \"work\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 162,
-          "lineContent": "type: \"work\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/index.ts",
-          "line": 169,
-          "lineContent": "WORKING: \"work\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/index.ts",
-          "line": 177,
-          "lineContent": "SHOPPING: \"work\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/index.ts",
-          "line": 201,
-          "lineContent": "money: \"work\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 829,
-          "lineContent": "{ type: \"work\", color: \"#ffa500\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 643,
-          "lineContent": ".filter((z) => z.type === \"work\")"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "stone",
-      "possibleEnums": [
-        "GatherableResource",
-        "ItemId",
-        "ResourceType",
-        "TileType"
-      ],
-      "count": 11,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 144,
-          "lineContent": "properties: { resource: \"stone\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 67,
-          "lineContent": "resourceType: \"stone\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 72,
-          "lineContent": "resourceType: \"stone\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 77,
-          "lineContent": "resourceType: \"stone\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 166,
-          "lineContent": "properties: { resource: \"stone\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BaseMaterialsCatalog.ts",
-          "line": 38,
-          "lineContent": "id: \"stone\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 184,
-          "lineContent": "{ itemId: \"stone\", quantity: 3 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 198,
-          "lineContent": "{ itemId: \"stone\", quantity: 4 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 262,
-          "lineContent": "{ itemId: \"stone\", quantity: 2 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 375,
-          "lineContent": "{ itemId: \"stone\", quantity: 20 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 1587,
-          "lineContent": "rawMaterials.push({ id: \"stone\", name: \"🪨 Piedra\", quantity: grandTotal.stone, reserved: 0 });"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "terrain",
-      "possibleEnums": [
-        "AssetCategory",
-        "MapElementType"
-      ],
-      "count": 11,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/DiverseWorldComposer.ts",
-          "line": 273,
-          "lineContent": "type: \"terrain\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/DiverseWorldComposer.ts",
-          "line": 327,
-          "lineContent": "type: \"terrain\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/DiverseWorldComposer.ts",
-          "line": 353,
-          "lineContent": "type: \"terrain\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/LayeredWorldRenderer.ts",
-          "line": 188,
-          "lineContent": "if (layer.type === \"terrain\" || layer.type === \"water\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/LayeredWorldRenderer.ts",
-          "line": 406,
-          "lineContent": "if (placedAsset.asset.type !== \"terrain\" && rng() < 0.3) {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/LayeredWorldRenderer.ts",
-          "line": 375,
-          "lineContent": "case \"terrain\":"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/SimpleBiomeAssetLoader.ts",
-          "line": 603,
-          "lineContent": "if (category === \"terrains\" || category === \"terrain\")"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/SimpleBiomeAssetLoader.ts",
-          "line": 223,
-          "lineContent": "type: \"terrain\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/SimpleBiomeAssetLoader.ts",
-          "line": 646,
-          "lineContent": "terrain: \"terrain\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 396,
-          "lineContent": "UnifiedAssetManager.CORE_ASSETS.filter((a) => a.category === \"terrain\"),"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/rendering/chunks/SimpleChunkPresenter.ts",
-          "line": 243,
-          "lineContent": "case \"terrain\":"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "combat",
-      "possibleEnums": [
-        "GoalType",
-        "GoalDomain",
         "PanelName"
       ],
-      "count": 10,
+      "count": 2,
       "occurrences": [
         {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 163,
-          "lineContent": "case \"combat\":"
+          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
+          "line": 1425,
+          "lineContent": "data: { needType: NeedType.HUNGER, restored: 25, source: \"world\" },"
         },
         {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 232,
-          "lineContent": "case \"combat\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/conflict/CombatSystem.ts",
-          "line": 807,
-          "lineContent": "system: \"combat\","
-        },
-        {
-          "file": "src/domain/simulation/systems/conflict/CombatSystem.ts",
-          "line": 832,
-          "lineContent": "system: \"combat\","
-        },
-        {
-          "file": "src/domain/simulation/systems/conflict/CombatSystem.ts",
-          "line": 858,
-          "lineContent": "system: \"combat\","
-        },
-        {
-          "file": "src/domain/simulation/systems/conflict/CombatSystem.ts",
-          "line": 903,
-          "lineContent": "system: \"combat\","
-        },
-        {
-          "file": "src/domain/simulation/systems/conflict/CombatSystem.ts",
-          "line": 911,
-          "lineContent": "system: \"combat\","
-        },
-        {
-          "file": "src/domain/simulation/systems/conflict/CombatSystem.ts",
-          "line": 935,
-          "lineContent": "system: \"combat\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 305,
-          "lineContent": "if (activeTab === \"combat\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 178,
-          "lineContent": "private combatCache: VersionedCache<GameStore[\"combat\"]> = {"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "tree",
-      "possibleEnums": [
-        "WorldResourceType",
-        "WorldEntityType"
-      ],
-      "count": 10,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 981,
-          "lineContent": "type === \"tree\""
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 15,
-          "lineContent": "type: \"tree\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/LayeredWorldRenderer.ts",
-          "line": 371,
-          "lineContent": "case \"tree\":"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/SimpleBiomeAssetLoader.ts",
-          "line": 448,
-          "lineContent": "const treeCount = assets.filter((a) => a.type === \"tree\").length;"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/SimpleBiomeAssetLoader.ts",
-          "line": 668,
-          "lineContent": "if (type === \"tree\" || type === \"rock\" || type === WorldEntityType.PLANT) {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/SimpleBiomeAssetLoader.ts",
-          "line": 175,
-          "lineContent": "type: \"tree\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientWorldResourceSystem.ts",
-          "line": 203,
-          "lineContent": "if (data.type === \"tree\" || data.type === \"rock\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientWorldResourceSystem.ts",
-          "line": 170,
-          "lineContent": "tree: \"tree\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 762,
-          "lineContent": "type: \"tree\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/rendering/chunks/SimpleChunkPresenter.ts",
-          "line": 250,
-          "lineContent": "case \"tree\":"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "mystical",
-      "possibleEnums": [
-        "ClothingStyle",
-        "BiomeType"
-      ],
-      "count": 8,
-      "occurrences": [
-        {
-          "file": "src/domain/data/BaseMaterialsCatalog.ts",
-          "line": 207,
-          "lineContent": "metadata: { biome: \"mystical\" },"
-        },
-        {
-          "file": "src/domain/data/BaseMaterialsCatalog.ts",
-          "line": 221,
-          "lineContent": "metadata: { biome: \"mystical\" },"
-        },
-        {
-          "file": "src/domain/data/BaseMaterialsCatalog.ts",
-          "line": 235,
-          "lineContent": "metadata: { biome: \"mystical\" },"
-        },
-        {
-          "file": "src/domain/simulation/systems/world/ItemGenerationSystem.ts",
-          "line": 34,
-          "lineContent": "mystical: \"mystical\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BaseMaterialsCatalog.ts",
-          "line": 205,
-          "lineContent": "metadata: { biome: \"mystical\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BaseMaterialsCatalog.ts",
-          "line": 219,
-          "lineContent": "metadata: { biome: \"mystical\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BaseMaterialsCatalog.ts",
-          "line": 233,
-          "lineContent": "metadata: { biome: \"mystical\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/types/appearance.ts",
-          "line": 89,
-          "lineContent": "clothingStyle: \"mystical\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "crafting",
-      "possibleEnums": [
-        "GoalDomain",
-        "SkillType",
-        "PanelName"
-      ],
-      "count": 8,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 175,
-          "lineContent": "case \"crafting\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 244,
-          "lineContent": "case \"crafting\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/EnhancedCraftingSystem.ts",
-          "line": 442,
-          "lineContent": "system: \"crafting\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/EnhancedCraftingSystem.ts",
-          "line": 452,
-          "lineContent": "system: \"crafting\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/EnhancedCraftingSystem.ts",
-          "line": 461,
-          "lineContent": "system: \"crafting\","
-        },
-        {
-          "file": "src/domain/simulation/systems/economy/EnhancedCraftingSystem.ts",
-          "line": 473,
-          "lineContent": "system: \"crafting\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 298,
-          "lineContent": "skill: \"crafting\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 317,
-          "lineContent": "if (activeTab === \"crafting\") {"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "rock",
-      "possibleEnums": [
-        "WorldResourceType",
-        "WorldEntityType"
-      ],
-      "count": 8,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 980,
-          "lineContent": "type === \"rock\" ||"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 60,
-          "lineContent": "type: \"rock\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/SimpleBiomeAssetLoader.ts",
-          "line": 450,
-          "lineContent": "const rockCount = assets.filter((a) => a.type === \"rock\").length;"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/SimpleBiomeAssetLoader.ts",
-          "line": 668,
-          "lineContent": "if (type === \"tree\" || type === \"rock\" || type === WorldEntityType.PLANT) {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/SimpleBiomeAssetLoader.ts",
-          "line": 207,
-          "lineContent": "type: \"rock\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientWorldResourceSystem.ts",
-          "line": 203,
-          "lineContent": "if (data.type === \"tree\" || data.type === \"rock\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientWorldResourceSystem.ts",
-          "line": 171,
-          "lineContent": "rock: \"rock\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 789,
-          "lineContent": "type: \"rock\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "wood",
-      "possibleEnums": [
-        "GatherableResource",
-        "ResourceType"
-      ],
-      "count": 7,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/ai/TaskQueue.ts",
-          "line": 56,
-          "lineContent": "*   params: { resourceType: 'wood' }"
-        },
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 135,
-          "lineContent": "properties: { resource: \"wood\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 22,
-          "lineContent": "resourceType: \"wood\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 27,
-          "lineContent": "resourceType: \"wood\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 32,
-          "lineContent": "resourceType: \"wood\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 157,
-          "lineContent": "properties: { resource: \"wood\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 1584,
-          "lineContent": "rawMaterials.push({ id: \"wood\", name: \"🪵 Madera\", quantity: grandTotal.wood, reserved: 0 });"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "bread",
-      "possibleEnums": [
-        "FoodId",
-        "ItemId"
-      ],
-      "count": 6,
-      "occurrences": [
-        {
-          "file": "src/domain/data/FoodCatalog.ts",
-          "line": 177,
-          "lineContent": "id: \"bread\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 294,
-          "lineContent": "{ itemId: \"bread\", quantity: 3 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/FoodCatalog.ts",
-          "line": 173,
-          "lineContent": "id: \"bread\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 122,
-          "lineContent": "output: { itemId: \"bread\", quantity: 2 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 310,
-          "lineContent": "key: \"bread\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 656,
-          "lineContent": "{ key: \"bread\", file: \"07_bread.png\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent",
-      "possibleEnums": [
-        "EntityType",
-        "TargetType"
-      ],
-      "count": 6,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/world/WorldQueryService.ts",
-          "line": 691,
-          "lineContent": "*   case 'agent':"
-        },
-        {
-          "file": "src/domain/simulation/systems/world/WorldQueryService.ts",
-          "line": 688,
-          "lineContent": "* switch (nearest?.entityType) {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 564,
-          "lineContent": "if (currentSelected && currentSelected.type === \"agent\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/scenes/MainScene.ts",
-          "line": 945,
-          "lineContent": "targetType: \"agent\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/shared/types/commands/SimulationCommand.ts",
-          "line": 240,
-          "lineContent": "targetType?: \"agent\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/types/GameEvents.ts",
-          "line": 998,
-          "lineContent": "targetType: \"agent\";"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "critical",
-      "possibleEnums": [
-        "CrisisSeverity",
-        "AssetPriority",
-        "BuildingCondition"
-      ],
-      "count": 6,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/components/EntityStatsComponent.ts",
-          "line": 75,
-          "lineContent": "if (average <= 25) return \"critical\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 391,
-          "lineContent": "UnifiedAssetManager.CORE_ASSETS.filter((a) => a.priority === \"critical\"),"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 569,
-          "lineContent": "if (config.required !== true && config.priority !== \"critical\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 596,
-          "lineContent": "if (config.required !== true && config.priority !== \"critical\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 450,
-          "lineContent": "const criticalGroup = this.assetGroups.get(\"critical\");"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/scenes/MainScene.ts",
-          "line": 614,
-          "lineContent": "type: level === \"critical\" ? \"warning\" : \"system\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "comfort",
-      "possibleEnums": [
-        "NeedType",
-        "EntityStat",
-        "ZoneType"
-      ],
-      "count": 5,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 310,
-          "lineContent": "{ key: \"comfort\", icon: \"🛋️\", label: \"Comodidad\" },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/index.ts",
-          "line": 167,
-          "lineContent": "MEDITATING: \"comfort\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/index.ts",
-          "line": 172,
-          "lineContent": "WRITING: \"comfort\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/index.ts",
-          "line": 174,
-          "lineContent": "CONTEMPLATING: \"comfort\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/index.ts",
-          "line": 176,
-          "lineContent": "HIDING: \"comfort\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "anvil",
-      "possibleEnums": [
-        "WorkstationType",
-        "ItemId"
-      ],
-      "count": 5,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 122,
-          "lineContent": "workstation: \"anvil\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 216,
-          "lineContent": "workstation: \"anvil\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 234,
-          "lineContent": "workstation: \"anvil\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 280,
-          "lineContent": "workstation: \"anvil\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 347,
-          "lineContent": "workstation: \"anvil\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "healthy",
-      "possibleEnums": [
-        "FoodCategory"
-      ],
-      "count": 5,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/FoodCatalog.ts",
-          "line": 13,
-          "lineContent": "category: \"healthy\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/FoodCatalog.ts",
-          "line": 28,
-          "lineContent": "category: \"healthy\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/FoodCatalog.ts",
-          "line": 42,
-          "lineContent": "category: \"healthy\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/FoodCatalog.ts",
-          "line": 176,
-          "lineContent": "category: \"healthy\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/FoodCatalog.ts",
-          "line": 190,
-          "lineContent": "category: \"healthy\","
+          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
+          "line": 1435,
+          "lineContent": "data: { needType: NeedType.THIRST, restored: 25, source: \"world\" },"
         }
       ]
     },
@@ -3262,484 +1175,12 @@
         "WeaponId",
         "EquipmentType"
       ],
-      "count": 4,
+      "count": 1,
       "occurrences": [
         {
           "file": "src/domain/data/EquipmentStats.ts",
           "line": 191,
           "lineContent": "if (!itemId || itemId === \"unarmed\") {"
-        },
-        {
-          "file": "src/domain/data/EquipmentStats.ts",
-          "line": 63,
-          "lineContent": "itemId: \"unarmed\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/detectors/CraftDetector.ts",
-          "line": 35,
-          "lineContent": "if (ctx.hasWeapon || ctx.equippedWeapon !== \"unarmed\") return null;"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/WeaponCatalog.ts",
-          "line": 5,
-          "lineContent": "id: \"unarmed\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "wooden_club",
-      "possibleEnums": [
-        "WeaponId",
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 4,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/ai/detectors/CraftDetector.ts",
-          "line": 47,
-          "lineContent": "const weaponToCraft = ctx.canCraftDagger ? \"stone_dagger\" : \"wooden_club\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 244,
-          "lineContent": "id: \"wooden_club\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 247,
-          "lineContent": "output: { itemId: \"wooden_club\", quantity: 1 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/WeaponCatalog.ts",
-          "line": 13,
-          "lineContent": "id: \"wooden_club\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "rest",
-      "possibleEnums": [
-        "GoalType",
-        "GoalDomain",
-        "WorkShift",
-        "ZoneType"
-      ],
-      "count": 4,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 123,
-          "lineContent": "type: \"rest\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 145,
-          "lineContent": "type: \"rest\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/index.ts",
-          "line": 166,
-          "lineContent": "RESTING: \"rest\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 828,
-          "lineContent": "{ type: \"rest\", color: \"#ff00ff\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "junk",
-      "possibleEnums": [
-        "FoodCategory"
-      ],
-      "count": 4,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/FoodCatalog.ts",
-          "line": 56,
-          "lineContent": "category: \"junk\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/FoodCatalog.ts",
-          "line": 69,
-          "lineContent": "category: \"junk\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/FoodCatalog.ts",
-          "line": 83,
-          "lineContent": "category: \"junk\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/FoodCatalog.ts",
-          "line": 96,
-          "lineContent": "category: \"junk\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "smithing",
-      "possibleEnums": [
-        "SkillType",
-        "ItemId"
-      ],
-      "count": 4,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 217,
-          "lineContent": "skill: \"smithing\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 235,
-          "lineContent": "skill: \"smithing\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 281,
-          "lineContent": "skill: \"smithing\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 348,
-          "lineContent": "skill: \"smithing\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "high",
-      "possibleEnums": [
-        "CrisisSeverity",
-        "DialoguePriority",
-        "AssetPriority"
-      ],
-      "count": 4,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/core/cards/helpers.ts",
-          "line": 89,
-          "lineContent": "return \"high\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientConflictResolutionSystem.ts",
-          "line": 62,
-          "lineContent": "priority: \"high\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/services/SettingsService.ts",
-          "line": 110,
-          "lineContent": "presetName: \"high\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/services/SettingsService.ts",
-          "line": 136,
-          "lineContent": "presetName: \"high\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "neutral",
-      "possibleEnums": [
-        "DialogueOutcome",
-        "MusicMood"
-      ],
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/AmbientAwarenessSystem.ts",
-          "line": 74,
-          "lineContent": "musicMood: \"neutral\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/AmbientAwarenessSystem.ts",
-          "line": 220,
-          "lineContent": "return \"neutral\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/interfaces/EntityServices.ts",
-          "line": 369,
-          "lineContent": "effect: \"neutral\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "default",
-      "possibleEnums": [
-        "SearchType",
-        "ExplorationType"
-      ],
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/conflict/ConflictResolutionSystem.ts",
-          "line": 137,
-          "lineContent": ": \"default\";"
-        },
-        {
-          "file": "src/infrastructure/controllers/worldController.ts",
-          "line": 109,
-          "lineContent": ": \"default\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/rendering/AppearanceGenerationSystem.ts",
-          "line": 262,
-          "lineContent": "inheritedSkinVariant: \"default\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "storage",
-      "possibleEnums": [
-        "BuildingType",
-        "ZoneType"
-      ],
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/world/ItemGenerationSystem.ts",
-          "line": 39,
-          "lineContent": "village: \"storage\","
-        },
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 149,
-          "lineContent": "type: \"storage\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 171,
-          "lineContent": "type: \"storage\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "market",
-      "possibleEnums": [
-        "PanelName",
-        "ZoneType"
-      ],
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 263,
-          "lineContent": "type: \"market\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 285,
-          "lineContent": "type: \"market\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 281,
-          "lineContent": "if (activeTab === \"market\") {"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "idle",
-      "possibleEnums": [
-        "GoalType",
-        "ActionType",
-        "AnimalState",
-        "ActivityType",
-        "RoleType"
-      ],
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/application/composition/GameEventWiring.ts",
-          "line": 218,
-          "lineContent": "activity: \"idle\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/entities/entities/EntityStateManager.ts",
-          "line": 92,
-          "lineContent": "currentBehavior: \"idle\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 546,
-          "lineContent": "currentAction: \"idle\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "gather",
-      "possibleEnums": [
-        "GoalType",
-        "ResourceInteractionType"
-      ],
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 183,
-          "lineContent": "interactionType: \"gather\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 225,
-          "lineContent": "interactionType: \"gather\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 264,
-          "lineContent": "interactionType: \"gather\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "iron_ore",
-      "possibleEnums": [
-        "ItemId",
-        "ResourceType"
-      ],
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BaseMaterialsCatalog.ts",
-          "line": 51,
-          "lineContent": "id: \"iron_ore\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 117,
-          "lineContent": "{ itemId: \"iron_ore\", quantity: 5 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 26,
-          "lineContent": "{ itemId: \"iron_ore\", quantity: 2 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "dessert",
-      "possibleEnums": [
-        "FoodCategory"
-      ],
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/FoodCatalog.ts",
-          "line": 109,
-          "lineContent": "category: \"dessert\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/FoodCatalog.ts",
-          "line": 123,
-          "lineContent": "category: \"dessert\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/FoodCatalog.ts",
-          "line": 137,
-          "lineContent": "category: \"dessert\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "stone_dagger",
-      "possibleEnums": [
-        "WeaponId",
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 257,
-          "lineContent": "id: \"stone_dagger\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 260,
-          "lineContent": "output: { itemId: \"stone_dagger\", quantity: 1 },"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/WeaponCatalog.ts",
-          "line": 21,
-          "lineContent": "id: \"stone_dagger\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "low",
-      "possibleEnums": [
-        "CrisisSeverity",
-        "DialoguePriority",
-        "AssetPriority"
-      ],
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/core/cards/helpers.ts",
-          "line": 91,
-          "lineContent": "return \"low\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/services/SettingsService.ts",
-          "line": 94,
-          "lineContent": "presetName: \"low\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 1282,
-          "lineContent": ": \"low\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "drink",
-      "possibleEnums": [
-        "ActionType",
-        "FoodCategory"
-      ],
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientAISystem.ts",
-          "line": 236,
-          "lineContent": "actionType: isEating ? \"eat\" : \"drink\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientAISystem.ts",
-          "line": 142,
-          "lineContent": "case \"drink\":"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientAISystem.ts",
-          "line": 132,
-          "lineContent": "switch (action.actionType) {"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "audio",
-      "possibleEnums": [
-        "AssetType",
-        "AssetCategory"
-      ],
-      "count": 3,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 632,
-          "lineContent": "case \"audio\":"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 1044,
-          "lineContent": "case \"audio\":"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/assets/UnifiedAssetManager.ts",
-          "line": 1037,
-          "lineContent": "switch (asset.type) {"
         }
       ]
     },
@@ -3749,1543 +1190,12 @@
         "SystemProperty",
         "StockpileType"
       ],
-      "count": 2,
+      "count": 1,
       "occurrences": [
         {
           "file": "src/domain/simulation/core/runner/CommandProcessor.ts",
           "line": 535,
           "lineContent": "private applyResourceDelta(delta: Partial<GameResources[\"materials\"]>): void {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/shared/types/commands/SimulationCommand.ts",
-          "line": 251,
-          "lineContent": "delta: Partial<GameResources[\"materials\"]>;"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "night",
-      "possibleEnums": [
-        "WorkShift",
-        "TimeOfDayPhase"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/core/runner/EventRegistry.ts",
-          "line": 319,
-          "lineContent": "if (period === \"night\" || period === TimeOfDayPhase.DEEP_NIGHT) {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/application/composition/gameLogic/GameTelemetryEmitter.ts",
-          "line": 547,
-          "lineContent": "timeInfo.phase === \"night\" || timeInfo.phase === TimeOfDayPhase.DEEP_NIGHT"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "construction",
-      "possibleEnums": [
-        "GoalType",
-        "ZoneConstructionStatus"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/ai/detectors/BuildDetector.ts",
-          "line": 39,
-          "lineContent": "workType: \"construction\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientBuildingSystem.ts",
-          "line": 92,
-          "lineContent": "if (building.status === \"construction\") {"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "system",
-      "possibleEnums": [
-        "DialogueSpeaker",
-        "PanelName"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/social/HouseholdSystem.ts",
-          "line": 361,
-          "lineContent": "agentId: \"system\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/scenes/MainScene.ts",
-          "line": 614,
-          "lineContent": "type: level === \"critical\" ? \"warning\" : \"system\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "dead",
-      "possibleEnums": [
-        "AnimalState",
-        "EntityStatus"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/application/composition/GameEventWiring.ts",
-          "line": 641,
-          "lineContent": "if (!stats || stats.isDead || stats.activity === \"dead\") {"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/application/composition/GameEventWiring.ts",
-          "line": 194,
-          "lineContent": "activity: \"dead\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "build_house",
-      "possibleEnums": [
-        "GovernanceProjectType"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/application/composition/gameLogic/GameTelemetryEmitter.ts",
-          "line": 300,
-          "lineContent": "(task.type === \"build_house\" ||"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/monitoring/GameMetricsService.ts",
-          "line": 199,
-          "lineContent": "task.type === \"build_house\" ||"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "mine",
-      "possibleEnums": [
-        "BuildingType",
-        "ResourceInteractionType"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/application/composition/gameLogic/GameTelemetryEmitter.ts",
-          "line": 310,
-          "lineContent": "(z) => (z.metadata as Record<string, unknown>)?.[\"building\"] === \"mine\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 62,
-          "lineContent": "interactionType: \"mine\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "rare_materials",
-      "possibleEnums": [
-        "ResourceType"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 112,
-          "lineContent": "resourceType: \"rare_materials\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 118,
-          "lineContent": "resourceType: \"rare_materials\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "water_source",
-      "possibleEnums": [
-        "WorldResourceType",
-        "WaterSourceVariant"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 145,
-          "lineContent": "type: \"water_source\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientWorldResourceSystem.ts",
-          "line": 106,
-          "lineContent": "data.type === \"water_source\" &&"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_workbench",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 59,
-          "lineContent": "spriteKey: \"agent_built_workbench\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientBuildingSystem.ts",
-          "line": 70,
-          "lineContent": "workbench: \"agent_built_workbench\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_house",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 107,
-          "lineContent": "spriteKey: \"agent_built_house\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientBuildingSystem.ts",
-          "line": 68,
-          "lineContent": "house: \"agent_built_house\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "copper_ore",
-      "possibleEnums": [
-        "ItemId",
-        "ResourceType"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BaseMaterialsCatalog.ts",
-          "line": 64,
-          "lineContent": "id: \"copper_ore\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 42,
-          "lineContent": "{ itemId: \"copper_ore\", quantity: 2 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "fish",
-      "possibleEnums": [
-        "AnimalType",
-        "ItemId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BaseMaterialsCatalog.ts",
-          "line": 136,
-          "lineContent": "id: \"fish\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 152,
-          "lineContent": "ingredients: [{ itemId: \"fish\", quantity: 1 }],"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "mystical_potion",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 11,
-          "lineContent": "id: \"mystical_potion\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 14,
-          "lineContent": "output: { itemId: \"mystical_potion\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "energy_crystal",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 46,
-          "lineContent": "id: \"energy_crystal\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 49,
-          "lineContent": "output: { itemId: \"energy_crystal\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "swamp_antidote",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 62,
-          "lineContent": "id: \"swamp_antidote\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 65,
-          "lineContent": "output: { itemId: \"swamp_antidote\", quantity: 2 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "reed_basket",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 80,
-          "lineContent": "id: \"reed_basket\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 83,
-          "lineContent": "output: { itemId: \"reed_basket\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "mountain_pickaxe",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 112,
-          "lineContent": "id: \"mountain_pickaxe\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 115,
-          "lineContent": "output: { itemId: \"mountain_pickaxe\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "healing_salve",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 164,
-          "lineContent": "id: \"healing_salve\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 167,
-          "lineContent": "output: { itemId: \"healing_salve\", quantity: 2 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "honey_bread",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 182,
-          "lineContent": "id: \"honey_bread\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 185,
-          "lineContent": "output: { itemId: \"honey_bread\", quantity: 2 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "pine_torch",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 199,
-          "lineContent": "id: \"pine_torch\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 202,
-          "lineContent": "output: { itemId: \"pine_torch\", quantity: 3 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "cotton_cloth",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 216,
-          "lineContent": "id: \"cotton_cloth\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 219,
-          "lineContent": "output: { itemId: \"cotton_cloth\", quantity: 2 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "flower_dye",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 229,
-          "lineContent": "id: \"flower_dye\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 232,
-          "lineContent": "output: { itemId: \"flower_dye\", quantity: 3 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "wheat_beer",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 242,
-          "lineContent": "id: \"wheat_beer\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 245,
-          "lineContent": "output: { itemId: \"wheat_beer\", quantity: 2 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "community_meal",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 289,
-          "lineContent": "id: \"community_meal\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/BiomeRecipesCatalog.ts",
-          "line": 292,
-          "lineContent": "output: { itemId: \"community_meal\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "snack",
-      "possibleEnums": [
-        "FoodCategory"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/FoodCatalog.ts",
-          "line": 150,
-          "lineContent": "category: \"snack\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/FoodCatalog.ts",
-          "line": 163,
-          "lineContent": "category: \"snack\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "stone_axe",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 179,
-          "lineContent": "id: \"stone_axe\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 182,
-          "lineContent": "output: { itemId: \"stone_axe\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "stone_pickaxe",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 193,
-          "lineContent": "id: \"stone_pickaxe\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 196,
-          "lineContent": "output: { itemId: \"stone_pickaxe\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "iron_axe",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 207,
-          "lineContent": "id: \"iron_axe\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 210,
-          "lineContent": "output: { itemId: \"iron_axe\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "iron_pickaxe",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 225,
-          "lineContent": "id: \"iron_pickaxe\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 228,
-          "lineContent": "output: { itemId: \"iron_pickaxe\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "iron_sword",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 271,
-          "lineContent": "id: \"iron_sword\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 274,
-          "lineContent": "output: { itemId: \"iron_sword\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "bow",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 289,
-          "lineContent": "id: \"bow\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 292,
-          "lineContent": "output: { itemId: \"bow\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "cloth_shirt",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 307,
-          "lineContent": "id: \"cloth_shirt\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 310,
-          "lineContent": "output: { itemId: \"cloth_shirt\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "leather_vest",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 323,
-          "lineContent": "id: \"leather_vest\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 326,
-          "lineContent": "output: { itemId: \"leather_vest\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "iron_helmet",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 341,
-          "lineContent": "id: \"iron_helmet\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 344,
-          "lineContent": "output: { itemId: \"iron_helmet\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "wooden_frame",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 357,
-          "lineContent": "id: \"wooden_frame\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 360,
-          "lineContent": "output: { itemId: \"wooden_frame\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "stone_foundation",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 370,
-          "lineContent": "id: \"stone_foundation\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 373,
-          "lineContent": "output: { itemId: \"stone_foundation\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "door",
-      "possibleEnums": [
-        "ItemId",
-        "RecipeId"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 383,
-          "lineContent": "id: \"door\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/data/RecipesCatalog.ts",
-          "line": 386,
-          "lineContent": "output: { itemId: \"door\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "resting",
-      "possibleEnums": [
-        "ActivityType"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/AnimatedGameEntity.ts",
-          "line": 607,
-          "lineContent": "const movingState = this.isEntityMoving() ? \"moving\" : \"resting\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/entities/GameEntity.ts",
-          "line": 84,
-          "lineContent": "state: \"resting\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "gather_water",
-      "possibleEnums": [
-        "GovernanceProjectType"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/core/ActionAnimationSystem.ts",
-          "line": 204,
-          "lineContent": "water: \"gather_water\","
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/core/ActionAnimationSystem.ts",
-          "line": 95,
-          "lineContent": "this.actionAnimations.set(\"gather_water\", {"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "medium",
-      "possibleEnums": [
-        "CrisisSeverity",
-        "DialoguePriority",
-        "AssetPriority",
-        "Difficulty"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/core/cards/helpers.ts",
-          "line": 90,
-          "lineContent": "if (needs.mentalHealth < 40) return \"medium\";"
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/services/SettingsService.ts",
-          "line": 102,
-          "lineContent": "presetName: \"medium\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "ok",
-      "possibleEnums": [
-        "ResponseStatus",
-        "StorageStatus"
-      ],
-      "count": 2,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/scenes/MainScene.ts",
-          "line": 617,
-          "lineContent": "level === \"ok\""
-        },
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/scenes/MainScene.ts",
-          "line": 610,
-          "lineContent": ": \"ok\";"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "disabled",
-      "possibleEnums": [
-        "EntityStatus",
-        "SystemStatus"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/core/MultiRateScheduler.ts",
-          "line": 538,
-          "lineContent": "`${enabled ? \"✅\" : \"❌\"} System \"${name}\" ${enabled ? \"enabled\" : \"disabled\"}`,"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "inspect",
-      "possibleEnums": [
-        "GoalType",
-        "GoalDomain",
-        "SearchType"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/ai/detectors/ExploreDetector.ts",
-          "line": 60,
-          "lineContent": "params: { explorationType: \"inspect\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "expired",
-      "possibleEnums": [
-        "ConflictResolution",
-        "TradeOfferStatus",
-        "InteractionStatus"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/conflict/ConflictResolutionSystem.ts",
-          "line": 144,
-          "lineContent": "outcome: \"expired\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "morning",
-      "possibleEnums": [
-        "WorkShift",
-        "TimeOfDayPhase"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/application/composition/gameLogic/GameTelemetryEmitter.ts",
-          "line": 553,
-          "lineContent": ": timeInfo.phase === \"morning\""
-        }
-      ]
-    },
-    {
-      "stringLiteral": "afternoon",
-      "possibleEnums": [
-        "WorkShift",
-        "TimeOfDayPhase"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/application/composition/gameLogic/GameTelemetryEmitter.ts",
-          "line": 557,
-          "lineContent": ": timeInfo.phase === \"afternoon\""
-        }
-      ]
-    },
-    {
-      "stringLiteral": "debug",
-      "possibleEnums": [
-        "EventChannel",
-        "LogLevel"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/application/initialization/main.ts",
-          "line": 38,
-          "lineContent": "const debugOverride = params.get(\"debug\") === \"1\";"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "trash_pile",
-      "possibleEnums": [
-        "WorldResourceType",
-        "TrashVariant"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/WorldResourceConfigs.ts",
-          "line": 105,
-          "lineContent": "type: \"trash_pile\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_shelter",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 21,
-          "lineContent": "spriteKey: \"agent_built_shelter\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_bedroom",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 31,
-          "lineContent": "spriteKey: \"agent_built_bedroom\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_living",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 41,
-          "lineContent": "spriteKey: \"agent_built_living\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_bathroom",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 50,
-          "lineContent": "spriteKey: \"agent_built_bathroom\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_kitchen",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 69,
-          "lineContent": "spriteKey: \"agent_built_kitchen\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_office",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 79,
-          "lineContent": "spriteKey: \"agent_built_office\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_medical",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 88,
-          "lineContent": "spriteKey: \"agent_built_medical\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_gym",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 98,
-          "lineContent": "spriteKey: \"agent_built_gym\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_library",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 117,
-          "lineContent": "spriteKey: \"agent_built_library\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_education",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 126,
-          "lineContent": "spriteKey: \"agent_built_education\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_training",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 135,
-          "lineContent": "spriteKey: \"agent_built_training\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_knowledge",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 144,
-          "lineContent": "spriteKey: \"agent_built_knowledge\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_social",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 153,
-          "lineContent": "spriteKey: \"agent_built_social\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_recreation",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 162,
-          "lineContent": "spriteKey: \"agent_built_recreation\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_entertainment",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 171,
-          "lineContent": "spriteKey: \"agent_built_entertainment\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_fun",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 180,
-          "lineContent": "spriteKey: \"agent_built_fun\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_play",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 189,
-          "lineContent": "spriteKey: \"agent_built_play\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_food",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 198,
-          "lineContent": "spriteKey: \"agent_built_food\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_water",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 208,
-          "lineContent": "spriteKey: \"agent_built_water\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_storage",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 218,
-          "lineContent": "spriteKey: \"agent_built_storage\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_market",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 228,
-          "lineContent": "spriteKey: \"agent_built_market\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_defense",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 238,
-          "lineContent": "spriteKey: \"agent_built_defense\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_security",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 248,
-          "lineContent": "spriteKey: \"agent_built_security\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_spiritual",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 257,
-          "lineContent": "spriteKey: \"agent_built_spiritual\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_energy",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 266,
-          "lineContent": "spriteKey: \"agent_built_energy\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_hygiene",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 275,
-          "lineContent": "spriteKey: \"agent_built_hygiene\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "agent_built_comfort",
-      "possibleEnums": [
-        "BuildingSpriteId",
-        "ZoneSpriteKey"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/config/ZoneProperties.ts",
-          "line": 284,
-          "lineContent": "spriteKey: \"agent_built_comfort\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "energy",
-      "possibleEnums": [
-        "NeedType",
-        "EntityStat",
-        "ZoneType"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 294,
-          "lineContent": "{ key: \"energy\", icon: \"⚡\", label: \"Energía\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "hunger",
-      "possibleEnums": [
-        "NeedType",
-        "EntityStat"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 296,
-          "lineContent": "{ key: \"hunger\", icon: \"🍖\", label: \"Hambre\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "thirst",
-      "possibleEnums": [
-        "NeedType",
-        "EntityStat"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/constants/WorldConfig.ts",
-          "line": 297,
-          "lineContent": "{ key: \"thirst\", icon: \"💧\", label: \"Sed\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "recreation",
-      "possibleEnums": [
-        "NeedType",
-        "ZoneType"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/constants/index.ts",
-          "line": 200,
-          "lineContent": "boredom: \"recreation\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "eat",
-      "possibleEnums": [
-        "ActionType"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/core/ActionAnimationSystem.ts",
-          "line": 130,
-          "lineContent": "this.actionAnimations.set(\"eat\", {"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "sleep",
-      "possibleEnums": [
-        "ActionType"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/core/ActionAnimationSystem.ts",
-          "line": 137,
-          "lineContent": "this.actionAnimations.set(\"sleep\", {"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "build",
-      "possibleEnums": [
-        "ActionType"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/core/ActionAnimationSystem.ts",
-          "line": 151,
-          "lineContent": "this.actionAnimations.set(\"build\", {"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "craft",
-      "possibleEnums": [
-        "GoalType",
-        "ActionType"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/core/ActionAnimationSystem.ts",
-          "line": 158,
-          "lineContent": "this.actionAnimations.set(\"craft\", {"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "decoration",
-      "possibleEnums": [
-        "AssetCategory",
-        "MapElementType"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/domain/systems/world/SimpleBiomeAssetLoader.ts",
-          "line": 271,
-          "lineContent": "type: \"decoration\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "ready",
-      "possibleEnums": [
-        "LoadingState",
-        "WorldGenerationStatus",
-        "SnapshotWorkerStatus",
-        "ZoneConstructionStatus",
-        "SystemStatus",
-        "WorkerMessageType"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientBuildingSystem.ts",
-          "line": 163,
-          "lineContent": "const status = metadata?.underConstruction ? \"construction\" : \"ready\";"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "legendary",
-      "possibleEnums": [
-        "ItemRarity",
-        "LegendTier"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/infrastructure/adapters/simulation/ClientLivingLegendsSystem.ts",
-          "line": 144,
-          "lineContent": "legend.legendTier === \"legendary\" ||"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "research",
-      "possibleEnums": [
-        "PanelName"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 296,
-          "lineContent": "if (activeTab === \"research\") {"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "active",
-      "possibleEnums": [
-        "MarketOrderStatus",
-        "EntityStatus",
-        "QuestStatus"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "../UnaCartaParaIsa/src/presentation/managers/ui/ReactUIUpdateService.ts",
-          "line": 1839,
-          "lineContent": "status: d.resolvedAt ? \"resolved\" : \"active\","
         }
       ]
     }

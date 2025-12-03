@@ -56,6 +56,16 @@ export enum ResourceInteractionType {
 }
 
 /**
+ * Enumeration of resource restore sources.
+ * Indicates where a restored resource came from.
+ */
+export enum RestoreSource {
+  WORLD = "world",
+  INVENTORY = "inventory",
+  STOCKPILE = "stockpile",
+}
+
+/**
  * Enumeration of world entity types for asset loading and rendering.
  * These represent visual entity types in the world.
  */

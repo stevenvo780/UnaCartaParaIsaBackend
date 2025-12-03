@@ -26,6 +26,9 @@ import { injectable, inject, optional } from "inversify";
 import { logger } from "@/infrastructure/utils/logger";
 import { TaskQueue } from "./TaskQueue";
 import { runAllDetectors } from "./detectors";
+import { LifeStage } from "@/shared/constants/AgentEnums";
+import { NeedType } from "@/shared/constants/AIEnums";
+import { ZoneType } from "@/shared/constants/ZoneEnums";
 import {
   handleGather,
   handleAttack,
@@ -55,7 +58,6 @@ import type { MovementSystem } from "../movement/MovementSystem";
 import type { WorldQueryService } from "../../world/WorldQueryService";
 import { SystemRegistry } from "../SystemRegistry";
 import { EventBus } from "@/domain/simulation/core/EventBus";
-import { NeedType } from "../../../../../shared/constants/AIEnums";
 import type { TimeSystem } from "../../core/TimeSystem";
 
 export interface AISystemDeps {
@@ -167,7 +169,7 @@ export class AISystem extends EventEmitter {
 
   private activeTask = new Map<string, AgentTask>();
   private lastUpdate = new Map<string, number>();
-  
+
   /** Memoria persistente por agente */
   private agentMemories = new Map<string, LegacyMemory>();
 
@@ -264,13 +266,15 @@ export class AISystem extends EventEmitter {
    * Registra una ubicación de recurso conocida.
    */
   public recordKnownResource(
-    agentId: string, 
-    resourceType: string, 
-    position: { x: number; y: number }
+    agentId: string,
+    resourceType: string,
+    position: { x: number; y: number },
   ): void {
     const memory = this.getAgentMemory(agentId);
     memory.knownResourceLocations.set(resourceType, position);
-    logger.debug(`[AISystem] ${agentId} recorded resource: ${resourceType} at (${position.x}, ${position.y})`);
+    logger.debug(
+      `[AISystem] ${agentId} recorded resource: ${resourceType} at (${position.x}, ${position.y})`,
+    );
   }
 
   /**
@@ -414,11 +418,8 @@ export class AISystem extends EventEmitter {
   public async update(deltaTimeMs: number): Promise<void> {
     const agents = this.gameState.agents ?? [];
 
-
     if (Math.random() < 0.04) {
-      logger.debug(
-        `[AISystem] update(): ${agents.length} agents`,
-      );
+      logger.debug(`[AISystem] update(): ${agents.length} agents`);
     }
 
     for (const agent of agents) {
@@ -543,15 +544,18 @@ export class AISystem extends EventEmitter {
     const position = this.agentRegistry?.getPosition(agentId);
     if (!position) return null;
 
-
     const memory = this.getAgentMemory(agentId);
     const memoryCallbacks: import("./types").MemoryCallbacks = {
-      recordVisitedZone: (zoneId: string) => this.recordVisitedZone(agentId, zoneId),
-      recordKnownResource: (resourceType: string, pos: { x: number; y: number }) => 
-        this.recordKnownResource(agentId, resourceType, pos),
+      recordVisitedZone: (zoneId: string) =>
+        this.recordVisitedZone(agentId, zoneId),
+      recordKnownResource: (
+        resourceType: string,
+        pos: { x: number; y: number },
+      ) => this.recordKnownResource(agentId, resourceType, pos),
       recordExploration: () => this.recordExploration(agentId),
       getVisitedZones: () => memory.visitedZones,
-      getKnownResourceLocations: () => memory.knownResourceLocations as Map<string, { x: number; y: number }>,
+      getKnownResourceLocations: () =>
+        memory.knownResourceLocations as Map<string, { x: number; y: number }>,
     };
 
     return {
@@ -621,9 +625,11 @@ export class AISystem extends EventEmitter {
         this.config.priorityBoost,
       );
     }
-    
+
     if (tasks.length > 0) {
-      logger.debug(`[AISystem] runDetectors ${agentId}: ${tasks.length} tasks enqueued, types=${tasks.map(t => t.type).join(",")}`);
+      logger.debug(
+        `[AISystem] runDetectors ${agentId}: ${tasks.length} tasks enqueued, types=${tasks.map((t) => t.type).join(",")}`,
+      );
     }
   }
 
@@ -640,7 +646,6 @@ export class AISystem extends EventEmitter {
     ) as DetectorContext["needs"];
 
     const spatialContext = this.buildSpatialContext(position, agentId);
-    
 
     const memory = this.getAgentMemory(agentId);
     const explorationContext: Record<string, unknown> = {
@@ -648,7 +653,6 @@ export class AISystem extends EventEmitter {
       lastExploreTime: memory.lastExploreTime,
       knownResources: memory.knownResourceLocations,
     };
-    
 
     if (this.gameState.zones && this.gameState.zones.length > 0) {
       explorationContext.allZones = this.gameState.zones.map((z) => ({
@@ -672,7 +676,7 @@ export class AISystem extends EventEmitter {
     // Find storage zone if inventory is heavy
     if (inventoryLoad > inventoryCapacity * 0.7 && this.gameState.zones) {
       const storageZone = this.gameState.zones.find(
-        (z) => z.type === "storage" || z.id.includes("storage"),
+        (z) => z.type === ZoneType.STORAGE || z.id.includes(ZoneType.STORAGE),
       );
       if (storageZone) {
         depositZoneId = storageZone.id;
@@ -729,7 +733,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-
     const nearestResource = wqs.findNearestResource(position.x, position.y, {
       excludeDepleted: true,
     });
@@ -741,7 +744,6 @@ export class AISystem extends EventEmitter {
         type: nearestResource.resourceType,
       };
     }
-
 
     if (Math.random() < 0.02) {
       logger.debug(
@@ -757,7 +759,7 @@ export class AISystem extends EventEmitter {
     );
     if (nearbyAgentsResult.length > 0) {
       const otherAgents = nearbyAgentsResult.filter((a) => a.id !== agentId);
-      
+
       result.nearbyAgents = otherAgents.map((a) => ({
         id: a.id,
         x: a.position.x,
@@ -771,7 +773,7 @@ export class AISystem extends EventEmitter {
         const potentialMate = otherAgents.find((a) => {
           const agent = a.agent;
           if (!agent || agent.sex === currentAgent.sex) return false;
-          if (agent.lifeStage !== "adult") return false;
+          if (agent.lifeStage !== LifeStage.ADULT) return false;
           const needs = agent.needs;
           if (!needs) return false;
           const wellness = (needs.hunger + needs.thirst + needs.energy) / 300;
@@ -785,7 +787,9 @@ export class AISystem extends EventEmitter {
             y: potentialMate.position.y,
           };
           if (Math.random() < 0.1) {
-            logger.debug(`💕 [SocialContext] ${agentId} found potentialMate: ${potentialMate.id}`);
+            logger.debug(
+              `💕 [SocialContext] ${agentId} found potentialMate: ${potentialMate.id}`,
+            );
           }
         }
 
@@ -803,15 +807,17 @@ export class AISystem extends EventEmitter {
               ? "thirst"
               : needs.hunger < 30
                 ? "hunger"
-                : "energy"
-            : "energy";
+                : NeedType.ENERGY
+            : NeedType.ENERGY;
           result.nearbyAgentInNeed = {
             id: agentInNeed.id,
             need: criticalNeed,
             targetZoneId: undefined, // Will be set by zone system if available
           };
           if (Math.random() < 0.1) {
-            logger.debug(`🆘 [SocialContext] ${agentId} found agentInNeed: ${agentInNeed.id} (${criticalNeed})`);
+            logger.debug(
+              `🆘 [SocialContext] ${agentId} found agentInNeed: ${agentInNeed.id} (${criticalNeed})`,
+            );
           }
         }
       }
@@ -936,20 +942,19 @@ export class AISystem extends EventEmitter {
   public getAIState(agentId: string): LegacyAIState {
     const task = this.activeTask.get(agentId);
     const pendingTasks = this.taskQueue.getTasks(agentId);
-    
 
     const taskData: Record<string, unknown> = {};
     if (task?.params) {
       if (task.params.needType) taskData.need = task.params.needType;
-      if (task.params.resourceType) taskData.resourceType = task.params.resourceType;
+      if (task.params.resourceType)
+        taskData.resourceType = task.params.resourceType;
       if (task.params.itemId) taskData.itemId = task.params.itemId;
       if (task.params.amount) taskData.amount = task.params.amount;
       if (task.params.reason) taskData.reason = task.params.reason;
     }
-    
 
     const memory = this.getAgentMemory(agentId);
-    
+
     return {
       currentGoal: task ?? null,
       pendingTasks,
@@ -979,7 +984,6 @@ export class AISystem extends EventEmitter {
    */
   private calculateIsWorkHours(): boolean {
     if (!this.timeSystem) {
-
       return true;
     }
 
@@ -989,7 +993,6 @@ export class AISystem extends EventEmitter {
 
       return hour >= 6 && hour < 18;
     } catch {
-
       return true;
     }
   }

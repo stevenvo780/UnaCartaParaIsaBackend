@@ -5,6 +5,8 @@
  * También detecta enums y miembros de enums que no se están utilizando.
  * Ignora valores por defecto del sistema como "number", "string", etc.
  * Genera un reporte detallado.
+ * 
+ * v2.0: Separación backend/frontend, exclusión de falsos positivos
  */
 
 import * as fs from 'fs';
@@ -14,6 +16,13 @@ import * as path from 'path';
 // Si estamos en el directorio raíz del proyecto, scripts está en ./scripts
 const projectRoot = process.cwd();
 const __dirname = path.join(projectRoot, 'scripts');
+
+// CLI args
+const args = process.argv.slice(2);
+const BACKEND_ONLY = args.includes('--backend-only');
+const FRONTEND_ONLY = args.includes('--frontend-only');
+const VERBOSE = args.includes('--verbose');
+const SHOW_ALL = args.includes('--all');
 
 // Directorios a analizar
 const BACKEND_SRC = path.join(__dirname, '../src');
@@ -28,6 +37,49 @@ const EXCLUDED_PATTERNS = [
   /dist\//,
   /coverage\//,
   /\.js$/,
+];
+
+// Patrones de archivos que contienen definiciones (catalogs, configs, IDs)
+// Estos archivos definen IDs como strings que no deberían convertirse a enums
+const CATALOG_DEFINITION_PATTERNS = [
+  /Catalog\.ts$/,
+  /Catalogs\.ts$/,
+  /Configs?\.ts$/,
+  /Registry\.ts$/,
+  /Definitions?\.ts$/,
+  /Data\.ts$/,
+  /Constants\.ts$/,
+  /Enums?\.ts$/,  // Archivos de definición de enums
+  /Seeds?\.ts$/,
+  /Fixtures?\.ts$/,
+  /Mocks?\.ts$/,
+];
+
+// Patrones de línea que indican definición de ID (no uso de enum)
+const ID_DEFINITION_PATTERNS = [
+  /^\s*id:\s*["']/,           // id: "valor"
+  /^\s*name:\s*["']/,         // name: "valor"
+  /^\s*_id:\s*["']/,          // _id: "valor"
+  /^\s*key:\s*["']/,          // key: "valor"
+  /^\s*code:\s*["']/,         // code: "valor"
+  /^\s*label:\s*["']/,        // label: "valor"
+  /^\s*title:\s*["']/,        // title: "valor"
+  /^\s*description:\s*["']/,  // description: "valor"
+  /^\s*\w+Id:\s*["']/,        // cualquierId: "valor"
+  /^\s*\[\s*["']/,            // ["key"]: valor (objeto indexado)
+  /export\s+const\s+\w+\s*=\s*["']/, // export const X = "valor"
+  /console\.(log|error|warn|info)\(/, // console.log, etc.
+  /throw\s+new\s+Error\(/,    // throw new Error("mensaje")
+  /Error\(/,                   // new Error("mensaje")
+  /\.emit\(/,                  // event.emit("evento")
+  /\.on\(/,                    // event.on("evento")
+  /\.once\(/,                  // event.once("evento")
+  /\.subscribe\(/,             // observable.subscribe
+  /logger\./,                  // logger.info, etc.
+  /LOG\./,                     // LOG.info, etc.
+  /^\s*\/\//,                  // Comentarios
+  /^\s*\*/,                    // Comentarios multilínea
+  /["'][^"']*\$\{/,            // Template strings con interpolación
 ];
 
 // Valores por defecto del sistema a ignorar
@@ -174,6 +226,9 @@ interface StringOccurrence {
   stringLiteral: string;
   lineContent: string;
   context: string;
+  source: 'backend' | 'frontend';
+  isFalsePositive: boolean;
+  falsePositiveReason?: string;
 }
 
 interface EnumValues {
@@ -267,8 +322,8 @@ function extractEnumValues(filePath: string): EnumValues[] {
 function findStringLiterals(
   filePath: string,
   content: string,
-): StringOccurrence[] {
-  const occurrences: StringOccurrence[] = [];
+): Omit<StringOccurrence, 'source' | 'isFalsePositive' | 'falsePositiveReason'>[] {
+  const occurrences: Omit<StringOccurrence, 'source' | 'isFalsePositive' | 'falsePositiveReason'>[] = [];
   const lines = content.split('\n');
 
   STRING_LITERAL_PATTERNS.forEach((pattern) => {
@@ -402,7 +457,7 @@ function countEnumUsages(
  * Función principal
  */
 function main() {
-  console.log('🔍 Validando strings y uso de Enums...\n');
+  console.log('🔍 Validando strings y uso de Enums (SOLO BACKEND)...\n');
 
   // Encontrar todos los enums
   console.log('📚 Extrayendo enums existentes...');
@@ -424,14 +479,14 @@ function main() {
 
   console.log(`   Total de valores únicos en enums: ${valueToEnums.size}\n`);
 
-  // Analizar archivos
-  console.log('🔎 Analizando código fuente...\n');
+  // Analizar archivos - SOLO BACKEND
+  console.log('🔎 Analizando código fuente (SOLO BACKEND)...\n');
 
   const backendFiles = getAllFiles(BACKEND_SRC);
-  const frontendFiles = getAllFiles(FRONTEND_SRC);
-  const allFiles = [...backendFiles, ...frontendFiles];
+  // NO incluir frontend: const frontendFiles = getAllFiles(FRONTEND_SRC);
+  const allFiles = [...backendFiles];
 
-  console.log(`   Analizando ${allFiles.length} archivos...\n`);
+  console.log(`   Analizando ${allFiles.length} archivos del backend...\n`);
 
   const missingEnumOccurrences: StringOccurrence[] = [];
 
@@ -439,13 +494,40 @@ function main() {
     try {
       const content = fs.readFileSync(filePath, 'utf8');
 
+      // Ignorar archivos de definición de catálogos/configs
+      const isCatalogFile = CATALOG_DEFINITION_PATTERNS.some(pattern => pattern.test(filePath));
+      
       // 1. Buscar strings literales que deberían ser enums
       const occurrences = findStringLiterals(filePath, content);
 
       occurrences.forEach((occ) => {
         // Solo nos importa si el string coincide EXACTAMENTE con un valor de algún Enum
         if (valueToEnums.has(occ.stringLiteral)) {
-          missingEnumOccurrences.push(occ);
+          // Verificar si es falso positivo
+          const lineContent = occ.lineContent;
+          const isIdDefinition = ID_DEFINITION_PATTERNS.some(pattern => pattern.test(lineContent));
+          
+          // Si es archivo de catálogo Y es definición de ID, es falso positivo
+          if (isCatalogFile && isIdDefinition) {
+            if (VERBOSE) {
+              console.log(`   ⚪ Ignorando (catálogo): "${occ.stringLiteral}" en ${path.basename(filePath)}:${occ.line}`);
+            }
+            return;
+          }
+          
+          // Si es definición de ID en cualquier archivo, probablemente es falso positivo
+          if (isIdDefinition) {
+            if (VERBOSE) {
+              console.log(`   ⚪ Ignorando (def ID): "${occ.stringLiteral}" en ${path.basename(filePath)}:${occ.line}`);
+            }
+            return;
+          }
+          
+          missingEnumOccurrences.push({
+            ...occ,
+            source: 'backend',
+            isFalsePositive: false,
+          });
         }
       });
 

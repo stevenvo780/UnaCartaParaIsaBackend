@@ -6,17 +6,17 @@ import {
 import { CraftingRecipe } from "@/shared/types/simulation/crafting";
 import { RecipesCatalog } from "../../../data/RecipesCatalog";
 import { BiomeRecipesCatalog } from "../../../data/BiomeRecipesCatalog";
+import { WeaponId } from "@/shared/constants/CraftingEnums";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../../config/Types";
 
 const BASIC_RECIPES = [
   "wood_to_plank",
   "make_rope",
   "cook_meat",
   "cook_fish",
-  "wooden_club",
+  WeaponId.WOODEN_CLUB,
 ];
-
-import { injectable, inject } from "inversify";
-import { TYPES } from "../../../../config/Types";
 
 @injectable()
 export class RecipeDiscoverySystem {

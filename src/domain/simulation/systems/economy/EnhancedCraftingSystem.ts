@@ -36,13 +36,14 @@ const BASIC_RECIPE_IDS = [
   "make_rope",
   "cook_meat",
   "cook_fish",
-  "wooden_club",
+  WeaponId.WOODEN_CLUB,
 ];
 
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../../config/Types";
-import { QuestStatus } from "../../../../shared/constants/QuestEnums";
 import { RecipeDiscoverySystem } from "./RecipeDiscoverySystem";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
+import { GoalDomain } from "@/shared/constants/AIEnums";
 
 @injectable()
 export class EnhancedCraftingSystem implements ICraftingSystem {
@@ -53,7 +54,10 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
    * Deprecated local state. Recipe knowledge is centralized in RecipeDiscoverySystem.
    * Kept only for backward compatibility if discovery system is unavailable in tests.
    */
-  private readonly knownRecipes = new Map<string, Map<string, AgentRecipeState>>();
+  private readonly knownRecipes = new Map<
+    string,
+    Map<string, AgentRecipeState>
+  >();
   private readonly activeJobs = new Map<string, CraftingJob>();
   private readonly equippedWeapons = new Map<string, WeaponId>();
 
@@ -316,7 +320,9 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
     );
   }
 
-  public getKnownRecipes(agentId: string): Map<string, AgentRecipeState> | undefined {
+  public getKnownRecipes(
+    agentId: string,
+  ): Map<string, AgentRecipeState> | undefined {
     if (this.recipeDiscovery) {
       const map = new Map<string, AgentRecipeState>();
       const known = this.recipeDiscovery.getAgentRecipes(agentId);
@@ -434,8 +440,6 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
     return map;
   }
 
-
-
   /**
    * Verifica si un agente puede craftear una receta.
    * @param agentId - ID del agente
@@ -466,21 +470,19 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
    * @param recipeId - ID de la receta a craftear
    */
   public requestCraft(agentId: string, recipeId: string): HandlerResult {
-
     if (!this.canCraft(agentId, recipeId)) {
       return {
-        status: QuestStatus.FAILED,
-        system: "crafting",
+        status: HandlerResultStatus.FAILED,
+        system: GoalDomain.CRAFTING,
         message: `Cannot craft ${recipeId}: missing ingredients or workstation`,
       };
     }
 
-
     const started = this.startCrafting(agentId, recipeId);
     if (!started) {
       return {
-        status: QuestStatus.FAILED,
-        system: "crafting",
+        status: HandlerResultStatus.FAILED,
+        system: GoalDomain.CRAFTING,
         message: `Failed to start crafting ${recipeId}`,
       };
     }
@@ -488,8 +490,8 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
     const job = this.activeJobs.get(agentId);
     if (job) {
       return {
-        status: "in_progress",
-        system: "crafting",
+        status: HandlerResultStatus.IN_PROGRESS,
+        system: GoalDomain.CRAFTING,
         message: `Started crafting ${recipeId}`,
         data: {
           agentId: job.agentId,
@@ -500,8 +502,8 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
     }
 
     return {
-      status: "completed",
-      system: "crafting",
+      status: HandlerResultStatus.COMPLETED,
+      system: GoalDomain.CRAFTING,
       message: `Instant crafting of ${recipeId} completed`,
     };
   }

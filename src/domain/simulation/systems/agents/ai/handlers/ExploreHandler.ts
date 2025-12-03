@@ -16,7 +16,7 @@ import {
   successResult,
 } from "../types";
 import { moveToPosition, isAtTarget } from "./MoveHandler";
-import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
  * @deprecated Use MovementSystem directly
@@ -44,8 +44,10 @@ export function handleExplore(
   _deps?: ExploreHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task, position, memory } = ctx;
-  
-  logger.debug(`[ExploreHandler] ${agentId}: exploring, target=${JSON.stringify(task.target)}, pos=(${Math.round(position.x)},${Math.round(position.y)})`);
+
+  logger.debug(
+    `[ExploreHandler] ${agentId}: exploring, target=${JSON.stringify(task.target)}, pos=(${Math.round(position.x)},${Math.round(position.y)})`,
+  );
 
   if (task.type !== TaskType.EXPLORE) {
     return errorResult("Wrong task type");
@@ -55,19 +57,16 @@ export function handleExplore(
     return errorResult("MovementSystem not available");
   }
 
-
   if (task.target?.position) {
     if (isAtTarget(position, task.target.position)) {
-
       if (memory && task.target.zoneId) {
         memory.recordVisitedZone(task.target.zoneId);
       }
-      
 
       if (memory) {
         memory.recordExploration();
       }
-      
+
       return successResult({
         explored: task.target.position,
         message: "Arrived at exploration target",
@@ -77,27 +76,25 @@ export function handleExplore(
     return moveToPosition(ctx, task.target.position);
   }
 
-
   if (task.target?.zoneId) {
     const result = systems.movement.requestMoveToZone(
       agentId,
       task.target.zoneId,
     );
 
-    if (result.status === "completed") {
-
+    if (result.status === HandlerResultStatus.COMPLETED) {
       if (memory) {
         memory.recordVisitedZone(task.target.zoneId);
         memory.recordExploration();
       }
-      
+
       return successResult({
         exploredZone: task.target.zoneId,
         message: "Arrived at exploration zone",
       });
     }
 
-    if (result.status === QuestStatus.FAILED) {
+    if (result.status === HandlerResultStatus.FAILED) {
       return errorResult(result.message ?? "Cannot reach exploration zone");
     }
 
@@ -106,26 +103,30 @@ export function handleExplore(
 
   // Si preferEdge=true, explorar hacia el borde del mapa (buscando agua)
   if (task.params?.preferEdge && systems.worldQuery) {
-    const edgeTarget = systems.worldQuery.getDirectionToNearestEdge(position.x, position.y);
-    
+    const edgeTarget = systems.worldQuery.getDirectionToNearestEdge(
+      position.x,
+      position.y,
+    );
+
     // Moverse hacia el borde pero no todo el camino de una vez
     const distanceToEdge = Math.sqrt(
-      Math.pow(edgeTarget.x - position.x, 2) + Math.pow(edgeTarget.y - position.y, 2)
+      Math.pow(edgeTarget.x - position.x, 2) +
+        Math.pow(edgeTarget.y - position.y, 2),
     );
-    
+
     // Avanzar máximo 150 unidades hacia el borde por tick
     const stepDistance = Math.min(150, distanceToEdge);
     const ratio = stepDistance / distanceToEdge;
-    
+
     const stepTarget = {
       x: position.x + (edgeTarget.x - position.x) * ratio,
       y: position.y + (edgeTarget.y - position.y) * ratio,
     };
-    
+
     logger.debug(
-      `[ExploreHandler] ${agentId}: searching water, moving toward ${edgeTarget.edgeName} edge (${Math.round(stepTarget.x)}, ${Math.round(stepTarget.y)})`
+      `[ExploreHandler] ${agentId}: searching water, moving toward ${edgeTarget.edgeName} edge (${Math.round(stepTarget.x)}, ${Math.round(stepTarget.y)})`,
     );
-    
+
     return moveToPosition(ctx, stepTarget);
   }
 
@@ -138,13 +139,13 @@ export function handleExplore(
  * Genera un punto de exploración inteligente.
  * Intenta moverse en direcciones variadas para cubrir más área.
  */
-function generateExploreTarget(
-  currentPosition: { x: number; y: number }
-): { x: number; y: number } {
-
+function generateExploreTarget(currentPosition: { x: number; y: number }): {
+  x: number;
+  y: number;
+} {
   const angle = Math.random() * Math.PI * 2;
   const distance = EXPLORE_RADIUS * (0.5 + Math.random() * 0.5);
-  
+
   return {
     x: currentPosition.x + Math.cos(angle) * distance,
     y: currentPosition.y + Math.sin(angle) * distance,

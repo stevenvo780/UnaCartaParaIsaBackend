@@ -21,8 +21,10 @@ import {
 } from "../types";
 import { logger } from "@/infrastructure/utils/logger";
 import { SIMULATION_CONSTANTS } from "@/shared/constants/SimulationConstants";
+import { ResourceType } from "@/shared/constants/ResourceEnums";
+import { NeedType } from "@/shared/constants/AIEnums";
 
-
+import { ZoneType } from "@/shared/constants/ZoneEnums";
 const THRESHOLDS = {
   CRITICAL: SIMULATION_CONSTANTS.NEEDS.CRITICAL_THRESHOLD,
   URGENT: SIMULATION_CONSTANTS.NEEDS.LOW_THRESHOLD,
@@ -30,7 +32,6 @@ const THRESHOLDS = {
 } as const;
 
 const PRIORITIES = SIMULATION_CONSTANTS.PRIORITIES;
-
 
 const NEEDS_TASK_TTL_MS = 15000;
 
@@ -40,21 +41,21 @@ const NEEDS_TASK_TTL_MS = 15000;
  */
 function getBestResourceTarget(
   ctx: DetectorContext,
-  resourceType: "food" | "water",
+  resourceType: ResourceType.FOOD | ResourceType.WATER,
 ): { entityId: string; position: { x: number; y: number } } | undefined {
-
-  if (resourceType === "food" && ctx.nearestFood) {
+  if (resourceType === ResourceType.FOOD && ctx.nearestFood) {
     return { entityId: ctx.nearestFood.id, position: ctx.nearestFood };
   }
-  if (resourceType === "water" && ctx.nearestWater) {
+  if (resourceType === ResourceType.WATER && ctx.nearestWater) {
     return { entityId: ctx.nearestWater.id, position: ctx.nearestWater };
   }
-
 
   if (ctx.knownResources) {
     const known = ctx.knownResources.get(resourceType);
     if (known) {
-      logger.debug(`[NeedsDetector] ${ctx.agentId}: usando recurso conocido ${resourceType} en (${known.x.toFixed(0)},${known.y.toFixed(0)})`);
+      logger.debug(
+        `[NeedsDetector] ${ctx.agentId}: usando recurso conocido ${resourceType} en (${known.x.toFixed(0)},${known.y.toFixed(0)})`,
+      );
       return { entityId: `memory_${resourceType}`, position: known };
     }
   }
@@ -67,7 +68,6 @@ function getBestResourceTarget(
  * Usa constantes centralizadas de SIMULATION_CONSTANTS.
  */
 export function detectNeeds(ctx: DetectorContext): Task[] {
-
   if (!ctx.needs) {
     return [];
   }
@@ -76,7 +76,9 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
 
   // Log periódico de necesidades
   if (Math.random() < 0.02) {
-    logger.debug(`[NeedsDetector] ${ctx.agentId}: h=${ctx.needs.hunger?.toFixed(0)}, t=${ctx.needs.thirst?.toFixed(0)}, e=${ctx.needs.energy?.toFixed(0)}`);
+    logger.debug(
+      `[NeedsDetector] ${ctx.agentId}: h=${ctx.needs.hunger?.toFixed(0)}, t=${ctx.needs.thirst?.toFixed(0)}, e=${ctx.needs.energy?.toFixed(0)}`,
+    );
   }
 
   const calcPriority = (v: number) => {
@@ -91,28 +93,26 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     return PRIORITIES.LOW;
   };
 
-
   const hunger = ctx.needs.hunger ?? 100;
   if (hunger < THRESHOLDS.LOW) {
-    const foodTarget = getBestResourceTarget(ctx, "food");
+    const foodTarget = getBestResourceTarget(ctx, ResourceType.FOOD);
     tasks.push(
       createTask({
         agentId: ctx.agentId,
         type: TaskType.SATISFY_NEED,
         priority: calcPriority(hunger),
         target: foodTarget,
-        params: { needType: "hunger", resourceType: "food" },
+        params: { needType: NeedType.HUNGER, resourceType: ResourceType.FOOD },
         source: "needs:hunger",
         ttlMs: NEEDS_TASK_TTL_MS,
       }),
     );
   }
 
-
   const thirst = ctx.needs.thirst ?? 100;
   if (thirst < THRESHOLDS.LOW) {
-    const waterTarget = getBestResourceTarget(ctx, "water");
-    
+    const waterTarget = getBestResourceTarget(ctx, ResourceType.WATER);
+
     if (waterTarget) {
       // Agua encontrada cerca - ir a beber
       tasks.push(
@@ -121,7 +121,10 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
           type: TaskType.SATISFY_NEED,
           priority: calcPriority(thirst),
           target: waterTarget,
-          params: { needType: "thirst", resourceType: "water" },
+          params: {
+            needType: NeedType.THIRST,
+            resourceType: ResourceType.WATER,
+          },
           source: "needs:thirst",
           ttlMs: NEEDS_TASK_TTL_MS,
         }),
@@ -134,7 +137,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
           agentId: ctx.agentId,
           type: TaskType.EXPLORE,
           priority: calcPriority(thirst),
-          params: { 
+          params: {
             reason: "searching_water",
             preferEdge: true, // Indicador para ExploreHandler de ir hacia el borde
           },
@@ -145,7 +148,6 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     }
   }
 
-
   const energy = ctx.needs.energy ?? 100;
   if (energy < THRESHOLDS.LOW) {
     tasks.push(
@@ -153,13 +155,12 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
         agentId: ctx.agentId,
         type: TaskType.REST,
         priority: calcPriority(energy),
-        params: { needType: "energy", duration: 5000 },
+        params: { needType: NeedType.ENERGY, duration: 5000 },
         source: "needs:energy",
         ttlMs: NEEDS_TASK_TTL_MS,
       }),
     );
   }
-
 
   const social = ctx.needs.social ?? 100;
   if (social < THRESHOLDS.LOW && ctx.nearbyAgents?.length) {
@@ -170,13 +171,12 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
         type: TaskType.SOCIALIZE,
         priority: calcSocialPriority(social),
         target: { entityId: target.id, position: target },
-        params: { needType: "social" },
+        params: { needType: NeedType.SOCIAL },
         source: "needs:social",
         ttlMs: NEEDS_TASK_TTL_MS,
       }),
     );
   }
-
 
   const fun = ctx.needs.fun ?? 100;
   if (fun < THRESHOLDS.LOW && ctx.nearbyAgents?.length) {
@@ -187,13 +187,12 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
         type: TaskType.SOCIALIZE,
         priority: calcSocialPriority(fun) * 0.9,
         target: { entityId: target.id, position: target },
-        params: { needType: "fun", action: "play" },
+        params: { needType: NeedType.FUN, action: ZoneType.PLAY },
         source: "needs:fun",
         ttlMs: NEEDS_TASK_TTL_MS,
       }),
     );
   }
-
 
   const mentalHealth = ctx.needs.mentalHealth ?? 100;
   if (mentalHealth < THRESHOLDS.LOW) {
@@ -209,11 +208,10 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     );
   }
 
-
   if (tasks.length > 0 && Math.random() < 0.1) {
     logger.debug(
       `[NeedsDetector] ${ctx.agentId}: ${tasks.length} tasks generated. ` +
-      `Needs: h=${Math.round(hunger)}, t=${Math.round(thirst)}, e=${Math.round(energy)}`
+        `Needs: h=${Math.round(hunger)}, t=${Math.round(thirst)}, e=${Math.round(energy)}`,
     );
   }
 

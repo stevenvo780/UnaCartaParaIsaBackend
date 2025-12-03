@@ -17,6 +17,7 @@ import {
 } from "../types";
 import { logger } from "@/infrastructure/utils/logger";
 
+import { GoalType } from "@/shared/constants/AIEnums";
 /** Tiempo mínimo entre exploraciones (ms) */
 const EXPLORE_COOLDOWN = 60000;
 /** Tiempo largo sin explorar aumenta urgencia */
@@ -44,9 +45,7 @@ export function detectExplore(ctx: DetectorContext): Task[] {
   }
 
   if (tasks.length > 0 && Math.random() < 0.02) {
-    logger.debug(
-      `🧭 [ExploreDetector] ${ctx.agentId}: ${tasks.length} tasks`,
-    );
+    logger.debug(`🧭 [ExploreDetector] ${ctx.agentId}: ${tasks.length} tasks`);
   }
 
   return tasks;
@@ -65,7 +64,7 @@ function detectInspect(ctx: DetectorContext): Task | null {
       entityId: ctx.nearbyInspectable.id,
       position: ctx.nearbyInspectable.position,
     },
-    params: { explorationType: "inspect" },
+    params: { explorationType: GoalType.INSPECT },
     source: "detector:explore:inspect",
   });
 }
@@ -84,9 +83,7 @@ function detectCuriosityExplore(ctx: DetectorContext): Task | null {
     priority += 0.15;
   }
 
-
   const unexploredZone = findUnexploredZone(ctx);
-  
 
   if (unexploredZone) {
     priority += 0.1;
@@ -96,10 +93,12 @@ function detectCuriosityExplore(ctx: DetectorContext): Task | null {
     agentId: ctx.agentId,
     type: TaskType.EXPLORE,
     priority: Math.min(TASK_PRIORITIES.NORMAL, priority),
-    target: unexploredZone ? {
-      zoneId: unexploredZone.id,
-      position: { x: unexploredZone.x, y: unexploredZone.y },
-    } : undefined,
+    target: unexploredZone
+      ? {
+          zoneId: unexploredZone.id,
+          position: { x: unexploredZone.x, y: unexploredZone.y },
+        }
+      : undefined,
     params: {
       explorationType: "curiosity",
       reason: unexploredZone ? "discover_new_area" : "cognitive_drive",
@@ -109,7 +108,6 @@ function detectCuriosityExplore(ctx: DetectorContext): Task | null {
 }
 
 function detectResourceScout(ctx: DetectorContext): Task | null {
-
   const lastExplore = ctx.lastExploreTime ?? 0;
   const timeSinceExplore = ctx.now - lastExplore;
   if (timeSinceExplore < EXPLORE_COOLDOWN) return null;
@@ -122,17 +120,18 @@ function detectResourceScout(ctx: DetectorContext): Task | null {
 
   const diligence = ctx.personality?.diligence ?? 0.5;
 
-
   const unexploredZone = findUnexploredZone(ctx);
 
   return createTask({
     agentId: ctx.agentId,
     type: TaskType.EXPLORE,
     priority: TASK_PRIORITIES.LOW + diligence * 0.15,
-    target: unexploredZone ? {
-      zoneId: unexploredZone.id,
-      position: { x: unexploredZone.x, y: unexploredZone.y },
-    } : undefined,
+    target: unexploredZone
+      ? {
+          zoneId: unexploredZone.id,
+          position: { x: unexploredZone.x, y: unexploredZone.y },
+        }
+      : undefined,
     params: {
       explorationType: "resource_scout",
       targetResource: "any",
@@ -145,21 +144,20 @@ function detectResourceScout(ctx: DetectorContext): Task | null {
  * Encuentra una zona no visitada para explorar.
  * Prioriza zonas cercanas que no estén en visitedZones.
  */
-function findUnexploredZone(ctx: DetectorContext): { id: string; x: number; y: number } | null {
+function findUnexploredZone(
+  ctx: DetectorContext,
+): { id: string; x: number; y: number } | null {
   const allZones = ctx.allZones;
   const visitedZones = ctx.visitedZones;
-  
+
   if (!allZones || allZones.length === 0) return null;
-  
 
-  const unvisited = allZones.filter(z => !visitedZones?.has(z.id));
-  
+  const unvisited = allZones.filter((z) => !visitedZones?.has(z.id));
+
   if (unvisited.length === 0) {
-
     const randomIndex = Math.floor(Math.random() * allZones.length);
     return allZones[randomIndex];
   }
-  
 
   const agentPos = ctx.position;
   unvisited.sort((a, b) => {
@@ -167,7 +165,6 @@ function findUnexploredZone(ctx: DetectorContext): { id: string; x: number; y: n
     const distB = Math.hypot(b.x - agentPos.x, b.y - agentPos.y);
     return distA - distB;
   });
-  
 
   return unvisited[0];
 }

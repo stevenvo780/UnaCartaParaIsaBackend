@@ -1,6 +1,7 @@
 import type { AnimalConfig } from "@/shared/types/simulation/animals";
 import { AnimalType } from "../../../../../shared/constants/AnimalEnums";
 
+import { BiomeType } from "@/shared/constants/BiomeEnums";
 export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
   rabbit: {
     type: AnimalType.RABBIT,
@@ -31,7 +32,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     waterConsumptionRate: 3,
 
     spawnProbability: 0.25,
-    suitableBiomes: ["grassland", "forest", "mystical", "village"],
+    suitableBiomes: ["grassland", "forest", BiomeType.MYSTICAL, "village"],
     groupSize: { min: 3, max: 7 },
     minDistanceBetweenGroups: 200,
   },
@@ -65,7 +66,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     waterConsumptionRate: 4,
 
     spawnProbability: 0.15,
-    suitableBiomes: ["forest", "mystical", "village"],
+    suitableBiomes: ["forest", BiomeType.MYSTICAL, "village"],
     groupSize: { min: 2, max: 4 },
     minDistanceBetweenGroups: 300,
   },
@@ -133,7 +134,13 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     waterConsumptionRate: 2,
 
     spawnProbability: 0.25,
-    suitableBiomes: ["forest", "mystical", "grassland", "wetland", "village"],
+    suitableBiomes: [
+      "forest",
+      BiomeType.MYSTICAL,
+      "grassland",
+      "wetland",
+      "village",
+    ],
     groupSize: { min: 3, max: 8 },
     minDistanceBetweenGroups: 200,
   },
@@ -208,7 +215,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     attackDamage: 20,
 
     spawnProbability: 0.05,
-    suitableBiomes: ["forest", "mystical"],
+    suitableBiomes: ["forest", BiomeType.MYSTICAL],
     groupSize: { min: 1, max: 3 },
     minDistanceBetweenGroups: 500,
   },

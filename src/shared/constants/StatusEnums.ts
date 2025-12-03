@@ -61,6 +61,22 @@ export enum InteractionStatus {
 export type InteractionStatusValue = `${InteractionStatus}`;
 
 /**
+ * Enumeration of handler result status values for ECS handler compatibility.
+ * Used across all systems that return handler results.
+ */
+export enum HandlerResultStatus {
+  DELEGATED = "delegated",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  IN_PROGRESS = "in_progress",
+}
+
+/**
+ * Type representing all possible handler result status values.
+ */
+export type HandlerResultStatusValue = `${HandlerResultStatus}`;
+
+/**
  * Enumeration of world generation status values.
  */
 export enum WorldGenerationStatus {
@@ -132,6 +148,12 @@ export const ALL_SNAPSHOT_WORKER_STATUSES: readonly SnapshotWorkerStatus[] =
   Object.values(SnapshotWorkerStatus) as SnapshotWorkerStatus[];
 
 /**
+ * Array of all handler result statuses for iteration.
+ */
+export const ALL_HANDLER_RESULT_STATUSES: readonly HandlerResultStatus[] =
+  Object.values(HandlerResultStatus) as HandlerResultStatus[];
+
+/**
  * Array of all zone construction statuses for iteration.
  */
 export const ALL_ZONE_CONSTRUCTION_STATUSES: readonly ZoneConstructionStatus[] =
@@ -188,5 +210,16 @@ export function isZoneConstructionStatus(
 ): value is ZoneConstructionStatus {
   return Object.values(ZoneConstructionStatus).includes(
     value as ZoneConstructionStatus,
+  );
+}
+
+/**
+ * Type guard to check if a string is a valid HandlerResultStatus.
+ */
+export function isHandlerResultStatus(
+  value: string,
+): value is HandlerResultStatus {
+  return Object.values(HandlerResultStatus).includes(
+    value as HandlerResultStatus,
   );
 }

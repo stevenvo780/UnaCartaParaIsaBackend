@@ -22,17 +22,20 @@ import { getFrameTime } from "../../../../../shared/FrameTime";
 import { performance } from "perf_hooks";
 import { performanceMonitor } from "../../../core/PerformanceMonitor";
 import { FoodCatalog } from "../../../../data/FoodCatalog";
-import { ResourceType } from "../../../../../shared/constants/ResourceEnums";
+import {
+  ResourceType,
+  RestoreSource,
+} from "../../../../../shared/constants/ResourceEnums";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
-import { NeedType } from "../../../../../shared/constants/AIEnums";
+import { NeedType, ActionType } from "../../../../../shared/constants/AIEnums";
 import { LifeStage } from "../../../../../shared/constants/AgentEnums";
-import { ActionType } from "../../../../../shared/constants/AIEnums";
 import { EntityType } from "../../../../../shared/constants/EntityEnums";
 import { FoodCategory } from "../../../../../shared/constants/FoodEnums";
 import type { FoodItem } from "@/shared/types/simulation/food";
-import { QuestStatus } from "../../../../../shared/constants/QuestEnums";
 import { SIMULATION_CONSTANTS } from "../../../../../shared/constants/SimulationConstants";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
+import { GoalType } from "@/shared/constants/AIEnums";
 /**
  * System for managing entity needs (hunger, thirst, energy, hygiene, social, fun, mental health).
  *
@@ -306,13 +309,12 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     const dtSeconds = (now - this.lastUpdate) / 1000;
     this.lastUpdate = now;
 
-
     if (Math.random() < 0.03) {
       const firstEntry = this.entityNeeds.entries().next().value;
       if (firstEntry) {
         const [agentId, needs] = firstEntry;
         logger.debug(
-          `[NeedsSystem] ${agentId}: h=${Math.round(needs.hunger)}, t=${Math.round(needs.thirst)}, e=${Math.round(needs.energy)}, dt=${dtSeconds.toFixed(2)}s, size=${this.entityNeeds.size}`
+          `[NeedsSystem] ${agentId}: h=${Math.round(needs.hunger)}, t=${Math.round(needs.thirst)}, e=${Math.round(needs.energy)}, dt=${dtSeconds.toFixed(2)}s, size=${this.entityNeeds.size}`,
         );
       }
     }
@@ -332,7 +334,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       if (firstAgent) {
         const [agentId, needs] = firstAgent;
         logger.debug(
-          `[NeedsSystem] Agent ${agentId}: h=${Math.round(needs.hunger)}, t=${Math.round(needs.thirst)}, e=${Math.round(needs.energy)}, dt=${dtSeconds.toFixed(2)}s`
+          `[NeedsSystem] Agent ${agentId}: h=${Math.round(needs.hunger)}, t=${Math.round(needs.thirst)}, e=${Math.round(needs.energy)}, dt=${dtSeconds.toFixed(2)}s`,
         );
       }
     }
@@ -409,12 +411,13 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
 
     this.batchProcessor.syncToMap(this.entityNeeds);
 
-
     if (this._tickCounter % 10 === 0 && this.entityNeeds.size > 0) {
       const first = Array.from(this.entityNeeds.entries())[0];
       if (first) {
         const [id, n] = first;
-        logger.debug(`[NeedsSystem] ${id}: h=${n.hunger.toFixed(0)}, t=${n.thirst.toFixed(0)}, e=${n.energy.toFixed(0)}`);
+        logger.debug(
+          `[NeedsSystem] ${id}: h=${n.hunger.toFixed(0)}, t=${n.thirst.toFixed(0)}, e=${n.energy.toFixed(0)}`,
+        );
       }
     }
 
@@ -460,7 +463,6 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     const nearbyZones = position
       ? this.findZonesNearPosition(position, 50)
       : [];
-
 
     const HUNGER_THRESHOLD = SIMULATION_CONSTANTS.NEEDS.SATISFIED_THRESHOLD;
     const HUNGER_CRITICAL = SIMULATION_CONSTANTS.NEEDS.LOW_THRESHOLD;
@@ -1342,10 +1344,6 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     return FoodCatalog.getFoodsByCategory(category);
   }
 
-
-
-
-
   /**
    * System name for ECS registration
    */
@@ -1364,7 +1362,11 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     agentId: string,
     itemIdOrNeedType: string,
   ): {
-    status: "delegated" | "completed" | "failed" | "in_progress";
+    status:
+      | HandlerResultStatus.DELEGATED
+      | HandlerResultStatus.COMPLETED
+      | HandlerResultStatus.FAILED
+      | HandlerResultStatus.IN_PROGRESS;
     system: string;
     message?: string;
     data?: unknown;
@@ -1373,14 +1375,13 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
 
     if (!needs) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: "needs",
         message: `No needs data for agent ${agentId}`,
       };
     }
 
     const needType = itemIdOrNeedType.toLowerCase();
-
 
     if (this.inventorySystem) {
       const inventory = this.inventorySystem.getAgentInventory(agentId);
@@ -1390,7 +1391,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
           this.inventorySystem.removeFromAgent(agentId, ResourceType.FOOD, 1);
           this.satisfyNeed(agentId, NeedType.HUNGER, 25);
           return {
-            status: "completed",
+            status: HandlerResultStatus.COMPLETED,
             system: "needs",
             message: "Consumed food from inventory",
             data: { needType: NeedType.HUNGER, restored: 25 },
@@ -1403,7 +1404,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
           this.inventorySystem.removeFromAgent(agentId, ResourceType.WATER, 1);
           this.satisfyNeed(agentId, NeedType.THIRST, 25);
           return {
-            status: "completed",
+            status: HandlerResultStatus.COMPLETED,
             system: "needs",
             message: "Consumed water from inventory",
             data: { needType: NeedType.THIRST, restored: 25 },
@@ -1411,35 +1412,41 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
         }
       }
 
-
       const gatherResult = this.tryGatherFromNearbyResource(agentId, needType);
       if (gatherResult.gathered) {
-
         if (needType === NeedType.HUNGER || needType === ResourceType.FOOD) {
           this.inventorySystem.removeFromAgent(agentId, ResourceType.FOOD, 1);
           this.satisfyNeed(agentId, NeedType.HUNGER, 25);
           return {
-            status: "completed",
+            status: HandlerResultStatus.COMPLETED,
             system: "needs",
             message: `Gathered and consumed food from ${gatherResult.resourceId}`,
-            data: { needType: NeedType.HUNGER, restored: 25, source: "world" },
+            data: {
+              needType: NeedType.HUNGER,
+              restored: 25,
+              source: RestoreSource.WORLD,
+            },
           };
         }
         if (needType === NeedType.THIRST || needType === ResourceType.WATER) {
           this.inventorySystem.removeFromAgent(agentId, ResourceType.WATER, 1);
           this.satisfyNeed(agentId, NeedType.THIRST, 25);
           return {
-            status: "completed",
+            status: HandlerResultStatus.COMPLETED,
             system: "needs",
             message: `Gathered and consumed water from ${gatherResult.resourceId}`,
-            data: { needType: NeedType.THIRST, restored: 25, source: "world" },
+            data: {
+              needType: NeedType.THIRST,
+              restored: 25,
+              source: RestoreSource.WORLD,
+            },
           };
         }
       }
     }
 
     return {
-      status: QuestStatus.FAILED,
+      status: HandlerResultStatus.FAILED,
       system: "needs",
       message: `No consumable available for ${itemIdOrNeedType}`,
     };
@@ -1448,7 +1455,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
   /**
    * Try to gather resources from a nearby world resource OR water tile.
    * Used when agent inventory is empty but agent is near a resource source.
-   * 
+   *
    * For water (thirst): Uses WorldQueryService to find OCEAN tiles directly.
    * The agent drinks from the terrain tile - no resource object needed.
    */
@@ -1480,14 +1487,14 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
 
         if (waterTiles.length > 0) {
           const nearestTile = waterTiles[0]; // Already sorted by distance
-          
+
           // Consume water from tile - may convert OCEAN to DIRT if depleted
           if (this.terrainSystem) {
             const consumed = this.terrainSystem.consumeWaterFromTile(
               nearestTile.tileX,
               nearestTile.tileY,
             );
-            
+
             if (consumed > 0) {
               logger.info(
                 `[NeedsSystem] 💧 Agent ${agentId} drinking from OCEAN tile at (${nearestTile.worldX}, ${nearestTile.worldY}), consumed ${consumed} water`,
@@ -1495,9 +1502,16 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
 
               // Add water to inventory then consume it
               if (this.inventorySystem) {
-                this.inventorySystem.addResource(agentId, ResourceType.WATER, 1);
+                this.inventorySystem.addResource(
+                  agentId,
+                  ResourceType.WATER,
+                  1,
+                );
               }
-              return { gathered: true, resourceId: `ocean_tile_${nearestTile.tileX}_${nearestTile.tileY}` };
+              return {
+                gathered: true,
+                resourceId: `ocean_tile_${nearestTile.tileX}_${nearestTile.tileY}`,
+              };
             }
           } else {
             // Fallback without TerrainSystem - just drink without consuming tile
@@ -1508,18 +1522,26 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
             if (this.inventorySystem) {
               this.inventorySystem.addResource(agentId, ResourceType.WATER, 1);
             }
-            return { gathered: true, resourceId: `ocean_tile_${nearestTile.tileX}_${nearestTile.tileY}` };
+            return {
+              gathered: true,
+              resourceId: `ocean_tile_${nearestTile.tileX}_${nearestTile.tileY}`,
+            };
           }
         }
       }
 
       // Fallback: check for water resources if WorldQueryService unavailable
       if (this.gameState?.worldResources && this.inventorySystem) {
-        const targetTypes = ["water_source", "water", "water_fresh"];
+        const targetTypes = ["water_source", ResourceType.WATER, "water_fresh"];
         let nearestResource: { id: string; distance: number } | null = null;
 
-        for (const [resourceId, resource] of Object.entries(this.gameState.worldResources)) {
-          if (!resource || !targetTypes.includes(resource.type?.toLowerCase() || "")) {
+        for (const [resourceId, resource] of Object.entries(
+          this.gameState.worldResources,
+        )) {
+          if (
+            !resource ||
+            !targetTypes.includes(resource.type?.toLowerCase() || "")
+          ) {
             continue;
           }
 
@@ -1528,15 +1550,24 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
           const dy = resPos.y - agentPos.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
-          if (distance <= GATHER_RANGE && (!nearestResource || distance < nearestResource.distance)) {
+          if (
+            distance <= GATHER_RANGE &&
+            (!nearestResource || distance < nearestResource.distance)
+          ) {
             nearestResource = { id: resourceId, distance };
           }
         }
 
         if (nearestResource) {
-          const gatherResult = this.inventorySystem.requestGather(agentId, nearestResource.id, 1);
-          if (gatherResult.status === "completed") {
-            logger.info(`[NeedsSystem] 🚰 Agent ${agentId} gathered water from ${nearestResource.id}`);
+          const gatherResult = this.inventorySystem.requestGather(
+            agentId,
+            nearestResource.id,
+            1,
+          );
+          if (gatherResult.status === HandlerResultStatus.COMPLETED) {
+            logger.info(
+              `[NeedsSystem] 🚰 Agent ${agentId} gathered water from ${nearestResource.id}`,
+            );
             return { gathered: true, resourceId: nearestResource.id };
           }
         }
@@ -1553,8 +1584,13 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     const targetTypes = ["food_source", "berry_bush", "food"];
     let nearestResource: { id: string; distance: number } | null = null;
 
-    for (const [resourceId, resource] of Object.entries(this.gameState.worldResources)) {
-      if (!resource || !targetTypes.includes(resource.type?.toLowerCase() || "")) {
+    for (const [resourceId, resource] of Object.entries(
+      this.gameState.worldResources,
+    )) {
+      if (
+        !resource ||
+        !targetTypes.includes(resource.type?.toLowerCase() || "")
+      ) {
         continue;
       }
 
@@ -1571,18 +1607,24 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     }
 
     if (nearestResource) {
-      logger.debug(`[NeedsSystem] ${agentId} found resource ${nearestResource.id} at distance ${nearestResource.distance.toFixed(1)}, attempting gather`);
+      logger.debug(
+        `[NeedsSystem] ${agentId} found resource ${nearestResource.id} at distance ${nearestResource.distance.toFixed(1)}, attempting gather`,
+      );
       const gatherResult = this.inventorySystem.requestGather(
         agentId,
         nearestResource.id,
         1,
       );
 
-      if (gatherResult.status === "completed") {
-        logger.info(`[NeedsSystem] 🍎 Agent ${agentId} gathered food from ${nearestResource.id}`);
+      if (gatherResult.status === HandlerResultStatus.COMPLETED) {
+        logger.info(
+          `[NeedsSystem] 🍎 Agent ${agentId} gathered food from ${nearestResource.id}`,
+        );
         return { gathered: true, resourceId: nearestResource.id };
       } else {
-        logger.debug(`[NeedsSystem] ${agentId} gather failed: ${gatherResult.status} - ${gatherResult.message}`);
+        logger.debug(
+          `[NeedsSystem] ${agentId} gather failed: ${gatherResult.status} - ${gatherResult.message}`,
+        );
       }
     }
 
@@ -1594,7 +1636,11 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
    * Returns HandlerResult for ECS handler compatibility.
    */
   public requestRest(agentId: string): {
-    status: "delegated" | "completed" | "failed" | "in_progress";
+    status:
+      | HandlerResultStatus.DELEGATED
+      | HandlerResultStatus.COMPLETED
+      | HandlerResultStatus.FAILED
+      | HandlerResultStatus.IN_PROGRESS;
     system: string;
     message?: string;
     data?: unknown;
@@ -1603,21 +1649,19 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
 
     if (!needs) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: "needs",
         message: `No needs data for agent ${agentId}`,
       };
     }
 
-
     const energyBefore = needs.energy;
     this.satisfyNeed(agentId, NeedType.ENERGY, 10);
     const energyAfter = needs.energy;
 
-
     if (energyAfter >= 80) {
       return {
-        status: "completed",
+        status: HandlerResultStatus.COMPLETED,
         system: "needs",
         message: "Fully rested",
         data: { energy: energyAfter },
@@ -1625,7 +1669,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     }
 
     return {
-      status: "in_progress",
+      status: HandlerResultStatus.IN_PROGRESS,
       system: "needs",
       message: "Resting",
       data: {
@@ -1645,7 +1689,11 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     need: string,
     delta: number,
   ): {
-    status: "delegated" | "completed" | "failed" | "in_progress";
+    status:
+      | HandlerResultStatus.DELEGATED
+      | HandlerResultStatus.COMPLETED
+      | HandlerResultStatus.FAILED
+      | HandlerResultStatus.IN_PROGRESS;
     system: string;
     message?: string;
     data?: unknown;
@@ -1655,7 +1703,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     if (success) {
       const needs = this.entityNeeds.get(agentId);
       return {
-        status: "completed",
+        status: HandlerResultStatus.COMPLETED,
         system: "needs",
         message: `Applied ${delta > 0 ? "+" : ""}${delta} to ${need}`,
         data: {
@@ -1667,15 +1715,11 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     }
 
     return {
-      status: QuestStatus.FAILED,
+      status: HandlerResultStatus.FAILED,
       system: "needs",
       message: `Failed to apply need change for ${agentId}`,
     };
   }
-
-
-
-
 
   private static readonly THRESHOLDS = {
     CRITICAL: 15,
@@ -1725,11 +1769,10 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       source: string;
     }> = [];
 
-
     if (needs.hunger < NeedsSystem.THRESHOLDS.LOW) {
       const priority = this.calculatePriority(needs.hunger);
       tasks.push({
-        type: "satisfy_need",
+        type: GoalType.SATISFY_NEED,
         priority,
         target: spatialContext?.nearestFood
           ? {
@@ -1740,16 +1783,15 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
               },
             }
           : undefined,
-        params: { needType: NeedType.HUNGER, resourceType: "food" },
+        params: { needType: NeedType.HUNGER, resourceType: ResourceType.FOOD },
         source: "needs:hunger",
       });
     }
 
-
     if (needs.thirst < NeedsSystem.THRESHOLDS.LOW) {
       const priority = this.calculatePriority(needs.thirst);
       tasks.push({
-        type: "satisfy_need",
+        type: GoalType.SATISFY_NEED,
         priority,
         target: spatialContext?.nearestWater
           ? {
@@ -1760,22 +1802,20 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
               },
             }
           : undefined,
-        params: { needType: NeedType.THIRST, resourceType: "water" },
+        params: { needType: NeedType.THIRST, resourceType: ResourceType.WATER },
         source: "needs:thirst",
       });
     }
 
-
     if (needs.energy < NeedsSystem.THRESHOLDS.LOW) {
       const priority = this.calculatePriority(needs.energy);
       tasks.push({
-        type: "rest",
+        type: ZoneType.REST,
         priority,
         params: { needType: NeedType.ENERGY, duration: 5000 },
         source: "needs:energy",
       });
     }
-
 
     if (
       needs.social < NeedsSystem.THRESHOLDS.LOW &&
@@ -1783,7 +1823,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     ) {
       const target = spatialContext.nearbyAgents[0];
       tasks.push({
-        type: "socialize",
+        type: ActionType.SOCIALIZE,
         priority: this.calculateSocialPriority(needs.social),
         target: { entityId: target.id, position: { x: target.x, y: target.y } },
         params: { needType: NeedType.SOCIAL },
@@ -1791,14 +1831,13 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       });
     }
 
-
     if (
       needs.fun < NeedsSystem.THRESHOLDS.LOW &&
       spatialContext?.nearbyAgents?.length
     ) {
       const target = spatialContext.nearbyAgents[0];
       tasks.push({
-        type: "socialize",
+        type: ActionType.SOCIALIZE,
         priority: this.calculateSocialPriority(needs.fun) * 0.9,
         target: { entityId: target.id, position: { x: target.x, y: target.y } },
         params: { needType: NeedType.FUN, action: ZoneType.PLAY },
@@ -1806,10 +1845,9 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       });
     }
 
-
     if (needs.mentalHealth < NeedsSystem.THRESHOLDS.LOW) {
       tasks.push({
-        type: "rest",
+        type: ZoneType.REST,
         priority: this.calculateSocialPriority(needs.mentalHealth),
         params: { needType: NeedType.MENTAL_HEALTH, action: "meditate" },
         source: "needs:mental",

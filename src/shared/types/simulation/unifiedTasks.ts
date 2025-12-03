@@ -11,11 +11,12 @@
 import type { NeedType } from "../../constants/AIEnums";
 import type { ResourceType } from "../../constants/ResourceEnums";
 
+import { GoalType, ActionType } from "@/shared/constants/AIEnums";
 /**
  * Unified Task Types
  */
 export enum TaskType {
-  SATISFY_NEED = "satisfy_need",
+  SATISFY_NEED = GoalType.SATISFY_NEED,
   REST = "rest",
 
   GATHER = "gather",
@@ -25,7 +26,7 @@ export enum TaskType {
   HUNT = "hunt",
   TRADE = "trade",
 
-  SOCIALIZE = "socialize",
+  SOCIALIZE = ActionType.SOCIALIZE,
   ASSIST = "assist",
 
   ATTACK = "attack",
@@ -170,7 +171,7 @@ export interface ActionParams {
   /** Item ID (for USE with items) */
   itemId?: string;
   /** Interaction type (for INTERACT) */
-  interactionType?: "socialize" | "trade" | "greet";
+  interactionType?: ActionType.SOCIALIZE | "trade" | "greet";
   /** Extra data */
   [key: string]: unknown;
 }

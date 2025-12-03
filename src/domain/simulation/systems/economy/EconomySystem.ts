@@ -64,7 +64,8 @@ import { TYPES } from "../../../../config/Types";
 import type { EntityIndex } from "../../core/EntityIndex";
 import type { AgentRegistry } from "../agents/AgentRegistry";
 import type { HandlerResult, ITradeSystem } from "../agents/SystemRegistry";
-import { QuestStatus } from "../../../../shared/constants/QuestEnums";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
+import { GoalDomain } from "@/shared/constants/AIEnums";
 
 /**
  * System for managing economic activities: resource production, salaries, market pricing, and trading.
@@ -461,7 +462,9 @@ export class EconomySystem implements ITradeSystem {
    * Kept for backward compatibility with older handlers.
    */
   public handleWorkAction(agentId: string, zoneId: string): void {
-    logger.warn("EconomySystem.handleWorkAction is deprecated; use ProductionSystem assignments/output instead.");
+    logger.warn(
+      "EconomySystem.handleWorkAction is deprecated; use ProductionSystem assignments/output instead.",
+    );
     const zone = this.state.zones.find((z) => z.id === zoneId);
     if (!zone) return;
 
@@ -727,8 +730,6 @@ export class EconomySystem implements ITradeSystem {
     return true;
   }
 
-
-
   /**
    * Solicita un intercambio comercial entre dos agentes.
    * @param buyerId - ID del comprador
@@ -746,21 +747,19 @@ export class EconomySystem implements ITradeSystem {
   ): HandlerResult {
     const totalCost = price * quantity;
 
-
     if (!this.canAfford(buyerId, totalCost)) {
       return {
-        status: QuestStatus.FAILED,
-        system: "trade",
+        status: HandlerResultStatus.FAILED,
+        system: GoalDomain.LOGISTICS,
         message: `Buyer ${buyerId} cannot afford ${totalCost}`,
         data: { required: totalCost },
       };
     }
 
-
     if (!this.inventorySystem) {
       return {
-        status: QuestStatus.FAILED,
-        system: "trade",
+        status: HandlerResultStatus.FAILED,
+        system: GoalDomain.LOGISTICS,
         message: "Inventory system not available",
       };
     }
@@ -768,8 +767,8 @@ export class EconomySystem implements ITradeSystem {
     const sellerInventory = this.inventorySystem.getAgentInventory(sellerId);
     if (!sellerInventory) {
       return {
-        status: QuestStatus.FAILED,
-        system: "trade",
+        status: HandlerResultStatus.FAILED,
+        system: GoalDomain.LOGISTICS,
         message: `Seller ${sellerId} has no inventory`,
       };
     }
@@ -778,23 +777,20 @@ export class EconomySystem implements ITradeSystem {
     const available = sellerInventory[resourceType] ?? 0;
     if (available < quantity) {
       return {
-        status: QuestStatus.FAILED,
-        system: "trade",
+        status: HandlerResultStatus.FAILED,
+        system: GoalDomain.LOGISTICS,
         message: `Seller doesn't have enough ${itemId}`,
         data: { available, requested: quantity },
       };
     }
 
-
-
     if (!this.transferMoney(buyerId, sellerId, totalCost)) {
       return {
-        status: QuestStatus.FAILED,
-        system: "trade",
+        status: HandlerResultStatus.FAILED,
+        system: GoalDomain.LOGISTICS,
         message: "Money transfer failed",
       };
     }
-
 
     this.inventorySystem.removeFromAgent(sellerId, resourceType, quantity);
     this.inventorySystem.addResource(buyerId, resourceType, quantity);
@@ -809,8 +805,8 @@ export class EconomySystem implements ITradeSystem {
     });
 
     return {
-      status: "completed",
-      system: "trade",
+      status: HandlerResultStatus.COMPLETED,
+      system: GoalDomain.LOGISTICS,
       message: `Trade completed: ${quantity}x ${itemId} for ${totalCost}`,
       data: {
         buyerId,

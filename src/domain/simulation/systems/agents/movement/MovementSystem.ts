@@ -27,8 +27,9 @@ import { ActivityType } from "../../../../../shared/constants/MovementEnums";
 import { ActionType } from "../../../../../shared/constants/AIEnums";
 import { SIM_CONSTANTS } from "../../../core/SimulationConstants";
 import { TerrainSystem } from "../../world/TerrainSystem";
-import { QuestStatus } from "../../../../../shared/constants/QuestEnums";
 import { MapElementType } from "../../../../../shared/constants/MapElementEnums";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
+import { WorldEntityType } from "@/shared/constants/ResourceEnums";
 
 export interface EntityMovementState {
   entityId: string;
@@ -170,7 +171,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     if (this.gameState?.zones?.length > 0) {
       this.precomputeZoneDistances();
     }
-    
+
     this.initializeObstacles();
     this.batchProcessor = new MovementBatchProcessor(this._gpuService);
     if (this._gpuService?.isGPUAvailable()) {
@@ -775,7 +776,6 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     const state = this.movementStates.get(entityId);
     if (!state) return false;
 
-
     if (activity !== ActivityType.MOVING) {
       state.isMoving = false;
       state.targetPosition = undefined;
@@ -806,10 +806,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
   /**
    * Checks if an entity is currently doing a specific activity.
    */
-  public isDoingActivity(
-    entityId: string,
-    activity: ActivityType,
-  ): boolean {
+  public isDoingActivity(entityId: string, activity: ActivityType): boolean {
     const state = this.movementStates.get(entityId);
     return state?.currentActivity === activity;
   }
@@ -1037,8 +1034,8 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     return (
       type === MapElementType.OBSTACLE ||
       type === "building" ||
-      type === "rock" ||
-      type === "tree"
+      type === WorldEntityType.ROCK ||
+      type === WorldEntityType.TREE
     );
   }
 
@@ -1079,11 +1076,12 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
   private readonly ARRIVAL_GRACE_PERIOD_MS = 2000;
 
   private maybeStartIdleWander(state: EntityMovementState, now: number): void {
-
     if (Math.random() < 0.01 && !state.isMoving) {
-      logger.debug(`[MovementSystem] maybeStartIdleWander ${state.entityId}: isMoving=${state.isMoving}, activity=${state.currentActivity}, lastArrival=${state.lastArrivalTime}, lastWander=${state.lastIdleWander}`);
+      logger.debug(
+        `[MovementSystem] maybeStartIdleWander ${state.entityId}: isMoving=${state.isMoving}, activity=${state.currentActivity}, lastArrival=${state.lastArrivalTime}, lastWander=${state.lastIdleWander}`,
+      );
     }
-    
+
     if (state.isMoving || state.currentActivity !== ActivityType.IDLE) return;
 
     if (
@@ -1112,7 +1110,9 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     const targetX = state.currentPosition.x + Math.cos(angle) * radius;
     const targetY = state.currentPosition.y + Math.sin(angle) * radius;
 
-    logger.debug(`[MovementSystem] ${state.entityId} starting idle wander to (${targetX.toFixed(0)}, ${targetY.toFixed(0)})`);
+    logger.debug(
+      `[MovementSystem] ${state.entityId} starting idle wander to (${targetX.toFixed(0)}, ${targetY.toFixed(0)})`,
+    );
     this.moveToPoint(state.entityId, targetX, targetY);
     state.lastIdleWander = now;
   }
@@ -1131,10 +1131,6 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     return this.movementStates.get(entityId);
   }
 
-
-
-
-
   /**
    * System name for ECS registration
    */
@@ -1148,7 +1144,11 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     agentId: string,
     target: { x: number; y: number },
   ): {
-    status: "delegated" | "completed" | "failed" | "in_progress";
+    status:
+      | HandlerResultStatus.DELEGATED
+      | HandlerResultStatus.COMPLETED
+      | HandlerResultStatus.FAILED
+      | HandlerResultStatus.IN_PROGRESS;
     system: string;
     message?: string;
     data?: unknown;
@@ -1157,34 +1157,31 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
 
     if (!state) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: "movement",
         message: `No movement state for agent ${agentId}`,
       };
     }
-
 
     const dx = state.currentPosition.x - target.x;
     const dy = state.currentPosition.y - target.y;
     const distSq = dx * dx + dy * dy;
 
     if (distSq < 4) {
-
       return {
-        status: "completed",
+        status: HandlerResultStatus.COMPLETED,
         system: "movement",
         message: "Already at target",
         data: { position: state.currentPosition },
       };
     }
 
-
     if (state.isMoving && state.targetPosition) {
       const targetDx = state.targetPosition.x - target.x;
       const targetDy = state.targetPosition.y - target.y;
       if (targetDx * targetDx + targetDy * targetDy < 4) {
         return {
-          status: "in_progress",
+          status: HandlerResultStatus.IN_PROGRESS,
           system: "movement",
           message: "Already moving to target",
         };
@@ -1195,7 +1192,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
 
     if (success) {
       return {
-        status: "delegated",
+        status: HandlerResultStatus.DELEGATED,
         system: "movement",
         message: "Movement started",
         data: { target },
@@ -1203,7 +1200,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     }
 
     return {
-      status: QuestStatus.FAILED,
+      status: HandlerResultStatus.FAILED,
       system: "movement",
       message: "Failed to start movement",
     };
@@ -1217,7 +1214,11 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     agentId: string,
     zoneId: string,
   ): {
-    status: "delegated" | "completed" | "failed" | "in_progress";
+    status:
+      | HandlerResultStatus.DELEGATED
+      | HandlerResultStatus.COMPLETED
+      | HandlerResultStatus.FAILED
+      | HandlerResultStatus.IN_PROGRESS;
     system: string;
     message?: string;
     data?: unknown;
@@ -1226,22 +1227,20 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
 
     if (!state) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: "movement",
         message: `No movement state for agent ${agentId}`,
       };
     }
 
-
     const zone = this.gameState.zones?.find((z) => z.id === zoneId);
     if (!zone) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: "movement",
         message: `Zone ${zoneId} not found`,
       };
     }
-
 
     const bounds = zone.bounds;
     if (
@@ -1252,17 +1251,16 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
       state.currentPosition.y <= bounds.y + bounds.height
     ) {
       return {
-        status: "completed",
+        status: HandlerResultStatus.COMPLETED,
         system: "movement",
         message: "Already in zone",
         data: { zoneId },
       };
     }
 
-
     if (state.isMoving && state.targetZone === zoneId) {
       return {
-        status: "in_progress",
+        status: HandlerResultStatus.IN_PROGRESS,
         system: "movement",
         message: "Already moving to zone",
       };
@@ -1272,7 +1270,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
 
     if (success) {
       return {
-        status: "delegated",
+        status: HandlerResultStatus.DELEGATED,
         system: "movement",
         message: "Movement to zone started",
         data: { zoneId },
@@ -1280,7 +1278,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     }
 
     return {
-      status: QuestStatus.FAILED,
+      status: HandlerResultStatus.FAILED,
       system: "movement",
       message: "Failed to start movement to zone",
     };
@@ -1294,7 +1292,11 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     agentId: string,
     entityId: string,
   ): {
-    status: "delegated" | "completed" | "failed" | "in_progress";
+    status:
+      | HandlerResultStatus.DELEGATED
+      | HandlerResultStatus.COMPLETED
+      | HandlerResultStatus.FAILED
+      | HandlerResultStatus.IN_PROGRESS;
     system: string;
     message?: string;
     data?: unknown;
@@ -1303,26 +1305,22 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
 
     if (!state) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: "movement",
         message: `No movement state for agent ${agentId}`,
       };
     }
 
-
     let targetPosition: { x: number; y: number } | undefined;
-
 
     const targetAgent = this.agentRegistry?.getProfile(entityId);
     if (targetAgent?.position) {
       targetPosition = targetAgent.position;
     }
 
-
     if (!targetPosition && this.gameState.worldResources?.[entityId]) {
       targetPosition = this.gameState.worldResources[entityId].position;
     }
-
 
     if (!targetPosition) {
       const entity = this.gameState.entities?.find((e) => e.id === entityId);
@@ -1333,7 +1331,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
 
     if (!targetPosition) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: "movement",
         message: `Entity ${entityId} not found or has no position`,
       };

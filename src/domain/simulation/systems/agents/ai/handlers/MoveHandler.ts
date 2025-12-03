@@ -13,8 +13,8 @@ import type {
   TaskTarget,
 } from "../types";
 import { errorResult, inProgressResult, successResult } from "../types";
-import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
 import { ActionType } from "../../../../../../shared/constants/AIEnums";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /** Distancia para considerar que llegó al destino (debe ser >= 2 del MovementSystem) */
 const ARRIVAL_THRESHOLD = 3.0;
@@ -69,7 +69,7 @@ export function handleMove(ctx: HandlerContext): HandlerExecutionResult {
 
     const result = systems.movement.requestMove(agentId, target.position);
 
-    if (result.status === QuestStatus.FAILED) {
+    if (result.status === HandlerResultStatus.FAILED) {
       return errorResult(result.message ?? "Movement failed");
     }
 
@@ -79,11 +79,11 @@ export function handleMove(ctx: HandlerContext): HandlerExecutionResult {
   if (target.zoneId) {
     const result = systems.movement.requestMoveToZone(agentId, target.zoneId);
 
-    if (result.status === QuestStatus.FAILED) {
+    if (result.status === HandlerResultStatus.FAILED) {
       return errorResult(result.message ?? "Movement to zone failed");
     }
 
-    if (result.status === "completed") {
+    if (result.status === HandlerResultStatus.COMPLETED) {
       return successResult({ arrivedAtZone: target.zoneId });
     }
 
@@ -96,11 +96,11 @@ export function handleMove(ctx: HandlerContext): HandlerExecutionResult {
       target.entityId,
     );
 
-    if (result.status === QuestStatus.FAILED) {
+    if (result.status === HandlerResultStatus.FAILED) {
       return errorResult(result.message ?? "Movement to entity failed");
     }
 
-    if (result.status === "completed") {
+    if (result.status === HandlerResultStatus.COMPLETED) {
       return successResult({ arrivedAtEntity: target.entityId });
     }
 
@@ -130,7 +130,7 @@ export function moveToPosition(
 
   const result = systems.movement.requestMove(agentId, target);
 
-  if (result.status === QuestStatus.FAILED) {
+  if (result.status === HandlerResultStatus.FAILED) {
     return errorResult(result.message ?? "Movement failed");
   }
 
@@ -152,11 +152,11 @@ export function moveToZone(
 
   const result = systems.movement.requestMoveToZone(agentId, zoneId);
 
-  if (result.status === QuestStatus.FAILED) {
+  if (result.status === HandlerResultStatus.FAILED) {
     return errorResult(result.message ?? "Movement to zone failed");
   }
 
-  if (result.status === "completed") {
+  if (result.status === HandlerResultStatus.COMPLETED) {
     return successResult({ arrivedAtZone: zoneId });
   }
 
@@ -178,11 +178,11 @@ export function moveToEntity(
 
   const result = systems.movement.requestMoveToEntity(agentId, entityId);
 
-  if (result.status === QuestStatus.FAILED) {
+  if (result.status === HandlerResultStatus.FAILED) {
     return errorResult(result.message ?? "Movement to entity failed");
   }
 
-  if (result.status === "completed") {
+  if (result.status === HandlerResultStatus.COMPLETED) {
     return successResult({ arrivedAtEntity: entityId });
   }
 

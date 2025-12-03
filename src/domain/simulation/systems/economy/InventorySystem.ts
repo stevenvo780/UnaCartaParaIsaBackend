@@ -13,10 +13,10 @@ import type { AgentRegistry } from "../agents/AgentRegistry";
 import type { IInventorySystem } from "../agents/SystemRegistry";
 import type { StateDirtyTracker } from "../../core/StateDirtyTracker";
 import { performanceMonitor } from "../../core/PerformanceMonitor";
-import { QuestStatus } from "../../../../shared/constants/QuestEnums";
 import { SystemProperty } from "../../../../shared/constants/SystemEnums";
 import { EntityType } from "../../../../shared/constants/EntityEnums";
 import { ResourceState } from "../../../../shared/constants/ResourceEnums";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
  * System for managing agent inventories and zone stockpiles.
@@ -204,7 +204,9 @@ export class InventorySystem implements IInventorySystem {
     const toAdd = Math.min(amount, available);
 
     if (toAdd <= 0) {
-      logger.debug(`[InventorySystem] ${agentId}: inventory full, capacity=${inv.capacity}, currentLoad=${currentLoad}, available=${available}`);
+      logger.debug(
+        `[InventorySystem] ${agentId}: inventory full, capacity=${inv.capacity}, currentLoad=${currentLoad}, available=${available}`,
+      );
       return false;
     }
 
@@ -653,10 +655,6 @@ export class InventorySystem implements IInventorySystem {
     };
   }
 
-
-
-
-
   /**
    * System name for ECS registration
    */
@@ -671,37 +669,37 @@ export class InventorySystem implements IInventorySystem {
     resourceId: string,
     quantity: number,
   ): {
-    status: "delegated" | "completed" | "failed" | "in_progress";
+    status:
+      | HandlerResultStatus.DELEGATED
+      | HandlerResultStatus.COMPLETED
+      | HandlerResultStatus.FAILED
+      | HandlerResultStatus.IN_PROGRESS;
     system: string;
     message?: string;
     data?: unknown;
   } {
-
     const resource = this.gameState?.worldResources?.[resourceId];
 
     if (!resource) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: SystemProperty.INVENTORY,
         message: `Resource ${resourceId} not found`,
       };
     }
 
-
     if (resource.state === ResourceState.DEPLETED) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: SystemProperty.INVENTORY,
         message: `Resource ${resourceId} is depleted`,
       };
     }
 
-
     let inventory = this.agentInventories.get(agentId);
     if (!inventory) {
       inventory = this.initializeAgentInventory(agentId);
     }
-
 
     const resourceTypeMap: Record<string, ResourceType> = {
       tree: ResourceType.WOOD,
@@ -718,16 +716,13 @@ export class InventorySystem implements IInventorySystem {
     const resourceType =
       resourceTypeMap[resource.type?.toLowerCase()] || ResourceType.WOOD;
 
-
-
-
     const actualQuantity = quantity;
 
     const success = this.addResource(agentId, resourceType, actualQuantity);
 
     if (success) {
       return {
-        status: "completed",
+        status: HandlerResultStatus.COMPLETED,
         system: SystemProperty.INVENTORY,
         message: `Gathered ${actualQuantity} ${resourceType}`,
         data: { resourceId, resourceType, quantity: actualQuantity },
@@ -735,7 +730,7 @@ export class InventorySystem implements IInventorySystem {
     }
 
     return {
-      status: QuestStatus.FAILED,
+      status: HandlerResultStatus.FAILED,
       system: SystemProperty.INVENTORY,
       message: "Inventory full",
     };
@@ -750,7 +745,11 @@ export class InventorySystem implements IInventorySystem {
     storageId: string,
     itemId: string,
   ): {
-    status: "delegated" | "completed" | "failed" | "in_progress";
+    status:
+      | HandlerResultStatus.DELEGATED
+      | HandlerResultStatus.COMPLETED
+      | HandlerResultStatus.FAILED
+      | HandlerResultStatus.IN_PROGRESS;
     system: string;
     message?: string;
     data?: unknown;
@@ -759,15 +758,13 @@ export class InventorySystem implements IInventorySystem {
 
     if (!inventory) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: SystemProperty.INVENTORY,
         message: `No inventory for agent ${agentId}`,
       };
     }
 
-
     let stockpile = this.stockpiles.get(storageId);
-
 
     if (!stockpile) {
       const zoneStockpiles = this.getStockpilesInZone(storageId);
@@ -778,12 +775,11 @@ export class InventorySystem implements IInventorySystem {
 
     if (!stockpile) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: SystemProperty.INVENTORY,
         message: `Storage ${storageId} not found`,
       };
     }
-
 
     if (itemId === EntityType.ALL) {
       const transferred = this.transferToStockpile(agentId, stockpile.id, {
@@ -800,7 +796,7 @@ export class InventorySystem implements IInventorySystem {
 
       if (totalTransferred > 0) {
         return {
-          status: "completed",
+          status: HandlerResultStatus.COMPLETED,
           system: SystemProperty.INVENTORY,
           message: `Deposited ${totalTransferred} resources`,
           data: { transferred },
@@ -808,19 +804,18 @@ export class InventorySystem implements IInventorySystem {
       }
 
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: SystemProperty.INVENTORY,
         message: "Nothing to deposit",
       };
     }
-
 
     const resourceType = itemId as ResourceType;
     const amount = inventory[resourceType] ?? 0;
 
     if (amount <= 0) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: SystemProperty.INVENTORY,
         message: `No ${itemId} to deposit`,
       };
@@ -832,7 +827,7 @@ export class InventorySystem implements IInventorySystem {
 
     if (transferred[resourceType] > 0) {
       return {
-        status: "completed",
+        status: HandlerResultStatus.COMPLETED,
         system: SystemProperty.INVENTORY,
         message: `Deposited ${transferred[resourceType]} ${itemId}`,
         data: { resourceType, amount: transferred[resourceType] },
@@ -840,7 +835,7 @@ export class InventorySystem implements IInventorySystem {
     }
 
     return {
-      status: QuestStatus.FAILED,
+      status: HandlerResultStatus.FAILED,
       system: SystemProperty.INVENTORY,
       message: "Deposit failed",
     };
@@ -856,7 +851,11 @@ export class InventorySystem implements IInventorySystem {
     itemId: string,
     quantity: number,
   ): {
-    status: "delegated" | "completed" | "failed" | "in_progress";
+    status:
+      | HandlerResultStatus.DELEGATED
+      | HandlerResultStatus.COMPLETED
+      | HandlerResultStatus.FAILED
+      | HandlerResultStatus.IN_PROGRESS;
     system: string;
     message?: string;
     data?: unknown;
@@ -866,7 +865,7 @@ export class InventorySystem implements IInventorySystem {
 
     if (!fromInventory) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: SystemProperty.INVENTORY,
         message: `No inventory for agent ${fromAgentId}`,
       };
@@ -881,7 +880,7 @@ export class InventorySystem implements IInventorySystem {
 
     if (available < quantity) {
       return {
-        status: QuestStatus.FAILED,
+        status: HandlerResultStatus.FAILED,
         system: SystemProperty.INVENTORY,
         message: `Insufficient ${itemId} (have ${available}, need ${quantity})`,
       };
@@ -892,18 +891,17 @@ export class InventorySystem implements IInventorySystem {
 
     if (added) {
       return {
-        status: "completed",
+        status: HandlerResultStatus.COMPLETED,
         system: SystemProperty.INVENTORY,
         message: `Transferred ${removed} ${itemId}`,
         data: { resourceType, quantity: removed },
       };
     }
 
-
     this.addResource(fromAgentId, resourceType, removed);
 
     return {
-      status: QuestStatus.FAILED,
+      status: HandlerResultStatus.FAILED,
       system: SystemProperty.INVENTORY,
       message: "Transfer failed - recipient inventory full",
     };

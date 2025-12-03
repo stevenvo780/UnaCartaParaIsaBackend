@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { logger } from "../utils/logger";
 import { HttpStatusCode } from "../../shared/constants/HttpStatusCodes";
 
+import { ExplorationType } from "@/shared/constants/AIEnums";
 /**
  * Request payload for chunk generation endpoint.
  */
@@ -106,7 +107,7 @@ export class WorldController {
           ? seed.slice(0, CHUNK_CONSTANTS.MAX_SEED_LENGTH)
           : typeof seed === "number"
             ? seed
-            : "default";
+            : ExplorationType.DEFAULT;
 
       const chunk = await worldGenerationService.generateChunk(x, y, {
         seed: validatedSeed,

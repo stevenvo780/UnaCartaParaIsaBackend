@@ -14,7 +14,7 @@ import {
   inProgressResult,
   successResult,
 } from "../types";
-import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
  * @deprecated Use SystemRegistry.combat instead
@@ -54,20 +54,20 @@ export function handleAttack(
   const result = systems.combat.requestAttack(agentId, targetId);
 
   switch (result.status) {
-    case "completed":
+    case HandlerResultStatus.COMPLETED:
       return successResult({
         targetId,
         message: result.message,
         ...((result.data as object) ?? {}),
       });
 
-    case QuestStatus.FAILED:
+    case HandlerResultStatus.FAILED:
       return errorResult(result.message ?? "Attack failed");
 
-    case "in_progress":
+    case HandlerResultStatus.IN_PROGRESS:
       return inProgressResult("combat", result.message ?? "Attacking");
 
-    case "delegated":
+    case HandlerResultStatus.DELEGATED:
       return inProgressResult(
         result.system,
         result.message ?? "Moving to target",

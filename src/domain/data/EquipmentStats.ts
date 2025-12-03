@@ -8,6 +8,7 @@
  */
 
 import { ItemId } from "../../shared/constants/ItemEnums";
+import { WeaponId } from "../../shared/constants/CraftingEnums";
 import {
   EquipmentType,
   GatherableResource,
@@ -18,7 +19,7 @@ import {
  */
 export interface EquipmentStats {
   /** Internal item ID */
-  itemId: ItemId | "unarmed";
+  itemId: ItemId | WeaponId;
   /** Display name */
   name: string;
   /** Type of tool/weapon */
@@ -60,7 +61,7 @@ export interface EquipmentStats {
  * Default stats for unarmed agents.
  */
 export const UNARMED_STATS: EquipmentStats = {
-  itemId: "unarmed",
+  itemId: WeaponId.UNARMED,
   name: "Desarmado",
   toolType: EquipmentType.UNARMED,
   attackRange: 30,
@@ -188,7 +189,7 @@ export const EQUIPMENT_STATS: Record<string, EquipmentStats> = {
  * Gets equipment stats for an item, or unarmed stats if not found.
  */
 export function getEquipmentStats(itemId: string | undefined): EquipmentStats {
-  if (!itemId || itemId === "unarmed") {
+  if (!itemId || itemId === WeaponId.UNARMED) {
     return UNARMED_STATS;
   }
   return EQUIPMENT_STATS[itemId] ?? UNARMED_STATS;

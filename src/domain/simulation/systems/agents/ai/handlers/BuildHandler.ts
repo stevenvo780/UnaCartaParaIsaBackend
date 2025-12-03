@@ -14,7 +14,7 @@ import {
   inProgressResult,
   successResult,
 } from "../types";
-import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
  * @deprecated Use SystemRegistry.building instead
@@ -60,20 +60,20 @@ export function handleBuild(
     const result = systems.building.requestRepair(agentId, buildingId);
 
     switch (result.status) {
-      case "completed":
+      case HandlerResultStatus.COMPLETED:
         return successResult({
           buildingId,
           message: result.message ?? "Building complete",
           ...((result.data as object) ?? {}),
         });
 
-      case QuestStatus.FAILED:
+      case HandlerResultStatus.FAILED:
         return errorResult(result.message ?? "Build failed");
 
-      case "in_progress":
+      case HandlerResultStatus.IN_PROGRESS:
         return inProgressResult("building", result.message ?? "Building");
 
-      case "delegated":
+      case HandlerResultStatus.DELEGATED:
         return inProgressResult(
           result.system,
           result.message ?? "Moving to building",
@@ -93,7 +93,7 @@ export function handleBuild(
     );
 
     switch (result.status) {
-      case "completed":
+      case HandlerResultStatus.COMPLETED:
         return successResult({
           buildingType,
           position: targetPos,
@@ -101,13 +101,13 @@ export function handleBuild(
           ...((result.data as object) ?? {}),
         });
 
-      case QuestStatus.FAILED:
+      case HandlerResultStatus.FAILED:
         return errorResult(result.message ?? "Cannot start construction");
 
-      case "in_progress":
+      case HandlerResultStatus.IN_PROGRESS:
         return inProgressResult("building", result.message ?? "Constructing");
 
-      case "delegated":
+      case HandlerResultStatus.DELEGATED:
         return inProgressResult(
           result.system,
           result.message ?? "Gathering materials",

@@ -389,7 +389,6 @@ export class SimulationRunner {
       movementSystem: this.movementSystem,
     });
 
-
     this.registerSystemsInSystemRegistry();
 
     this.economySystem.setDependencies({
@@ -451,7 +450,9 @@ export class SimulationRunner {
         logger.info(`🔁 Migrated ${migrated} trust edges into SocialSystem`);
       }
     } catch (err) {
-      logger.warn("Trust migration failed", { error: err instanceof Error ? err.message : String(err) });
+      logger.warn("Trust migration failed", {
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 

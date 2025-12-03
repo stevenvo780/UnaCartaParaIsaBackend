@@ -14,7 +14,7 @@ import {
   inProgressResult,
   successResult,
 } from "../types";
-import { QuestStatus } from "../../../../../../shared/constants/QuestEnums";
+import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
  * @deprecated Use SystemRegistry.combat instead
@@ -50,19 +50,19 @@ export function handleFlee(
   const result = systems.combat.requestFlee(agentId, fromPosition);
 
   switch (result.status) {
-    case "completed":
+    case HandlerResultStatus.COMPLETED:
       return successResult({
         message: result.message ?? "Escaped safely",
         ...((result.data as object) ?? {}),
       });
 
-    case QuestStatus.FAILED:
+    case HandlerResultStatus.FAILED:
       return errorResult(result.message ?? "Flee failed");
 
-    case "in_progress":
+    case HandlerResultStatus.IN_PROGRESS:
       return inProgressResult("combat", result.message ?? "Fleeing");
 
-    case "delegated":
+    case HandlerResultStatus.DELEGATED:
       return inProgressResult(
         result.system,
         result.message ?? "Moving to safety",

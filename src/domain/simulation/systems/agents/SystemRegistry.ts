@@ -11,12 +11,14 @@ import { injectable } from "inversify";
 import { logger } from "@/infrastructure/utils/logger";
 import { SystemProperty } from "../../../../shared/constants/SystemEnums";
 import { ActivityType } from "../../../../shared/constants/MovementEnums";
+import { HandlerResultStatus } from "../../../../shared/constants/StatusEnums";
+import { GoalDomain } from "@/shared/constants/AIEnums";
 
 /**
  * Resultado de una operación de handler
  */
 export interface HandlerResult {
-  status: "delegated" | "completed" | "failed" | "in_progress";
+  status: HandlerResultStatus;
   system: string;
   message?: string;
   data?: unknown;
@@ -40,7 +42,11 @@ export interface IMovementSystem extends ISystem {
   requestMoveToEntity(agentId: string, entityId: string): HandlerResult;
   stopMovement(agentId: string): void;
   isMoving(agentId: string): boolean;
-  startActivity(entityId: string, activity: ActivityType, durationMs?: number): boolean;
+  startActivity(
+    entityId: string,
+    activity: ActivityType,
+    durationMs?: number,
+  ): boolean;
   getActivity(entityId: string): ActivityType | undefined;
 }
 
@@ -69,11 +75,14 @@ export interface INeedsSystem extends ISystem {
    * Genera tareas pendientes basadas en el estado de necesidades del agente.
    * El sistema es la única fuente de verdad sobre umbrales y prioridades.
    */
-  getPendingTasks(agentId: string, spatialContext?: {
-    nearestFood?: { id: string; x: number; y: number };
-    nearestWater?: { id: string; x: number; y: number };
-    nearbyAgents?: readonly { id: string; x: number; y: number }[];
-  }): Array<{
+  getPendingTasks(
+    agentId: string,
+    spatialContext?: {
+      nearestFood?: { id: string; x: number; y: number };
+      nearestWater?: { id: string; x: number; y: number };
+      nearbyAgents?: readonly { id: string; x: number; y: number }[];
+    },
+  ): Array<{
     type: string;
     priority: number;
     target?: { entityId?: string; position?: { x: number; y: number } };
@@ -155,8 +164,14 @@ export interface ITradeSystem extends ISystem {
  * Sistema de consultas del mundo (WorldQueryService)
  */
 export interface IWorldQuerySystem extends ISystem {
-  getDirectionToNearestEdge(x: number, y: number): { x: number; y: number; edgeName: string };
-  findNearestWater(x: number, y: number): { worldX: number; worldY: number } | null;
+  getDirectionToNearestEdge(
+    x: number,
+    y: number,
+  ): { x: number; y: number; edgeName: string };
+  findNearestWater(
+    x: number,
+    y: number,
+  ): { worldX: number; worldY: number } | null;
   hasWaterAt(x: number, y: number): boolean;
 }
 
@@ -188,7 +203,7 @@ export class SystemRegistry {
       case "movement":
         this.movement = system as unknown as IMovementSystem;
         break;
-      case "combat":
+      case GoalDomain.COMBAT:
         this.combat = system as unknown as ICombatSystem;
         break;
       case "needs":
@@ -197,16 +212,16 @@ export class SystemRegistry {
       case SystemProperty.INVENTORY:
         this.inventory = system as unknown as IInventorySystem;
         break;
-      case "social":
+      case GoalDomain.SOCIAL:
         this.social = system as unknown as ISocialSystem;
         break;
-      case "crafting":
+      case GoalDomain.CRAFTING:
         this.crafting = system as unknown as ICraftingSystem;
         break;
       case "building":
         this.building = system as unknown as IBuildingSystem;
         break;
-      case "trade":
+      case GoalDomain.LOGISTICS:
         this.trade = system as unknown as ITradeSystem;
         break;
       case "worldQuery":
@@ -260,7 +275,7 @@ export class SystemRegistry {
       case "movement":
         this.movement = undefined;
         break;
-      case "combat":
+      case GoalDomain.COMBAT:
         this.combat = undefined;
         break;
       case "needs":
@@ -269,16 +284,16 @@ export class SystemRegistry {
       case SystemProperty.INVENTORY:
         this.inventory = undefined;
         break;
-      case "social":
+      case GoalDomain.SOCIAL:
         this.social = undefined;
         break;
-      case "crafting":
+      case GoalDomain.CRAFTING:
         this.crafting = undefined;
         break;
       case "building":
         this.building = undefined;
         break;
-      case "trade":
+      case GoalDomain.LOGISTICS:
         this.trade = undefined;
         break;
       case "worldQuery":

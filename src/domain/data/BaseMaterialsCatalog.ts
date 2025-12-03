@@ -204,7 +204,7 @@ export class BaseMaterialsCatalog {
         maxStack: 30,
         value: 15,
       },
-      metadata: { biome: "mystical" },
+      metadata: { biome: BiomeType.MYSTICAL },
     },
     {
       id: ItemId.GLOWING_CRYSTAL,
@@ -218,7 +218,7 @@ export class BaseMaterialsCatalog {
         maxStack: 20,
         value: 25,
       },
-      metadata: { biome: "mystical" },
+      metadata: { biome: BiomeType.MYSTICAL },
     },
     {
       id: ItemId.MYSTICAL_FIBER,
@@ -232,7 +232,7 @@ export class BaseMaterialsCatalog {
         maxStack: 50,
         value: 8,
       },
-      metadata: { biome: "mystical" },
+      metadata: { biome: BiomeType.MYSTICAL },
     },
 
     {

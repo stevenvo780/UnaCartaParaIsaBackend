@@ -604,7 +604,7 @@ export class WorldQueryService {
 
     // Combine and sort by distance from query position
     const allWaterTiles = [...oceanTiles, ...lakeTiles];
-    
+
     return allWaterTiles.sort((a, b) => {
       const distA = Math.sqrt(
         Math.pow(a.worldX - x, 2) + Math.pow(a.worldY - y, 2),
@@ -801,10 +801,7 @@ export class WorldQueryService {
    * Uses small radius - agents must EXPLORE to find water, not magically know where it is.
    * Water is at map edges, so agents will need to explore in that direction.
    */
-  public findNearestWater(
-    x: number,
-    y: number,
-  ): TileQueryResult | null {
+  public findNearestWater(x: number, y: number): TileQueryResult | null {
     // Radio más amplio para encontrar agua (500 unidades = ~15 tiles)
     // Los agentes deben explorar si no hay agua cerca
     const waterTiles = this.findWaterTilesNear(x, y, 500);
@@ -820,14 +817,14 @@ export class WorldQueryService {
     y: number,
   ): { x: number; y: number; edgeName: string } {
     const worldSize = this.gameState.worldSize ?? { width: 2000, height: 2000 };
-    
+
     const distToLeft = x;
     const distToRight = worldSize.width - x;
     const distToTop = y;
     const distToBottom = worldSize.height - y;
-    
+
     const minDist = Math.min(distToLeft, distToRight, distToTop, distToBottom);
-    
+
     if (minDist === distToLeft) {
       return { x: 0, y: y, edgeName: "west" };
     } else if (minDist === distToRight) {

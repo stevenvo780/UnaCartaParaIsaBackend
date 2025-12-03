@@ -6,7 +6,6 @@
  * @module domain/simulation/systems/agents
  */
 
-
 export { SystemRegistry } from "./SystemRegistry";
 export type {
   HandlerResult,
@@ -21,22 +20,17 @@ export type {
   ITradeSystem,
 } from "./SystemRegistry";
 
-
 export { AgentRegistry } from "./AgentRegistry";
 export type { MovementState } from "./AgentRegistry";
-
 
 export { RoleSystem } from "./RoleSystem";
 export { EquipmentSystem, equipmentSystem } from "./EquipmentSystem";
 export { AmbientAwarenessSystem } from "./AmbientAwarenessSystem";
 
-
 export { AISystem } from "./ai/AISystem";
 export { TaskQueue } from "./ai/TaskQueue";
 export { SharedKnowledgeSystem } from "./ai/SharedKnowledgeSystem";
 
-
 export { MovementSystem } from "./movement/MovementSystem";
-
 
 export { NeedsSystem } from "./needs/NeedsSystem";
