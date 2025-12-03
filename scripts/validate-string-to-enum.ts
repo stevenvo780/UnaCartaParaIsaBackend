@@ -402,33 +402,46 @@ function findAllEnums(backendSrc: string): Map<string, EnumValues> {
 
 /**
  * Cuenta los usos de Enums y sus miembros en el código
+ * Busca tanto el uso explícito (EnumName.MEMBER) como el uso del valor string ("value")
  */
 function countEnumUsages(
   filePath: string,
   content: string,
   enumMap: Map<string, EnumValues>
 ) {
-  // Ignorar el archivo donde se define el enum para no contar la definición como uso
-  // Aunque idealmente deberíamos ignorar solo la definición específica.
-  // Por simplicidad, asumimos que si el archivo contiene "export enum X", esos usos no cuentan.
-
   enumMap.forEach((enumData, enumName) => {
+    // Ignorar el archivo donde se define el enum
     if (filePath === enumData.file) return;
 
     // 1. Buscar uso del Enum como tipo o valor (e.g. "let x: EnumName" o "EnumName.Member")
-    // Usamos \b para asegurar palabra completa
     const enumUsageRegex = new RegExp(`\\b${enumName}\\b`, 'g');
     const matches = content.match(enumUsageRegex);
     if (matches) {
       enumData.usageCount += matches.length;
     }
 
-    // 2. Buscar uso de miembros específicos (e.g. "EnumName.Member")
-    enumData.members.forEach((_, memberName) => {
+    // 2. Buscar uso de miembros específicos
+    enumData.members.forEach((memberValue, memberName) => {
+      let count = 0;
+      
+      // 2a. Uso explícito: EnumName.MEMBER
       const memberUsageRegex = new RegExp(`\\b${enumName}\\.${memberName}\\b`, 'g');
       const memberMatches = content.match(memberUsageRegex);
       if (memberMatches) {
-        const count = memberMatches.length;
+        count += memberMatches.length;
+      }
+      
+      // 2b. Uso por valor string: "value" o 'value'
+      // Solo contar si el valor es lo suficientemente específico (>3 chars, no es palabra común)
+      if (memberValue.length > 3) {
+        const valueRegex = new RegExp(`["']${memberValue}["']`, 'g');
+        const valueMatches = content.match(valueRegex);
+        if (valueMatches) {
+          count += valueMatches.length;
+        }
+      }
+      
+      if (count > 0) {
         enumData.memberUsageCounts.set(
           memberName,
           (enumData.memberUsageCounts.get(memberName) || 0) + count
@@ -574,60 +587,20 @@ function main() {
   console.log('   Pueden estar en uso en el frontend o reservados para futuro uso.\n');
 
   const unusedEnums: EnumValues[] = [];
-  const unusedMembers: { enumName: string; member: string; file: string }[] = [];
 
   enumMap.forEach((enumData) => {
     if (enumData.usageCount === 0) {
       unusedEnums.push(enumData);
-    } else {
-      // Si el enum se usa, verificar sus miembros
-      enumData.memberUsageCounts.forEach((count, member) => {
-        if (count === 0) {
-          unusedMembers.push({
-            enumName: enumData.enumName,
-            member: member,
-            file: enumData.file
-          });
-        }
-      });
     }
   });
 
   if (unusedEnums.length === 0) {
-    console.log('✅ Todos los Enums definidos parecen estar en uso.\n');
+    console.log('✅ Todos los Enums definidos están en uso.\n');
   } else {
     console.log(`📊 ${unusedEnums.length} Enums no usados en backend:\n`);
     unusedEnums.forEach((e) => {
       const relativePath = path.relative(path.join(__dirname, '..'), e.file);
       console.log(`   - ${e.enumName} (en ${relativePath})`);
-    });
-    console.log();
-  }
-
-  // --- REPORTE 3: Miembros de Enum sin uso ---
-
-  console.log('📉 REPORTE DE MIEMBROS DE ENUM SIN USO (INFORMATIVO)\n');
-  console.log('='.repeat(80));
-  console.log('ℹ️  Estos miembros de enums no se usan explícitamente en el backend.');
-  console.log('   Esto es NORMAL - pueden usarse en frontend o estar reservados.\n');
-
-  if (unusedMembers.length === 0) {
-    console.log('✅ Todos los miembros de los Enums usados parecen estar en uso.\n');
-  } else {
-    console.log(`📊 ${unusedMembers.length} miembros de Enums sin uso en backend:\n`);
-
-    // Agrupar por Enum
-    const membersByEnum = new Map<string, string[]>();
-    unusedMembers.forEach((item) => {
-      if (!membersByEnum.has(item.enumName)) {
-        membersByEnum.set(item.enumName, []);
-      }
-      membersByEnum.get(item.enumName)!.push(item.member);
-    });
-
-    membersByEnum.forEach((members, enumName) => {
-      console.log(`   ${enumName}:`);
-      console.log(`      ${members.join(', ')}`);
     });
     console.log();
   }
@@ -638,17 +611,11 @@ function main() {
     summary: {
       totalEnums: enumMap.size,
       unusedEnums: unusedEnums.length,
-      unusedMembers: unusedMembers.length,
       missingEnumOccurrences: missingEnumOccurrences.length,
     },
     unusedEnums: unusedEnums.map(e => ({
       name: e.enumName,
       file: path.relative(path.join(__dirname, '..'), e.file)
-    })),
-    unusedMembers: unusedMembers.map(m => ({
-      enum: m.enumName,
-      member: m.member,
-      file: path.relative(path.join(__dirname, '..'), m.file)
     })),
     missingEnumUsages: sortedMissing.map(([stringLiteral, occurrences]) => ({
       stringLiteral,
@@ -669,7 +636,9 @@ function main() {
   console.log('📋 RESUMEN FINAL');
   console.log('═'.repeat(80));
   
-  if (missingEnumOccurrences.length === 0) {
+  if (missingEnumOccurrences.length === 0 && unusedEnums.length === 0) {
+    console.log('✅ ESTADO: LIMPIO - Enums correctamente definidos y usados');
+  } else if (missingEnumOccurrences.length === 0) {
     console.log('✅ ESTADO: LIMPIO - No hay strings que deban convertirse a enums');
   } else if (missingEnumOccurrences.length <= 5) {
     console.log(`⚠️  ESTADO: CASI LIMPIO - ${missingEnumOccurrences.length} string(s) pendiente(s) de revisar`);
@@ -678,8 +647,7 @@ function main() {
   }
   
   console.log(`\n   📊 Strings a corregir: ${missingEnumOccurrences.length}`);
-  console.log(`   📚 Enums sin uso (info): ${unusedEnums.length}`);
-  console.log(`   📝 Miembros sin uso (info): ${unusedMembers.length}`);
+  console.log(`   📚 Enums sin uso: ${unusedEnums.length}`);
   console.log('\n✅ Reporte completo guardado en: ' + reportPath);
 }
 
