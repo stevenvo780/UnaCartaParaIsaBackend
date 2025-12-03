@@ -145,11 +145,7 @@ export class LifeCycleSystem extends EventEmitter {
    *
    * Kept as no-op for backwards compatibility with tests.
    */
-  private setupDeathListener(): void {
-    // Death handling moved to EventRegistry to avoid duplicate processing.
-    // EventRegistry.ts now handles: markEntityDead, recordDeath, removeEntity
-    // and triggers INVENTORY_DROPPED for cleanup.
-  }
+  private setupDeathListener(): void {}
 
   public setDependencies(systems: {
     needsSystem?: INeedsPort;
@@ -579,7 +575,6 @@ export class LifeCycleSystem extends EventEmitter {
       this.inventorySystem.initializeAgentInventory(id);
     }
     if (profile.position && this._movementSystem) {
-      // Initialize movement state BEFORE attempting to move
       if (!this._movementSystem.hasMovementState(id)) {
         this._movementSystem.initializeEntityMovement(id, profile.position);
         logger.debug(

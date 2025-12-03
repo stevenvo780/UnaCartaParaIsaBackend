@@ -317,8 +317,6 @@ export class MultiRateScheduler {
       const startTime = performance.now();
       performanceMonitor.beginTick(TickRate.MEDIUM);
 
-      // preTick removed - only FAST tick handles index rebuild to avoid redundant work
-
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.mediumSystems, delta, entityCount);
 
@@ -378,8 +376,6 @@ export class MultiRateScheduler {
 
       const startTime = performance.now();
       performanceMonitor.beginTick(TickRate.SLOW);
-
-      // preTick removed - only FAST tick handles index rebuild to avoid redundant work
 
       const entityCount = this.getEntityCount();
       await this.executeSystems(this.slowSystems, delta, entityCount);

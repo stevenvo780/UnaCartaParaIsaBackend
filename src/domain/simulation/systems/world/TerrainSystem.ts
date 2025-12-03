@@ -13,7 +13,7 @@ import { TileType } from "../../../../shared/constants/TileTypeEnums";
  * When water reaches 0, OCEAN tile converts to DIRT.
  */
 interface WaterTileState {
-  waterLevel: number; // 0-100, starts at 100 for OCEAN tiles
+  waterLevel: number;
   maxWater: number;
 }
 
@@ -83,7 +83,6 @@ export class TerrainSystem {
           }
         }
 
-        // Handle biome change
         if ("biome" in updates && updates.biome) {
           tile.biome = updates.biome as BiomeType;
           modified = true;
@@ -116,13 +115,11 @@ export class TerrainSystem {
     const tile = this.getTile(tileX, tileY);
     if (!tile) return 0;
 
-    // Both OCEAN and LAKE tiles have water
     if (tile.biome !== BiomeType.OCEAN && tile.biome !== BiomeType.LAKE)
       return 0;
 
     const key = `${tileX},${tileY}`;
 
-    // Initialize water level if not tracked
     if (!this.waterLevels.has(key)) {
       this.waterLevels.set(key, {
         waterLevel: TerrainSystem.OCEAN_WATER_CAPACITY,
@@ -136,7 +133,6 @@ export class TerrainSystem {
       return 0;
     }
 
-    // Consume water
     const consumed = Math.min(
       TerrainSystem.WATER_PER_DRINK,
       waterState.waterLevel,
@@ -147,7 +143,6 @@ export class TerrainSystem {
       `💧 [TerrainSystem] Water consumed at (${tileX}, ${tileY}): ${consumed} units, remaining: ${waterState.waterLevel}/${waterState.maxWater}`,
     );
 
-    // If water depleted, convert OCEAN to DIRT
     if (waterState.waterLevel <= 0) {
       this.convertOceanToDirt(tileX, tileY);
     }
@@ -162,7 +157,6 @@ export class TerrainSystem {
     const tile = this.getTile(tileX, tileY);
     if (!tile || tile.biome !== BiomeType.OCEAN) return;
 
-    // Update biome to DIRT/GRASSLAND
     const success = this.modifyTile(tileX, tileY, {
       biome: BiomeType.GRASSLAND,
       assets: {
@@ -175,10 +169,8 @@ export class TerrainSystem {
         `🏜️ [TerrainSystem] OCEAN tile at (${tileX}, ${tileY}) dried up and converted to GRASSLAND`,
       );
 
-      // Remove from water tracking
       this.waterLevels.delete(`${tileX},${tileY}`);
 
-      // Emit specific event for water depletion
       simulationEvents.emit(GameEventType.TERRAIN_MODIFIED, {
         x: tileX,
         y: tileY,

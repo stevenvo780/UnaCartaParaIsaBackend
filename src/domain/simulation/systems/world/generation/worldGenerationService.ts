@@ -101,14 +101,11 @@ export class WorldGenerationService {
           );
         }
 
-        // GUARANTEED WATER: Force a lake cluster near spawn (tiles 5-8, 5-8)
-        // This ensures agents always have accessible water to survive
         const distFromSpawnCenter = Math.sqrt(
           Math.pow(globalX - 6, 2) + Math.pow(globalY - 6, 2),
         );
         let biome: BiomeType;
         if (distFromSpawnCenter < 2.5) {
-          // Small lake near spawn
           biome = BiomeType.LAKE;
           logger.debug(
             `[OASIS] Forced LAKE at (${globalX}, ${globalY}) dist=${distFromSpawnCenter.toFixed(2)}`,

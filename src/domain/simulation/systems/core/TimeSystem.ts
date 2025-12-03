@@ -93,7 +93,6 @@ export class TimeSystem extends EventEmitter {
       this.lastWeatherChange = now;
     }
 
-    // Debug log every 10 seconds
     if (now - this.lastLogTime >= 10000) {
       this.lastLogTime = now;
       logger.debug(

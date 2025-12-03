@@ -31,7 +31,6 @@ export function detectInventory(ctx: DetectorContext): Task[] {
 
   const loadRatio = ctx.inventoryLoad / ctx.inventoryCapacity;
 
-  // Log cuando inventario está lleno pero no hay zona de depósito
   if (
     loadRatio >= DEPOSIT_THRESHOLD &&
     !ctx.depositZoneId &&

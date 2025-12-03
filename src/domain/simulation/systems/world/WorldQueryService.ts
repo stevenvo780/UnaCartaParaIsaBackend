@@ -576,7 +576,6 @@ export class WorldQueryService {
     y: number,
     radius: number,
   ): TileQueryResult[] {
-    // Search for both OCEAN and LAKE tiles
     const oceanTiles = this.findTilesInArea(
       x - radius,
       y - radius,
@@ -593,7 +592,6 @@ export class WorldQueryService {
       { biome: BiomeType.LAKE },
     );
 
-    // Debug: log water search periodically
     const now = Date.now();
     if (!this._lastWaterDebugLog || now - this._lastWaterDebugLog > 30000) {
       this._lastWaterDebugLog = now;
@@ -602,7 +600,6 @@ export class WorldQueryService {
       );
     }
 
-    // Combine and sort by distance from query position
     const allWaterTiles = [...oceanTiles, ...lakeTiles];
 
     return allWaterTiles.sort((a, b) => {
@@ -802,8 +799,6 @@ export class WorldQueryService {
    * Water is at map edges, so agents will need to explore in that direction.
    */
   public findNearestWater(x: number, y: number): TileQueryResult | null {
-    // Radio más amplio para encontrar agua (500 unidades = ~15 tiles)
-    // Los agentes deben explorar si no hay agua cerca
     const waterTiles = this.findWaterTilesNear(x, y, 500);
     return waterTiles.length > 0 ? waterTiles[0] : null;
   }

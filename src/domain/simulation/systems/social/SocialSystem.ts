@@ -131,7 +131,6 @@ export class SocialSystem implements ISocialSystem {
     const edgeCount = this.edges.size;
     const groupCount = this.groups.length;
 
-    // Debug log every 5 seconds
     if (Math.floor(now / 5000) !== Math.floor((now - deltaTimeMs) / 5000)) {
       logger.debug(
         `👥 [SocialSystem] update: agents=${agentCount}, edges=${edgeCount}, groups=${groupCount}, edgesModified=${this.edgesModified}`,

@@ -80,13 +80,10 @@ export class EventRegistry {
       (data: { entityId: string; reason?: string }) => {
         const agentId = data.entityId;
 
-        // 1. Mark entity as dead in index
         this.runner.entityIndex.markEntityDead(agentId);
 
-        // 2. Record death in genealogy
         this.runner._genealogySystem.recordDeath(agentId);
 
-        // 3. Cleanup all agent systems (centralized here to avoid duplicate cleanup)
         this.runner.aiSystem.removeAgentState(agentId);
         this.runner.needsSystem.removeEntityNeeds(agentId);
         this.runner.socialSystem.removeRelationships(agentId);
@@ -95,7 +92,6 @@ export class EventRegistry {
         this.runner.roleSystem.removeAgentRole(agentId);
         this.runner.householdSystem.removeAgentFromHousehold(agentId);
 
-        // 4. Drop inventory to household/storage (triggers INVENTORY_DROPPED)
         const inventory =
           this.runner.inventorySystem.getAgentInventory(agentId);
         if (
@@ -120,7 +116,6 @@ export class EventRegistry {
         }
         this.runner.inventorySystem.removeAgentInventory(agentId);
 
-        // 5. Remove from registries
         this.runner.agentRegistry.removeAgent(agentId);
         this.runner.entityIndex.removeEntity(agentId);
 

@@ -57,7 +57,6 @@ export class TaskSystem {
     if (dtSec < 2) return;
     this.lastUpdate = now;
 
-    // Debug log every 10 seconds
     if (now - this.lastLogTime >= 10000) {
       this.lastLogTime = now;
       const active = [...this.tasks.values()].filter(

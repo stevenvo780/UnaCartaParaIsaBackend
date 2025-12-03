@@ -167,7 +167,6 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     this.gridWidth = Math.max(1, Math.ceil(worldWidthPx / this.gridSize));
     this.gridHeight = Math.max(1, Math.ceil(worldHeightPx / this.gridSize));
 
-    // Defensive: only precompute if zones exist
     if (this.gameState?.zones?.length > 0) {
       this.precomputeZoneDistances();
     }

@@ -295,7 +295,6 @@ export class SharedKnowledgeSystem extends EventEmitter {
   public update(): void {
     const now = Date.now();
 
-    // Debug log every 10 seconds
     if (now % 10000 < 1000) {
       const stats = this.getStats();
       logger.debug(

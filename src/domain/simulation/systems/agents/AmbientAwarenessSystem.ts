@@ -100,7 +100,6 @@ export class AmbientAwarenessSystem {
     const wellbeing = this.computeWellbeing();
     const ambientState = this.computeAmbientState(wellbeing);
 
-    // Debug log every 10 seconds
     if (Math.floor(now / 10000) !== Math.floor((now - 1000) / 10000)) {
       logger.debug(
         `🌡️ [AmbientAwarenessSystem] update: wellbeing=${wellbeing.average.toFixed(1)}, variance=${wellbeing.variance.toFixed(2)}, state=${ambientState}`,

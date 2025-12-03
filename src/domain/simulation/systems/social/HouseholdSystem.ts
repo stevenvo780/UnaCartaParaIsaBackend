@@ -59,7 +59,6 @@ export class HouseholdSystem {
 
     const stats = this.getSystemStats();
 
-    // Debug log every 10 seconds
     if (now - this.lastLogTime >= 10000) {
       this.lastLogTime = now;
       logger.debug(

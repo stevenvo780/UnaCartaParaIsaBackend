@@ -243,7 +243,6 @@ export class ConflictResolutionSystem {
   public update(): void {
     const now = Date.now();
 
-    // Debug log every 10 seconds
     const activeCardsCount = this.activeCards.size;
     const activeConflictsCount = this.getActiveConflicts().length;
     if (Math.floor(now / 10000) !== Math.floor((now - 1000) / 10000)) {

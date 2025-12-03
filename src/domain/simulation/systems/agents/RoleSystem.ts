@@ -206,7 +206,7 @@ export class RoleSystem extends EventEmitter {
       const dtStats = (now - this.lastStatsUpdate) / 1000;
       this.updateRoleStats(dtStats);
       this.lastStatsUpdate = now;
-      // Debug log with stats update
+
       logger.debug(
         `👷 [RoleSystem] roles=${this.roles.size} shift=${this.currentShift} roleTypes=${[...new Set([...this.roles.values()].map((r) => r.roleType))].join(",")}`,
       );

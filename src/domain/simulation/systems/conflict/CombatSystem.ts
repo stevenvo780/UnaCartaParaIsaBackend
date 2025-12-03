@@ -171,7 +171,6 @@ export class CombatSystem implements ICombatSystem {
     const startTime = performance.now();
     const now = getFrameTime();
 
-    // Debug log every 10 seconds
     if (now % 10000 < 100) {
       const validEntities =
         this.state.entities?.filter((e) => !e.isDead && e.position).length ?? 0;
@@ -464,9 +463,8 @@ export class CombatSystem implements ICombatSystem {
   }
 
   public equip(agentId: string, weaponId: WeaponId): void {
-    // Sync with global equipment system
     equipmentSystem.equipItem(agentId, EquipmentSlot.MAIN_HAND, weaponId);
-    // Keep legacy local map for backward compatibility
+
     this.equippedWeapons.set(agentId, weaponId);
     simulationEvents.emit(GameEventType.COMBAT_WEAPON_EQUIPPED, {
       agentId,
@@ -572,7 +570,7 @@ export class CombatSystem implements ICombatSystem {
     now: number,
   ): boolean {
     const lastAttack = this.lastAttackAt.get(agentId) ?? 0;
-    // Use equipment stats: higher attackSpeed => shorter cooldown
+
     const stats = equipmentSystem.getMainHandStats(agentId);
     const cooldown = Math.max(
       200,
@@ -618,7 +616,7 @@ export class CombatSystem implements ICombatSystem {
     const attackerProfile = this.lifeCycleSystem.getAgent(attacker.id);
     const aggression =
       attackerProfile?.traits?.aggression ?? attacker.traits?.aggression ?? 0.3;
-    // Compute damage from equipment stats (unified source)
+
     const eqStats = equipmentSystem.getMainHandStats(attacker.id);
     const base = 10 * eqStats.damageMultiplier * (0.8 + Math.random() * 0.4);
     const scale = 0.5 + aggression * 0.7;

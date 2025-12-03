@@ -162,7 +162,6 @@ export class EconomySystem implements ITradeSystem {
       this.lastSalaryPayment = now;
     }
 
-    // Debug log every 10 seconds
     if (now - this.lastLogTime >= 10000) {
       this.lastLogTime = now;
       const agents = this.state.agents?.length ?? 0;

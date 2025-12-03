@@ -453,7 +453,6 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
       return false;
     }
 
-    // Agent must know the recipe (from RecipeDiscovery), unless it is a basic one
     const isBasic = BASIC_RECIPE_IDS.includes(recipeId);
     const knowsRecipe = this.recipeDiscovery
       ? this.recipeDiscovery.agentKnowsRecipe(agentId, recipeId)

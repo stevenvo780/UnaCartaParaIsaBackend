@@ -662,7 +662,6 @@ export class AISystem extends EventEmitter {
       }));
     }
 
-    // Inventory context - simplified using available methods
     let inventoryLoad = 0;
     const inventoryCapacity = 50;
     let depositZoneId: string | undefined;
@@ -673,7 +672,6 @@ export class AISystem extends EventEmitter {
       inventoryLoad = inventoryCapacity - availableSpace;
     }
 
-    // Find storage zone if inventory is heavy
     if (inventoryLoad > inventoryCapacity * 0.7 && this.gameState.zones) {
       const storageZone = this.gameState.zones.find(
         (z) => z.type === ZoneType.STORAGE || z.id.includes(ZoneType.STORAGE),
@@ -766,10 +764,8 @@ export class AISystem extends EventEmitter {
         y: a.position.y,
       }));
 
-      // Social context: find potential mate and agent in need
       const currentAgent = this.agentRegistry?.getProfile(agentId);
       if (currentAgent) {
-        // Find potential mate (opposite sex, adult, high wellness)
         const potentialMate = otherAgents.find((a) => {
           const agent = a.agent;
           if (!agent || agent.sex === currentAgent.sex) return false;
@@ -793,7 +789,6 @@ export class AISystem extends EventEmitter {
           }
         }
 
-        // Find nearby agent in need (critical needs)
         const agentInNeed = otherAgents.find((a) => {
           const needs = a.agent?.needs;
           if (!needs) return false;
@@ -812,7 +807,7 @@ export class AISystem extends EventEmitter {
           result.nearbyAgentInNeed = {
             id: agentInNeed.id,
             need: criticalNeed,
-            targetZoneId: undefined, // Will be set by zone system if available
+            targetZoneId: undefined,
           };
           if (Math.random() < 0.1) {
             logger.debug(

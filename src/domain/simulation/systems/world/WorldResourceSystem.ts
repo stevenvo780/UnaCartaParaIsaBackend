@@ -277,8 +277,6 @@ export class WorldResourceSystem {
     const config = getResourceConfig(type);
     if (!config) return null;
 
-    // WATER_SOURCE eliminado - el agua proviene SOLO de tiles OCEAN/LAKE del terreno
-    // Los agentes usan WorldQueryService.findWaterTilesNear() para beber
     const validTypes: WorldResourceType[] = [
       WorldResourceType.TREE,
       WorldResourceType.ROCK,
@@ -358,10 +356,6 @@ export class WorldResourceSystem {
         const pixelX = tile.x * tileSize;
         const pixelY = tile.y * tileSize;
 
-        // Los tiles de agua (OCEAN/LAKE) NO generan recursos separados.
-        // Los agentes usan directamente los tiles de agua del terreno via WorldQueryService.findWaterTilesNear()
-        // Esto evita crear miles de recursos duplicados innecesarios.
-
         if (tile.assets.vegetation) {
           for (const asset of tile.assets.vegetation) {
             const resourceType = this.mapAssetToResource(asset);
@@ -403,10 +397,6 @@ export class WorldResourceSystem {
             }
           }
         }
-
-        // NO generamos water_fresh para biomas terrestres.
-        // El agua solo proviene de tiles OCEAN/LAKE del terreno o estructuras como pozos.
-        // Los agentes usan WorldQueryService.findWaterTilesNear() para encontrar agua.
       }
     }
 

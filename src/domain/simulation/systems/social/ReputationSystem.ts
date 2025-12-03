@@ -53,8 +53,6 @@ function affinityToTrust(affinity: number): number {
 }
 
 function trustDeltaToAffinityDelta(delta: number): number {
-  // Very conservative mapping: small trust deltas become small affinity deltas
-  // 1 trust unit ~ 2 affinity units, but we scale down to avoid spikes
   return Math.max(-1, Math.min(1, delta * 2));
 }
 
@@ -107,7 +105,6 @@ export class ReputationSystem {
   }
 
   public updateTrust(a: string, b: string, delta: number): void {
-    // Prefer SocialSystem as source of truth for pair relationships
     if (this.socialSystem) {
       const affinityDelta = trustDeltaToAffinityDelta(delta);
       this.socialSystem.modifyAffinity(a, b, affinityDelta);
@@ -196,7 +193,6 @@ export class ReputationSystem {
     this.lastUpdate = now;
     const decay = REPUTATION_CONFIG.decay.perSecond * dt;
 
-    // Debug log every 10 seconds
     const agentCount = this.reputation.size;
     let trustEdgesCount = 0;
     this.trust.forEach((row) => (trustEdgesCount += row.size));
@@ -206,8 +202,6 @@ export class ReputationSystem {
       );
     }
 
-    // If SocialSystem is present, it already decays affinities.
-    // Skip decaying local trust map to avoid duplicated effects.
     if (!this.socialSystem) {
       this.trust.forEach((row) => {
         row.forEach((edge) => {
@@ -229,8 +223,6 @@ export class ReputationSystem {
 
     let trustEdges = 0;
     if (this.socialSystem) {
-      // Estimate edges from SocialSystem graph
-      // Note: SocialSystem does not expose edges directly; approximate using gameState relationships snapshot if present
       trustEdges = Object.values(
         this.gameState.socialGraph?.relationships || {},
       ).reduce((acc, targets) => acc + Object.keys(targets).length, 0);
@@ -264,7 +256,7 @@ export class ReputationSystem {
     this.gameState.reputation.stats = this.getSystemStats();
 
     const allReputations = this.getAllReputations();
-    // Build trust array from SocialSystem if available for snapshot
+
     let trustArray: Array<{
       sourceId: string;
       targets: Array<{ sourceId: string; targetId: string; trust: number }>;

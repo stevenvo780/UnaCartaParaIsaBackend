@@ -1469,10 +1469,9 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     }
 
     const agentPos = { x: agent.position.x, y: agent.position.y };
-    // Increased from 50 to 100 to cover at least 1.5 tiles (64px = 1 tile)
+
     const GATHER_RANGE = 100;
 
-    // For THIRST: Search for OCEAN/LAKE tiles using WorldQueryService
     if (needType === NeedType.THIRST || needType === ResourceType.WATER) {
       if (this.worldQueryService) {
         const waterTiles = this.worldQueryService.findWaterTilesNear(
@@ -1486,9 +1485,8 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
         );
 
         if (waterTiles.length > 0) {
-          const nearestTile = waterTiles[0]; // Already sorted by distance
+          const nearestTile = waterTiles[0];
 
-          // Consume water from tile - may convert OCEAN to DIRT if depleted
           if (this.terrainSystem) {
             const consumed = this.terrainSystem.consumeWaterFromTile(
               nearestTile.tileX,
@@ -1500,7 +1498,6 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
                 `[NeedsSystem] 💧 Agent ${agentId} drinking from OCEAN tile at (${nearestTile.worldX}, ${nearestTile.worldY}), consumed ${consumed} water`,
               );
 
-              // Add water to inventory then consume it
               if (this.inventorySystem) {
                 this.inventorySystem.addResource(
                   agentId,
@@ -1514,7 +1511,6 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
               };
             }
           } else {
-            // Fallback without TerrainSystem - just drink without consuming tile
             logger.info(
               `[NeedsSystem] 💧 Agent ${agentId} drinking from OCEAN tile at (${nearestTile.worldX}, ${nearestTile.worldY})`,
             );
@@ -1530,7 +1526,6 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
         }
       }
 
-      // Fallback: check for water resources if WorldQueryService unavailable
       if (this.gameState?.worldResources && this.inventorySystem) {
         const targetTypes = ["water_source", ResourceType.WATER, "water_fresh"];
         let nearestResource: { id: string; distance: number } | null = null;
@@ -1576,7 +1571,6 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       return { gathered: false };
     }
 
-    // For HUNGER: Search for food resources
     if (!this.gameState?.worldResources || !this.inventorySystem) {
       return { gathered: false };
     }

@@ -397,13 +397,14 @@ export class SimulationRunner {
 
     logger.info("🔗 SimulationRunner: System dependencies configured");
 
-    // One-time migrations to unify duplicated logic between systems
     this.migrateTrustEdgesToSocial();
-    // After migrating, drop local trust edges to avoid duplication
+
     try {
       this.reputationSystem.clearTrustMap();
     } catch {
-      // Silently ignore if clearTrustMap fails (e.g., already cleared)
+      logger.warn(
+        "ReputationSystem: Failed to clear trust map during initialization",
+      );
     }
 
     this.eventRegistry.setupEventListeners();
@@ -442,7 +443,7 @@ export class SimulationRunner {
         const a = row.sourceId;
         for (const edge of row.targets) {
           const b = edge.targetId;
-          // trust (0..1) -> affinity (-1..1)
+
           const affinity = Math.max(-1, Math.min(1, edge.value * 2 - 1));
           this.socialSystem.setAffinity(a, b, affinity);
           migrated++;

@@ -102,10 +102,6 @@ export class WorldLoader {
       height: worldConfig.height * worldConfig.tileSize,
     };
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // FIX: Populate world.terrain as 2D array for TerrainSystem/WorldQueryService
-    // Converts flat tiles to SimulationTerrainTile format (assets.terrain)
-    // ═══════════════════════════════════════════════════════════════════════
     type SimulationTerrainTile = {
       x: number;
       y: number;
@@ -118,7 +114,6 @@ export class WorldLoader {
     for (let y = 0; y < worldConfig.height; y++) {
       terrain2D[y] = [];
       for (let x = 0; x < worldConfig.width; x++) {
-        // Default empty tile (will be overwritten)
         terrain2D[y][x] = {
           x,
           y,
@@ -129,7 +124,6 @@ export class WorldLoader {
       }
     }
 
-    // Populate from generated tiles
     for (const tile of allTiles) {
       terrain2D[tile.y][tile.x] = {
         x: tile.x,
@@ -154,7 +148,6 @@ export class WorldLoader {
       },
     };
 
-    // Count biomes for debug
     const biomeCounts: Record<string, number> = {};
     for (const tile of allTiles) {
       biomeCounts[tile.biome] = (biomeCounts[tile.biome] || 0) + 1;

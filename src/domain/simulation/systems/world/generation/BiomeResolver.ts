@@ -41,7 +41,6 @@ export class BiomeResolver {
     elevation: number,
     continentality: number,
   ): BiomeType {
-    // Ocean: low continentality - expanded threshold
     if (continentality < 0.35) {
       this.waterBiomesGenerated++;
       logger.debug(
@@ -50,8 +49,6 @@ export class BiomeResolver {
       return BiomeType.OCEAN;
     }
 
-    // Lake: low elevation + moderate moisture = inland water
-    // Relaxed thresholds to generate more water bodies
     if (elevation < 0.48 && moisture > 0.5) {
       this.waterBiomesGenerated++;
       logger.debug(
@@ -60,10 +57,7 @@ export class BiomeResolver {
       return BiomeType.LAKE;
     }
 
-    // FALLBACK: Force water generation if none generated in a while
-    // This ensures survival is possible even with "unlucky" noise values
     if (this.waterBiomesGenerated === 0 && elevation < 0.52) {
-      // First few tiles - guarantee at least one water source
       this.waterBiomesGenerated++;
       logger.info(
         `💧 [BiomeResolver] Forced LAKE generation for survival (first water source)`,
@@ -71,12 +65,10 @@ export class BiomeResolver {
       return BiomeType.LAKE;
     }
 
-    // Wetland: moderate-low elevation with high moisture
     if (elevation < 0.5 && moisture > 0.55) {
       return BiomeType.WETLAND;
     }
 
-    // Beach: transition zone
     if (continentality < 0.42 && elevation < 0.42) {
       return BiomeType.BEACH;
     }
