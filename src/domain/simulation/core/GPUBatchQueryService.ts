@@ -1,17 +1,3 @@
-type TF = typeof import("@tensorflow/tfjs-node");
-let tf: TF | null = null;
-let tfLoadPromise: Promise<TF> | null = null;
-
-async function getTensorFlow(): Promise<TF> {
-  if (tf) return tf;
-  if (tfLoadPromise) return tfLoadPromise;
-  tfLoadPromise = import("@tensorflow/tfjs-node").then((module) => {
-    tf = module;
-    return tf;
-  });
-  return tfLoadPromise;
-}
-
 import { logger } from "../../../infrastructure/utils/logger";
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
@@ -209,7 +195,7 @@ export class GPUBatchQueryService {
 
   /**
    * GPU batch processing - compute all distances, then filter per query.
-   * Now async to support lazy-loading of TensorFlow.
+   * Uses GPUComputeService for centralized TensorFlow loading.
    */
   private async processGPUAsync(
     queries: PendingQuery[],
@@ -218,7 +204,18 @@ export class GPUBatchQueryService {
     const startTime = performance.now();
 
     try {
-      const tfModule = await getTensorFlow();
+      if (!this.gpuService) {
+        logger.warn("⚠️ GPUComputeService not available, falling back to CPU");
+        this.processCPU(queries, entityCount);
+        return;
+      }
+
+      const tfModule = await this.gpuService.getTensorFlowModule();
+      if (!tfModule) {
+        logger.warn("⚠️ TensorFlow not available, falling back to CPU");
+        this.processCPU(queries, entityCount);
+        return;
+      }
 
       const queryCenters = new Float32Array(queries.length * 2);
       for (let i = 0; i < queries.length; i++) {

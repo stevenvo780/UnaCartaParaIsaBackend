@@ -1,4 +1,4 @@
-import { SpatialGrid } from "../../../shared/utils/SpatialGrid";
+import { OptimizedSpatialGrid } from "../../../shared/utils/OptimizedSpatialGrid";
 import { performance } from "node:perf_hooks";
 import { performanceMonitor } from "./PerformanceMonitor";
 import type { SimulationEntity } from "./schema";
@@ -14,11 +14,11 @@ import { EntityType } from "../../../shared/constants/EntityEnums";
  * Optimized with incremental O(Δn) updates instead of O(n) full rebuilds.
  * Uses object pooling to reduce garbage collection pressure.
  *
- * @see SpatialGrid for the underlying grid implementation
+ * @see OptimizedSpatialGrid for the underlying grid implementation
  */
 @injectable()
 export class SharedSpatialIndex {
-  private grid: SpatialGrid<string>;
+  private grid: OptimizedSpatialGrid<string>;
   private entityPositions = new Map<string, { x: number; y: number }>();
   private entityTypes = new Map<string, EntityType>();
   private dirty = true;
@@ -41,7 +41,7 @@ export class SharedSpatialIndex {
     worldHeight: number = 3200,
     cellSize: number = 70,
   ) {
-    this.grid = new SpatialGrid(worldWidth, worldHeight, cellSize);
+    this.grid = new OptimizedSpatialGrid(worldWidth, worldHeight, cellSize);
     for (let i = 0; i < this.POSITION_POOL_SIZE; i++) {
       this.positionPool.push({ x: 0, y: 0 });
     }

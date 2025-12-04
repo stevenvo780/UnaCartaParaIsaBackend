@@ -120,6 +120,17 @@ export class GPUComputeService {
   }
 
   /**
+   * Gets the TensorFlow module, lazy-loading if needed.
+   * Use this for custom GPU operations outside of built-in batch methods.
+   *
+   * @returns TensorFlow module or null if not available
+   */
+  async getTensorFlowModule(): Promise<TF | null> {
+    await this.ensureTensorFlowLoaded();
+    return this.tf;
+  }
+
+  /**
    * Updates entity positions in batch using GPU acceleration.
    * Falls back to CPU if GPU unavailable or entity count < 1000.
    * TensorFlow is lazy-loaded only when entity count >= 1000.

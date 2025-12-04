@@ -1,5 +1,5 @@
 import { logger } from "@/infrastructure/utils/logger";
-import { SpatialGrid } from "../../../../shared/utils/SpatialGrid";
+import { OptimizedSpatialGrid } from "../../../../shared/utils/OptimizedSpatialGrid";
 import { GameEventType, simulationEvents } from "../../core/events";
 import { getResourceConfig } from "./config/WorldResourceConfigs";
 import type {
@@ -24,7 +24,7 @@ import { optional } from "inversify";
 @injectable()
 export class WorldResourceSystem {
   private gameState: GameState;
-  private spatialGrid: SpatialGrid<string>;
+  private spatialGrid: OptimizedSpatialGrid<string>;
   private resources: Map<string, WorldResourceInstance> = new Map();
   private lastRegenerationCheck = 0;
   private readonly REGENERATION_CHECK_INTERVAL = 5000;
@@ -44,7 +44,7 @@ export class WorldResourceSystem {
       this.gameState.worldResources = {};
     }
 
-    this.spatialGrid = new SpatialGrid(3200, 3200, 100);
+    this.spatialGrid = new OptimizedSpatialGrid(3200, 3200, 100);
 
     if (this.gameState.worldResources) {
       for (const resource of Object.values(this.gameState.worldResources)) {

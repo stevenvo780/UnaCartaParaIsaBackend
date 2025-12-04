@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
 import { Worker } from "node:worker_threads";
+import { logger } from "../../utils/logger";
 import type {
   WorldGenConfig,
   TerrainTile,
@@ -133,8 +134,7 @@ export class ChunkWorkerPool extends EventEmitter {
       this.spawnWorkerIfNeeded();
     }
 
-    // eslint-disable-next-line no-console
-    console.log(
+    logger.info(
       `[ChunkWorkerPool] Elastic pool initialized: min=${this.minWorkers}, max=${this.maxWorkers}, idleTimeout=${this.idleTimeoutMs}ms`,
     );
   }

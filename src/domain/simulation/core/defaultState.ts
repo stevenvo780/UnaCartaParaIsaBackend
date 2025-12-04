@@ -5,6 +5,7 @@ import type {
 } from "@/shared/types/game-types";
 import { InteractionType } from "../../../shared/constants/InteractionEnums";
 import { WeatherType } from "../../../shared/constants/AmbientEnums";
+import { logger } from "../../../infrastructure/utils/logger";
 
 /**
  * Default resource values for new game states.
@@ -110,9 +111,8 @@ export function cloneGameState(state: GameState): GameState {
   try {
     return structuredClone(state);
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      "structuredClone failed, falling back to JSON:",
+    logger.warn(
+      "structuredClone failed, falling back to JSON",
       err instanceof Error ? err.message : String(err),
     );
     return JSON.parse(JSON.stringify(state)) as GameState;

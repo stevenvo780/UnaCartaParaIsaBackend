@@ -1,6 +1,10 @@
 /**
  * @fileoverview Event Bus - Central Event System
  *
+ * @deprecated This EventBus is used internally by AISystem only.
+ * For cross-system events, use `simulationEvents` from `./events.ts` instead.
+ * This module will be refactored in a future version to unify event systems.
+ *
  * Sistema de eventos centralizado para comunicación entre sistemas.
  * Los sistemas emiten eventos, otros sistemas escuchan y reaccionan.
  *
