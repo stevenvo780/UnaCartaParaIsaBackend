@@ -133,7 +133,7 @@ export class MovementBatchProcessor {
           const targetY = this.targetBuffer[posOffset + 1];
           const dx = targetX - currentX;
           const dy = targetY - currentY;
-          const distance = Math.sqrt(dx * dx + dy * dy);
+          const distance = Math.hypot(dx, dy);
 
           if (distance > 0.001) {
             const speed = this.BASE_MOVEMENT_SPEED;
@@ -177,7 +177,7 @@ export class MovementBatchProcessor {
 
       const dx = targetX - currentX;
       const dy = targetY - currentY;
-      const distanceRemaining = Math.sqrt(dx * dx + dy * dy);
+      const distanceRemaining = Math.hypot(dx, dy);
 
       if (distanceRemaining < 2) {
         this.positionBuffer![posOffset] = targetX;

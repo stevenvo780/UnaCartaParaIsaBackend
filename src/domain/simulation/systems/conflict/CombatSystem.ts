@@ -968,7 +968,7 @@ export class CombatSystem implements ICombatSystem {
 
     const dx = agentPos.x - fromPosition.x;
     const dy = agentPos.y - fromPosition.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    const distance = Math.hypot(dx, dy);
 
     if (distance < 1) {
       const angle = Math.random() * Math.PI * 2;

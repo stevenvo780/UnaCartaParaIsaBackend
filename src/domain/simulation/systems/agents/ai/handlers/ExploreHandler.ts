@@ -107,9 +107,9 @@ export function handleExplore(
       position.y,
     );
 
-    const distanceToEdge = Math.sqrt(
-      Math.pow(edgeTarget.x - position.x, 2) +
-        Math.pow(edgeTarget.y - position.y, 2),
+    const distanceToEdge = Math.hypot(
+      edgeTarget.x - position.x,
+      edgeTarget.y - position.y,
     );
 
     const stepDistance = Math.min(150, distanceToEdge);

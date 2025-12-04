@@ -219,7 +219,7 @@ export class WorldQueryService {
 
     const dx = resource.position.x - x;
     const dy = resource.position.y - y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    const distance = Math.hypot(dx, dy);
 
     return {
       id: resource.id,
@@ -259,7 +259,7 @@ export class WorldQueryService {
       .map((resource) => {
         const dx = resource.position.x - x;
         const dy = resource.position.y - y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+        const distance = Math.hypot(dx, dy);
 
         return {
           id: resource.id,
@@ -342,7 +342,7 @@ export class WorldQueryService {
     return {
       id: nearest.id,
       position: nearest.position,
-      distance: Math.sqrt(minDistSq),
+      distance: Math.sqrt(minDistSq), // sqrt of pre-computed squared distance
       entityType: EntityType.ANIMAL as const,
       animalType: nearest.type,
       isDead: nearest.isDead,
@@ -381,7 +381,7 @@ export class WorldQueryService {
         return {
           id: animal.id,
           position: animal.position,
-          distance: Math.sqrt(dx * dx + dy * dy),
+          distance: Math.hypot(dx, dy),
           entityType: EntityType.ANIMAL as const,
           animalType: animal.type,
           isDead: animal.isDead,
@@ -445,7 +445,7 @@ export class WorldQueryService {
     return {
       id: nearest.id,
       position: nearest.position,
-      distance: Math.sqrt(minDistSq),
+      distance: Math.sqrt(minDistSq), // sqrt of pre-computed squared distance
       entityType: EntityType.AGENT as const,
       isDead: nearest.isDead ?? false,
       agent: nearest,
@@ -482,7 +482,7 @@ export class WorldQueryService {
         return {
           id: agent.id,
           position: agent.position!,
-          distance: Math.sqrt(dx * dx + dy * dy),
+          distance: Math.hypot(dx, dy),
           entityType: EntityType.AGENT as const,
           isDead: agent.isDead ?? false,
           agent,
@@ -603,12 +603,8 @@ export class WorldQueryService {
     const allWaterTiles = [...oceanTiles, ...lakeTiles];
 
     return allWaterTiles.sort((a, b) => {
-      const distA = Math.sqrt(
-        Math.pow(a.worldX - x, 2) + Math.pow(a.worldY - y, 2),
-      );
-      const distB = Math.sqrt(
-        Math.pow(b.worldX - x, 2) + Math.pow(b.worldY - y, 2),
-      );
+      const distA = Math.hypot(a.worldX - x, a.worldY - y);
+      const distB = Math.hypot(b.worldX - x, b.worldY - y);
       return distA - distB;
     });
   }
@@ -634,7 +630,7 @@ export class WorldQueryService {
         return {
           id: zone.id,
           position: { x: centerX, y: centerY },
-          distance: Math.sqrt(dx * dx + dy * dy),
+          distance: Math.hypot(dx, dy),
           entityType: EntityType.ZONE as const,
           zoneType: zone.type,
           zone,
@@ -702,7 +698,7 @@ export class WorldQueryService {
         x: nearest.bounds.x + nearest.bounds.width / 2,
         y: nearest.bounds.y + nearest.bounds.height / 2,
       },
-      distance: Math.sqrt(minDistSq),
+      distance: Math.sqrt(minDistSq), // sqrt of pre-computed squared distance
       entityType: EntityType.ZONE as const,
       zoneType: nearest.type,
       zone: nearest,

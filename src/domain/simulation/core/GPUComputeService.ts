@@ -273,7 +273,7 @@ export class GPUComputeService {
 
       const dx = targetX - currentX;
       const dy = targetY - currentY;
-      const distanceRemaining = Math.sqrt(dx * dx + dy * dy);
+      const distanceRemaining = Math.hypot(dx, dy);
 
       if (distanceRemaining < 2) {
         newPositions[posOffset] = targetX;
@@ -1230,7 +1230,7 @@ export class GPUComputeService {
         const dx = animalPositions[i * 2] - threatPositions[threatIdx * 2];
         const dy =
           animalPositions[i * 2 + 1] - threatPositions[threatIdx * 2 + 1];
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        const dist = Math.hypot(dx, dy);
 
         if (dist > 0.001) {
           newPositions[i * 2] += (dx / dist) * moveAmount;
@@ -1288,7 +1288,7 @@ export class GPUComputeService {
 
       const dx = ax - threatPositions[nearestThreatIdx * 2];
       const dy = ay - threatPositions[nearestThreatIdx * 2 + 1];
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      const dist = Math.hypot(dx, dy);
 
       if (dist > 0.001) {
         newPositions[i * 2] += (dx / dist) * moveAmount;

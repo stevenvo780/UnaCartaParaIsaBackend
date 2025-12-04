@@ -101,8 +101,9 @@ export class WorldGenerationService {
           );
         }
 
-        const distFromSpawnCenter = Math.sqrt(
-          Math.pow(globalX - 6, 2) + Math.pow(globalY - 6, 2),
+        const distFromSpawnCenter = Math.hypot(
+          globalX - 6,
+          globalY - 6,
         );
         let biome: BiomeType;
         if (distFromSpawnCenter < 2.5) {

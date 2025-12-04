@@ -897,7 +897,7 @@ export class AnimalSystem {
 
     const dx = waterTile.x - animal.position.x;
     const dy = waterTile.y - animal.position.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    const distance = Math.hypot(dx, dy);
 
     if (distance < 40) {
       animal.state = AnimalState.DRINKING;

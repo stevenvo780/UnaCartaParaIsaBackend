@@ -148,9 +148,9 @@ export class VoronoiGenerator {
               grid[neighborRow][neighborCol]
             ) {
               const neighbor = grid[neighborRow][neighborCol]!;
-              const distance = Math.sqrt(
-                (candidate.x - neighbor.x) ** 2 +
-                  (candidate.y - neighbor.y) ** 2,
+              const distance = Math.hypot(
+                candidate.x - neighbor.x,
+                candidate.y - neighbor.y,
               );
 
               if (distance < minDistance) {

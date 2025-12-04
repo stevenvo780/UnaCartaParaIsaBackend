@@ -625,7 +625,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       if (!zone.bounds) return false;
       const dx = zone.bounds.x + zone.bounds.width / 2 - position.x;
       const dy = zone.bounds.y + zone.bounds.height / 2 - position.y;
-      return Math.sqrt(dx * dx + dy * dy) < radius + zone.bounds.width / 2;
+      return Math.hypot(dx, dy) < radius + zone.bounds.width / 2;
     });
 
     this.zoneCache.set(cacheKey, {
@@ -1543,7 +1543,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
           const resPos = resource.position || { x: 0, y: 0 };
           const dx = resPos.x - agentPos.x;
           const dy = resPos.y - agentPos.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
+          const distance = Math.hypot(dx, dy);
 
           if (
             distance <= GATHER_RANGE &&
@@ -1591,7 +1591,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       const resPos = resource.position || { x: 0, y: 0 };
       const dx = resPos.x - agentPos.x;
       const dy = resPos.y - agentPos.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      const distance = Math.hypot(dx, dy);
 
       if (distance <= GATHER_RANGE) {
         if (!nearestResource || distance < nearestResource.distance) {

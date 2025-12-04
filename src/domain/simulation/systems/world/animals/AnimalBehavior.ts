@@ -24,7 +24,7 @@ export class AnimalBehavior {
   ): void {
     const dx = animal.position.x - threatPosition.x;
     const dy = animal.position.y - threatPosition.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    const distance = Math.hypot(dx, dy);
 
     if (distance > 0 && distance < 300) {
       const normalizedX = dx / distance;
@@ -47,7 +47,7 @@ export class AnimalBehavior {
   ): void {
     const dx = targetPosition.x - animal.position.x;
     const dy = targetPosition.y - animal.position.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    const distance = Math.hypot(dx, dy);
 
     if (distance > 5) {
       const normalizedX = dx / distance;
@@ -129,7 +129,7 @@ export class AnimalBehavior {
     if (animal.targetPosition) {
       const dx = animal.targetPosition.x - animal.position.x;
       const dy = animal.targetPosition.y - animal.position.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      const distance = Math.hypot(dx, dy);
 
       if (distance < 30) {
         animal.state = AnimalState.EATING;
@@ -214,7 +214,7 @@ export class AnimalBehavior {
 
       const dx = prey.position.x - animal.position.x;
       const dy = prey.position.y - animal.position.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      const distance = Math.hypot(dx, dy);
 
       if (distance < 25) {
         const attackDamage = (config.attackDamage || 15) * animal.genes.size;
@@ -268,7 +268,7 @@ export class AnimalBehavior {
     if (animal.targetPosition) {
       const dx = animal.targetPosition.x - animal.position.x;
       const dy = animal.targetPosition.y - animal.position.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      const distance = Math.hypot(dx, dy);
 
       if (distance < 30) {
         animal.state = AnimalState.DRINKING;
@@ -327,7 +327,7 @@ export class AnimalBehavior {
     if (nearbyMate) {
       const dx = nearbyMate.position.x - animal.position.x;
       const dy = nearbyMate.position.y - animal.position.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      const distance = Math.hypot(dx, dy);
 
       if (distance < 50) {
         if (Math.random() < 0.35) {

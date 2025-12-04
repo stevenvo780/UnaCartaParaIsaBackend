@@ -150,7 +150,7 @@ export class GPUBatchQueryService {
       const dy = this.entityPositions[i * 2 + 1] - centerY;
       const distSq = dx * dx + dy * dy;
       if (distSq <= radiusSq) {
-        results.push({ entityIndex: i, distance: Math.sqrt(distSq) });
+        results.push({ entityIndex: i, distance: Math.hypot(dx, dy) });
       }
     }
 
@@ -248,7 +248,7 @@ export class GPUBatchQueryService {
           const distSq = distancesSq[q][e];
           if (distSq <= query.radiusSq) {
             indices.push(e);
-            distances[count++] = Math.sqrt(distSq);
+            distances[count++] = Math.sqrt(distSq); // Keep sqrt for pre-computed squared distances
           }
         }
 
@@ -284,7 +284,7 @@ export class GPUBatchQueryService {
 
         if (distSq <= query.radiusSq) {
           indices.push(i);
-          distances.push(Math.sqrt(distSq));
+          distances.push(Math.hypot(dx, dy));
         }
       }
 
