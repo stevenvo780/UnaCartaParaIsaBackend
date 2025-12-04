@@ -18,20 +18,6 @@ import {
 import { moveToPosition, isAtTarget } from "./MoveHandler";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
-/**
- * @deprecated Use MovementSystem directly
- */
-export interface ExploreHandlerDeps {
-  getUnexploredPosition?: (agentId: string) => { x: number; y: number } | null;
-  markAsExplored?: (
-    agentId: string,
-    x: number,
-    y: number,
-    radius: number,
-  ) => void;
-  getExplorationProgress?: (agentId: string) => number;
-}
-
 /** Radio de exploración al hacer movimientos aleatorios */
 const EXPLORE_RADIUS = 50;
 
@@ -41,7 +27,6 @@ const EXPLORE_RADIUS = 50;
  */
 export function handleExplore(
   ctx: HandlerContext,
-  _deps?: ExploreHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task, position, memory } = ctx;
 

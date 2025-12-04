@@ -106,11 +106,6 @@ describe("AISystem v4", () => {
       const registry = aiSystem.getSystemRegistry();
       expect(registry).toBeDefined();
     });
-
-    it("debe exponer EventBus", () => {
-      const bus = aiSystem.getEventBus();
-      expect(bus).toBeDefined();
-    });
   });
 
   describe("update", () => {

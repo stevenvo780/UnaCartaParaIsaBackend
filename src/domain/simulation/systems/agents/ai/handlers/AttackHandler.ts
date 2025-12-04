@@ -17,24 +17,10 @@ import {
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
- * @deprecated Use SystemRegistry.combat instead
- */
-export interface AttackHandlerDeps {
-  attackEntity?: (
-    attackerId: string,
-    targetId: string,
-  ) => { hit: boolean; damage: number };
-  getEntityHealth?: (entityId: string) => number;
-  getEntityPosition?: (entityId: string) => { x: number; y: number } | null;
-  isInRange?: (agentId: string, targetId: string, range: number) => boolean;
-}
-
-/**
  * Maneja el ataque delegando al CombatSystem.
  */
 export function handleAttack(
   ctx: HandlerContext,
-  _deps?: AttackHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
   const targetId = task.target?.entityId;

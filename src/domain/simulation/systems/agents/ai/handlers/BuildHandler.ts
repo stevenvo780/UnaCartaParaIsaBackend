@@ -17,31 +17,10 @@ import {
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
- * @deprecated Use SystemRegistry.building instead
- */
-export interface BuildHandlerDeps {
-  getConstruction?: (buildingId: string) => {
-    id: string;
-    progress: number;
-    required: Record<string, number>;
-    position: { x: number; y: number };
-  } | null;
-  contributeToConstruction?: (
-    agentId: string,
-    buildingId: string,
-  ) => { contributed: boolean; amount: number };
-  hasResourcesForBuild?: (
-    agentId: string,
-    requirements: Record<string, number>,
-  ) => boolean;
-}
-
-/**
  * Maneja la construcción delegando al BuildingSystem.
  */
 export function handleBuild(
   ctx: HandlerContext,
-  _deps?: BuildHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
 

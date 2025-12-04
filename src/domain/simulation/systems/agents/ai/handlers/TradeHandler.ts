@@ -22,27 +22,10 @@ export interface TradeOffer {
 }
 
 /**
- * @deprecated Use SystemRegistry.trade instead
- */
-export interface TradeHandlerDeps {
-  findNearestMarket?: (
-    agentId: string,
-  ) => { id: string; position: { x: number; y: number } } | null;
-  getEntityPosition?: (entityId: string) => { x: number; y: number } | null;
-  executeTrade?: (
-    agentId: string,
-    targetId: string,
-    offer: TradeOffer,
-  ) => { success: boolean; completed: TradeOffer };
-  canTrade?: (agentId: string, targetId: string) => boolean;
-}
-
-/**
  * Maneja el comercio delegando al TradeSystem.
  */
 export function handleTrade(
   ctx: HandlerContext,
-  _deps?: TradeHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
 

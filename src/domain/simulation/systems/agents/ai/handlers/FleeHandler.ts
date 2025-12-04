@@ -17,20 +17,10 @@ import {
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
- * @deprecated Use SystemRegistry.combat instead
- */
-export interface FleeHandlerDeps {
-  getEntityPosition?: (entityId: string) => { x: number; y: number } | null;
-  moveToPoint?: (agentId: string, x: number, y: number) => boolean;
-  getDistanceTo?: (agentId: string, targetId: string) => number;
-}
-
-/**
  * Maneja la huida delegando al CombatSystem.
  */
 export function handleFlee(
   ctx: HandlerContext,
-  _deps?: FleeHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
 

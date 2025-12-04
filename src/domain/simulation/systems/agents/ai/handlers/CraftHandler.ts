@@ -23,35 +23,10 @@ export interface Recipe {
 }
 
 /**
- * @deprecated Use SystemRegistry.crafting instead
- */
-export interface CraftHandlerDeps {
-  getRecipe?: (itemType: string) => Recipe | null;
-  hasIngredients?: (
-    agentId: string,
-    ingredients: Record<string, number>,
-  ) => boolean;
-  consumeIngredients?: (
-    agentId: string,
-    ingredients: Record<string, number>,
-  ) => boolean;
-  addToInventory?: (
-    agentId: string,
-    itemType: string,
-    amount: number,
-  ) => boolean;
-  findNearestStation?: (
-    agentId: string,
-    stationType: string,
-  ) => { id: string; position: { x: number; y: number } } | null;
-}
-
-/**
  * Maneja el crafteo delegando al CraftingSystem.
  */
 export function handleCraft(
   ctx: HandlerContext,
-  _deps?: CraftHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
 

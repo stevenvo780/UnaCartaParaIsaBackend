@@ -40,7 +40,6 @@ import {
   AnimalSystem,
   ItemGenerationSystem,
   CombatSystem,
-  ReputationSystem,
   RecipeDiscoverySystem,
   TaskSystem,
   MarriageSystem,
@@ -156,10 +155,8 @@ container
   .bind<CombatSystem>(TYPES.CombatSystem)
   .to(CombatSystem)
   .inSingletonScope();
-container
-  .bind<ReputationSystem>(TYPES.ReputationSystem)
-  .to(ReputationSystem)
-  .inSingletonScope();
+
+// ReputationSystem merged into SocialSystem - no separate binding needed
 
 container
   .bind<RecipeDiscoverySystem>(TYPES.RecipeDiscoverySystem)

@@ -19,28 +19,10 @@ import { logger } from "@/infrastructure/utils/logger";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
- * @deprecated Use SystemRegistry.needs instead
- */
-export interface ConsumeHandlerDeps {
-  consumeResource?: (
-    agentId: string,
-    resourceType: string,
-    amount: number,
-  ) => boolean;
-  satisfyNeed?: (agentId: string, needType: string, amount: number) => boolean;
-  hasResource?: (
-    agentId: string,
-    resourceType: string,
-    amount: number,
-  ) => boolean;
-}
-
-/**
  * Maneja el consumo delegando al NeedsSystem.
  */
 export function handleConsume(
   ctx: HandlerContext,
-  _deps?: ConsumeHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
 

@@ -18,25 +18,10 @@ import { logger } from "@/infrastructure/utils/logger";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
- * @deprecated Use SystemRegistry.inventory instead
- */
-export interface DepositHandlerDeps {
-  findNearestStorage?: (
-    agentId: string,
-  ) => { id: string; position: { x: number; y: number } } | null;
-  depositToStorage?: (
-    agentId: string,
-    storageId: string,
-  ) => { deposited: boolean; items: Record<string, number> };
-  getInventoryItems?: (agentId: string) => Record<string, number>;
-}
-
-/**
  * Maneja el depósito delegando al InventorySystem.
  */
 export function handleDeposit(
   ctx: HandlerContext,
-  _deps?: DepositHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
 

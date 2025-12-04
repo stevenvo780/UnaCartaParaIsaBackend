@@ -57,7 +57,6 @@ import type { NeedsSystem } from "../needs/NeedsSystem";
 import type { MovementSystem } from "../movement/MovementSystem";
 import type { WorldQueryService } from "../../world/WorldQueryService";
 import { SystemRegistry } from "../SystemRegistry";
-import { EventBus } from "@/domain/simulation/core/EventBus";
 import type { TimeSystem } from "../../core/TimeSystem";
 
 export interface AISystemDeps {
@@ -69,7 +68,6 @@ export interface AISystemDeps {
   timeSystem?: TimeSystem;
 
   systemRegistry?: SystemRegistry;
-  eventBus?: EventBus;
 }
 
 export interface AISystemConfig {
@@ -162,7 +160,6 @@ export class AISystem extends EventEmitter {
   private _movementSystem?: MovementSystem;
 
   private systemRegistry: SystemRegistry;
-  private eventBus: EventBus;
 
   private taskQueue: TaskQueue;
   private config: AISystemConfig;
@@ -192,22 +189,11 @@ export class AISystem extends EventEmitter {
     this.timeSystem = timeSystem;
     this.config = { ...DEFAULT_CONFIG };
 
-    this.eventBus = new EventBus();
     this.systemRegistry = new SystemRegistry();
 
     this.taskQueue = new TaskQueue({
       maxTasksPerAgent: this.config.maxTasksPerAgent,
       debug: this.config.debug,
-    });
-
-    this.eventBus.on("ai:task_emit", (event) => {
-      this.emitTask(event.agentId, {
-        type: event.type as TaskType,
-        priority: event.priority,
-        target: event.target,
-        params: event.params,
-        source: event.source,
-      });
     });
 
     logger.info("✅ [AISystem] Initialized (v4 - ECS architecture)");
@@ -223,7 +209,6 @@ export class AISystem extends EventEmitter {
     if (deps.worldQueryService) this.worldQueryService = deps.worldQueryService;
     if (deps.timeSystem) this.timeSystem = deps.timeSystem;
     if (deps.systemRegistry) this.systemRegistry = deps.systemRegistry;
-    if (deps.eventBus) this.eventBus = deps.eventBus;
   }
 
   /**
@@ -231,13 +216,6 @@ export class AISystem extends EventEmitter {
    */
   public getSystemRegistry(): SystemRegistry {
     return this.systemRegistry;
-  }
-
-  /**
-   * Obtiene el EventBus para acceso externo.
-   */
-  public getEventBus(): EventBus {
-    return this.eventBus;
   }
 
   /**
@@ -471,51 +449,51 @@ export class AISystem extends EventEmitter {
 
     switch (task.type) {
       case TaskType.SATISFY_NEED:
-        result = handleConsume(ctx, {});
+        result = handleConsume(ctx);
         break;
 
       case TaskType.REST:
-        result = handleRest(ctx, {});
+        result = handleRest(ctx);
         break;
 
       case TaskType.GATHER:
-        result = handleGather(ctx, {});
+        result = handleGather(ctx);
         break;
 
       case TaskType.ATTACK:
-        result = handleAttack(ctx, {});
+        result = handleAttack(ctx);
         break;
 
       case TaskType.FLEE:
-        result = handleFlee(ctx, {});
+        result = handleFlee(ctx);
         break;
 
       case TaskType.SOCIALIZE:
-        result = handleSocialize(ctx, {});
+        result = handleSocialize(ctx);
         break;
 
       case TaskType.EXPLORE:
-        result = handleExplore(ctx, {});
+        result = handleExplore(ctx);
         break;
 
       case TaskType.CRAFT:
-        result = handleCraft(ctx, {});
+        result = handleCraft(ctx);
         break;
 
       case TaskType.BUILD:
-        result = handleBuild(ctx, {});
+        result = handleBuild(ctx);
         break;
 
       case TaskType.DEPOSIT:
-        result = handleDeposit(ctx, {});
+        result = handleDeposit(ctx);
         break;
 
       case TaskType.TRADE:
-        result = handleTrade(ctx, {});
+        result = handleTrade(ctx);
         break;
 
       case TaskType.HUNT:
-        result = handleAttack(ctx, {});
+        result = handleAttack(ctx);
         break;
 
       case TaskType.IDLE:
@@ -575,7 +553,6 @@ export class AISystem extends EventEmitter {
       position,
 
       systems: this.systemRegistry,
-      events: this.eventBus,
       memory: memoryCallbacks,
     };
   }

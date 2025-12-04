@@ -54,7 +54,7 @@ const CONFLICT_CONFIG = {
  * - Conflict/mediation history tracking
  *
  * @see CombatSystem for combat integration
- * @see ReputationSystem for sanction effects
+ * @see SocialSystem for reputation and sanction effects
  */
 @injectable()
 export class ConflictResolutionSystem {

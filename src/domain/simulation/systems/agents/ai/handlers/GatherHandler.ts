@@ -18,31 +18,10 @@ import { isAtTarget, moveToPosition } from "./MoveHandler";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
- * @deprecated Use SystemRegistry.inventory instead
- */
-export interface GatherHandlerDeps {
-  harvestResource?: (
-    agentId: string,
-    resourceId: string,
-    amount: number,
-  ) => boolean;
-  getResourceAt?: (
-    x: number,
-    y: number,
-  ) => { id: string; type: string; amount: number } | null;
-  addToInventory?: (
-    agentId: string,
-    itemType: string,
-    amount: number,
-  ) => boolean;
-}
-
-/**
  * Maneja la recolección delegando al InventorySystem.
  */
 export function handleGather(
   ctx: HandlerContext,
-  _deps?: GatherHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
   const target = task.target;

@@ -18,21 +18,59 @@ import { DialogueTone } from "../../../../shared/constants/AmbientEnums";
 import { GoalType } from "../../../../shared/constants/AIEnums";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 import { GoalDomain } from "@/shared/constants/AIEnums";
+import type {
+  ReputationEntry,
+  AgentReputation,
+  ReputationChange,
+  SerializedReputationData,
+  TrustRelationship,
+} from "@/shared/types/simulation/reputation";
 
 /**
- * System for managing social relationships between agents.
+ * Configuration for reputation system (merged from ReputationSystem)
+ */
+const REPUTATION_CONFIG = {
+  decay: {
+    perSecond: 0.003,
+    targetValue: 0.5,
+  },
+  initialValues: {
+    reputation: 0.5,
+  },
+  impacts: {
+    socialRelation: {
+      reputation: 0.01,
+    },
+    combat: {
+      maxImpact: 0.05,
+      damageNormalizer: 200,
+    },
+    interactionGame: {
+      scale: 0.08,
+      exploitPenalty: 0.5,
+    },
+  },
+  bounds: {
+    min: 0,
+    max: 1,
+  },
+} as const;
+
+/**
+ * Unified system for managing social relationships and reputation between agents.
  *
  * Features:
- * - Affinity tracking between agent pairs
+ * - Affinity tracking between agent pairs (-1 to 1 scale)
+ * - Reputation scores per agent (0 to 1 scale)
  * - Social group formation based on affinity thresholds
  * - Truce system for conflict resolution
  * - Proximity-based relationship reinforcement
  * - Permanent bonds (family, marriage)
  * - Infamy tracking for reputation effects
  * - Zone heat tracking for conflict areas
+ * - Reputation history tracking
  *
  * @see MarriageSystem for marriage relationships
- * @see ReputationSystem for reputation effects
  */
 @injectable()
 export class SocialSystem implements ISocialSystem {
@@ -57,6 +95,16 @@ export class SocialSystem implements ISocialSystem {
   private edgesModified = false;
   private gpuService?: GPUComputeService;
   private entityIndex?: EntityIndex;
+
+  // === Reputation state (merged from ReputationSystem) ===
+  private reputation = new Map<string, ReputationEntry>();
+  private reputationHistory = new Map<string, ReputationChange[]>();
+  private readonly MAX_HISTORY_PER_AGENT = 50;
+  private reputationStatsCache = {
+    agents: 0,
+    avgReputation: 0.5,
+    lastUpdate: 0,
+  };
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
@@ -133,7 +181,7 @@ export class SocialSystem implements ISocialSystem {
 
     if (Math.floor(now / 5000) !== Math.floor((now - deltaTimeMs) / 5000)) {
       logger.debug(
-        `👥 [SocialSystem] update: agents=${agentCount}, edges=${edgeCount}, groups=${groupCount}, edgesModified=${this.edgesModified}`,
+        `👥 [SocialSystem] update: agents=${agentCount}, edges=${edgeCount}, groups=${groupCount}, edgesModified=${this.edgesModified}, reputations=${this.reputation.size}`,
       );
     }
 
@@ -143,6 +191,7 @@ export class SocialSystem implements ISocialSystem {
 
     if (now - this.lastDecayUpdate > 2000) {
       await this.decayEdgesOptimized(dt);
+      this.updateReputationDecay(dt);
       this.lastDecayUpdate = now;
     }
 
@@ -167,6 +216,7 @@ export class SocialSystem implements ISocialSystem {
         this.gameState.socialGraph.relationships =
           this.serializeRelationships();
       }
+      this.syncReputationToGameState();
       this.dirtyTracker?.markDirty("socialGraph");
       this.lastGraphSync = now;
     }
@@ -846,5 +896,312 @@ export class SocialSystem implements ISocialSystem {
       }
     }
     this.gameState.socialGraph.relationships = relationships;
+  }
+
+  // =========================================================================
+  // REPUTATION METHODS (merged from ReputationSystem)
+  // =========================================================================
+
+  /**
+   * Updates the reputation of an agent.
+   * @param agentId - The ID of the agent
+   * @param delta - The change in reputation (-1 to 1 recommended)
+   * @param reason - Optional reason for the change
+   */
+  public updateReputation(
+    agentId: string,
+    delta: number,
+    reason?: string,
+  ): void {
+    const now = Date.now();
+    const r = this.reputation.get(agentId) || {
+      value: REPUTATION_CONFIG.initialValues.reputation,
+      lastUpdated: now,
+    };
+    const oldValue = r.value;
+    r.value = Math.max(
+      REPUTATION_CONFIG.bounds.min,
+      Math.min(REPUTATION_CONFIG.bounds.max, r.value + delta),
+    );
+    r.lastUpdated = now;
+    this.reputation.set(agentId, r);
+
+    if (delta !== 0) {
+      const change: ReputationChange = {
+        timestamp: now,
+        agentId,
+        oldValue,
+        newValue: r.value,
+        delta,
+        reason: reason || "unknown",
+      };
+
+      const history = this.reputationHistory.get(agentId) || [];
+      history.push(change);
+      if (history.length > this.MAX_HISTORY_PER_AGENT) {
+        history.shift();
+      }
+      this.reputationHistory.set(agentId, history);
+
+      simulationEvents.emit(GameEventType.REPUTATION_UPDATED, {
+        agentId,
+        oldValue,
+        newValue: r.value,
+        delta,
+        reason: reason || "unknown",
+        timestamp: now,
+      });
+
+      if (Math.abs(delta) >= 0.05) {
+        logger.debug(
+          `⭐ [REPUTATION] ${agentId}: ${oldValue.toFixed(2)} -> ${r.value.toFixed(2)} (${delta > 0 ? "+" : ""}${delta.toFixed(2)}) - ${reason || "unknown"}`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Gets the reputation of an agent (0 to 1 scale).
+   * @param agentId - The ID of the agent
+   * @returns Reputation value between 0 and 1
+   */
+  public getReputation(agentId: string): number {
+    return (
+      this.reputation.get(agentId)?.value ??
+      REPUTATION_CONFIG.initialValues.reputation
+    );
+  }
+
+  /**
+   * Gets all agent reputations sorted by rank.
+   */
+  public getAllReputations(): AgentReputation[] {
+    const allReps = Array.from(this.reputation.entries())
+      .map(([agentId, entry]) => ({
+        agentId,
+        agentName: agentId,
+        reputation: entry.value,
+        lastUpdated: entry.lastUpdated,
+        rank: 0,
+      }))
+      .sort((a, b) => b.reputation - a.reputation);
+
+    allReps.forEach((rep, index) => {
+      rep.rank = index + 1;
+    });
+
+    return allReps;
+  }
+
+  /**
+   * Gets the reputation history for an agent.
+   * @param agentId - The ID of the agent
+   * @param limit - Maximum number of entries to return
+   */
+  public getReputationHistory(agentId: string, limit = 20): ReputationChange[] {
+    const history = this.reputationHistory.get(agentId) || [];
+    return history.slice(-limit).sort((a, b) => b.timestamp - a.timestamp);
+  }
+
+  /**
+   * Gets top reputations.
+   * @param limit - Maximum number of entries to return
+   */
+  public getTopReputations(limit = 10): AgentReputation[] {
+    return this.getAllReputations().slice(0, limit);
+  }
+
+  /**
+   * Gets trust network for an agent (affinity converted to trust 0-1 scale).
+   * @param agentId - The ID of the agent
+   */
+  public getTrustNetwork(agentId: string): TrustRelationship[] {
+    const neighbors = this.edges.get(agentId);
+    if (!neighbors) return [];
+    return Array.from(neighbors.entries()).map(([targetId, affinity]) => ({
+      sourceId: agentId,
+      targetId,
+      trust: (affinity + 1) / 2, // Convert affinity (-1..1) to trust (0..1)
+      lastUpdated: Date.now(),
+    }));
+  }
+
+  /**
+   * Gets reputation system stats.
+   */
+  public getReputationStats(): {
+    agents: number;
+    avgReputation: number;
+    trustEdges: number;
+  } {
+    let totalRep = 0;
+    let repCount = 0;
+    this.reputation.forEach((r) => {
+      totalRep += r.value;
+      repCount++;
+    });
+
+    let trustEdges = 0;
+    this.edges.forEach((row) => (trustEdges += row.size));
+
+    return {
+      agents: repCount,
+      avgReputation:
+        repCount > 0
+          ? totalRep / repCount
+          : REPUTATION_CONFIG.initialValues.reputation,
+      trustEdges,
+    };
+  }
+
+  /**
+   * Updates reputation decay over time.
+   * Called internally during update cycle.
+   */
+  private updateReputationDecay(dt: number): void {
+    const decay = REPUTATION_CONFIG.decay.perSecond * dt;
+    const now = Date.now();
+
+    let totalRep = 0;
+    let repCount = 0;
+
+    this.reputation.forEach((r) => {
+      r.value += (REPUTATION_CONFIG.decay.targetValue - r.value) * decay;
+      r.lastUpdated = now;
+      totalRep += r.value;
+      repCount++;
+    });
+
+    this.reputationStatsCache.agents = repCount;
+    this.reputationStatsCache.avgReputation =
+      repCount > 0
+        ? totalRep / repCount
+        : REPUTATION_CONFIG.initialValues.reputation;
+    this.reputationStatsCache.lastUpdate = now;
+  }
+
+  /**
+   * Serializes reputation data for persistence.
+   */
+  public serializeReputationData(): SerializedReputationData {
+    // Trust is now affinity - convert to trust scale for backward compatibility
+    const trustArray: SerializedReputationData["trust"] = [];
+    for (const [sourceId, targets] of this.edges.entries()) {
+      const arr: Array<{
+        targetId: string;
+        value: number;
+        lastUpdated: number;
+      }> = [];
+      for (const [targetId, affinity] of targets.entries()) {
+        arr.push({
+          targetId,
+          value: (affinity + 1) / 2, // affinity to trust conversion
+          lastUpdated: Date.now(),
+        });
+      }
+      trustArray.push({ sourceId, targets: arr });
+    }
+
+    const reputationArray = Array.from(this.reputation.entries()).map(
+      ([agentId, entry]) => ({
+        agentId,
+        value: entry.value,
+        lastUpdated: entry.lastUpdated,
+      }),
+    );
+
+    const historyArray = Array.from(this.reputationHistory.entries()).map(
+      ([agentId, changes]) => ({
+        agentId,
+        changes: [...changes],
+      }),
+    );
+
+    return {
+      trust: trustArray,
+      reputation: reputationArray,
+      reputationHistory: historyArray,
+    };
+  }
+
+  /**
+   * Deserializes reputation data from persistence.
+   */
+  public deserializeReputationData(data: SerializedReputationData): void {
+    // Trust to affinity: affinity = trust * 2 - 1
+    for (const source of data.trust) {
+      for (const target of source.targets) {
+        const affinity = target.value * 2 - 1;
+        this.setAffinity(source.sourceId, target.targetId, affinity);
+      }
+    }
+
+    this.reputation.clear();
+    for (const rep of data.reputation) {
+      this.reputation.set(rep.agentId, {
+        value: rep.value,
+        lastUpdated: rep.lastUpdated,
+      });
+    }
+
+    this.reputationHistory.clear();
+    for (const history of data.reputationHistory) {
+      this.reputationHistory.set(history.agentId, history.changes);
+    }
+  }
+
+  /**
+   * Removes all reputation and relationship data for an agent.
+   */
+  public removeAgentData(agentId: string): void {
+    this.reputation.delete(agentId);
+    this.reputationHistory.delete(agentId);
+    this.removeRelationships(agentId);
+  }
+
+  /**
+   * Syncs reputation data to game state.
+   * Called during update cycle.
+   */
+  private syncReputationToGameState(): void {
+    if (!this.gameState.reputation) {
+      this.gameState.reputation = {
+        data: {
+          trust: [],
+          reputation: [],
+          reputationHistory: [],
+        },
+        stats: {
+          agents: 0,
+          avgReputation: 0.5,
+          trustEdges: 0,
+        },
+      };
+    }
+
+    this.gameState.reputation.data = this.serializeReputationData();
+    this.gameState.reputation.stats = this.getReputationStats();
+    this.gameState.reputation.reputations = this.getAllReputations();
+
+    // Trust array for backward compatibility
+    const trustArray = Array.from(this.edges.entries()).map(
+      ([sourceId, targets]) => ({
+        sourceId,
+        targets: Array.from(targets.entries()).map(([targetId, affinity]) => ({
+          sourceId,
+          targetId,
+          trust: (affinity + 1) / 2,
+        })),
+      }),
+    );
+    this.gameState.reputation.trust = trustArray;
+  }
+
+  /**
+   * Cleans up all reputation data.
+   */
+  public cleanupReputation(): void {
+    this.reputation.clear();
+    this.reputationHistory.clear();
   }
 }

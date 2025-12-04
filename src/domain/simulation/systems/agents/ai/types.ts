@@ -16,7 +16,6 @@
 
 import { NeedType, GoalType, ActionType } from "@/shared/constants/AIEnums";
 import type { HandlerResult, SystemRegistry } from "../SystemRegistry";
-import type { EventBus } from "@/domain/simulation/core/EventBus";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 export type { HandlerResult } from "../SystemRegistry";
@@ -284,9 +283,6 @@ export interface HandlerContext {
 
   /** Registro de sistemas para delegación */
   readonly systems: SystemRegistry;
-
-  /** Bus de eventos para comunicación cross-system */
-  readonly events: EventBus;
 
   /** Callbacks para actualizar la memoria del agente */
   readonly memory?: MemoryCallbacks;

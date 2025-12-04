@@ -26,7 +26,6 @@ import {
   EnhancedCraftingSystem,
   AnimalSystem,
   ItemGenerationSystem,
-  ReputationSystem,
   RecipeDiscoverySystem,
   TaskSystem,
   MarriageSystem,
@@ -188,8 +187,7 @@ export class SimulationRunner {
 
   @inject(TYPES.CombatSystem) public readonly combatSystem!: CombatSystem;
 
-  @inject(TYPES.ReputationSystem)
-  public readonly reputationSystem!: ReputationSystem;
+  // ReputationSystem functionality merged into SocialSystem
 
   @inject(TYPES.RecipeDiscoverySystem)
   public readonly _recipeDiscoverySystem!: RecipeDiscoverySystem;
@@ -397,15 +395,7 @@ export class SimulationRunner {
 
     logger.info("🔗 SimulationRunner: System dependencies configured");
 
-    this.migrateTrustEdgesToSocial();
-
-    try {
-      this.reputationSystem.clearTrustMap();
-    } catch {
-      logger.warn(
-        "ReputationSystem: Failed to clear trust map during initialization",
-      );
-    }
+    // Trust migration is no longer needed - SocialSystem handles everything
 
     this.eventRegistry.setupEventListeners();
 
@@ -423,40 +413,6 @@ export class SimulationRunner {
       entitiesCount: this.state.entities?.length ?? 0,
       tickCounter: this.tickCounter,
     });
-  }
-
-  /**
-   * Migrates trust edges from ReputationSystem into SocialSystem's affinity graph.
-   * This unifies pairwise relationship storage and avoids duplicated decay/update logic.
-   *
-   * Safe to call multiple times; it will just re-apply existing edges.
-   */
-  private migrateTrustEdgesToSocial(): void {
-    try {
-      if (!this.socialSystem || !this.reputationSystem) return;
-
-      const data = this.reputationSystem.serialize();
-      if (!data?.trust || data.trust.length === 0) return;
-
-      let migrated = 0;
-      for (const row of data.trust) {
-        const a = row.sourceId;
-        for (const edge of row.targets) {
-          const b = edge.targetId;
-
-          const affinity = Math.max(-1, Math.min(1, edge.value * 2 - 1));
-          this.socialSystem.setAffinity(a, b, affinity);
-          migrated++;
-        }
-      }
-      if (migrated > 0) {
-        logger.info(`🔁 Migrated ${migrated} trust edges into SocialSystem`);
-      }
-    } catch (err) {
-      logger.warn("Trust migration failed", {
-        error: err instanceof Error ? err.message : String(err),
-      });
-    }
   }
 
   /**
@@ -649,12 +605,8 @@ export class SimulationRunner {
       enabled: true,
     });
 
-    this.scheduler.registerSystem({
-      name: "ReputationSystem",
-      rate: TickRate.SLOW,
-      update: () => this.reputationSystem.update(),
-      enabled: true,
-    });
+    // ReputationSystem functionality is now integrated into SocialSystem
+    // No separate registration needed
 
     this.scheduler.registerSystem({
       name: "GovernanceSystem",

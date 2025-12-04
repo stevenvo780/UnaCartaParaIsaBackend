@@ -385,7 +385,7 @@ export class EventRegistry {
         if (data.cancelled) return;
 
         for (const agentId of data.completedBy) {
-          this.runner.reputationSystem.updateReputation(
+          this.runner.socialSystem.updateReputation(
             agentId,
             0.05,
             "task_completed",
@@ -425,7 +425,7 @@ export class EventRegistry {
           data.roleType === RoleType.LEADER ||
           data.roleType === RoleType.GUARD
         ) {
-          this.runner.reputationSystem.updateReputation(
+          this.runner.socialSystem.updateReputation(
             data.agentId,
             0.1,
             `role_assigned_${data.roleType}`,
@@ -444,7 +444,7 @@ export class EventRegistry {
         truceDuration?: number;
         timestamp: number;
       }) => {
-        this.runner.reputationSystem.updateReputation(
+        this.runner.socialSystem.updateReputation(
           data.agentId,
           data.reputationPenalty,
           `norm_violation_${data.violationType}`,
@@ -466,7 +466,7 @@ export class EventRegistry {
           data.targetId,
           data.truceBonus || 0.1,
         );
-        this.runner.reputationSystem.updateReputation(
+        this.runner.socialSystem.updateReputation(
           data.targetId,
           0.02,
           "truce_accepted",
@@ -534,7 +534,7 @@ export class EventRegistry {
         if (task && task.contributors) {
           const contributorCount = task.contributors.size;
           if (contributorCount > 1 && data.contribution > 10) {
-            this.runner.reputationSystem.updateReputation(
+            this.runner.socialSystem.updateReputation(
               data.agentId,
               0.01,
               "collaborative_work",
@@ -554,7 +554,7 @@ export class EventRegistry {
         maxHealth: number;
         timestamp: number;
       }) => {
-        this.runner.reputationSystem.updateReputation(
+        this.runner.socialSystem.updateReputation(
           data.repairedBy,
           0.03,
           "building_repaired",

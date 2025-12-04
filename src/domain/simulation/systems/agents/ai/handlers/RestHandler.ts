@@ -18,24 +18,10 @@ import { ActivityType } from "../../../../../../shared/constants/MovementEnums";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
- * @deprecated Use SystemRegistry.needs instead
- */
-export interface RestHandlerDeps {
-  findNearestRestSpot?: (
-    agentId: string,
-  ) => { id: string; position: { x: number; y: number }; bonus: number } | null;
-  startResting?: (agentId: string) => boolean;
-  stopResting?: (agentId: string) => void;
-  isResting?: (agentId: string) => boolean;
-  getEnergy?: (agentId: string) => number;
-}
-
-/**
  * Maneja el descanso delegando al NeedsSystem.
  */
 export function handleRest(
   ctx: HandlerContext,
-  _deps?: RestHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
 

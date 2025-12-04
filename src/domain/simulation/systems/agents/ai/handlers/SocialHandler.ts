@@ -17,31 +17,10 @@ import {
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /**
- * @deprecated Use SystemRegistry.social instead
- */
-export interface SocialHandlerDeps {
-  getEntityPosition?: (entityId: string) => { x: number; y: number } | null;
-  interact?: (
-    agentId: string,
-    targetId: string,
-  ) => { success: boolean; type: string };
-  assist?: (
-    agentId: string,
-    targetId: string,
-  ) => { success: boolean; helped: boolean };
-  reproduce?: (
-    agentId: string,
-    partnerId: string,
-  ) => { success: boolean; offspringId?: string };
-  isCompatibleForReproduction?: (agentId: string, targetId: string) => boolean;
-}
-
-/**
  * Maneja interacciones sociales delegando al SocialSystem.
  */
 export function handleSocialize(
   ctx: HandlerContext,
-  _deps?: SocialHandlerDeps,
 ): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
   const targetId = task.target?.entityId;
