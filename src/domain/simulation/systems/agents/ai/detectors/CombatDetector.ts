@@ -21,6 +21,7 @@ import { RoleType } from "../../../../../../shared/constants/RoleEnums";
 import { SocialStatus } from "../../../../../../shared/constants/AgentEnums";
 import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
 import { logger } from "@/infrastructure/utils/logger";
+import { distance } from "@/shared/utils/mathUtils";
 
 const FLEE_HEALTH_THRESHOLD = SIMULATION_CONSTANTS.COMBAT.FLEE_HEALTH_THRESHOLD;
 const PREDATOR_FLEE_DISTANCE =
@@ -157,13 +158,6 @@ export function detectCombat(ctx: DetectorContext): Task[] {
   }
 
   return tasks;
-}
-
-function distance(
-  a: { x: number; y: number },
-  b: { x: number; y: number },
-): number {
-  return Math.hypot(b.x - a.x, b.y - a.y);
 }
 
 function calculateFleeDirection(

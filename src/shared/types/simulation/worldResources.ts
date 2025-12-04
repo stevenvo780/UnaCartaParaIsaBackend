@@ -5,16 +5,17 @@ import {
   ResourceType,
 } from "../../../shared/constants/ResourceEnums";
 import { BiomeType } from "../../../shared/constants/BiomeEnums";
+import { Position } from "../game-types";
 
 /**
  * Re-export enums for backward compatibility.
  */
 export { WorldResourceType, ResourceState, ResourceInteractionType };
 
-export interface Position {
-  x: number;
-  y: number;
-}
+/**
+ * @deprecated Use Position from '../game-types' instead. Re-exported for backward compatibility.
+ */
+export type { Position };
 
 export interface ResourceYield {
   resourceType: ResourceType;

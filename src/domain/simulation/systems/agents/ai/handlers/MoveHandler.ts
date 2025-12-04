@@ -15,6 +15,10 @@ import type {
 import { errorResult, inProgressResult, successResult } from "../types";
 import { ActionType } from "../../../../../../shared/constants/AIEnums";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
+import {
+  distance as sharedDistance,
+  isWithinDistance,
+} from "@/shared/utils/mathUtils";
 
 /** Distancia para considerar que llegó al destino (debe ser >= 2 del MovementSystem) */
 const ARRIVAL_THRESHOLD = 3.0;
@@ -27,21 +31,18 @@ export function isAtTarget(
   target: { x: number; y: number },
   threshold: number = ARRIVAL_THRESHOLD,
 ): boolean {
-  const dx = current.x - target.x;
-  const dy = current.y - target.y;
-  return Math.sqrt(dx * dx + dy * dy) <= threshold;
+  return isWithinDistance(current, target, threshold);
 }
 
 /**
- * Calcula distancia entre dos puntos
+ * Calcula distancia entre dos puntos.
+ * @deprecated Use `distance` from `@/shared/utils/mathUtils` instead.
  */
 export function distance(
   a: { x: number; y: number },
   b: { x: number; y: number },
 ): number {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  return Math.sqrt(dx * dx + dy * dy);
+  return sharedDistance(a, b);
 }
 
 /**

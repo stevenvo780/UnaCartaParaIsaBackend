@@ -163,6 +163,94 @@ enum ItemId {
 
 ---
 
+---
+
+## 🔴 NUEVAS Redundancias Detectadas (Segunda Auditoría)
+
+### 5. Interface Position Triplicada
+**Ubicaciones**:
+- `src/shared/types/simulation/worldResources.ts:14`
+- `src/shared/types/simulation/unifiedTasks.ts:54`
+- `src/shared/types/game-types.ts:77`
+
+Todas son idénticas:
+```typescript
+export interface Position {
+  x: number;
+  y: number;
+}
+```
+
+**Acción**: Consolidar en `game-types.ts` y re-exportar desde otros archivos.
+
+---
+
+### 6. Función distance() Duplicada
+**Ubicaciones**:
+- `src/domain/simulation/systems/agents/ai/handlers/MoveHandler.ts:38` (exported)
+- `src/domain/simulation/systems/agents/ai/detectors/CombatDetector.ts:162` (private)
+
+Diferencia menor:
+- MoveHandler: `Math.sqrt(dx * dx + dy * dy)`
+- CombatDetector: `Math.hypot(b.x - a.x, b.y - a.y)`
+
+**Acción**: Crear utilidad compartida en `shared/utils/mathUtils.ts`
+
+---
+
+### 7. AISystemConfig Duplicada
+**Ubicaciones**:
+- `src/domain/simulation/systems/agents/ai/AISystem.ts:75`
+- `src/shared/types/simulation/ai.ts:147`
+
+Interfaces con propiedades diferentes pero mismo nombre:
+```typescript
+// En AISystem.ts
+export interface AISystemConfig {
+  updateInterval: number;
+  priorityBoost: number;
+  maxTasksPerAgent: number;
+  debug: boolean;
+}
+
+// En ai.ts
+export interface AISystemConfig {
+  decisionIntervalMs: number;
+  goalTimeoutMs: number;
+  minPriorityThreshold: number;
+  batchSize: number;
+}
+```
+
+**Acción**: Renombrar una como `AISystemRuntimeConfig` o fusionar
+
+---
+
+### 8. Math.random() Directo vs RandomUtils (84 instancias)
+**Problema**: `RandomUtils` existe en `src/shared/utils/RandomUtils.ts` pero 84 lugares usan `Math.random()` directamente.
+
+**Ejemplos afectados**:
+- `TimeSystem.ts` (4 usos)
+- `BuildingSystem.ts` (8 usos)
+- `NeedsSystem.ts` (2 usos)
+- `MarriageSystem.ts` (3 usos)
+- Varios detectors AI (5+ usos)
+
+**Acción**: Migrar gradualmente a `RandomUtils` para permitir seeding y testing determinístico
+
+---
+
+### 9. Mezcla inconsistente de cálculo de distancia
+**Problema**: Uso inconsistente de métodos de distancia euclidiana:
+- `Math.sqrt(dx * dx + dy * dy)` → 12 instancias
+- `Math.hypot(dx, dy)` → 15 instancias
+
+**Afecta**: GPUComputeService, NeedsSystem, MovementSystem, CombatSystem, WorldQueryService
+
+**Acción**: Estandarizar en `Math.hypot()` (más legible, mismo rendimiento en V8)
+
+---
+
 ## 🔧 Acciones Recomendadas
 
 ### ✅ Completadas (4 de diciembre 2025)
@@ -170,6 +258,19 @@ enum ItemId {
 2. [x] Deprecar `EventBus.ts` con JSDoc warning
 3. [x] Reemplazar console.log/warn por logger en `ChunkWorkerPool` y `defaultState`
 4. [x] Centralizar carga de TensorFlow en `GPUComputeService.getTensorFlowModule()`
+
+### ✅ Completadas (Segunda Auditoría - 4 de diciembre 2025)
+5. [x] **Consolidar Position** → `worldResources.ts` y `unifiedTasks.ts` ahora re-exportan de `game-types.ts`
+6. [x] **Crear mathUtils.ts** → `distance()`, `isWithinDistance()`, `clamp()`, `lerp()`, `distanceSquared()`, `normalize()` centralizados
+7. [x] **Deprecar distance() duplicada** → `MoveHandler.ts` ahora usa `mathUtils.distance()`, `CombatDetector.ts` eliminó su función local
+8. [x] **Renombrar AISystemConfig** → Interface en `ai.ts` renombrada a `LegacyAISystemConfig` con alias deprecado
+
+### 🆕 Nuevas acciones (Segunda auditoría)
+1. [ ] **Consolidar Position** → Mover a `game-types.ts`, re-exportar
+2. [ ] **Crear mathUtils.ts** → `distance()`, `clamp()`, `lerp()` centralizados
+3. [ ] **Renombrar AISystemConfig** → Resolver conflicto de nombres
+4. [ ] **Migrar a RandomUtils** → Permitir tests determinísticos
+5. [ ] **Estandarizar Math.hypot()** → Consistencia en cálculos de distancia
 
 ### Corto plazo (Este mes)
 1. [ ] Evaluar fusión ReputationSystem → SocialSystem

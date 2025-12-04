@@ -10,8 +10,15 @@
 
 import type { NeedType } from "../../constants/AIEnums";
 import type { ResourceType } from "../../constants/ResourceEnums";
+import { Position } from "../game-types";
 
 import { GoalType, ActionType } from "@/shared/constants/AIEnums";
+
+/**
+ * @deprecated Use Position from '../game-types' instead. Re-exported for backward compatibility.
+ */
+export type { Position };
+
 /**
  * Unified Task Types
  */
@@ -46,14 +53,6 @@ export enum TaskStatus {
   COMPLETED = "completed",
   FAILED = "failed",
   CANCELLED = "cancelled",
-}
-
-/**
- * Position in world coordinates
- */
-export interface Position {
-  x: number;
-  y: number;
 }
 
 /**
