@@ -7,18 +7,14 @@
  * @module domain/simulation/systems/agents/ai/handlers/MoveHandler
  */
 
-import type {
-  HandlerContext,
-  HandlerExecutionResult,
-  TaskTarget,
-} from "../types";
+import type { HandlerContext, HandlerExecutionResult } from "../types";
 import { errorResult, inProgressResult, successResult } from "../types";
-import { ActionType } from "../../../../../../shared/constants/AIEnums";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 import {
   distance as sharedDistance,
   isWithinDistance,
 } from "@/shared/utils/mathUtils";
+import { logger } from "@/infrastructure/utils/logger";
 
 /** Distancia para considerar que llegó al destino (debe ser >= 2 del MovementSystem) */
 const ARRIVAL_THRESHOLD = 3.0;
@@ -32,17 +28,6 @@ export function isAtTarget(
   threshold: number = ARRIVAL_THRESHOLD,
 ): boolean {
   return isWithinDistance(current, target, threshold);
-}
-
-/**
- * Calcula distancia entre dos puntos.
- * @deprecated Use `distance` from `@/shared/utils/mathUtils` instead.
- */
-export function distance(
-  a: { x: number; y: number },
-  b: { x: number; y: number },
-): number {
-  return sharedDistance(a, b);
 }
 
 /**
@@ -125,11 +110,20 @@ export function moveToPosition(
     return errorResult("MovementSystem not available");
   }
 
+  const dist = sharedDistance(position, target);
+
   if (isAtTarget(position, target)) {
     return successResult({ arrived: true });
   }
 
   const result = systems.movement.requestMove(agentId, target);
+
+  // Log detallado para debug
+  if (dist > 100) {
+    logger.debug(
+      `[MoveHandler] ${agentId}: moveToPosition dist=${dist.toFixed(0)}, result.status=${result.status}, msg=${result.message}`,
+    );
+  }
 
   if (result.status === HandlerResultStatus.FAILED) {
     return errorResult(result.message ?? "Movement failed");
@@ -141,75 +135,5 @@ export function moveToPosition(
 /**
  * Solicita movimiento a una zona.
  */
-export function moveToZone(
-  ctx: HandlerContext,
-  zoneId: string,
-): HandlerExecutionResult {
-  const { systems, agentId } = ctx;
-
-  if (!systems.movement) {
-    return errorResult("MovementSystem not available");
-  }
-
-  const result = systems.movement.requestMoveToZone(agentId, zoneId);
-
-  if (result.status === HandlerResultStatus.FAILED) {
-    return errorResult(result.message ?? "Movement to zone failed");
-  }
-
-  if (result.status === HandlerResultStatus.COMPLETED) {
-    return successResult({ arrivedAtZone: zoneId });
-  }
-
-  return inProgressResult("movement", `Moving to zone ${zoneId}`);
-}
-
-/**
- * Solicita movimiento hacia una entidad.
- */
-export function moveToEntity(
-  ctx: HandlerContext,
-  entityId: string,
-): HandlerExecutionResult {
-  const { systems, agentId } = ctx;
-
-  if (!systems.movement) {
-    return errorResult("MovementSystem not available");
-  }
-
-  const result = systems.movement.requestMoveToEntity(agentId, entityId);
-
-  if (result.status === HandlerResultStatus.FAILED) {
-    return errorResult(result.message ?? "Movement to entity failed");
-  }
-
-  if (result.status === HandlerResultStatus.COMPLETED) {
-    return successResult({ arrivedAtEntity: entityId });
-  }
-
-  return inProgressResult("movement", `Moving to entity ${entityId}`);
-}
-
-/**
- * Detiene el movimiento del agente.
- */
-export function stopMovement(ctx: HandlerContext): void {
-  ctx.systems.movement?.stopMovement(ctx.agentId);
-}
-
-/**
- * Verifica si el agente está en movimiento.
- */
-export function isMoving(ctx: HandlerContext): boolean {
-  return ctx.systems.movement?.isMoving(ctx.agentId) ?? false;
-}
-
-/**
- * @deprecated Use moveToPosition with HandlerContext
- */
-export function createMoveAction(_target: TaskTarget): {
-  type: string;
-  target: TaskTarget;
-} {
-  return { type: ActionType.MOVE, target: _target };
-}
+// Legacy helpers for moving directly to zones/entities were removed because
+// handlers now issue movement requests through `handleMove`/`moveToPosition`.

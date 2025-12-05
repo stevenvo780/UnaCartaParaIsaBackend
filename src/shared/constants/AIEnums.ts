@@ -8,18 +8,6 @@
  */
 
 /**
- * Re-export SocialPreference from AgentEnums for backward compatibility.
- * @deprecated Import SocialPreference from AgentEnums instead.
- */
-export { SocialPreference } from "./AgentEnums";
-
-/**
- * Re-export WorkEthic from AgentEnums for backward compatibility.
- * @deprecated Import WorkEthic from AgentEnums instead.
- */
-export { WorkEthic } from "./AgentEnums";
-
-/**
  * Enumeration of AI goal types.
  * Goals represent high-level objectives that agents work towards.
  */
@@ -139,18 +127,6 @@ export type ActionTypeValue = `${ActionType}`;
  * Type representing all possible need type values.
  */
 export type NeedTypeValue = `${NeedType}`;
-
-/**
- * Re-export SocialPreferenceValue from AgentEnums for backward compatibility.
- * @deprecated Import from AgentEnums instead.
- */
-export type { SocialPreferenceValue } from "./AgentEnums";
-
-/**
- * Re-export WorkEthicValue from AgentEnums for backward compatibility.
- * @deprecated Import from AgentEnums instead.
- */
-export type { WorkEthicValue } from "./AgentEnums";
 
 /**
  * Type representing all possible goal domain values.

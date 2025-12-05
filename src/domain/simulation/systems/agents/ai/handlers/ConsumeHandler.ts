@@ -57,6 +57,13 @@ export function handleConsume(ctx: HandlerContext): HandlerExecutionResult {
   }
 
   if (task.target?.position) {
+    const dist = Math.hypot(
+      position.x - task.target.position.x,
+      position.y - task.target.position.y,
+    );
+    logger.debug(
+      `[ConsumeHandler] ${agentId}: pos=(${position.x.toFixed(1)},${position.y.toFixed(1)}) target=(${task.target.position.x.toFixed(1)},${task.target.position.y.toFixed(1)}) dist=${dist.toFixed(1)} threshold=3.0`,
+    );
     if (!isAtTarget(position, task.target.position)) {
       const moveResult = moveToPosition(ctx, task.target.position);
       logger.debug(

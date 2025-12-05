@@ -196,33 +196,6 @@ export function getEquipmentStats(itemId: string | undefined): EquipmentStats {
 }
 
 /**
- * Gets the best tool for a specific gathering task.
- * @param availableItems - List of item IDs the agent has
- * @param resource - The resource type to gather
- * @returns The best item ID for the task, or undefined if none suitable
- */
-export function getBestToolForResource(
-  availableItems: string[],
-  resource: GatherableResource,
-): string | undefined {
-  let bestTool: string | undefined;
-  let bestBonus = 1.0;
-
-  for (const itemId of availableItems) {
-    const stats = EQUIPMENT_STATS[itemId];
-    if (!stats) continue;
-
-    const bonus = stats.gatheringBonus[resource] ?? 1.0;
-    if (bonus > bestBonus) {
-      bestBonus = bonus;
-      bestTool = itemId;
-    }
-  }
-
-  return bestTool;
-}
-
-/**
  * Gets the best weapon for hunting/combat.
  * @param availableItems - List of item IDs the agent has
  * @param preferRanged - Whether to prefer ranged weapons

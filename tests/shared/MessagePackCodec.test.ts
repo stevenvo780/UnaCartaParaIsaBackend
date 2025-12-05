@@ -1,10 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   isBinaryMessage,
   encodeMsgPack,
   decodeMessage,
-  sendBinaryMessage,
-  sendJsonMessage,
 } from "../../src/shared/MessagePackCodec";
 
 describe("MessagePackCodec", () => {
@@ -57,65 +55,4 @@ describe("MessagePackCodec", () => {
     });
   });
 
-  describe("sendBinaryMessage", () => {
-    it("debe enviar por WebSocket", () => {
-      const sendFn = vi.fn();
-      const ws = {
-        send: sendFn,
-        readyState: 1, // OPEN
-      };
-
-      const data = { test: "value" };
-      sendBinaryMessage(ws as any, data);
-
-      expect(sendFn).toHaveBeenCalled();
-      const sentData = sendFn.mock.calls[0][0];
-      expect(Buffer.isBuffer(sentData)).toBe(true);
-    });
-
-    it("no debe enviar si ws no está open", () => {
-      const sendFn = vi.fn();
-      const ws = {
-        send: sendFn,
-        readyState: 0, // CONNECTING
-      };
-
-      const data = { test: "value" };
-      sendBinaryMessage(ws as any, data);
-
-      expect(sendFn).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("sendJsonMessage", () => {
-    it("debe enviar JSON por WebSocket", () => {
-      const sendFn = vi.fn();
-      const ws = {
-        send: sendFn,
-        readyState: 1,
-      };
-
-      const data = { test: "value", number: 42 };
-      sendJsonMessage(ws as any, data);
-
-      expect(sendFn).toHaveBeenCalled();
-      const sentData = sendFn.mock.calls[0][0];
-      expect(typeof sentData).toBe("string");
-      expect(JSON.parse(sentData)).toEqual(data);
-    });
-
-    it("no debe enviar si ws no está open", () => {
-      const sendFn = vi.fn();
-      const ws = {
-        send: sendFn,
-        readyState: 2, // CLOSING
-      };
-
-      const data = { test: "value" };
-      sendJsonMessage(ws as any, data);
-
-      expect(sendFn).not.toHaveBeenCalled();
-    });
-  });
 });
-

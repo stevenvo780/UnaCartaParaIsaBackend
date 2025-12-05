@@ -7,17 +7,7 @@
  * @module domain/simulation/systems/agents/ai/handlers
  */
 
-export {
-  handleMove,
-  isAtTarget,
-  moveToPosition,
-  moveToZone,
-  moveToEntity,
-  stopMovement,
-  isMoving,
-  distance,
-  createMoveAction,
-} from "./MoveHandler";
+export { handleMove, isAtTarget, moveToPosition } from "./MoveHandler";
 export { handleGather } from "./GatherHandler";
 export { handleAttack } from "./AttackHandler";
 export { handleFlee } from "./FleeHandler";

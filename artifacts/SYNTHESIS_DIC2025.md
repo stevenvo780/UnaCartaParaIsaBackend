@@ -116,7 +116,7 @@ docker-compose -f docker-compose.gpu.yml up -d backend-gpu
 ├─────────────────────────────────────────────────────────┤
 │  ✅ Funcionando:     27 sistemas (93%)                  │
 │  ⏳ Parcial:          2 sistemas (7%) - esperado        │
-│  🔧 Fixes aplicados: 19+ correcciones                   │
+│  🔧 Fixes aplicados: 21+ correcciones                   │
 │  ✅ Pendientes:       0 (completado)                    │
 ├─────────────────────────────────────────────────────────┤
 │  DINÁMICAS ACTIVAS:                                     │
@@ -132,13 +132,21 @@ docker-compose -f docker-compose.gpu.yml up -d backend-gpu
 │  ✓ LRU caches en Movement/Needs (optimización)         │
 │  ✓ Wolf spawn rate aumentado 3x                        │
 │  ✓ Frontend animal sync corregido                      │
+│  ✓ FleeHandler: Ahora completa a distancia >= 150      │
+│  ✓ ConsumeHandler: Logs de posición para debug         │
+│  ✓ MoveHandler: Logs de distancia para debug           │
 ├─────────────────────────────────────────────────────────┤
 │  SISTEMAS PARCIALES (comportamiento esperado):         │
 │  ⏳ HouseholdSystem: Esperando casas completadas       │
 │  ⏳ SharedKnowledgeSystem: Sin amenazas cercanas       │
+├─────────────────────────────────────────────────────────┤
+│  BUGS CRÍTICOS RESUELTOS (5-dic-2025):                 │
+│  ✓ Flee nunca terminaba → Agentes atascados            │
+│  ✓ Agentes morían de sed → No llegaban al agua         │
+│  ✓ Tareas bloqueadas → No se activaban nuevas          │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-*Documento generado: 5 de diciembre de 2025*
+*Documento generado: 5 de diciembre de 2025 (21:43 UTC)*

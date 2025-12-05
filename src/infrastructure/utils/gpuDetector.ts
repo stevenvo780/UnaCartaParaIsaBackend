@@ -18,45 +18,6 @@ interface GPUInfo {
   tf?: unknown;
 }
 
-let cachedTf: unknown = null;
-let tfLoadAttempted = false;
-
-/**
- * Attempts to load TensorFlow.js with GPU preference.
- *
- * Tries to load the GPU version first (@tensorflow/tfjs-node-gpu),
- * falling back to CPU version if GPU is unavailable.
- * Results are cached to avoid repeated load attempts.
- *
- * @returns {unknown} TensorFlow.js instance or null if unavailable
- */
-export function getTensorFlow(): unknown {
-  if (tfLoadAttempted) return cachedTf;
-  tfLoadAttempted = true;
-
-  try {
-    cachedTf = require("@tensorflow/tfjs-node");
-    logger.info("✅ TensorFlow.js CPU loaded successfully");
-    return cachedTf;
-  } catch (cpuErr) {
-    logger.debug("TensorFlow CPU not available", {
-      error: cpuErr instanceof Error ? cpuErr.message : String(cpuErr),
-    });
-  }
-
-  try {
-    cachedTf = require("@tensorflow/tfjs-node-gpu");
-    logger.info("✅ TensorFlow.js GPU loaded (if available)");
-    return cachedTf;
-  } catch (gpuErr) {
-    logger.debug("TensorFlow GPU also unavailable", {
-      error: gpuErr instanceof Error ? gpuErr.message : String(gpuErr),
-    });
-  }
-
-  return null;
-}
-
 /**
  * Detects GPU availability and usage status.
  *

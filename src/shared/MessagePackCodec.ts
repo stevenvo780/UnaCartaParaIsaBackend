@@ -9,8 +9,6 @@
 
 import { encode, decode } from "@msgpack/msgpack";
 
-export type SerializedData = Buffer | string;
-
 /**
  * Detects if a message is MessagePack (binary) or JSON (text).
  *
@@ -52,46 +50,6 @@ export function decodeMessage<T>(raw: string | Buffer | ArrayBuffer): T {
 }
 
 /**
- * Sends a message via WebSocket using MessagePack encoding.
- *
- * @param ws - WebSocket instance
- * @param data - Data to send
+ * Hybrid helpers were removed: callers should invoke `encodeMsgPack`/
+ * `decodeMessage` or `isBinaryMessage` directly for clarity.
  */
-export function sendBinaryMessage<T>(
-  ws: { send: (data: Buffer | string) => void; readyState?: number },
-  data: T,
-): void {
-  if (ws.readyState !== undefined && ws.readyState !== 1) {
-    return;
-  }
-  ws.send(encodeMsgPack(data));
-}
-
-/**
- * Sends a message via WebSocket as JSON (for debugging or compatibility).
- *
- * @param ws - WebSocket instance
- * @param data - Data to send
- */
-export function sendJsonMessage<T>(
-  ws: { send: (data: string) => void; readyState?: number },
-  data: T,
-): void {
-  if (ws.readyState !== undefined && ws.readyState !== 1) {
-    return;
-  }
-  ws.send(JSON.stringify(data));
-}
-
-/**
- * Hybrid codec that detects and uses the appropriate format.
- */
-export const MessagePackCodec = {
-  encode: encodeMsgPack,
-  decode: decodeMessage,
-  sendBinary: sendBinaryMessage,
-  sendJson: sendJsonMessage,
-  isBinary: isBinaryMessage,
-};
-
-export default MessagePackCodec;

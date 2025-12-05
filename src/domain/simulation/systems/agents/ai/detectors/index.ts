@@ -72,20 +72,3 @@ export function runAllDetectors(ctx: DetectorContext): Task[] {
 
   return tasks;
 }
-
-/**
- * Ejecuta detectores específicos
- */
-export function runDetectors(
-  ctx: DetectorContext,
-  detectors: Detector[],
-): Task[] {
-  const tasks: Task[] = [];
-
-  for (const detector of detectors) {
-    const detected = detector(ctx);
-    tasks.push(...detected);
-  }
-
-  return tasks;
-}

@@ -20,19 +20,6 @@ export enum BuildingType {
 }
 
 /**
- * Enumeration of building sprite IDs used for rendering.
- */
-export enum BuildingSpriteId {
-  AGENT_BUILT_HOUSE = "agent_built_house",
-  AGENT_BUILT_MINE = "agent_built_mine",
-  AGENT_BUILT_WORKBENCH = "agent_built_workbench",
-  AGENT_BUILT_FARM = "agent_built_farm",
-  AGENT_BUILT_WORKSHOP = "agent_built_workshop",
-  AGENT_BUILT_WATCHTOWER = "agent_built_watchtower",
-  AGENT_BUILT_STORAGE = "agent_built_storage",
-}
-
-/**
  * Enumeration of building condition levels.
  * Defines the state of repair and usability of buildings.
  */
