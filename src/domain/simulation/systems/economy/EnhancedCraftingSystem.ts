@@ -37,7 +37,7 @@ const BASIC_RECIPE_IDS = [
   "cook_meat",
   "cook_fish",
   WeaponId.WOODEN_CLUB,
-  WeaponId.STONE_DAGGER, // Agregado para que agentes sin conocimiento puedan craftear dagas básicas
+  WeaponId.STONE_DAGGER,
 ];
 
 import { injectable, inject, optional } from "inversify";

@@ -251,7 +251,7 @@ export class GPUBatchQueryService {
           const distSq = distancesSq[q][e];
           if (distSq <= query.radiusSq) {
             indices.push(e);
-            distances[count++] = Math.sqrt(distSq); // Keep sqrt for pre-computed squared distances
+            distances[count++] = Math.sqrt(distSq);
           }
         }
 

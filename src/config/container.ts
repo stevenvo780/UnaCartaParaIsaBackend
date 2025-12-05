@@ -156,8 +156,6 @@ container
   .to(CombatSystem)
   .inSingletonScope();
 
-// ReputationSystem merged into SocialSystem - no separate binding needed
-
 container
   .bind<RecipeDiscoverySystem>(TYPES.RecipeDiscoverySystem)
   .to(RecipeDiscoverySystem)

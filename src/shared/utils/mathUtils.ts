@@ -33,7 +33,7 @@ export function isWithinDistance(
 ): boolean {
   const dx = a.x - b.x;
   const dy = a.y - b.y;
-  // Use squared distance comparison to avoid sqrt for performance
+
   return dx * dx + dy * dy <= threshold * threshold;
 }
 

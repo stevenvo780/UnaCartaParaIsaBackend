@@ -102,7 +102,7 @@ export type {
 export { SocialSystem } from "./social/SocialSystem";
 export { MarriageSystem } from "./social/MarriageSystem";
 export { HouseholdSystem } from "./social/HouseholdSystem";
-// ReputationSystem merged into SocialSystem
+
 export { GenealogySystem } from "./social/GenealogySystem";
 
 export { EconomySystem } from "./economy/EconomySystem";

@@ -33,7 +33,6 @@ export const TYPES = {
   AnimalSystem: Symbol.for("AnimalSystem"),
   ItemGenerationSystem: Symbol.for("ItemGenerationSystem"),
   CombatSystem: Symbol.for("CombatSystem"),
-  // ReputationSystem merged into SocialSystem
 
   RecipeDiscoverySystem: Symbol.for("RecipeDiscoverySystem"),
 

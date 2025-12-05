@@ -9,7 +9,10 @@
 
 import { injectable } from "inversify";
 import { logger } from "@/infrastructure/utils/logger";
-import { SystemProperty, SystemName } from "../../../../shared/constants/SystemEnums";
+import {
+  SystemProperty,
+  SystemName,
+} from "../../../../shared/constants/SystemEnums";
 import { ActivityType } from "../../../../shared/constants/MovementEnums";
 import { HandlerResultStatus } from "../../../../shared/constants/StatusEnums";
 import { GoalDomain } from "@/shared/constants/AIEnums";

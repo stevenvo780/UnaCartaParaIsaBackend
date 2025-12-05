@@ -39,7 +39,6 @@ export function handleCraft(ctx: HandlerContext): HandlerExecutionResult {
     return errorResult("CraftingSystem not available");
   }
 
-  // Try multiple param names for recipe: recipeId, itemId, itemType
   const recipeId =
     (task.params?.recipeId as string) ??
     (task.params?.itemId as string) ??

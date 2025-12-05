@@ -354,13 +354,10 @@ export class MarriageSystem {
       );
     }
 
-    // Auto-accept pending proposals after minimum age (simulates target deciding)
-    // This simplified approach accepts proposals probabilistically based on age
     const proposalsToAccept: string[] = [];
     for (const [targetId, proposal] of this.pendingProposals) {
       const age = now - proposal.timestamp;
       if (age >= this.PROPOSAL_MIN_AGE_MS) {
-        // 20% chance per update tick after min age
         if (Math.random() < 0.2) {
           proposalsToAccept.push(targetId);
         }

@@ -170,7 +170,7 @@ export class AnimalSystem {
 
   public async update(deltaMs: number): Promise<void> {
     const startTime = performance.now();
-    // Clear intra-frame caches at start of each update
+
     this.currentFrameId++;
     this.frameQueryCache.clear();
     this.frameThreatResults.clear();
@@ -376,7 +376,6 @@ export class AnimalSystem {
       const config = getAnimalConfig(animal.type);
       if (!config) continue;
 
-      // Detect threats and cache results for updateAnimalBehavior()
       const nearbyPredator = this.findNearbyPredator(
         animal,
         config.detectionRange,
@@ -385,7 +384,6 @@ export class AnimalSystem {
         ? this.findNearbyHuman(animal, config.detectionRange)
         : null;
 
-      // Store in frame cache for reuse
       this.frameThreatResults.set(animalId, {
         predator: nearbyPredator,
         human: nearbyHuman,
@@ -465,8 +463,6 @@ export class AnimalSystem {
       );
     }
 
-    // Use cached threat results from processFleeingAnimalsBatch() if available
-    // This avoids duplicate spatial queries per frame
     const cachedThreats = this.frameThreatResults.get(animal.id);
     const nearbyPredator =
       cachedThreats?.predator ??
@@ -629,7 +625,7 @@ export class AnimalSystem {
 
     if (animal.needs.reproductiveUrge > 70 && isMature && isHealthyEnough) {
       animal.state = AnimalState.MATING;
-      // Use grid-cell based cache key for mate searches (80 radius)
+
       const mates = this.getAnimalsInRadiusCached(
         animal.position,
         80,

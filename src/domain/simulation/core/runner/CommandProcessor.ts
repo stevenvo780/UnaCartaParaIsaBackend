@@ -448,8 +448,6 @@ export class CommandProcessor {
           payload.agentB &&
           typeof payload.delta === "number"
         ) {
-          // Trust is now handled via affinity in SocialSystem
-          // delta for trust (0-1) needs to be converted to affinity scale (-1 to 1)
           const affinityDelta = (payload.delta as number) * 2;
           this.runner.socialSystem.modifyAffinity(
             payload.agentA as string,

@@ -81,15 +81,20 @@ export function detectWork(ctx: DetectorContext): Task[] {
 function detectGatherWork(ctx: DetectorContext): Task[] {
   const tasks: Task[] = [];
 
-  // Priorizar materiales de construcción cuando hay demanda del BuildingSystem
   if (ctx.hasBuildingResourceDemand) {
-    const needsWood = ctx.nearestTree && ctx.buildingResourceNeeds?.wood && ctx.buildingResourceNeeds.wood > 0;
-    const needsStone = ctx.nearestStone && ctx.buildingResourceNeeds?.stone && ctx.buildingResourceNeeds.stone > 0;
+    const needsWood =
+      ctx.nearestTree &&
+      ctx.buildingResourceNeeds?.wood &&
+      ctx.buildingResourceNeeds.wood > 0;
+    const needsStone =
+      ctx.nearestStone &&
+      ctx.buildingResourceNeeds?.stone &&
+      ctx.buildingResourceNeeds.stone > 0;
 
-    // Si faltan ambos, balancear: 50% wood, 50% stone (basado en hash del agentId)
     if (needsWood && needsStone) {
-      // Usar hash simple del agentId para distribuir consistentemente
-      const agentHash = ctx.agentId.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+      const agentHash = ctx.agentId
+        .split("")
+        .reduce((acc, c) => acc + c.charCodeAt(0), 0);
       const collectStone = agentHash % 2 === 0;
 
       if (collectStone) {
@@ -103,7 +108,10 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
               entityId: ctx.nearestStone!.id,
               position: ctx.nearestStone!,
             },
-            params: { resourceType: ctx.nearestStone!.type, forConstruction: true },
+            params: {
+              resourceType: ctx.nearestStone!.type,
+              forConstruction: true,
+            },
             source: "detector:work:gather:stone",
           }),
         );
@@ -114,10 +122,8 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
         }
         return tasks;
       }
-      // Else: fall through to collect wood
     }
 
-    // Priorizar madera si hay árboles cercanos y se necesita wood
     if (needsWood) {
       const priority = calculateWorkPriority(ctx) * 1.2;
       tasks.push(
@@ -129,7 +135,10 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
             entityId: ctx.nearestTree!.id,
             position: ctx.nearestTree!,
           },
-          params: { resourceType: ctx.nearestTree!.type, forConstruction: true },
+          params: {
+            resourceType: ctx.nearestTree!.type,
+            forConstruction: true,
+          },
           source: "detector:work:gather:tree",
         }),
       );
@@ -141,7 +150,6 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
       return tasks;
     }
 
-    // Si solo falta piedra, buscar piedra
     if (needsStone) {
       const priority = calculateWorkPriority(ctx) * 1.2;
       tasks.push(
@@ -153,7 +161,10 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
             entityId: ctx.nearestStone!.id,
             position: ctx.nearestStone!,
           },
-          params: { resourceType: ctx.nearestStone!.type, forConstruction: true },
+          params: {
+            resourceType: ctx.nearestStone!.type,
+            forConstruction: true,
+          },
           source: "detector:work:gather:stone",
         }),
       );
@@ -166,7 +177,6 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
     }
   }
 
-  // Comportamiento normal: usar nearestResource (from WorldResourceSystem)
   if (ctx.nearestResource) {
     const priority = calculateWorkPriority(ctx);
     tasks.push(
@@ -185,11 +195,9 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
     return tasks;
   }
 
-  // Fallback: use work zones with items (from ItemGenerationSystem)
   if (ctx.workZonesWithItems && ctx.workZonesWithItems.length > 0) {
     const priority = calculateWorkPriority(ctx);
 
-    // Pick the closest work zone
     const nearestZone = ctx.workZonesWithItems[0];
 
     tasks.push(

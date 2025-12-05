@@ -38,15 +38,13 @@ export function detectInventory(ctx: DetectorContext): Task[] {
   const woodCount = inv.wood_log ?? inv.wood ?? 0;
   const stoneCount = inv.stone ?? 0;
 
-  // Umbral adaptativo: si hay demanda de construcción, depositar con 1+ materiales
-  const effectiveThreshold = ctx.hasBuildingResourceDemand ? 1 : BUILDING_MATERIAL_THRESHOLD;
+  const effectiveThreshold = ctx.hasBuildingResourceDemand
+    ? 1
+    : BUILDING_MATERIAL_THRESHOLD;
 
-  // Detectar si tiene materiales de construcción que debería depositar
   const hasBuildingMaterials =
-    woodCount >= effectiveThreshold ||
-    stoneCount >= effectiveThreshold;
+    woodCount >= effectiveThreshold || stoneCount >= effectiveThreshold;
 
-  // Caso 1: Inventario lleno sin zona de depósito
   if (
     loadRatio >= DEPOSIT_THRESHOLD &&
     !ctx.depositZoneId &&
@@ -57,7 +55,6 @@ export function detectInventory(ctx: DetectorContext): Task[] {
     );
   }
 
-  // Caso 2: Tiene materiales de construcción pero no zona de depósito
   if (hasBuildingMaterials && !ctx.depositZoneId && Math.random() < 0.02) {
     logger.debug(
       `📦 [InventoryDetector] ${ctx.agentId}: has building materials (wood=${woodCount}, stone=${stoneCount}) but no depositZone`,
@@ -66,16 +63,10 @@ export function detectInventory(ctx: DetectorContext): Task[] {
 
   if (!ctx.depositZoneId) return tasks;
 
-  // Generar tarea si:
-  // 1. El inventario está lleno (>= DEPOSIT_THRESHOLD)
-  // 2. O tiene materiales de construcción significativos
-  // 3. O hay demanda de construcción y tiene algún material
   const shouldDeposit = loadRatio >= DEPOSIT_THRESHOLD || hasBuildingMaterials;
 
   if (!shouldDeposit) return tasks;
 
-  // Prioridad más alta cuando hay demanda de construcción urgente
-  // URGENT (0.8) para depósito con demanda de construcción > gather HIGH (0.6)
   const priority =
     loadRatio > URGENT_DEPOSIT_THRESHOLD
       ? TASK_PRIORITIES.URGENT
@@ -104,7 +95,10 @@ export function detectInventory(ctx: DetectorContext): Task[] {
     }),
   );
 
-  if (tasks.length > 0 && (Math.random() < 0.1 || ctx.hasBuildingResourceDemand)) {
+  if (
+    tasks.length > 0 &&
+    (Math.random() < 0.1 || ctx.hasBuildingResourceDemand)
+  ) {
     logger.debug(
       `📦 [InventoryDetector] ${ctx.agentId}: deposit task, load=${(loadRatio * 100).toFixed(0)}%, wood=${woodCount}, stone=${stoneCount}, forConstruction=${ctx.hasBuildingResourceDemand}`,
     );

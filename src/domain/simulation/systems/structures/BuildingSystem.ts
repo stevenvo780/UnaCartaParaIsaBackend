@@ -185,7 +185,6 @@ export class BuildingSystem implements IBuildingSystem {
     let totalWood = 0;
     let totalStone = 0;
 
-    // Si podemos construir más casas
     if (
       houses < this.config.maxHouses &&
       !this.hasActiveJob(BuildingType.HOUSE)
@@ -195,14 +194,12 @@ export class BuildingSystem implements IBuildingSystem {
       totalStone += cost.stone;
     }
 
-    // Si podemos construir más minas
     if (mines < this.config.maxMines && !this.hasActiveJob(BuildingType.MINE)) {
       const cost = BUILDING_COSTS[BuildingType.MINE];
       totalWood += cost.wood;
       totalStone += cost.stone;
     }
 
-    // Si podemos construir más workbenches
     if (
       workbenches < this.config.maxWorkbenches &&
       !this.hasActiveJob(BuildingType.WORKBENCH)
@@ -212,14 +209,10 @@ export class BuildingSystem implements IBuildingSystem {
       totalStone += cost.stone;
     }
 
-    // Nota: los jobs activos en constructionJobs ya tienen recursos reservados,
-    // así que solo contamos los edificios que podemos construir (arriba).
-
     if (totalWood === 0 && totalStone === 0) {
       return null;
     }
 
-    // Calcular el déficit real restando los recursos ya disponibles en stockpile
     const stats = this.inventorySystem?.getSystemStats();
     const stockpiledWood = stats?.stockpiled?.wood ?? 0;
     const stockpiledStone = stats?.stockpiled?.stone ?? 0;
@@ -227,7 +220,6 @@ export class BuildingSystem implements IBuildingSystem {
     const deficitWood = Math.max(0, totalWood - stockpiledWood);
     const deficitStone = Math.max(0, totalStone - stockpiledStone);
 
-    // Si ya tenemos todo lo necesario, no hay déficit
     if (deficitWood === 0 && deficitStone === 0) {
       return null;
     }

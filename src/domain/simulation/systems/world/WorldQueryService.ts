@@ -342,7 +342,7 @@ export class WorldQueryService {
     return {
       id: nearest.id,
       position: nearest.position,
-      distance: Math.sqrt(minDistSq), // sqrt of pre-computed squared distance
+      distance: Math.sqrt(minDistSq),
       entityType: EntityType.ANIMAL as const,
       animalType: nearest.type,
       isDead: nearest.isDead,
@@ -445,7 +445,7 @@ export class WorldQueryService {
     return {
       id: nearest.id,
       position: nearest.position,
-      distance: Math.sqrt(minDistSq), // sqrt of pre-computed squared distance
+      distance: Math.sqrt(minDistSq),
       entityType: EntityType.AGENT as const,
       isDead: nearest.isDead ?? false,
       agent: nearest,
@@ -698,7 +698,7 @@ export class WorldQueryService {
         x: nearest.bounds.x + nearest.bounds.width / 2,
         y: nearest.bounds.y + nearest.bounds.height / 2,
       },
-      distance: Math.sqrt(minDistSq), // sqrt of pre-computed squared distance
+      distance: Math.sqrt(minDistSq),
       entityType: EntityType.ZONE as const,
       zoneType: nearest.type,
       zone: nearest,

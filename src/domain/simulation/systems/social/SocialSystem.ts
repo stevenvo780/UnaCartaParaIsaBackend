@@ -97,7 +97,6 @@ export class SocialSystem implements ISocialSystem {
   private gpuService?: GPUComputeService;
   private entityIndex?: EntityIndex;
 
-  // === Reputation state (merged from ReputationSystem) ===
   private reputation = new Map<string, ReputationEntry>();
   private reputationHistory = new Map<string, ReputationChange[]>();
   private readonly MAX_HISTORY_PER_AGENT = 50;
@@ -850,7 +849,6 @@ export class SocialSystem implements ISocialSystem {
         };
 
       case "find_mate": {
-        // Handle courtship/mate-finding interaction
         this.registerFriendlyInteraction(agentId, targetId);
         const affinity = this.getAffinityBetween(agentId, targetId);
 
@@ -858,12 +856,10 @@ export class SocialSystem implements ISocialSystem {
           `💕 [SocialSystem] find_mate: ${agentId} -> ${targetId}, affinity=${affinity.toFixed(2)}, threshold=${SocialSystem.MARRIAGE_AFFINITY_THRESHOLD}`,
         );
 
-        // If affinity is high enough and we have marriage system, propose marriage
         if (
           affinity >= SocialSystem.MARRIAGE_AFFINITY_THRESHOLD &&
           this.marriageSystem
         ) {
-          // proposeMarriage returns boolean: true = proposal registered, false = failed (group full, etc.)
           const proposalSuccess = this.marriageSystem.proposeMarriage(
             agentId,
             targetId,
@@ -950,10 +946,6 @@ export class SocialSystem implements ISocialSystem {
     }
     this.gameState.socialGraph.relationships = relationships;
   }
-
-  // =========================================================================
-  // REPUTATION METHODS (merged from ReputationSystem)
-  // =========================================================================
 
   /**
    * Updates the reputation of an agent.
@@ -1137,7 +1129,6 @@ export class SocialSystem implements ISocialSystem {
    * Serializes reputation data for persistence.
    */
   public serializeReputationData(): SerializedReputationData {
-    // Trust is now affinity - convert to trust scale for backward compatibility
     const trustArray: SerializedReputationData["trust"] = [];
     for (const [sourceId, targets] of this.edges.entries()) {
       const arr: Array<{
@@ -1181,7 +1172,6 @@ export class SocialSystem implements ISocialSystem {
    * Deserializes reputation data from persistence.
    */
   public deserializeReputationData(data: SerializedReputationData): void {
-    // Trust to affinity: affinity = trust * 2 - 1
     for (const source of data.trust) {
       for (const target of source.targets) {
         const affinity = target.value * 2 - 1;
@@ -1236,7 +1226,6 @@ export class SocialSystem implements ISocialSystem {
     this.gameState.reputation.stats = this.getReputationStats();
     this.gameState.reputation.reputations = this.getAllReputations();
 
-    // Trust array for backward compatibility
     const trustArray = Array.from(this.edges.entries()).map(
       ([sourceId, targets]) => ({
         sourceId,

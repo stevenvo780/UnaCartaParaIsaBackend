@@ -187,8 +187,6 @@ export class SimulationRunner {
 
   @inject(TYPES.CombatSystem) public readonly combatSystem!: CombatSystem;
 
-  // ReputationSystem functionality merged into SocialSystem
-
   @inject(TYPES.RecipeDiscoverySystem)
   public readonly _recipeDiscoverySystem!: RecipeDiscoverySystem;
 
@@ -394,8 +392,6 @@ export class SimulationRunner {
     });
 
     logger.info("🔗 SimulationRunner: System dependencies configured");
-
-    // Trust migration is no longer needed - SocialSystem handles everything
 
     this.eventRegistry.setupEventListeners();
 
@@ -604,9 +600,6 @@ export class SimulationRunner {
       update: (delta: number) => this.economySystem.update(delta),
       enabled: true,
     });
-
-    // ReputationSystem functionality is now integrated into SocialSystem
-    // No separate registration needed
 
     this.scheduler.registerSystem({
       name: "GovernanceSystem",

@@ -156,7 +156,6 @@ class Logger {
       writeIntervalMs,
     );
 
-    // Initialize log file
     this.ensureLogFile();
 
     const flushAndExit = async (): Promise<void> => {
@@ -358,11 +357,9 @@ class Logger {
 
     try {
       if (this.config.useJsonLines) {
-        // JSON Lines format: one JSON object per line
         const lines = logsToWrite.map((log) => JSON.stringify(log)).join("\n");
         await fs.promises.appendFile(logFilePath, lines + "\n", "utf-8");
       } else {
-        // Standard JSON array format
         let existingLogs: LogEntry[] = [];
         try {
           if (fs.existsSync(logFilePath)) {
@@ -420,7 +417,6 @@ class Logger {
       void this.evacuateToFile();
     }
 
-    // Cleanup old throttle entries
     const now = Date.now();
     for (const [key, entry] of this.throttleMap) {
       if (now - entry.lastTime > this.config.throttleWindowMs * 2) {
@@ -511,8 +507,6 @@ class Logger {
     }
   }
 
-  // ========== Convenience methods with category ==========
-
   /**
    * Debug level log with category.
    */
@@ -582,7 +576,6 @@ class Logger {
         : LogCategory.GENERAL;
     const logData = category === categoryOrData ? data : categoryOrData;
 
-    // Errors are never throttled
     const entry = this.createEntry(LogLevel.ERROR, category, message, {
       data: logData,
     });
@@ -592,8 +585,6 @@ class Logger {
       logData ?? "",
     );
   }
-
-  // ========== Agent-specific logging ==========
 
   /**
    * Log an agent-specific event.
@@ -610,8 +601,6 @@ class Logger {
       data,
     });
   }
-
-  // ========== Analysis utilities ==========
 
   /**
    * Get current aggregated metrics.
@@ -748,5 +737,4 @@ class Logger {
 
 export const logger = new Logger();
 
-// Re-export for convenience
 export { LogLevel, LogCategory } from "../../shared/constants/LogEnums";
