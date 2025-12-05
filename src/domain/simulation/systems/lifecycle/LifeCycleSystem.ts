@@ -208,6 +208,9 @@ export class LifeCycleSystem extends EventEmitter {
     }
     const dtSec = deltaTimeMs / 1000;
 
+    // Log genealogy stats periodically
+    this._genealogySystem?.logStats();
+
     const yearInc = dtSec / this.config.secondsPerYear;
     const agents = this.gameState.agents || [];
 

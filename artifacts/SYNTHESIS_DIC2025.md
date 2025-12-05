@@ -326,4 +326,69 @@ docker-compose -f docker-compose.gpu.yml up -d backend-gpu
 
 ---
 
-*Documento generado: 5 de diciembre de 2025 - Actualizado 18:21 UTC*
+## 🔄 SINCRONIZACIÓN BACKEND/FRONTEND (5 Dic 2025)
+
+### Sistemas Eliminados del Frontend
+Los siguientes Client adapters fueron eliminados porque NO existen en el backend:
+
+| Sistema Eliminado | Razón |
+|-------------------|-------|
+| `ClientReputationSystem` | Fusionado en `SocialSystem` del backend |
+| `ClientMarketSystem` | No implementado en backend |
+| `ClientQuestSystem` | No implementado en backend |
+| `ClientNormsSystem` | No implementado en backend |
+| `ClientResearchSystem` | No implementado en backend |
+| `ClientLivingLegendsSystem` | No implementado en backend |
+| `ClientInteractionGameSystem` | No implementado en backend |
+| `ClientCardDialogueSystem` | No implementado en backend |
+| `ClientBuildingMaintenanceSystem` | No implementado en backend |
+| `ClientResourceAttractionSystem` | No implementado en backend |
+| `ClientTradeSystem` | No implementado en backend |
+| `ClientKnowledgeNetworkSystem` | Backend usa `SharedKnowledgeSystem` |
+
+### Archivos Frontend Modificados
+| Archivo | Cambios |
+|---------|---------|
+| `Types.ts` | ~15 símbolos eliminados |
+| `ContainerConfig.ts` | Reescrito (~120 líneas menos) |
+| `DISystemComposer.ts` | ~107 líneas eliminadas |
+| `GameEventWiring.ts` | ~125 líneas eliminadas |
+| `GameTelemetryEmitter.ts` | ~74 líneas eliminadas |
+| `GameLogicManager.ts` | ~21 líneas eliminadas |
+| `SchedulerRegistry.ts` | ~66 líneas eliminadas |
+| `ReactUIUpdateService.ts` | ~3 líneas eliminadas |
+| `registry.types.ts` | ~8 líneas eliminadas |
+| `SystemLoader.ts` | ~37 líneas eliminadas |
+| **Total** | **~522 líneas eliminadas** |
+
+### Sistemas Sincronizados Backend ↔ Frontend
+| Backend | Frontend Adapter | Estado |
+|---------|------------------|--------|
+| AISystem | ClientAISystem | ✅ |
+| NeedsSystem | ClientNeedsSystem | ✅ |
+| SocialSystem | ClientSocialSystem | ✅ (incluye reputation) |
+| MarriageSystem | ClientMarriageSystem | ✅ |
+| GenealogySystem | ClientGenealogySystem | ✅ |
+| InventorySystem | ClientInventorySystem | ✅ |
+| BuildingSystem | ClientBuildingSystem | ✅ |
+| CraftingSystem | ClientCraftingSystem | ✅ |
+| CombatSystem | ClientCombatSystem | ✅ |
+| AnimalSystem | ClientAnimalSystem | ✅ |
+| TimeSystem | ClientTimeSystem | ✅ |
+| LifeCycleSystem | ClientLifeCycleSystem | ✅ |
+| GovernanceSystem | ClientGovernanceSystem | ✅ |
+| TaskSystem | ClientTaskSystem | ✅ |
+| RoleSystem | ClientRoleSystem | ✅ |
+| ProductionSystem | ClientProductionSystem | ✅ |
+| ConflictResolutionSystem | ClientConflictResolutionSystem | ✅ |
+| TerrainSystem | ClientTerrainSystem | ✅ |
+| WorldResourceSystem | ClientWorldResourceSystem | ✅ |
+| RecipeDiscoverySystem | ClientRecipeDiscoverySystem | ✅ |
+| ResourceReservationSystem | ClientResourceReservationSystem | ✅ |
+| AmbientAwarenessSystem | ClientAmbientAwarenessSystem | ✅ |
+| HouseholdSystem | ClientHouseholdSystem | ✅ |
+| EconomySystem | ClientEconomySystem | ✅ |
+
+---
+
+*Documento generado: 5 de diciembre de 2025 - Actualizado 18:50 UTC*
