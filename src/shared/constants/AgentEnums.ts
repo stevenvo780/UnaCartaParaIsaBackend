@@ -61,6 +61,3 @@ export enum WorkEthic {
   BALANCED = "balanced",
   WORKAHOLIC = "workaholic",
 }
-
-// Type/value helpers were removed to keep the module focused on the enums
-// actually used by the simulation runtime.

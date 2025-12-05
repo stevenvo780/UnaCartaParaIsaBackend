@@ -46,7 +46,6 @@ export class SharedSpatialIndex {
     _worldHeight: number = 0,
     cellSize: number = 70,
   ) {
-    // Mundo infinito - los parámetros de tamaño se ignoran en OptimizedSpatialGrid
     this.grid = new OptimizedSpatialGrid(0, 0, cellSize);
     for (let i = 0; i < this.POSITION_POOL_SIZE; i++) {
       this.positionPool.push({ x: 0, y: 0 });

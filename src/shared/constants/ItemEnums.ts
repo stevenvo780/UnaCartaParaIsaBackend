@@ -134,4 +134,3 @@ export enum ItemId {
 /**
  * Type representing all possible item rarity values.
  */
-// Alias/listas/guards eliminados para mantener sólo los enums usados.

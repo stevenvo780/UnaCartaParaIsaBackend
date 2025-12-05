@@ -21,4 +21,3 @@ export enum ResponseStatus {
 /**
  * Type representing all possible response status values.
  */
-// Alias/lista/guard eliminados para mantener sólo el enum usado por los controladores.

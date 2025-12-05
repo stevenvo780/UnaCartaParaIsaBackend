@@ -139,9 +139,6 @@ export class OptimizedSpatialGrid<T = string> {
         row <= centerRow + cellRadius;
         row++
       ) {
-        // No limitar por cols/rows - el mundo es infinito/procedural
-        // Las celdas se crean dinámicamente en el Map
-
         const key = this.cellKey(col, row);
         const cell = this.cells.get(key);
         if (!cell) continue;
@@ -263,7 +260,7 @@ export class OptimizedSpatialGrid<T = string> {
 
     return {
       totalEntities: this.entityPositions.size,
-      totalCells: this.cells.size, // Mundo infinito: solo contamos celdas ocupadas
+      totalCells: this.cells.size,
       occupiedCells: this.cells.size,
       avgEntitiesPerCell:
         this.cells.size > 0 ? this.entityPositions.size / this.cells.size : 0,

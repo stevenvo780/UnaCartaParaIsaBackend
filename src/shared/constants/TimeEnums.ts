@@ -23,4 +23,3 @@ export enum TimeOfDayPhase {
 /**
  * Type representing all possible time of day phase values.
  */
-// Alias/lista/guard eliminados para mantener sólo el enum.

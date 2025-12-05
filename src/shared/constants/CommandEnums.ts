@@ -144,8 +144,6 @@ export enum AnimalCommandType {
   SPAWN_ANIMAL = "SPAWN_ANIMAL",
 }
 
-// Alias/guards eliminados para mantener sólo los enums necesarios.
-
 /**
  * Enumeration of simulation request types.
  */

@@ -217,8 +217,6 @@ container
 container
   .bind<SharedSpatialIndex>(TYPES.SharedSpatialIndex)
   .toDynamicValue(() => {
-    // Mundo procedural INFINITO - OptimizedSpatialGrid ahora soporta cualquier coordenada
-    // Los parámetros de tamaño se ignoran (legacy), solo el cellSize es relevante
     return new SharedSpatialIndex(0, 0, 70);
   })
   .inSingletonScope();

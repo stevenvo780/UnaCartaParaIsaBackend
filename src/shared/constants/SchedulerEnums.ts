@@ -18,4 +18,3 @@ export enum TickRate {
 /**
  * Type representing all possible tick rate values.
  */
-// Alias/lista/guard eliminados para mantener únicamente el enum.

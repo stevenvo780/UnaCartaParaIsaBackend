@@ -63,4 +63,3 @@ export enum SnapshotType {
 /**
  * Type representing all possible system status values.
  */
-// Alias/lista/guard eliminados para mantener sólo los enums usados.

@@ -65,9 +65,6 @@ export class BiomeResolver {
       return BiomeType.LAKE;
     }
 
-    // Note: Removed forced first LAKE logic for deterministic chunk generation
-    // The relaxed LAKE thresholds (elevation < 0.48 && moisture > 0.5) should be sufficient
-
     if (elevation < 0.5 && moisture > 0.55) {
       return BiomeType.WETLAND;
     }

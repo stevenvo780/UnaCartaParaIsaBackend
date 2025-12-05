@@ -689,7 +689,6 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Obtener stock global (stockpiles + inventarios) y total de agentes para balanceo de carga
     let _globalStockpile:
       | { wood?: number; stone?: number; food?: number }
       | undefined;
@@ -703,7 +702,7 @@ export class AISystem extends EventEmitter {
     };
     if (inventorySys?.getSystemStats) {
       const stats = inventorySys.getSystemStats();
-      // Sumar recursos en stockpiles + inventarios de agentes
+
       _globalStockpile = {
         wood: (stats.stockpiled.wood ?? 0) + (stats.inAgents.wood ?? 0),
         stone: (stats.stockpiled.stone ?? 0) + (stats.inAgents.stone ?? 0),
@@ -715,7 +714,7 @@ export class AISystem extends EventEmitter {
         );
       }
     }
-    // Obtener total de agentes vivos
+
     if (this.agentRegistry) {
       _totalAgents = Math.max(1, this.agentRegistry.getStats().aliveAgents);
     }

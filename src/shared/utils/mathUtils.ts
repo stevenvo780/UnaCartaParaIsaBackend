@@ -36,6 +36,3 @@ export function isWithinDistance(
 
   return dx * dx + dy * dy <= threshold * threshold;
 }
-
-// Remaining helpers are intentionally minimal; other calculations live in
-// specialized systems to keep this module lean.

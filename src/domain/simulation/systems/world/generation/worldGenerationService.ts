@@ -41,7 +41,7 @@ export class WorldGenerationService {
     }
     this.currentSeed = seed;
     this.noiseGen = new NoiseUtils(this.currentSeed);
-    this.biomeResolver.reset(); // Reset biome state when seed changes for determinism
+    this.biomeResolver.reset();
     if (config.width <= 0 || config.height <= 0) {
       throw new Error("World generation config dimensions must be positive");
     }

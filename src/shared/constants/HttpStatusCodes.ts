@@ -25,5 +25,3 @@ export enum HttpStatusCode {
   INTERNAL_SERVER_ERROR = 500,
   SERVICE_UNAVAILABLE = 503,
 }
-
-// Alias/listas/guard eliminados para mantener el archivo enfocado sólo en los enums.

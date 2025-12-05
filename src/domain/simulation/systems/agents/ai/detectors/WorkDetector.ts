@@ -28,7 +28,7 @@ const CRITICAL_NEED_THRESHOLD = SIMULATION_CONSTANTS.NEEDS.CRITICAL_THRESHOLD;
  * Por encima de esto, reduce probabilidad de gather
  */
 const PER_CAPITA_SATURATION_THRESHOLD = 10;
-const PER_CAPITA_MAX_THRESHOLD = 50; // Por encima de esto, casi nunca gather
+const PER_CAPITA_MAX_THRESHOLD = 50;
 
 /**
  * Calcula si debemos skipear gather basado en saturación per-cápita.
@@ -42,42 +42,37 @@ function shouldSkipGatherDueToSaturation(
   const agents = ctx.totalAgents ?? 1;
   const perCapita = stock / agents;
 
-  // Log de diagnóstico (10% prob)
   if (RandomUtils.chance(0.1)) {
     logger.debug(
       `⚖️ [WorkDetector] ${ctx.agentId}: evaluating ${resourceType} saturation: stock=${stock}, agents=${agents}, perCapita=${perCapita.toFixed(1)}`,
     );
   }
 
-  // Si hay demanda de construcción, nunca skipear wood/stone
   if (
     ctx.hasBuildingResourceDemand &&
     (resourceType === "wood" || resourceType === "stone")
   ) {
     const needs = ctx.buildingResourceNeeds;
     if (needs && (needs[resourceType] ?? 0) > 0) {
-      return false; // Siempre recolectar si hay demanda
+      return false;
     }
   }
 
-  // Si per-cápita está bajo el threshold, no skipear
   if (perCapita < PER_CAPITA_SATURATION_THRESHOLD) {
     return false;
   }
 
-  // Si está muy saturado, skipear casi siempre
   if (perCapita >= PER_CAPITA_MAX_THRESHOLD) {
     logger.debug(
       `⚖️ [WorkDetector] ${ctx.agentId}: SKIP ${resourceType} (per-capita=${perCapita.toFixed(1)} >= max ${PER_CAPITA_MAX_THRESHOLD})`,
     );
-    return RandomUtils.chance(0.95); // 95% skip
+    return RandomUtils.chance(0.95);
   }
 
-  // Probabilidad de skip proporcional al exceso
   const excessRatio =
     (perCapita - PER_CAPITA_SATURATION_THRESHOLD) /
     (PER_CAPITA_MAX_THRESHOLD - PER_CAPITA_SATURATION_THRESHOLD);
-  const skipChance = Math.min(0.8, excessRatio * 0.8); // Max 80% skip
+  const skipChance = Math.min(0.8, excessRatio * 0.8);
 
   if (RandomUtils.chance(skipChance)) {
     logger.debug(
@@ -244,7 +239,6 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
   }
 
   if (ctx.nearestResource) {
-    // Determinar tipo de recurso para saturación
     const resType = ctx.nearestResource.type?.toLowerCase() ?? "";
     let saturationResourceType: "wood" | "stone" | "food" | null = null;
 
@@ -264,12 +258,10 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
       saturationResourceType = "food";
     }
 
-    // Aplicar lógica de saturación per-cápita
     if (
       saturationResourceType &&
       shouldSkipGatherDueToSaturation(ctx, saturationResourceType)
     ) {
-      // Skip este gather, no crear task - dejar que el agente busque otra actividad
       return tasks;
     }
 

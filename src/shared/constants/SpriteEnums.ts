@@ -47,4 +47,3 @@ export enum ZoneSpriteKey {
 /**
  * Type representing all possible zone sprite key values.
  */
-// Alias/listas/guard eliminados para mantener sólo los sprite keys.

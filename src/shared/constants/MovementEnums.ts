@@ -37,8 +37,6 @@ export enum ActivityType {
   ATTACKING = "attacking",
 }
 
-// Alias/listas/guards innecesarios se eliminaron para mantener sólo los enums usados.
-
 /**
  * Re-export WeatherType from AmbientEnums for convenience.
  */

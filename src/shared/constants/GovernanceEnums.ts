@@ -52,5 +52,3 @@ export enum GovernanceProjectType {
   ASSIGN_HUNTERS = "assign_hunters",
   GATHER_WATER = "gather_water",
 }
-
-// Alias/listas/guards eliminados para reducir ruido.

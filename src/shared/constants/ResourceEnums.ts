@@ -75,5 +75,3 @@ export enum WorldEntityType {
   PLANT = "plant",
   PROP = "prop",
 }
-
-// Alias/listas/guards eliminados; las validaciones viven en resourceMapping.ts.

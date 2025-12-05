@@ -51,5 +51,3 @@ export enum EntityStat {
   MONEY = "money",
   SAFETY = "safety",
 }
-
-// Alias/listas/guards eliminados para evitar exportes sin uso.

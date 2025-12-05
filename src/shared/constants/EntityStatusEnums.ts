@@ -17,5 +17,3 @@ export enum EntityStatus {
   DESPAWNING = "despawning",
   DISABLED = "disabled",
 }
-
-// Alias/listas/guards eliminados para mantener el módulo mínimo.

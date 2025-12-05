@@ -37,5 +37,3 @@ export enum FoodId {
   BREAD = "bread",
   SANDWICH = "sandwich",
 }
-
-// Alias/listas/guards eliminados para no exportar símbolos sin uso.

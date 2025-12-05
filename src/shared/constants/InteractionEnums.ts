@@ -23,4 +23,3 @@ export enum InteractionType {
 /**
  * Type representing all possible interaction type values.
  */
-// Alias/lista/guard eliminados para mantener sólo el enum.

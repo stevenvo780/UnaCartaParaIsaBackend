@@ -41,6 +41,3 @@ export enum RoleType {
 export const ALL_ROLE_TYPES: readonly RoleType[] = Object.values(
   RoleType,
 ) as RoleType[];
-
-// Alias/listas/guards innecesarios eliminados; sólo se mantiene `ALL_ROLE_TYPES`
-// porque lo consume RoleSystem para iterar todos los roles disponibles.

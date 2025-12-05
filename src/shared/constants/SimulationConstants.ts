@@ -381,6 +381,3 @@ export const SIM_CONSTANTS = {
   WATER_DECAY_RATE: SIMULATION_CONSTANTS.RESOURCES.WATER_DECAY_RATE,
   DEPRECATION_INTERVAL: SIMULATION_CONSTANTS.TIMING.DEPRECATION_INTERVAL_MS,
 } as const;
-
-// Reexport legacy constants eliminados; todos los consumidores deberían usar
-// `SIMULATION_CONSTANTS` directamente.

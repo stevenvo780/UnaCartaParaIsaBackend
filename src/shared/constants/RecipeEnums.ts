@@ -60,5 +60,3 @@ export enum RecipeId {
   CULTIVATED_SEEDS = "cultivated_seeds",
   COMMUNITY_MEAL = "community_meal",
 }
-
-// Alias/listas/guard eliminados para mantener sólo los IDs.

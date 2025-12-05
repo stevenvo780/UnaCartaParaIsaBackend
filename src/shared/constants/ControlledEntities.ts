@@ -6,5 +6,3 @@ export enum ControlledEntity {
   ISA = "isa",
   STEV = "stev",
 }
-
-// Type alias eliminado para no exportar símbolos sin uso.

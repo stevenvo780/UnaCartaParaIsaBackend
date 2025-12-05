@@ -15,5 +15,3 @@ export enum KnowledgeNodeType {
   LOCATION = "location",
   PERSON = "person",
 }
-
-// Alias/lista/guard eliminados; sólo se expone el enum.

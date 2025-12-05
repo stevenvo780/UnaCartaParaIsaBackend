@@ -27,5 +27,3 @@ export enum ConflictResolution {
   CONTINUED = "continued",
   EXPIRED = "expired",
 }
-
-// Alias/guards eliminados; sólo quedan los enums usados por los sistemas.

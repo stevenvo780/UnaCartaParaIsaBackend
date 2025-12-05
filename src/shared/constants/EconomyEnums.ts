@@ -6,8 +6,6 @@
  * @module shared/constants/EconomyEnums
  */
 
-// Resource enums no longer needed tras remover configuraciones.
-
 /**
  * Enumeration of market order types.
  */
@@ -36,5 +34,3 @@ export enum TradeOfferStatus {
   EXPIRED = "expired",
   CANCELLED = "cancelled",
 }
-
-// Alias/guards/configs sin uso eliminados para mantener el módulo ligero.

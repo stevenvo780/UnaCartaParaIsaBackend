@@ -13,5 +13,3 @@ export enum GodId {
   ISA = "isa",
   STEV = "stev",
 }
-
-// Alias/guard sin uso eliminados.

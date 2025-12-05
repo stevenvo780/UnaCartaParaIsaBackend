@@ -62,4 +62,3 @@ export enum LogCategory {
 /**
  * Type representing all possible log level values.
  */
-// Alias/listas/guards eliminados para que sólo se exporten los enums.

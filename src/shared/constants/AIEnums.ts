@@ -112,5 +112,3 @@ export enum AgentPriority {
 export enum GoalReason {
   REPRODUCTION_DRIVE = "reproduction_drive",
 }
-
-// Se eliminaron alias y type guards sin consumidores para reducir ruido.

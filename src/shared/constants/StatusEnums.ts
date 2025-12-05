@@ -105,4 +105,3 @@ export enum ZoneConstructionStatus {
 /**
  * Type guard to check if a string is a valid StorageStatus.
  */
-// Alias/listas/guards eliminados; únicamente se conservan los enums reales.

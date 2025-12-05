@@ -16,5 +16,3 @@ export enum CombatEventType {
   WEAPON_CRAFTED = "weapon_crafted",
   WEAPON_EQUIPPED = "weapon_equipped",
 }
-
-// Eliminados type guards/aliases sin uso para mantener el módulo mínimo.

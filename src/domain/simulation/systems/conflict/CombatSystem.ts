@@ -987,7 +987,6 @@ export class CombatSystem implements ICombatSystem {
     const dy = agentPos.y - fromPosition.y;
     const distance = Math.hypot(dx, dy);
 
-    // Si ya está suficientemente lejos (>150 unidades), huida completada
     if (distance >= 150) {
       return {
         status: HandlerResultStatus.COMPLETED,

@@ -60,7 +60,7 @@ export class ChunkLoadingSystem {
    */
   private createDefaultInfiniteWorldConfig(): WorldGenConfig {
     return {
-      width: 1000000, // Valor grande pero Map soporta infinito
+      width: 1000000,
       height: 1000000,
       tileSize: 32,
       seed: Date.now(),
@@ -100,7 +100,6 @@ export class ChunkLoadingSystem {
 
     this.lastCheckTime = now;
 
-    // Auto-initialize with infinite world config if not set
     if (!this.worldConfig) {
       logger.info(
         `[ChunkLoadingSystem] Auto-initializing with infinite world config`,

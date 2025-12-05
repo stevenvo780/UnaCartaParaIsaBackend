@@ -33,5 +33,3 @@ export enum MapElementType {
   STRUCTURE = "structure",
   VEGETATION = "vegetation",
 }
-
-// Alias/lista/guard eliminados para dejar sólo el enum.

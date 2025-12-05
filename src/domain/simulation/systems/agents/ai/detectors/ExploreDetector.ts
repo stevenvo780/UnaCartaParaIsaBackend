@@ -32,7 +32,6 @@ const RESOURCE_SEARCH_COOLDOWN = 10000;
 export function detectExplore(ctx: DetectorContext): Task[] {
   const tasks: Task[] = [];
 
-  // NUEVO: Prioridad alta cuando no hay recursos y hay demanda
   const urgentResourceSearch = detectUrgentResourceSearch(ctx);
   if (urgentResourceSearch) {
     tasks.push(urgentResourceSearch);
@@ -65,32 +64,25 @@ export function detectExplore(ctx: DetectorContext): Task[] {
  * Prioridad más alta que exploración normal para que agentes busquen nuevos chunks.
  */
 function detectUrgentResourceSearch(ctx: DetectorContext): Task | null {
-  // Solo activar si hay demanda de construcción
   if (!ctx.hasBuildingResourceDemand) return null;
 
-  // Solo si no hay recursos cercanos (ni árboles ni piedras)
   if (ctx.nearestTree || ctx.nearestStone || ctx.nearestResource) return null;
 
-  // Cooldown más corto para búsqueda urgente
   const lastExplore = ctx.lastExploreTime ?? 0;
   const timeSinceExplore = ctx.now - lastExplore;
   if (timeSinceExplore < RESOURCE_SEARCH_COOLDOWN) return null;
 
-  // Elegir dirección de exploración - alejarse del centro hacia los bordes
   const distFromCenter = Math.hypot(ctx.position.x, ctx.position.y);
-  const exploreDistance = 300; // Distancia mayor para encontrar nuevos chunks
+  const exploreDistance = 300;
 
-  // Dirección radial hacia afuera del centro
   let targetX = ctx.position.x;
   let targetY = ctx.position.y;
 
   if (distFromCenter > 10) {
-    // Moverse en dirección opuesta al centro
     const angle = Math.atan2(ctx.position.y, ctx.position.x);
     targetX = ctx.position.x + Math.cos(angle) * exploreDistance;
     targetY = ctx.position.y + Math.sin(angle) * exploreDistance;
   } else {
-    // Si está cerca del centro, elegir dirección aleatoria
     const angle = RandomUtils.floatRange(0, Math.PI * 2);
     targetX = ctx.position.x + Math.cos(angle) * exploreDistance;
     targetY = ctx.position.y + Math.sin(angle) * exploreDistance;
@@ -105,7 +97,7 @@ function detectUrgentResourceSearch(ctx: DetectorContext): Task | null {
   return createTask({
     agentId: ctx.agentId,
     type: TaskType.EXPLORE,
-    priority: TASK_PRIORITIES.NORMAL + 0.2, // Prioridad moderada-alta
+    priority: TASK_PRIORITIES.NORMAL + 0.2,
     target: {
       position: { x: targetX, y: targetY },
     },

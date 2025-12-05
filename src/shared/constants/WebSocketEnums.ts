@@ -69,4 +69,3 @@ export enum WorkerMessageType {
 /**
  * Type guard to check if a string is a valid WebSocketMessageType.
  */
-// Alias/listas/guards eliminados para mantener sólo los enums consumidos.

@@ -21,4 +21,3 @@ export enum TileType {
 /**
  * Type representing all possible tile type values.
  */
-// Alias/lista/guard eliminados para mantener sólo el enum.

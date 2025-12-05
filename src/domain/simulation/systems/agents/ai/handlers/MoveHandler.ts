@@ -118,7 +118,6 @@ export function moveToPosition(
 
   const result = systems.movement.requestMove(agentId, target);
 
-  // Log detallado para debug
   if (dist > 100) {
     logger.debug(
       `[MoveHandler] ${agentId}: moveToPosition dist=${dist.toFixed(0)}, result.status=${result.status}, msg=${result.message}`,
@@ -135,5 +134,3 @@ export function moveToPosition(
 /**
  * Solicita movimiento a una zona.
  */
-// Legacy helpers for moving directly to zones/entities were removed because
-// handlers now issue movement requests through `handleMove`/`moveToPosition`.
