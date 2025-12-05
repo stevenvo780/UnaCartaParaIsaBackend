@@ -689,19 +689,29 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Obtener stock global y total de agentes para balanceo de carga
+    // Obtener stock global (stockpiles + inventarios) y total de agentes para balanceo de carga
     let _globalStockpile: { wood?: number; stone?: number; food?: number } | undefined;
     let _totalAgents = 1;
+    
     const inventorySys = this.systemRegistry?.inventory as unknown as { 
-      getTotalStockpileResources?: () => { wood?: number; stone?: number; food?: number } 
+      getSystemStats?: () => {
+        stockpiled: { wood: number; stone: number; food: number };
+        inAgents: { wood: number; stone: number; food: number };
+      }
     };
-    if (inventorySys?.getTotalStockpileResources) {
-      const totals = inventorySys.getTotalStockpileResources();
+    if (inventorySys?.getSystemStats) {
+      const stats = inventorySys.getSystemStats();
+      // Sumar recursos en stockpiles + inventarios de agentes
       _globalStockpile = {
-        wood: totals.wood ?? 0,
-        stone: totals.stone ?? 0,
-        food: totals.food ?? 0,
+        wood: (stats.stockpiled.wood ?? 0) + (stats.inAgents.wood ?? 0),
+        stone: (stats.stockpiled.stone ?? 0) + (stats.inAgents.stone ?? 0),
+        food: (stats.stockpiled.food ?? 0) + (stats.inAgents.food ?? 0),
       };
+      if (RandomUtils.chance(0.01)) {
+        logger.debug(
+          `📦 [AISystem] globalStockpile: wood=${_globalStockpile.wood}, stone=${_globalStockpile.stone}, food=${_globalStockpile.food}`,
+        );
+      }
     }
     // Obtener total de agentes vivos
     if (this.agentRegistry) {

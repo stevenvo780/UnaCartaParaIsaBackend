@@ -136,23 +136,6 @@ export enum AgentCommandType {
   SET_PRIORITY = "SET_PRIORITY",
 }
 
-/**
- * Type representing all possible agent command type values.
- */
-export type AgentCommandTypeValue = `${AgentCommandType}`;
-
-/**
- * Array of all agent command types for iteration.
- */
-export const ALL_AGENT_COMMAND_TYPES: readonly AgentCommandType[] =
-  Object.values(AgentCommandType) as AgentCommandType[];
-
-/**
- * Type guard to check if a string is a valid AgentCommandType.
- */
-export function isAgentCommandType(value: string): value is AgentCommandType {
-  return Object.values(AgentCommandType).includes(value as AgentCommandType);
-}
 
 /**
  * Enumeration of animal command types.
@@ -162,23 +145,7 @@ export enum AnimalCommandType {
   SPAWN_ANIMAL = "SPAWN_ANIMAL",
 }
 
-/**
- * Type representing all possible animal command type values.
- */
-export type AnimalCommandTypeValue = `${AnimalCommandType}`;
-
-/**
- * Array of all animal command types for iteration.
- */
-export const ALL_ANIMAL_COMMAND_TYPES: readonly AnimalCommandType[] =
-  Object.values(AnimalCommandType) as AnimalCommandType[];
-
-/**
- * Type guard to check if a string is a valid AnimalCommandType.
- */
-export function isAnimalCommandType(value: string): value is AnimalCommandType {
-  return Object.values(AnimalCommandType).includes(value as AnimalCommandType);
-}
+// Alias/guards eliminados para mantener sólo los enums necesarios.
 
 /**
  * Enumeration of simulation request types.

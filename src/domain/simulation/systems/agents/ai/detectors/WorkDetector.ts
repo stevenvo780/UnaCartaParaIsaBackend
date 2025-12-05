@@ -42,6 +42,13 @@ function shouldSkipGatherDueToSaturation(
   const agents = ctx.totalAgents ?? 1;
   const perCapita = stock / agents;
 
+  // Log de diagnóstico (10% prob)
+  if (RandomUtils.chance(0.1)) {
+    logger.debug(
+      `⚖️ [WorkDetector] ${ctx.agentId}: evaluating ${resourceType} saturation: stock=${stock}, agents=${agents}, perCapita=${perCapita.toFixed(1)}`,
+    );
+  }
+
   // Si hay demanda de construcción, nunca skipear wood/stone
   if (ctx.hasBuildingResourceDemand && (resourceType === "wood" || resourceType === "stone")) {
     const needs = ctx.buildingResourceNeeds;
@@ -57,6 +64,9 @@ function shouldSkipGatherDueToSaturation(
 
   // Si está muy saturado, skipear casi siempre
   if (perCapita >= PER_CAPITA_MAX_THRESHOLD) {
+    logger.debug(
+      `⚖️ [WorkDetector] ${ctx.agentId}: SKIP ${resourceType} (per-capita=${perCapita.toFixed(1)} >= max ${PER_CAPITA_MAX_THRESHOLD})`,
+    );
     return RandomUtils.chance(0.95); // 95% skip
   }
 
@@ -66,11 +76,9 @@ function shouldSkipGatherDueToSaturation(
   const skipChance = Math.min(0.8, excessRatio * 0.8); // Max 80% skip
 
   if (RandomUtils.chance(skipChance)) {
-    if (RandomUtils.chance(0.05)) {
-      logger.debug(
-        `⚖️ [WorkDetector] ${ctx.agentId}: skipping ${resourceType} gather (per-capita=${perCapita.toFixed(1)}, skipChance=${(skipChance*100).toFixed(0)}%)`,
-      );
-    }
+    logger.debug(
+      `⚖️ [WorkDetector] ${ctx.agentId}: SKIP ${resourceType} (per-capita=${perCapita.toFixed(1)}, skipChance=${(skipChance*100).toFixed(0)}%)`,
+    );
     return true;
   }
   return false;
