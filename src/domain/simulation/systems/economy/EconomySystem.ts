@@ -279,21 +279,24 @@ export class EconomySystem implements ITradeSystem {
    * Optimized from O(n²) to O(n × k) where k = avg agents per cell.
    */
   private autoTradeAmongAgents(): void {
-    const entities: Array<{ id: string; position?: { x: number; y: number } }> = [];
+    const entities: Array<{ id: string; position?: { x: number; y: number } }> =
+      [];
     if (this.agentRegistry) {
       for (const profile of this.agentRegistry.getAllProfiles()) {
         if (!profile.isDead) {
           entities.push({
             id: profile.id,
-            position: this.agentRegistry.getPosition(profile.id)
+            position: this.agentRegistry.getPosition(profile.id),
           });
         }
       }
     } else if (this.state.entities) {
-      entities.push(...this.state.entities.map(e => ({
-        id: e.id,
-        position: e.position
-      })));
+      entities.push(
+        ...this.state.entities.map((e) => ({
+          id: e.id,
+          position: e.position,
+        })),
+      );
     }
     if (entities.length < 2) return;
 
@@ -327,7 +330,7 @@ export class EconomySystem implements ITradeSystem {
     for (const [cellKey, cellAgents] of spatialGrid) {
       if (cellAgents.length < 2) continue;
 
-      const [cellX, cellY] = cellKey.split(',').map(Number);
+      const [cellX, cellY] = cellKey.split(",").map(Number);
 
       // Get agents in this cell + 8 adjacent cells
       const nearbyAgents: Array<{ id: string }> = [...cellAgents];

@@ -128,27 +128,29 @@ export class SnapshotManager {
         if (activeTask || memory) {
           const serializedMemory = memory
             ? {
-              ...memory,
-              visitedZones: Array.from(memory.visitedZones || []),
-              knownResourceLocations: memory.knownResourceLocations
-                ? Object.fromEntries(memory.knownResourceLocations)
-                : {},
-              successfulActivities: memory.successfulActivities
-                ? Object.fromEntries(memory.successfulActivities)
-                : {},
-              failedAttempts: memory.failedAttempts
-                ? Object.fromEntries(memory.failedAttempts)
-                : {},
-              failedTargets: memory.failedTargets
-                ? Object.fromEntries(memory.failedTargets)
-                : {},
-            }
+                ...memory,
+                visitedZones: Array.from(memory.visitedZones || []),
+                knownResourceLocations: memory.knownResourceLocations
+                  ? Object.fromEntries(memory.knownResourceLocations)
+                  : {},
+                successfulActivities: memory.successfulActivities
+                  ? Object.fromEntries(memory.successfulActivities)
+                  : {},
+                failedAttempts: memory.failedAttempts
+                  ? Object.fromEntries(memory.failedAttempts)
+                  : {},
+                failedTargets: memory.failedTargets
+                  ? Object.fromEntries(memory.failedTargets)
+                  : {},
+              }
             : undefined;
 
           ai = {
             currentGoal: activeTask || undefined,
             goalQueue: [...(pendingTasks || [])],
-            currentAction: activeTask ? { type: activeTask.type, target: activeTask.target } : undefined,
+            currentAction: activeTask
+              ? { type: activeTask.type, target: activeTask.target }
+              : undefined,
             offDuty: false,
             lastDecisionTime: Date.now(),
             personality: {},
@@ -270,27 +272,29 @@ export class SnapshotManager {
         if (activeTask || memory) {
           const serializedMemory = memory
             ? {
-              ...memory,
-              visitedZones: Array.from(memory.visitedZones || []),
-              knownResourceLocations: memory.knownResourceLocations
-                ? Object.fromEntries(memory.knownResourceLocations)
-                : {},
-              successfulActivities: memory.successfulActivities
-                ? Object.fromEntries(memory.successfulActivities)
-                : {},
-              failedAttempts: memory.failedAttempts
-                ? Object.fromEntries(memory.failedAttempts)
-                : {},
-              failedTargets: memory.failedTargets
-                ? Object.fromEntries(memory.failedTargets)
-                : {},
-            }
+                ...memory,
+                visitedZones: Array.from(memory.visitedZones || []),
+                knownResourceLocations: memory.knownResourceLocations
+                  ? Object.fromEntries(memory.knownResourceLocations)
+                  : {},
+                successfulActivities: memory.successfulActivities
+                  ? Object.fromEntries(memory.successfulActivities)
+                  : {},
+                failedAttempts: memory.failedAttempts
+                  ? Object.fromEntries(memory.failedAttempts)
+                  : {},
+                failedTargets: memory.failedTargets
+                  ? Object.fromEntries(memory.failedTargets)
+                  : {},
+              }
             : undefined;
 
           ai = {
             currentGoal: activeTask || undefined,
             goalQueue: [...(pendingTasks || [])],
-            currentAction: activeTask ? { type: activeTask.type, target: activeTask.target } : undefined,
+            currentAction: activeTask
+              ? { type: activeTask.type, target: activeTask.target }
+              : undefined,
             offDuty: false,
             lastDecisionTime: Date.now(),
             personality: {},

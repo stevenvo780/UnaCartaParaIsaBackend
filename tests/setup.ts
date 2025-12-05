@@ -203,6 +203,8 @@ export function createMockAISystemDependencies() {
       registerAgent: vi.fn(),
       unregisterAgent: vi.fn(),
       updateAgentPosition: vi.fn(),
+      getStats: vi.fn(() => ({ aliveAgents: 1, totalAgents: 1 })),
+      getAllProfiles: vi.fn(() => []),
     } as unknown as AgentRegistry,
   };
 }

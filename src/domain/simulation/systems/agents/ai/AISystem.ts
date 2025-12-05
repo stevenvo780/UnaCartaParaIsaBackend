@@ -64,8 +64,18 @@ import { SystemRegistry } from "../SystemRegistry";
 import type { TimeSystem } from "../../core/TimeSystem";
 import { equipmentSystem } from "../EquipmentSystem";
 import { RoleSystem } from "../RoleSystem";
-import { container } from "@/config/container";
+import type { Container } from "inversify";
 import { RandomUtils } from "@/shared/utils/RandomUtils";
+
+// Lazy import to avoid circular dependency
+let _container: Container | null = null;
+function getContainer(): Container {
+  if (!_container) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    _container = require("@/config/container").container;
+  }
+  return _container!;
+}
 
 export interface AISystemDeps {
   gameState: GameState;
@@ -146,7 +156,6 @@ export class AISystem extends EventEmitter {
   private worldQueryService?: WorldQueryService;
   private timeSystem?: TimeSystem;
 
-
   private systemRegistry: SystemRegistry;
 
   private taskQueue: TaskQueue;
@@ -159,7 +168,10 @@ export class AISystem extends EventEmitter {
   private agentMemories = new Map<string, AIAgentMemory>();
 
   /** Caché de contextos de detección con TTL de 500ms */
-  private contextCache = new Map<string, { context: DetectorContext; timestamp: number }>();
+  private contextCache = new Map<
+    string,
+    { context: DetectorContext; timestamp: number }
+  >();
   private readonly CONTEXT_CACHE_TTL = 500; // ms
 
   constructor(
@@ -278,7 +290,6 @@ export class AISystem extends EventEmitter {
     };
   }
 
-
   /**
    * Emite una tarea para un agente.
    *
@@ -381,10 +392,12 @@ export class AISystem extends EventEmitter {
    */
   public async update(deltaTimeMs: number): Promise<void> {
     const agents = this.gameState.agents ?? [];
-    const aliveAgents = agents.filter(a => !a.isDead);
+    const aliveAgents = agents.filter((a) => !a.isDead);
 
     if (RandomUtils.chance(0.04)) {
-      logger.debug(`[AISystem] update(): ${aliveAgents.length} alive agents (${agents.length} total)`);
+      logger.debug(
+        `[AISystem] update(): ${aliveAgents.length} alive agents (${agents.length} total)`,
+      );
     }
 
     // Process in batches to avoid long blocking
@@ -399,7 +412,7 @@ export class AISystem extends EventEmitter {
 
       // Yield to event loop after each batch to prevent blocking
       if (i + BATCH_SIZE < aliveAgents.length) {
-        await new Promise(resolve => setImmediate(resolve));
+        await new Promise((resolve) => setImmediate(resolve));
       }
     }
   }
@@ -655,7 +668,10 @@ export class AISystem extends EventEmitter {
       const availableSpace = inventorySystem.getInventorySpace(agentId);
       inventoryLoad = inventoryCapacity - availableSpace;
 
-      agentInventory = (inventorySystem.getAgentInventory?.(agentId) as Record<string, number> | undefined) ?? {};
+      agentInventory =
+        (inventorySystem.getAgentInventory?.(agentId) as
+          | Record<string, number>
+          | undefined) ?? {};
     }
 
     if (this.gameState.zones) {
@@ -734,7 +750,7 @@ export class AISystem extends EventEmitter {
 
     let roleType: string | undefined;
     try {
-      const roleSystem = container.get<RoleSystem>(TYPES.RoleSystem);
+      const roleSystem = getContainer().get<RoleSystem>(TYPES.RoleSystem);
       const agentRole = roleSystem.getAgentRole(agentId);
       roleType = agentRole?.roleType;
     } catch (error) {

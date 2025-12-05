@@ -31,7 +31,7 @@ export class EventRegistry {
   private eventCleanups: (() => void)[] = [];
   private eventCaptureListener?: (eventName: string, payload: unknown) => void;
 
-  constructor(private runner: SimulationRunner) { }
+  constructor(private runner: SimulationRunner) {}
 
   private registerEvent(
     eventName: string,
@@ -274,7 +274,7 @@ export class EventRegistry {
 
     this.registerEvent(
       GameEventType.MOVEMENT_ARRIVED_AT_ZONE,
-      (data: { entityId: string; zoneId: string }) => {
+      (_data: { entityId: string; zoneId: string }) => {
         // Entity arrived at zone - handled internally by AISystem
       },
     );
@@ -390,7 +390,7 @@ export class EventRegistry {
 
     this.registerEvent(
       GameEventType.KNOWLEDGE_LEARNED,
-      (data: {
+      (_data: {
         agentId: string;
         knowledgeId: string;
         knowledgeType: string;

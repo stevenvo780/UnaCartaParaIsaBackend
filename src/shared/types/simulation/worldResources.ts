@@ -12,7 +12,6 @@ import { Position } from "../game-types";
  */
 export { WorldResourceType, ResourceState, ResourceInteractionType };
 
-
 export interface ResourceYield {
   resourceType: ResourceType;
   amountMin: number;

@@ -463,4 +463,3 @@ export class EquipmentSystem {
  * Includes both personal equipment and shared tool storage.
  */
 export const equipmentSystem = new EquipmentSystem();
-

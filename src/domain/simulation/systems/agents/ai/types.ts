@@ -337,8 +337,6 @@ export interface HandlerExecutionResult {
   data?: Record<string, unknown>;
 }
 
-
-
 let taskIdCounter = 0;
 
 /**

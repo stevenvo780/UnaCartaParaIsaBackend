@@ -1002,12 +1002,15 @@ export class SimulationRunner {
         social,
         ai: activeTask
           ? {
-            currentGoal: activeTask,
-            goalQueue: pendingTasks,
-            currentAction: { type: activeTask.type, target: activeTask.target },
-            offDuty: false,
-            lastDecisionTime: Date.now(),
-          }
+              currentGoal: activeTask,
+              goalQueue: pendingTasks,
+              currentAction: {
+                type: activeTask.type,
+                target: activeTask.target,
+              },
+              offDuty: false,
+              lastDecisionTime: Date.now(),
+            }
           : null,
       };
     }

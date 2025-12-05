@@ -21,9 +21,6 @@ import { WeatherType } from "../../../shared/constants/AmbientEnums";
 import { DialogueTone } from "../../../shared/constants/AmbientEnums";
 import { ActivityType } from "../../../shared/constants/MovementEnums";
 
-
-
-
 /**
  * State container for material resources.
  */
