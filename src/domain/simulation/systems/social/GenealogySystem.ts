@@ -6,6 +6,7 @@ import type {
   SerializedFamilyTree,
 } from "@/shared/types/simulation/genealogy";
 import type { AgentProfile } from "@/shared/types/simulation/agents";
+import { logger } from "../../../../infrastructure/utils/logger";
 
 interface GenealogyConfig {
   mutationRate: number;
@@ -26,6 +27,7 @@ export class GenealogySystem {
     relationships: new Map(),
   };
   private history: GenealogyEvent[] = [];
+  private lastLogTime = 0;
 
   constructor(@inject(TYPES.GameState) _gameState: GameState) {
     void _gameState;
@@ -34,6 +36,22 @@ export class GenealogySystem {
       trackHistory: true,
       maxHistoryEvents: 500,
     };
+    logger.info("🌳 [GenealogySystem] Initialized");
+  }
+
+  /** Logs genealogy stats every 10 seconds */
+  public logStats(): void {
+    const now = Date.now();
+    if (now - this.lastLogTime < 10000) return;
+    this.lastLogTime = now;
+
+    const lineageCount = this.familyTree.lineages.size;
+    const ancestorCount = this.familyTree.ancestors.size;
+    const historyCount = this.history.length;
+
+    logger.debug(
+      `🌳 [GenealogySystem] lineages=${lineageCount}, ancestors=${ancestorCount}, events=${historyCount}`,
+    );
   }
 
   public getAncestor(agentId: string): Ancestor | undefined {

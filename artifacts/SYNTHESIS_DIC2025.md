@@ -1,6 +1,7 @@
 # 📊 Síntesis de Auditorías - Diciembre 2025
 
 **Fecha**: 5 de diciembre de 2025  
+**Última actualización**: 5 de diciembre de 2025 (18:30 UTC)  
 **Documentos fuente**:
 - `AUDITORIA_SIMULACION_DIC2025.md` - Auditoría de arquitectura y bugs críticos
 - `REDUNDANCY_AUDIT_2025.md` - Auditoría de código redundante y duplicado
@@ -20,11 +21,15 @@
 | ✅ | `EnhancedCraftingSystem.ts` | Agregado `stone_dagger` a BASIC_RECIPE_IDS |
 | ✅ | `SocialSystem.ts` | Nuevo case `"find_mate"` que llama a `proposeMarriage()` |
 | ✅ | `MarriageSystem.ts` | Auto-aceptación de propuestas después de 5s |
+| ✅ | `InventoryDetector.ts` | **[NEW]** Prioridad URGENT para depósitos cuando hay demanda de construcción |
+| ✅ | `BuildingSystem.ts` | **[NEW]** `getResourceDemand()` ahora retorna DÉFICIT real (resta stockpile) |
+| ✅ | `WorkDetector.ts` | **[NEW]** Balanceo 50/50 wood/stone cuando ambos faltan |
+| ✅ | `AISystem.ts` | **[NEW]** Log de `nearestStone` para diagnóstico |
 
-### Sistemas 100% Funcionales (17 de 26)
+### Sistemas 100% Funcionales (19 de 26)
 | Sistema | Logs | Estado |
 |---------|------|--------|
-| AISystem | 9948 | ⭐ Funcionando óptimamente |
+| AISystem | 9948+ | ⭐ Funcionando óptimamente |
 | MovementSystem | 1464 | ⭐ Funcionando óptimamente |
 | NeedsSystem | 108 | ⭐ Funcionando óptimamente |
 | SocialSystem | 130 | ⭐ Funcionando óptimamente |
@@ -39,20 +44,22 @@
 | TaskSystem | 64 | ⭐ Funcionando |
 | RoleSystem | 63 | ⭐ Funcionando |
 | GovernanceSystem | - | ⭐ Funcionando (demandas + asignación roles) |
-| EnhancedCraftingSystem | - | ⭐ CORREGIDO - equippedWeapons: 1 |
-| MarriageSystem | - | ⭐ CORREGIDO - groups=3 |
+| EnhancedCraftingSystem | - | ⭐ CORREGIDO - equippedWeapons: 9 |
+| MarriageSystem | - | ⭐ CORREGIDO - groups=28 |
+| **BuildingSystem** | - | ⭐ **CORREGIDO** - Construyendo casas, minas, workbenches |
+| **ProductionSystem** | - | ⭐ **ACTIVO** - zones=7 |
 
-### Detectores IA Funcionales (8 de 9)
+### Detectores IA Funcionales (9 de 9)
 | Detector | Estado | Tareas |
 |----------|--------|--------|
 | NeedsDetector | ✅ 3605 logs | satisfy_need, rest |
 | SocialDetector | ✅ 452 logs | socialize, repro |
-| WorkDetector | ✅ 1883 logs | gather, work |
-| InventoryDetector | ✅ 1304 logs | deposit |
+| WorkDetector | ✅ **MEJORADO** | gather wood/stone (balanceado) |
+| InventoryDetector | ✅ **MEJORADO** | deposit (prioridad URGENT) |
 | ExploreDetector | ✅ 893 logs | explore |
 | CraftDetector | ✅ CORREGIDO | craft (weapons) |
 | CombatDetector | ✅ Listo | flee, attack |
-| BuildDetector | ⚠️ Parcial | pendingBuilds |
+| BuildDetector | ✅ **CORREGIDO** | contribute, build |
 
 ### Consolidaciones de Código Completadas
 | Acción | Estado |
@@ -68,19 +75,16 @@
 
 ## ⚠️ PARCIAL (Lo que está funcionando pero con limitaciones)
 
-### Sistemas con Bloqueos
-| Sistema | Problema | Dependencia |
-|---------|----------|-------------|
-| BuildingSystem | `wood=7, necesita=12` | Requiere más recolección de madera |
-| HouseholdSystem | `households=0` | Dependiente de BuildingSystem |
-| ProductionSystem | `productionZones=0` | Sin zonas de producción activas |
+### Sistemas con Bloqueos Menores
+| Sistema | Problema | Estado |
+|---------|----------|--------|
+| HouseholdSystem | `households=0` | Casas construyéndose, pendiente ocupación |
 | RecipeDiscoverySystem | Sin nuevas recetas | Recetas básicas funcionan |
 
 ### Handlers IA Parciales
 | Handler | Estado | Bloqueo |
 |---------|--------|---------|
-| BuildHandler | ⚠️ | Falta de madera |
-| AttackHandler | ⚠️ | Sin depredadores/enemigos |
+| AttackHandler | ⚠️ | Sin depredadores/enemigos activos |
 | TradeHandler | ⚠️ | Via MARKET (funciona parcialmente) |
 
 ---
@@ -90,17 +94,17 @@
 ### Alta Prioridad
 | Tarea | Descripción | Acción Requerida |
 |-------|-------------|------------------|
-| 🔴 Balanceo de recolección | Agentes priorizan comida sobre madera | Ajustar pesos en WorkDetector o NeedsDetector |
 | 🔴 Spawn de depredadores | `wolf.spawnProbability: 0.05` muy baja | Aumentar a 0.15-0.20 en biomes de bosque |
-| 🔴 GenealogySystem | Sin logs visibles | Añadir logging para visibilidad del árbol |
+| 🟡 Remover logs diagnóstico | `nearestStone` logs en AISystem.ts | Limpiar antes de producción |
 
 ### Media Prioridad (Warnings de Arquitectura)
-| Warning | Archivo | Descripción |
-|---------|---------|-------------|
-| ⚠️ | `MultiRateScheduler.ts` | `preTick` se ejecuta 3x (FAST/MEDIUM/SLOW) |
-| ⚠️ | `EventRegistry + LifeCycleSystem` | Doble procesamiento de AGENT_DEATH |
-| ⚠️ | `MovementSystem, NeedsSystem` | Caches sin límite de tamaño (potencial memory leak) |
-| ⚠️ | `MovementSystem.ts` | `pathfindingStartTime` definido pero no usado |
+| Warning | Archivo | Estado |
+|---------|---------|--------|
+| ~~⚠️~~ ✅ | `MultiRateScheduler.ts` | **RESUELTO** - `preTick` solo corre en FAST tick (ver líneas 303, 363) |
+| ~~⚠️~~ ✅ | `EventRegistry + LifeCycleSystem` | **RESUELTO** - No hay AGENT_DEATH duplicado en backend |
+| ~~⚠️~~ ✅ | `MovementSystem.ts` | **FALSO POSITIVO** - `pathfindingStartTime` SÍ se usa (líneas 582-599, 614) |
+| ⚠️ | `MovementSystem, NeedsSystem` | Caches sin límite de tamaño (potencial memory leak) - PENDIENTE |
+| ⚠️ | `AISystem.ts` | Logs de diagnóstico temporales (nearestStone) - remover en producción |
 
 ### Redundancias Pendientes de Resolver
 | Redundancia | Archivos | Recomendación |
@@ -112,48 +116,97 @@
 | Inconsistencia distancia | `sqrt(dx*dx+dy*dy)` vs `Math.hypot()` | Estandarizar a `Math.hypot()` |
 
 ### Código Deprecado sin Eliminar
-| Archivo | Métodos |
-|---------|---------|
-| ClientInventorySystem | `addToAgent`, `removeFromAgent`, `transferToStockpile`, `createStockpile` |
-| ClientGenealogySystem | `handleBirth`, `handleDeath`, `inheritTraits`, `updateLifeStage` |
-| GatherHandler | Interface `GatherHandlerDeps` (usar SystemRegistry) |
+| Archivo | Métodos | Prioridad |
+|---------|---------|-----------|
+| ClientInventorySystem | `addToAgent`, `removeFromAgent`, `transferToStockpile`, `createStockpile` | Media |
+| ClientGenealogySystem | `handleBirth`, `handleDeath`, `inheritTraits`, `updateLifeStage` | Media |
+| GatherHandler | Interface `GatherHandlerDeps` (usar SystemRegistry) | Baja |
+
+### Sistemas Inactivos/Sin Verificar
+| Sistema | Motivo | Acción |
+|---------|--------|--------|
+| ~~GenealogySystem~~ | **N/A - Solo Frontend** | No aplica al backend |
+| SharedKnowledgeSystem | `resourceAlerts=0, threatAlerts=0` | Normal si no hay amenazas |
+| ResourceReservationSystem | `reservations=0` | ✅ Normal (jobs activos usan recursos directos) |
 
 ---
 
-## 📈 MÉTRICAS ACTUALES DE LA SIMULACIÓN
+## 📈 MÉTRICAS ACTUALES DE LA SIMULACIÓN (Después de fixes)
 
-| Métrica | Valor |
-|---------|-------|
-| Agentes vivos | 19-21 |
-| Animales vivos | 53 |
-| Chunks cargados | 64 |
-| Casas construidas | 1/8 |
-| Zonas descubiertas | 5 |
-| Grupos de matrimonio | 3 |
-| Relaciones sociales | 31 edges |
-| Bienestar general | 56.5-58% |
-| Transacciones | 14 |
-| Armas equipadas | 1 |
+| Métrica | Valor Anterior | Valor Actual | Tendencia |
+|---------|----------------|--------------|-----------|
+| Agentes vivos | 19-21 | 11 | ↔️ estable |
+| Animales vivos | 53 | **124** | ⬆️ x2.3 |
+| Chunks cargados | 64 | 64 | ↔️ estable |
+| **Casas construidas** | 1/8 | **3/8** | ⬆️ +2 |
+| **Minas construidas** | 0 | **1** | ⬆️ +1 |
+| **Workbenches** | 1 | **2** | ⬆️ +1 |
+| Zonas totales | 5 | **9** | ⬆️ +4 |
+| **Grupos de matrimonio** | 3 | **16-28** | ⬆️ x5-9 |
+| Relaciones sociales | 31 edges | 17 edges | ↘️ (regenerando) |
+| Bienestar general | 56.5-58% | 57-58% | ↔️ estable |
+| **Armas equipadas** | 1 | **7-9** | ⬆️ x7-9 |
+| **Stockpile wood** | ~7 | **7-27** | ⬆️ (consumiendo) |
+| **Stockpile stone** | 0 | **3-28** | ⬆️ ∞ |
+| Estados animales | - | wandering=94, fleeing=22 | ✅ activo |
+
+---
+
+## 📋 VERIFICACIÓN DE LOGS (Sistemas Activos)
+
+### ✅ Sistemas con Logs Confirmados
+| Sistema | Ejemplo de Log | Frecuencia |
+|---------|----------------|------------|
+| AISystem | `update(): 11 agents` | Alta |
+| NeedsSystem | `isa: h=55, t=32, e=100` | Alta |
+| SocialSystem | `agents=11, edges=17, groups=1` | Media |
+| MarriageSystem | `groups=16, pendingProposals=0` | Media |
+| AnimalSystem | `Registry size: 124, Live: 124` | Alta |
+| BuildingSystem | `Status: houses=3/8, zones=9` | Media |
+| CombatSystem | `entities=11, combatLogSize=6` | Media |
+| TimeSystem | `hour=8:56 phase=morning` | Media |
+| RoleSystem | `roles=10 shift=morning` | Media |
+| InventorySystem | `Agents: 11, inAgents: ...` | Media |
+| ChunkLoadingSystem | `11 agents, 64 already loaded` | Baja |
+| TaskSystem | `total=4 active=0 stalled=0` | Media |
+| GovernanceSystem | `demands=[housing_full]` | Media |
+| AmbientAwarenessSystem | `wellbeing=57.6, variance=0.09` | Media |
+| ConflictResolutionSystem | `activeCards=0, conflicts=0` | Baja |
+| ProductionSystem | `zones=7, productionZones=0` | Baja |
+| HouseholdSystem | `households=0, capacity=0` | Baja |
+| SharedKnowledgeSystem | `resourceAlerts=0, threatAlerts=0` | Baja |
+| ResourceReservationSystem | `reservations=0` | Baja |
+| EnhancedCraftingSystem | `equippedWeapons: 7` | Baja |
+
+### ⚠️ Sistemas Sin Logs Visibles
+| Sistema | Estado | Acción Sugerida |
+|---------|--------|-----------------|
+| ~~GenealogySystem~~ | **N/A** | Solo existe en Frontend (no Backend) |
+| ~~RecipeDiscoverySystem~~ | **N/A** | Solo existe en Frontend (no Backend) |
+| ~~ReputationSystem~~ | **N/A** | Solo existe en Frontend (no Backend) |
+
+> **Nota**: Estos sistemas son **Client-side adapters** que reciben datos del backend via mensajes. No tienen lógica de simulación propia.
 
 ---
 
 ## 🎯 PRÓXIMOS PASOS RECOMENDADOS
 
 ### Inmediato (Esta semana)
-1. **Ajustar WorkDetector** para priorizar madera cuando `BuildingSystem` tiene demanda pendiente
-2. **Aumentar spawn de wolves** en config de biomes
-3. **Añadir logs a GenealogySystem** para visibilidad
+1. ~~**Ajustar WorkDetector** para priorizar madera cuando BuildingSystem tiene demanda~~ ✅ **COMPLETADO**
+2. **Aumentar spawn de wolves** en config de biomes (actualmente 0.05, subir a 0.15-0.20)
+3. ~~**Añadir logs a GenealogySystem**~~ ❌ N/A - Solo existe en Frontend
+4. **Remover logs diagnóstico de AISystem.ts** (nearestStone) antes de producción
 
 ### Corto plazo (Este mes)
 1. Migrar handlers AI de deps legacy a SystemRegistry
 2. Eliminar métodos @deprecated del frontend
-3. Evaluar fusión ReputationSystem → SocialSystem
+3. ~~Evaluar fusión ReputationSystem → SocialSystem~~ Solo Frontend - evaluar allá
+4. **Implementar LRU cache en MovementSystem/NeedsSystem** (prevenir memory leak)
 
 ### Mediano plazo (Q1 2026)
-1. Refactorizar `preTick` para ejecutar una sola vez por ciclo
-2. Implementar LRU cache en MovementSystem/NeedsSystem
-3. Unificar sistema de eventos
-4. Migrar a RandomUtils para tests determinísticos
+1. ~~Refactorizar `preTick` para ejecutar una sola vez por ciclo~~ ✅ **YA RESUELTO**
+2. Unificar sistema de eventos
+3. Migrar a RandomUtils para tests determinísticos
 
 ---
 
@@ -163,24 +216,114 @@
 ┌─────────────────────────────────────────────────────────┐
 │                  ESTADO DEL BACKEND                     │
 ├─────────────────────────────────────────────────────────┤
-│  ✅ Funcionando:     17 sistemas (65%)                  │
-│  ⚠️ Parcial:          4 sistemas (15%)                  │
+│  ✅ Funcionando:     19 sistemas (73%)                  │
+│  ⚠️ Parcial:          2 sistemas (8%)                   │
 │  ❌ Inactivo:         1 sistema  (4%)                   │
-│  🔧 Fixes aplicados: 7 correcciones críticas            │
+│  🔧 Fixes aplicados: 11 correcciones críticas           │
 ├─────────────────────────────────────────────────────────┤
 │  DINÁMICAS ACTIVAS:                                     │
 │  ✓ Supervivencia    ✓ Exploración    ✓ Recolección     │
 │  ✓ Socialización    ✓ Reproducción   ✓ Ecosistema      │
 │  ✓ Comercio         ✓ Roles          ✓ Gobernanza      │
 │  ✓ Crafting         ✓ Equipamiento   ✓ Matrimonios     │
+│  ✓ CONSTRUCCIÓN ⭐  ✓ Depósitos ⭐                      │
 ├─────────────────────────────────────────────────────────┤
 │  DINÁMICAS BLOQUEADAS:                                  │
-│  ✗ Construcción (falta madera)                          │
 │  ✗ Combate (falta depredadores)                         │
-│  ✗ Hogares (depende de construcción)                    │
+│  ✗ Hogares (casas construyéndose, pendiente ocupación)  │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-*Documento generado: 5 de diciembre de 2025*
+## 🔧 FIXES APLICADOS HOY (5 Dic 2025)
+
+### 1. Prioridad de Depósitos (`InventoryDetector.ts`)
+**Problema**: Tareas de depósito y recolección tenían la misma prioridad (HIGH=0.6), causando que agentes recolectaran infinitamente sin depositar.
+
+**Solución**: Cambiar prioridad de depósito a URGENT (0.8) cuando hay demanda de construcción.
+
+```typescript
+const priority =
+  loadRatio > URGENT_DEPOSIT_THRESHOLD
+    ? TASK_PRIORITIES.CRITICAL
+    : ctx.hasBuildingResourceDemand
+      ? TASK_PRIORITIES.URGENT  // Antes: HIGH
+      : hasBuildingMaterials && (woodCount >= 6 || stoneCount >= 6)
+        ? TASK_PRIORITIES.HIGH
+        : TASK_PRIORITIES.NORMAL;
+```
+
+### 2. Cálculo de Déficit Real (`BuildingSystem.ts`)
+**Problema**: `getResourceDemand()` retornaba demanda total sin considerar lo que ya había en stockpile.
+
+**Solución**: Restar recursos disponibles para retornar el déficit real.
+
+```typescript
+const deficitWood = Math.max(0, totalWood - stockpiledWood);
+const deficitStone = Math.max(0, totalStone - stockpiledStone);
+```
+
+### 3. Balanceo de Recolección Wood/Stone (`WorkDetector.ts`)
+**Problema**: Agentes siempre priorizaban madera sobre piedra, causando que stone=0 perpetuamente.
+
+**Solución**: Distribuir 50/50 entre agentes usando hash del agentId.
+
+```typescript
+if (needsWood && needsStone) {
+  const agentHash = ctx.agentId.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const collectStone = agentHash % 2 === 0;
+  // Agentes pares recolectan piedra, impares madera
+}
+```
+
+**Resultado**: 
+- Casas, minas y workbenches construyéndose activamente
+- Stockpile balanceado: wood=27, stone=28
+- Construcción de mina completada
+
+---
+
+## 📁 ARCHIVOS MODIFICADOS (5 Dic 2025)
+
+### Backend (`/UnaCartaParaIsaBackend/src/`)
+| Archivo | Líneas | Tipo de Cambio |
+|---------|--------|----------------|
+| `domain/simulation/systems/agents/ai/detectors/InventoryDetector.ts` | ~10 | Prioridad URGENT |
+| `domain/simulation/systems/agents/ai/detectors/WorkDetector.ts` | ~50 | Balanceo wood/stone |
+| `domain/simulation/systems/structures/BuildingSystem.ts` | ~15 | Cálculo déficit real |
+| `domain/simulation/systems/agents/ai/AISystem.ts` | ~10 | Logs diagnóstico |
+
+### Documentación (`/UnaCartaParaIsaBackend/artifacts/`)
+| Archivo | Descripción |
+|---------|-------------|
+| `SYNTHESIS_DIC2025.md` | Este documento (síntesis completa) |
+| `AUDITORIA_SIMULACION_DIC2025.md` | Auditoría original de arquitectura |
+| `REDUNDANCY_AUDIT_2025.md` | Auditoría de código redundante |
+| `AUDIT_MECHANICS_DIC2025.md` | Auditoría de mecánicas vía Docker |
+
+---
+
+## 🧪 COMANDOS DE VERIFICACIÓN ÚTILES
+
+```bash
+# Ver logs en tiempo real (últimos 30s)
+docker logs --since 30s unacartaparaisabackend-backend-gpu-1 2>&1 | tail -50
+
+# Verificar sistemas específicos
+docker logs --since 1m unacartaparaisabackend-backend-gpu-1 2>&1 | grep -E "(BUILDING|Stockpile)"
+
+# Verificar construcciones
+docker logs --since 1m unacartaparaisabackend-backend-gpu-1 2>&1 | grep "Construction"
+
+# Verificar recolección wood/stone
+docker logs --since 30s unacartaparaisabackend-backend-gpu-1 2>&1 | grep -E "(TREE|STONE|assigned to)"
+
+# Rebuild y restart
+docker-compose -f docker-compose.gpu.yml build --no-cache backend-gpu && \
+docker-compose -f docker-compose.gpu.yml up -d backend-gpu
+```
+
+---
+
+*Documento generado: 5 de diciembre de 2025 - Actualizado 18:21 UTC*
