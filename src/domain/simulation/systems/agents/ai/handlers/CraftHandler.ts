@@ -26,9 +26,7 @@ export interface Recipe {
 /**
  * Maneja el crafteo delegando al CraftingSystem.
  */
-export function handleCraft(
-  ctx: HandlerContext,
-): HandlerExecutionResult {
+export function handleCraft(ctx: HandlerContext): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
 
   if (task.type !== TaskType.CRAFT) {
@@ -43,12 +41,14 @@ export function handleCraft(
 
   // Try multiple param names for recipe: recipeId, itemId, itemType
   const recipeId =
-    (task.params?.recipeId as string) ?? 
-    (task.params?.itemId as string) ?? 
+    (task.params?.recipeId as string) ??
+    (task.params?.itemId as string) ??
     (task.params?.itemType as string);
 
   if (!recipeId) {
-    logger.debug(`[CraftHandler] ${agentId}: No recipe specified, params=${JSON.stringify(task.params)}`);
+    logger.debug(
+      `[CraftHandler] ${agentId}: No recipe specified, params=${JSON.stringify(task.params)}`,
+    );
     return errorResult("No recipe specified");
   }
 
@@ -60,7 +60,9 @@ export function handleCraft(
   }
 
   const result = systems.crafting.requestCraft(agentId, recipeId);
-  logger.info(`[CraftHandler] ${agentId}: requestCraft(${recipeId}) = ${result.status} - ${result.message}`);
+  logger.info(
+    `[CraftHandler] ${agentId}: requestCraft(${recipeId}) = ${result.status} - ${result.message}`,
+  );
 
   switch (result.status) {
     case HandlerResultStatus.COMPLETED:
@@ -72,7 +74,9 @@ export function handleCraft(
       });
 
     case HandlerResultStatus.FAILED:
-      logger.debug(`[CraftHandler] ${agentId}: Craft failed - ${result.message}`);
+      logger.debug(
+        `[CraftHandler] ${agentId}: Craft failed - ${result.message}`,
+      );
       return errorResult(result.message ?? "Craft failed");
 
     case HandlerResultStatus.IN_PROGRESS:

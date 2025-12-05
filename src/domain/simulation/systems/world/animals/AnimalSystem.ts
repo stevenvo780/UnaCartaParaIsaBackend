@@ -468,10 +468,9 @@ export class AnimalSystem {
     // Use cached threat results from processFleeingAnimalsBatch() if available
     // This avoids duplicate spatial queries per frame
     const cachedThreats = this.frameThreatResults.get(animal.id);
-    const nearbyPredator = cachedThreats?.predator ?? this.findNearbyPredator(
-      animal,
-      config.detectionRange,
-    );
+    const nearbyPredator =
+      cachedThreats?.predator ??
+      this.findNearbyPredator(animal, config.detectionRange);
     if (nearbyPredator) {
       animal.state = AnimalState.FLEEING;
       animal.fleeTarget = nearbyPredator.id;
@@ -488,7 +487,9 @@ export class AnimalSystem {
     }
 
     if (config.fleeFromHumans) {
-      const nearbyHuman = cachedThreats?.human ?? this.findNearbyHuman(animal, config.detectionRange);
+      const nearbyHuman =
+        cachedThreats?.human ??
+        this.findNearbyHuman(animal, config.detectionRange);
       if (nearbyHuman) {
         animal.state = AnimalState.FLEEING;
         animal.fleeTarget = nearbyHuman.id;

@@ -19,9 +19,7 @@ import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 /**
  * Maneja la construcción delegando al BuildingSystem.
  */
-export function handleBuild(
-  ctx: HandlerContext,
-): HandlerExecutionResult {
+export function handleBuild(ctx: HandlerContext): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
 
   if (task.type !== TaskType.BUILD) {

@@ -853,26 +853,36 @@ export class SocialSystem implements ISocialSystem {
         // Handle courtship/mate-finding interaction
         this.registerFriendlyInteraction(agentId, targetId);
         const affinity = this.getAffinityBetween(agentId, targetId);
-        
+
         logger.info(
-          `💕 [SocialSystem] find_mate: ${agentId} -> ${targetId}, affinity=${affinity.toFixed(2)}, threshold=${SocialSystem.MARRIAGE_AFFINITY_THRESHOLD}`
+          `💕 [SocialSystem] find_mate: ${agentId} -> ${targetId}, affinity=${affinity.toFixed(2)}, threshold=${SocialSystem.MARRIAGE_AFFINITY_THRESHOLD}`,
         );
-        
+
         // If affinity is high enough and we have marriage system, propose marriage
-        if (affinity >= SocialSystem.MARRIAGE_AFFINITY_THRESHOLD && this.marriageSystem) {
+        if (
+          affinity >= SocialSystem.MARRIAGE_AFFINITY_THRESHOLD &&
+          this.marriageSystem
+        ) {
           // proposeMarriage returns boolean: true = proposal registered, false = failed (group full, etc.)
-          const proposalSuccess = this.marriageSystem.proposeMarriage(agentId, targetId);
+          const proposalSuccess = this.marriageSystem.proposeMarriage(
+            agentId,
+            targetId,
+          );
           logger.info(
-            `💍 [SocialSystem] Marriage proposal: ${agentId} -> ${targetId}, success=${proposalSuccess}`
+            `💍 [SocialSystem] Marriage proposal: ${agentId} -> ${targetId}, success=${proposalSuccess}`,
           );
           return {
-            status: proposalSuccess ? HandlerResultStatus.COMPLETED : HandlerResultStatus.FAILED,
+            status: proposalSuccess
+              ? HandlerResultStatus.COMPLETED
+              : HandlerResultStatus.FAILED,
             system: GoalDomain.SOCIAL,
-            message: proposalSuccess ? "Marriage proposal registered" : "Marriage proposal failed",
+            message: proposalSuccess
+              ? "Marriage proposal registered"
+              : "Marriage proposal failed",
             data: { affinity, proposalSuccess },
           };
         }
-        
+
         return {
           status: HandlerResultStatus.COMPLETED,
           system: GoalDomain.SOCIAL,

@@ -46,10 +46,12 @@ function detectWeaponNeed(ctx: DetectorContext): Task | null {
 
   // If backend has canCraft info, use it; otherwise assume crafting is possible
   // This allows the handler to verify actual materials availability
-  const canCraftAnything = ctx.canCraftClub || ctx.canCraftDagger || 
+  const canCraftAnything =
+    ctx.canCraftClub ||
+    ctx.canCraftDagger ||
     // Backend fallback: assume crafting possible if work hours and has role that needs weapons
     (ctx.isWorkHours && needsWeaponForRole);
-  
+
   if (!canCraftAnything) return null;
 
   const weaponToCraft = ctx.canCraftDagger

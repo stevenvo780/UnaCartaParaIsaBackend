@@ -20,9 +20,7 @@ import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 /**
  * Maneja el descanso delegando al NeedsSystem.
  */
-export function handleRest(
-  ctx: HandlerContext,
-): HandlerExecutionResult {
+export function handleRest(ctx: HandlerContext): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
 
   if (task.type !== TaskType.REST) {

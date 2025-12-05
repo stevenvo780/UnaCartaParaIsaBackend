@@ -19,9 +19,7 @@ import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 /**
  * Maneja el ataque delegando al CombatSystem.
  */
-export function handleAttack(
-  ctx: HandlerContext,
-): HandlerExecutionResult {
+export function handleAttack(ctx: HandlerContext): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
   const targetId = task.target?.entityId;
 

@@ -25,9 +25,7 @@ const EXPLORE_RADIUS = 50;
  * Maneja la exploración usando MovementSystem.
  * Registra zonas visitadas y recursos descubiertos en la memoria del agente.
  */
-export function handleExplore(
-  ctx: HandlerContext,
-): HandlerExecutionResult {
+export function handleExplore(ctx: HandlerContext): HandlerExecutionResult {
   const { systems, agentId, task, position, memory } = ctx;
 
   logger.debug(

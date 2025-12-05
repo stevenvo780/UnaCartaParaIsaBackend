@@ -21,9 +21,7 @@ import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 /**
  * Maneja el consumo delegando al NeedsSystem.
  */
-export function handleConsume(
-  ctx: HandlerContext,
-): HandlerExecutionResult {
+export function handleConsume(ctx: HandlerContext): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
 
   const needType = task.params?.needType as string | undefined;

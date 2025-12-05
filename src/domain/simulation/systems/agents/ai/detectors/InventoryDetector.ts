@@ -37,9 +37,11 @@ export function detectInventory(ctx: DetectorContext): Task[] {
   const inv = ctx.inventory ?? {};
   const woodCount = inv.wood_log ?? inv.wood ?? 0;
   const stoneCount = inv.stone ?? 0;
-  
+
   // Detectar si tiene materiales de construcción que debería depositar
-  const hasBuildingMaterials = woodCount >= BUILDING_MATERIAL_THRESHOLD || stoneCount >= BUILDING_MATERIAL_THRESHOLD;
+  const hasBuildingMaterials =
+    woodCount >= BUILDING_MATERIAL_THRESHOLD ||
+    stoneCount >= BUILDING_MATERIAL_THRESHOLD;
 
   // Caso 1: Inventario lleno sin zona de depósito
   if (
@@ -65,14 +67,16 @@ export function detectInventory(ctx: DetectorContext): Task[] {
   // 1. El inventario está lleno (>= DEPOSIT_THRESHOLD)
   // 2. O tiene materiales de construcción significativos
   const shouldDeposit = loadRatio >= DEPOSIT_THRESHOLD || hasBuildingMaterials;
-  
+
   if (!shouldDeposit) return tasks;
 
   // Prioridad más alta si tiene muchos materiales de construcción
-  const priority = 
-    loadRatio > URGENT_DEPOSIT_THRESHOLD ? TASK_PRIORITIES.HIGH :
-    (hasBuildingMaterials && (woodCount >= 6 || stoneCount >= 6)) ? TASK_PRIORITIES.HIGH :
-    TASK_PRIORITIES.NORMAL;
+  const priority =
+    loadRatio > URGENT_DEPOSIT_THRESHOLD
+      ? TASK_PRIORITIES.HIGH
+      : hasBuildingMaterials && (woodCount >= 6 || stoneCount >= 6)
+        ? TASK_PRIORITIES.HIGH
+        : TASK_PRIORITIES.NORMAL;
 
   tasks.push(
     createTask({

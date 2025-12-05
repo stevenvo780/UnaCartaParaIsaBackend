@@ -24,9 +24,7 @@ export interface TradeOffer {
 /**
  * Maneja el comercio delegando al TradeSystem.
  */
-export function handleTrade(
-  ctx: HandlerContext,
-): HandlerExecutionResult {
+export function handleTrade(ctx: HandlerContext): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
 
   if (task.type !== TaskType.TRADE) {

@@ -20,9 +20,7 @@ import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 /**
  * Maneja el depósito delegando al InventorySystem.
  */
-export function handleDeposit(
-  ctx: HandlerContext,
-): HandlerExecutionResult {
+export function handleDeposit(ctx: HandlerContext): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
 
   logger.debug(`📦 [DepositHandler] ${agentId}: entering handler`);

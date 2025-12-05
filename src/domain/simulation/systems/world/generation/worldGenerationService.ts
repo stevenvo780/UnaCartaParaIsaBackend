@@ -101,10 +101,7 @@ export class WorldGenerationService {
           );
         }
 
-        const distFromSpawnCenter = Math.hypot(
-          globalX - 6,
-          globalY - 6,
-        );
+        const distFromSpawnCenter = Math.hypot(globalX - 6, globalY - 6);
         let biome: BiomeType;
         if (distFromSpawnCenter < 2.5) {
           biome = BiomeType.LAKE;

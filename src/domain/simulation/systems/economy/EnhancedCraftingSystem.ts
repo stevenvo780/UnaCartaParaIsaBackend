@@ -37,7 +37,7 @@ const BASIC_RECIPE_IDS = [
   "cook_meat",
   "cook_fish",
   WeaponId.WOODEN_CLUB,
-  WeaponId.STONE_DAGGER,  // Agregado para que agentes sin conocimiento puedan craftear dagas básicas
+  WeaponId.STONE_DAGGER, // Agregado para que agentes sin conocimiento puedan craftear dagas básicas
 ];
 
 import { injectable, inject, optional } from "inversify";
@@ -449,12 +449,16 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
   public canCraft(agentId: string, recipeId: string): boolean {
     const recipe = RecipesCatalog.getRecipeById(recipeId);
     if (!recipe) {
-      logger.debug(`[CraftingSystem] canCraft(${agentId}, ${recipeId}): recipe not found`);
+      logger.debug(
+        `[CraftingSystem] canCraft(${agentId}, ${recipeId}): recipe not found`,
+      );
       return false;
     }
 
     if (this.config.requireWorkstation && !this.hasCraftingStation()) {
-      logger.debug(`[CraftingSystem] canCraft(${agentId}, ${recipeId}): no workstation`);
+      logger.debug(
+        `[CraftingSystem] canCraft(${agentId}, ${recipeId}): no workstation`,
+      );
       return false;
     }
 
@@ -464,13 +468,17 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
       : this.getOrCreateRecipeMap(agentId).has(recipeId);
 
     if (!isBasic && !knowsRecipe) {
-      logger.debug(`[CraftingSystem] canCraft(${agentId}, ${recipeId}): not basic and doesn't know recipe`);
+      logger.debug(
+        `[CraftingSystem] canCraft(${agentId}, ${recipeId}): not basic and doesn't know recipe`,
+      );
       return false;
     }
 
     const hasIng = this.hasIngredients(agentId, recipe);
     if (!hasIng) {
-      logger.debug(`[CraftingSystem] canCraft(${agentId}, ${recipeId}): missing ingredients`);
+      logger.debug(
+        `[CraftingSystem] canCraft(${agentId}, ${recipeId}): missing ingredients`,
+      );
     }
     return hasIng;
   }

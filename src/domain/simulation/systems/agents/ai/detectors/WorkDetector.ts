@@ -103,10 +103,10 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
   // Fallback: use work zones with items (from ItemGenerationSystem)
   if (ctx.workZonesWithItems && ctx.workZonesWithItems.length > 0) {
     const priority = calculateWorkPriority(ctx);
-    
+
     // Pick the closest work zone
     const nearestZone = ctx.workZonesWithItems[0];
-    
+
     tasks.push(
       createTask({
         agentId: ctx.agentId,
@@ -116,14 +116,14 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
           zoneId: nearestZone.zoneId,
           position: { x: nearestZone.x, y: nearestZone.y },
         },
-        params: { 
-          resourceType: nearestZone.items[0]?.itemId ?? 'wood_log',
-          fromZone: true
+        params: {
+          resourceType: nearestZone.items[0]?.itemId ?? "wood_log",
+          fromZone: true,
         },
         source: "detector:work:gather:zone",
       }),
     );
-    
+
     if (Math.random() < 0.1) {
       logger.debug(
         `🔨 [WorkDetector] ${ctx.agentId}: gather from zone ${nearestZone.zoneId}`,

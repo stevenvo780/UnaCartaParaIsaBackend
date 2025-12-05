@@ -19,9 +19,7 @@ import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 /**
  * Maneja la huida delegando al CombatSystem.
  */
-export function handleFlee(
-  ctx: HandlerContext,
-): HandlerExecutionResult {
+export function handleFlee(ctx: HandlerContext): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
 
   if (task.type !== TaskType.FLEE) {

@@ -19,9 +19,7 @@ import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 /**
  * Maneja interacciones sociales delegando al SocialSystem.
  */
-export function handleSocialize(
-  ctx: HandlerContext,
-): HandlerExecutionResult {
+export function handleSocialize(ctx: HandlerContext): HandlerExecutionResult {
   const { systems, agentId, task } = ctx;
   const targetId = task.target?.entityId;
 

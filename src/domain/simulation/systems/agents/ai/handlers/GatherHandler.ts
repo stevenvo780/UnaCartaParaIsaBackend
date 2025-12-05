@@ -20,9 +20,7 @@ import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 /**
  * Maneja la recolección delegando al InventorySystem.
  */
-export function handleGather(
-  ctx: HandlerContext,
-): HandlerExecutionResult {
+export function handleGather(ctx: HandlerContext): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
   const target = task.target;
 
