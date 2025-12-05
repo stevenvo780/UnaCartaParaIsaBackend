@@ -4,6 +4,24 @@ import { ZoneType } from "@/shared/constants/ZoneEnums";
 import { TYPES } from "@/config/Types";
 import { InventorySystem } from "../../systems/economy/InventorySystem";
 
+type InventoryTotals = {
+  wood: number;
+  stone: number;
+  food: number;
+  water: number;
+  rare_materials: number;
+  metal: number;
+  iron_ore: number;
+  copper_ore: number;
+};
+
+export interface InventoryTotalsSnapshot {
+  totalStockpiles: number;
+  totalAgentInventories: number;
+  stockpiled: InventoryTotals;
+  inAgents: InventoryTotals;
+}
+
 export interface CachedZoneInfo {
   id: string;
   type: ZoneType | string;
@@ -39,7 +57,7 @@ export class WorldContextCache {
   private readonly ZONE_TTL = 1000; // ms
 
   private inventoryCache?: {
-    data: ReturnType<InventorySystem["getSystemStats"]>;
+    data: InventoryTotalsSnapshot;
     timestamp: number;
   };
 
@@ -51,13 +69,14 @@ export class WorldContextCache {
     private readonly inventorySystem: InventorySystem,
   ) {}
 
-  public getInventoryStats(): ReturnType<InventorySystem["getSystemStats"]> {
+  public getInventoryStats(): InventoryTotalsSnapshot {
     const now = Date.now();
     if (
       !this.inventoryCache ||
       now - this.inventoryCache.timestamp > this.INVENTORY_TTL
     ) {
       this.inventoryCache = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         data: this.inventorySystem.getSystemStats(),
         timestamp: now,
       };

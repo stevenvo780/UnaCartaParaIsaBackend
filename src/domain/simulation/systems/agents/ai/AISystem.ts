@@ -692,7 +692,10 @@ export class AISystem extends EventEmitter {
     }
 
     if (zonesMetadata) {
-      const storageZone = this.findClosestZone(position, zonesMetadata.storageZones);
+      const storageZone = this.findClosestZone(
+        position,
+        zonesMetadata.storageZones,
+      );
       if (storageZone) {
         depositZoneId = storageZone.id;
       }
@@ -814,7 +817,10 @@ export class AISystem extends EventEmitter {
       items: { itemId: string; quantity: number }[];
     }[] = [];
     if (zonesMetadata) {
-      const craftZone = this.findClosestZone(position, zonesMetadata.craftZones);
+      const craftZone = this.findClosestZone(
+        position,
+        zonesMetadata.craftZones,
+      );
       if (craftZone) {
         craftZoneId = craftZone.id;
       }
@@ -878,7 +884,12 @@ export class AISystem extends EventEmitter {
 
       pendingBuilds = this.gameState.zones
         .map((zone) => {
-          const progress = (zone as { metadata?: { buildProgress?: number } }).metadata?.buildProgress;
+          const metadata = (
+            zone as {
+              metadata?: { buildProgress?: number };
+            }
+          ).metadata;
+          const progress = metadata?.buildProgress;
           if (progress !== undefined && progress < 1) {
             return {
               id: zone.id,
@@ -888,8 +899,9 @@ export class AISystem extends EventEmitter {
           }
           return undefined;
         })
-        .filter((build): build is { id: string; zoneId: string; progress: number } =>
-          Boolean(build),
+        .filter(
+          (build): build is { id: string; zoneId: string; progress: number } =>
+            Boolean(build),
         );
 
       const craftZone = this.gameState.zones.find(

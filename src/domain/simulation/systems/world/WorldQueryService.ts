@@ -423,11 +423,9 @@ export class WorldQueryService {
 
     const searchRadii = [300, 800, 1600, 3200, 6400];
     for (const radius of searchRadii) {
-      const agents = this.agentRegistry.getAgentsInRadius(
-        { x, y },
-        radius,
-        { excludeDead: options.excludeDead },
-      );
+      const agents = this.agentRegistry.getAgentsInRadius({ x, y }, radius, {
+        excludeDead: options.excludeDead,
+      });
       if (agents.length === 0) continue;
 
       let nearest: AgentProfile | null = null;
@@ -470,11 +468,9 @@ export class WorldQueryService {
   ): AgentQueryResult[] {
     if (!this.agentRegistry) return [];
 
-    const agents = this.agentRegistry.getAgentsInRadius(
-      { x, y },
-      radius,
-      { excludeDead: options.excludeDead },
-    );
+    const agents = this.agentRegistry.getAgentsInRadius({ x, y }, radius, {
+      excludeDead: options.excludeDead,
+    });
 
     return agents
       .map((agent) => {
