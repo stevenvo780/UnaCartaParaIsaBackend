@@ -689,6 +689,25 @@ export class AISystem extends EventEmitter {
       }
     }
 
+    // Obtener stock global y total de agentes para balanceo de carga
+    let _globalStockpile: { wood?: number; stone?: number; food?: number } | undefined;
+    let _totalAgents = 1;
+    const inventorySys = this.systemRegistry?.inventory as unknown as { 
+      getTotalStockpileResources?: () => { wood?: number; stone?: number; food?: number } 
+    };
+    if (inventorySys?.getTotalStockpileResources) {
+      const totals = inventorySys.getTotalStockpileResources();
+      _globalStockpile = {
+        wood: totals.wood ?? 0,
+        stone: totals.stone ?? 0,
+        food: totals.food ?? 0,
+      };
+    }
+    // Obtener total de agentes vivos
+    if (this.agentRegistry) {
+      _totalAgents = Math.max(1, this.agentRegistry.getStats().aliveAgents);
+    }
+
     const isWorkHours = this.calculateIsWorkHours();
 
     const equippedWeapon = equipmentSystem.getEquippedItem(
@@ -844,6 +863,8 @@ export class AISystem extends EventEmitter {
       pendingBuilds: pendingBuilds.length > 0 ? pendingBuilds : undefined,
       hasBuildingResourceDemand: _hasBuildingResourceDemand,
       buildingResourceNeeds: _buildingResourceNeeds,
+      globalStockpile: _globalStockpile,
+      totalAgents: _totalAgents,
 
       workZonesWithItems:
         workZonesWithItems.length > 0 ? workZonesWithItems : undefined,

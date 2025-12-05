@@ -23,6 +23,59 @@ import { logger } from "@/infrastructure/utils/logger";
 /** No trabajar si necesidades críticas - usa constante centralizada */
 const CRITICAL_NEED_THRESHOLD = SIMULATION_CONSTANTS.NEEDS.CRITICAL_THRESHOLD;
 
+/** 
+ * Recursos per-cápita mínimos para considerar "saturado"
+ * Por encima de esto, reduce probabilidad de gather
+ */
+const PER_CAPITA_SATURATION_THRESHOLD = 10;
+const PER_CAPITA_MAX_THRESHOLD = 50; // Por encima de esto, casi nunca gather
+
+/**
+ * Calcula si debemos skipear gather basado en saturación per-cápita.
+ * Retorna true si hay suficiente stock y debemos buscar otra actividad.
+ */
+function shouldSkipGatherDueToSaturation(
+  ctx: DetectorContext,
+  resourceType: "wood" | "stone" | "food",
+): boolean {
+  const stock = ctx.globalStockpile?.[resourceType] ?? 0;
+  const agents = ctx.totalAgents ?? 1;
+  const perCapita = stock / agents;
+
+  // Si hay demanda de construcción, nunca skipear wood/stone
+  if (ctx.hasBuildingResourceDemand && (resourceType === "wood" || resourceType === "stone")) {
+    const needs = ctx.buildingResourceNeeds;
+    if (needs && (needs[resourceType] ?? 0) > 0) {
+      return false; // Siempre recolectar si hay demanda
+    }
+  }
+
+  // Si per-cápita está bajo el threshold, no skipear
+  if (perCapita < PER_CAPITA_SATURATION_THRESHOLD) {
+    return false;
+  }
+
+  // Si está muy saturado, skipear casi siempre
+  if (perCapita >= PER_CAPITA_MAX_THRESHOLD) {
+    return RandomUtils.chance(0.95); // 95% skip
+  }
+
+  // Probabilidad de skip proporcional al exceso
+  const excessRatio = (perCapita - PER_CAPITA_SATURATION_THRESHOLD) / 
+                      (PER_CAPITA_MAX_THRESHOLD - PER_CAPITA_SATURATION_THRESHOLD);
+  const skipChance = Math.min(0.8, excessRatio * 0.8); // Max 80% skip
+
+  if (RandomUtils.chance(skipChance)) {
+    if (RandomUtils.chance(0.05)) {
+      logger.debug(
+        `⚖️ [WorkDetector] ${ctx.agentId}: skipping ${resourceType} gather (per-capita=${perCapita.toFixed(1)}, skipChance=${(skipChance*100).toFixed(0)}%)`,
+      );
+    }
+    return true;
+  }
+  return false;
+}
+
 /**
  * Detecta necesidad de trabajar
  */
@@ -179,6 +232,24 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
   }
 
   if (ctx.nearestResource) {
+    // Determinar tipo de recurso para saturación
+    const resType = ctx.nearestResource.type?.toLowerCase() ?? "";
+    let saturationResourceType: "wood" | "stone" | "food" | null = null;
+    
+    if (resType.includes("tree") || resType.includes("wood")) {
+      saturationResourceType = "wood";
+    } else if (resType.includes("stone") || resType.includes("rock") || resType.includes("ore")) {
+      saturationResourceType = "stone";
+    } else if (resType.includes("berry") || resType.includes("fruit") || resType.includes("food")) {
+      saturationResourceType = "food";
+    }
+
+    // Aplicar lógica de saturación per-cápita
+    if (saturationResourceType && shouldSkipGatherDueToSaturation(ctx, saturationResourceType)) {
+      // Skip este gather, no crear task - dejar que el agente busque otra actividad
+      return tasks;
+    }
+
     const priority = calculateWorkPriority(ctx);
     tasks.push(
       createTask({
