@@ -166,6 +166,62 @@ export class BuildingSystem implements IBuildingSystem {
     return this.constructionJobs.get(jobId);
   }
 
+  /**
+   * Retorna la demanda total de recursos para construcciones pendientes o planeadas.
+   * Esto incluye edificios que se podrían construir si hubiera recursos.
+   */
+  public getResourceDemand(): { wood: number; stone: number } | null {
+    const zones = (this.state.zones || []) as MutableZone[];
+    const houses = zones.filter((z) => z.type === ZoneType.REST).length;
+    const mines = zones.filter(
+      (z) =>
+        z.metadata?.building === BuildingType.MINE &&
+        z.metadata?.underConstruction !== true,
+    ).length;
+    const workbenches = zones.filter(
+      (z) => z.metadata?.building === BuildingType.WORKBENCH,
+    ).length;
+
+    let totalWood = 0;
+    let totalStone = 0;
+
+    // Si podemos construir más casas
+    if (
+      houses < this.config.maxHouses &&
+      !this.hasActiveJob(BuildingType.HOUSE)
+    ) {
+      const cost = BUILDING_COSTS[BuildingType.HOUSE];
+      totalWood += cost.wood;
+      totalStone += cost.stone;
+    }
+
+    // Si podemos construir más minas
+    if (mines < this.config.maxMines && !this.hasActiveJob(BuildingType.MINE)) {
+      const cost = BUILDING_COSTS[BuildingType.MINE];
+      totalWood += cost.wood;
+      totalStone += cost.stone;
+    }
+
+    // Si podemos construir más workbenches
+    if (
+      workbenches < this.config.maxWorkbenches &&
+      !this.hasActiveJob(BuildingType.WORKBENCH)
+    ) {
+      const cost = BUILDING_COSTS[BuildingType.WORKBENCH];
+      totalWood += cost.wood;
+      totalStone += cost.stone;
+    }
+
+    // Nota: los jobs activos en constructionJobs ya tienen recursos reservados,
+    // así que solo contamos los edificios que podemos construir (arriba).
+
+    if (totalWood === 0 && totalStone === 0) {
+      return null;
+    }
+
+    return { wood: totalWood, stone: totalStone };
+  }
+
   public update(_deltaMs: number): void {
     const now = this.now();
     this.completeFinishedJobs(now);

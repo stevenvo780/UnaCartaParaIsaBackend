@@ -2,6 +2,9 @@ import { logger } from "../../../infrastructure/utils/logger";
 import { injectable, inject, optional } from "inversify";
 import { TYPES } from "../../../config/Types";
 import type { GPUComputeService } from "./GPUComputeService";
+import type * as tf from "@tensorflow/tfjs-node-gpu";
+
+type TF = typeof tf;
 
 /**
  * Result of a batched spatial query.
@@ -210,7 +213,7 @@ export class GPUBatchQueryService {
         return;
       }
 
-      const tfModule = await this.gpuService.getTensorFlowModule();
+      const tfModule: TF | null = await this.gpuService.getTensorFlowModule();
       if (!tfModule) {
         logger.warn("⚠️ TensorFlow not available, falling back to CPU");
         this.processCPU(queries, entityCount);

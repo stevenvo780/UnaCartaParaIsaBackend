@@ -31,6 +31,7 @@ import { NeedType } from "@/shared/constants/AIEnums";
 import { ZoneType } from "@/shared/constants/ZoneEnums";
 import { EquipmentSlot } from "@/shared/constants/EquipmentEnums";
 import { WeaponId } from "@/shared/constants/CraftingEnums";
+import { WorldResourceType } from "@/shared/constants/ResourceEnums";
 import {
   handleGather,
   handleAttack,
@@ -668,6 +669,28 @@ export class AISystem extends EventEmitter {
       }
     }
 
+    // === BUILDING RESOURCE DEMAND ===
+    // Revisar si BuildingSystem necesita recursos urgentemente
+    let _hasBuildingResourceDemand = false;
+    let _buildingResourceNeeds: { wood?: number; stone?: number } | undefined;
+    const buildingSystem = this.systemRegistry?.building;
+    if (
+      buildingSystem &&
+      typeof buildingSystem.getResourceDemand === "function"
+    ) {
+      const demand: { wood: number; stone: number } | null =
+        buildingSystem.getResourceDemand();
+      if (demand && (demand.wood > 0 || demand.stone > 0)) {
+        _hasBuildingResourceDemand = true;
+        _buildingResourceNeeds = demand;
+        if (Math.random() < 0.01) {
+          logger.debug(
+            `🏗️ [AISystem] ${agentId}: Building demand detected: wood=${demand.wood}, stone=${demand.stone}`,
+          );
+        }
+      }
+    }
+
     const isWorkHours = this.calculateIsWorkHours();
 
     // === EQUIPMENT & COMBAT CONTEXT ===
@@ -840,6 +863,8 @@ export class AISystem extends EventEmitter {
       craftZoneId,
       // Building
       pendingBuilds: pendingBuilds.length > 0 ? pendingBuilds : undefined,
+      hasBuildingResourceDemand: _hasBuildingResourceDemand,
+      buildingResourceNeeds: _buildingResourceNeeds,
       // Work zones with items
       workZonesWithItems:
         workZonesWithItems.length > 0 ? workZonesWithItems : undefined,
@@ -892,6 +917,42 @@ export class AISystem extends EventEmitter {
         y: nearestResource.position.y,
         type: nearestResource.resourceType,
       };
+    }
+
+    // Si hay demanda de recursos de construcción, buscar árboles y piedras específicamente
+    const buildingSystem = this.systemRegistry?.building;
+    const resourceDemand = buildingSystem?.getResourceDemand?.();
+    if (resourceDemand && (resourceDemand.wood > 0 || resourceDemand.stone > 0)) {
+      // Buscar árbol más cercano
+      if (resourceDemand.wood > 0) {
+        const nearestTree = wqs.findNearestResource(position.x, position.y, {
+          type: WorldResourceType.TREE,
+          excludeDepleted: true,
+        });
+        if (nearestTree && nearestTree.distance < QUERY_RADIUS) {
+          result.nearestTree = {
+            id: nearestTree.id,
+            x: nearestTree.position.x,
+            y: nearestTree.position.y,
+            type: nearestTree.resourceType,
+          };
+        }
+      }
+      // Buscar piedra más cercana
+      if (resourceDemand.stone > 0) {
+        const nearestRock = wqs.findNearestResource(position.x, position.y, {
+          type: WorldResourceType.ROCK,
+          excludeDepleted: true,
+        });
+        if (nearestRock && nearestRock.distance < QUERY_RADIUS) {
+          result.nearestStone = {
+            id: nearestRock.id,
+            x: nearestRock.position.x,
+            y: nearestRock.position.y,
+            type: nearestRock.resourceType,
+          };
+        }
+      }
     }
 
     if (Math.random() < 0.02) {

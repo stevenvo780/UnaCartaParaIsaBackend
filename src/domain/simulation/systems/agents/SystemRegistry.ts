@@ -147,6 +147,8 @@ export interface IBuildingSystem extends ISystem {
     position: { x: number; y: number },
   ): HandlerResult;
   requestRepair(agentId: string, buildingId: string): HandlerResult;
+  /** Retorna la demanda actual de recursos para construcción */
+  getResourceDemand?(): { wood: number; stone: number } | null;
 }
 
 /**
