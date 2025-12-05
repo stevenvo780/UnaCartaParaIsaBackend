@@ -23,3 +23,9 @@
 - `ProductionSystem`/`AnimalSystem`: cambios locales de terreno
 - `ChunkLoadingSystem`: alta de tiles por chunk
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/world/TerrainSystem.ts`: implementa `getTile`, `modifyTile`, `registerTilesFromChunk` y sincroniza con `ChunkLoadingSystem`, confirmando las operaciones descritas.
+- Los sistemas de Producción y Animales modifican tiles invocando este archivo (como se ve en `ProductionSystem.processProduction` y `AnimalSystem.updateAnimalBehavior`), validando las integraciones mencionadas.

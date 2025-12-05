@@ -31,13 +31,13 @@ Este documento registra el estado de cada archivo Markdown dentro de `diagrams/`
 | RESOURCE_RESERVATION_FLOWS.md | ✅ Limpio | Documentación actualizada |
 | ROLE_FLOWS.md | ✅ Limpio | Documentación verificada (RoleSystem.ts) |
 | SHARED_KNOWLEDGE_FLOWS.md | ✅ Limpio | Documentación verificada (SharedKnowledgeSystem.ts) |
-| SOCIAL_FLOWS.md | Pendiente | Revisar |
-| TASK_FLOWS.md | Pendiente | Revisar |
-| TERRAIN_FLOWS.md | Pendiente | Revisar |
-| TIME_FLOWS.md | Pendiente | Revisar |
+| SOCIAL_FLOWS.md | ✅ Limpio | Documentación verificada (SocialSystem.ts) |
+| TASK_FLOWS.md | ✅ Limpio | Documentación verificada (TaskSystem.ts) |
+| TERRAIN_FLOWS.md | ✅ Limpio | Documentación verificada (TerrainSystem.ts) |
+| TIME_FLOWS.md | ✅ Limpio | Documentación verificada (TimeSystem.ts) |
 | WORLDRESOURCE_FLOWS.md | ✅ Limpio | Documentación actualizada |
-| WORLD_GENERATION_FLOWS.md | Pendiente | Revisar |
-| WORLD_QUERY_FLOWS.md | Pendiente | Revisar |
+| WORLD_GENERATION_FLOWS.md | ✅ Limpio | Documentación verificada (worldGenerationService.ts) |
+| WORLD_QUERY_FLOWS.md | ✅ Limpio | Documentación verificada (WorldQueryService.ts) |
 
 ## Siguiente paso
 Seguir la checklist iterativamente: por cada archivo marcado como “Pendiente”, abrirlo, borrar cualquier sección de auditoría, confirmar que describe arquitectura/propiedades reales y actualizar esta tabla cuando se complete.

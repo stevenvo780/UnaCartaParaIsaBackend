@@ -53,3 +53,9 @@
 - `TerrainSystem`: registra tiles generados
 - `WorldResourceSystem`/`AnimalSystem`: spawn posterior por chunk
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/world/generation/worldGenerationService.ts`: implementa `initializeGenerators`, `generateChunk`, `generateVoronoiWorld` y utiliza `NoiseUtils`, `BiomeResolver`, `seedrandom` y `SimpleBiomeConfig` como se describe.
+- `ChunkLoadingSystem` invoca `generateChunk` directamente desde este servicio, validando la integración documentada.

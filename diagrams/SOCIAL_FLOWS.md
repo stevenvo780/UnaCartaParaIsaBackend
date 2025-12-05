@@ -40,3 +40,9 @@
 - GPU opcional para decaimiento de grandes grafos (buffers `Float32Array`)
 - Edges con |valor| < minAffinity → clamp a 0 para evitar trabajo innecesario
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/social/SocialSystem.ts`: contiene `update`, la integración con `SharedSpatialIndex`, `GPUComputeService`, los listeners de matrimonios/divorcios y la sincronización de `socialGraph`, validando el comportamiento descrito.
+- El decaimiento de afinidad, grupos permanentes y la sincronización con `gameState` están implementados en ese archivo, confirmando la documentación.

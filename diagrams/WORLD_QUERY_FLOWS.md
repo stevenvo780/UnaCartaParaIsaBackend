@@ -23,3 +23,9 @@
 - Apalanca `SharedSpatialIndex` reconstruido por tick
 - Para lotes masivos, combinar con `GPUBatchQueryService` (distancias)
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/world/WorldQueryService.ts`: implementa `findNearestResource`, `findResourcesInRadius`, `findNearestAnimal`, `findNearestAgent`, `getTileAt`, `findTilesInArea` y usa `SharedSpatialIndex` + servicios GPU tal como se describe.
+- Las dependencias con `WorldResourceSystem`, `AnimalRegistry`, `AgentRegistry` y `TerrainSystem` se inyectan en este archivo, confirmando la arquitectura documentada.

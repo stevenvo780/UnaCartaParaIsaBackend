@@ -25,3 +25,9 @@
 - `RoleSystem` (turnos), `AmbientAwarenessSystem` (mood, música, clima)
 - `AISystem` (detectores sensibles al tiempo)
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/core/TimeSystem.ts`: contiene `update`, `updateTime`, `updateWeather`, `shouldChangeWeather` y emite `TIME_CHANGED`, confirmando cada punto descrito.
+- Las dependencias con `RoleSystem` y `AmbientAwarenessSystem` se realizan mediante el snapshot de `TimeSystem` que consumen esos sistemas, validando la integración mencionada.

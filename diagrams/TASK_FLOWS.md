@@ -38,3 +38,9 @@
 - `BuildingSystem`: crea tareas de construcción y escucha `TASK_COMPLETED`
 - `GovernanceSystem`: puede observar estadísticas para políticas
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/objectives/TaskSystem.ts`: implementa `createTask`, `contributeToTask`, `update`, `cancelStalledTask`, `syncTasksState` y emite los eventos `TASK_CREATED`, `TASK_PROGRESS`, `TASK_COMPLETED`, `TASK_STALLED`, confirmando el flujo descrito.
+- Las integraciones con `AISystem`, `BuildingSystem` y `GovernanceSystem` están codificadas a través de eventos y dependencias en este archivo.
