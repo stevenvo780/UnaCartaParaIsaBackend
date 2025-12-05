@@ -16,20 +16,4 @@ export enum KnowledgeNodeType {
   PERSON = "person",
 }
 
-/**
- * Type representing all possible knowledge node type values.
- */
-export type KnowledgeNodeTypeValue = `${KnowledgeNodeType}`;
-
-/**
- * Array of all knowledge node types for iteration.
- */
-export const ALL_KNOWLEDGE_NODE_TYPES: readonly KnowledgeNodeType[] =
-  Object.values(KnowledgeNodeType) as KnowledgeNodeType[];
-
-/**
- * Type guard to check if a string is a valid KnowledgeNodeType.
- */
-export function isKnowledgeNodeType(value: string): value is KnowledgeNodeType {
-  return Object.values(KnowledgeNodeType).includes(value as KnowledgeNodeType);
-}
+// Alias/lista/guard eliminados; sólo se expone el enum.

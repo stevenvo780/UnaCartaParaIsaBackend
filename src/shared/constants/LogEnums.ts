@@ -62,37 +62,4 @@ export enum LogCategory {
 /**
  * Type representing all possible log level values.
  */
-export type LogLevelValue = `${LogLevel}`;
-
-/**
- * Type representing all possible log category values.
- */
-export type LogCategoryValue = `${LogCategory}`;
-
-/**
- * Array of all log levels for iteration.
- */
-export const ALL_LOG_LEVELS: readonly LogLevel[] = Object.values(
-  LogLevel,
-) as LogLevel[];
-
-/**
- * Array of all log categories for iteration.
- */
-export const ALL_LOG_CATEGORIES: readonly LogCategory[] = Object.values(
-  LogCategory,
-) as LogCategory[];
-
-/**
- * Type guard to check if a string is a valid LogLevel.
- */
-export function isLogLevel(value: string): value is LogLevel {
-  return Object.values(LogLevel).includes(value as LogLevel);
-}
-
-/**
- * Type guard to check if a string is a valid LogCategory.
- */
-export function isLogCategory(value: string): value is LogCategory {
-  return Object.values(LogCategory).includes(value as LogCategory);
-}
+// Alias/listas/guards eliminados para que sólo se exporten los enums.

@@ -23,7 +23,7 @@ import { logger } from "@/infrastructure/utils/logger";
 /** No trabajar si necesidades críticas - usa constante centralizada */
 const CRITICAL_NEED_THRESHOLD = SIMULATION_CONSTANTS.NEEDS.CRITICAL_THRESHOLD;
 
-/** 
+/**
  * Recursos per-cápita mínimos para considerar "saturado"
  * Por encima de esto, reduce probabilidad de gather
  */
@@ -50,7 +50,10 @@ function shouldSkipGatherDueToSaturation(
   }
 
   // Si hay demanda de construcción, nunca skipear wood/stone
-  if (ctx.hasBuildingResourceDemand && (resourceType === "wood" || resourceType === "stone")) {
+  if (
+    ctx.hasBuildingResourceDemand &&
+    (resourceType === "wood" || resourceType === "stone")
+  ) {
     const needs = ctx.buildingResourceNeeds;
     if (needs && (needs[resourceType] ?? 0) > 0) {
       return false; // Siempre recolectar si hay demanda
@@ -71,13 +74,14 @@ function shouldSkipGatherDueToSaturation(
   }
 
   // Probabilidad de skip proporcional al exceso
-  const excessRatio = (perCapita - PER_CAPITA_SATURATION_THRESHOLD) / 
-                      (PER_CAPITA_MAX_THRESHOLD - PER_CAPITA_SATURATION_THRESHOLD);
+  const excessRatio =
+    (perCapita - PER_CAPITA_SATURATION_THRESHOLD) /
+    (PER_CAPITA_MAX_THRESHOLD - PER_CAPITA_SATURATION_THRESHOLD);
   const skipChance = Math.min(0.8, excessRatio * 0.8); // Max 80% skip
 
   if (RandomUtils.chance(skipChance)) {
     logger.debug(
-      `⚖️ [WorkDetector] ${ctx.agentId}: SKIP ${resourceType} (per-capita=${perCapita.toFixed(1)}, skipChance=${(skipChance*100).toFixed(0)}%)`,
+      `⚖️ [WorkDetector] ${ctx.agentId}: SKIP ${resourceType} (per-capita=${perCapita.toFixed(1)}, skipChance=${(skipChance * 100).toFixed(0)}%)`,
     );
     return true;
   }
@@ -243,17 +247,28 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
     // Determinar tipo de recurso para saturación
     const resType = ctx.nearestResource.type?.toLowerCase() ?? "";
     let saturationResourceType: "wood" | "stone" | "food" | null = null;
-    
+
     if (resType.includes("tree") || resType.includes("wood")) {
       saturationResourceType = "wood";
-    } else if (resType.includes("stone") || resType.includes("rock") || resType.includes("ore")) {
+    } else if (
+      resType.includes("stone") ||
+      resType.includes("rock") ||
+      resType.includes("ore")
+    ) {
       saturationResourceType = "stone";
-    } else if (resType.includes("berry") || resType.includes("fruit") || resType.includes("food")) {
+    } else if (
+      resType.includes("berry") ||
+      resType.includes("fruit") ||
+      resType.includes("food")
+    ) {
       saturationResourceType = "food";
     }
 
     // Aplicar lógica de saturación per-cápita
-    if (saturationResourceType && shouldSkipGatherDueToSaturation(ctx, saturationResourceType)) {
+    if (
+      saturationResourceType &&
+      shouldSkipGatherDueToSaturation(ctx, saturationResourceType)
+    ) {
       // Skip este gather, no crear task - dejar que el agente busque otra actividad
       return tasks;
     }

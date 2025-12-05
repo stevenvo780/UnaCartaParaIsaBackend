@@ -19,7 +19,6 @@ export enum DemandType {
   INFRASTRUCTURE = "infrastructure",
 }
 
-
 /**
  * Enumeration of governance event types.
  */
@@ -34,7 +33,6 @@ export enum GovernanceEventType {
   ROLE_REASSIGNED = "role_reassigned",
 }
 
-
 /**
  * Enumeration of governance policy identifiers.
  * These IDs are used to identify specific policies in the governance system.
@@ -44,7 +42,6 @@ export enum GovernancePolicyId {
   WATER_SUPPLY = "water_supply",
   HOUSING_EXPANSION = "housing_expansion",
 }
-
 
 /**
  * Enumeration of governance project types.

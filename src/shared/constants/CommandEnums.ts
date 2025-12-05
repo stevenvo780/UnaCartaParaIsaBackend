@@ -136,7 +136,6 @@ export enum AgentCommandType {
   SET_PRIORITY = "SET_PRIORITY",
 }
 
-
 /**
  * Enumeration of animal command types.
  * Commands that can be sent to the animal system.

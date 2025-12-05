@@ -143,4 +143,8 @@ export enum GameEventType {
   CONFLICT_TRUCE_REJECTED = "CONFLICT_TRUCE_REJECTED",
 }
 
-// Alias/listas/guard eliminados; quedan sólo los enums reales.
+/**
+ * Array containing all game event type values.
+ * Used for iterating over all event types when setting up listeners.
+ */
+export const ALL_GAME_EVENT_TYPES: GameEventType[] = Object.values(GameEventType);

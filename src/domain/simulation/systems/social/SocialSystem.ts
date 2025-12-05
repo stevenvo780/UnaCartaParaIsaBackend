@@ -17,7 +17,7 @@ import { ActionType } from "../../../../shared/constants/AIEnums";
 import { DialogueTone } from "../../../../shared/constants/AmbientEnums";
 import { GoalType } from "../../../../shared/constants/AIEnums";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
-import { GoalDomain } from "@/shared/constants/AIEnums";
+import { SystemName } from "@/shared/constants/SystemEnums";
 import type { MarriageSystem } from "../social/MarriageSystem";
 import type {
   ReputationEntry,
@@ -824,7 +824,7 @@ export class SocialSystem implements ISocialSystem {
     if (!agent || !target) {
       return {
         status: HandlerResultStatus.FAILED,
-        system: GoalDomain.SOCIAL,
+        system: SystemName.SOCIAL,
         message: `Agent or target not found: ${agentId}, ${targetId}`,
       };
     }
@@ -832,7 +832,7 @@ export class SocialSystem implements ISocialSystem {
     if (this.isTruceActive(agentId, targetId)) {
       return {
         status: HandlerResultStatus.FAILED,
-        system: GoalDomain.SOCIAL,
+        system: SystemName.SOCIAL,
         message: "Truce active between agents",
       };
     }
@@ -843,7 +843,7 @@ export class SocialSystem implements ISocialSystem {
         this.registerFriendlyInteraction(agentId, targetId);
         return {
           status: HandlerResultStatus.COMPLETED,
-          system: GoalDomain.SOCIAL,
+          system: SystemName.SOCIAL,
           message: "Friendly interaction registered",
           data: { affinityChange: 0.1 },
         };
@@ -871,7 +871,7 @@ export class SocialSystem implements ISocialSystem {
             status: proposalSuccess
               ? HandlerResultStatus.COMPLETED
               : HandlerResultStatus.FAILED,
-            system: GoalDomain.SOCIAL,
+            system: SystemName.SOCIAL,
             message: proposalSuccess
               ? "Marriage proposal registered"
               : "Marriage proposal failed",
@@ -881,7 +881,7 @@ export class SocialSystem implements ISocialSystem {
 
         return {
           status: HandlerResultStatus.COMPLETED,
-          system: GoalDomain.SOCIAL,
+          system: SystemName.SOCIAL,
           message: `Courtship interaction, affinity now ${affinity.toFixed(2)}`,
           data: { affinityChange: 0.1, currentAffinity: affinity },
         };
@@ -892,7 +892,7 @@ export class SocialSystem implements ISocialSystem {
         this.addInfamy(agentId, 0.1);
         return {
           status: HandlerResultStatus.COMPLETED,
-          system: GoalDomain.SOCIAL,
+          system: SystemName.SOCIAL,
           message: "Hostile interaction registered",
           data: { affinityChange: -0.2 },
         };
@@ -901,7 +901,7 @@ export class SocialSystem implements ISocialSystem {
         this.addEdge(agentId, targetId, 0.15);
         return {
           status: HandlerResultStatus.COMPLETED,
-          system: GoalDomain.SOCIAL,
+          system: SystemName.SOCIAL,
           message: "Assistance registered",
           data: { affinityChange: 0.15 },
         };
@@ -910,7 +910,7 @@ export class SocialSystem implements ISocialSystem {
         this.addEdge(agentId, targetId, 0.05);
         return {
           status: HandlerResultStatus.COMPLETED,
-          system: GoalDomain.SOCIAL,
+          system: SystemName.SOCIAL,
           message: `Interaction type '${type}' processed`,
           data: { affinityChange: 0.05 },
         };

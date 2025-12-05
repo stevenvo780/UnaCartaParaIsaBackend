@@ -23,9 +23,9 @@ describe("BiomeResolver", () => {
     });
 
     it("debe resolver playa para continentality y elevación bajas", () => {
-      // continentality < 0.40 && elevation < 0.40 = BEACH
-      // pero no puede ser OCEAN (continentality >= 0.30)
-      const biome = resolver.resolveBiome(0.5, 0.5, 0.35, 0.35);
+      // continentality < 0.42 && elevation < 0.42 = BEACH
+      // pero no puede ser OCEAN (continentality >= 0.35) ni LAKE (moisture <= 0.5)
+      const biome = resolver.resolveBiome(0.5, 0.4, 0.38, 0.38);
       expect(biome).toBe(BiomeType.BEACH);
     });
 

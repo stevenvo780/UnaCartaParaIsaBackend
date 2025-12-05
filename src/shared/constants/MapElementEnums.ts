@@ -34,21 +34,4 @@ export enum MapElementType {
   VEGETATION = "vegetation",
 }
 
-/**
- * Type representing all possible map element type values.
- */
-export type MapElementTypeValue = `${MapElementType}`;
-
-/**
- * Array of all map element types for iteration.
- */
-export const ALL_MAP_ELEMENT_TYPES: readonly MapElementType[] = Object.values(
-  MapElementType,
-) as MapElementType[];
-
-/**
- * Type guard to check if a string is a valid MapElementType.
- */
-export function isMapElementType(value: string): value is MapElementType {
-  return Object.values(MapElementType).includes(value as MapElementType);
-}
+// Alias/lista/guard eliminados para dejar sólo el enum.

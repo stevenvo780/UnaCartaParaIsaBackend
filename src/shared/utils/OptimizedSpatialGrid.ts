@@ -137,9 +137,8 @@ export class OptimizedSpatialGrid<T = string> {
         row <= centerRow + cellRadius;
         row++
       ) {
-        if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) {
-          continue;
-        }
+        // No limitar por cols/rows - el mundo es infinito/procedural
+        // Las celdas se crean dinámicamente en el Map
 
         const key = this.cellKey(col, row);
         const cell = this.cells.get(key);

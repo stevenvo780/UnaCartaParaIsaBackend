@@ -25,7 +25,6 @@ export enum MarketOrderStatus {
   CANCELLED = "cancelled",
 }
 
-
 /**
  * Enumeration of trade offer statuses.
  * Defines all possible statuses for trade offers in the trading system.

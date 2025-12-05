@@ -246,7 +246,11 @@ export interface DetectorContext {
   /** Recursos que BuildingSystem necesita */
   readonly buildingResourceNeeds?: Readonly<{ wood?: number; stone?: number }>;
   /** Stock global en stockpiles para balanceo de carga */
-  readonly globalStockpile?: Readonly<{ wood?: number; stone?: number; food?: number }>;
+  readonly globalStockpile?: Readonly<{
+    wood?: number;
+    stone?: number;
+    food?: number;
+  }>;
   /** Total de agentes vivos para calcular recursos per-cápita */
   readonly totalAgents?: number;
 

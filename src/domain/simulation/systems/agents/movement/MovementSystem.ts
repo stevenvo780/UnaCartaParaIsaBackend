@@ -1108,7 +1108,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
       RandomUtils.floatRange(
         0,
         SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX -
-        SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN,
+          SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN,
       );
 
     const angle = RandomUtils.floatRange(0, Math.PI * 2);
@@ -1163,10 +1163,10 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     target: { x: number; y: number },
   ): {
     status:
-    | HandlerResultStatus.DELEGATED
-    | HandlerResultStatus.COMPLETED
-    | HandlerResultStatus.FAILED
-    | HandlerResultStatus.IN_PROGRESS;
+      | HandlerResultStatus.DELEGATED
+      | HandlerResultStatus.COMPLETED
+      | HandlerResultStatus.FAILED
+      | HandlerResultStatus.IN_PROGRESS;
     system: string;
     message?: string;
     data?: unknown;
@@ -1233,10 +1233,10 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     zoneId: string,
   ): {
     status:
-    | HandlerResultStatus.DELEGATED
-    | HandlerResultStatus.COMPLETED
-    | HandlerResultStatus.FAILED
-    | HandlerResultStatus.IN_PROGRESS;
+      | HandlerResultStatus.DELEGATED
+      | HandlerResultStatus.COMPLETED
+      | HandlerResultStatus.FAILED
+      | HandlerResultStatus.IN_PROGRESS;
     system: string;
     message?: string;
     data?: unknown;
@@ -1311,10 +1311,10 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     entityId: string,
   ): {
     status:
-    | HandlerResultStatus.DELEGATED
-    | HandlerResultStatus.COMPLETED
-    | HandlerResultStatus.FAILED
-    | HandlerResultStatus.IN_PROGRESS;
+      | HandlerResultStatus.DELEGATED
+      | HandlerResultStatus.COMPLETED
+      | HandlerResultStatus.FAILED
+      | HandlerResultStatus.IN_PROGRESS;
     system: string;
     message?: string;
     data?: unknown;

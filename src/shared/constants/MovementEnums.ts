@@ -17,7 +17,6 @@ export enum Difficulty {
   HARD = "hard",
 }
 
-
 /**
  * Enumeration of entity activity types.
  * Defines all possible activities that entities can perform during movement.

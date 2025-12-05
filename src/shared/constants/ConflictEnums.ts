@@ -17,7 +17,6 @@ export enum ConflictResolutionChoice {
   CONTINUE = "continue",
 }
 
-
 /**
  * Enumeration of conflict resolution outcomes.
  * These represent the final state of a conflict after resolution.

@@ -334,7 +334,7 @@ export class AnimalSystem {
       if (
         isIdleState &&
         i % this.IDLE_UPDATE_DIVISOR !==
-        this.updateFrame % this.IDLE_UPDATE_DIVISOR
+          this.updateFrame % this.IDLE_UPDATE_DIVISOR
       ) {
         continue;
       }

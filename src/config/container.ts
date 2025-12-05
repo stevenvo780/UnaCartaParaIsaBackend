@@ -217,9 +217,10 @@ container
 container
   .bind<SharedSpatialIndex>(TYPES.SharedSpatialIndex)
   .toDynamicValue(() => {
-    const gameState = container.get<GameState>(TYPES.GameState);
-    const worldWidth = gameState.worldSize?.width ?? 2000;
-    const worldHeight = gameState.worldSize?.height ?? 2000;
+    // Mundo procedural infinito - usar valores grandes por defecto
+    // El grid usa Map internamente, así que puede crecer dinámicamente
+    const worldWidth = 50000; // ~50k pixels, suficiente para muchos chunks
+    const worldHeight = 50000;
     return new SharedSpatialIndex(worldWidth, worldHeight, 70);
   })
   .inSingletonScope();

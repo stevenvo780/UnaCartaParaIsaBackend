@@ -21,18 +21,4 @@ export enum ResponseStatus {
 /**
  * Type representing all possible response status values.
  */
-export type ResponseStatusValue = `${ResponseStatus}`;
-
-/**
- * Array of all response statuses for iteration.
- */
-export const ALL_RESPONSE_STATUSES: readonly ResponseStatus[] = Object.values(
-  ResponseStatus,
-) as ResponseStatus[];
-
-/**
- * Type guard to check if a string is a valid ResponseStatus.
- */
-export function isResponseStatus(value: string): value is ResponseStatus {
-  return Object.values(ResponseStatus).includes(value as ResponseStatus);
-}
+// Alias/lista/guard eliminados para mantener sólo el enum usado por los controladores.
