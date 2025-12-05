@@ -24,13 +24,13 @@ Este documento registra el estado de cada archivo Markdown dentro de `diagrams/`
 | MARRIAGE_FLOWS.md | ✅ Limpio | Documentación verificada (MarriageSystem.ts) |
 | MOVEMENT_FLOWS.md | ✅ Limpio | Documentación actualizada |
 | NEEDS_FLOWS.md | ✅ Limpio | Documentación actualizada |
-| PRODUCTION_FLOWS.md | Pendiente | Revisar |
-| README.md | Pendiente | Revisar |
-| RECIPE_DISCOVERY_FLOWS.md | Pendiente | Revisar |
-| REPUTATION_FLOWS.md | Pendiente | Revisar |
+| PRODUCTION_FLOWS.md | ✅ Limpio | Documentación verificada (ProductionSystem.ts) |
+| README.md | ✅ Limpio | Índice verificado (no contiene notas de auditoría) |
+| RECIPE_DISCOVERY_FLOWS.md | ✅ Limpio | Documentación verificada (RecipeDiscoverySystem.ts) |
+| REPUTATION_FLOWS.md | ✅ Limpio | Documentación verificada (SocialSystem.ts) |
 | RESOURCE_RESERVATION_FLOWS.md | ✅ Limpio | Documentación actualizada |
-| ROLE_FLOWS.md | Pendiente | Revisar |
-| SHARED_KNOWLEDGE_FLOWS.md | Pendiente | Revisar |
+| ROLE_FLOWS.md | ✅ Limpio | Documentación verificada (RoleSystem.ts) |
+| SHARED_KNOWLEDGE_FLOWS.md | ✅ Limpio | Documentación verificada (SharedKnowledgeSystem.ts) |
 | SOCIAL_FLOWS.md | Pendiente | Revisar |
 | TASK_FLOWS.md | Pendiente | Revisar |
 | TERRAIN_FLOWS.md | Pendiente | Revisar |

@@ -29,3 +29,9 @@
 - `SocialSystem`: puede consultar trust para formar grupos/relaciones
 - `Combat/Social`: cambios por daño/interacciones pueden ajustar reputation
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/social/SocialSystem.ts`: gestiona tanto los edges de trust (`edges`, `addEdge`, `getAffinityBetween`) como `updateReputation`, `getReputation` y el historial (`reputationHistory`), confirmando el flujo descrito.
+- El decaimiento hacia el valor neutral se ejecuta dentro de `update()` del mismo archivo y se emite `GameEventType.REPUTATION_UPDATED`, validando la integración indicada.

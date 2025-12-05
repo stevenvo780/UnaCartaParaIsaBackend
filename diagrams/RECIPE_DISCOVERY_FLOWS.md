@@ -26,3 +26,9 @@
 - `EnhancedCraftingSystem`: usa catálogo de recetas y recetas conocidas
 - `BiomeRecipesCatalog`: aporta recetas por bioma
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/economy/RecipeDiscoverySystem.ts`: implementa `initializeBasicRecipes`, `attemptBiomeDiscovery`, `attemptExperimentation`, `agentKnowsRecipe` y `getAgentRecipes`, siguiendo el flujo documentado.
+- `BASIC_RECIPES`, `BiomeRecipesCatalog` y la integración con `EnhancedCraftingSystem` se usan directamente en este archivo, confirmando la relación descrita.

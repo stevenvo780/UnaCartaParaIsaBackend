@@ -30,3 +30,9 @@
 - `GovernanceSystem`: asignación reactiva por demanda
 - `Production/Economy`: impactos de productividad
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/agents/RoleSystem.ts`: define `ROLE_DEFINITIONS`, `assignRole`, `rebalanceRoles`, `workShift` y los métodos para emitir tareas, coincidiendo con el flujo descrito.
+- Este archivo expone la integración con `GovernanceSystem` y `AISystem` a través de `generateTasksForRole` y eventos, validando la documentación.

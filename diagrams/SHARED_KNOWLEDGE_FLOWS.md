@@ -28,3 +28,9 @@
 - `AISystem`: detectores se nutren de alertas informadas
 - `Social/Governance`: señales ambientales (amenazas/recursos)
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/agents/ai/SharedKnowledgeSystem.ts`: implementa `registerResourceFind`, `registerThreat`, `getKnownResourceAlerts`, `getKnownThreatAlerts`, `update` y la propagación vía `SharedSpatialIndex`, coincidiendo con el flujo descrito.
+- Los eventos `RESOURCE_DISCOVERED` y `THREAT_DETECTED` son emitidos desde este archivo y consumidos por IA/social/gobernanza.
