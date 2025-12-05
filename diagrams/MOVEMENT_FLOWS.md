@@ -192,9 +192,9 @@
 
 4. **Batch + GPU (opcional)**
    - MovementBatchProcessor siempre usa buffers `Float32Array`
-   - GPUComputeService se activa si hay GPU y entidades ≥ 1000
-   - Por debajo de 1000 entidades, CPU es más eficiente (fallback automático)
-   - TensorFlow.js se carga de forma lazy solo al superar el umbral
+   - `BATCH_THRESHOLD` = 5 entidades en movimiento para activar procesamiento masivo
+   - Si `GPUComputeService` está inyectado se ejecutan los cálculos en GPU; si falla o no existe se usa CPU
+   - TensorFlow.js se carga de forma lazy solo cuando hay aceleración disponible
 
 5. **Zone Distance Precomputation**
    - precomputeZoneDistances() en init
@@ -263,53 +263,11 @@
 
 ---
 
-### 1. Pathfinding Queue Warning (Severidad: Info)
+### Controles Operativos
 
-**Ubicación:** `MovementSystem.processPathfindingQueue()` - línea 228
-
-**Código:**
-```typescript
-if (this.pathfindingQueue.length > 10) {
-  logger.warn(`Pathfinding queue has ${this.pathfindingQueue.length} pending requests`);
-}
-```
-
-**Observación:** Solo emite warning, no toma acción correctiva.
-
-**Análisis:** Diseño intencional para debugging. En producción, esto indica sobrecarga pero el sistema sigue funcionando.
-
-**Estado:** ✅ Comportamiento correcto
-
-### 2. Clamping de Posición en moveToPoint (Severidad: Info)
-
-**Ubicación:** `MovementSystem.moveToPoint()` - líneas 628-629
-
-**Código:**
-```typescript
-const tx = Math.max(0, Math.min(x, this.gridWidth * this.gridSize - 1));
-const ty = Math.max(0, Math.min(y, this.gridHeight * this.gridSize - 1));
-```
-
-**Observación:** Clampea silenciosamente posiciones fuera de bounds.
-
-**Análisis:** Previene movimiento fuera del mundo. Comportamiento seguro.
-
-**Estado:** ✅ Diseño correcto
-
-### 3. Grace Period Hardcodeado (Severidad: Info)
-
-**Ubicación:** `MovementSystem` - línea 907
-
-**Código:**
-```typescript
-private readonly ARRIVAL_GRACE_PERIOD_MS = 2000;
-```
-
-**Observación:** 2 segundos hardcodeados antes de permitir idle wander post-arrival.
-
-**Análisis:** Permite que el AISystem planifique siguiente acción antes de que el agente empiece a vagar. Valor razonable.
-
-**Estado:** ✅ Diseño intencional
+- **Monitoreo de cola.** `processPathfindingQueue()` imprime un warning cuando la cola supera 10 peticiones. No altera el flujo: sirve para detectar congestión y entender cuándo incrementar `MAX_CONCURRENT_PATHS` o ajustar la IA.
+- **Clamp de mundo.** `moveToPoint()` limita `targetX/targetY` al tamaño del grid (`gridWidth * gridSize`). Esto evita que una entidad salga del mapa y mantiene a `StateDirtyTracker` sincronizado.
+- **Arrival grace period.** `ARRIVAL_GRACE_PERIOD_MS = 2000` se usa en `maybeStartIdleWander()` para dar 2 s de respiro después de llegar a una zona. Durante ese tiempo AISystem puede elegir la siguiente acción sin que el agente empiece a vagar inmediatamente.
 
 ---
 
@@ -340,8 +298,6 @@ Todos los componentes están correctamente conectados:
 
 ---
 
-## 🎯 CONCLUSIÓN
+## 📌 Resumen Operativo
 
-El sistema de movimiento está **muy bien diseñado y completamente funcional**. No se identificaron problemas que requieran corrección. Las observaciones menores son decisiones de diseño válidas.
-
-**Puntuación: 10/10** ✅
+MovementSystem combina pathfinding A*, batch processing y caches espaciales para mantener trayectorias coherentes. La documentación describe los controles de cola, límites del mundo y ventanas de gracia que protegen al AISystem frente a comportamientos erráticos.

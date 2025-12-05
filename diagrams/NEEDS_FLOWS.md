@@ -207,8 +207,7 @@
 
 1. **Batch + GPU (opcional)**
    - NeedsBatchProcessor opera sobre `Float32Array` (7 necesidades × N)
-   - GPUComputeService se activa si hay GPU y entidades ≥ 1000
-   - Por debajo de 1000, CPU es más eficiente (fallback automático)
+   - Intento de uso de GPUComputeService cuando está disponible; fallback a CPU si no hay aceleración o falla la llamada
    - applyDecayBatch() y applyCrossEffectsBatch() vectorizados
 
 2. **Social Morale GPU Acceleration**
@@ -327,61 +326,11 @@ public getFoodsByCategory(category: FoodCategory): FoodItem[]
 
 ---
 
-### 1. Emergency Needs Passive Recovery (Severidad: Info)
+### Sistemas de Protección
 
-**Ubicación:** `NeedsSystem.checkEmergencyNeeds()` - líneas 701-710
-
-**Código:**
-```typescript
-if (needs.hunger < CRITICAL) {
-  if (!this.tryEmergencyFood(entityId, needs)) {
-    needs.hunger = Math.min(100, needs.hunger + 0.5);  // Passive recovery
-  }
-}
-```
-
-**Observación:** Si no hay comida en inventario, hay una pequeña recuperación pasiva.
-
-**Análisis:** Previene muerte inevitable cuando no hay recursos. Balance de gameplay.
-
-**Estado:** ✅ Diseño intencional
-
-### 2. Immortal Entity Protection (Severidad: Info)
-
-**Ubicación:** `NeedsSystem.checkForDeath()` - líneas 615-620
-
-**Código:**
-```typescript
-if (entity?.immortal) {
-  if (needs.hunger <= 10) needs.hunger = 20;
-  if (needs.thirst <= 10) needs.thirst = 20;
-  if (needs.energy <= 10) needs.energy = 20;
-  return false;
-}
-```
-
-**Observación:** Entidades inmortales no mueren y tienen necesidades auto-corregidas.
-
-**Análisis:** Protege NPCs especiales como deidades o personajes de historia.
-
-**Estado:** ✅ Diseño correcto
-
-### 3. Respawn Modifica isDead Directamente (Severidad: Info)
-
-**Ubicación:** `NeedsSystem.respawnEntity()` - línea 670
-
-**Código:**
-```typescript
-if (agent) {
-  agent.isDead = false;
-}
-```
-
-**Observación:** NeedsSystem modifica isDead aunque los comentarios dicen que es dominio de LifeCycleSystem.
-
-**Análisis:** Esto es parte del sistema de respawn. handleEntityDeath() correctamente emite AGENT_DEATH para LifeCycleSystem, pero respawn necesita reactivar el agente.
-
-**Estado:** ⚠️ Inconsistencia menor - podría delegarse a LifeCycleSystem
+- **Recuperación de emergencia.** `checkEmergencyNeeds()` intenta consumir inventario (`tryEmergencyFood/Water`). Si no hay recursos, aplica un `+0.5` pasivo a hambre y sed para dar tiempo a los planificadores. ENERGY recibe un descanso emergente.
+- **Entidades inmortales.** En `checkForDeath()` se garantiza que hunger/thirst/energy no bajen de 20 para perfiles con `immortal = true`, manteniendo vivos a NPCs narrativos mientras siguen participando en la simulación.
+- **Reactivación tras respawn.** `respawnEntity()` reestablece estadísticos y marca `agent.isDead = false` en `gameState.agents`. Aunque LifeCycleSystem es quien maneja las muertes (via `AGENT_DEATH`), NeedsSystem es el módulo que programa y ejecuta la reaparición.
 
 ---
 
@@ -414,8 +363,6 @@ Todos los componentes están correctamente conectados:
 
 ---
 
-## 🎯 CONCLUSIÓN
+## 📌 Resumen Operativo
 
-El sistema de necesidades está **muy bien diseñado y completamente funcional**. La única observación menor es la inconsistencia de que NeedsSystem modifica `isDead` directamente en respawn, pero esto es necesario para la funcionalidad de respawn.
-
-**Puntuación: 10/10** ✅
+NeedsSystem garantiza decadencias consistentes, integra boosts sociales/zona y aplica salvaguardas (emergencias, inmortalidad, respawn) para que la simulación no se estanque. Esta documentación refleja el comportamiento válido en `NeedsSystem`, `NeedsBatchProcessor` y servicios asociados.

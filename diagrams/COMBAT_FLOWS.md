@@ -31,7 +31,7 @@
 │  │  ┌────────────────────────────────────────────────────────────────────┐ ││
 │  │  │ GPUComputeService.computeDistancesBatch()                          │ ││
 │  │  │ - Pairwise distance calculations                                   │ ││
-│  │  │ - GPU activado si entidades ≥ 1000 (sino CPU)                      │ ││
+│  │  │ - GPU activado si hay ≥ 30 atacantes simultáneos (sino CPU)        │ ││
 │  │  └────────────────────────────────────────────────────────────────────┘ ││
 │  └─────────────────────────────────────────────────────────────────────────┘│
 │                                                                              │
@@ -265,54 +265,11 @@ const damage = Math.max(1, Math.round(base * scale * (crit ? weapon.critMultipli
 
 ---
 
-### 1. Animales Siempre Atacables (Severidad: Info)
+### Reglas y Políticas
 
-**Ubicación:** `CombatSystem.shouldAttack()` - línea 491
-
-**Código:**
-```typescript
-const targetIsAnimal = target.type === EntityType.ANIMAL || target.tags?.includes("animal");
-if (targetIsAnimal) return true;
-```
-
-**Observación:** Los agentes atacan animales sin considerar hostilidad.
-
-**Análisis:** Diseño intencional para caza. Los animales no tienen sistema social con agentes.
-
-**Estado:** ✅ Diseño correcto
-
-### 2. Aggression Random Check (Severidad: Info)
-
-**Ubicación:** `CombatSystem.shouldAttack()` - línea 510
-
-**Código:**
-```typescript
-return Math.random() < aggression * 0.25;
-```
-
-**Observación:** Agentes con alta agresión (0.6+) tienen 15% probabilidad de atacar neutrales.
-
-**Análisis:** Añade variabilidad al comportamiento. Simula agentes "volátiles".
-
-**Estado:** ✅ Diseño intencional
-
-### 3. GPU Threshold Alto (Severidad: Info)
-
-**Ubicación:** `CombatSystem.updateBatch()` - línea 236
-
-**Código:**
-```typescript
-if (this.gpuService?.isGPUAvailable() && attackers.length >= 30) {
-  await this.updateBatchGPU(attackers, entitiesById, now);
-  return;
-}
-```
-
-**Observación:** GPU se activa solo con 30+ atacantes.
-
-**Análisis:** Balance entre overhead de setup GPU vs beneficio de cálculo paralelo. Razonable.
-
-**Estado:** ✅ Threshold apropiado
+- **Animales como objetivos válidos.** `shouldAttack()` devuelve `true` cuando el target tiene `EntityType.ANIMAL`. Esto permite que los agentes realicen caza sin depender de afinidad social. Los animales carecen de reputación con humanos, así que la decisión se mantiene independiente del `SocialSystem`.
+- **Chequeo de agresión aleatorio.** Tras descartar enemigos declarados, la probabilidad de atacar depende del rasgo `aggression`: si es ≥ 0.6, se evalúa `RandomUtils.chance(aggression * 0.25)`. Esto introduce imprevisibilidad controlada en encuentros neutrales.
+- **Umbral de GPU en lotes.** `updateBatch()` activa `updateBatchGPU()` solo cuando hay al menos 30 atacantes y el servicio de GPU está disponible. En escenarios menores la versión CPU evita el overhead de transferencia de buffers.
 
 ---
 
@@ -344,8 +301,6 @@ Todos los componentes están correctamente conectados:
 
 ---
 
-## 🎯 CONCLUSIÓN
+## 📌 Resumen Operativo
 
-El sistema de combate está **muy bien diseñado y completamente funcional**. No se identificaron problemas que requieran corrección. Las observaciones menores son decisiones de diseño válidas.
-
-**Puntuación: 10/10** ✅
+CombatSystem gestiona detección espacial, cooldowns y registros de combate con soporte para GPU cuando se presentan escaramuzas masivas. Las reglas documentadas describen exactamente cómo se seleccionan objetivos y cuándo se activa el procesamiento masivo.
