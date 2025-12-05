@@ -22,7 +22,7 @@ import { GoalDomain } from "@/shared/constants/AIEnums";
  */
 export interface HandlerResult {
   status: HandlerResultStatus;
-  system: SystemName;
+  system: string;
   message?: string;
   data?: unknown;
 }

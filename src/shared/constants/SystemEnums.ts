@@ -63,18 +63,4 @@ export enum SnapshotType {
 /**
  * Type representing all possible system status values.
  */
-export type SystemStatusValue = `${SystemStatus}`;
-
-/**
- * Array of all system statuses for iteration.
- */
-export const ALL_SYSTEM_STATUSES: readonly SystemStatus[] = Object.values(
-  SystemStatus,
-) as SystemStatus[];
-
-/**
- * Type guard to check if a string is a valid SystemStatus.
- */
-export function isSystemStatus(value: string): value is SystemStatus {
-  return Object.values(SystemStatus).includes(value as SystemStatus);
-}
+// Alias/lista/guard eliminados para mantener sólo los enums usados.

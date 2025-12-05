@@ -20,7 +20,6 @@ export enum WebSocketMessageType {
 /**
  * Type representing all possible WebSocket message type values.
  */
-export type WebSocketMessageTypeValue = `${WebSocketMessageType}`;
 
 /**
  * Enumeration of chunk-related WebSocket message types.
@@ -38,7 +37,6 @@ export enum ChunkMessageType {
 /**
  * Type representing all possible chunk message type values.
  */
-export type ChunkMessageTypeValue = `${ChunkMessageType}`;
 
 /**
  * Enumeration of worker message types for background processing.
@@ -55,47 +53,20 @@ export enum WorkerMessageType {
 /**
  * Type representing all possible worker message type values.
  */
-export type WorkerMessageTypeValue = `${WorkerMessageType}`;
 
 /**
  * Array of all WebSocket message types for iteration.
  */
-export const ALL_WEBSOCKET_MESSAGE_TYPES: readonly WebSocketMessageType[] =
-  Object.values(WebSocketMessageType) as WebSocketMessageType[];
 
 /**
  * Array of all chunk message types for iteration.
  */
-export const ALL_CHUNK_MESSAGE_TYPES: readonly ChunkMessageType[] =
-  Object.values(ChunkMessageType) as ChunkMessageType[];
 
 /**
  * Array of all worker message types for iteration.
  */
-export const ALL_WORKER_MESSAGE_TYPES: readonly WorkerMessageType[] =
-  Object.values(WorkerMessageType) as WorkerMessageType[];
 
 /**
  * Type guard to check if a string is a valid WebSocketMessageType.
  */
-export function isWebSocketMessageType(
-  value: string,
-): value is WebSocketMessageType {
-  return Object.values(WebSocketMessageType).includes(
-    value as WebSocketMessageType,
-  );
-}
-
-/**
- * Type guard to check if a string is a valid ChunkMessageType.
- */
-export function isChunkMessageType(value: string): value is ChunkMessageType {
-  return Object.values(ChunkMessageType).includes(value as ChunkMessageType);
-}
-
-/**
- * Type guard to check if a string is a valid WorkerMessageType.
- */
-export function isWorkerMessageType(value: string): value is WorkerMessageType {
-  return Object.values(WorkerMessageType).includes(value as WorkerMessageType);
-}
+// Alias/listas/guards eliminados para mantener sólo los enums consumidos.

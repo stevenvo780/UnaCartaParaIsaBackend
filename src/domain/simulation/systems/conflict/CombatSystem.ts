@@ -246,10 +246,9 @@ export class CombatSystem implements ICombatSystem {
             radius,
             EntityType.ALL,
           );
-          logger.debug(
-            `attacker=${attacker.id}, queryRadius results`,
-            { results },
-          );
+          logger.debug(`attacker=${attacker.id}, queryRadius results`, {
+            results,
+          });
           nearby = results
             .filter((candidate) => candidate.entity !== attacker.id)
             .map((candidate) => entitiesById.get(candidate.entity))
@@ -261,7 +260,10 @@ export class CombatSystem implements ICombatSystem {
         }
 
         for (const target of nearby) {
-          logger.debug(`Checking combat`, { attacker: attacker.id, target: target.id });
+          logger.debug(`Checking combat`, {
+            attacker: attacker.id,
+            target: target.id,
+          });
           const shouldAtt = this.shouldAttack(attacker, target);
           logger.debug(`shouldAttack result`, { shouldAtt });
           if (!shouldAtt) continue;

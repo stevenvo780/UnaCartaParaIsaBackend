@@ -21,18 +21,4 @@ export enum TileType {
 /**
  * Type representing all possible tile type values.
  */
-export type TileTypeValue = `${TileType}`;
-
-/**
- * Array of all tile types for iteration.
- */
-export const ALL_TILE_TYPES: readonly TileType[] = Object.values(
-  TileType,
-) as TileType[];
-
-/**
- * Type guard to check if a string is a valid TileType.
- */
-export function isTileType(value: string): value is TileType {
-  return Object.values(TileType).includes(value as TileType);
-}
+// Alias/lista/guard eliminados para mantener sólo el enum.
