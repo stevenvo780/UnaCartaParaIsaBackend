@@ -7,6 +7,7 @@ import { TimeOfDayPhase } from "../../../../shared/constants/TimeEnums";
 import { WeatherType } from "../../../../shared/constants/AmbientEnums";
 import { WorkShift } from "../../../../shared/constants/RoleEnums";
 import { logger } from "@/infrastructure/utils/logger";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 
 export interface TimeOfDay {
   hour: number;
@@ -215,7 +216,7 @@ export class TimeSystem extends EventEmitter {
     const weatherProbabilities = this.getWeatherProbabilities();
 
     let newWeatherType = this.currentWeather.type;
-    const rand = Math.random();
+    const rand = RandomUtils.float();
     let cumulative = 0;
 
     for (const [weather, probability] of Object.entries(weatherProbabilities)) {
@@ -330,9 +331,9 @@ export class TimeSystem extends EventEmitter {
       [WeatherType.CLEAR]: 0.1,
       [WeatherType.CLOUDY]: 0.3,
       [WeatherType.FOGGY]: 0.4,
-      [WeatherType.RAINY]: 0.5 + Math.random() * 0.4,
-      [WeatherType.STORMY]: 0.7 + Math.random() * 0.3,
-      [WeatherType.SNOWY]: 0.6 + Math.random() * 0.3,
+      [WeatherType.RAINY]: 0.5 + RandomUtils.floatRange(0, 0.4),
+      [WeatherType.STORMY]: 0.7 + RandomUtils.floatRange(0, 0.3),
+      [WeatherType.SNOWY]: 0.6 + RandomUtils.floatRange(0, 0.3),
     };
 
     return intensities[weatherType] || 0.5;
@@ -425,7 +426,7 @@ export class TimeSystem extends EventEmitter {
   }
 
   private randomFloat(min: number, max: number): number {
-    return min + Math.random() * (max - min);
+    return RandomUtils.floatRange(min, max);
   }
 
   public getCurrentTime(): TimeOfDay {

@@ -88,6 +88,32 @@ const ID_DEFINITION_PATTERNS = [
   /["'][^"']*\$\{/,            // Template strings con interpolación
 ];
 
+// Patrones de contextos TypeScript (no son código ejecutable)
+const TYPESCRIPT_CONTEXT_PATTERNS = [
+  // Acceso a propiedades de tipo: Type["property"]
+  /\w+\["[^"]+"\]/,
+  // Literales en tipos discriminados: Extract<T, { type: "VALUE" }>
+  /Extract<[^>]+,\s*\{\s*type:\s*["'][^"']+["']\s*\}>/,
+  // Tipo en parámetros: command: Extract<...>
+  /:\s*Extract<[^>]+,\s*\{\s*type:\s*["'][^"']+["']\s*\}>/,
+  // Partial con acceso a propiedades: Partial<Type["property"]>
+  /Partial<\w+\["[^"]+"\]>/,
+  // Tipo como anotación: variable: Type["property"]
+  /:\s*\w+\["[^"]+"\]/,
+  // Type assertion con acceso: as Type["property"]
+  /as\s+\w+\["[^"]+"\]/,
+];
+
+// Patrones de búsqueda de substring (no comparaciones exactas)
+const SUBSTRING_SEARCH_PATTERNS = [
+  /\.includes\(["'][^"']+["']\)/, // string.includes("substring")
+  /\.startsWith\(["'][^"']+["']\)/, // string.startsWith("prefix")
+  /\.endsWith\(["'][^"']+["']\)/, // string.endsWith("suffix")
+  /\.indexOf\(["'][^"']+["']\)/, // string.indexOf("substring")
+  /\.search\(["'][^"']+["']\)/, // string.search("pattern")
+  /\.match\(["'][^"']+["']\)/, // string.match("pattern")
+];
+
 // Valores por defecto del sistema a ignorar
 // Nota: No incluimos letras individuales ya que se filtran por longitud < 2
 const SYSTEM_DEFAULT_VALUES = new Set([
@@ -147,7 +173,7 @@ const STRING_LITERAL_PATTERNS = [
     regex: /(===|!==|==|!=)\s*["']([a-zA-Z_][a-zA-Z0-9_]*?)["']/gi,
     captureGroup: 2,
   },
-  // Asignaciones con strings literales
+  // Asignaciones con strings literales (excluye tipos)
   {
     name: 'Asignaciones',
     regex: /:\s*["']([a-zA-Z_][a-zA-Z0-9_]*?)["']\s*[,;\)\}]/g,
@@ -159,22 +185,10 @@ const STRING_LITERAL_PATTERNS = [
     regex: /case\s+["']([a-zA-Z_][a-zA-Z0-9_]*?)["']\s*:/gi,
     captureGroup: 1,
   },
-  // Includes/StartsWith/EndsWith
-  {
-    name: 'Métodos de string',
-    regex: /\.(includes|startsWith|endsWith|indexOf|match|search)\(["']([a-zA-Z_][a-zA-Z0-9_]*?)["']/gi,
-    captureGroup: 2,
-  },
   // Return statements
   {
     name: 'Return statements',
     regex: /return\s+["']([a-zA-Z_][a-zA-Z0-9_]*?)["']/gi,
-    captureGroup: 1,
-  },
-  // Object property access
-  {
-    name: 'Acceso a propiedades',
-    regex: /\[["']([a-zA-Z_][a-zA-Z0-9_]*?)["']\]/g,
     captureGroup: 1,
   },
   // Set/Map operations
@@ -183,10 +197,10 @@ const STRING_LITERAL_PATTERNS = [
     regex: /\.(set|add|has|get|delete)\(["']([a-zA-Z_][a-zA-Z0-9_]*?)["']/gi,
     captureGroup: 2,
   },
-  // Array methods
+  // Array methods (excluye includes que es substring)
   {
     name: 'Métodos de array',
-    regex: /\.(push|includes|indexOf|find|filter|some|every)\(["']([a-zA-Z_][a-zA-Z0-9_]*?)["']/gi,
+    regex: /\.(push|find|filter|some|every)\(["']([a-zA-Z_][a-zA-Z0-9_]*?)["']/gi,
     captureGroup: 2,
   },
   // Switch statements (protegido contra ReDoS con límites)
@@ -504,6 +518,24 @@ async function processFile(
           if (isIdDefinition) {
             if (VERBOSE) {
               console.log(`   ⚪ Ignorando (def ID): "${occ.stringLiteral}" en ${path.basename(filePath)}:${occ.line}`);
+            }
+            return;
+          }
+
+          // Verificar si está en un contexto de tipo TypeScript
+          const isTypeContext = TYPESCRIPT_CONTEXT_PATTERNS.some(pattern => pattern.test(lineContent));
+          if (isTypeContext) {
+            if (VERBOSE) {
+              console.log(`   ⚪ Ignorando (tipo TS): "${occ.stringLiteral}" en ${path.basename(filePath)}:${occ.line}`);
+            }
+            return;
+          }
+
+          // Verificar si es una búsqueda de substring
+          const isSubstringSearch = SUBSTRING_SEARCH_PATTERNS.some(pattern => pattern.test(lineContent));
+          if (isSubstringSearch) {
+            if (VERBOSE) {
+              console.log(`   ⚪ Ignorando (substring): "${occ.stringLiteral}" en ${path.basename(filePath)}:${occ.line}`);
             }
             return;
           }

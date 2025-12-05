@@ -37,6 +37,7 @@ import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 import { SystemName } from "../../../../../shared/constants/SystemEnums";
 
 import { GoalType } from "@/shared/constants/AIEnums";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 /**
  * System for managing entity needs (hunger, thirst, energy, hygiene, social, fun, mental health).
  *
@@ -314,7 +315,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     const dtSeconds = (now - this.lastUpdate) / 1000;
     this.lastUpdate = now;
 
-    if (Math.random() < 0.03) {
+    if (RandomUtils.chance(0.03)) {
       const firstEntry = this.entityNeeds.entries().next().value;
       if (firstEntry) {
         const [agentId, needs] = firstEntry;
@@ -334,7 +335,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
   private updateTraditional(dtSeconds: number, _now: number): void {
     const startTime = performance.now();
 
-    if (Math.random() < 0.02) {
+    if (RandomUtils.chance(0.02)) {
       const firstAgent = this.entityNeeds.entries().next().value;
       if (firstAgent) {
         const [agentId, needs] = firstAgent;

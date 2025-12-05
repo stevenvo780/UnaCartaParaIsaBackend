@@ -32,6 +32,7 @@ import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 import { WorldEntityType } from "@/shared/constants/ResourceEnums";
 import { SystemName } from "@/shared/constants/SystemEnums";
 import { EntityType } from "@/shared/constants/EntityEnums";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 
 export interface EntityMovementState {
   entityId: string;
@@ -1078,7 +1079,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
   private readonly ARRIVAL_GRACE_PERIOD_MS = 2000;
 
   private maybeStartIdleWander(state: EntityMovementState, now: number): void {
-    if (Math.random() < 0.01 && !state.isMoving) {
+    if (RandomUtils.chance(0.01) && !state.isMoving) {
       logger.debug(
         `[MovementSystem] maybeStartIdleWander ${state.entityId}: isMoving=${state.isMoving}, activity=${state.currentActivity}, lastArrival=${state.lastArrivalTime}, lastWander=${state.lastIdleWander}`,
       );
@@ -1100,15 +1101,13 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
       return;
     }
 
-    if (Math.random() > SIM_CONSTANTS.IDLE_WANDER_PROBABILITY) return;
+    if (!RandomUtils.chance(SIM_CONSTANTS.IDLE_WANDER_PROBABILITY)) return;
 
     const radius: number =
       SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN +
-      Math.random() *
-        (SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX -
-          SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN);
+      RandomUtils.floatRange(0, SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX - SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN);
 
-    const angle = Math.random() * Math.PI * 2;
+    const angle = RandomUtils.floatRange(0, Math.PI * 2);
     const targetX = state.currentPosition.x + Math.cos(angle) * radius;
     const targetY = state.currentPosition.y + Math.sin(angle) * radius;
 

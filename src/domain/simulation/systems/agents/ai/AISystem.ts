@@ -65,6 +65,7 @@ import type { TimeSystem } from "../../core/TimeSystem";
 import { equipmentSystem } from "../EquipmentSystem";
 import { RoleSystem } from "../RoleSystem";
 import { container } from "@/config/container";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 
 export interface AISystemDeps {
   gameState: GameState;
@@ -403,7 +404,7 @@ export class AISystem extends EventEmitter {
   public async update(deltaTimeMs: number): Promise<void> {
     const agents = this.gameState.agents ?? [];
 
-    if (Math.random() < 0.04) {
+    if (RandomUtils.chance(0.04)) {
       logger.debug(`[AISystem] update(): ${agents.length} agents`);
     }
 
@@ -680,7 +681,7 @@ export class AISystem extends EventEmitter {
       if (demand && (demand.wood > 0 || demand.stone > 0)) {
         _hasBuildingResourceDemand = true;
         _buildingResourceNeeds = demand;
-        if (Math.random() < 0.01) {
+        if (RandomUtils.chance(0.01)) {
           logger.debug(
             `🏗️ [AISystem] ${agentId}: Building demand detected: wood=${demand.wood}, stone=${demand.stone}`,
           );
@@ -772,7 +773,7 @@ export class AISystem extends EventEmitter {
     if (this.gameState.zones && this.gameState.zones.length > 0) {
       const workZoneTypes = [ZoneType.WORK, ZoneType.GATHERING, ZoneType.WILD];
 
-      if (Math.random() < 0.01) {
+      if (RandomUtils.chance(0.01)) {
         const zoneIds = this.gameState.zones.slice(0, 5).map((z) => z.id);
         logger.debug(
           `🔧 [AISystem] ${agentId}: total zones=${this.gameState.zones.length}, sample: ${zoneIds.join(", ")}`,
@@ -810,7 +811,7 @@ export class AISystem extends EventEmitter {
         }
       }
 
-      if (workZonesWithItems.length > 0 && Math.random() < 0.05) {
+      if (workZonesWithItems.length > 0 && RandomUtils.chance(0.05)) {
         logger.debug(
           `🔧 [AISystem] ${agentId}: found ${workZonesWithItems.length} work zones with items`,
         );
@@ -934,7 +935,7 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    if (Math.random() < 0.02) {
+    if (RandomUtils.chance(0.02)) {
       logger.debug(
         `[AISystem] buildSpatial ${agentId}: food=${result.nearestFood ? "found" : "none"}, water=${result.nearestWater ? "found" : "none"}, resource=${result.nearestResource ? "found" : "none"}`,
       );
@@ -973,7 +974,7 @@ export class AISystem extends EventEmitter {
             x: potentialMate.position.x,
             y: potentialMate.position.y,
           };
-          if (Math.random() < 0.1) {
+          if (RandomUtils.chance(0.1)) {
             logger.debug(
               `💕 [SocialContext] ${agentId} found potentialMate: ${potentialMate.id}`,
             );
@@ -1000,7 +1001,7 @@ export class AISystem extends EventEmitter {
             need: criticalNeed,
             targetZoneId: undefined,
           };
-          if (Math.random() < 0.1) {
+          if (RandomUtils.chance(0.1)) {
             logger.debug(
               `🆘 [SocialContext] ${agentId} found agentInNeed: ${agentInNeed.id} (${criticalNeed})`,
             );
