@@ -1,23 +1,25 @@
 /**
- * SpatialGrid optimizado con TypedArrays para mejor rendimiento
- * Diseñado para procesamiento en batch y fácil migración a GPU
+ * SpatialGrid optimizado para mundos infinitos/procedurales.
+ * Usa Map para celdas dinámicas sin límites de tamaño.
+ * Soporta coordenadas negativas y cualquier rango.
  */
 export class OptimizedSpatialGrid<T = string> {
   private cells: Map<string, Set<T>>;
   private entityPositions: Map<T, { x: number; y: number }>;
   private readonly cellSize: number;
-  private readonly cols: number;
-  private readonly rows: number;
 
   private positionBuffer: Float32Array | null = null;
   private entityIdArray: T[] = [];
   private bufferDirty = true;
   private readonly BATCH_SIZE = 1024;
 
-  constructor(worldWidth: number, worldHeight: number, cellSize: number) {
+  /**
+   * @param _worldWidth - Ignorado (mundo infinito)
+   * @param _worldHeight - Ignorado (mundo infinito)
+   * @param cellSize - Tamaño de cada celda del grid
+   */
+  constructor(_worldWidth: number, _worldHeight: number, cellSize: number) {
     this.cellSize = cellSize;
-    this.cols = Math.ceil(worldWidth / cellSize);
-    this.rows = Math.ceil(worldHeight / cellSize);
     this.cells = new Map();
     this.entityPositions = new Map();
   }

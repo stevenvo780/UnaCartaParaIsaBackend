@@ -147,4 +147,5 @@ export enum GameEventType {
  * Array containing all game event type values.
  * Used for iterating over all event types when setting up listeners.
  */
-export const ALL_GAME_EVENT_TYPES: GameEventType[] = Object.values(GameEventType);
+export const ALL_GAME_EVENT_TYPES: GameEventType[] =
+  Object.values(GameEventType);

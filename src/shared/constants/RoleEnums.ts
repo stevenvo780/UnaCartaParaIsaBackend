@@ -38,37 +38,9 @@ export enum RoleType {
 /**
  * Type representing all possible work shift values.
  */
-export type WorkShiftValue = `${WorkShift}`;
-
-/**
- * Type representing all possible role type values.
- */
-export type RoleTypeValue = `${RoleType}`;
-
-/**
- * Array of all work shifts for iteration.
- */
-export const ALL_WORK_SHIFTS: readonly WorkShift[] = Object.values(
-  WorkShift,
-) as WorkShift[];
-
-/**
- * Type guard to check if a string is a valid WorkShift.
- */
-export function isWorkShift(value: string): value is WorkShift {
-  return Object.values(WorkShift).includes(value as WorkShift);
-}
-
-/**
- * Array of all role types for iteration.
- */
 export const ALL_ROLE_TYPES: readonly RoleType[] = Object.values(
   RoleType,
 ) as RoleType[];
 
-/**
- * Type guard to check if a string is a valid RoleType.
- */
-export function isRoleType(value: string): value is RoleType {
-  return Object.values(RoleType).includes(value as RoleType);
-}
+// Alias/listas/guards innecesarios eliminados; sólo se mantiene `ALL_ROLE_TYPES`
+// porque lo consume RoleSystem para iterar todos los roles disponibles.

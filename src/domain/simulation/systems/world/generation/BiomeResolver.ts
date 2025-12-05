@@ -21,6 +21,14 @@ export class BiomeResolver {
   }
 
   /**
+   * Reset internal state for deterministic chunk generation.
+   * Call this before generating a new chunk to ensure consistent results.
+   */
+  public reset(): void {
+    this.waterBiomesGenerated = 0;
+  }
+
+  /**
    * Resolve biome based on environmental factors.
    * Uses realistic thresholds (Perlin noise centered around 0.5).
    *
@@ -57,13 +65,8 @@ export class BiomeResolver {
       return BiomeType.LAKE;
     }
 
-    if (this.waterBiomesGenerated === 0 && elevation < 0.52) {
-      this.waterBiomesGenerated++;
-      logger.info(
-        `💧 [BiomeResolver] Forced LAKE generation for survival (first water source)`,
-      );
-      return BiomeType.LAKE;
-    }
+    // Note: Removed forced first LAKE logic for deterministic chunk generation
+    // The relaxed LAKE thresholds (elevation < 0.48 && moisture > 0.5) should be sufficient
 
     if (elevation < 0.5 && moisture > 0.55) {
       return BiomeType.WETLAND;
