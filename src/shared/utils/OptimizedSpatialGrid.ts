@@ -263,7 +263,7 @@ export class OptimizedSpatialGrid<T = string> {
 
     return {
       totalEntities: this.entityPositions.size,
-      totalCells: this.cols * this.rows,
+      totalCells: this.cells.size, // Mundo infinito: solo contamos celdas ocupadas
       occupiedCells: this.cells.size,
       avgEntitiesPerCell:
         this.cells.size > 0 ? this.entityPositions.size / this.cells.size : 0,
