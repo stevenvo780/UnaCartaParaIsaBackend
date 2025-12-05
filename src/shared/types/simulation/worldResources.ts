@@ -12,10 +12,6 @@ import { Position } from "../game-types";
  */
 export { WorldResourceType, ResourceState, ResourceInteractionType };
 
-/**
- * @deprecated Use Position from '../game-types' instead. Re-exported for backward compatibility.
- */
-export type { Position };
 
 export interface ResourceYield {
   resourceType: ResourceType;

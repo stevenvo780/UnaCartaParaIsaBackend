@@ -464,7 +464,3 @@ export class EquipmentSystem {
  */
 export const equipmentSystem = new EquipmentSystem();
 
-/**
- * @deprecated Use equipmentSystem instead. Kept for backward compatibility.
- */
-export const toolStorage = equipmentSystem;

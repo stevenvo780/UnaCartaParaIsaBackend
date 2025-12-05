@@ -337,10 +337,7 @@ export interface HandlerExecutionResult {
   data?: Record<string, unknown>;
 }
 
-/**
- * @deprecated Use HandlerExecutionResult instead
- */
-export type ActionResult = HandlerExecutionResult;
+
 
 let taskIdCounter = 0;
 

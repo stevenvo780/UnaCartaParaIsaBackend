@@ -1,9 +1,6 @@
 import { BiomeType } from "../../../../../shared/constants/BiomeEnums";
 
-/**
- * Re-export BiomeType enum for backward compatibility.
- * @deprecated Import from shared/constants/BiomeEnums instead
- */
+// Re-export for module organization
 export { BiomeType };
 
 export interface BiomeDefinition {

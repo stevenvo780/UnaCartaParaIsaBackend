@@ -43,7 +43,7 @@ export class AnimalSystem {
   @inject(TYPES.GameState)
   private gameState!: GameState;
   private config: AnimalSystemConfig;
-  /** @deprecated Use animalRegistry instead - this getter delegates to registry */
+  /** Internal getter delegating to animalRegistry for backward compatibility */
   private get animals(): Map<string, Animal> {
     return this.animalRegistry.getAnimalsMap();
   }
@@ -334,7 +334,7 @@ export class AnimalSystem {
       if (
         isIdleState &&
         i % this.IDLE_UPDATE_DIVISOR !==
-          this.updateFrame % this.IDLE_UPDATE_DIVISOR
+        this.updateFrame % this.IDLE_UPDATE_DIVISOR
       ) {
         continue;
       }

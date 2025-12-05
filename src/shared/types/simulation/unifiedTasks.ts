@@ -15,10 +15,6 @@ import { RandomUtils } from "@/shared/utils/RandomUtils";
 
 import { GoalType, ActionType } from "@/shared/constants/AIEnums";
 
-/**
- * @deprecated Use Position from '../game-types' instead. Re-exported for backward compatibility.
- */
-export type { Position };
 
 /**
  * Unified Task Types

@@ -84,7 +84,7 @@ export class SimulationRunner {
   private readonly emitter = new EventEmitter();
   private readonly commands: SimulationCommand[] = [];
   private readonly maxCommandQueue: number;
-  /** @deprecated Use scheduler instead */
+  /** Legacy tick handle, used only for cleanup in stop() */
   private tickHandle?: NodeJS.Timeout;
   private tickCounter = 0;
   private scheduler: MultiRateScheduler;

@@ -61,7 +61,7 @@ export interface SchedulerHooks {
    */
   postTickHeavy?: () => void;
   /**
-   * @deprecated Use postTickLight for critical work and postTickHeavy for expensive work
+   * Legacy postTick hook - serves as fallback when postTickLight/Heavy are not configured.
    */
   postTick?: () => void;
   /** Returns current entity count for optimization decisions */

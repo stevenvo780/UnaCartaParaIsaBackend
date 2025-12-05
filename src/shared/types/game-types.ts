@@ -115,13 +115,9 @@ export interface Size {
 /**
  * Rectangle with position and size.
  */
-export interface Rect extends Position, Size {}
+export interface Rect extends Position, Size { }
 
-/**
- * Re-export InteractionType enum for backward compatibility.
- * @deprecated Import directly from InteractionEnums instead.
- */
-export { InteractionType } from "../../shared/constants/InteractionEnums";
+
 
 export interface DialogueEntry {
   speaker: string;
@@ -372,11 +368,11 @@ export type KnowledgeNodeData =
   | { type: KnowledgeNodeType.FACT; content: string; category?: string }
   | { type: KnowledgeNodeType.RECIPE; recipeId: string; ingredients: string[] }
   | {
-      type: KnowledgeNodeType.LOCATION;
-      x: number;
-      y: number;
-      zoneId?: string;
-    }
+    type: KnowledgeNodeType.LOCATION;
+    x: number;
+    y: number;
+    zoneId?: string;
+  }
   | { type: KnowledgeNodeType.PERSON; agentId: string; relationship?: string };
 
 export interface KnowledgeGraphState {

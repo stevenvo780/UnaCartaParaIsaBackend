@@ -51,7 +51,6 @@ export { RoleSystem } from "./agents/RoleSystem";
 export {
   EquipmentSystem,
   equipmentSystem,
-  toolStorage,
   TOOL_CATEGORIES,
   ROLE_TOOL_NEEDS,
 } from "./agents/EquipmentSystem";

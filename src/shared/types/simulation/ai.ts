@@ -143,20 +143,3 @@ export interface AgentAction {
   data?: AgentActionData;
   timestamp: number;
 }
-
-/**
- * Legacy AI configuration interface.
- * @deprecated Use AISystemConfig from AISystem.ts for runtime configuration.
- * This interface is kept for backward compatibility with existing code.
- */
-export interface LegacyAISystemConfig {
-  decisionIntervalMs: number;
-  goalTimeoutMs: number;
-  minPriorityThreshold: number;
-  batchSize: number;
-}
-
-/**
- * @deprecated Alias for LegacyAISystemConfig. Use AISystemConfig from AISystem.ts instead.
- */
-export type AISystemConfig = LegacyAISystemConfig;

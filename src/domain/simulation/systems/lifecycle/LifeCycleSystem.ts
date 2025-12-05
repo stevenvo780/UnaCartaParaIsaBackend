@@ -109,7 +109,6 @@ export class LifeCycleSystem extends EventEmitter {
       mortalInterbirthSec: 240,
     };
 
-    this.setupDeathListener();
   }
 
   /**
@@ -138,14 +137,6 @@ export class LifeCycleSystem extends EventEmitter {
     }
   }
 
-  /**
-   * @deprecated Death handling centralized in EventRegistry.
-   * This listener was causing duplicate cleanup. Now EventRegistry
-   * handles AGENT_DEATH and calls cleanupAgentState directly.
-   *
-   * Kept as no-op for backwards compatibility with tests.
-   */
-  private setupDeathListener(): void { }
 
   public setDependencies(systems: {
     needsSystem?: INeedsPort;

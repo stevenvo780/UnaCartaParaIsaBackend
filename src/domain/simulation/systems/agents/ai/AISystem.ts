@@ -90,27 +90,9 @@ export interface AISystemConfig {
 }
 
 /**
- * Estado legacy para compatibilidad con código existente.
- * @deprecated Este tipo se eliminará cuando se refactoricen los consumidores.
+ * Memoria del agente para tracking de zonas, recursos y actividades.
  */
-export interface LegacyAIState {
-  currentGoal: AgentTask | null;
-  pendingTasks: readonly AgentTask[];
-  goalQueue: unknown[];
-  currentAction: { type: string; target?: unknown } | null;
-  offDuty: boolean;
-  lastDecisionTime: number;
-  personality: Record<string, unknown>;
-  memory: LegacyMemory;
-  data: Record<string, unknown>;
-  targetZoneId?: string;
-}
-
-/**
- * Memoria legacy para compatibilidad.
- * @deprecated
- */
-export interface LegacyMemory {
+export interface AIAgentMemory {
   visitedZones: Set<string>;
   knownResources: Map<string, unknown>;
   knownAgents: Map<string, unknown>;
@@ -120,7 +102,6 @@ export interface LegacyMemory {
   socialMemory: Map<string, unknown>;
   shortTerm: unknown[];
   longTerm: unknown[];
-
   knownResourceLocations: Map<string, unknown>;
   successfulActivities: Map<string, unknown>;
   failedAttempts: Map<string, unknown>;
@@ -175,7 +156,7 @@ export class AISystem extends EventEmitter {
   private lastUpdate = new Map<string, number>();
 
   /** Memoria persistente por agente */
-  private agentMemories = new Map<string, LegacyMemory>();
+  private agentMemories = new Map<string, AIAgentMemory>();
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
@@ -229,7 +210,7 @@ export class AISystem extends EventEmitter {
    * Obtiene la memoria persistente de un agente.
    * Crea una nueva si no existe.
    */
-  public getAgentMemory(agentId: string): LegacyMemory {
+  public getAgentMemory(agentId: string): AIAgentMemory {
     let memory = this.agentMemories.get(agentId);
     if (!memory) {
       memory = this.createEmptyMemory();
@@ -273,7 +254,7 @@ export class AISystem extends EventEmitter {
   /**
    * Crea una memoria vacía para un agente.
    */
-  private createEmptyMemory(): LegacyMemory {
+  private createEmptyMemory(): AIAgentMemory {
     return {
       visitedZones: new Set<string>(),
       knownResources: new Map<string, unknown>(),
@@ -1112,95 +1093,6 @@ export class AISystem extends EventEmitter {
   }
 
   /**
-   * @deprecated Use clearAgent()
-   */
-  public removeAgentState(agentId: string): void {
-    this.clearAgent(agentId);
-  }
-
-  /**
-   * @deprecated No longer needed - sync happens automatically
-   */
-  public syncToGameState(): void { }
-
-  /**
-   * @deprecated El nuevo sistema usa tareas, no goals
-   */
-  public setGoal(_agentId: string, _goal: unknown): void { }
-
-  /**
-   * @deprecated El nuevo sistema usa tareas, no goals
-   */
-  public clearGoals(_agentId: string): void {
-    this.clearAgent(_agentId);
-  }
-
-  /**
-   * @deprecated El nuevo sistema usa tareas
-   */
-  public getCurrentGoal(_agentId: string): unknown {
-    return this.activeTask.get(_agentId);
-  }
-
-  /**
-   * @deprecated No longer needed
-   */
-  public restoreAIState(_agentId: string, _state: unknown): void { }
-
-  /**
-   * @deprecated Called internally in constructor
-   */
-  public initialize(): void { }
-
-  /**
-   * @deprecated No longer needed - handled internally
-   */
-  public notifyEntityArrived(_agentId: string, _entityId: string): void { }
-
-
-  /**
-   * @deprecated Use getActiveTask() + getPendingTasks()
-   */
-  public getAIState(agentId: string): LegacyAIState {
-    const task = this.activeTask.get(agentId);
-    const pendingTasks = this.taskQueue.getTasks(agentId);
-
-    const taskData: Record<string, unknown> = {};
-    if (task?.params) {
-      if (task.params.needType) taskData.need = task.params.needType;
-      if (task.params.resourceType)
-        taskData.resourceType = task.params.resourceType;
-      if (task.params.itemId) taskData.itemId = task.params.itemId;
-      if (task.params.amount) taskData.amount = task.params.amount;
-      if (task.params.reason) taskData.reason = task.params.reason;
-    }
-
-    const memory = this.getAgentMemory(agentId);
-
-    return {
-      currentGoal: task ?? null,
-      pendingTasks,
-      goalQueue: [...pendingTasks],
-      currentAction: task ? { type: task.type, target: task.target } : null,
-      offDuty: false,
-      lastDecisionTime: this.lastUpdate.get(agentId) ?? 0,
-      personality: {},
-      memory,
-      data: taskData,
-      targetZoneId: task?.target?.zoneId,
-    };
-  }
-
-  /**
-   * @deprecated Use cancelTask()
-   */
-  public setAgentOffDuty(agentId: string, _offDuty: boolean): void {
-    if (_offDuty) {
-      this.cancelTask(agentId);
-    }
-  }
-
-  /**
    * Determina si es hora de trabajo basándose en el TimeSystem.
    * Horas de trabajo: 6:00 - 18:00 (día completo)
    */
@@ -1224,23 +1116,4 @@ export class AISystem extends EventEmitter {
       return true;
     }
   }
-
-  /**
-   * @deprecated Reevaluación automática por detectores
-   */
-  public forceGoalReevaluation(agentId: string): void {
-    this.runDetectors(agentId);
-  }
-
-  /**
-   * @deprecated Use cancelTask()
-   */
-  public failCurrentGoal(agentId: string): void {
-    const task = this.activeTask.get(agentId);
-    if (task) {
-      this.failTask(agentId, task, "forced_fail");
-    }
-  }
-
-
 }

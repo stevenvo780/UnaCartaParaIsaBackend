@@ -22,11 +22,7 @@ import { WeatherType } from "../../../shared/constants/AmbientEnums";
 import { DialogueTone } from "../../../shared/constants/AmbientEnums";
 import { ActivityType } from "../../../shared/constants/MovementEnums";
 
-/**
- * MaterialType is now ResourceType - use ResourceType instead.
- * @deprecated Use ResourceType from ResourceEnums instead.
- */
-export type MaterialType = ResourceType;
+
 
 /**
  * State container for material resources.
