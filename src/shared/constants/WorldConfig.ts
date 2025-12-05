@@ -1,7 +1,7 @@
 import { EntityStat } from "./EntityEnums";
 import { ZoneID, ZoneType } from "./ZoneEnums";
 
-import { ResourceType } from "@/shared/constants/ResourceEnums";
+import { ResourceType } from "./ResourceEnums";
 export const WORLD_CONFIG = {
   WORLD_WIDTH: 4096,
   WORLD_HEIGHT: 4096,

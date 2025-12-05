@@ -168,20 +168,6 @@ export function isWorkEthic(value: string): value is WorkEthic {
 }
 
 /**
- * Enumeration of reasons for appearance updates.
- * Used to track why an agent's appearance changed.
- */
-export enum AppearanceUpdateReason {
-  AGING = "aging",
-  EQUIPMENT_CHANGE = "equipment_change",
-  INJURY = "injury",
-  HEALING = "healing",
-  CLOTHING_CHANGE = "clothing_change",
-  STATUS_EFFECT = "status_effect",
-  INITIALIZATION = "initialization",
-}
-
-/**
  * Type representing all possible appearance update reason values.
  */
 export type AppearanceUpdateReasonValue = `${AppearanceUpdateReason}`;
