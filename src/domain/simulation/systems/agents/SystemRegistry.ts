@@ -113,6 +113,8 @@ export interface IInventorySystem extends ISystem {
   ): HandlerResult;
   hasItem(agentId: string, itemId: string): boolean;
   getInventorySpace(agentId: string): number;
+  /** Obtiene el inventario completo de un agente */
+  getAgentInventory?(agentId: string): Record<string, number> | undefined;
 }
 
 /**

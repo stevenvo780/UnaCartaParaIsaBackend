@@ -647,14 +647,19 @@ export class AISystem extends EventEmitter {
     let inventoryLoad = 0;
     const inventoryCapacity = 50;
     let depositZoneId: string | undefined;
+    let agentInventory: Record<string, number> = {};
 
     const inventorySystem = this.systemRegistry?.inventory;
     if (inventorySystem) {
       const availableSpace = inventorySystem.getInventorySpace(agentId);
       inventoryLoad = inventoryCapacity - availableSpace;
+      // Obtener el inventario completo del agente
+      agentInventory = inventorySystem.getAgentInventory?.(agentId) ?? {};
     }
 
-    if (inventoryLoad > inventoryCapacity * 0.7 && this.gameState.zones) {
+    // Buscar zona de depósito siempre que haya zonas disponibles
+    // (antes solo se buscaba si el inventario estaba al 70%)
+    if (this.gameState.zones) {
       const storageZone = this.gameState.zones.find(
         (z) => z.type === ZoneType.STORAGE || z.id.includes(ZoneType.STORAGE),
       );
@@ -793,6 +798,8 @@ export class AISystem extends EventEmitter {
       inventoryLoad,
       inventoryCapacity,
       depositZoneId,
+      // Inventario completo del agente para detectar materiales de construcción
+      inventory: Object.keys(agentInventory).length > 0 ? agentInventory : undefined,
       // Equipment & Combat
       hasWeapon,
       equippedWeapon: equippedWeapon ?? WeaponId.UNARMED,

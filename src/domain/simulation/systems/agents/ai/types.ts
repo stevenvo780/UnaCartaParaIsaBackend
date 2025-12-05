@@ -227,6 +227,10 @@ export interface DetectorContext {
   readonly nearestMarketZoneId?: string;
 
   readonly hasExcessResources?: boolean;
+  /** Indica si BuildingSystem necesita recursos (wood/stone) urgentemente */
+  readonly hasBuildingResourceDemand?: boolean;
+  /** Recursos que BuildingSystem necesita */
+  readonly buildingResourceNeeds?: Readonly<{ wood?: number; stone?: number }>;
 
   readonly lastExploreTime?: number;
   readonly visitedZones?: ReadonlySet<string>;
