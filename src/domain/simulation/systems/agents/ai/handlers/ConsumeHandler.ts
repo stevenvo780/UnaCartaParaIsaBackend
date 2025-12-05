@@ -26,9 +26,8 @@ export function handleConsume(
 ): HandlerExecutionResult {
   const { systems, agentId, task, position } = ctx;
 
-  logger.debug(
-    `[ConsumeHandler] ${agentId}: type=${task.type}, target=${JSON.stringify(task.target)}, pos=(${position?.x?.toFixed(0)},${position?.y?.toFixed(0)})`,
-  );
+  const needType = task.params?.needType as string | undefined;
+  const itemId = task.params?.itemId as string | undefined;
 
   if (task.type !== TaskType.SATISFY_NEED) {
     return errorResult("Wrong task type");
@@ -37,9 +36,6 @@ export function handleConsume(
   if (!systems.needs) {
     return errorResult("NeedsSystem not available");
   }
-
-  const needType = task.params?.needType as string | undefined;
-  const itemId = task.params?.itemId as string | undefined;
 
   if (!needType) {
     return errorResult("No need type specified");

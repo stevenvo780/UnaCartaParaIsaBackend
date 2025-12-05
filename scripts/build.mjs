@@ -11,6 +11,11 @@ await esbuild.build({
   // No empaquetar dependencias nativas o problemáticas
   external: [
     '@tensorflow/tfjs-node-gpu',
+    '@tensorflow/tfjs-node',
+    '@mapbox/node-pre-gyp',
+    'mock-aws-s3',
+    'aws-sdk',
+    'nock',
     'ws',
     'ssh2-sftp-client', 
     'cpu-features',

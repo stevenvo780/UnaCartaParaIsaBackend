@@ -108,6 +108,28 @@ export class AnimalSystem {
   private updateFrame = 0;
   private readonly IDLE_UPDATE_DIVISOR = 5;
 
+  /**
+   * Intra-frame cache for hunting/mating radius queries.
+   * Key: "hunt_{x}_{y}_{radius}" or "mate_{x}_{y}"
+   * Cleared at start of each update() call.
+   * Reduces redundant spatial queries within same frame.
+   */
+  private frameQueryCache = new Map<string, Animal[]>();
+  private currentFrameId = 0;
+
+  /**
+   * Per-frame threat detection results.
+   * Populated by processFleeingAnimalsBatch(), consumed by updateAnimalBehavior().
+   * Avoids duplicate threat detection per animal per frame.
+   */
+  private frameThreatResults = new Map<
+    string,
+    {
+      predator: { id: string; position: { x: number; y: number } } | null;
+      human: { id: string; position: { x: number; y: number } } | null;
+    }
+  >();
+
   @inject(TYPES.TerrainSystem as symbol)
   @optional()
   private terrainSystem?: TerrainSystem;
@@ -148,6 +170,10 @@ export class AnimalSystem {
 
   public async update(deltaMs: number): Promise<void> {
     const startTime = performance.now();
+    // Clear intra-frame caches at start of each update
+    this.currentFrameId++;
+    this.frameQueryCache.clear();
+    this.frameThreatResults.clear();
     const now = getFrameTime();
     const deltaSeconds = deltaMs / 1000;
     const deltaMinutes = deltaMs / 60000;
@@ -331,6 +357,7 @@ export class AnimalSystem {
   /**
    * GPU batch processing for fleeing animals.
    * Computes flee vectors for all animals that are fleeing in parallel.
+   * Also caches threat detection results for reuse in updateAnimalBehavior().
    * This is an O(A × T) operation where A = fleeing animals, T = threats.
    */
   private async processFleeingAnimalsBatch(
@@ -349,10 +376,21 @@ export class AnimalSystem {
       const config = getAnimalConfig(animal.type);
       if (!config) continue;
 
+      // Detect threats and cache results for updateAnimalBehavior()
       const nearbyPredator = this.findNearbyPredator(
         animal,
         config.detectionRange,
       );
+      const nearbyHuman = config.fleeFromHumans
+        ? this.findNearbyHuman(animal, config.detectionRange)
+        : null;
+
+      // Store in frame cache for reuse
+      this.frameThreatResults.set(animalId, {
+        predator: nearbyPredator,
+        human: nearbyHuman,
+      });
+
       if (nearbyPredator) {
         animal.state = AnimalState.FLEEING;
         animal.fleeTarget = nearbyPredator.id;
@@ -363,16 +401,13 @@ export class AnimalSystem {
         continue;
       }
 
-      if (config.fleeFromHumans) {
-        const nearbyHuman = this.findNearbyHuman(animal, config.detectionRange);
-        if (nearbyHuman) {
-          animal.state = AnimalState.FLEEING;
-          animal.fleeTarget = nearbyHuman.id;
-          animal.needs.fear = 100;
-          animal.currentTarget = null;
-          animal.targetPosition = null;
-          fleeingAnimals.push({ animal, threatPos: nearbyHuman.position });
-        }
+      if (nearbyHuman) {
+        animal.state = AnimalState.FLEEING;
+        animal.fleeTarget = nearbyHuman.id;
+        animal.needs.fear = 100;
+        animal.currentTarget = null;
+        animal.targetPosition = null;
+        fleeingAnimals.push({ animal, threatPos: nearbyHuman.position });
       }
     }
 
@@ -430,7 +465,10 @@ export class AnimalSystem {
       );
     }
 
-    const nearbyPredator = this.findNearbyPredator(
+    // Use cached threat results from processFleeingAnimalsBatch() if available
+    // This avoids duplicate spatial queries per frame
+    const cachedThreats = this.frameThreatResults.get(animal.id);
+    const nearbyPredator = cachedThreats?.predator ?? this.findNearbyPredator(
       animal,
       config.detectionRange,
     );
@@ -450,7 +488,7 @@ export class AnimalSystem {
     }
 
     if (config.fleeFromHumans) {
-      const nearbyHuman = this.findNearbyHuman(animal, config.detectionRange);
+      const nearbyHuman = cachedThreats?.human ?? this.findNearbyHuman(animal, config.detectionRange);
       if (nearbyHuman) {
         animal.state = AnimalState.FLEEING;
         animal.fleeTarget = nearbyHuman.id;
@@ -474,9 +512,11 @@ export class AnimalSystem {
     if (isHungry || needsHealing) {
       if (config.isPredator) {
         animal.state = AnimalState.HUNTING;
-        const prey = this.getAnimalsInRadius(
+        const huntRadius = config.huntingRange || 200;
+        const prey = this.getAnimalsInRadiusCached(
           animal.position,
-          config.huntingRange || 200,
+          huntRadius,
+          `hunt_${Math.floor(animal.position.x / 50)}_${Math.floor(animal.position.y / 50)}_${huntRadius}`,
         );
         AnimalBehavior.huntPrey(
           animal,
@@ -588,7 +628,12 @@ export class AnimalSystem {
 
     if (animal.needs.reproductiveUrge > 70 && isMature && isHealthyEnough) {
       animal.state = AnimalState.MATING;
-      const mates = this.getAnimalsInRadius(animal.position, 80);
+      // Use grid-cell based cache key for mate searches (80 radius)
+      const mates = this.getAnimalsInRadiusCached(
+        animal.position,
+        80,
+        `mate_${Math.floor(animal.position.x / 50)}_${Math.floor(animal.position.y / 50)}`,
+      );
       AnimalBehavior.attemptReproduction(
         animal,
         mates,
@@ -933,6 +978,37 @@ export class AnimalSystem {
       radius,
       true,
     );
+  }
+
+  /**
+   * Get animals within radius with intra-frame caching.
+   * Uses a grid-cell based cache key to share results between nearby animals.
+   * Cache is cleared at the start of each update() call.
+   *
+   * @param position - Center position for the query
+   * @param radius - Query radius in world units
+   * @param cacheKey - Unique key for this query (grid-cell based for spatial locality)
+   * @returns Array of animals within radius
+   */
+  private getAnimalsInRadiusCached(
+    position: { x: number; y: number },
+    radius: number,
+    cacheKey: string,
+  ): Animal[] {
+    const cached = this.frameQueryCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const result = this.animalRegistry.getAnimalsInRadius(
+      position.x,
+      position.y,
+      radius,
+      true,
+    );
+
+    this.frameQueryCache.set(cacheKey, result);
+    return result;
   }
 
   /**
