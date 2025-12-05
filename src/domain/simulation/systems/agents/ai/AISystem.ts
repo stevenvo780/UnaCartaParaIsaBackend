@@ -657,7 +657,7 @@ export class AISystem extends EventEmitter {
       const availableSpace = inventorySystem.getInventorySpace(agentId);
       inventoryLoad = inventoryCapacity - availableSpace;
 
-      agentInventory = inventorySystem.getAgentInventory?.(agentId) ?? {};
+      agentInventory = (inventorySystem.getAgentInventory?.(agentId) as Record<string, number> | undefined) ?? {};
     }
 
     if (this.gameState.zones) {
@@ -1122,12 +1122,12 @@ export class AISystem extends EventEmitter {
   /**
    * @deprecated Use getStats() instead
    */
-  public syncToGameState(): void {}
+  public syncToGameState(): void { }
 
   /**
    * @deprecated El nuevo sistema usa tareas, no goals
    */
-  public setGoal(_agentId: string, _goal: unknown): void {}
+  public setGoal(_agentId: string, _goal: unknown): void { }
 
   /**
    * @deprecated El nuevo sistema usa tareas, no goals
@@ -1153,12 +1153,12 @@ export class AISystem extends EventEmitter {
   /**
    * @deprecated No longer needed
    */
-  public restoreAIState(_agentId: string, _state: unknown): void {}
+  public restoreAIState(_agentId: string, _state: unknown): void { }
 
   /**
    * @deprecated Called internally in constructor
    */
-  public initialize(): void {}
+  public initialize(): void { }
 
   /**
    * @deprecated Use getActiveTask() + getPendingTasks()
@@ -1247,5 +1247,5 @@ export class AISystem extends EventEmitter {
   /**
    * @deprecated No longer needed - handled internally
    */
-  public notifyEntityArrived(_agentId: string, _entityId: string): void {}
+  public notifyEntityArrived(_agentId: string, _entityId: string): void { }
 }

@@ -87,37 +87,11 @@ export enum ZoneID {
 /**
  * Type representing all possible zone type values.
  */
-export type ZoneTypeValue = `${ZoneType}`;
-
-/**
- * Type representing all possible stockpile type values.
- */
-export type StockpileTypeValue = `${StockpileType}`;
-
 /**
  * Array of all zone types for iteration.
  */
 export const ALL_ZONE_TYPES: readonly ZoneType[] = Object.values(
   ZoneType,
 ) as ZoneType[];
-
-/**
- * Array of all stockpile types for iteration.
- */
-export const ALL_STOCKPILE_TYPES: readonly StockpileType[] = Object.values(
-  StockpileType,
-) as StockpileType[];
-
-/**
- * Type guard to check if a string is a valid ZoneType.
- */
-export function isZoneType(value: string): value is ZoneType {
-  return Object.values(ZoneType).includes(value as ZoneType);
-}
-
-/**
- * Type guard to check if a string is a valid StockpileType.
- */
-export function isStockpileType(value: string): value is StockpileType {
-  return Object.values(StockpileType).includes(value as StockpileType);
-}
+// Alias/listas/guards eliminados; sólo se mantiene `ALL_ZONE_TYPES` que es usado
+// por `shared/types/simulation/zones`.

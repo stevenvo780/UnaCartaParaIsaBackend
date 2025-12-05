@@ -18,12 +18,6 @@ export enum WeaponId {
 }
 
 /**
- * Re-export ItemTier from ItemEnums for backward compatibility.
- * @deprecated Import ItemTier from ItemEnums instead.
- */
-export { ItemTier } from "./ItemEnums";
-
-/**
  * Enumeration of workstation types used in crafting.
  * Workstations are required for certain crafting recipes.
  */

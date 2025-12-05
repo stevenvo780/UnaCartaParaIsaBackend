@@ -7,7 +7,4 @@ export enum Environment {
   TEST = "test",
 }
 
-/**
- * Type representing all possible environment values.
- */
-export type EnvironmentValue = `${Environment}`;
+// Alias eliminado para mantener sólo el enum.
