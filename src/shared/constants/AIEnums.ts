@@ -105,6 +105,20 @@ export enum GoalDomain {
 }
 
 /**
+ * Enumeration of agent priority levels.
+ * Determines how agents prioritize their goals and actions.
+ */
+export enum AgentPriority {
+  SURVIVAL = "survival",
+  NORMAL = "normal",
+  SOCIAL = "social",
+  WORK = "work",
+  COMBAT = "combat",
+  FLEE = "flee",
+  IDLE = "idle",
+}
+
+/**
  * Enumeration of reasons for goals or actions.
  */
 export enum GoalReason {
@@ -197,4 +211,23 @@ export const ALL_GOAL_DOMAINS: readonly GoalDomain[] = Object.values(
  */
 export function isGoalDomain(value: string): value is GoalDomain {
   return Object.values(GoalDomain).includes(value as GoalDomain);
+}
+
+/**
+ * Type representing all possible agent priority values.
+ */
+export type AgentPriorityValue = `${AgentPriority}`;
+
+/**
+ * Array of all agent priorities for iteration.
+ */
+export const ALL_AGENT_PRIORITIES: readonly AgentPriority[] = Object.values(
+  AgentPriority,
+) as AgentPriority[];
+
+/**
+ * Type guard to check if a string is a valid AgentPriority.
+ */
+export function isAgentPriority(value: string): value is AgentPriority {
+  return Object.values(AgentPriority).includes(value as AgentPriority);
 }

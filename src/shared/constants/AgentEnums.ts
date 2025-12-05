@@ -63,6 +63,20 @@ export enum WorkEthic {
 }
 
 /**
+ * Enumeration of appearance update reasons.
+ * Defines why an agent's appearance might change.
+ */
+export enum AppearanceUpdateReason {
+  AGING = "aging",
+  EQUIPMENT_CHANGE = "equipment_change",
+  STATUS_CHANGE = "status_change",
+  DAMAGE = "damage",
+  HEALING = "healing",
+  MOOD_CHANGE = "mood_change",
+  INITIAL = "initial",
+}
+
+/**
  * Type representing all possible sex values.
  */
 export type SexValue = `${Sex}`;

@@ -17,9 +17,57 @@ export enum LogLevel {
 }
 
 /**
+ * Enumeration of log categories for identifying which system generated the log.
+ * Useful for filtering and analyzing behavior by subsystem.
+ */
+export enum LogCategory {
+  /** Core simulation runner and scheduler */
+  SIMULATION = "simulation",
+  /** AI decision-making and behavior trees */
+  AI = "ai",
+  /** Agent movement and pathfinding */
+  MOVEMENT = "movement",
+  /** Combat and conflict resolution */
+  COMBAT = "combat",
+  /** Social interactions and relationships */
+  SOCIAL = "social",
+  /** Economy, trading, and resources */
+  ECONOMY = "economy",
+  /** World generation and terrain */
+  WORLD = "world",
+  /** Item generation and inventory */
+  ITEMS = "items",
+  /** Animal behavior and spawning */
+  ANIMALS = "animals",
+  /** Needs system (hunger, energy, etc.) */
+  NEEDS = "needs",
+  /** Lifecycle events (birth, death, aging) */
+  LIFECYCLE = "lifecycle",
+  /** Buildings and construction */
+  BUILDINGS = "buildings",
+  /** Governance and political systems */
+  GOVERNANCE = "governance",
+  /** Storage and persistence */
+  STORAGE = "storage",
+  /** Chunk loading and streaming */
+  CHUNKS = "chunks",
+  /** GPU compute operations */
+  GPU = "gpu",
+  /** General/uncategorized logs */
+  GENERAL = "general",
+  /** Performance metrics and profiling */
+  PERFORMANCE = "performance",
+}
+
+/**
  * Type representing all possible log level values.
  */
 export type LogLevelValue = `${LogLevel}`;
+
+/**
+ * Type representing all possible log category values.
+ */
+export type LogCategoryValue = `${LogCategory}`;
 
 /**
  * Array of all log levels for iteration.
@@ -29,8 +77,22 @@ export const ALL_LOG_LEVELS: readonly LogLevel[] = Object.values(
 ) as LogLevel[];
 
 /**
+ * Array of all log categories for iteration.
+ */
+export const ALL_LOG_CATEGORIES: readonly LogCategory[] = Object.values(
+  LogCategory,
+) as LogCategory[];
+
+/**
  * Type guard to check if a string is a valid LogLevel.
  */
 export function isLogLevel(value: string): value is LogLevel {
   return Object.values(LogLevel).includes(value as LogLevel);
+}
+
+/**
+ * Type guard to check if a string is a valid LogCategory.
+ */
+export function isLogCategory(value: string): value is LogCategory {
+  return Object.values(LogCategory).includes(value as LogCategory);
 }
