@@ -17,7 +17,7 @@ import { AnimalBatchProcessor } from "./AnimalBatchProcessor";
 import { getFrameTime } from "../../../../../shared/FrameTime";
 import { performance } from "node:perf_hooks";
 import { performanceMonitor } from "../../../core/PerformanceMonitor";
-import { SIM_CONSTANTS } from "../../../../../shared/constants/SimulationConstants";
+import { SIMULATION_CONSTANTS } from "../../../../../shared/constants/SimulationConstants";
 import { TileType } from "../../../../../shared/constants/TileTypeEnums";
 import { AnimalState } from "../../../../../shared/constants/AnimalEnums";
 import { AnimalRegistry } from "../../world/animals/AnimalRegistry";
@@ -26,10 +26,10 @@ import { WorldResourceType } from "../../../../../shared/constants/ResourceEnums
 import { RandomUtils } from "@/shared/utils/RandomUtils";
 
 const DEFAULT_CONFIG: AnimalSystemConfig = {
-  maxAnimals: SIM_CONSTANTS.MAX_ANIMALS,
-  spawnRadius: SIM_CONSTANTS.SPAWN_RADIUS,
+  maxAnimals: SIMULATION_CONSTANTS.ANIMALS.MAX_ANIMALS,
+  spawnRadius: SIMULATION_CONSTANTS.SPATIAL.SPAWN_RADIUS,
   updateInterval: 50,
-  cleanupInterval: SIM_CONSTANTS.ANIMAL_CLEANUP_INTERVAL,
+  cleanupInterval: SIMULATION_CONSTANTS.TIMING.ANIMAL_CLEANUP_INTERVAL_MS,
 };
 
 import { injectable, inject, optional, postConstruct } from "inversify";
@@ -334,7 +334,7 @@ export class AnimalSystem {
       if (
         isIdleState &&
         i % this.IDLE_UPDATE_DIVISOR !==
-        this.updateFrame % this.IDLE_UPDATE_DIVISOR
+          this.updateFrame % this.IDLE_UPDATE_DIVISOR
       ) {
         continue;
       }

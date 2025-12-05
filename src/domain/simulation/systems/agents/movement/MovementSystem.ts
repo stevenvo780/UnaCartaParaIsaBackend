@@ -25,7 +25,7 @@ import {
 import { MovementBatchProcessor } from "./MovementBatchProcessor";
 import { ActivityType } from "../../../../../shared/constants/MovementEnums";
 import { ActionType } from "../../../../../shared/constants/AIEnums";
-import { SIM_CONSTANTS } from "../../../../../shared/constants/SimulationConstants";
+import { SIMULATION_CONSTANTS } from "../../../../../shared/constants/SimulationConstants";
 import { TerrainSystem } from "../../world/TerrainSystem";
 import { MapElementType } from "../../../../../shared/constants/MapElementEnums";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
@@ -93,7 +93,8 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
   private pathfinder: EasyStar.js;
 
   private zoneDistanceCache = new Map<string, ZoneDistance>();
-  private readonly gridSize = SIM_CONSTANTS.PATHFINDING_GRID_SIZE;
+  private readonly gridSize =
+    SIMULATION_CONSTANTS.MOVEMENT.PATHFINDING_GRID_SIZE;
   private gridWidth: number;
   private gridHeight: number;
   private occupiedTiles = new Set<string>();
@@ -161,7 +162,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     this.pathfinder.setAcceptableTiles([0]);
     this.pathfinder.enableDiagonals();
     this.pathfinder.setIterationsPerCalculation(
-      SIM_CONSTANTS.PATHFINDING_MAX_ITERATIONS,
+      SIMULATION_CONSTANTS.MOVEMENT.PATHFINDING_MAX_ITERATIONS,
     );
 
     const worldWidthPx =
@@ -270,8 +271,8 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
             estimatedTime: estimateTravelTime(
               distance,
               0,
-              SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
-              SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+              SIMULATION_CONSTANTS.MOVEMENT.BASE_SPEED,
+              SIMULATION_CONSTANTS.MOVEMENT.FATIGUE_PENALTY_MULTIPLIER,
             ),
             distance,
           });
@@ -418,10 +419,12 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     const ageSpeedMultiplier = 1.0;
     const fatigueMultiplier =
       1 /
-      (1 + (state.fatigue / 100) * SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER);
+      (1 +
+        (state.fatigue / 100) *
+          SIMULATION_CONSTANTS.MOVEMENT.FATIGUE_PENALTY_MULTIPLIER);
 
     const effectiveSpeed =
-      SIM_CONSTANTS.BASE_MOVEMENT_SPEED *
+      SIMULATION_CONSTANTS.MOVEMENT.BASE_SPEED *
       ageSpeedMultiplier *
       fatigueMultiplier;
 
@@ -644,8 +647,8 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
         const travelTime = estimateTravelTime(
           pathResult.distance,
           state.fatigue,
-          SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
-          SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+          SIMULATION_CONSTANTS.MOVEMENT.BASE_SPEED,
+          SIMULATION_CONSTANTS.MOVEMENT.FATIGUE_PENALTY_MULTIPLIER,
         );
 
         state.isMoving = true;
@@ -685,8 +688,8 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     const travelTime = estimateTravelTime(
       distance,
       state.fatigue,
-      SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
-      SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+      SIMULATION_CONSTANTS.MOVEMENT.BASE_SPEED,
+      SIMULATION_CONSTANTS.MOVEMENT.FATIGUE_PENALTY_MULTIPLIER,
     );
 
     const now = Date.now();
@@ -831,8 +834,8 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
         estimatedTime: estimateTravelTime(
           distance,
           0,
-          SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
-          SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+          SIMULATION_CONSTANTS.MOVEMENT.BASE_SPEED,
+          SIMULATION_CONSTANTS.MOVEMENT.FATIGUE_PENALTY_MULTIPLIER,
         ),
         distance,
       };
@@ -865,7 +868,12 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
 
     return new Promise((resolve) => {
       // Crear grid local para esta área específica
-      const localGrid = this.createLocalGrid(minGridX, minGridY, localGridWidth, localGridHeight);
+      const localGrid = this.createLocalGrid(
+        minGridX,
+        minGridY,
+        localGridWidth,
+        localGridHeight,
+      );
       this.pathfinder.setGrid(localGrid);
 
       const startTime = performance.now();
@@ -903,8 +911,8 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
               estimatedTime: estimateTravelTime(
                 pathDistance,
                 0,
-                SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
-                SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+                SIMULATION_CONSTANTS.MOVEMENT.BASE_SPEED,
+                SIMULATION_CONSTANTS.MOVEMENT.FATIGUE_PENALTY_MULTIPLIER,
               ),
               distance: pathDistance,
             };
@@ -919,8 +927,8 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
               estimatedTime: estimateTravelTime(
                 distance,
                 0,
-                SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
-                SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+                SIMULATION_CONSTANTS.MOVEMENT.BASE_SPEED,
+                SIMULATION_CONSTANTS.MOVEMENT.FATIGUE_PENALTY_MULTIPLIER,
               ),
               distance,
             });
@@ -1047,8 +1055,8 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
         const travelTime = estimateTravelTime(
           distance,
           0,
-          SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
-          SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+          SIMULATION_CONSTANTS.MOVEMENT.BASE_SPEED,
+          SIMULATION_CONSTANTS.MOVEMENT.FATIGUE_PENALTY_MULTIPLIER,
         );
         const difficulty: Difficulty =
           assessRouteDifficultyByDistance(distance);
@@ -1090,20 +1098,24 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     }
 
     if (
-      (state.lastIdleWander || 0) + SIM_CONSTANTS.IDLE_WANDER_COOLDOWN_MS >
+      (state.lastIdleWander || 0) +
+        SIMULATION_CONSTANTS.MOVEMENT.IDLE_WANDER_COOLDOWN_MS >
       now
     ) {
       return;
     }
 
-    if (!RandomUtils.chance(SIM_CONSTANTS.IDLE_WANDER_PROBABILITY)) return;
+    if (
+      !RandomUtils.chance(SIMULATION_CONSTANTS.MOVEMENT.IDLE_WANDER_PROBABILITY)
+    )
+      return;
 
     const radius: number =
-      SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN +
+      SIMULATION_CONSTANTS.MOVEMENT.IDLE_WANDER_RADIUS_MIN +
       RandomUtils.floatRange(
         0,
-        SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX -
-          SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN,
+        SIMULATION_CONSTANTS.MOVEMENT.IDLE_WANDER_RADIUS_MAX -
+          SIMULATION_CONSTANTS.MOVEMENT.IDLE_WANDER_RADIUS_MIN,
       );
 
     const angle = RandomUtils.floatRange(0, Math.PI * 2);
