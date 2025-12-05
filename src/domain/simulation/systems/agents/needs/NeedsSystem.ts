@@ -83,6 +83,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     }
   >();
   private readonly ZONE_CACHE_TTL = 15000;
+  private readonly MAX_ZONE_CACHE_SIZE = 200;
   private _tickCounter = 0;
   private gpuService?: GPUComputeService;
 
@@ -646,6 +647,15 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
   private cleanZoneCache(now: number): void {
     for (const [key, cache] of this.zoneCache.entries()) {
       if (now - cache.timestamp > this.ZONE_CACHE_TTL) {
+        this.zoneCache.delete(key);
+      }
+    }
+    // LRU eviction if cache exceeds max size
+    if (this.zoneCache.size > this.MAX_ZONE_CACHE_SIZE) {
+      const entries = Array.from(this.zoneCache.entries())
+        .sort((a, b) => a[1].timestamp - b[1].timestamp);
+      const toDelete = entries.slice(0, this.zoneCache.size - this.MAX_ZONE_CACHE_SIZE);
+      for (const [key] of toDelete) {
         this.zoneCache.delete(key);
       }
     }

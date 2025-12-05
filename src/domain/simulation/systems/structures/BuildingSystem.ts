@@ -15,7 +15,7 @@ import type { InventorySystem } from "../economy/InventorySystem";
 import { logger } from "../../../../infrastructure/utils/logger";
 import { ZoneType } from "../../../../shared/constants/ZoneEnums";
 import { BuildingType } from "../../../../shared/constants/BuildingEnums";
-import { SystemStatus } from "../../../../shared/constants/SystemEnums";
+import { SystemStatus, SystemName } from "../../../../shared/constants/SystemEnums";
 import { ZoneConstructionStatus } from "../../../../shared/constants/StatusEnums";
 import { TileType } from "../../../../shared/constants/TileTypeEnums";
 import { ResourceType } from "../../../../shared/constants/ResourceEnums";
@@ -939,7 +939,7 @@ export class BuildingSystem implements IBuildingSystem {
     if (!cost) {
       return {
         status: HandlerResultStatus.FAILED,
-        system: "building",
+        system: SystemName.BUILDING,
         message: `Unknown building type: ${buildingType}`,
       };
     }
@@ -948,14 +948,14 @@ export class BuildingSystem implements IBuildingSystem {
     if (!started) {
       return {
         status: HandlerResultStatus.FAILED,
-        system: "building",
+        system: SystemName.BUILDING,
         message: `Failed to start construction of ${buildingType} - insufficient resources or invalid position`,
       };
     }
 
     return {
       status: HandlerResultStatus.IN_PROGRESS,
-      system: "building",
+      system: SystemName.BUILDING,
       message: `Started construction of ${buildingType}`,
       data: { buildingType, position },
     };
@@ -971,7 +971,7 @@ export class BuildingSystem implements IBuildingSystem {
     if (!zone) {
       return {
         status: HandlerResultStatus.FAILED,
-        system: "building",
+        system: SystemName.BUILDING,
         message: `Building not found: ${buildingId}`,
       };
     }
@@ -980,7 +980,7 @@ export class BuildingSystem implements IBuildingSystem {
     if (!buildingState) {
       return {
         status: HandlerResultStatus.FAILED,
-        system: "building",
+        system: SystemName.BUILDING,
         message: "Building has no state to repair",
       };
     }
@@ -988,7 +988,7 @@ export class BuildingSystem implements IBuildingSystem {
     if (buildingState.durability >= buildingState.maxDurability) {
       return {
         status: HandlerResultStatus.COMPLETED,
-        system: "building",
+        system: SystemName.BUILDING,
         message: "Building is already at max durability",
       };
     }
@@ -997,14 +997,14 @@ export class BuildingSystem implements IBuildingSystem {
     if (!repaired) {
       return {
         status: HandlerResultStatus.FAILED,
-        system: "building",
+        system: SystemName.BUILDING,
         message: "Failed to repair - insufficient resources or inventory",
       };
     }
 
     return {
       status: HandlerResultStatus.COMPLETED,
-      system: "building",
+      system: SystemName.BUILDING,
       message: `Repaired building`,
       data: {
         newDurability: buildingState.durability,

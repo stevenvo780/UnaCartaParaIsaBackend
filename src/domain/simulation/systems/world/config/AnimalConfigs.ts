@@ -214,7 +214,7 @@ export const ANIMAL_CONFIGS: Record<string, AnimalConfig> = {
     huntingRange: 250,
     attackDamage: 20,
 
-    spawnProbability: 0.05,
+    spawnProbability: 0.15,
     suitableBiomes: ["forest", BiomeType.MYSTICAL],
     groupSize: { min: 1, max: 3 },
     minDistanceBetweenGroups: 500,

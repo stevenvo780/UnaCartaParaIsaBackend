@@ -31,6 +31,7 @@ import { MapElementType } from "../../../../../shared/constants/MapElementEnums"
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 import { WorldEntityType } from "@/shared/constants/ResourceEnums";
 import { SystemName } from "@/shared/constants/SystemEnums";
+import { EntityType } from "@/shared/constants/EntityEnums";
 
 export interface EntityMovementState {
   entityId: string;
@@ -105,6 +106,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
   >();
   private readonly GRID_CACHE_DURATION = 30000;
   private readonly PATH_CACHE_DURATION = 30000;
+  private readonly MAX_PATH_CACHE_SIZE = 500;
   private lastCacheCleanup: number = 0;
   private entitiesDirty = true;
 
@@ -1033,7 +1035,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     const type = element.type || "";
     return (
       type === MapElementType.OBSTACLE ||
-      type === "building" ||
+      type === EntityType.BUILDING ||
       type === WorldEntityType.ROCK ||
       type === WorldEntityType.TREE
     );
@@ -1120,6 +1122,15 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
   private cleanupOldCache(now: number): void {
     for (const [key, cached] of this.pathCache.entries()) {
       if (now - cached.timestamp > this.PATH_CACHE_DURATION) {
+        this.pathCache.delete(key);
+      }
+    }
+    // LRU eviction if cache exceeds max size
+    if (this.pathCache.size > this.MAX_PATH_CACHE_SIZE) {
+      const entries = Array.from(this.pathCache.entries())
+        .sort((a, b) => a[1].timestamp - b[1].timestamp);
+      const toDelete = entries.slice(0, this.pathCache.size - this.MAX_PATH_CACHE_SIZE);
+      for (const [key] of toDelete) {
         this.pathCache.delete(key);
       }
     }

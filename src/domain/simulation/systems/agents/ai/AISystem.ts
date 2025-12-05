@@ -929,17 +929,6 @@ export class AISystem extends EventEmitter {
             y: nearestRock.position.y,
             type: nearestRock.resourceType,
           };
-          if (Math.random() < 0.1) {
-            logger.debug(
-              `🪨 [AISystem] ${agentId}: Found nearestStone at (${nearestRock.position.x}, ${nearestRock.position.y}) dist=${nearestRock.distance.toFixed(0)}`,
-            );
-          }
-        } else {
-          if (Math.random() < 0.05) {
-            logger.debug(
-              `🪨 [AISystem] ${agentId}: No nearestStone found. demand.stone=${resourceDemand.stone}, rockFound=${!!nearestRock}, dist=${nearestRock?.distance?.toFixed(0) ?? "N/A"}`,
-            );
-          }
         }
       }
     }

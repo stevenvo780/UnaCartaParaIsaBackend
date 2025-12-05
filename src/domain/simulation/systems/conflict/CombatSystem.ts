@@ -72,6 +72,7 @@ import { SocialStatus } from "../../../../shared/constants/AgentEnums";
 import { ActionType } from "../../../../shared/constants/AIEnums";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 import { GoalDomain } from "@/shared/constants/AIEnums";
+import { SystemName } from "@/shared/constants/SystemEnums";
 
 /**
  * System for managing combat between entities.
@@ -866,7 +867,7 @@ export class CombatSystem implements ICombatSystem {
     if (distSq > rangeSq) {
       return {
         status: HandlerResultStatus.DELEGATED,
-        system: "movement",
+        system: SystemName.MOVEMENT,
         message: "Target out of range, moving closer",
         data: { targetPosition: target.position },
       };
@@ -979,7 +980,7 @@ export class CombatSystem implements ICombatSystem {
 
       return {
         status: HandlerResultStatus.DELEGATED,
-        system: "movement",
+        system: SystemName.MOVEMENT,
         message: "Fleeing in random direction",
         data: { target: fleeTarget },
       };
@@ -993,7 +994,7 @@ export class CombatSystem implements ICombatSystem {
 
     return {
       status: HandlerResultStatus.DELEGATED,
-      system: "movement",
+      system: SystemName.MOVEMENT,
       message: "Fleeing from threat",
       data: { target: fleeTarget, fromPosition },
     };
