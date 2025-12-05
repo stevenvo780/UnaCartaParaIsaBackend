@@ -36,7 +36,7 @@ export enum RoleType {
 }
 
 /**
- * Type representing all possible work shift values.
+ * Helper con la lista completa de roles disponibles.
  */
 export const ALL_ROLE_TYPES: readonly RoleType[] = Object.values(
   RoleType,

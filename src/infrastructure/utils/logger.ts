@@ -162,8 +162,11 @@ class Logger {
     const flushAndExit = async (): Promise<void> => {
       try {
         await this.flush();
-      } catch {
-        console.error("Failed to flush logs on exit.");
+      } catch (error) {
+        console.error(
+          "Failed to flush logs on exit:",
+          error instanceof Error ? error.message : String(error),
+        );
       }
     };
     process.on("beforeExit", flushAndExit);
@@ -682,7 +685,11 @@ class Logger {
             f.startsWith("logs") &&
             (f.endsWith(".json") || f.endsWith(".jsonl")),
         );
-    } catch {
+    } catch (error) {
+      console.error(
+        "Failed to list log files:",
+        error instanceof Error ? error.message : String(error),
+      );
       return [];
     }
   }

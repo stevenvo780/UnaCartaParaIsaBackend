@@ -45,7 +45,8 @@ export class WorldResourceSystem {
       this.gameState.worldResources = {};
     }
 
-    this.spatialGrid = new OptimizedSpatialGrid(3200, 3200, 100);
+    // Mundo procedural infinito - los parámetros de tamaño se ignoran
+    this.spatialGrid = new OptimizedSpatialGrid(0, 0, 100);
 
     if (this.gameState.worldResources) {
       for (const resource of Object.values(this.gameState.worldResources)) {

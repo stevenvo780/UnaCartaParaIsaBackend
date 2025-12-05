@@ -164,11 +164,13 @@ describe("CombatSystem", () => {
     expect(enemies).toContain("target");
   });
 
-  it("update emite eventos de combate y elimina al objetivo cuando la salud llega a cero", () => {
+  it("update emite eventos de combate y elimina al objetivo cuando la salud llega a cero", async () => {
     vi.spyOn(Math, "random").mockReturnValue(0);
 
-    vi.setSystemTime(1000);
-    combatSystem.update(0);
+    // El cooldown base es 4000ms, así que necesitamos estar al menos 4000ms después del tiempo inicial (0)
+    vi.setSystemTime(5000);
+    
+    await combatSystem.update(0);
 
     expect(emitSpy).toHaveBeenCalledWith(
       GameEventNames.COMBAT_HIT,

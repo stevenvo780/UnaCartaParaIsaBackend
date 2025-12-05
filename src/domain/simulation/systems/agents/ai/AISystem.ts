@@ -740,8 +740,11 @@ export class AISystem extends EventEmitter {
       const roleSystem = container.get<RoleSystem>(TYPES.RoleSystem);
       const agentRole = roleSystem.getAgentRole(agentId);
       roleType = agentRole?.roleType;
-    } catch {
-      // RoleSystem might not be available, roleType will remain undefined
+    } catch (error) {
+      logger.debug("RoleSystem not available for agent context", {
+        agentId,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
 
     const craftingSystem = this.systemRegistry?.crafting;
@@ -1214,7 +1217,13 @@ export class AISystem extends EventEmitter {
       const hour = currentTime.hour;
 
       return hour >= 6 && hour < 18;
-    } catch {
+    } catch (error) {
+      logger.debug(
+        "Failed to get current time from TimeSystem, assuming work hours",
+        {
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
       return true;
     }
   }

@@ -19,7 +19,6 @@ export enum StorageStatus {
 /**
  * Type representing all possible storage status values.
  */
-export type StorageStatusValue = `${StorageStatus}`;
 
 /**
  * Enumeration of storage backend types.
@@ -32,7 +31,6 @@ export enum StorageType {
 /**
  * Type representing all possible storage type values.
  */
-export type StorageTypeValue = `${StorageType}`;
 
 /**
  * Enumeration of storage file prefixes.
@@ -44,7 +42,6 @@ export enum StorageFilePrefix {
 /**
  * Type representing all possible storage file prefix values.
  */
-export type StorageFilePrefixValue = `${StorageFilePrefix}`;
 
 /**
  * Enumeration of handler result status values for ECS handler compatibility.
@@ -60,7 +57,6 @@ export enum HandlerResultStatus {
 /**
  * Type representing all possible handler result status values.
  */
-export type HandlerResultStatusValue = `${HandlerResultStatus}`;
 
 /**
  * Enumeration of world generation status values.
@@ -73,7 +69,6 @@ export enum WorldGenerationStatus {
 /**
  * Type representing all possible world generation status values.
  */
-export type WorldGenerationStatusValue = `${WorldGenerationStatus}`;
 
 /**
  * Enumeration of zone construction status values.
@@ -86,83 +81,28 @@ export enum ZoneConstructionStatus {
 /**
  * Type representing all possible zone construction status values.
  */
-export type ZoneConstructionStatusValue = `${ZoneConstructionStatus}`;
 
 /**
  * Array of all storage status values for iteration.
  */
-export const ALL_STORAGE_STATUSES: readonly StorageStatus[] = Object.values(
-  StorageStatus,
-) as StorageStatus[];
 
 /**
  * Array of all storage types for iteration.
  */
-export const ALL_STORAGE_TYPES: readonly StorageType[] = Object.values(
-  StorageType,
-) as StorageType[];
 
 /**
  * Array of all world generation statuses for iteration.
  */
-export const ALL_WORLD_GENERATION_STATUSES: readonly WorldGenerationStatus[] =
-  Object.values(WorldGenerationStatus) as WorldGenerationStatus[];
 
 /**
  * Array of all handler result statuses for iteration.
  */
-export const ALL_HANDLER_RESULT_STATUSES: readonly HandlerResultStatus[] =
-  Object.values(HandlerResultStatus) as HandlerResultStatus[];
 
 /**
  * Array of all zone construction statuses for iteration.
  */
-export const ALL_ZONE_CONSTRUCTION_STATUSES: readonly ZoneConstructionStatus[] =
-  Object.values(ZoneConstructionStatus) as ZoneConstructionStatus[];
 
 /**
  * Type guard to check if a string is a valid StorageStatus.
  */
-export function isStorageStatus(value: string): value is StorageStatus {
-  return Object.values(StorageStatus).includes(value as StorageStatus);
-}
-
-/**
- * Type guard to check if a string is a valid StorageType.
- */
-export function isStorageType(value: string): value is StorageType {
-  return Object.values(StorageType).includes(value as StorageType);
-}
-
-/**
- * Type guard to check if a string is a valid WorldGenerationStatus.
- */
-export function isWorldGenerationStatus(
-  value: string,
-): value is WorldGenerationStatus {
-  return Object.values(WorldGenerationStatus).includes(
-    value as WorldGenerationStatus,
-  );
-}
-
-/**
- * Type guard to check if a string is a valid ZoneConstructionStatus.
- */
-export function isZoneConstructionStatus(
-  value: string,
-): value is ZoneConstructionStatus {
-  return Object.values(ZoneConstructionStatus).includes(
-    value as ZoneConstructionStatus,
-  );
-}
-
-/**
- * Type guard to check if a string is a valid HandlerResultStatus.
- */
-export function isHandlerResultStatus(
-  value: string,
-): value is HandlerResultStatus {
-  return Object.values(HandlerResultStatus).includes(
-    value as HandlerResultStatus,
-  );
-}
+// Alias/listas/guards eliminados; únicamente se conservan los enums reales.

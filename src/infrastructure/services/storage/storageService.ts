@@ -334,7 +334,10 @@ export class StorageService {
     try {
       const parsed: unknown = JSON.parse(rawContent);
       return this.isSaveData(parsed) ? parsed : null;
-    } catch {
+    } catch (error) {
+      logger.debug("Failed to parse save data", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return null;
     }
   }

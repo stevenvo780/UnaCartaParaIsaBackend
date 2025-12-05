@@ -47,18 +47,4 @@ export enum ZoneSpriteKey {
 /**
  * Type representing all possible zone sprite key values.
  */
-export type ZoneSpriteKeyValue = `${ZoneSpriteKey}`;
-
-/**
- * Array of all zone sprite keys for iteration.
- */
-export const ALL_ZONE_SPRITE_KEYS: readonly ZoneSpriteKey[] = Object.values(
-  ZoneSpriteKey,
-) as ZoneSpriteKey[];
-
-/**
- * Type guard to check if a string is a valid ZoneSpriteKey.
- */
-export function isZoneSpriteKey(value: string): value is ZoneSpriteKey {
-  return Object.values(ZoneSpriteKey).includes(value as ZoneSpriteKey);
-}
+// Alias/listas/guard eliminados para mantener sólo los sprite keys.

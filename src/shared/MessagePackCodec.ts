@@ -44,7 +44,11 @@ export function decodeMessage<T>(raw: string | Buffer | ArrayBuffer): T {
 
   try {
     return decode(buffer) as T;
-  } catch {
+  } catch (error) {
+    console.error(
+      "Failed to decode MessagePack, falling back to JSON:",
+      error instanceof Error ? error.message : String(error),
+    );
     return JSON.parse(buffer.toString()) as T;
   }
 }

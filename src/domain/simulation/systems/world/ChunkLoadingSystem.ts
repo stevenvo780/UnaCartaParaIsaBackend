@@ -56,6 +56,38 @@ export class ChunkLoadingSystem {
   }
 
   /**
+   * Create a default infinite world configuration
+   */
+  private createDefaultInfiniteWorldConfig(): WorldGenConfig {
+    return {
+      width: 1000000, // Valor grande pero Map soporta infinito
+      height: 1000000,
+      tileSize: 32,
+      seed: Date.now(),
+      noise: {
+        temperature: {
+          scale: 0.0005,
+          octaves: 4,
+          persistence: 0.5,
+          lacunarity: 2.0,
+        },
+        moisture: {
+          scale: 0.0005,
+          octaves: 3,
+          persistence: 0.6,
+          lacunarity: 2.0,
+        },
+        elevation: {
+          scale: 0.0005,
+          octaves: 5,
+          persistence: 0.4,
+          lacunarity: 2.0,
+        },
+      },
+    };
+  }
+
+  /**
    * Update the chunk loading system
    * Periodically checks agent positions and loads nearby chunks
    */
@@ -68,9 +100,12 @@ export class ChunkLoadingSystem {
 
     this.lastCheckTime = now;
 
+    // Auto-initialize with infinite world config if not set
     if (!this.worldConfig) {
-      logger.debug(`[ChunkLoadingSystem] update: no worldConfig, skipping`);
-      return;
+      logger.info(
+        `[ChunkLoadingSystem] Auto-initializing with infinite world config`,
+      );
+      this.worldConfig = this.createDefaultInfiniteWorldConfig();
     }
 
     const agentSource = this.agentRegistry

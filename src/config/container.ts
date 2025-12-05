@@ -217,11 +217,9 @@ container
 container
   .bind<SharedSpatialIndex>(TYPES.SharedSpatialIndex)
   .toDynamicValue(() => {
-    // Mundo procedural infinito - usar valores grandes por defecto
-    // El grid usa Map internamente, así que puede crecer dinámicamente
-    const worldWidth = 50000; // ~50k pixels, suficiente para muchos chunks
-    const worldHeight = 50000;
-    return new SharedSpatialIndex(worldWidth, worldHeight, 70);
+    // Mundo procedural INFINITO - OptimizedSpatialGrid ahora soporta cualquier coordenada
+    // Los parámetros de tamaño se ignoran (legacy), solo el cellSize es relevante
+    return new SharedSpatialIndex(0, 0, 70);
   })
   .inSingletonScope();
 

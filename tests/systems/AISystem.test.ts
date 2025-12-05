@@ -367,8 +367,9 @@ describe("AISystem v4", () => {
         vi.advanceTimersByTime(600);
         try {
           batchSystem.update(600);
-        } catch {
-          // Ignorar errores de dependencias faltantes
+        } catch (error) {
+          // Ignorar errores de dependencias faltantes en tests
+          console.error("Batch update error (expected in tests):", error instanceof Error ? error.message : String(error));
         }
       }
       

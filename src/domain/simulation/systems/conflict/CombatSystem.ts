@@ -246,18 +246,29 @@ export class CombatSystem implements ICombatSystem {
             radius,
             EntityType.ALL,
           );
+          logger.debug(
+            `attacker=${attacker.id}, queryRadius results`,
+            { results },
+          );
           nearby = results
             .filter((candidate) => candidate.entity !== attacker.id)
             .map((candidate) => entitiesById.get(candidate.entity))
             .filter((candidate): candidate is SimulationEntity =>
               Boolean(candidate && !candidate.isDead),
             );
+          logger.debug(`attacker=${attacker.id}, nearby`, { nearby });
           this.sharedSpatialIndex.releaseResults(results);
         }
 
         for (const target of nearby) {
-          if (!this.shouldAttack(attacker, target)) continue;
-          if (!this.isOffCooldown(attacker.id, weaponId, now)) continue;
+          logger.debug(`Checking combat`, { attacker: attacker.id, target: target.id });
+          const shouldAtt = this.shouldAttack(attacker, target);
+          logger.debug(`shouldAttack result`, { shouldAtt });
+          if (!shouldAtt) continue;
+
+          const offCooldown = this.isOffCooldown(attacker.id, weaponId, now);
+          logger.debug(`isOffCooldown result`, { offCooldown });
+          if (!offCooldown) continue;
 
           this.resolveAttack(attacker, target, weaponId, now);
           this.lastAttackAt.set(attacker.id, now);

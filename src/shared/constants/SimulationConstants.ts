@@ -288,13 +288,8 @@ export const SIMULATION_CONSTANTS = {
 } as const;
 
 /**
- * Type for accessing simulation constants with type safety.
- */
-export type SimulationConstantsType = typeof SIMULATION_CONSTANTS;
-
-/**
- * Legacy export for backward compatibility.
- * @deprecated Use SIMULATION_CONSTANTS instead. This will be removed in a future version.
+ * Legacy export para módulos que todavía dependen del shape anterior.
+ * TODO: migrar consumidores a `SIMULATION_CONSTANTS` y eliminar esta copia.
  */
 export const SIM_CONSTANTS = {
   TICK_INTERVAL_MS: SIMULATION_CONSTANTS.TIMING.TICK_INTERVAL_MS,
@@ -386,12 +381,6 @@ export const SIM_CONSTANTS = {
   WATER_DECAY_RATE: SIMULATION_CONSTANTS.RESOURCES.WATER_DECAY_RATE,
   DEPRECATION_INTERVAL: SIMULATION_CONSTANTS.TIMING.DEPRECATION_INTERVAL_MS,
 } as const;
-
-/**
- * Legacy type export for backward compatibility.
- * @deprecated Use SimulationConstantsType instead.
- */
-export type SimConstantsType = typeof SIM_CONSTANTS;
 
 // Reexport legacy constants eliminados; todos los consumidores deberían usar
 // `SIMULATION_CONSTANTS` directamente.

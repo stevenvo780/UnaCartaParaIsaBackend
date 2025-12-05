@@ -83,7 +83,8 @@ function readLogFile(filePath: string): LogEntry[] {
   return lines.map(line => {
     try {
       return JSON.parse(line) as LogEntry;
-    } catch {
+    } catch (error) {
+      console.error("Failed to parse log line:", error instanceof Error ? error.message : String(error));
       return null;
     }
   }).filter(Boolean) as LogEntry[];

@@ -36,12 +36,18 @@ export class SharedSpatialIndex {
   > = [];
   private readonly RESULT_POOL_SIZE = 50;
 
+  /**
+   * @param _worldWidth - Ignorado (mundo procedural infinito)
+   * @param _worldHeight - Ignorado (mundo procedural infinito)
+   * @param cellSize - Tamaño de celda para el grid espacial
+   */
   constructor(
-    worldWidth: number = 3200,
-    worldHeight: number = 3200,
+    _worldWidth: number = 0,
+    _worldHeight: number = 0,
     cellSize: number = 70,
   ) {
-    this.grid = new OptimizedSpatialGrid(worldWidth, worldHeight, cellSize);
+    // Mundo infinito - los parámetros de tamaño se ignoran en OptimizedSpatialGrid
+    this.grid = new OptimizedSpatialGrid(0, 0, cellSize);
     for (let i = 0; i < this.POSITION_POOL_SIZE; i++) {
       this.positionPool.push({ x: 0, y: 0 });
     }
