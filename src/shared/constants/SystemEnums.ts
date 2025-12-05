@@ -38,6 +38,21 @@ export enum SystemProperty {
 }
 
 /**
+ * Enumeration of system names for identifying simulation systems.
+ */
+export enum SystemName {
+  MOVEMENT = "movement",
+  NEEDS = "needs",
+  BUILDING = "building",
+  COMBAT = "combat",
+  SOCIAL = "social",
+  CRAFTING = "crafting",
+  INVENTORY = "inventory",
+  WORLD_QUERY = "worldQuery",
+  TRADE = "trade",
+}
+
+/**
  * Enumeration of snapshot types.
  */
 export enum SnapshotType {

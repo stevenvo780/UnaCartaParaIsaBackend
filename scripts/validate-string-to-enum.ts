@@ -89,6 +89,7 @@ const ID_DEFINITION_PATTERNS = [
 ];
 
 // Valores por defecto del sistema a ignorar
+// Nota: No incluimos letras individuales ya que se filtran por longitud < 2
 const SYSTEM_DEFAULT_VALUES = new Set([
   // Tipos primitivos
   'number',
@@ -136,34 +137,6 @@ const SYSTEM_DEFAULT_VALUES = new Set([
   'status',
   'message',
   'code',
-  // Valores muy cortos o genéricos
-  'x',
-  'y',
-  'z',
-  'i',
-  'j',
-  'k',
-  'a',
-  'b',
-  'c',
-  'v',
-  'w',
-  'h',
-  'r',
-  'g',
-  'b',
-  'p',
-  'q',
-  't',
-  'u',
-  's',
-  'n',
-  'm',
-  'l',
-  'd',
-  'e',
-  'f',
-  'o',
 ]);
 
 // Patrones para encontrar strings literales que podrían ser enums
@@ -171,56 +144,62 @@ const STRING_LITERAL_PATTERNS = [
   // Comparaciones con === o !==
   {
     name: 'Comparaciones',
-    regex: /(===|!==|==|!=)\s*["']([a-z_][a-z0-9_]*?)["']/gi,
+    regex: /(===|!==|==|!=)\s*["']([a-zA-Z_][a-zA-Z0-9_]*?)["']/gi,
     captureGroup: 2,
   },
   // Asignaciones con strings literales
   {
     name: 'Asignaciones',
-    regex: /:\s*["']([a-z_][a-z0-9_]*?)["']\s*[,;\)\}]/g,
+    regex: /:\s*["']([a-zA-Z_][a-zA-Z0-9_]*?)["']\s*[,;\)\}]/g,
     captureGroup: 1,
   },
   // Case statements
   {
     name: 'Case statements',
-    regex: /case\s+["']([a-z_][a-z0-9_]*?)["']\s*:/gi,
+    regex: /case\s+["']([a-zA-Z_][a-zA-Z0-9_]*?)["']\s*:/gi,
     captureGroup: 1,
   },
   // Includes/StartsWith/EndsWith
   {
     name: 'Métodos de string',
-    regex: /\.(includes|startsWith|endsWith|indexOf|match|search)\(["']([a-z_][a-z0-9_]*?)["']/gi,
+    regex: /\.(includes|startsWith|endsWith|indexOf|match|search)\(["']([a-zA-Z_][a-zA-Z0-9_]*?)["']/gi,
     captureGroup: 2,
   },
   // Return statements
   {
     name: 'Return statements',
-    regex: /return\s+["']([a-z_][a-z0-9_]*?)["']/gi,
+    regex: /return\s+["']([a-zA-Z_][a-zA-Z0-9_]*?)["']/gi,
     captureGroup: 1,
   },
   // Object property access
   {
     name: 'Acceso a propiedades',
-    regex: /\[["']([a-z_][a-z0-9_]*?)["']\]/g,
+    regex: /\[["']([a-zA-Z_][a-zA-Z0-9_]*?)["']\]/g,
     captureGroup: 1,
   },
   // Set/Map operations
   {
     name: 'Operaciones Set/Map',
-    regex: /\.(set|add|has|get|delete)\(["']([a-z_][a-z0-9_]*?)["']/gi,
+    regex: /\.(set|add|has|get|delete)\(["']([a-zA-Z_][a-zA-Z0-9_]*?)["']/gi,
     captureGroup: 2,
   },
   // Array methods
   {
     name: 'Métodos de array',
-    regex: /\.(push|includes|indexOf|find|filter|some|every)\(["']([a-z_][a-z0-9_]*?)["']/gi,
+    regex: /\.(push|includes|indexOf|find|filter|some|every)\(["']([a-zA-Z_][a-zA-Z0-9_]*?)["']/gi,
     captureGroup: 2,
   },
-  // Switch statements
+  // Switch statements (protegido contra ReDoS con límites)
   {
     name: 'Switch statements',
-    regex: /switch\s*\([^)]+\)\s*\{[^}]*case\s+["']([a-z_][a-z0-9_]*?)["']/gi,
+    regex: /switch\s*\([^)]{0,200}\)\s*\{[^}]{0,500}case\s+["']([a-zA-Z_][a-zA-Z0-9_]*?)["']/gi,
     captureGroup: 1,
+  },
+  // Template literals
+  {
+    name: 'Template literals',
+    regex: /`\$\{(\w+)\.([A-Z_][A-Z0-9_]*)\}`/g,
+    captureGroup: 2,
   },
 ];
 
@@ -255,9 +234,23 @@ function getAllFiles(dir: string, fileList: string[] = []): string[] {
   }
 
   const files = fs.readdirSync(dir);
+  const realDirPath = fs.realpathSync(dir);
 
   files.forEach((file) => {
     const filePath = path.join(dir, file);
+
+    // Protección contra path traversal - verificar que el archivo esté dentro del directorio
+    try {
+      const realFilePath = fs.realpathSync(filePath);
+      if (!realFilePath.startsWith(realDirPath)) {
+        console.warn(`⚠️  Omitiendo symlink fuera del proyecto: ${filePath}`);
+        return;
+      }
+    } catch (error) {
+      // El archivo puede no existir o no tener permisos
+      return;
+    }
+
     const stat = fs.statSync(filePath);
 
     if (stat.isDirectory()) {
@@ -280,8 +273,8 @@ function extractEnumValues(filePath: string): EnumValues[] {
   const content = fs.readFileSync(filePath, 'utf8');
   const enums: EnumValues[] = [];
 
-  // Buscar enums exportados
-  const enumRegex = /export\s+enum\s+(\w+)\s*\{([^}]+)\}/gs;
+  // Buscar enums exportados (protegido contra ReDoS con límites)
+  const enumRegex = /export\s+enum\s+(\w+)\s*\{([^}]{0,10000})\}/gs;
   let match;
 
   while ((match = enumRegex.exec(content)) !== null) {
@@ -293,7 +286,7 @@ function extractEnumValues(filePath: string): EnumValues[] {
 
     // Extraer miembros y valores del enum (formato: KEY = "value" o KEY = 'value')
     // También soporta KEY = "value", (con coma)
-    const memberRegex = /([a-zA-Z0-9_]+)\s*=\s*["']([^"']+)["']/g;
+    const memberRegex = /([a-zA-Z0-9_]+)\s*=\s*["']([^"']{0,100})["']/g;
     let memberMatch;
 
     while ((memberMatch = memberRegex.exec(enumBody)) !== null) {
@@ -334,7 +327,8 @@ function findStringLiterals(
 
   STRING_LITERAL_PATTERNS.forEach((pattern) => {
     let match;
-    const regex = new RegExp(pattern.regex.source, pattern.regex.flags);
+    // Usar cache de regex para mejor rendimiento
+    const regex = getCachedRegex(pattern.regex.source, pattern.regex.flags);
 
     while ((match = regex.exec(content)) !== null) {
       const stringLiteral = match[pattern.captureGroup];
@@ -349,7 +343,7 @@ function findStringLiterals(
       }
 
       // Ignorar si parece ser un ID o hash (muy largo o con caracteres especiales)
-      if (stringLiteral.length > 50 || /[^a-z0-9_]/.test(stringLiteral)) {
+      if (stringLiteral.length > 50 || /[^a-zA-Z0-9_]/.test(stringLiteral)) {
         continue;
       }
 
@@ -406,6 +400,17 @@ function findAllEnums(backendSrc: string): Map<string, EnumValues> {
   return enumMap;
 }
 
+// Cache de regex compiladas para mejor rendimiento
+const regexCache = new Map<string, RegExp>();
+
+function getCachedRegex(pattern: string, flags: string = 'g'): RegExp {
+  const key = `${pattern}::${flags}`;
+  if (!regexCache.has(key)) {
+    regexCache.set(key, new RegExp(pattern, flags));
+  }
+  return regexCache.get(key)!;
+}
+
 /**
  * Cuenta los usos de Enums y sus miembros en el código
  * Busca tanto el uso explícito (EnumName.MEMBER) como el uso del valor string ("value")
@@ -416,11 +421,11 @@ function countEnumUsages(
   enumMap: Map<string, EnumValues>
 ) {
   enumMap.forEach((enumData, enumName) => {
-    // Ignorar el archivo donde se define el enum
-    if (filePath === enumData.file) return;
+    // NO ignorar el archivo donde se define el enum - puede tener auto-referencias
+    // if (filePath === enumData.file) return;
 
     // 1. Buscar uso del Enum como tipo o valor (e.g. "let x: EnumName" o "EnumName.Member")
-    const enumUsageRegex = new RegExp(`\\b${enumName}\\b`, 'g');
+    const enumUsageRegex = getCachedRegex(`\\b${enumName}\\b`, 'g');
     const matches = content.match(enumUsageRegex);
     if (matches) {
       enumData.usageCount += matches.length;
@@ -428,29 +433,35 @@ function countEnumUsages(
 
     // 2. Buscar uso de miembros específicos
     enumData.members.forEach((memberValue, memberName) => {
-      let count = 0;
-      
+      // Track si encontramos uso explícito o por valor para evitar conteo doble
+      const usagePositions = new Set<number>();
+
       // 2a. Uso explícito: EnumName.MEMBER
-      const memberUsageRegex = new RegExp(`\\b${enumName}\\.${memberName}\\b`, 'g');
-      const memberMatches = content.match(memberUsageRegex);
-      if (memberMatches) {
-        count += memberMatches.length;
+      const memberUsageRegex = getCachedRegex(`\\b${enumName}\\.${memberName}\\b`, 'g');
+      let memberMatch;
+      while ((memberMatch = memberUsageRegex.exec(content)) !== null) {
+        usagePositions.add(memberMatch.index);
       }
-      
+
       // 2b. Uso por valor string: "value" o 'value'
-      // Solo contar si el valor es lo suficientemente específico (>3 chars, no es palabra común)
-      if (memberValue.length > 3) {
-        const valueRegex = new RegExp(`["']${memberValue}["']`, 'g');
-        const valueMatches = content.match(valueRegex);
-        if (valueMatches) {
-          count += valueMatches.length;
+      // Solo contar si el valor es lo suficientemente específico (>=3 chars, no es palabra común)
+      if (memberValue.length >= 3 && !SYSTEM_DEFAULT_VALUES.has(memberValue)) {
+        // Escapar caracteres especiales en el valor para regex
+        const escapedValue = memberValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const valueRegex = getCachedRegex(`["'\`]${escapedValue}["'\`]`, 'g');
+        let valueMatch;
+        while ((valueMatch = valueRegex.exec(content)) !== null) {
+          // Solo agregar si no está en la misma posición que un uso explícito
+          if (!usagePositions.has(valueMatch.index)) {
+            usagePositions.add(valueMatch.index);
+          }
         }
       }
-      
-      if (count > 0) {
+
+      if (usagePositions.size > 0) {
         enumData.memberUsageCounts.set(
           memberName,
-          (enumData.memberUsageCounts.get(memberName) || 0) + count
+          (enumData.memberUsageCounts.get(memberName) || 0) + usagePositions.size
         );
       }
     });
@@ -458,9 +469,68 @@ function countEnumUsages(
 }
 
 /**
+ * Procesa un archivo de forma asíncrona
+ */
+async function processFile(
+  filePath: string,
+  valueToEnums: Map<string, string[]>,
+  enumMap: Map<string, EnumValues>,
+  isCatalogFile: boolean
+): Promise<StringOccurrence[]> {
+  return new Promise((resolve) => {
+    try {
+      const content = fs.readFileSync(filePath, 'utf8');
+      const occurrences: StringOccurrence[] = [];
+
+      // 1. Buscar strings literales que deberían ser enums
+      const foundOccurrences = findStringLiterals(filePath, content);
+
+      foundOccurrences.forEach((occ) => {
+        // Solo nos importa si el string coincide EXACTAMENTE con un valor de algún Enum
+        if (valueToEnums.has(occ.stringLiteral)) {
+          // Verificar si es falso positivo
+          const lineContent = occ.lineContent;
+          const isIdDefinition = ID_DEFINITION_PATTERNS.some(pattern => pattern.test(lineContent));
+
+          // Si es archivo de catálogo Y es definición de ID, es falso positivo
+          if (isCatalogFile && isIdDefinition) {
+            if (VERBOSE) {
+              console.log(`   ⚪ Ignorando (catálogo): "${occ.stringLiteral}" en ${path.basename(filePath)}:${occ.line}`);
+            }
+            return;
+          }
+
+          // Si es definición de ID en cualquier archivo, probablemente es falso positivo
+          if (isIdDefinition) {
+            if (VERBOSE) {
+              console.log(`   ⚪ Ignorando (def ID): "${occ.stringLiteral}" en ${path.basename(filePath)}:${occ.line}`);
+            }
+            return;
+          }
+
+          occurrences.push({
+            ...occ,
+            source: 'backend',
+            isFalsePositive: false,
+          });
+        }
+      });
+
+      // 2. Contar usos de Enums
+      countEnumUsages(filePath, content, enumMap);
+
+      resolve(occurrences);
+    } catch (error) {
+      console.error(`   ⚠️  Error leyendo ${filePath}:`, error);
+      resolve([]);
+    }
+  });
+}
+
+/**
  * Función principal
  */
-function main() {
+async function main() {
   console.log('🔍 Validando strings y uso de Enums (SOLO BACKEND)...\n');
 
   // Encontrar todos los enums - SOLO DEL BACKEND
@@ -492,56 +562,26 @@ function main() {
 
   console.log(`   Analizando ${allFiles.length} archivos del backend...\n`);
 
+  // Procesar archivos en paralelo (en lotes para no sobrecargar)
+  const BATCH_SIZE = 50;
   const missingEnumOccurrences: StringOccurrence[] = [];
 
-  allFiles.forEach((filePath) => {
-    try {
-      const content = fs.readFileSync(filePath, 'utf8');
-
-      // Ignorar archivos de definición de catálogos/configs
+  for (let i = 0; i < allFiles.length; i += BATCH_SIZE) {
+    const batch = allFiles.slice(i, i + BATCH_SIZE);
+    const batchPromises = batch.map((filePath) => {
       const isCatalogFile = CATALOG_DEFINITION_PATTERNS.some(pattern => pattern.test(filePath));
-      
-      // 1. Buscar strings literales que deberían ser enums
-      const occurrences = findStringLiterals(filePath, content);
+      return processFile(filePath, valueToEnums, enumMap, isCatalogFile);
+    });
 
-      occurrences.forEach((occ) => {
-        // Solo nos importa si el string coincide EXACTAMENTE con un valor de algún Enum
-        if (valueToEnums.has(occ.stringLiteral)) {
-          // Verificar si es falso positivo
-          const lineContent = occ.lineContent;
-          const isIdDefinition = ID_DEFINITION_PATTERNS.some(pattern => pattern.test(lineContent));
-          
-          // Si es archivo de catálogo Y es definición de ID, es falso positivo
-          if (isCatalogFile && isIdDefinition) {
-            if (VERBOSE) {
-              console.log(`   ⚪ Ignorando (catálogo): "${occ.stringLiteral}" en ${path.basename(filePath)}:${occ.line}`);
-            }
-            return;
-          }
-          
-          // Si es definición de ID en cualquier archivo, probablemente es falso positivo
-          if (isIdDefinition) {
-            if (VERBOSE) {
-              console.log(`   ⚪ Ignorando (def ID): "${occ.stringLiteral}" en ${path.basename(filePath)}:${occ.line}`);
-            }
-            return;
-          }
-          
-          missingEnumOccurrences.push({
-            ...occ,
-            source: 'backend',
-            isFalsePositive: false,
-          });
-        }
-      });
+    const batchResults = await Promise.all(batchPromises);
+    batchResults.forEach(occurrences => {
+      missingEnumOccurrences.push(...occurrences);
+    });
 
-      // 2. Contar usos de Enums
-      countEnumUsages(filePath, content, enumMap);
-
-    } catch (error) {
-      console.error(`   ⚠️  Error leyendo ${filePath}:`, error);
+    if (VERBOSE) {
+      console.log(`   Procesados ${Math.min(i + BATCH_SIZE, allFiles.length)}/${allFiles.length} archivos...`);
     }
-  });
+  }
 
   // --- REPORTE 1: Strings que deberían ser Enums ---
 
@@ -657,4 +697,8 @@ function main() {
   console.log('\n✅ Reporte completo guardado en: ' + reportPath);
 }
 
-main();
+// Ejecutar main y manejar errores
+main().catch((error) => {
+  console.error('❌ Error fatal:', error);
+  process.exit(1);
+});

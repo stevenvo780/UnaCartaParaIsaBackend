@@ -167,8 +167,8 @@ export class BuildingSystem implements IBuildingSystem {
   }
 
   /**
-   * Retorna la demanda total de recursos para construcciones pendientes o planeadas.
-   * Esto incluye edificios que se podrían construir si hubiera recursos.
+   * Retorna el DÉFICIT de recursos para construcciones pendientes o planeadas.
+   * Resta lo que ya hay disponible en stockpile para evitar recolección innecesaria.
    */
   public getResourceDemand(): { wood: number; stone: number } | null {
     const zones = (this.state.zones || []) as MutableZone[];
@@ -219,7 +219,20 @@ export class BuildingSystem implements IBuildingSystem {
       return null;
     }
 
-    return { wood: totalWood, stone: totalStone };
+    // Calcular el déficit real restando los recursos ya disponibles en stockpile
+    const stats = this.inventorySystem?.getSystemStats();
+    const stockpiledWood = stats?.stockpiled?.wood ?? 0;
+    const stockpiledStone = stats?.stockpiled?.stone ?? 0;
+
+    const deficitWood = Math.max(0, totalWood - stockpiledWood);
+    const deficitStone = Math.max(0, totalStone - stockpiledStone);
+
+    // Si ya tenemos todo lo necesario, no hay déficit
+    if (deficitWood === 0 && deficitStone === 0) {
+      return null;
+    }
+
+    return { wood: deficitWood, stone: deficitStone };
   }
 
   public update(_deltaMs: number): void {

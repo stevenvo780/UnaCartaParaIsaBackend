@@ -75,11 +75,12 @@ export function detectInventory(ctx: DetectorContext): Task[] {
   if (!shouldDeposit) return tasks;
 
   // Prioridad más alta cuando hay demanda de construcción urgente
+  // URGENT (0.8) para depósito con demanda de construcción > gather HIGH (0.6)
   const priority =
     loadRatio > URGENT_DEPOSIT_THRESHOLD
-      ? TASK_PRIORITIES.HIGH
+      ? TASK_PRIORITIES.URGENT
       : ctx.hasBuildingResourceDemand
-        ? TASK_PRIORITIES.HIGH
+        ? TASK_PRIORITIES.URGENT
         : hasBuildingMaterials && (woodCount >= 6 || stoneCount >= 6)
           ? TASK_PRIORITIES.HIGH
           : TASK_PRIORITIES.NORMAL;

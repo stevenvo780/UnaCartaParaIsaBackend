@@ -34,6 +34,7 @@ import { FoodCategory } from "../../../../../shared/constants/FoodEnums";
 import type { FoodItem } from "@/shared/types/simulation/food";
 import { SIMULATION_CONSTANTS } from "../../../../../shared/constants/SimulationConstants";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
+import { SystemName } from "../../../../../shared/constants/SystemEnums";
 
 import { GoalType } from "@/shared/constants/AIEnums";
 /**
@@ -1381,7 +1382,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     if (!needs) {
       return {
         status: HandlerResultStatus.FAILED,
-        system: "needs",
+        system: SystemName.NEEDS,
         message: `No needs data for agent ${agentId}`,
       };
     }
@@ -1397,7 +1398,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
           this.satisfyNeed(agentId, NeedType.HUNGER, 25);
           return {
             status: HandlerResultStatus.COMPLETED,
-            system: "needs",
+            system: SystemName.NEEDS,
             message: "Consumed food from inventory",
             data: { needType: NeedType.HUNGER, restored: 25 },
           };
@@ -1410,7 +1411,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
           this.satisfyNeed(agentId, NeedType.THIRST, 25);
           return {
             status: HandlerResultStatus.COMPLETED,
-            system: "needs",
+            system: SystemName.NEEDS,
             message: "Consumed water from inventory",
             data: { needType: NeedType.THIRST, restored: 25 },
           };
@@ -1424,7 +1425,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
           this.satisfyNeed(agentId, NeedType.HUNGER, 25);
           return {
             status: HandlerResultStatus.COMPLETED,
-            system: "needs",
+            system: SystemName.NEEDS,
             message: `Gathered and consumed food from ${gatherResult.resourceId}`,
             data: {
               needType: NeedType.HUNGER,
@@ -1438,7 +1439,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
           this.satisfyNeed(agentId, NeedType.THIRST, 25);
           return {
             status: HandlerResultStatus.COMPLETED,
-            system: "needs",
+            system: SystemName.NEEDS,
             message: `Gathered and consumed water from ${gatherResult.resourceId}`,
             data: {
               needType: NeedType.THIRST,
@@ -1452,7 +1453,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
 
     return {
       status: HandlerResultStatus.FAILED,
-      system: "needs",
+      system: SystemName.NEEDS,
       message: `No consumable available for ${itemIdOrNeedType}`,
     };
   }
@@ -1649,7 +1650,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     if (!needs) {
       return {
         status: HandlerResultStatus.FAILED,
-        system: "needs",
+        system: SystemName.NEEDS,
         message: `No needs data for agent ${agentId}`,
       };
     }
@@ -1661,7 +1662,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     if (energyAfter >= 80) {
       return {
         status: HandlerResultStatus.COMPLETED,
-        system: "needs",
+        system: SystemName.NEEDS,
         message: "Fully rested",
         data: { energy: energyAfter },
       };
@@ -1669,7 +1670,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
 
     return {
       status: HandlerResultStatus.IN_PROGRESS,
-      system: "needs",
+      system: SystemName.NEEDS,
       message: "Resting",
       data: {
         energyBefore,
@@ -1703,7 +1704,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
       const needs = this.entityNeeds.get(agentId);
       return {
         status: HandlerResultStatus.COMPLETED,
-        system: "needs",
+        system: SystemName.NEEDS,
         message: `Applied ${delta > 0 ? "+" : ""}${delta} to ${need}`,
         data: {
           need,
@@ -1715,7 +1716,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
 
     return {
       status: HandlerResultStatus.FAILED,
-      system: "needs",
+      system: SystemName.NEEDS,
       message: `Failed to apply need change for ${agentId}`,
     };
   }

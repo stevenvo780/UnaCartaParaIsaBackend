@@ -9,7 +9,7 @@
 
 import { injectable } from "inversify";
 import { logger } from "@/infrastructure/utils/logger";
-import { SystemProperty } from "../../../../shared/constants/SystemEnums";
+import { SystemProperty, SystemName } from "../../../../shared/constants/SystemEnums";
 import { ActivityType } from "../../../../shared/constants/MovementEnums";
 import { HandlerResultStatus } from "../../../../shared/constants/StatusEnums";
 import { GoalDomain } from "@/shared/constants/AIEnums";
@@ -19,7 +19,7 @@ import { GoalDomain } from "@/shared/constants/AIEnums";
  */
 export interface HandlerResult {
   status: HandlerResultStatus;
-  system: string;
+  system: SystemName;
   message?: string;
   data?: unknown;
 }
@@ -204,13 +204,13 @@ export class SystemRegistry {
     this.systems.set(name, system);
 
     switch (name) {
-      case "movement":
+      case SystemName.MOVEMENT:
         this.movement = system as unknown as IMovementSystem;
         break;
       case GoalDomain.COMBAT:
         this.combat = system as unknown as ICombatSystem;
         break;
-      case "needs":
+      case SystemName.NEEDS:
         this.needs = system as unknown as INeedsSystem;
         break;
       case SystemProperty.INVENTORY:
@@ -222,13 +222,13 @@ export class SystemRegistry {
       case GoalDomain.CRAFTING:
         this.crafting = system as unknown as ICraftingSystem;
         break;
-      case "building":
+      case SystemName.BUILDING:
         this.building = system as unknown as IBuildingSystem;
         break;
       case GoalDomain.LOGISTICS:
         this.trade = system as unknown as ITradeSystem;
         break;
-      case "worldQuery":
+      case SystemName.WORLD_QUERY:
         this.worldQuery = system as unknown as IWorldQuerySystem;
         break;
     }
@@ -276,13 +276,13 @@ export class SystemRegistry {
     this.systems.delete(name);
 
     switch (name) {
-      case "movement":
+      case SystemName.MOVEMENT:
         this.movement = undefined;
         break;
       case GoalDomain.COMBAT:
         this.combat = undefined;
         break;
-      case "needs":
+      case SystemName.NEEDS:
         this.needs = undefined;
         break;
       case SystemProperty.INVENTORY:
@@ -294,13 +294,13 @@ export class SystemRegistry {
       case GoalDomain.CRAFTING:
         this.crafting = undefined;
         break;
-      case "building":
+      case SystemName.BUILDING:
         this.building = undefined;
         break;
       case GoalDomain.LOGISTICS:
         this.trade = undefined;
         break;
-      case "worldQuery":
+      case SystemName.WORLD_QUERY:
         this.worldQuery = undefined;
         break;
     }

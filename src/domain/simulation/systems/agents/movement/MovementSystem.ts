@@ -30,6 +30,7 @@ import { TerrainSystem } from "../../world/TerrainSystem";
 import { MapElementType } from "../../../../../shared/constants/MapElementEnums";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 import { WorldEntityType } from "@/shared/constants/ResourceEnums";
+import { SystemName } from "@/shared/constants/SystemEnums";
 
 export interface EntityMovementState {
   entityId: string;
@@ -1157,7 +1158,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     if (!state) {
       return {
         status: HandlerResultStatus.FAILED,
-        system: "movement",
+        system: SystemName.MOVEMENT,
         message: `No movement state for agent ${agentId}`,
       };
     }
@@ -1169,7 +1170,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     if (distSq < 4) {
       return {
         status: HandlerResultStatus.COMPLETED,
-        system: "movement",
+        system: SystemName.MOVEMENT,
         message: "Already at target",
         data: { position: state.currentPosition },
       };
@@ -1181,7 +1182,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
       if (targetDx * targetDx + targetDy * targetDy < 4) {
         return {
           status: HandlerResultStatus.IN_PROGRESS,
-          system: "movement",
+          system: SystemName.MOVEMENT,
           message: "Already moving to target",
         };
       }
@@ -1192,7 +1193,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     if (success) {
       return {
         status: HandlerResultStatus.DELEGATED,
-        system: "movement",
+        system: SystemName.MOVEMENT,
         message: "Movement started",
         data: { target },
       };
@@ -1227,7 +1228,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     if (!state) {
       return {
         status: HandlerResultStatus.FAILED,
-        system: "movement",
+        system: SystemName.MOVEMENT,
         message: `No movement state for agent ${agentId}`,
       };
     }
@@ -1236,7 +1237,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     if (!zone) {
       return {
         status: HandlerResultStatus.FAILED,
-        system: "movement",
+        system: SystemName.MOVEMENT,
         message: `Zone ${zoneId} not found`,
       };
     }
@@ -1251,7 +1252,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     ) {
       return {
         status: HandlerResultStatus.COMPLETED,
-        system: "movement",
+        system: SystemName.MOVEMENT,
         message: "Already in zone",
         data: { zoneId },
       };
@@ -1260,7 +1261,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     if (state.isMoving && state.targetZone === zoneId) {
       return {
         status: HandlerResultStatus.IN_PROGRESS,
-        system: "movement",
+        system: SystemName.MOVEMENT,
         message: "Already moving to zone",
       };
     }
@@ -1270,7 +1271,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     if (success) {
       return {
         status: HandlerResultStatus.DELEGATED,
-        system: "movement",
+        system: SystemName.MOVEMENT,
         message: "Movement to zone started",
         data: { zoneId },
       };
@@ -1305,7 +1306,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     if (!state) {
       return {
         status: HandlerResultStatus.FAILED,
-        system: "movement",
+        system: SystemName.MOVEMENT,
         message: `No movement state for agent ${agentId}`,
       };
     }
@@ -1331,7 +1332,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     if (!targetPosition) {
       return {
         status: HandlerResultStatus.FAILED,
-        system: "movement",
+        system: SystemName.MOVEMENT,
         message: `Entity ${entityId} not found or has no position`,
       };
     }
