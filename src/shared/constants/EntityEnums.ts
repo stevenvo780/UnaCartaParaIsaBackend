@@ -12,6 +12,7 @@
 export enum EntityType {
   AGENT = "agent",
   ANIMAL = "animal",
+  BUILDING = "building",
   ZONE = "zone",
   RESOURCE = "resource",
   TILE = "tile",

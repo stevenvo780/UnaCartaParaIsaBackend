@@ -29,6 +29,8 @@ import { runAllDetectors } from "./detectors";
 import { LifeStage } from "@/shared/constants/AgentEnums";
 import { NeedType } from "@/shared/constants/AIEnums";
 import { ZoneType } from "@/shared/constants/ZoneEnums";
+import { EquipmentSlot } from "@/shared/constants/EquipmentEnums";
+import { WeaponId } from "@/shared/constants/CraftingEnums";
 import {
   handleGather,
   handleAttack,
@@ -58,6 +60,9 @@ import type { MovementSystem } from "../movement/MovementSystem";
 import type { WorldQueryService } from "../../world/WorldQueryService";
 import { SystemRegistry } from "../SystemRegistry";
 import type { TimeSystem } from "../../core/TimeSystem";
+import { equipmentSystem } from "../EquipmentSystem";
+import { RoleSystem } from "../RoleSystem";
+import { container } from "@/config/container";
 
 export interface AISystemDeps {
   gameState: GameState;
@@ -660,6 +665,125 @@ export class AISystem extends EventEmitter {
 
     const isWorkHours = this.calculateIsWorkHours();
 
+    // === EQUIPMENT & COMBAT CONTEXT ===
+    const equippedWeapon = equipmentSystem.getEquippedItem(agentId, EquipmentSlot.MAIN_HAND);
+    const hasWeapon = equippedWeapon !== undefined && equippedWeapon !== WeaponId.UNARMED;
+    
+    // Get agent needs directly from needsSystem
+    const agentNeeds = this.needsSystem?.getNeeds(agentId);
+    // Health is part of needs if exists, otherwise default to 100
+    const health = (agentNeeds as Record<string, number | undefined>)?.health ?? 100;
+    const maxHealth = 100;
+
+    // === ROLE CONTEXT ===
+    // Get role from RoleSystem via container
+    let roleType: string | undefined;
+    try {
+      const roleSystem = container.get<RoleSystem>(TYPES.RoleSystem);
+      const agentRole = roleSystem.getAgentRole(agentId);
+      roleType = agentRole?.roleType;
+    } catch {
+      // RoleSystem not available, leave roleType undefined
+    }
+
+    // === CRAFTING CONTEXT ===
+    // Check if agent can craft basic weapons
+    const craftingSystem = this.systemRegistry?.crafting;
+    let canCraftClub = false;
+    let canCraftDagger = false;
+    
+    if (craftingSystem && typeof (craftingSystem as unknown as { canCraftWeapon?: (agentId: string, weaponId: string) => boolean }).canCraftWeapon === 'function') {
+      const craftSys = craftingSystem as unknown as { canCraftWeapon: (agentId: string, weaponId: string) => boolean };
+      canCraftClub = craftSys.canCraftWeapon(agentId, WeaponId.WOODEN_CLUB);
+      canCraftDagger = craftSys.canCraftWeapon(agentId, WeaponId.STONE_DAGGER);
+    }
+
+    // Find crafting zone
+    let craftZoneId: string | undefined;
+    if (this.gameState.zones) {
+      const craftZone = this.gameState.zones.find(
+        (z) => z.type === ZoneType.WORK || 
+               z.id.includes('craft') || 
+               (z as { metadata?: { craftingStation?: boolean } }).metadata?.craftingStation === true
+      );
+      if (craftZone) {
+        craftZoneId = craftZone.id;
+      }
+    }
+
+    // === BUILD CONTEXT ===
+    // Check for pending builds (buildings in construction)
+    const pendingBuilds: { id: string; zoneId: string; progress: number }[] = [];
+    if (this.gameState.zones) {
+      for (const zone of this.gameState.zones) {
+        const zoneWithMeta = zone as { metadata?: { buildProgress?: number; buildingType?: string } };
+        if (zoneWithMeta.metadata?.buildProgress !== undefined && 
+            zoneWithMeta.metadata.buildProgress < 1) {
+          pendingBuilds.push({
+            id: zone.id,
+            zoneId: zone.id,
+            progress: zoneWithMeta.metadata.buildProgress,
+          });
+        }
+      }
+    }
+
+    // === WORK ZONES WITH ITEMS ===
+    // Find zones that have items to collect (work zones, resource zones, forests, mines)
+    const workZonesWithItems: { zoneId: string; x: number; y: number; items: { itemId: string; quantity: number }[] }[] = [];
+    if (this.gameState.zones && this.gameState.zones.length > 0) {
+      const workZoneTypes = [ZoneType.WORK, ZoneType.GATHERING, ZoneType.WILD];
+      
+      // Debug: log total zones count once per agent occasionally
+      if (Math.random() < 0.01) {
+        const zoneIds = this.gameState.zones.slice(0, 5).map(z => z.id);
+        logger.debug(
+          `🔧 [AISystem] ${agentId}: total zones=${this.gameState.zones.length}, sample: ${zoneIds.join(', ')}`
+        );
+      }
+      
+      for (const zone of this.gameState.zones) {
+        // Check if it's a work-related zone by type or name pattern
+        const isWorkZone = workZoneTypes.includes(zone.type as ZoneType) || 
+            zone.id.includes('workbench') || 
+            zone.id.includes('mine') ||
+            zone.id.includes('forest') ||
+            zone.id.includes('logging') ||
+            zone.id.includes('quarry');
+        
+        if (isWorkZone) {
+          // Calculate zone center
+          const centerX = zone.bounds.x + zone.bounds.width / 2;
+          const centerY = zone.bounds.y + zone.bounds.height / 2;
+          
+          // Check distance from agent
+          const dx = centerX - position.x;
+          const dy = centerY - position.y;
+          const distance = Math.hypot(dx, dy);
+          
+          // Include zones within 1000 units (larger radius for work zones)
+          if (distance < 1000) {
+            workZonesWithItems.push({
+              zoneId: zone.id,
+              x: centerX,
+              y: centerY,
+              items: [
+                { itemId: 'wood_log', quantity: 1 },
+                { itemId: 'stone', quantity: 1 }
+              ]
+            });
+          }
+        }
+      }
+      
+      // Debug log for work zones
+      if (workZonesWithItems.length > 0 && Math.random() < 0.05) {
+        logger.debug(
+          `🔧 [AISystem] ${agentId}: found ${workZonesWithItems.length} work zones with items`
+        );
+      }
+    }
+
     return {
       agentId,
       position,
@@ -669,6 +793,20 @@ export class AISystem extends EventEmitter {
       inventoryLoad,
       inventoryCapacity,
       depositZoneId,
+      // Equipment & Combat
+      hasWeapon,
+      equippedWeapon: equippedWeapon ?? WeaponId.UNARMED,
+      health,
+      maxHealth,
+      roleType,
+      // Crafting
+      canCraftClub,
+      canCraftDagger,
+      craftZoneId,
+      // Building
+      pendingBuilds: pendingBuilds.length > 0 ? pendingBuilds : undefined,
+      // Work zones with items
+      workZonesWithItems: workZonesWithItems.length > 0 ? workZonesWithItems : undefined,
       ...spatialContext,
       ...explorationContext,
     };

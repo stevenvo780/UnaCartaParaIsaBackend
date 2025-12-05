@@ -37,6 +37,8 @@ export class MarriageSystem {
   private marriageHistory: MarriageEvent[] = [];
   private readonly MAX_HISTORY = 200;
   private readonly PROPOSAL_EXPIRATION_MS = 300000;
+  /** Minimum time before proposal can be auto-accepted (5 seconds) */
+  private readonly PROPOSAL_MIN_AGE_MS = 5000;
 
   constructor(@inject(TYPES.GameState) gameState: GameState) {
     this.gameState = gameState;
@@ -350,6 +352,27 @@ export class MarriageSystem {
       logger.debug(
         `💍 [MarriageSystem] update: groups=${marriedGroups}, pendingProposals=${pendingProposals}`,
       );
+    }
+
+    // Auto-accept pending proposals after minimum age (simulates target deciding)
+    // This simplified approach accepts proposals probabilistically based on age
+    const proposalsToAccept: string[] = [];
+    for (const [targetId, proposal] of this.pendingProposals) {
+      const age = now - proposal.timestamp;
+      if (age >= this.PROPOSAL_MIN_AGE_MS) {
+        // 20% chance per update tick after min age
+        if (Math.random() < 0.2) {
+          proposalsToAccept.push(targetId);
+        }
+      }
+    }
+    for (const targetId of proposalsToAccept) {
+      const result = this.acceptProposal(targetId);
+      if (result.success) {
+        logger.info(
+          `💒 [MarriageSystem] Auto-accepted proposal for ${targetId}, groupId=${result.groupId}`,
+        );
+      }
     }
 
     if (now - this.lastProposalCleanup >= 60000) {

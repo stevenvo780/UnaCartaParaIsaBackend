@@ -215,6 +215,13 @@ export interface DetectorContext {
     y: number;
     type: string;
   };
+  /** Zonas de trabajo con items disponibles para recolectar */
+  readonly workZonesWithItems?: readonly {
+    zoneId: string;
+    x: number;
+    y: number;
+    items: readonly { itemId: string; quantity: number }[];
+  }[];
 
   readonly depositZoneId?: string;
   readonly nearestMarketZoneId?: string;

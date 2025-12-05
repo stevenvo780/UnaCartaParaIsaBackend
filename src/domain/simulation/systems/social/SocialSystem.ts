@@ -18,6 +18,7 @@ import { DialogueTone } from "../../../../shared/constants/AmbientEnums";
 import { GoalType } from "../../../../shared/constants/AIEnums";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 import { GoalDomain } from "@/shared/constants/AIEnums";
+import type { MarriageSystem } from "../social/MarriageSystem";
 import type {
   ReputationEntry,
   AgentReputation,
@@ -106,6 +107,12 @@ export class SocialSystem implements ISocialSystem {
     lastUpdate: 0,
   };
 
+  /** Marriage system for find_mate interactions */
+  private marriageSystem?: MarriageSystem;
+
+  /** Affinity threshold required to propose marriage */
+  private static readonly MARRIAGE_AFFINITY_THRESHOLD = 0.4;
+
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
     @inject(TYPES.StateDirtyTracker)
@@ -116,11 +123,15 @@ export class SocialSystem implements ISocialSystem {
     @inject(TYPES.SharedSpatialIndex)
     @optional()
     sharedSpatialIndex?: SharedSpatialIndex,
+    @inject(TYPES.MarriageSystem)
+    @optional()
+    marriageSystem?: MarriageSystem,
   ) {
     this.gameState = gameState;
     this.gpuService = gpuService;
     this.entityIndex = entityIndex;
     this.sharedSpatialIndex = sharedSpatialIndex;
+    this.marriageSystem = marriageSystem;
     this.config = {
       proximityRadius: 100,
       reinforcementPerSecond: 0.05,
@@ -837,6 +848,38 @@ export class SocialSystem implements ISocialSystem {
           message: "Friendly interaction registered",
           data: { affinityChange: 0.1 },
         };
+
+      case "find_mate": {
+        // Handle courtship/mate-finding interaction
+        this.registerFriendlyInteraction(agentId, targetId);
+        const affinity = this.getAffinityBetween(agentId, targetId);
+        
+        logger.info(
+          `💕 [SocialSystem] find_mate: ${agentId} -> ${targetId}, affinity=${affinity.toFixed(2)}, threshold=${SocialSystem.MARRIAGE_AFFINITY_THRESHOLD}`
+        );
+        
+        // If affinity is high enough and we have marriage system, propose marriage
+        if (affinity >= SocialSystem.MARRIAGE_AFFINITY_THRESHOLD && this.marriageSystem) {
+          // proposeMarriage returns boolean: true = proposal registered, false = failed (group full, etc.)
+          const proposalSuccess = this.marriageSystem.proposeMarriage(agentId, targetId);
+          logger.info(
+            `💍 [SocialSystem] Marriage proposal: ${agentId} -> ${targetId}, success=${proposalSuccess}`
+          );
+          return {
+            status: proposalSuccess ? HandlerResultStatus.COMPLETED : HandlerResultStatus.FAILED,
+            system: GoalDomain.SOCIAL,
+            message: proposalSuccess ? "Marriage proposal registered" : "Marriage proposal failed",
+            data: { affinity, proposalSuccess },
+          };
+        }
+        
+        return {
+          status: HandlerResultStatus.COMPLETED,
+          system: GoalDomain.SOCIAL,
+          message: `Courtship interaction, affinity now ${affinity.toFixed(2)}`,
+          data: { affinityChange: 0.1, currentAffinity: affinity },
+        };
+      }
 
       case "hostile":
         this.addEdge(agentId, targetId, -0.2);

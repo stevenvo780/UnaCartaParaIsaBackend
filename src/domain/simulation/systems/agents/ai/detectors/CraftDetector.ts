@@ -32,10 +32,10 @@ export function detectCraft(ctx: DetectorContext): Task[] {
 }
 
 function detectWeaponNeed(ctx: DetectorContext): Task | null {
+  // Skip if already has weapon
   if (ctx.hasWeapon || ctx.equippedWeapon !== WeaponId.UNARMED) return null;
 
-  if (!ctx.canCraftClub && !ctx.canCraftDagger) return null;
-
+  // Need a crafting zone
   if (!ctx.craftZoneId) return null;
 
   const role = (ctx.roleType ?? "").toLowerCase();
@@ -43,6 +43,14 @@ function detectWeaponNeed(ctx: DetectorContext): Task | null {
     role === RoleType.HUNTER ||
     role === RoleType.GUARD ||
     role === SocialStatus.WARRIOR;
+
+  // If backend has canCraft info, use it; otherwise assume crafting is possible
+  // This allows the handler to verify actual materials availability
+  const canCraftAnything = ctx.canCraftClub || ctx.canCraftDagger || 
+    // Backend fallback: assume crafting possible if work hours and has role that needs weapons
+    (ctx.isWorkHours && needsWeaponForRole);
+  
+  if (!canCraftAnything) return null;
 
   const weaponToCraft = ctx.canCraftDagger
     ? "stone_dagger"
