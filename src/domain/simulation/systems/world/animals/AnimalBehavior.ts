@@ -4,6 +4,7 @@ import { getAnimalConfig } from "../config/AnimalConfigs";
 import { AnimalNeeds } from "./AnimalNeeds";
 import { AnimalGenetics } from "./AnimalGenetics";
 import { simulationEvents, GameEventType } from "../../../core/events";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import {
   AnimalState,
   AnimalTargetType,
@@ -75,17 +76,17 @@ export class AnimalBehavior {
   ): void {
     let wanderAngle = this.wanderAngles.get(animal.id);
     if (wanderAngle === undefined) {
-      wanderAngle = Math.random() * Math.PI * 2;
+      wanderAngle = RandomUtils.floatRange(0, Math.PI * 2);
       this.wanderAngles.set(animal.id, wanderAngle);
     }
 
-    if (Math.random() < 0.02) {
+    if (RandomUtils.chance(0.02)) {
       animal.state = AnimalState.IDLE;
       return;
     }
 
     const wanderStrength = 0.1;
-    wanderAngle += (Math.random() - 0.5) * wanderStrength;
+    wanderAngle += (RandomUtils.float() - 0.5) * wanderStrength;
     this.wanderAngles.set(animal.id, wanderAngle);
 
     const effectiveSpeed =
@@ -330,14 +331,14 @@ export class AnimalBehavior {
       const distance = Math.hypot(dx, dy);
 
       if (distance < 50) {
-        if (Math.random() < 0.35) {
+        if (RandomUtils.chance(0.35)) {
           const offspringPosition = {
             x:
               (animal.position.x + nearbyMate.position.x) / 2 +
-              (Math.random() - 0.5) * 20,
+              (RandomUtils.float() - 0.5) * 20,
             y:
               (animal.position.y + nearbyMate.position.y) / 2 +
-              (Math.random() - 0.5) * 20,
+              (RandomUtils.float() - 0.5) * 20,
           };
 
           const offspringGenes = AnimalGenetics.breedGenes(
@@ -348,7 +349,7 @@ export class AnimalBehavior {
             Math.max(animal.generation, nearbyMate.generation) + 1;
 
           const offspring: Animal = {
-            id: `animal_${animal.type}_${Date.now()}_${Math.random()}`,
+            id: `animal_${animal.type}_${Date.now()}_${RandomUtils.float()}`,
             type: animal.type,
             position: offspringPosition,
             state: AnimalState.IDLE,

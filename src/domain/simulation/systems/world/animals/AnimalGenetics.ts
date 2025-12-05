@@ -1,11 +1,12 @@
 import type { AnimalGenes } from "@/shared/types/simulation/animals";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 
 const MUTATION_RATE = 0.1;
 
 export class AnimalGenetics {
   public static generateRandomGenes(seed?: number): AnimalGenes {
     const random =
-      seed !== undefined ? (): number => Math.random() : Math.random;
+      seed !== undefined ? (): number => RandomUtils.float() : RandomUtils.float;
 
     return {
       color: Math.floor(random() * 0xffffff),
@@ -35,10 +36,10 @@ export class AnimalGenetics {
   }
 
   private static inheritColor(color1: number, color2: number): number {
-    if (Math.random() < MUTATION_RATE) {
-      return Math.floor(Math.random() * 0xffffff);
+    if (RandomUtils.chance(MUTATION_RATE)) {
+      return Math.floor(RandomUtils.float() * 0xffffff);
     }
-    return Math.random() < 0.5 ? color1 : color2;
+    return RandomUtils.chance(0.5) ? color1 : color2;
   }
 
   private static inheritTrait(
@@ -49,7 +50,7 @@ export class AnimalGenetics {
   ): number {
     const average = (trait1 + trait2) / 2;
     const mutation =
-      Math.random() < MUTATION_RATE ? (Math.random() - 0.5) * 0.2 : 0;
+      RandomUtils.chance(MUTATION_RATE) ? (RandomUtils.float() - 0.5) * 0.2 : 0;
 
     return Math.max(min, Math.min(max, average + mutation));
   }

@@ -3,9 +3,10 @@ import {
   FoodCategory as FoodCategoryEnum,
   FoodId,
 } from "../../shared/constants/FoodEnums";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 
 const gameRandom: { random: () => number } = {
-  random: () => Math.random(),
+  random: () => RandomUtils.float(),
 };
 
 export class FoodCatalog {

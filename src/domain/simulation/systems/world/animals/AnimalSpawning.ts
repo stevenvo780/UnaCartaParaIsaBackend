@@ -10,6 +10,7 @@ import { AnimalGenetics } from "./AnimalGenetics";
 import { simulationEvents, GameEventType } from "../../../core/events";
 import { AnimalState } from "../../../../../shared/constants/AnimalEnums";
 import { BiomeType } from "../../../../../shared/constants/BiomeEnums";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 
 export class AnimalSpawning {
   private static nextAnimalId = 1;
@@ -75,12 +76,12 @@ export class AnimalSpawning {
 
           const chunkSpawnProb = config.spawnProbability * 0.1;
 
-          if (Math.random() < chunkSpawnProb) {
-            const groupSize = Math.random() < 0.3 ? 2 : 1;
+          if (RandomUtils.chance(chunkSpawnProb)) {
+            const groupSize = RandomUtils.chance(0.3) ? 2 : 1;
 
             for (let i = 0; i < groupSize; i++) {
-              const offsetX = (Math.random() - 0.5) * 80;
-              const offsetY = (Math.random() - 0.5) * 80;
+              const offsetX = (RandomUtils.float() - 0.5) * 80;
+              const offsetY = (RandomUtils.float() - 0.5) * 80;
 
               const animal = this.createAnimal(
                 config.type,

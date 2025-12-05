@@ -23,6 +23,7 @@ import { AnimalState } from "../../../../../shared/constants/AnimalEnums";
 import { AnimalRegistry } from "../../world/animals/AnimalRegistry";
 import type { AgentRegistry } from "../../agents/AgentRegistry";
 import { WorldResourceType } from "../../../../../shared/constants/ResourceEnums";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 
 const DEFAULT_CONFIG: AnimalSystemConfig = {
   maxAnimals: SIM_CONSTANTS.MAX_ANIMALS,
@@ -456,7 +457,7 @@ export class AnimalSystem {
     const config = getAnimalConfig(animal.type);
     if (!config) return;
 
-    if (Math.random() < 0.01) {
+    if (RandomUtils.chance(0.01)) {
       const maxHealth = config.maxHealth * animal.genes.health;
       logger.debug(
         `🐾 [AnimalDebug] ${animal.id} (${animal.type}): health=${animal.health.toFixed(0)}/${maxHealth.toFixed(0)}, hunger=${animal.needs.hunger.toFixed(0)}, thirst=${animal.needs.thirst.toFixed(0)}, state=${animal.state}`,
@@ -663,7 +664,7 @@ export class AnimalSystem {
       if (
         config.consumesVegetation &&
         this.terrainSystem &&
-        Math.random() < 0.2
+        RandomUtils.chance(0.2)
       ) {
         const TILE_SIZE = 64;
         const tileX = Math.floor(animal.position.x / TILE_SIZE);
@@ -676,7 +677,7 @@ export class AnimalSystem {
       }
 
       if (animal.state === AnimalState.IDLE) {
-        if (Math.random() < 0.8) {
+        if (RandomUtils.chance(0.8)) {
           animal.state = AnimalState.WANDERING;
           AnimalBehavior.wander(animal, 0.5, deltaSeconds);
         }

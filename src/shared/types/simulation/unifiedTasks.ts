@@ -11,6 +11,7 @@
 import type { NeedType } from "../../constants/AIEnums";
 import type { ResourceType } from "../../constants/ResourceEnums";
 import { Position } from "../game-types";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 
 import { GoalType, ActionType } from "@/shared/constants/AIEnums";
 
@@ -277,7 +278,7 @@ export const TASK_TIMEOUTS: Record<TaskType, number> = {
  * Create a new task with defaults
  */
 export function createTask(params: CreateTaskParams): AgentTask {
-  const id = `task_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const id = `task_${Date.now()}_${RandomUtils.float().toString(36).slice(2, 7)}`;
   const now = Date.now();
 
   return {

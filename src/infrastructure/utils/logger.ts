@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import * as fs from "fs";
 import * as path from "path";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 
 /**
  * Advanced logging utility for the backend with behavior analysis support.
@@ -115,7 +116,7 @@ const DEFAULT_CONFIG: LoggerConfig = {
  * Generate a unique ID for log entries.
  */
 function generateLogId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  return `${Date.now()}-${RandomUtils.float().toString(36).substring(2, 9)}`;
 }
 
 /**

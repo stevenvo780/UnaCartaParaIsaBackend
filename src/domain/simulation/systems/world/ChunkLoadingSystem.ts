@@ -9,6 +9,7 @@ import { logger } from "../../../../infrastructure/utils/logger";
 import type { WorldGenConfig } from "./generation/types";
 import { TileType } from "../../../../shared/constants/TileTypeEnums";
 import { BiomeType } from "../../../../shared/constants/BiomeEnums";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 
 /**
  * System for dynamically loading chunks around agents.
@@ -86,7 +87,7 @@ export class ChunkLoadingSystem {
 
     const chunksToLoad = this.calculateChunksToLoad(activeAgents);
 
-    if (Math.random() < 0.1) {
+    if (RandomUtils.chance(0.1)) {
       logger.debug(
         `[ChunkLoadingSystem] update: ${activeAgents.length} agents, ${chunksToLoad.length} chunks to load, ${this.loadedChunks.size} already loaded`,
       );
