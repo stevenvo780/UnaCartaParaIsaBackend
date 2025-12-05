@@ -232,12 +232,17 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
           `🔄 NeedsSystem auto-initialized needs for existing agent ${agent.name} (${agent.id})`,
         );
       } else {
+        // Only reinitialize truly corrupted values (negative = calculation error)
+        // Values of exactly 0 are valid and should trigger death via checkForDeath
         if (
-          existingNeeds.hunger <= 0 ||
-          existingNeeds.thirst <= 0 ||
-          existingNeeds.energy <= 0
+          existingNeeds.hunger < 0 ||
+          existingNeeds.thirst < 0 ||
+          existingNeeds.energy < 0 ||
+          Number.isNaN(existingNeeds.hunger) ||
+          Number.isNaN(existingNeeds.thirst) ||
+          Number.isNaN(existingNeeds.energy)
         ) {
-          const oldValues = `h=${existingNeeds.hunger.toFixed(0)} t=${existingNeeds.thirst.toFixed(0)} e=${existingNeeds.energy.toFixed(0)}`;
+          const oldValues = `h=${existingNeeds.hunger?.toFixed(0) ?? "NaN"} t=${existingNeeds.thirst?.toFixed(0) ?? "NaN"} e=${existingNeeds.energy?.toFixed(0) ?? "NaN"}`;
           this.initializeEntityNeeds(agent.id);
           reinitCount++;
           logger.warn(

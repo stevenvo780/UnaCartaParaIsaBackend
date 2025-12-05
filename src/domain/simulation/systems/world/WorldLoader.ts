@@ -445,11 +445,11 @@ export class WorldLoader {
       bounds: {
         x: baseX + 150,
         y: baseY + 80,
-        width: 40,
-        height: 30,
+        width: 60,
+        height: 40,
       },
       props: {
-        capacity: 200,
+        capacity: 1000,
       },
       metadata: {
         buildingId: `building_storage_initial_${Date.now()}`,
@@ -465,7 +465,7 @@ export class WorldLoader {
     const stockpile = this.runner.inventorySystem.createStockpile(
       storageZone.id,
       StockpileType.GENERAL,
-      200,
+      1000,
     );
 
     this.runner.inventorySystem.addToStockpile(
