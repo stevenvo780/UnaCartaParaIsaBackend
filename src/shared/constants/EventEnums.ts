@@ -143,22 +143,4 @@ export enum GameEventType {
   CONFLICT_TRUCE_REJECTED = "CONFLICT_TRUCE_REJECTED",
 }
 
-/**
- * Type representing all possible game event type values.
- */
-export type GameEventTypeValue = `${GameEventType}`;
-
-/**
- * Array of all game event types for iteration.
- * Use this instead of Object.values() for type safety.
- */
-export const ALL_GAME_EVENT_TYPES: readonly GameEventType[] = Object.values(
-  GameEventType,
-) as GameEventType[];
-
-/**
- * Type guard to check if a string is a valid GameEventType.
- */
-export function isGameEventType(value: string): value is GameEventType {
-  return Object.values(GameEventType).includes(value as GameEventType);
-}
+// Alias/listas/guard eliminados; quedan sólo los enums reales.

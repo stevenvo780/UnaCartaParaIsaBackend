@@ -7,7 +7,4 @@ export enum ControlledEntity {
   STEV = "stev",
 }
 
-/**
- * Type for controlled entity values.
- */
-export type ControlledEntityType = ControlledEntity;
+// Type alias eliminado para no exportar símbolos sin uso.

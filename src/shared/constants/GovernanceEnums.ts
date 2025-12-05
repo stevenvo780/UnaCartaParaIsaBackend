@@ -19,24 +19,6 @@ export enum DemandType {
   INFRASTRUCTURE = "infrastructure",
 }
 
-/**
- * Type representing all possible demand type values.
- */
-export type DemandTypeValue = `${DemandType}`;
-
-/**
- * Array of all demand types for iteration.
- */
-export const ALL_DEMAND_TYPES: readonly DemandType[] = Object.values(
-  DemandType,
-) as DemandType[];
-
-/**
- * Type guard to check if a string is a valid DemandType.
- */
-export function isDemandType(value: string): value is DemandType {
-  return Object.values(DemandType).includes(value as DemandType);
-}
 
 /**
  * Enumeration of governance event types.
@@ -52,27 +34,6 @@ export enum GovernanceEventType {
   ROLE_REASSIGNED = "role_reassigned",
 }
 
-/**
- * Type representing all possible governance event type values.
- */
-export type GovernanceEventTypeValue = `${GovernanceEventType}`;
-
-/**
- * Array of all governance event types for iteration.
- */
-export const ALL_GOVERNANCE_EVENT_TYPES: readonly GovernanceEventType[] =
-  Object.values(GovernanceEventType) as GovernanceEventType[];
-
-/**
- * Type guard to check if a string is a valid GovernanceEventType.
- */
-export function isGovernanceEventType(
-  value: string,
-): value is GovernanceEventType {
-  return Object.values(GovernanceEventType).includes(
-    value as GovernanceEventType,
-  );
-}
 
 /**
  * Enumeration of governance policy identifiers.
@@ -84,27 +45,6 @@ export enum GovernancePolicyId {
   HOUSING_EXPANSION = "housing_expansion",
 }
 
-/**
- * Type representing all possible governance policy ID values.
- */
-export type GovernancePolicyIdValue = `${GovernancePolicyId}`;
-
-/**
- * Array of all governance policy IDs for iteration.
- */
-export const ALL_GOVERNANCE_POLICY_IDS: readonly GovernancePolicyId[] =
-  Object.values(GovernancePolicyId) as GovernancePolicyId[];
-
-/**
- * Type guard to check if a string is a valid GovernancePolicyId.
- */
-export function isGovernancePolicyId(
-  value: string,
-): value is GovernancePolicyId {
-  return Object.values(GovernancePolicyId).includes(
-    value as GovernancePolicyId,
-  );
-}
 
 /**
  * Enumeration of governance project types.
@@ -116,24 +56,4 @@ export enum GovernanceProjectType {
   GATHER_WATER = "gather_water",
 }
 
-/**
- * Type representing all possible governance project type values.
- */
-export type GovernanceProjectTypeValue = `${GovernanceProjectType}`;
-
-/**
- * Array of all governance project types for iteration.
- */
-export const ALL_GOVERNANCE_PROJECT_TYPES: readonly GovernanceProjectType[] =
-  Object.values(GovernanceProjectType) as GovernanceProjectType[];
-
-/**
- * Type guard to check if a string is a valid GovernanceProjectType.
- */
-export function isGovernanceProjectType(
-  value: string,
-): value is GovernanceProjectType {
-  return Object.values(GovernanceProjectType).includes(
-    value as GovernanceProjectType,
-  );
-}
+// Alias/listas/guards eliminados para reducir ruido.

@@ -17,27 +17,6 @@ export enum ConflictResolutionChoice {
   CONTINUE = "continue",
 }
 
-/**
- * Type representing all possible conflict resolution choice values.
- */
-export type ConflictResolutionChoiceValue = `${ConflictResolutionChoice}`;
-
-/**
- * Array of all conflict resolution choices for iteration.
- */
-export const ALL_CONFLICT_RESOLUTION_CHOICES: readonly ConflictResolutionChoice[] =
-  Object.values(ConflictResolutionChoice) as ConflictResolutionChoice[];
-
-/**
- * Type guard to check if a string is a valid ConflictResolutionChoice.
- */
-export function isConflictResolutionChoice(
-  value: string,
-): value is ConflictResolutionChoice {
-  return Object.values(ConflictResolutionChoice).includes(
-    value as ConflictResolutionChoice,
-  );
-}
 
 /**
  * Enumeration of conflict resolution outcomes.
@@ -50,24 +29,4 @@ export enum ConflictResolution {
   EXPIRED = "expired",
 }
 
-/**
- * Type representing all possible conflict resolution values.
- */
-export type ConflictResolutionValue = `${ConflictResolution}`;
-
-/**
- * Array of all conflict resolutions for iteration.
- */
-export const ALL_CONFLICT_RESOLUTIONS: readonly ConflictResolution[] =
-  Object.values(ConflictResolution) as ConflictResolution[];
-
-/**
- * Type guard to check if a string is a valid ConflictResolution.
- */
-export function isConflictResolution(
-  value: string,
-): value is ConflictResolution {
-  return Object.values(ConflictResolution).includes(
-    value as ConflictResolution,
-  );
-}
+// Alias/guards eliminados; sólo quedan los enums usados por los sistemas.

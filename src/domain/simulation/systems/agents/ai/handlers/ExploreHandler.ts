@@ -19,8 +19,8 @@ import {
 import { moveToPosition, isAtTarget } from "./MoveHandler";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
-/** Radio de exploración al hacer movimientos aleatorios */
-const EXPLORE_RADIUS = 50;
+/** Radio de exploración al hacer movimientos aleatorios - aumentado para encontrar nuevos chunks */
+const EXPLORE_RADIUS = 200;
 
 /**
  * Maneja la exploración usando MovementSystem.

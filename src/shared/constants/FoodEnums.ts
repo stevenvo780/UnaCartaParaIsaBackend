@@ -38,40 +38,4 @@ export enum FoodId {
   SANDWICH = "sandwich",
 }
 
-/**
- * Type representing all possible food category values.
- */
-export type FoodCategoryValue = `${FoodCategory}`;
-
-/**
- * Type representing all possible food ID values.
- */
-export type FoodIdValue = `${FoodId}`;
-
-/**
- * Array of all food categories for iteration.
- */
-export const ALL_FOOD_CATEGORIES: readonly FoodCategory[] = Object.values(
-  FoodCategory,
-) as FoodCategory[];
-
-/**
- * Array of all food IDs for iteration.
- */
-export const ALL_FOOD_IDS: readonly FoodId[] = Object.values(
-  FoodId,
-) as FoodId[];
-
-/**
- * Type guard to check if a string is a valid FoodCategory.
- */
-export function isFoodCategory(value: string): value is FoodCategory {
-  return Object.values(FoodCategory).includes(value as FoodCategory);
-}
-
-/**
- * Type guard to check if a string is a valid FoodId.
- */
-export function isFoodId(value: string): value is FoodId {
-  return Object.values(FoodId).includes(value as FoodId);
-}
+// Alias/listas/guards eliminados para no exportar símbolos sin uso.

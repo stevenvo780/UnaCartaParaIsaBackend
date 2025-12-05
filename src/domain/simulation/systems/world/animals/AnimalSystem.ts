@@ -17,7 +17,7 @@ import { AnimalBatchProcessor } from "./AnimalBatchProcessor";
 import { getFrameTime } from "../../../../../shared/FrameTime";
 import { performance } from "node:perf_hooks";
 import { performanceMonitor } from "../../../core/PerformanceMonitor";
-import { SIM_CONSTANTS } from "../../../core/SimulationConstants";
+import { SIM_CONSTANTS } from "../../../../../shared/constants/SimulationConstants";
 import { TileType } from "../../../../../shared/constants/TileTypeEnums";
 import { AnimalState } from "../../../../../shared/constants/AnimalEnums";
 import { AnimalRegistry } from "../../world/animals/AnimalRegistry";
@@ -334,7 +334,7 @@ export class AnimalSystem {
       if (
         isIdleState &&
         i % this.IDLE_UPDATE_DIVISOR !==
-          this.updateFrame % this.IDLE_UPDATE_DIVISOR
+        this.updateFrame % this.IDLE_UPDATE_DIVISOR
       ) {
         continue;
       }

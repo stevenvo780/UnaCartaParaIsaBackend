@@ -18,21 +18,4 @@ export enum EntityStatus {
   DISABLED = "disabled",
 }
 
-/**
- * Type representing all possible entity status values.
- */
-export type EntityStatusValue = `${EntityStatus}`;
-
-/**
- * Array of all entity statuses for iteration.
- */
-export const ALL_ENTITY_STATUSES: readonly EntityStatus[] = Object.values(
-  EntityStatus,
-) as EntityStatus[];
-
-/**
- * Type guard to check if a string is a valid EntityStatus.
- */
-export function isEntityStatus(value: string): value is EntityStatus {
-  return Object.values(EntityStatus).includes(value as EntityStatus);
-}
+// Alias/listas/guards eliminados para mantener el módulo mínimo.

@@ -61,21 +61,4 @@ export enum RecipeId {
   COMMUNITY_MEAL = "community_meal",
 }
 
-/**
- * Type representing all possible recipe ID values.
- */
-export type RecipeIdValue = `${RecipeId}`;
-
-/**
- * Array of all recipe IDs for iteration.
- */
-export const ALL_RECIPE_IDS: readonly RecipeId[] = Object.values(
-  RecipeId,
-) as RecipeId[];
-
-/**
- * Type guard to check if a string is a valid RecipeId.
- */
-export function isRecipeId(value: string): value is RecipeId {
-  return Object.values(RecipeId).includes(value as RecipeId);
-}
+// Alias/listas/guard eliminados para mantener sólo los IDs.

@@ -62,19 +62,5 @@ export enum WorkEthic {
   WORKAHOLIC = "workaholic",
 }
 
-/**
- * Enumeration of appearance update reasons.
- * Defines why an agent's appearance might change.
- */
-export enum AppearanceUpdateReason {
-  AGING = "aging",
-  EQUIPMENT_CHANGE = "equipment_change",
-  STATUS_CHANGE = "status_change",
-  DAMAGE = "damage",
-  HEALING = "healing",
-  MOOD_CHANGE = "mood_change",
-  INITIAL = "initial",
-}
-
 // Type/value helpers were removed to keep the module focused on the enums
 // actually used by the simulation runtime.

@@ -26,21 +26,4 @@ export enum HttpStatusCode {
   SERVICE_UNAVAILABLE = 503,
 }
 
-/**
- * Type representing all possible HTTP status code values.
- */
-export type HttpStatusCodeValue = HttpStatusCode;
-
-/**
- * Array of all HTTP status codes for iteration.
- */
-export const ALL_HTTP_STATUS_CODES: readonly HttpStatusCode[] = Object.values(
-  HttpStatusCode,
-).filter((v): v is HttpStatusCode => typeof v === "number") as HttpStatusCode[];
-
-/**
- * Type guard to check if a number is a valid HttpStatusCode.
- */
-export function isHttpStatusCode(value: number): value is HttpStatusCode {
-  return Object.values(HttpStatusCode).includes(value as HttpStatusCode);
-}
+// Alias/listas/guard eliminados para mantener el archivo enfocado sólo en los enums.
