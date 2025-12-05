@@ -709,7 +709,9 @@ export class AISystem extends EventEmitter {
       const roleSystem = container.get<RoleSystem>(TYPES.RoleSystem);
       const agentRole = roleSystem.getAgentRole(agentId);
       roleType = agentRole?.roleType;
-    } catch {}
+    } catch {
+      // RoleSystem not available, roleType remains undefined
+    }
 
     const craftingSystem = this.systemRegistry?.crafting;
     let canCraftClub = false;

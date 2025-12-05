@@ -32,3 +32,10 @@
 - `Reputation/Social`: efectos colaterales por sanciones/treguas
 - `Governance`: coordinación con fuerzas/zonas según políticas
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/conflict/ConflictResolutionSystem.ts`: define `truceCards`, `mediationAttempts`, `sanctionHistory` y los métodos `handleCombatHit()`, `resolveConflict()` y `handleCombatInZone()` que ejecutan exactamente el flujo descrito.
+- Los eventos `CONFLICT_TRUCE_PROPOSED` y las sanciones/dispatch de guardias se emiten desde este archivo, consumidos por sistemas sociales/gubernamentales como se documenta.
+- Integración con `CombatSystem` está codificada a través de `simulationEvents.on(GameEventType.COMBAT_HIT, ...)`, verificando que las fuentes/destinatarios del diagrama son reales.

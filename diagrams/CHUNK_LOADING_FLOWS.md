@@ -28,3 +28,10 @@
 - `AnimalSystem` y `WorldResourceSystem`: spawn por chunk
 - `TerrainSystem`: alta de tiles con biome/walkable/asset
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/world/ChunkLoadingSystem.ts`: implementa `update()`, `calculateChunksToLoad()` y `loadChunk()`, siguiendo exactamente el flujo descrito (radio, intervalos y deduplicación).
+- `src/domain/simulation/systems/world/generation/worldGenerationService.ts`: produce los datos de terreno que ChunkLoadingSystem inyecta en `TerrainSystem`.
+- `AnimalSystem.spawnAnimalsForChunk()` y `WorldResourceSystem.spawnResourcesForChunk()` se invocan desde este sistema cuando se carga un chunk, alineándose con la integración documentada.

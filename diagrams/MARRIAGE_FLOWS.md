@@ -33,3 +33,9 @@
 - Cohesión decae levemente con el tiempo y con tamaño del grupo
 - Beneficios (moral/productividad/social) en función de cohesión/tamaño
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/social/MarriageSystem.ts`: contiene `proposeMarriage`, `acceptProposal`, `rejectProposal`, `initiateDivorce`, `handleMemberDeath` y la lógica de cohesión/beneficios descrita.
+- Escucha `AGENT_DEATH` vía `simulationEvents` y emite los eventos `MARRIAGE_*`, `DIVORCE_*`, `WIDOWHOOD_REGISTERED`, tal como se documenta.

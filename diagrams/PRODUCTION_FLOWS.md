@@ -46,3 +46,9 @@
 - Logging periódico (10s) para monitoreo
 - Métricas de duración por operación (`PerformanceMonitor`)
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/world/ProductionSystem.ts`: contiene `update`, `ensureAssignments`, `processProduction`, `depositToZoneStockpile` y la lógica de modificación de terreno/obstáculos tal como se explica.
+- Los eventos `PRODUCTION_OUTPUT_GENERATED` y `PRODUCTION_WORKER_REMOVED` se emiten desde este archivo, confirmando la sección de eventos.

@@ -25,3 +25,9 @@
 - `RecipeDiscoverySystem`: puede basarse en materiales disponibles por bioma
 - Agentes/IA: recolectan via zonas; produce recursos para Economy/Crafting
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/world/ItemGenerationSystem.ts`: define `processZoneGeneration`, `tryGenerateItem`, `forceSpawnItem`, `addGenerationRule`, `clearZoneItems` y los eventos `ITEM_GENERATED/ITEM_COLLECTED`, confirmando el flujo descrito.
+- El catálogo base (`BaseMaterialsCatalog`) se usa directamente en este archivo para inicializar reglas según bioma/zoneType, validando la dependencia documentada.

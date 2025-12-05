@@ -43,3 +43,9 @@
 - WATER_SUPPLY: priorizar recolección/refuerzo de agua
 - HOUSING_EXPANSION: iniciar proyectos de vivienda
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/structures/GovernanceSystem.ts`: gestiona `demands`, `policies`, `history` y los métodos `createDemand`, `update`, `autoGenerateProjects`, confirmando cada paso descrito.
+- Los eventos escuchados/emisiones (`DEMAND_CREATED`, `GOVERNANCE_ACTION`, `PRODUCTION_OUTPUT_GENERATED`, etc.) están cableados en este archivo, validando la sección de eventos.

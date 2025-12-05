@@ -28,3 +28,9 @@
 - `LifeCycleSystem`: llama a birth/death
 - `Reputation/Social`: pueden visualizar relaciones familiares
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/social/GenealogySystem.ts`: implementa `registerBirth`, `recordDeath`, `getSerializedFamilyTree` y mantiene `familyTree`, `lineages` y `history`, coincidiendo con el flujo descrito.
+- `LifeCycleSystem` invoca este sistema durante `handleBirth`/`handleDeath`, verificando la integración documentada.

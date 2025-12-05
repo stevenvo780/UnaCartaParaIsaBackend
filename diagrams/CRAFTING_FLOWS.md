@@ -32,3 +32,10 @@
 
 - Logs por operación, snapshot: `getCraftingSnapshot()` (jobs, recetas, armas equipadas)
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/economy/EnhancedCraftingSystem.ts`: implementa `startCrafting`, `update`, `finishJob`, `applyOutput` y los eventos `CRAFTING_JOB_STARTED/COMPLETED`, confirmando cada paso del flujo descrito.
+- `InventorySystem` y `EquipmentSystem` se inyectan en ese archivo y se usan para consumir ingredientes/depositar resultados tal como se documenta.
+- `RecipeDiscoverySystem` (`src/domain/simulation/systems/economy/RecipeDiscoverySystem.ts`) gestiona `knownRecipes` y expone las recetas requeridas por el sistema de crafting, validando la integración mencionada.

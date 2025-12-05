@@ -25,8 +25,9 @@
 │  └────────────────────────────────────────────────────────────────┘         │
 │                                                                              │
 │  ┌────────────────────────────────────────────────────────────────┐         │
-│  │               BuildingMaintenanceSystem                         │         │
-│  │    Deterioro, reparación, abandono                              │         │
+│  │     Maintenance Loop (dentro de BuildingSystem)                 │         │
+│  │  - Deterioro, abandono, reparaciones                           │         │
+│  │  - Uso de InventorySystem para reparaciones                    │         │
 │  └────────────────────────────────────────────────────────────────┘         │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -131,21 +132,15 @@
 | Componente | Evento Emitido | Handler | Estado |
 |------------|----------------|---------|--------|
 | BuildingSystem | BUILDING_CONSTRUCTION_STARTED | UI/Client | ✅ |
-| BuildingSystem | BUILDING_CONSTRUCTED | MaintenanceSystem.init | ✅ |
-| MaintenanceSystem | BUILDING_DAMAGED | UI/Client | ✅ |
-| MaintenanceSystem | BUILDING_REPAIRED | UI/Client | ✅ |
-
-### Listener de Eventos
-
-| Sistema | Escucha | Handler | Estado |
-|---------|---------|---------|--------|
-| BuildingMaintenanceSystem | BUILDING_CONSTRUCTED | initializeBuildingState() | ✅ |
+| BuildingSystem | BUILDING_CONSTRUCTED | initializeBuildingState() | ✅ |
+| BuildingSystem | BUILDING_DAMAGED | UI/Client | ✅ |
+| BuildingSystem | BUILDING_REPAIRED | UI/Client | ✅ |
 
 ---
 
 ### Fortalezas del Sistema
 
-- ✅ **Arquitectura modular**: BuildingSystem + BuildingMaintenanceSystem separados
+- ✅ **Arquitectura modular**: BuildingSystem concentra construcción y mantenimiento (loop interno)
 - ✅ **Resource Reservation Pattern**: Evita construir sin materiales
 - ✅ **Position Validation**: 100 intentos con rechazo por bounds/collision/water
 - ✅ **Task Integration**: Trabajadores asignados automáticamente
@@ -164,11 +159,14 @@ BuildingSystem
     ├── @inject @optional TaskSystem ✅
     ├── @inject @optional WorldResourceSystem ✅
     ├── @inject @optional TerrainSystem ✅
-    └── emit → BUILDING_CONSTRUCTION_STARTED, BUILDING_CONSTRUCTED ✅
-
-BuildingMaintenanceSystem
-    ├── @inject GameState ✅
-    ├── @inject InventorySystem ✅
-    ├── listen ← BUILDING_CONSTRUCTED ✅
-    └── emit → BUILDING_DAMAGED, BUILDING_REPAIRED ✅
+    ├── @inject @optional InventorySystem ✅ (reparaciones y stock para mantenimiento)
+    └── emit → BUILDING_CONSTRUCTION_STARTED, BUILDING_CONSTRUCTED, BUILDING_DAMAGED, BUILDING_REPAIRED ✅
 ```
+
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/structures/BuildingSystem.ts`: concentra construcción y mantenimiento. Las secciones `tryScheduleConstruction`, `createConstructionZone`, `updateMaintenance()` y `repairBuilding()` implementan cada paso descrito.
+- `ResourceReservationSystem`, `TaskSystem`, `WorldResourceSystem`, `TerrainSystem` e `InventorySystem` se inyectan exactamente como se muestra en el diagrama, validando los flujos de reserva, limpieza de área y reparaciones.
+- Eventos `BUILDING_CONSTRUCTION_STARTED`, `BUILDING_CONSTRUCTED`, `BUILDING_DAMAGED` y `BUILDING_REPAIRED` son emitidos desde este archivo y consumidos por UI/telemetría.

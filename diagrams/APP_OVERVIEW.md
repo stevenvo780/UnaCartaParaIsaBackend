@@ -59,3 +59,11 @@
 - Prometheus: `backend_*` métricas por tick/sistema/subsistema/memoria
 - Grafana: dashboards aprovisionados
 
+---
+
+## 📌 Validación
+
+- `src/application/server.ts`: instancia `SimulationRunner`, registra rutas HTTP (`simulationRoutes`, `worldRoutes`, `saveRoutes`, `metricsRoutes`) y expone los endpoints descritos.
+- `src/domain/simulation/core/SimulationRunner.ts`: implementa el Scheduler multi‑rate (`FAST/MEDIUM/SLOW`) y emite los snapshots consumidos por `/ws/sim`.
+- `src/infrastructure/services/chunk/ChunkStreamServer.ts`: gestiona `/ws/chunks`, generando chunks incrementales tal como se describe en la sección de Streams.
+- `src/application/routes/*.ts`: corresponden a los caminos `/api/sim`, `/api/world/chunk`, `/api/saves*` y `/metrics*`, asegurando que la documentación refleje las rutas reales.

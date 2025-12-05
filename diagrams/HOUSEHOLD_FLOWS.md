@@ -30,3 +30,9 @@
 - `MarriageSystem`: puede anotarse `marriageGroupId` en household
 - `Inventory/Economy`: emplean el inventario compartido
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/social/HouseholdSystem.ts`: contiene `rebuildFromZones`, `assignAgentToHousehold`, `depositToHousehold`, `withdrawFromHousehold` y `update`, confirmando el flujo descrito.
+- Los eventos (`HOUSEHOLD_AGENT_ASSIGNED`, `HOUSEHOLD_AGENTS_HOMELESS`, etc.) se emiten desde este archivo y son consumidos por Governance y otros sistemas, como se documenta.

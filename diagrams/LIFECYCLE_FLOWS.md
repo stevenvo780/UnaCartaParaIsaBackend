@@ -36,3 +36,9 @@
 - `Needs/AI/Inventory/Social/Marriage/Genealogy/Household/Movement/Role/Task`
 - `AgentRegistry/EntityIndex` para sincronizar entidades
 
+---
+
+## 📌 Validación
+
+- `src/domain/simulation/systems/lifecycle/LifeCycleSystem.ts`: implementa el flujo completo (`update`, `tryBreeding`, `spawnAgentProfile`, `assignToHouseholdQueue`, `rebalanceRoles`) y emite los eventos `AGENT_BIRTH`, `AGENT_AGED`, `AGENT_DEATH`.
+- Las dependencias listadas (Needs, AI, Inventory, etc.) se inyectan o se obtienen vía `SystemRegistry`, comprobando las integraciones descritas.
