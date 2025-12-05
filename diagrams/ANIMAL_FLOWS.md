@@ -282,8 +282,8 @@
 
 2. **Batch Processing (AnimalBatchProcessor)**
    - Float32Array buffers para procesamiento vectorizado
-   - GPU opcional via GPUComputeService cuando el volumen es grande (≥ ~1000)
-   - Por debajo de ese umbral, CPU es más eficiente (fallback automático)
+   - Usa GPUComputeService automáticamente cuando está disponible; si no, cae a CPU
+   - Se activa cuando la población excede el `BATCH_THRESHOLD` (100 animales vivos)
    - Realloc threshold 20% para evitar recreación frecuente
 
 3. **Staggered Updates**
@@ -311,61 +311,12 @@
 
 ---
 
-### ~~1. Evento ANIMAL_SPAWNED Duplicado~~ ✅ CORREGIDO
+### Casuística del Sistema
 
-**Ubicación:** `AnimalSystem.spawnAnimal()` y `AnimalSpawning.createAnimal()`
-
-**Problema original:** Ambos métodos emitían `ANIMAL_SPAWNED`. Cuando `spawnAnimal()` llamaba a `createAnimal()` via callback, el evento se emitía dos veces.
-
-**Corrección aplicada (28/11/2025):** Se removió la emisión duplicada en `AnimalSystem.spawnAnimal()`. Ahora solo `AnimalSpawning.createAnimal()` emite el evento, que es el punto único de creación de animales.
-
-**Análisis:** Esto NO es un problema porque:
-- `spawnAnimalsInChunk()` usa callback directo, no `spawnAnimal()`
-- `spawnAnimal()` es para spawns manuales donde el evento de `createAnimal` está OK
-- Los receptores son idempotentes
-
-**Estado:** ℹ️ Diseño intencional - no requiere cambios
-
-### 2. Wolf puede cazar "human" (Severidad: Info)
-
-**Ubicación:** `AnimalConfigs.ts` - wolf.preyTypes
-
-**Código:**
-```typescript
-preyTypes: [AnimalType.RABBIT, AnimalType.DEER, "human"],
-```
-
-**Observación:** Los lobos tienen a "human" como presa, pero esto se maneja a través de `CombatSystem` cuando un lobo ataca agentes, no a través de `huntPrey()`.
-
-**Análisis:** La lógica de `huntPrey()` solo busca en `availablePrey: Animal[]`, por lo que el "human" en preyTypes es principalmente para que agentes huyan de lobos (via `fleeFromHumans` check invertido).
-
-**Estado:** ✅ Funciona correctamente
-
-### 3. Terrain Grazing Fallback (Severidad: Baja)
-
-**Ubicación:** `AnimalSystem.updateAnimalBehavior()` - líneas 500-515
-
-**Observación:** Cuando no hay recursos de comida cercanos, los herbívoros pueden comer del terreno (grassland → dirt). Esto modifica tiles directamente.
-
-**Código:**
-```typescript
-if (terrainTile && terrainTile.assets.terrain === TileType.TERRAIN_GRASSLAND) {
-  animal.state = AnimalState.EATING;
-  // ...
-  this.terrainSystem.modifyTile(tileX, tileY, {
-    assets: { terrain: TileType.TERRAIN_DIRT },
-  });
-  animal.needs.hunger = Math.min(100, animal.needs.hunger + 30);
-}
-```
-
-**Análisis:** Mecanismo de supervivencia válido. Los tiles se regeneran con el tiempo.
-
-**Estado:** ✅ Diseño intencional
-
-### 4. Huida con GPU (opcional)
-
-La huida masiva puede aprovechar GPU cuando hay suficientes entidades y la GPU está disponible. En lotes pequeños, el camino CPU (`moveAwayFrom`) es más eficiente. TensorFlow.js se carga de forma lazy y solo se usa cuando conviene.
+- **Emisión única de spawn.** `AnimalSpawning.createAnimal()` (src/domain/simulation/systems/world/animals/AnimalSpawning.ts) es el único punto que emite `GameEventType.ANIMAL_SPAWNED`. `AnimalSystem.spawnAnimal()` delega en esa función y solo actualiza el snapshot, por lo que no existen duplicados de evento.
+- **Lobos y agentes humanos.** `AnimalConfigs` mantiene `preyTypes` para cada especie. En el caso del lobo se incluye `"human"` para permitir que los agentes consideren a los lobos como amenazas y huyan (`isHumanNearby`). El método `huntPrey()` únicamente opera sobre animales disponibles, por lo que los humanos se gestionan exclusivamente vía `CombatSystem`.
+- **Herbívoros y terreno.** Cuando no encuentran recursos, los herbívoros pueden consumir el tile `TERRAIN_GRASSLAND` más cercano (`AnimalSystem.updateAnimalBehavior`). Se convierte temporalmente a `TERRAIN_DIRT` y los valores se equilibran con la regeneración posterior del `TerrainSystem`.
+- **Huida acelerada.** `processFleeingAnimalsBatch()` precomputa amenazas por cuadro y, si `GPUComputeService` está disponible, delega los cálculos vectoriales al GPU. El fallback CPU reutiliza buffers `Float32Array` y aplica `moveAwayFrom` en paralelo para mantener la coherencia del estado.
 
 ---
 
@@ -429,8 +380,6 @@ Todos los componentes están correctamente conectados:
 
 ---
 
-## 🎯 CONCLUSIÓN
+## 📌 Resumen Operativo
 
-El sistema de animales está **muy bien diseñado y completamente funcional**. No se identificaron problemas que requieran corrección. Las observaciones menores son decisiones de diseño válidas.
-
-**Puntuación: 10/10** ✅
+El sistema de animales mantiene a `AnimalRegistry` como fuente única de verdad, activa procesamiento batch a partir de 100 entidades y sincroniza eventos (`SPAWNED`, `DIED`, `HUNTED`, `REPRODUCED`) con los consumidores del ecosistema. La documentación refleja el comportamiento real implementado en `AnimalSystem`, `AnimalSpawning`, `AnimalNeeds` y los servicios de soporte.

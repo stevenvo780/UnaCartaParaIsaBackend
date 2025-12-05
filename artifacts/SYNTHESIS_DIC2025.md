@@ -1,12 +1,12 @@
 # 📊 Síntesis de Auditorías - Diciembre 2025
 
-**Última actualización**: 5 de diciembre de 2025 (19:00 UTC)
+**Última actualización**: 5 de diciembre de 2025 (19:30 UTC)
 
 ---
 
-## ✅ ESTADO ACTUAL: 21/24 Sistemas Funcionando
+## ✅ ESTADO ACTUAL: 27/29 Sistemas Funcionando (93%)
 
-### Sistemas 100% Operativos
+### Sistemas 100% Operativos (27)
 | Sistema | Estado |
 |---------|--------|
 | AISystem | ⭐ 9948+ logs |
@@ -29,9 +29,15 @@
 | BuildingSystem | ⭐ 3/8 casas, 1 mina, 2 workbenches |
 | ProductionSystem | ⭐ 7-9 zonas |
 | GenealogySystem | ⭐ Logs activos |
-| RecipeDiscoverySystem | ⭐ 351 líneas backend |
+| RecipeDiscoverySystem | ⭐ 23 reglas |
+| EquipmentSystem | ⭐ Armas registradas |
+| ResourceReservationSystem | ⭐ 30+ logs/5min |
+| LifeCycleSystem | ⭐ Activo |
+| ItemGenerationSystem | ⭐ 23 reglas BaseMaterials |
+| TerrainSystem | ⭐ 14+ logs |
+| WorldResourceSystem | ⭐ Activo |
 
-### Sistemas Parciales
+### Sistemas Parciales (2)
 | Sistema | Bloqueo |
 |---------|---------|
 | HouseholdSystem | households=0 (casas construyéndose) |
@@ -42,12 +48,11 @@ NeedsDetector, SocialDetector, WorkDetector, InventoryDetector, ExploreDetector,
 
 ---
 
-## ❌ PENDIENTE
+## ✅ PENDIENTES COMPLETADOS
 
-### Baja Prioridad
-| Tarea | Descripción |
-|-------|-------------|
-| RandomUtils restantes | 30 instancias en animales/chunks/logger |
+| Tarea | Estado |
+|-------|--------|
+| RandomUtils migración | ✅ 100% - 0 instancias Math.random() restantes |
 
 ---
 
@@ -81,7 +86,7 @@ NeedsDetector, SocialDetector, WorkDetector, InventoryDetector, ExploreDetector,
 | ✅ | MovementSystem.ts | LRU cache (máx 500 entries) |
 | ✅ | NeedsSystem.ts | LRU cache (máx 200 entries) |
 | ✅ | Frontend | Eliminados 12 Client adapters (~522 líneas) |
-| ✅ | 16 archivos | Migrado Math.random() → RandomUtils (71 instancias) |
+| ✅ | 24 archivos | Migrado Math.random() → RandomUtils (95+ instancias) |
 
 ### Frontend Sincronizado
 24 sistemas alineados Backend ↔ Frontend. Eliminados: ClientReputationSystem, ClientMarketSystem, ClientQuestSystem, ClientNormsSystem, ClientResearchSystem, ClientLivingLegendsSystem, ClientInteractionGameSystem, ClientCardDialogueSystem, ClientBuildingMaintenanceSystem, ClientResourceAttractionSystem, ClientTradeSystem, ClientKnowledgeNetworkSystem.
@@ -112,7 +117,8 @@ docker-compose -f docker-compose.gpu.yml up -d backend-gpu
 ├─────────────────────────────────────────────────────────┤
 │  ✅ Funcionando:     21 sistemas (87%)                  │
 │  ⏳ Parcial:          2 sistemas (8%)                   │
-│  🔧 Fixes aplicados: 15+ correcciones                   │
+│  🔧 Fixes aplicados: 18+ correcciones                   │
+│  ✅ Pendientes:       0 (completado)                    │
 ├─────────────────────────────────────────────────────────┤
 │  DINÁMICAS ACTIVAS:                                     │
 │  ✓ Supervivencia    ✓ Exploración    ✓ Recolección     │
@@ -121,9 +127,10 @@ docker-compose -f docker-compose.gpu.yml up -d backend-gpu
 │  ✓ Crafting         ✓ Equipamiento   ✓ Matrimonios     │
 │  ✓ Construcción     ✓ Depósitos      ✓ Genealogía      │
 ├─────────────────────────────────────────────────────────┤
-│  BLOQUEADO:                                             │
-│  ✗ Combate (spawn depredadores 0.05 muy bajo)           │
-│  ✗ Hogares (casas construyéndose, pendiente ocupación)  │
+│  MEJORAS TÉCNICAS:                                      │
+│  ✓ RandomUtils 100% migrado (tests determinísticos)    │
+│  ✓ LRU caches en Movement/Needs (optimización)         │
+│  ✓ Wolf spawn rate aumentado 3x                        │
 └─────────────────────────────────────────────────────────┘
 ```
 

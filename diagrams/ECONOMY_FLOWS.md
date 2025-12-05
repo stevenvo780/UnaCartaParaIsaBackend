@@ -200,54 +200,11 @@
 
 ---
 
-### 1. Fallback a Recursos Globales (Severidad: Info)
+### Casuística del Sistema
 
-**Ubicación:** `EconomySystem.handleWorkAction()` - línea 243
-
-**Código:**
-```typescript
-if (amount > 0) {
-  const added = this.inventorySystem.addResource(agentId, resourceType, amount);
-  if (!added) {
-    this.addToGlobalResources(resourceType, amount);
-  }
-}
-```
-
-**Observación:** Si el inventario del agente está lleno, los recursos van al pool global.
-
-**Análisis:** Diseño intencional - los recursos no se pierden.
-
-**Estado:** ✅ Diseño correcto
-
-### 2. Salario Pagado Incluso Sin Trabajo (Severidad: Info)
-
-**Ubicación:** `EconomySystem.processSalaryPayments()` - línea 168
-
-**Observación:** El salario se paga a todo agente con rol, independientemente de si trabajó.
-
-**Análisis:** Simula un sistema de "salario base" más realista. Los agentes reciben un ingreso mínimo.
-
-**Estado:** ✅ Diseño intencional
-
-### 3. EntityIndex vs GameState Agents (Severidad: Info)
-
-**Ubicación:** `EconomySystem.updateEconomyStats()` - líneas 126-140
-
-**Código:**
-```typescript
-if (this.agentRegistry) {
-  for (const agent of this.agentRegistry.getAllProfiles()) { ... }
-} else if (this.state.agents) {
-  for (const agent of this.state.agents) { ... }
-}
-```
-
-**Observación:** Hay dos formas de iterar sobre agentes según disponibilidad de dependencias.
-
-**Análisis:** Fallback graceful para compatibilidad.
-
-**Estado:** ✅ Patrón correcto
+- **Inventarios saturados.** `EconomySystem.handleWorkAction()` deposita la producción en el inventario personal. Si `InventorySystem.addResource` devuelve `false`, `addToGlobalResources` agrega el excedente al `GameState.resources.materials`, evitando pérdidas de recursos cuando los agentes están llenos.
+- **Salario base garantizado.** `processSalaryPayments()` recorre a todos los agentes vivos con rol asignado y deposita un monto fijo según `RoleType`, sin comprobar si ejecutaron acciones durante el ciclo. Esto modela un ingreso regular que mantiene el flujo monetario aun cuando la IA está inactiva.
+- **Compatibilidad de fuentes de agentes.** `updateEconomyStats()` usa `AgentRegistry.getAllProfiles()` cuando está inyectado y cae a `state.agents` si la dependencia no existe. El doble camino asegura estadísticas consistentes tanto en modo ECS puro como en escenarios de pruebas donde solo existe el `GameState`.
 
 ---
 
@@ -276,8 +233,6 @@ Todos los componentes están correctamente conectados:
 
 ---
 
-## 🎯 CONCLUSIÓN
+## 📌 Resumen Operativo
 
-El sistema de economía está **bien diseñado y completamente funcional**. No se identificaron problemas que requieran corrección. Las observaciones menores son decisiones de diseño válidas.
-
-**Puntuación: 10/10** ✅
+EconomySystem coordina producción, salarios y transferencias monetarias apoyándose en InventorySystem, SocialSystem y RoleSystem. Las rutas de fallback documentadas aseguran que la simulación mantenga consistencia financiera incluso cuando cambian las dependencias activas.
