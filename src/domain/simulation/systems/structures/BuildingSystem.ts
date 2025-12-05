@@ -16,7 +16,10 @@ import type { InventorySystem } from "../economy/InventorySystem";
 import { logger } from "../../../../infrastructure/utils/logger";
 import { ZoneType } from "../../../../shared/constants/ZoneEnums";
 import { BuildingType } from "../../../../shared/constants/BuildingEnums";
-import { SystemStatus, SystemName } from "../../../../shared/constants/SystemEnums";
+import {
+  SystemStatus,
+  SystemName,
+} from "../../../../shared/constants/SystemEnums";
 import { ZoneConstructionStatus } from "../../../../shared/constants/StatusEnums";
 import { TileType } from "../../../../shared/constants/TileTypeEnums";
 import { ResourceType } from "../../../../shared/constants/ResourceEnums";

@@ -145,8 +145,9 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
       this.getRecipeState(job.agentId, recipe.id)?.successRate ??
       recipe.successRate ??
       0.5;
-    const success =
-      RandomUtils.chance(Math.max(this.config.minSuccessRate, successRate));
+    const success = RandomUtils.chance(
+      Math.max(this.config.minSuccessRate, successRate),
+    );
 
     logger.info(
       `⚒️ [finishJob] ${job.agentId}: Recipe=${recipe.id}, success=${success}`,

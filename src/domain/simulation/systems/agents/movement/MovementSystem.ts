@@ -1105,7 +1105,11 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
 
     const radius: number =
       SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN +
-      RandomUtils.floatRange(0, SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX - SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN);
+      RandomUtils.floatRange(
+        0,
+        SIM_CONSTANTS.IDLE_WANDER_RADIUS_MAX -
+          SIM_CONSTANTS.IDLE_WANDER_RADIUS_MIN,
+      );
 
     const angle = RandomUtils.floatRange(0, Math.PI * 2);
     const targetX = state.currentPosition.x + Math.cos(angle) * radius;
@@ -1124,11 +1128,15 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
         this.pathCache.delete(key);
       }
     }
-    // LRU eviction if cache exceeds max size
+
     if (this.pathCache.size > this.MAX_PATH_CACHE_SIZE) {
-      const entries = Array.from(this.pathCache.entries())
-        .sort((a, b) => a[1].timestamp - b[1].timestamp);
-      const toDelete = entries.slice(0, this.pathCache.size - this.MAX_PATH_CACHE_SIZE);
+      const entries = Array.from(this.pathCache.entries()).sort(
+        (a, b) => a[1].timestamp - b[1].timestamp,
+      );
+      const toDelete = entries.slice(
+        0,
+        this.pathCache.size - this.MAX_PATH_CACHE_SIZE,
+      );
       for (const [key] of toDelete) {
         this.pathCache.delete(key);
       }

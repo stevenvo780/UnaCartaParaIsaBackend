@@ -620,7 +620,8 @@ export class CombatSystem implements ICombatSystem {
       attackerProfile?.traits?.aggression ?? attacker.traits?.aggression ?? 0.3;
 
     const eqStats = equipmentSystem.getMainHandStats(attacker.id);
-    const base = 10 * eqStats.damageMultiplier * (0.8 + RandomUtils.floatRange(0, 0.4));
+    const base =
+      10 * eqStats.damageMultiplier * (0.8 + RandomUtils.floatRange(0, 0.4));
     const scale = 0.5 + aggression * 0.7;
     const crit = RandomUtils.chance(0.1);
     const damage = Math.max(1, Math.round(base * scale * (crit ? 1.75 : 1)));
@@ -894,7 +895,8 @@ export class CombatSystem implements ICombatSystem {
     }
 
     const weaponId = this.equippedWeapons.get(agentId) ?? WeaponId.UNARMED;
-    const base = 10 * eqStats.damageMultiplier * (0.8 + RandomUtils.floatRange(0, 0.4));
+    const base =
+      10 * eqStats.damageMultiplier * (0.8 + RandomUtils.floatRange(0, 0.4));
     const damage = Math.max(1, Math.round(base));
 
     const targetStats = this.ensureStats(target);

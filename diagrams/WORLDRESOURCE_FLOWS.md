@@ -38,12 +38,12 @@
 | Tipo | DisplayName | Interacción | Duración | Regenera | Biomas |
 |------|-------------|-------------|----------|----------|--------|
 | TREE | Árbol | CHOP | 3000ms | ✅ 5min | forest, mystical, grassland, village |
-| ROCK | Roca | MINE | 4000ms | ✅ | mountain, desert, wasteland |
-| BERRY_BUSH | Arbusto de bayas | GATHER | 2000ms | ✅ | forest, grassland |
-| WATER_SOURCE | Fuente de agua | DRINK | 1000ms | ✅ | ocean, wetland |
-| MUSHROOM_PATCH | Hongos | GATHER | 1500ms | ✅ | forest, mystical, wetland |
-| WHEAT_CROP | Trigo | HARVEST | 2000ms | ✅ | grassland (farms) |
-| TRASH_PILE | Basura | SCAVENGE | 2500ms | ❌ | wasteland, village |
+| ROCK | Roca | MINE | 4000ms | ✅ 7min | mountain, desert, wasteland |
+| BERRY_BUSH | Arbusto de bayas | GATHER | 1500ms | ✅ 10min | forest, grassland, village |
+| WATER_SOURCE | Fuente de agua | COLLECT | 2000ms | ✅ 1min (hasta 5 ciclos) | ocean, wetland |
+| MUSHROOM_PATCH | Hongos | GATHER | 1500ms | ✅ 10min | forest, mystical, wetland |
+| WHEAT_CROP | Trigo | GATHER | 2000ms | ✅ 10min | grassland (farms) |
+| TRASH_PILE | Basura | SEARCH/SCAVENGE | 5000ms | ✅ 10min | Spawn via decals (sin bioma fijo) |
 
 ---
 
@@ -167,6 +167,16 @@
 
 ---
 
+### Casuística y Garantías
+
+- **Spawns deduplicados por chunk.** `spawnResourcesForChunk()` mantiene `spawnedChunks` para no volver a poblar el mismo chunk (`WorldResourceSystem.ts:333-369`). `clearSpawnedChunks()` resetea el estado en cargas nuevas.
+- **Recursos anclados a assets del terreno.** Durante la carga de chunks se mapean `vegetation` y `decals` hacia recursos interactivos (árboles, bayas, basura). Los offsets aleatorios evitan superposición y mantienen coherencia visual (`mapAssetToResource`, `mapDecalToResource`).
+- **Agua vinculada a tiles.** Los `WATER_SOURCE` guardan `linkedTileX/Y`. Al agotarse, el tile pasa temporalmente a `TERRAIN_DIRT` y tras `regenerationTime` vuelve a agua; después de cinco ciclos, el recurso se elimina definitivamente (`harvestResource()` y `checkRegeneration()`).
+- **Búsqueda progresiva y logging.** `getNearestResource()` escala los radios 200→500→1000→2000 y registra diagnósticos cuando se buscan fuentes de agua escasas, lo que facilita tuning sin auditorías externas.
+- **Timers de regeneración.** `regenerationTimers` se revisan cada 5 s; al completarse, se restablece el estado `PRISTINE`, se emiten eventos y, si aplica, se actualiza el `TerrainSystem` (`checkRegeneration()`).
+
+---
+
 ### Fortalezas del Sistema
 
 - ✅ **Chunk-based spawning**: Lazy loading con deduplicación
@@ -216,3 +226,9 @@ interface WorldResourceInstance {
   regenerationStartTime?: number; // Cuando empezó regeneración
 }
 ```
+
+---
+
+## 📌 Resumen Operativo
+
+WorldResourceSystem sincroniza recursos interactivos con el mundo visual mediante `OptimizedSpatialGrid` (100 px), spawns por chunk con deduplicación y timers de regeneración vinculados al `TerrainSystem`. Las tablas y flujos documentados reflejan los valores reales de `WorldResourceConfigs` y el comportamiento implementado en `WorldResourceSystem`.

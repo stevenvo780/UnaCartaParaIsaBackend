@@ -1,6 +1,6 @@
 # 📊 Síntesis de Auditorías - Diciembre 2025
 
-**Última actualización**: 5 de diciembre de 2025 (19:30 UTC)
+**Última actualización**: 5 de diciembre de 2025 (19:35 UTC)
 
 ---
 
@@ -9,39 +9,43 @@
 ### Sistemas 100% Operativos (27)
 | Sistema | Estado |
 |---------|--------|
-| AISystem | ⭐ 9948+ logs |
-| MovementSystem | ⭐ 1464 logs |
-| NeedsSystem | ⭐ 108 logs |
-| SocialSystem | ⭐ 130 logs (incluye reputation) |
-| InventorySystem | ⭐ 538 logs |
-| AnimalSystem | ⭐ 432 logs |
-| TimeSystem | ⭐ 65 logs |
-| EconomySystem | ⭐ 64 logs |
-| CombatSystem | ⭐ Listo (esperando depredadores) |
-| ConflictResolutionSystem | ⭐ Activo |
-| AmbientAwarenessSystem | ⭐ Activo |
-| ChunkLoadingSystem | ⭐ 64 chunks |
-| TaskSystem | ⭐ Activo |
-| RoleSystem | ⭐ 10 roles |
+| AISystem | ⭐ 810+ logs/min |
+| MovementSystem | ⭐ 128 logs/min |
+| NeedsSystem | ⭐ 12 logs/min |
+| SocialSystem | ⭐ 12 logs/min |
+| InventorySystem | ⭐ 7 logs/min |
+| AnimalSystem | ⭐ 40 logs/min |
+| TimeSystem | ⭐ 6 logs/min |
+| EconomySystem | ⭐ 6 logs/min |
+| CombatSystem | ⭐ 12 logs/min |
+| ConflictResolutionSystem | ⭐ 6 logs/min |
+| AmbientAwarenessSystem | ⭐ 6 logs/min |
+| ChunkLoadingSystem | ⭐ Activo |
+| TaskSystem | ⭐ 6 logs/min |
+| RoleSystem | ⭐ 6 logs/min |
 | GovernanceSystem | ⭐ Demandas activas |
-| EnhancedCraftingSystem | ⭐ 7-9 armas equipadas |
-| MarriageSystem | ⭐ 16-28 grupos |
-| BuildingSystem | ⭐ 3/8 casas, 1 mina, 2 workbenches |
-| ProductionSystem | ⭐ 7-9 zonas |
-| GenealogySystem | ⭐ Logs activos |
+| EnhancedCraftingSystem | ⭐ Armas equipadas |
+| MarriageSystem | ⭐ 6 logs/min |
+| BuildingSystem | ⭐ Construcciones activas |
+| ProductionSystem | ⭐ 6 logs/min |
+| GenealogySystem | ⭐ 6 logs/min |
 | RecipeDiscoverySystem | ⭐ 23 reglas |
 | EquipmentSystem | ⭐ Armas registradas |
-| ResourceReservationSystem | ⭐ 30+ logs/5min |
+| ResourceReservationSystem | ⭐ 6 logs/min |
 | LifeCycleSystem | ⭐ Activo |
-| ItemGenerationSystem | ⭐ 23 reglas BaseMaterials |
-| TerrainSystem | ⭐ 14+ logs |
+| ItemGenerationSystem | ⭐ 23 reglas |
+| TerrainSystem | ⭐ 3 logs/min |
 | WorldResourceSystem | ⭐ Activo |
 
-### Sistemas Parciales (2)
-| Sistema | Bloqueo |
-|---------|---------|
-| HouseholdSystem | households=0 (casas construyéndose) |
-| SharedKnowledgeSystem | alerts=0 (normal sin amenazas) |
+### Sistemas Parciales (2) - Comportamiento Esperado
+| Sistema | Estado | Razón |
+|---------|--------|-------|
+| HouseholdSystem | ⏳ households=0 | Casas en construcción, aún sin completar |
+| SharedKnowledgeSystem | ⏳ alerts=0 | Lobos lejos de agentes, sin amenazas cercanas |
+
+**Nota**: Ambos sistemas funcionan correctamente. Activarán cuando:
+- Se complete una casa → HouseholdSystem registrará ocupantes
+- Un lobo se acerque a agentes → SharedKnowledgeSystem emitirá alertas
 
 ### Detectores IA: 9/9 ✅
 NeedsDetector, SocialDetector, WorkDetector, InventoryDetector, ExploreDetector, CraftDetector, CombatDetector, BuildDetector
@@ -60,16 +64,10 @@ NeedsDetector, SocialDetector, WorkDetector, InventoryDetector, ExploreDetector,
 
 | Métrica | Valor |
 |---------|-------|
-| Agentes vivos | 11 |
-| Animales vivos | 99 |
-| Casas | 3/8 |
-| Minas | 1 |
-| Workbenches | 2 |
-| Zonas | 9 |
-| Grupos matrimonio | 16-28 |
-| Armas equipadas | 7-9 |
-| Stockpile | wood=27, stone=28 |
-| Bienestar | 57-58% |
+| Agentes vivos | 11-12 |
+| Animales vivos | 200+ |
+| Stockpile | wood=70, stone=8 |
+| Construcciones | En progreso |
 
 ---
 
@@ -87,6 +85,7 @@ NeedsDetector, SocialDetector, WorkDetector, InventoryDetector, ExploreDetector,
 | ✅ | NeedsSystem.ts | LRU cache (máx 200 entries) |
 | ✅ | Frontend | Eliminados 12 Client adapters (~522 líneas) |
 | ✅ | 24 archivos | Migrado Math.random() → RandomUtils (95+ instancias) |
+| ✅ | ClientAnimalSystem.ts | Fix sincronización animales (state.animals.animals) |
 
 ### Frontend Sincronizado
 24 sistemas alineados Backend ↔ Frontend. Eliminados: ClientReputationSystem, ClientMarketSystem, ClientQuestSystem, ClientNormsSystem, ClientResearchSystem, ClientLivingLegendsSystem, ClientInteractionGameSystem, ClientCardDialogueSystem, ClientBuildingMaintenanceSystem, ClientResourceAttractionSystem, ClientTradeSystem, ClientKnowledgeNetworkSystem.
@@ -116,8 +115,8 @@ docker-compose -f docker-compose.gpu.yml up -d backend-gpu
 │                  ESTADO DEL BACKEND                     │
 ├─────────────────────────────────────────────────────────┤
 │  ✅ Funcionando:     27 sistemas (93%)                  │
-│  ⏳ Parcial:          2 sistemas (7%)                   │
-│  🔧 Fixes aplicados: 18+ correcciones                   │
+│  ⏳ Parcial:          2 sistemas (7%) - esperado        │
+│  🔧 Fixes aplicados: 19+ correcciones                   │
 │  ✅ Pendientes:       0 (completado)                    │
 ├─────────────────────────────────────────────────────────┤
 │  DINÁMICAS ACTIVAS:                                     │
@@ -132,6 +131,11 @@ docker-compose -f docker-compose.gpu.yml up -d backend-gpu
 │  ✓ RandomUtils 100% migrado (tests determinísticos)    │
 │  ✓ LRU caches en Movement/Needs (optimización)         │
 │  ✓ Wolf spawn rate aumentado 3x                        │
+│  ✓ Frontend animal sync corregido                      │
+├─────────────────────────────────────────────────────────┤
+│  SISTEMAS PARCIALES (comportamiento esperado):         │
+│  ⏳ HouseholdSystem: Esperando casas completadas       │
+│  ⏳ SharedKnowledgeSystem: Sin amenazas cercanas       │
 └─────────────────────────────────────────────────────────┘
 ```
 

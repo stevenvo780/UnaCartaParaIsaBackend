@@ -361,8 +361,14 @@ export class WorldResourceSystem {
           for (const asset of tile.assets.vegetation) {
             const resourceType = this.mapAssetToResource(asset);
             if (resourceType) {
-              const offsetX = RandomUtils.floatRange(-tileSize * 0.3, tileSize * 0.3);
-              const offsetY = RandomUtils.floatRange(-tileSize * 0.3, tileSize * 0.3);
+              const offsetX = RandomUtils.floatRange(
+                -tileSize * 0.3,
+                tileSize * 0.3,
+              );
+              const offsetY = RandomUtils.floatRange(
+                -tileSize * 0.3,
+                tileSize * 0.3,
+              );
 
               const resource = this.spawnResource(
                 resourceType,
@@ -382,8 +388,14 @@ export class WorldResourceSystem {
           for (const decal of tile.assets.decals) {
             const resourceType = this.mapDecalToResource(decal);
             if (resourceType) {
-              const offsetX = RandomUtils.floatRange(-tileSize * 0.4, tileSize * 0.4);
-              const offsetY = RandomUtils.floatRange(-tileSize * 0.4, tileSize * 0.4);
+              const offsetX = RandomUtils.floatRange(
+                -tileSize * 0.4,
+                tileSize * 0.4,
+              );
+              const offsetY = RandomUtils.floatRange(
+                -tileSize * 0.4,
+                tileSize * 0.4,
+              );
 
               const resource = this.spawnResource(
                 resourceType,
@@ -603,7 +615,10 @@ export class WorldResourceSystem {
             continue;
           }
 
-          const amount = RandomUtils.intRange(secondary.amountMin, secondary.amountMax);
+          const amount = RandomUtils.intRange(
+            secondary.amountMin,
+            secondary.amountMax,
+          );
 
           if (amount > 0) {
             items.push({ type: secondary.resourceType, amount });

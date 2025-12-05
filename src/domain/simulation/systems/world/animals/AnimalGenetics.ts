@@ -6,7 +6,9 @@ const MUTATION_RATE = 0.1;
 export class AnimalGenetics {
   public static generateRandomGenes(seed?: number): AnimalGenes {
     const random =
-      seed !== undefined ? (): number => RandomUtils.float() : RandomUtils.float;
+      seed !== undefined
+        ? (): number => RandomUtils.float()
+        : RandomUtils.float;
 
     return {
       color: Math.floor(random() * 0xffffff),
@@ -49,8 +51,9 @@ export class AnimalGenetics {
     max: number,
   ): number {
     const average = (trait1 + trait2) / 2;
-    const mutation =
-      RandomUtils.chance(MUTATION_RATE) ? (RandomUtils.float() - 0.5) * 0.2 : 0;
+    const mutation = RandomUtils.chance(MUTATION_RATE)
+      ? (RandomUtils.float() - 0.5) * 0.2
+      : 0;
 
     return Math.max(min, Math.min(max, average + mutation));
   }

@@ -651,11 +651,15 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
         this.zoneCache.delete(key);
       }
     }
-    // LRU eviction if cache exceeds max size
+
     if (this.zoneCache.size > this.MAX_ZONE_CACHE_SIZE) {
-      const entries = Array.from(this.zoneCache.entries())
-        .sort((a, b) => a[1].timestamp - b[1].timestamp);
-      const toDelete = entries.slice(0, this.zoneCache.size - this.MAX_ZONE_CACHE_SIZE);
+      const entries = Array.from(this.zoneCache.entries()).sort(
+        (a, b) => a[1].timestamp - b[1].timestamp,
+      );
+      const toDelete = entries.slice(
+        0,
+        this.zoneCache.size - this.MAX_ZONE_CACHE_SIZE,
+      );
       for (const [key] of toDelete) {
         this.zoneCache.delete(key);
       }
