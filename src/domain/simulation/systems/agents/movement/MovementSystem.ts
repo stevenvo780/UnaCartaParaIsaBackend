@@ -70,6 +70,12 @@ export interface ZoneDistance {
   difficulty: Difficulty;
 }
 
+type PathfindingQueueEntry = {
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+  callback: (result: PathfindingResult) => void;
+};
+
 /**
  * System for managing entity movement, pathfinding, and activities.
  *
@@ -118,12 +124,9 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
    */
   private readonly BATCH_THRESHOLD = 3;
 
-  private pathfindingQueue: Array<{
-    entityId: string;
-    from: { x: number; y: number };
-    to: { x: number; y: number };
-    callback: (result: PathfindingResult) => void;
-  }> = [];
+  private pathfindingQueue: string[] = [];
+  private pathQueueHead = 0;
+  private pendingPathRequests = new Map<string, PathfindingQueueEntry>();
   private activePaths = 0;
   private readonly MAX_CONCURRENT_PATHS = 20; // Increased from 5 to prevent pathfinding starvation
   @inject(TYPES.AgentRegistry as symbol)
@@ -234,48 +237,28 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     }
 
     while (
-      this.pathfindingQueue.length > 0 &&
+      this.pathQueueHead < this.pathfindingQueue.length &&
       this.activePaths < this.MAX_CONCURRENT_PATHS
     ) {
-      const request = this.pathfindingQueue.shift();
-      if (!request) break;
+      const entityId = this.pathfindingQueue[this.pathQueueHead++];
+      const request = entityId
+        ? this.pendingPathRequests.get(entityId)
+        : undefined;
 
-      this.activePaths++;
+      if (!request) {
+        continue;
+      }
 
-      this.calculatePath(request.from, request.to)
-        .then((result) => {
-          this.activePaths--;
-          request.callback(result);
+      this.pendingPathRequests.delete(entityId);
+      this.dispatchPathfindingRequest(entityId, request);
+    }
 
-          if (this.pathfindingQueue.length > 10) {
-            logger.warn(
-              `Pathfinding queue has ${this.pathfindingQueue.length} pending requests`,
-            );
-          }
-        })
-        .catch((err) => {
-          this.activePaths--;
-          logger.error(
-            `Pathfinding error for entity ${request.entityId}:`,
-            err,
-          );
-
-          const distance = Math.hypot(
-            request.to.x - request.from.x,
-            request.to.y - request.from.y,
-          );
-          request.callback({
-            success: false,
-            path: [],
-            estimatedTime: estimateTravelTime(
-              distance,
-              0,
-              SIMULATION_CONSTANTS.MOVEMENT.BASE_SPEED,
-              SIMULATION_CONSTANTS.MOVEMENT.FATIGUE_PENALTY_MULTIPLIER,
-            ),
-            distance,
-          });
-        });
+    if (
+      this.pathQueueHead > 0 &&
+      this.pathQueueHead > this.pathfindingQueue.length / 2
+    ) {
+      this.pathfindingQueue = this.pathfindingQueue.slice(this.pathQueueHead);
+      this.pathQueueHead = 0;
     }
   }
 
@@ -285,15 +268,50 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     to: { x: number; y: number },
     callback: (result: PathfindingResult) => void,
   ): void {
-    const existingIndex = this.pathfindingQueue.findIndex(
-      (r) => r.entityId === entityId,
-    );
-
-    if (existingIndex !== -1) {
-      this.pathfindingQueue[existingIndex] = { entityId, from, to, callback };
-    } else {
-      this.pathfindingQueue.push({ entityId, from, to, callback });
+    const isNew = !this.pendingPathRequests.has(entityId);
+    this.pendingPathRequests.set(entityId, { from, to, callback });
+    if (isNew) {
+      this.pathfindingQueue.push(entityId);
     }
+  }
+
+  private dispatchPathfindingRequest(
+    entityId: string,
+    request: PathfindingQueueEntry,
+  ): void {
+    this.activePaths++;
+
+    this.calculatePath(request.from, request.to)
+      .then((result) => {
+        this.activePaths--;
+        request.callback(result);
+
+        if (this.pendingPathRequests.size > 10) {
+          logger.warn(
+            `Pathfinding queue has ${this.pendingPathRequests.size} pending requests`,
+          );
+        }
+      })
+      .catch((err) => {
+        this.activePaths--;
+        logger.error(`Pathfinding error for entity ${entityId}:`, err);
+
+        const distance = Math.hypot(
+          request.to.x - request.from.x,
+          request.to.y - request.from.y,
+        );
+        request.callback({
+          success: false,
+          path: [],
+          estimatedTime: estimateTravelTime(
+            distance,
+            0,
+            SIMULATION_CONSTANTS.MOVEMENT.BASE_SPEED,
+            SIMULATION_CONSTANTS.MOVEMENT.FATIGUE_PENALTY_MULTIPLIER,
+          ),
+          distance,
+        });
+      });
   }
 
   private isMovingBuffer: Uint8Array | null = null;

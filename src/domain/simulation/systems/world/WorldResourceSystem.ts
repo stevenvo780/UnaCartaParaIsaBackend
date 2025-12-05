@@ -483,17 +483,15 @@ export class WorldResourceSystem {
     position: { x: number; y: number },
     radius: number,
   ): WorldResourceInstance[] {
-    if (!this.gameState.worldResources) return [];
-
-    const radiusSq = radius * radius;
-    return Object.values(this.gameState.worldResources).filter(
-      (resource: WorldResourceInstance) => {
-        const dx = resource.position.x - position.x;
-        const dy = resource.position.y - position.y;
-        const distSq = dx * dx + dy * dy;
-        return distSq <= radiusSq && resource.state !== ResourceState.DEPLETED;
-      },
-    );
+    const nearbyIds = this.spatialGrid.queryRadius(position, radius);
+    const results: WorldResourceInstance[] = [];
+    for (const { entity: id } of nearbyIds) {
+      const resource = this.resources.get(id);
+      if (!resource) continue;
+      if (resource.state === ResourceState.DEPLETED) continue;
+      results.push(resource);
+    }
+    return results;
   }
 
   public harvestResource(

@@ -59,6 +59,13 @@ export class AgentRegistry {
 
   private profileIndex = new Map<string, AgentProfile>();
   private profileIndexDirty = true;
+  private agentSpatialCache: {
+    timestamp: number;
+    cellSize: number;
+    cells: Map<string, AgentProfile[]>;
+  } | null = null;
+  private readonly AGENT_SPATIAL_CACHE_TTL = 200; // ms
+  private readonly AGENT_SPATIAL_CELL_SIZE = 600; // world units
 
   private aiStatesRef?: SystemMap<AIState>;
   private needsRef?: SystemMap<EntityNeedsData>;
@@ -112,6 +119,7 @@ export class AgentRegistry {
       this.profileIndex.set(agent.id, agent);
     }
     this.profileIndexDirty = false;
+    this.invalidateSpatialCache();
     logger.debug(
       `📋 AgentRegistry: Rebuilt profile index (${this.profileIndex.size} agents)`,
     );
@@ -122,6 +130,7 @@ export class AgentRegistry {
    */
   public invalidateProfileIndex(): void {
     this.profileIndexDirty = true;
+    this.invalidateSpatialCache();
   }
 
   /**
@@ -190,6 +199,7 @@ export class AgentRegistry {
     }
     this.gameState.agents.push(profile);
     this.profileIndex.set(profile.id, profile);
+    this.invalidateSpatialCache();
     logger.debug(`📋 AgentRegistry: Added agent ${profile.id}`);
   }
 
@@ -206,6 +216,7 @@ export class AgentRegistry {
 
     this.gameState.agents.splice(index, 1);
     this.profileIndex.delete(agentId);
+    this.invalidateSpatialCache();
     logger.debug(`📋 AgentRegistry: Removed agent ${agentId}`);
     return true;
   }
@@ -333,6 +344,92 @@ export class AgentRegistry {
     this.needsRef = undefined;
     this.movementRef = undefined;
     this.inventoryRef = undefined;
+    this.invalidateSpatialCache();
     logger.debug("📋 AgentRegistry: Cleared all references");
+  }
+
+  /**
+   * Returns agents within a radius using a cached spatial grid.
+   */
+  public getAgentsInRadius(
+    position: { x: number; y: number },
+    radius: number,
+    options: { excludeDead?: boolean } = {},
+  ): AgentProfile[] {
+    const cache = this.getAgentSpatialCache();
+    if (!cache) return [];
+
+    const cellSize = cache.cellSize;
+    const radiusSq = radius * radius;
+    const minCellX = Math.floor((position.x - radius) / cellSize);
+    const maxCellX = Math.floor((position.x + radius) / cellSize);
+    const minCellY = Math.floor((position.y - radius) / cellSize);
+    const maxCellY = Math.floor((position.y + radius) / cellSize);
+
+    const results: AgentProfile[] = [];
+    for (let cellX = minCellX; cellX <= maxCellX; cellX++) {
+      for (let cellY = minCellY; cellY <= maxCellY; cellY++) {
+        const bucket = cache.cells.get(`${cellX},${cellY}`);
+        if (!bucket) continue;
+
+        for (const agent of bucket) {
+          if (options.excludeDead && agent.isDead) continue;
+          const agentPos = agent.position;
+          if (!agentPos) continue;
+          const dx = agentPos.x - position.x;
+          const dy = agentPos.y - position.y;
+          if (dx * dx + dy * dy <= radiusSq) {
+            results.push(agent);
+          }
+        }
+      }
+    }
+
+    return results;
+  }
+
+  private getAgentSpatialCache(): {
+    timestamp: number;
+    cellSize: number;
+    cells: Map<string, AgentProfile[]>;
+  } | null {
+    const now = Date.now();
+    if (
+      !this.agentSpatialCache ||
+      now - this.agentSpatialCache.timestamp > this.AGENT_SPATIAL_CACHE_TTL
+    ) {
+      this.agentSpatialCache = {
+        timestamp: now,
+        cellSize: this.AGENT_SPATIAL_CELL_SIZE,
+        cells: this.buildAgentSpatialCells(),
+      };
+    }
+    return this.agentSpatialCache;
+  }
+
+  private buildAgentSpatialCells(): Map<string, AgentProfile[]> {
+    const cells = new Map<string, AgentProfile[]>();
+    const cellSize = this.AGENT_SPATIAL_CELL_SIZE;
+    const profiles = Array.from(this.getAllProfiles());
+
+    for (const profile of profiles) {
+      const pos = profile.position;
+      if (!pos) continue;
+
+      const cellX = Math.floor(pos.x / cellSize);
+      const cellY = Math.floor(pos.y / cellSize);
+      const key = `${cellX},${cellY}`;
+
+      if (!cells.has(key)) {
+        cells.set(key, []);
+      }
+      cells.get(key)!.push(profile);
+    }
+
+    return cells;
+  }
+
+  private invalidateSpatialCache(): void {
+    this.agentSpatialCache = null;
   }
 }

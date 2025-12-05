@@ -66,6 +66,11 @@ import { equipmentSystem } from "../EquipmentSystem";
 import { RoleSystem } from "../RoleSystem";
 import type { Container } from "inversify";
 import { RandomUtils } from "@/shared/utils/RandomUtils";
+import {
+  WorldContextCache,
+  type CachedZoneInfo,
+  type ZonesMetadata,
+} from "@/domain/simulation/core/WorldContextCache";
 
 // Lazy import to avoid circular dependency
 let _container: Container | null = null;
@@ -156,6 +161,7 @@ export class AISystem extends EventEmitter {
   private needsSystem?: NeedsSystem;
   private worldQueryService?: WorldQueryService;
   private timeSystem?: TimeSystem;
+  private worldContextCache?: WorldContextCache;
 
   private systemRegistry: SystemRegistry;
 
@@ -184,6 +190,9 @@ export class AISystem extends EventEmitter {
     @optional()
     worldQueryService?: WorldQueryService,
     @inject(TYPES.TimeSystem) @optional() timeSystem?: TimeSystem,
+    @inject(TYPES.WorldContextCache)
+    @optional()
+    worldContextCache?: WorldContextCache,
   ) {
     super();
     this.gameState = gameState;
@@ -192,6 +201,7 @@ export class AISystem extends EventEmitter {
 
     this.worldQueryService = worldQueryService;
     this.timeSystem = timeSystem;
+    this.worldContextCache = worldContextCache;
     this.config = { ...DEFAULT_CONFIG };
 
     this.systemRegistry = new SystemRegistry();
@@ -651,10 +661,16 @@ export class AISystem extends EventEmitter {
       knownResources: memory.knownResourceLocations,
     };
 
-    if (this.gameState.zones && this.gameState.zones.length > 0) {
+    const zonesMetadata = this.worldContextCache?.getZonesMetadata();
+    if (zonesMetadata) {
+      const zoneCenters = this.getZoneCentersFromMetadata(zonesMetadata);
+      if (zoneCenters.length > 0) {
+        explorationContext.allZones = zoneCenters;
+      }
+    } else if (this.gameState.zones && this.gameState.zones.length > 0) {
       explorationContext.allZones = this.gameState.zones.map((z) => ({
         id: z.id,
-        x: z.bounds.x + z.bounds.width / 2, // Centro de la zona
+        x: z.bounds.x + z.bounds.width / 2,
         y: z.bounds.y + z.bounds.height / 2,
       }));
     }
@@ -675,7 +691,12 @@ export class AISystem extends EventEmitter {
           | undefined) ?? {};
     }
 
-    if (this.gameState.zones) {
+    if (zonesMetadata) {
+      const storageZone = this.findClosestZone(position, zonesMetadata.storageZones);
+      if (storageZone) {
+        depositZoneId = storageZone.id;
+      }
+    } else if (this.gameState.zones) {
       const storageZone = this.gameState.zones.find(
         (z) => z.type === ZoneType.STORAGE || z.id.includes(ZoneType.STORAGE),
       );
@@ -709,24 +730,28 @@ export class AISystem extends EventEmitter {
       | undefined;
     let _totalAgents = 1;
 
-    const inventorySys = this.systemRegistry?.inventory as unknown as {
-      getSystemStats?: () => {
-        stockpiled: { wood: number; stone: number; food: number };
-        inAgents: { wood: number; stone: number; food: number };
-      };
-    };
-    if (inventorySys?.getSystemStats) {
-      const stats = inventorySys.getSystemStats();
-
+    if (this.worldContextCache) {
+      const stats = this.worldContextCache.getInventoryStats();
       _globalStockpile = {
         wood: (stats.stockpiled.wood ?? 0) + (stats.inAgents.wood ?? 0),
         stone: (stats.stockpiled.stone ?? 0) + (stats.inAgents.stone ?? 0),
         food: (stats.stockpiled.food ?? 0) + (stats.inAgents.food ?? 0),
       };
-      if (RandomUtils.chance(0.01)) {
-        logger.debug(
-          `📦 [AISystem] globalStockpile: wood=${_globalStockpile.wood}, stone=${_globalStockpile.stone}, food=${_globalStockpile.food}`,
-        );
+    } else {
+      const inventorySys = this.systemRegistry?.inventory as unknown as {
+        getSystemStats?: () => {
+          stockpiled: { wood: number; stone: number; food: number };
+          inAgents: { wood: number; stone: number; food: number };
+        };
+      };
+      if (inventorySys?.getSystemStats) {
+        const stats = inventorySys.getSystemStats();
+
+        _globalStockpile = {
+          wood: (stats.stockpiled.wood ?? 0) + (stats.inAgents.wood ?? 0),
+          stone: (stats.stockpiled.stone ?? 0) + (stats.inAgents.stone ?? 0),
+          food: (stats.stockpiled.food ?? 0) + (stats.inAgents.food ?? 0),
+        };
       }
     }
 
@@ -781,54 +806,44 @@ export class AISystem extends EventEmitter {
     }
 
     let craftZoneId: string | undefined;
-    if (this.gameState.zones) {
-      const craftZone = this.gameState.zones.find(
-        (z) =>
-          z.type === ZoneType.WORK ||
-          z.id.includes("craft") ||
-          (z as { metadata?: { craftingStation?: boolean } }).metadata
-            ?.craftingStation === true,
-      );
-      if (craftZone) {
-        craftZoneId = craftZone.id;
-      }
-    }
-
-    const pendingBuilds: { id: string; zoneId: string; progress: number }[] =
-      [];
-    if (this.gameState.zones) {
-      for (const zone of this.gameState.zones) {
-        const zoneWithMeta = zone as {
-          metadata?: { buildProgress?: number; buildingType?: string };
-        };
-        if (
-          zoneWithMeta.metadata?.buildProgress !== undefined &&
-          zoneWithMeta.metadata.buildProgress < 1
-        ) {
-          pendingBuilds.push({
-            id: zone.id,
-            zoneId: zone.id,
-            progress: zoneWithMeta.metadata.buildProgress,
-          });
-        }
-      }
-    }
-
+    let pendingBuilds: { id: string; zoneId: string; progress: number }[] = [];
     const workZonesWithItems: {
       zoneId: string;
       x: number;
       y: number;
       items: { itemId: string; quantity: number }[];
     }[] = [];
-    if (this.gameState.zones && this.gameState.zones.length > 0) {
-      const workZoneTypes = [ZoneType.WORK, ZoneType.GATHERING, ZoneType.WILD];
-
-      if (RandomUtils.chance(0.01)) {
-        const zoneIds = this.gameState.zones.slice(0, 5).map((z) => z.id);
-        logger.debug(
-          `🔧 [AISystem] ${agentId}: total zones=${this.gameState.zones.length}, sample: ${zoneIds.join(", ")}`,
-        );
+    if (zonesMetadata) {
+      const craftZone = this.findClosestZone(position, zonesMetadata.craftZones);
+      if (craftZone) {
+        craftZoneId = craftZone.id;
       }
+
+      pendingBuilds =
+        zonesMetadata.pendingBuilds.map((build) => ({
+          id: build.id,
+          zoneId: build.zoneId,
+          progress: build.progress,
+        })) ?? [];
+
+      for (const zone of zonesMetadata.workZones) {
+        const dx = zone.center.x - position.x;
+        const dy = zone.center.y - position.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance < 1000) {
+          workZonesWithItems.push({
+            zoneId: zone.id,
+            x: zone.center.x,
+            y: zone.center.y,
+            items: [
+              { itemId: ItemId.WOOD_LOG, quantity: 1 },
+              { itemId: ItemId.STONE, quantity: 1 },
+            ],
+          });
+        }
+      }
+    } else if (this.gameState.zones && this.gameState.zones.length > 0) {
+      const workZoneTypes = [ZoneType.WORK, ZoneType.GATHERING, ZoneType.WILD];
 
       for (const zone of this.gameState.zones) {
         const isWorkZone =
@@ -861,10 +876,31 @@ export class AISystem extends EventEmitter {
         }
       }
 
-      if (workZonesWithItems.length > 0 && RandomUtils.chance(0.05)) {
-        logger.debug(
-          `🔧 [AISystem] ${agentId}: found ${workZonesWithItems.length} work zones with items`,
+      pendingBuilds = this.gameState.zones
+        .map((zone) => {
+          const progress = (zone as { metadata?: { buildProgress?: number } }).metadata?.buildProgress;
+          if (progress !== undefined && progress < 1) {
+            return {
+              id: zone.id,
+              zoneId: zone.id,
+              progress,
+            };
+          }
+          return undefined;
+        })
+        .filter((build): build is { id: string; zoneId: string; progress: number } =>
+          Boolean(build),
         );
+
+      const craftZone = this.gameState.zones.find(
+        (z) =>
+          z.type === ZoneType.WORK ||
+          z.id.includes("craft") ||
+          (z as { metadata?: { craftingStation?: boolean } }).metadata
+            ?.craftingStation === true,
+      );
+      if (craftZone) {
+        craftZoneId = craftZone.id;
       }
     }
 
@@ -907,6 +943,48 @@ export class AISystem extends EventEmitter {
     this.contextCache.set(agentId, { context, timestamp: now });
 
     return context;
+  }
+
+  private getZoneCentersFromMetadata(
+    metadata: ZonesMetadata,
+  ): Array<{ id: string; x: number; y: number }> {
+    const centers: Array<{ id: string; x: number; y: number }> = [];
+    const seen = new Set<string>();
+    const register = (zone: CachedZoneInfo): void => {
+      if (seen.has(zone.id)) return;
+      seen.add(zone.id);
+      centers.push({
+        id: zone.id,
+        x: zone.center.x,
+        y: zone.center.y,
+      });
+    };
+
+    metadata.storageZones.forEach(register);
+    metadata.workZones.forEach(register);
+    metadata.craftZones.forEach(register);
+
+    return centers;
+  }
+
+  private findClosestZone(
+    position: { x: number; y: number },
+    zones: readonly CachedZoneInfo[],
+  ): CachedZoneInfo | undefined {
+    let closest: CachedZoneInfo | undefined;
+    let minDistSq = Infinity;
+
+    for (const zone of zones) {
+      const dx = zone.center.x - position.x;
+      const dy = zone.center.y - position.y;
+      const distSq = dx * dx + dy * dy;
+      if (distSq < minDistSq) {
+        minDistSq = distSq;
+        closest = zone;
+      }
+    }
+
+    return closest;
   }
 
   /**

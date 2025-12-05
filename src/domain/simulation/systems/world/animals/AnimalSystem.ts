@@ -783,10 +783,17 @@ export class AnimalSystem {
       y?: number;
     }> = [];
     if (this.agentRegistry) {
-      for (const profile of this.agentRegistry.getAllProfiles()) {
-        if (!profile.isDead) {
-          entities.push(profile);
-        }
+      const nearbyAgents = this.agentRegistry.getAgentsInRadius(
+        animal.position,
+        range,
+        { excludeDead: true },
+      );
+      for (const agent of nearbyAgents) {
+        entities.push({
+          id: agent.id,
+          isDead: agent.isDead,
+          position: agent.position,
+        });
       }
     } else if (this.gameState.entities) {
       entities.push(...this.gameState.entities);

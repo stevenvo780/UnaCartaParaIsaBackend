@@ -421,35 +421,42 @@ export class WorldQueryService {
   ): AgentQueryResult | null {
     if (!this.agentRegistry) return null;
 
-    const agents = Array.from(this.agentRegistry.getAllProfiles());
+    const searchRadii = [300, 800, 1600, 3200, 6400];
+    for (const radius of searchRadii) {
+      const agents = this.agentRegistry.getAgentsInRadius(
+        { x, y },
+        radius,
+        { excludeDead: options.excludeDead },
+      );
+      if (agents.length === 0) continue;
 
-    let nearest: AgentProfile | null = null;
-    let minDistSq = Infinity;
+      let nearest: AgentProfile | null = null;
+      let minDistSq = Infinity;
+      for (const agent of agents) {
+        if (!agent.position) continue;
+        const dx = agent.position.x - x;
+        const dy = agent.position.y - y;
+        const distSq = dx * dx + dy * dy;
 
-    for (const agent of agents) {
-      if (!agent.position) continue;
-      if (options.excludeDead && agent.isDead) continue;
+        if (distSq < minDistSq) {
+          minDistSq = distSq;
+          nearest = agent;
+        }
+      }
 
-      const dx = agent.position.x - x;
-      const dy = agent.position.y - y;
-      const distSq = dx * dx + dy * dy;
-
-      if (distSq < minDistSq) {
-        minDistSq = distSq;
-        nearest = agent;
+      if (nearest && nearest.position) {
+        return {
+          id: nearest.id,
+          position: nearest.position,
+          distance: Math.sqrt(minDistSq),
+          entityType: EntityType.AGENT as const,
+          isDead: nearest.isDead ?? false,
+          agent: nearest,
+        };
       }
     }
 
-    if (!nearest || !nearest.position) return null;
-
-    return {
-      id: nearest.id,
-      position: nearest.position,
-      distance: Math.sqrt(minDistSq),
-      entityType: EntityType.AGENT as const,
-      isDead: nearest.isDead ?? false,
-      agent: nearest,
-    };
+    return null;
   }
 
   /**
@@ -463,22 +470,16 @@ export class WorldQueryService {
   ): AgentQueryResult[] {
     if (!this.agentRegistry) return [];
 
-    const agents = Array.from(this.agentRegistry.getAllProfiles());
-    const radiusSq = radius * radius;
+    const agents = this.agentRegistry.getAgentsInRadius(
+      { x, y },
+      radius,
+      { excludeDead: options.excludeDead },
+    );
 
     return agents
-      .filter((agent) => {
-        if (!agent.position) return false;
-        if (options.excludeDead && agent.isDead) return false;
-
-        const dx = agent.position.x - x;
-        const dy = agent.position.y - y;
-        return dx * dx + dy * dy <= radiusSq;
-      })
       .map((agent) => {
-        const dx = agent.position!.x - x;
-        const dy = agent.position!.y - y;
-
+        const dx = (agent.position?.x ?? 0) - x;
+        const dy = (agent.position?.y ?? 0) - y;
         return {
           id: agent.id,
           position: agent.position!,
