@@ -38,10 +38,13 @@ export function detectInventory(ctx: DetectorContext): Task[] {
   const woodCount = inv.wood_log ?? inv.wood ?? 0;
   const stoneCount = inv.stone ?? 0;
 
+  // Umbral adaptativo: si hay demanda de construcción, depositar con 1+ materiales
+  const effectiveThreshold = ctx.hasBuildingResourceDemand ? 1 : BUILDING_MATERIAL_THRESHOLD;
+
   // Detectar si tiene materiales de construcción que debería depositar
   const hasBuildingMaterials =
-    woodCount >= BUILDING_MATERIAL_THRESHOLD ||
-    stoneCount >= BUILDING_MATERIAL_THRESHOLD;
+    woodCount >= effectiveThreshold ||
+    stoneCount >= effectiveThreshold;
 
   // Caso 1: Inventario lleno sin zona de depósito
   if (
@@ -66,17 +69,20 @@ export function detectInventory(ctx: DetectorContext): Task[] {
   // Generar tarea si:
   // 1. El inventario está lleno (>= DEPOSIT_THRESHOLD)
   // 2. O tiene materiales de construcción significativos
+  // 3. O hay demanda de construcción y tiene algún material
   const shouldDeposit = loadRatio >= DEPOSIT_THRESHOLD || hasBuildingMaterials;
 
   if (!shouldDeposit) return tasks;
 
-  // Prioridad más alta si tiene muchos materiales de construcción
+  // Prioridad más alta cuando hay demanda de construcción urgente
   const priority =
     loadRatio > URGENT_DEPOSIT_THRESHOLD
       ? TASK_PRIORITIES.HIGH
-      : hasBuildingMaterials && (woodCount >= 6 || stoneCount >= 6)
+      : ctx.hasBuildingResourceDemand
         ? TASK_PRIORITIES.HIGH
-        : TASK_PRIORITIES.NORMAL;
+        : hasBuildingMaterials && (woodCount >= 6 || stoneCount >= 6)
+          ? TASK_PRIORITIES.HIGH
+          : TASK_PRIORITIES.NORMAL;
 
   tasks.push(
     createTask({
@@ -91,14 +97,15 @@ export function detectInventory(ctx: DetectorContext): Task[] {
         hasBuildingMaterials,
         woodCount,
         stoneCount,
+        forConstruction: ctx.hasBuildingResourceDemand,
       },
       source: "detector:inventory:deposit",
     }),
   );
 
-  if (tasks.length > 0 && Math.random() < 0.1) {
+  if (tasks.length > 0 && (Math.random() < 0.1 || ctx.hasBuildingResourceDemand)) {
     logger.debug(
-      `📦 [InventoryDetector] ${ctx.agentId}: deposit task, load=${(loadRatio * 100).toFixed(0)}%, wood=${woodCount}, stone=${stoneCount}`,
+      `📦 [InventoryDetector] ${ctx.agentId}: deposit task, load=${(loadRatio * 100).toFixed(0)}%, wood=${woodCount}, stone=${stoneCount}, forConstruction=${ctx.hasBuildingResourceDemand}`,
     );
   }
 

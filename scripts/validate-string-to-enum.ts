@@ -24,6 +24,12 @@ const FRONTEND_ONLY = args.includes('--frontend-only');
 const VERBOSE = args.includes('--verbose');
 const SHOW_ALL = args.includes('--all');
 
+// Validar que no se usen flags contradictorios
+if (BACKEND_ONLY && FRONTEND_ONLY) {
+  console.error('❌ Error: No puedes usar --backend-only y --frontend-only simultáneamente');
+  process.exit(1);
+}
+
 // Directorios a analizar
 const BACKEND_SRC = path.join(__dirname, '../src');
 const FRONTEND_SRC = path.join(__dirname, '../../UnaCartaParaIsa/src');

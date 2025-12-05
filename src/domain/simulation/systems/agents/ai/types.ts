@@ -215,6 +215,20 @@ export interface DetectorContext {
     y: number;
     type: string;
   };
+  /** Árbol más cercano (para recolectar madera cuando hay demanda de construcción) */
+  readonly nearestTree?: {
+    id: string;
+    x: number;
+    y: number;
+    type: string;
+  };
+  /** Piedra más cercana (para recolectar piedra cuando hay demanda de construcción) */
+  readonly nearestStone?: {
+    id: string;
+    x: number;
+    y: number;
+    type: string;
+  };
   /** Zonas de trabajo con items disponibles para recolectar */
   readonly workZonesWithItems?: readonly {
     zoneId: string;
