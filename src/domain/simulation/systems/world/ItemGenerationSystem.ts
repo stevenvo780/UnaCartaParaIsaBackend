@@ -1,4 +1,5 @@
 import { logger } from "@/infrastructure/utils/logger";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import type { GameState, Zone } from "@/shared/types/game-types";
 import type {
   GenerationRule,
@@ -155,7 +156,7 @@ export class ItemGenerationSystem {
   }
 
   private tryGenerateItem(zone: Zone, rule: GenerationRule): void {
-    if (Math.random() > rule.spawnChance) return;
+    if (!RandomUtils.chance(rule.spawnChance)) return;
 
     const zoneItemMap = this.zoneItems.get(zone.id);
     if (zoneItemMap?.has(rule.itemId)) {
@@ -174,7 +175,7 @@ export class ItemGenerationSystem {
 
     const quantity =
       rule.minQuantity +
-      Math.floor(Math.random() * (rule.maxQuantity - rule.minQuantity + 1));
+      RandomUtils.intRange(0, rule.maxQuantity - rule.minQuantity);
 
     const item: GeneratedItem = {
       id: `item_gen_${this.nextItemId++}`,

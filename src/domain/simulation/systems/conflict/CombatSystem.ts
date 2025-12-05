@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import type { GameState } from "@/shared/types/game-types";
 import { simulationEvents, GameEventType } from "../../core/events";
 import { WeaponId } from "../../../../shared/constants/CraftingEnums";
@@ -562,7 +563,7 @@ export class CombatSystem implements ICombatSystem {
       attackerProfile.traits?.aggression ?? attacker.traits?.aggression ?? 0.3;
     if (aggression < 0.6) return false;
 
-    return Math.random() < aggression * 0.25;
+    return RandomUtils.chance(aggression * 0.25);
   }
 
   private isOffCooldown(
@@ -619,9 +620,9 @@ export class CombatSystem implements ICombatSystem {
       attackerProfile?.traits?.aggression ?? attacker.traits?.aggression ?? 0.3;
 
     const eqStats = equipmentSystem.getMainHandStats(attacker.id);
-    const base = 10 * eqStats.damageMultiplier * (0.8 + Math.random() * 0.4);
+    const base = 10 * eqStats.damageMultiplier * (0.8 + RandomUtils.floatRange(0, 0.4));
     const scale = 0.5 + aggression * 0.7;
-    const crit = Math.random() < 0.1;
+    const crit = RandomUtils.chance(0.1);
     const damage = Math.max(1, Math.round(base * scale * (crit ? 1.75 : 1)));
 
     const newHealth = Math.max(0, (targetStats.health ?? 100) - damage);
@@ -893,7 +894,7 @@ export class CombatSystem implements ICombatSystem {
     }
 
     const weaponId = this.equippedWeapons.get(agentId) ?? WeaponId.UNARMED;
-    const base = 10 * eqStats.damageMultiplier * (0.8 + Math.random() * 0.4);
+    const base = 10 * eqStats.damageMultiplier * (0.8 + RandomUtils.floatRange(0, 0.4));
     const damage = Math.max(1, Math.round(base));
 
     const targetStats = this.ensureStats(target);
@@ -972,7 +973,7 @@ export class CombatSystem implements ICombatSystem {
     const distance = Math.hypot(dx, dy);
 
     if (distance < 1) {
-      const angle = Math.random() * Math.PI * 2;
+      const angle = RandomUtils.floatRange(0, Math.PI * 2);
       const fleeTarget = {
         x: agentPos.x + Math.cos(angle) * 200,
         y: agentPos.y + Math.sin(angle) * 200,

@@ -44,12 +44,10 @@ NeedsDetector, SocialDetector, WorkDetector, InventoryDetector, ExploreDetector,
 
 ## ❌ PENDIENTE
 
-### Media Prioridad
+### Baja Prioridad
 | Tarea | Descripción |
 |-------|-------------|
-| Migrar handlers AI | De deps legacy a SystemRegistry |
-| Unificar eventos | EventBus.ts → simulationEvents |
-| RandomUtils | 84 instancias de Math.random() directo |
+| RandomUtils restantes | 30 instancias en animales/chunks/logger |
 
 ---
 
@@ -83,6 +81,7 @@ NeedsDetector, SocialDetector, WorkDetector, InventoryDetector, ExploreDetector,
 | ✅ | MovementSystem.ts | LRU cache (máx 500 entries) |
 | ✅ | NeedsSystem.ts | LRU cache (máx 200 entries) |
 | ✅ | Frontend | Eliminados 12 Client adapters (~522 líneas) |
+| ✅ | 16 archivos | Migrado Math.random() → RandomUtils (71 instancias) |
 
 ### Frontend Sincronizado
 24 sistemas alineados Backend ↔ Frontend. Eliminados: ClientReputationSystem, ClientMarketSystem, ClientQuestSystem, ClientNormsSystem, ClientResearchSystem, ClientLivingLegendsSystem, ClientInteractionGameSystem, ClientCardDialogueSystem, ClientBuildingMaintenanceSystem, ClientResourceAttractionSystem, ClientTradeSystem, ClientKnowledgeNetworkSystem.

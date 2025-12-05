@@ -19,6 +19,7 @@ import {
   TaskType,
   createTask,
 } from "../types";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import { logger } from "@/infrastructure/utils/logger";
 import { SIMULATION_CONSTANTS } from "@/shared/constants/SimulationConstants";
 import { ResourceType } from "@/shared/constants/ResourceEnums";
@@ -74,7 +75,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
 
   const tasks: Task[] = [];
 
-  if (Math.random() < 0.02) {
+  if (RandomUtils.chance(0.02)) {
     logger.debug(
       `[NeedsDetector] ${ctx.agentId}: h=${ctx.needs.hunger?.toFixed(0)}, t=${ctx.needs.thirst?.toFixed(0)}, e=${ctx.needs.energy?.toFixed(0)}`,
     );
@@ -204,7 +205,7 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
     );
   }
 
-  if (tasks.length > 0 && Math.random() < 0.1) {
+  if (tasks.length > 0 && RandomUtils.chance(0.1)) {
     logger.debug(
       `[NeedsDetector] ${ctx.agentId}: ${tasks.length} tasks generated. ` +
         `Needs: h=${Math.round(hunger)}, t=${Math.round(thirst)}, e=${Math.round(energy)}`,

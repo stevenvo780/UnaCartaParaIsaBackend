@@ -1,4 +1,5 @@
 import { GameState } from "@/shared/types/game-types";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import {
   MarriageGroup,
   MarriageProposal,
@@ -313,7 +314,7 @@ export class MarriageSystem {
       members: memberIds,
       foundedDate: Date.now(),
       cohesion: 1.0 - memberIds.length * this.config.cohesionDecayPerMember,
-      sharedResources: Math.random() < 0.7,
+      sharedResources: RandomUtils.chance(0.7),
       children: [],
     };
 
@@ -358,7 +359,7 @@ export class MarriageSystem {
     for (const [targetId, proposal] of this.pendingProposals) {
       const age = now - proposal.timestamp;
       if (age >= this.PROPOSAL_MIN_AGE_MS) {
-        if (Math.random() < 0.2) {
+        if (RandomUtils.chance(0.2)) {
           proposalsToAccept.push(targetId);
         }
       }
@@ -391,9 +392,9 @@ export class MarriageSystem {
           (1 + group.members.length * 0.2) *
           (1 - group.cohesion);
 
-        if (Math.random() < divorceChance && group.members.length > 0) {
+        if (RandomUtils.chance(divorceChance) && group.members.length > 0) {
           const memberToLeave =
-            group.members[Math.floor(Math.random() * group.members.length)];
+            group.members[RandomUtils.intRange(0, group.members.length - 1)];
           this.initiateDivorce(memberToLeave, group.id, "conflict");
         }
       }

@@ -14,6 +14,7 @@ import {
   TASK_PRIORITIES,
   createTask,
 } from "../types";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
 import { logger } from "@/infrastructure/utils/logger";
 
@@ -48,14 +49,14 @@ export function detectInventory(ctx: DetectorContext): Task[] {
   if (
     loadRatio >= DEPOSIT_THRESHOLD &&
     !ctx.depositZoneId &&
-    Math.random() < 0.02
+    RandomUtils.chance(0.02)
   ) {
     logger.debug(
       `📦 [InventoryDetector] ${ctx.agentId}: full (${(loadRatio * 100).toFixed(0)}%) but no depositZone`,
     );
   }
 
-  if (hasBuildingMaterials && !ctx.depositZoneId && Math.random() < 0.02) {
+  if (hasBuildingMaterials && !ctx.depositZoneId && RandomUtils.chance(0.02)) {
     logger.debug(
       `📦 [InventoryDetector] ${ctx.agentId}: has building materials (wood=${woodCount}, stone=${stoneCount}) but no depositZone`,
     );
@@ -97,7 +98,7 @@ export function detectInventory(ctx: DetectorContext): Task[] {
 
   if (
     tasks.length > 0 &&
-    (Math.random() < 0.1 || ctx.hasBuildingResourceDemand)
+    (RandomUtils.chance(0.1) || ctx.hasBuildingResourceDemand)
   ) {
     logger.debug(
       `📦 [InventoryDetector] ${ctx.agentId}: deposit task, load=${(loadRatio * 100).toFixed(0)}%, wood=${woodCount}, stone=${stoneCount}, forConstruction=${ctx.hasBuildingResourceDemand}`,

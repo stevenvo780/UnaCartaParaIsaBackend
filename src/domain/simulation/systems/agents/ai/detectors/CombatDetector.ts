@@ -17,6 +17,7 @@ import {
   TASK_PRIORITIES,
   createTask,
 } from "../types";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import { RoleType } from "../../../../../../shared/constants/RoleEnums";
 import { SocialStatus } from "../../../../../../shared/constants/AgentEnums";
 import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
@@ -151,7 +152,7 @@ export function detectCombat(ctx: DetectorContext): Task[] {
     }
   }
 
-  if (tasks.length > 0 && Math.random() < 0.1) {
+  if (tasks.length > 0 && RandomUtils.chance(0.1)) {
     logger.debug(
       `⚔️ [CombatDetector] ${ctx.agentId}: ${tasks.length} tasks, types=${tasks.map((t) => t.type).join(",")}`,
     );

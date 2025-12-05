@@ -1,4 +1,5 @@
 import { InventorySystem } from "./InventorySystem";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import type { GameState } from "@/shared/types/game-types";
 import { WeaponId } from "../../../../shared/constants/CraftingEnums";
 import type {
@@ -145,7 +146,7 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
       recipe.successRate ??
       0.5;
     const success =
-      Math.random() < Math.max(this.config.minSuccessRate, successRate);
+      RandomUtils.chance(Math.max(this.config.minSuccessRate, successRate));
 
     logger.info(
       `⚒️ [finishJob] ${job.agentId}: Recipe=${recipe.id}, success=${success}`,

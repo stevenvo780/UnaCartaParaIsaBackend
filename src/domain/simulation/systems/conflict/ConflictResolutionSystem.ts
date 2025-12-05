@@ -1,4 +1,5 @@
 import { GameState } from "@/shared/types/game-types";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import type { ConflictState } from "@/shared/types/game-types";
 import { ExplorationType } from "@/shared/constants/AgentEnums";
 import { TradeOfferStatus } from "@/shared/constants/EconomyEnums";
@@ -124,7 +125,7 @@ export class ConflictResolutionSystem {
         ? CONFLICT_CONFIG.truce.chances.heavyHit
         : CONFLICT_CONFIG.truce.chances.default;
 
-    if (Math.random() > tryChance) {
+    if (!RandomUtils.chance(tryChance)) {
       return { shouldProposeTruce: false };
     }
 

@@ -1,4 +1,5 @@
 import type { GameState, Zone } from "@/shared/types/game-types";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import type { ResourceType } from "@/shared/types/simulation/economy";
 import { InventorySystem } from "../economy/InventorySystem";
 import { LifeCycleSystem } from "../lifecycle/LifeCycleSystem";
@@ -263,8 +264,8 @@ export class ProductionSystem {
       const TILE_SIZE = 64;
 
       for (let i = 0; i < tilesToModify; i++) {
-        const xOffset = Math.random() * zone.bounds.width;
-        const yOffset = Math.random() * zone.bounds.height;
+        const xOffset = RandomUtils.floatRange(0, zone.bounds.width);
+        const yOffset = RandomUtils.floatRange(0, zone.bounds.height);
 
         const worldX = zone.bounds.x + xOffset;
         const worldY = zone.bounds.y + yOffset;

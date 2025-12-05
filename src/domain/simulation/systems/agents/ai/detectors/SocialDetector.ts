@@ -14,6 +14,7 @@ import {
   TASK_PRIORITIES,
   createTask,
 } from "../types";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import { NeedType } from "@/shared/constants/AIEnums";
 import { GoalReason } from "../../../../../../shared/constants/AIEnums";
 import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
@@ -39,7 +40,7 @@ export function detectSocial(ctx: DetectorContext): Task[] {
     tasks.push(assistTask);
   }
 
-  if (tasks.length > 0 && Math.random() < 0.05) {
+  if (tasks.length > 0 && RandomUtils.chance(0.05)) {
     logger.debug(
       `💬 [SocialDetector] ${ctx.agentId}: ${tasks.length} tasks (repro=${!!reproductionTask}, assist=${!!assistTask})`,
     );

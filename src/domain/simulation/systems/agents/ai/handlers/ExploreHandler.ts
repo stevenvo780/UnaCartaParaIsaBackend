@@ -8,6 +8,7 @@
  */
 
 import { logger } from "@/infrastructure/utils/logger";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import type { HandlerContext, HandlerExecutionResult } from "../types";
 import {
   TaskType,
@@ -123,8 +124,8 @@ function generateExploreTarget(currentPosition: { x: number; y: number }): {
   x: number;
   y: number;
 } {
-  const angle = Math.random() * Math.PI * 2;
-  const distance = EXPLORE_RADIUS * (0.5 + Math.random() * 0.5);
+  const angle = RandomUtils.floatRange(0, Math.PI * 2);
+  const distance = EXPLORE_RADIUS * (0.5 + RandomUtils.floatRange(0, 0.5));
 
   return {
     x: currentPosition.x + Math.cos(angle) * distance,

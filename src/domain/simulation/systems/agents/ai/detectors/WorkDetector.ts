@@ -14,6 +14,7 @@ import {
   TASK_PRIORITIES,
   createTask,
 } from "../types";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import { RoleType } from "../../../../../../shared/constants/RoleEnums";
 import { SocialStatus } from "../../../../../../shared/constants/AgentEnums";
 import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
@@ -69,7 +70,7 @@ export function detectWork(ctx: DetectorContext): Task[] {
       }
   }
 
-  if (tasks.length > 0 && Math.random() < 0.05) {
+  if (tasks.length > 0 && RandomUtils.chance(0.05)) {
     logger.debug(
       `🔨 [WorkDetector] ${ctx.agentId}: role=${role}, ${tasks.length} tasks`,
     );
@@ -115,7 +116,7 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
             source: "detector:work:gather:stone",
           }),
         );
-        if (Math.random() < 0.1) {
+        if (RandomUtils.chance(0.1)) {
           logger.debug(
             `🪨 [WorkDetector] ${ctx.agentId}: assigned to STONE (balanced distribution)`,
           );
@@ -142,7 +143,7 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
           source: "detector:work:gather:tree",
         }),
       );
-      if (Math.random() < 0.1) {
+      if (RandomUtils.chance(0.1)) {
         logger.debug(
           `🌲 [WorkDetector] ${ctx.agentId}: prioritizing TREE for construction demand`,
         );
@@ -168,7 +169,7 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
           source: "detector:work:gather:stone",
         }),
       );
-      if (Math.random() < 0.1) {
+      if (RandomUtils.chance(0.1)) {
         logger.debug(
           `🪨 [WorkDetector] ${ctx.agentId}: prioritizing STONE for construction demand`,
         );
@@ -217,7 +218,7 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
       }),
     );
 
-    if (Math.random() < 0.1) {
+    if (RandomUtils.chance(0.1)) {
       logger.debug(
         `🔨 [WorkDetector] ${ctx.agentId}: gather from zone ${nearestZone.zoneId}`,
       );

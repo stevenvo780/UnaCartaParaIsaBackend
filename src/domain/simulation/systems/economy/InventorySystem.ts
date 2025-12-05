@@ -3,6 +3,7 @@ import {
   Stockpile,
   ResourceType,
 } from "@/shared/types/simulation/economy";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import type { GameState, StockpileSnapshot } from "@/shared/types/game-types";
 import { logger } from "../../../../infrastructure/utils/logger";
 import { SIMULATION_CONSTANTS } from "../../../../shared/constants/SimulationConstants";
@@ -88,7 +89,7 @@ export class InventorySystem implements IInventorySystem {
     type: Stockpile["type"],
     capacity?: number,
   ): Stockpile {
-    const id = `stockpile_${zoneId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `stockpile_${zoneId}_${Date.now()}_${RandomUtils.float().toString(36).substr(2, 9)}`;
     const stockpile: Stockpile = {
       id,
       zoneId,

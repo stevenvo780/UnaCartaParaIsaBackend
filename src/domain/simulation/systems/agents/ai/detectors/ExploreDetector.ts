@@ -15,6 +15,7 @@ import {
   TASK_PRIORITIES,
   createTask,
 } from "../types";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import { logger } from "@/infrastructure/utils/logger";
 
 import { GoalType } from "@/shared/constants/AIEnums";
@@ -44,7 +45,7 @@ export function detectExplore(ctx: DetectorContext): Task[] {
     tasks.push(resourceScoutTask);
   }
 
-  if (tasks.length > 0 && Math.random() < 0.02) {
+  if (tasks.length > 0 && RandomUtils.chance(0.02)) {
     logger.debug(`🧭 [ExploreDetector] ${ctx.agentId}: ${tasks.length} tasks`);
   }
 
@@ -155,7 +156,7 @@ function findUnexploredZone(
   const unvisited = allZones.filter((z) => !visitedZones?.has(z.id));
 
   if (unvisited.length === 0) {
-    const randomIndex = Math.floor(Math.random() * allZones.length);
+    const randomIndex = RandomUtils.intRange(0, allZones.length - 1);
     return allZones[randomIndex];
   }
 

@@ -1,4 +1,5 @@
 import { logger } from "@/infrastructure/utils/logger";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import { OptimizedSpatialGrid } from "../../../../shared/utils/OptimizedSpatialGrid";
 import { GameEventType, simulationEvents } from "../../core/events";
 import { getResourceConfig } from "./config/WorldResourceConfigs";
@@ -248,7 +249,7 @@ export class WorldResourceSystem {
           const resourceConfigs = this.getResourcesForBiome(biome);
 
           for (const config of resourceConfigs) {
-            if (Math.random() < config.spawnProbability!) {
+            if (RandomUtils.chance(config.spawnProbability!)) {
               const resource = this.spawnResource(config.type, { x, y }, biome);
               if (resource) {
                 spawned++;
@@ -289,7 +290,7 @@ export class WorldResourceSystem {
       return null;
     }
 
-    const id = `resource_${type}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+    const id = `resource_${type}_${Date.now()}_${RandomUtils.float().toString(36).substr(2, 5)}`;
 
     const resource: WorldResourceInstance = {
       id,
@@ -360,8 +361,8 @@ export class WorldResourceSystem {
           for (const asset of tile.assets.vegetation) {
             const resourceType = this.mapAssetToResource(asset);
             if (resourceType) {
-              const offsetX = (Math.random() - 0.5) * (tileSize * 0.6);
-              const offsetY = (Math.random() - 0.5) * (tileSize * 0.6);
+              const offsetX = RandomUtils.floatRange(-tileSize * 0.3, tileSize * 0.3);
+              const offsetY = RandomUtils.floatRange(-tileSize * 0.3, tileSize * 0.3);
 
               const resource = this.spawnResource(
                 resourceType,
@@ -381,8 +382,8 @@ export class WorldResourceSystem {
           for (const decal of tile.assets.decals) {
             const resourceType = this.mapDecalToResource(decal);
             if (resourceType) {
-              const offsetX = (Math.random() - 0.5) * (tileSize * 0.8);
-              const offsetY = (Math.random() - 0.5) * (tileSize * 0.8);
+              const offsetX = RandomUtils.floatRange(-tileSize * 0.4, tileSize * 0.4);
+              const offsetY = RandomUtils.floatRange(-tileSize * 0.4, tileSize * 0.4);
 
               const resource = this.spawnResource(
                 resourceType,
@@ -419,11 +420,11 @@ export class WorldResourceSystem {
   private mapDecalToResource(_decal: string): WorldResourceType | null {
     if (_decal.startsWith("decal_rock_")) return WorldResourceType.ROCK;
 
-    const rand = Math.random();
+    const rand = RandomUtils.float();
 
     if (rand < 0.85) return null;
 
-    const resourceRand = Math.random();
+    const resourceRand = RandomUtils.float();
 
     if (resourceRand < 0.4) return WorldResourceType.ROCK;
 
@@ -591,24 +592,18 @@ export class WorldResourceSystem {
       yields.amountMin !== undefined &&
       yields.amountMax !== undefined
     ) {
-      harvestAmount = Math.floor(
-        Math.random() * (yields.amountMax - yields.amountMin + 1) +
-          yields.amountMin,
-      );
+      harvestAmount = RandomUtils.intRange(yields.amountMin, yields.amountMax);
 
       if (yields?.secondaryYields) {
         for (const secondary of yields.secondaryYields) {
           if (
             secondary.rareMaterialsChance &&
-            Math.random() > secondary.rareMaterialsChance
+            !RandomUtils.chance(secondary.rareMaterialsChance)
           ) {
             continue;
           }
 
-          const amount = Math.floor(
-            Math.random() * (secondary.amountMax - secondary.amountMin + 1) +
-              secondary.amountMin,
-          );
+          const amount = RandomUtils.intRange(secondary.amountMin, secondary.amountMax);
 
           if (amount > 0) {
             items.push({ type: secondary.resourceType, amount });

@@ -1,4 +1,5 @@
 import type { GameState, Zone } from "@/shared/types/game-types";
+import { RandomUtils } from "@/shared/utils/RandomUtils";
 import { simulationEvents, GameEventType } from "../../core/events";
 import { ResourceReservationSystem } from "../economy/ResourceReservationSystem";
 import { WorldResourceSystem } from "../world/WorldResourceSystem";
@@ -256,7 +257,7 @@ export class BuildingSystem implements IBuildingSystem {
     const zones = (this.state.zones || []) as MutableZone[];
     const houses = zones.filter((z) => z.type === ZoneType.REST).length;
 
-    if (Math.random() < 0.15) {
+    if (RandomUtils.chance(0.15)) {
       logger.debug(
         `🏗️ [BUILDING] Status: houses=${houses}/${this.config.maxHouses}, ` +
           `zones=${zones.length}, activeJobs=${this.constructionJobs.size}`,
@@ -325,7 +326,7 @@ export class BuildingSystem implements IBuildingSystem {
     position?: { x: number; y: number },
   ): boolean {
     const cost = BUILDING_COSTS[label];
-    const reservationId = `build_${label}_${now}_${Math.random().toString(36).slice(2)}`;
+    const reservationId = `build_${label}_${now}_${RandomUtils.float().toString(36).slice(2)}`;
 
     const reserved = this.reservationSystem.reserve(reservationId, {
       wood: cost.wood,
@@ -342,8 +343,8 @@ export class BuildingSystem implements IBuildingSystem {
 
     const worldSize = this.state.worldSize ?? { width: 2000, height: 2000 };
     const boundsPosition = position ?? {
-      x: Math.floor(Math.random() * worldSize.width),
-      y: Math.floor(Math.random() * worldSize.height),
+      x: RandomUtils.intRange(0, worldSize.width - 1),
+      y: RandomUtils.intRange(0, worldSize.height - 1),
     };
 
     const validatedPosition = this.validateAndAdjustPosition(
@@ -414,7 +415,7 @@ export class BuildingSystem implements IBuildingSystem {
     const worldSize = this.state.worldSize ?? { width: 2000, height: 2000 };
     const TILE_SIZE = 64;
 
-    const zoneId = `zone_${label}_${Math.random().toString(36).slice(2)}`;
+    const zoneId = `zone_${label}_${RandomUtils.float().toString(36).slice(2)}`;
 
     const tileX = Math.floor(validatedPosition.x / TILE_SIZE);
     const tileY = Math.floor(validatedPosition.y / TILE_SIZE);
@@ -439,7 +440,7 @@ export class BuildingSystem implements IBuildingSystem {
               : label === BuildingType.FARM
                 ? BuildingType.FARM
                 : BuildingType.HOUSE,
-      spriteVariant: Math.floor(Math.random() * 3),
+      spriteVariant: RandomUtils.intRange(0, 2),
     };
 
     const bounds = {
@@ -597,11 +598,11 @@ export class BuildingSystem implements IBuildingSystem {
       const testX =
         attempt === 0
           ? position.x
-          : Math.floor(Math.random() * (worldSize.width - BUILDING_WIDTH));
+          : RandomUtils.intRange(0, worldSize.width - BUILDING_WIDTH - 1);
       const testY =
         attempt === 0
           ? position.y
-          : Math.floor(Math.random() * (worldSize.height - BUILDING_HEIGHT));
+          : RandomUtils.intRange(0, worldSize.height - BUILDING_HEIGHT - 1);
 
       if (
         testX < 0 ||
@@ -684,8 +685,8 @@ export class BuildingSystem implements IBuildingSystem {
 
     for (let y = startY; y < endY; y += CROP_SPACING) {
       for (let x = startX; x < endX; x += CROP_SPACING) {
-        const offsetX = (Math.random() - 0.5) * 8;
-        const offsetY = (Math.random() - 0.5) * 8;
+        const offsetX = RandomUtils.floatRange(-4, 4);
+        const offsetY = RandomUtils.floatRange(-4, 4);
 
         const resource = this.worldResourceSystem.spawnResource(
           "wheat_crop",
