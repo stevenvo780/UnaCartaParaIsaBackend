@@ -37,6 +37,9 @@ describe("ChunkLoadingSystem", () => {
     getOrGenerateChunk: ReturnType<typeof vi.fn>;
     worldToChunk: ReturnType<typeof vi.fn>;
   };
+  let mockAgentRegistry: {
+    getAllProfiles: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     gameState = createMockGameState();
@@ -58,12 +61,16 @@ describe("ChunkLoadingSystem", () => {
       worldToChunk: vi.fn(() => ({ chunkX: 0, chunkY: 0 })),
     };
 
+    mockAgentRegistry = {
+      getAllProfiles: vi.fn(() => []),
+    };
+
     chunkLoadingSystem = new ChunkLoadingSystem(
       gameState,
       mockChunkManager as any,
       mockAnimalSystem as any,
       mockWorldResourceSystem as any,
-      mockTerrainSystem as any,
+      mockAgentRegistry as any,
     );
   });
 

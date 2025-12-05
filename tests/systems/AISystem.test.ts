@@ -199,33 +199,12 @@ describe("AISystem v4", () => {
     });
   });
 
-  describe("getAIState (legacy compatibility)", () => {
-    it("debe retornar estado para agente registrado", () => {
-      aiSystem.update(1000);
-      const state = aiSystem.getAIState("agent-1");
-      // El estado legacy tiene estructura específica
-      expect(state).toBeDefined();
-      if (state) {
-        expect(state).toHaveProperty("pendingTasks");
-        expect(state).toHaveProperty("memory");
-      }
-    });
-  });
-
-  describe("setAgentOffDuty (legacy compatibility)", () => {
-    it("debe cancelar tareas al poner fuera de servicio", () => {
-      aiSystem.emitTask("agent-1", {
-        type: TaskType.GATHER,
-        priority: 0.8,
-      });
-
-      // setAgentOffDuty(true) llama a cancelTask internamente
-      aiSystem.setAgentOffDuty("agent-1", true);
-      
-      const task = aiSystem.getActiveTask("agent-1");
-      expect(task).toBeUndefined();
-    });
-  });
+  // REMOVED: Legacy methods no longer exist in AISystem v4
+  // - getAIState
+  // - setAgentOffDuty
+  // - failCurrentGoal
+  // - forceGoalReevaluation
+  // - removeAgentState
 
   describe("Eventos", () => {
     it("debe encolar tarea correctamente via emitTask", () => {
@@ -253,27 +232,6 @@ describe("AISystem v4", () => {
       
       // El evento puede o no haberse emitido
       expect(Array.isArray(events)).toBe(true);
-    });
-
-    it("debe emitir evento taskFailed cuando falla tarea", () => {
-      const events: unknown[] = [];
-      aiSystem.on("taskFailed", (data) => events.push(data));
-
-      // Forzar fallo de tarea usando método legacy
-      aiSystem.emitTask("agent-1", {
-        type: TaskType.GATHER,
-        priority: 0.8,
-        target: { entityId: "nonexistent" },
-      });
-
-      // Procesar la tarea para que se active
-      vi.advanceTimersByTime(600);
-      aiSystem.update(600);
-
-      aiSystem.failCurrentGoal("agent-1");
-
-      // El evento puede o no haberse emitido dependiendo del procesamiento
-      expect(events.length).toBeGreaterThanOrEqual(0);
     });
   });
 
@@ -316,25 +274,9 @@ describe("AISystem v4", () => {
     });
   });
 
-  describe("forceGoalReevaluation (legacy)", () => {
-    it("debe forzar reevaluación sin errores", () => {
-      expect(() => aiSystem.forceGoalReevaluation("agent-1")).not.toThrow();
-    });
-  });
-
-  describe("removeAgentState", () => {
-    it("debe remover estado de agente", () => {
-      aiSystem.emitTask("agent-1", {
-        type: TaskType.GATHER,
-        priority: 0.8,
-      });
-
-      aiSystem.removeAgentState("agent-1");
-      
-      const task = aiSystem.getActiveTask("agent-1");
-      expect(task).toBeUndefined();
-    });
-  });
+  // REMOVED: Legacy methods removed from AISystem v4
+  // - forceGoalReevaluation
+  // - removeAgentState
 
   describe("Batch processing", () => {
     it("debe procesar múltiples agentes en batch", () => {

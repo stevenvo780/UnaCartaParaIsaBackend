@@ -72,7 +72,8 @@ let _container: Container | null = null;
 function getContainer(): Container {
   if (!_container) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    _container = require("@/config/container").container;
+    _container = (require("@/config/container") as { container: Container })
+      .container;
   }
   return _container!;
 }
@@ -867,7 +868,7 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    return {
+    const context: DetectorContext = {
       agentId,
       position,
       needs,

@@ -19,7 +19,6 @@ import {
   assessRouteDifficultyByDistance,
   calculateZoneDistance,
   worldToGrid,
-  findAccessibleDestination,
   Difficulty,
 } from "./helpers";
 import { MovementBatchProcessor } from "./MovementBatchProcessor";

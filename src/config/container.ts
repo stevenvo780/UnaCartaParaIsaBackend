@@ -55,6 +55,7 @@ import { SharedKnowledgeSystem } from "../domain/simulation/systems/agents/ai/Sh
 
 import { EntityIndex } from "../domain/simulation/core/EntityIndex";
 import { SharedSpatialIndex } from "../domain/simulation/core/SharedSpatialIndex";
+import { WorldContextCache } from "../domain/simulation/core/WorldContextCache";
 import { GPUComputeService } from "../domain/simulation/core/GPUComputeService";
 import { GPUBatchQueryService } from "../domain/simulation/core/GPUBatchQueryService";
 import { AgentRegistry } from "../domain/simulation/systems/agents/AgentRegistry";
@@ -219,6 +220,11 @@ container
   .toDynamicValue(() => {
     return new SharedSpatialIndex(0, 0, 70);
   })
+  .inSingletonScope();
+
+container
+  .bind<WorldContextCache>(TYPES.WorldContextCache)
+  .to(WorldContextCache)
   .inSingletonScope();
 
 container

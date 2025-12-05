@@ -143,9 +143,10 @@ describe("OptimizedSpatialGrid", () => {
       const stats = grid.getStats();
 
       expect(stats.totalEntities).toBe(2);
-      expect(stats.totalCells).toBe(100); // 10x10
-      expect(stats.occupiedCells).toBeGreaterThan(0);
-      expect(stats.avgEntitiesPerCell).toBeGreaterThan(0);
+      // Grid infinito: totalCells = celdas ocupadas (no hay límite fijo)
+      expect(stats.totalCells).toBe(2); // 2 celdas ocupadas (una por entidad en distintas celdas)
+      expect(stats.occupiedCells).toBe(2);
+      expect(stats.avgEntitiesPerCell).toBe(1);
     });
   });
 

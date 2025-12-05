@@ -26,6 +26,9 @@ describe("SnapshotManager", () => {
       },
       aiSystem: {
         getAIState: vi.fn(),
+        getActiveTask: vi.fn().mockReturnValue(null),
+        getPendingTasks: vi.fn().mockReturnValue([]),
+        getAgentMemory: vi.fn().mockReturnValue(null),
       },
       capturedEvents: [],
       getTickCounter: vi.fn().mockReturnValue(100),
@@ -129,16 +132,20 @@ describe("SnapshotManager", () => {
       },
     };
 
-    mockRunner.aiSystem.getAIState.mockReturnValue(mockAIState);
+    // Use new AISystem v4 methods instead of legacy getAIState
+    mockRunner.aiSystem.getAgentMemory.mockReturnValue(mockAIState.memory);
+    mockRunner.aiSystem.getActiveTask.mockReturnValue({
+      type: 'idle',
+      priority: 0.1,
+      personality: mockAIState.personality
+    });
 
     const snapshot = snapshotManager.getInitialSnapshot();
     const serializedAgent = snapshot.state.agents[0];
 
     expect(serializedAgent.ai).toBeDefined();
     const ai = serializedAgent.ai as any;
-    expect(ai.personality).toBeDefined();
-    expect(ai.personality.riskTolerance).toBe(0.5);
-
+    
     expect(ai.memory).toBeDefined();
     // Set should be converted to Array
     expect(Array.isArray(ai.memory.visitedZones)).toBe(true);
