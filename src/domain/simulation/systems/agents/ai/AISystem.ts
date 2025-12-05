@@ -158,6 +158,10 @@ export class AISystem extends EventEmitter {
   /** Memoria persistente por agente */
   private agentMemories = new Map<string, AIAgentMemory>();
 
+  /** Caché de contextos de detección con TTL de 500ms */
+  private contextCache = new Map<string, { context: DetectorContext; timestamp: number }>();
+  private readonly CONTEXT_CACHE_TTL = 500; // ms
+
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
     @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
@@ -372,18 +376,31 @@ export class AISystem extends EventEmitter {
   }
 
   /**
-   * Actualiza la IA de todos los agentes.
+   * Actualiza la IA de todos los agentes con batch processing.
+   * Procesa agentes en batches pequeños para reducir latencia y evitar bloqueo.
    */
   public async update(deltaTimeMs: number): Promise<void> {
     const agents = this.gameState.agents ?? [];
+    const aliveAgents = agents.filter(a => !a.isDead);
 
     if (RandomUtils.chance(0.04)) {
-      logger.debug(`[AISystem] update(): ${agents.length} agents`);
+      logger.debug(`[AISystem] update(): ${aliveAgents.length} alive agents (${agents.length} total)`);
     }
 
-    for (const agent of agents) {
-      if (agent.isDead) continue;
-      this.updateAgent(agent.id, deltaTimeMs);
+    // Process in batches to avoid long blocking
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < aliveAgents.length; i += BATCH_SIZE) {
+      const batch = aliveAgents.slice(i, i + BATCH_SIZE);
+
+      // Process batch sequentially (async handlers need sequential execution)
+      for (const agent of batch) {
+        this.updateAgent(agent.id, deltaTimeMs);
+      }
+
+      // Yield to event loop after each batch to prevent blocking
+      if (i + BATCH_SIZE < aliveAgents.length) {
+        await new Promise(resolve => setImmediate(resolve));
+      }
     }
   }
 
@@ -594,8 +611,16 @@ export class AISystem extends EventEmitter {
   /**
    * Construye contexto para detectores.
    * Usa WorldQueryService para poblar campos espaciales.
+   * Implementa caché con TTL de 500ms para reducir queries costosas.
    */
   private buildDetectorContext(agentId: string): DetectorContext | null {
+    // Verificar caché primero
+    const now = Date.now();
+    const cached = this.contextCache.get(agentId);
+    if (cached && now - cached.timestamp < this.CONTEXT_CACHE_TTL) {
+      return cached.context;
+    }
+
     const position = this.agentRegistry?.getPosition(agentId);
     if (!position) return null;
 
@@ -860,11 +885,20 @@ export class AISystem extends EventEmitter {
       ...spatialContext,
       ...explorationContext,
     };
+
+    // Guardar en caché
+    this.contextCache.set(agentId, { context, timestamp: now });
+
+    return context;
   }
 
   /**
    * Construye contexto espacial usando WorldQueryService.
    * Retorna un objeto mutable para luego hacer spread.
+   *
+   * NOTA: Este método hace múltiples queries espaciales. La mayoría de estos datos
+   * son cacheados por buildDetectorContext (TTL 500ms) para evitar recomputación.
+   * Optimización futura: combinar queries de recursos en una sola llamada.
    */
   private buildSpatialContext(
     position: { x: number; y: number },
@@ -876,6 +910,7 @@ export class AISystem extends EventEmitter {
     const QUERY_RADIUS = 300;
     const result: Record<string, unknown> = {};
 
+    // Query 1: Nearest food
     const nearestFood = wqs.findNearestFood(position.x, position.y);
     if (nearestFood && "id" in nearestFood) {
       result.nearestFood = {

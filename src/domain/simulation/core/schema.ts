@@ -14,13 +14,13 @@ import type {
   RoadPolyline,
   ObjectLayer,
 } from "@/shared/types/game-types";
-import { ResourceType } from "../../../shared/constants/ResourceEnums";
 import { EntityStatus } from "../../../shared/constants/EntityStatusEnums";
 import { EntityType } from "../../../shared/constants/EntityEnums";
 import { InteractionType } from "../../../shared/constants/InteractionEnums";
 import { WeatherType } from "../../../shared/constants/AmbientEnums";
 import { DialogueTone } from "../../../shared/constants/AmbientEnums";
 import { ActivityType } from "../../../shared/constants/MovementEnums";
+
 
 
 

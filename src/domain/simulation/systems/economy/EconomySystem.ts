@@ -274,77 +274,123 @@ export class EconomySystem implements ITradeSystem {
     return totalValue;
   }
 
+  /**
+   * Auto-trades between agents using spatial partitioning.
+   * Optimized from O(n²) to O(n × k) where k = avg agents per cell.
+   */
   private autoTradeAmongAgents(): void {
-    const entities: Array<{ id: string }> = [];
+    const entities: Array<{ id: string; position?: { x: number; y: number } }> = [];
     if (this.agentRegistry) {
       for (const profile of this.agentRegistry.getAllProfiles()) {
-        if (!profile.isDead) entities.push(profile);
+        if (!profile.isDead) {
+          entities.push({
+            id: profile.id,
+            position: this.agentRegistry.getPosition(profile.id)
+          });
+        }
       }
     } else if (this.state.entities) {
-      entities.push(...this.state.entities);
+      entities.push(...this.state.entities.map(e => ({
+        id: e.id,
+        position: e.position
+      })));
     }
     if (entities.length < 2) return;
 
     const now = Date.now();
 
+    // Cleanup old trades
     for (const [key, timestamp] of this.recentTrades) {
       if (now - timestamp > this.TRADE_COOLDOWN_MS) {
         this.recentTrades.delete(key);
       }
     }
 
-    for (let i = 0; i < entities.length; i++) {
-      const seller = entities[i];
-      if (!seller || !seller.id) continue;
+    // Spatial partitioning: group agents by grid cells (500x500 units)
+    const CELL_SIZE = 500;
+    const spatialGrid = new Map<string, Array<{ id: string }>>();
 
-      const sellerInv = this.inventorySystem.getAgentInventory(seller.id);
-      if (!sellerInv) continue;
+    for (const entity of entities) {
+      if (!entity.position) continue;
 
-      for (const resource of [
-        ResourceTypeEnum.WOOD,
-        ResourceTypeEnum.STONE,
-        ResourceTypeEnum.FOOD,
-        ResourceTypeEnum.WATER,
-        ResourceTypeEnum.METAL,
-      ]) {
-        const sellerStock = sellerInv[resource] || 0;
+      const cellX = Math.floor(entity.position.x / CELL_SIZE);
+      const cellY = Math.floor(entity.position.y / CELL_SIZE);
+      const cellKey = `${cellX},${cellY}`;
 
-        if (sellerStock < 15) continue;
+      if (!spatialGrid.has(cellKey)) {
+        spatialGrid.set(cellKey, []);
+      }
+      spatialGrid.get(cellKey)!.push({ id: entity.id });
+    }
 
-        for (let j = 0; j < entities.length; j++) {
-          if (i === j) continue;
-          const buyer = entities[j];
-          if (!buyer || !buyer.id) continue;
+    // Trade only within cells and adjacent cells
+    for (const [cellKey, cellAgents] of spatialGrid) {
+      if (cellAgents.length < 2) continue;
 
-          const tradeKey = [seller.id, buyer.id, resource].sort().join(":");
-          if (this.recentTrades.has(tradeKey)) continue;
+      const [cellX, cellY] = cellKey.split(',').map(Number);
 
-          const buyerInv = this.inventorySystem.getAgentInventory(buyer.id);
+      // Get agents in this cell + 8 adjacent cells
+      const nearbyAgents: Array<{ id: string }> = [...cellAgents];
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+          if (dx === 0 && dy === 0) continue;
+          const adjacentKey = `${cellX + dx},${cellY + dy}`;
+          const adjacentAgents = spatialGrid.get(adjacentKey);
+          if (adjacentAgents) {
+            nearbyAgents.push(...adjacentAgents);
+          }
+        }
+      }
 
-          if (!buyerInv || (buyerInv[resource] || 0) > 3) continue;
+      // Trade within nearby agents (reduced search space)
+      for (let i = 0; i < cellAgents.length; i++) {
+        const seller = cellAgents[i];
+        if (!seller || !seller.id) continue;
 
-          const tradeAmount = Math.min(5, sellerStock);
-          const price = this.getResourcePrice(resource);
-          const cost = price * tradeAmount;
+        const sellerInv = this.inventorySystem.getAgentInventory(seller.id);
+        if (!sellerInv) continue;
 
-          if (!this.canAfford(buyer.id, cost)) continue;
+        for (const resource of [
+          ResourceTypeEnum.WOOD,
+          ResourceTypeEnum.STONE,
+          ResourceTypeEnum.FOOD,
+          ResourceTypeEnum.WATER,
+          ResourceTypeEnum.METAL,
+        ]) {
+          const sellerStock = sellerInv[resource] || 0;
+          if (sellerStock < 15) continue;
 
-          const removed = this.inventorySystem.removeFromAgent(
-            seller.id,
-            resource,
-            tradeAmount,
-          );
-          if (removed > 0) {
-            this.inventorySystem.addResource(buyer.id, resource, removed);
+          for (const buyer of nearbyAgents) {
+            if (seller.id === buyer.id) continue;
+            if (!buyer || !buyer.id) continue;
 
-            this.transferMoney(buyer.id, seller.id, cost);
+            const tradeKey = [seller.id, buyer.id, resource].sort().join(":");
+            if (this.recentTrades.has(tradeKey)) continue;
 
-            this.recentTrades.set(tradeKey, now);
+            const buyerInv = this.inventorySystem.getAgentInventory(buyer.id);
+            if (!buyerInv || (buyerInv[resource] || 0) > 3) continue;
 
-            logger.debug(
-              `🔄 [MARKET] Auto-trade: ${seller.id} sold ${removed} ${resource} to ${buyer.id} for ${cost}`,
+            const tradeAmount = Math.min(5, sellerStock);
+            const price = this.getResourcePrice(resource);
+            const cost = price * tradeAmount;
+
+            if (!this.canAfford(buyer.id, cost)) continue;
+
+            const removed = this.inventorySystem.removeFromAgent(
+              seller.id,
+              resource,
+              tradeAmount,
             );
-            return;
+            if (removed > 0) {
+              this.inventorySystem.addResource(buyer.id, resource, removed);
+              this.transferMoney(buyer.id, seller.id, cost);
+              this.recentTrades.set(tradeKey, now);
+
+              logger.debug(
+                `🔄 [MARKET] Auto-trade: ${seller.id} sold ${removed} ${resource} to ${buyer.id} for ${cost}`,
+              );
+              return;
+            }
           }
         }
       }
@@ -457,7 +503,7 @@ export class EconomySystem implements ITradeSystem {
   }
 
   /**
-   * @deprecated Use ProductionSystem zone-based assignments/output. This method will be removed.
+   * Legacy work action handler. Use ProductionSystem zone-based assignments for new code.
    * Kept for backward compatibility with older handlers.
    */
   public handleWorkAction(agentId: string, zoneId: string): void {

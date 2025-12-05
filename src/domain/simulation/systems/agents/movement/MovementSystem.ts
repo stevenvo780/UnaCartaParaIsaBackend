@@ -114,9 +114,9 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
   private batchProcessor: MovementBatchProcessor;
   /**
    * Threshold for activating batch processing.
-   * 5 entities: GPU batch processing is efficient for position updates.
+   * Reduced to 3 for earlier GPU/SIMD activation (vectorized ops efficient even with small batches).
    */
-  private readonly BATCH_THRESHOLD = 5;
+  private readonly BATCH_THRESHOLD = 3;
 
   private pathfindingQueue: Array<{
     entityId: string;
@@ -125,7 +125,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     callback: (result: PathfindingResult) => void;
   }> = [];
   private activePaths = 0;
-  private readonly MAX_CONCURRENT_PATHS = 5;
+  private readonly MAX_CONCURRENT_PATHS = 20; // Increased from 5 to prevent pathfinding starvation
   @inject(TYPES.AgentRegistry as symbol)
   @optional()
   private agentRegistry?: AgentRegistry;

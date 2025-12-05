@@ -67,6 +67,11 @@ export class ProductionSystem {
   private readonly assignments = new Map<string, Set<string>>();
   private lastUpdate = Date.now();
 
+  /** Pool de trabajadores disponibles (optimización para ensureAssignments) */
+  private idleWorkers = new Set<string>();
+  private lastIdlePoolUpdate = 0;
+  private readonly IDLE_POOL_UPDATE_INTERVAL = 2000; // ms
+
   constructor(
     @inject(TYPES.GameState) private readonly state: GameState,
     @inject(TYPES.InventorySystem)
@@ -139,10 +144,31 @@ export class ProductionSystem {
       );
     }
 
+    // Actualizar pool de trabajadores idle antes de procesar zonas
+    if (now - this.lastIdlePoolUpdate > this.IDLE_POOL_UPDATE_INTERVAL) {
+      this.updateIdleWorkersPool();
+      this.lastIdlePoolUpdate = now;
+    }
+
     for (const zone of zones) {
       if (!this.isProductionZone(zone)) continue;
       this.ensureAssignments(zone);
       this.processProduction(zone, now);
+    }
+  }
+
+  /**
+   * Actualiza el pool de trabajadores idle.
+   * Un trabajador está idle si está vivo y no está asignado a ninguna zona.
+   */
+  private updateIdleWorkersPool(): void {
+    this.idleWorkers.clear();
+
+    const agents = this.lifeCycleSystem.getAgents();
+    for (const agent of agents) {
+      if (agent.isDead) continue;
+      if (this.isAgentBusy(agent.id)) continue;
+      this.idleWorkers.add(agent.id);
     }
   }
 
@@ -183,7 +209,7 @@ export class ProductionSystem {
 
   /**
    * Ensures zone has workers assigned up to maximum capacity.
-   * Searches for idle agents through `LifeCycleSystem`.
+   * Uses idle worker pool for O(1) assignment instead of O(n) iteration.
    *
    * @param zone - Zone to manage
    */
@@ -194,16 +220,20 @@ export class ProductionSystem {
     }
 
     const required = this.config.maxWorkersPerZone;
-    if (assigned.size >= required) {
+    const needed = required - assigned.size;
+
+    if (needed <= 0) {
       return;
     }
 
-    const agents = this.lifeCycleSystem.getAgents();
-    for (const agent of agents) {
-      if (assigned.size >= required) break;
-      if (agent.isDead) continue;
-      if (this.isAgentBusy(agent.id)) continue;
-      assigned.add(agent.id);
+    // Asignar trabajadores del idle pool (O(needed) en lugar de O(n))
+    let assignedCount = 0;
+    for (const workerId of this.idleWorkers) {
+      if (assignedCount >= needed) break;
+
+      assigned.add(workerId);
+      this.idleWorkers.delete(workerId);
+      assignedCount++;
     }
   }
 

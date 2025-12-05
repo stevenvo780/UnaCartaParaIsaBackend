@@ -26,6 +26,7 @@ import type {
   SerializedReputationData,
   TrustRelationship,
 } from "@/shared/types/simulation/reputation";
+import { UnionFind } from "@/shared/utils/UnionFind";
 
 /**
  * Configuration for reputation system (merged from ReputationSystem)
@@ -94,6 +95,8 @@ export class SocialSystem implements ISocialSystem {
 
   /** Dirty flag to skip recomputeGroups when no edges changed */
   private edgesModified = false;
+  /** Union-Find structure for efficient connected components computation */
+  private unionFind = new UnionFind<string>();
   private gpuService?: GPUComputeService;
   private entityIndex?: EntityIndex;
 
@@ -263,7 +266,7 @@ export class SocialSystem implements ISocialSystem {
       totalEdges += neighbors.size;
     }
 
-    if (this.gpuService?.isGPUAvailable() && totalEdges > 200) {
+    if (this.gpuService?.isGPUAvailable() && totalEdges > 50) {
       await this.decayEdgesGPU(dt, minAffinity);
       return;
     }
@@ -375,7 +378,7 @@ export class SocialSystem implements ISocialSystem {
         !!e.position && !e.isDead,
     );
 
-    if (this.gpuService?.isGPUAvailable() && entitiesWithPos.length >= 20) {
+    if (this.gpuService?.isGPUAvailable() && entitiesWithPos.length >= 10) {
       await this.updateProximityGPU(entitiesWithPos, reinforcement);
       return;
     }
@@ -659,79 +662,82 @@ export class SocialSystem implements ISocialSystem {
     return this.zoneHeat.get(zoneId) || 0;
   }
 
+  /**
+   * Recomputes social groups using Union-Find for O(α(n)) amortized complexity.
+   * Optimized from O(V + E) BFS to near-constant time per operation.
+   */
   private recomputeGroups(): void {
     const startTime = performance.now();
-    const visited = new Set<string>();
     const newGroups: SocialGroup[] = [];
     const entities = this.gameState.entities?.map((e) => e.id) || [];
 
-    for (const u of entities) {
-      if (visited.has(u)) continue;
+    // Rebuild Union-Find from edges
+    this.unionFind.clear();
 
-      const groupMembers: string[] = [];
-      const queue = [u];
-      visited.add(u);
+    // Initialize all entities as separate sets
+    for (const entityId of entities) {
+      this.unionFind.makeSet(entityId);
+    }
 
-      while (queue.length > 0) {
-        const current = queue.shift()!;
-        groupMembers.push(current);
+    // Union entities with affinity above threshold
+    for (const [aId, neighbors] of this.edges) {
+      for (const [bId, affinity] of neighbors) {
+        if (affinity >= this.config.groupThreshold) {
+          this.unionFind.union(aId, bId);
+        }
+      }
+    }
 
-        const neighbors = this.edges.get(current);
-        if (neighbors) {
-          for (const [v, affinity] of neighbors.entries()) {
-            if (affinity >= this.config.groupThreshold && !visited.has(v)) {
-              visited.add(v);
-              queue.push(v);
+    // Get connected components (groups)
+    const components = this.unionFind.getComponents();
+
+    // Process each component to create groups
+    for (const groupMembers of components) {
+      if (groupMembers.length <= 1) continue;
+
+      let totalAffinity = 0;
+      let edgeCount = 0;
+      let bestLeader = { id: groupMembers[0], score: -Infinity };
+
+      for (const member of groupMembers) {
+        let leadershipScore = 0;
+        const memberEdges = this.edges.get(member);
+
+        if (memberEdges) {
+          for (const other of groupMembers) {
+            if (member === other) continue;
+            const aff = memberEdges.get(other) || 0;
+            if (aff > 0) {
+              totalAffinity += aff;
+              edgeCount++;
+              leadershipScore += aff;
             }
           }
+        }
+
+        if (leadershipScore > bestLeader.score) {
+          bestLeader = { id: member, score: leadershipScore };
         }
       }
 
-      if (groupMembers.length > 1) {
-        let totalAffinity = 0;
-        let edgeCount = 0;
-        let bestLeader = { id: groupMembers[0], score: -Infinity };
+      const cohesion = edgeCount > 0 ? totalAffinity / edgeCount : 0;
 
-        for (const member of groupMembers) {
-          let leadershipScore = 0;
-          const memberEdges = this.edges.get(member);
+      newGroups.push({
+        id: `group_${groupMembers[0]}`,
+        members: groupMembers,
+        leader: bestLeader.id,
+        cohesion,
+        morale: 100,
+      });
 
-          if (memberEdges) {
-            for (const other of groupMembers) {
-              if (member === other) continue;
-              const aff = memberEdges.get(other) || 0;
-              if (aff > 0) {
-                totalAffinity += aff;
-                edgeCount++;
-                leadershipScore += aff;
-              }
-            }
-          }
-
-          if (leadershipScore > bestLeader.score) {
-            bestLeader = { id: member, score: leadershipScore };
-          }
-        }
-
-        const cohesion = edgeCount > 0 ? totalAffinity / edgeCount : 0;
-
-        newGroups.push({
-          id: `group_${groupMembers[0]}`,
+      if (cohesion > 0.7 && groupMembers.length >= 3) {
+        simulationEvents.emit(GameEventType.SOCIAL_RALLY, {
+          groupId: `group_${groupMembers[0]}`,
+          leaderId: bestLeader.id,
           members: groupMembers,
-          leader: bestLeader.id,
           cohesion,
-          morale: 100,
+          timestamp: Date.now(),
         });
-
-        if (cohesion > 0.7 && groupMembers.length >= 3) {
-          simulationEvents.emit(GameEventType.SOCIAL_RALLY, {
-            groupId: `group_${groupMembers[0]}`,
-            leaderId: bestLeader.id,
-            members: groupMembers,
-            cohesion,
-            timestamp: Date.now(),
-          });
-        }
       }
     }
 

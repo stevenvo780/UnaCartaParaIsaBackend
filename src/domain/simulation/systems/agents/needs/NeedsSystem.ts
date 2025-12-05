@@ -91,10 +91,10 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
   private batchProcessor: NeedsBatchProcessor;
   /**
    * Threshold for activating batch processing.
-   * 5 entities: GPU batch is efficient even with small counts due to vectorization.
-   * NeedsSystem processes 7 needs per entity, so 5 entities = 35 operations.
+   * Reduced to 3 for earlier GPU/SIMD activation (vectorized ops efficient even with small batches).
+   * NeedsSystem processes 7 needs per entity, so 3 entities = 21 operations.
    */
-  private readonly BATCH_THRESHOLD = 5;
+  private readonly BATCH_THRESHOLD = 3;
   private entityIndex?: EntityIndex;
   private spatialIndex?: SharedSpatialIndex;
   private agentRegistry?: AgentRegistry;
@@ -613,6 +613,14 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
   /**
    * Finds zones near a position with caching for performance.
    */
+  /**
+   * Finds zones near a position with caching to reduce O(z) iterations.
+   * Cache key uses 100-unit grid cells for spatial locality.
+   *
+   * OPTIMIZATION: While this iterates all zones, the cache (TTL 5s) ensures
+   * the O(z) filter only runs once per grid cell per 5 seconds, not per agent.
+   * Further optimization would require a persistent spatial index for zones.
+   */
   private findZonesNearPosition(
     position: { x: number; y: number },
     radius: number,
@@ -971,7 +979,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
   ): Promise<void> {
     if (!this.socialSystem || !this.gameState.entities) return;
 
-    const GPU_BATCH_THRESHOLD = 20;
+    const GPU_BATCH_THRESHOLD = 5; // Reduced from 20 for earlier GPU activation
 
     const entityPositions: Array<{ id: string; x: number; y: number }> = [];
     for (const entityId of entityIds) {
