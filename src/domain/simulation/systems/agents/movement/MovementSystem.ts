@@ -673,8 +673,9 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     const state = this.movementStates.get(entityId);
     if (!state) return false;
 
-    const tx = Math.max(0, Math.min(x, this.gridWidth * this.gridSize - 1));
-    const ty = Math.max(0, Math.min(y, this.gridHeight * this.gridSize - 1));
+    // Mundo infinito: no clampar coordenadas, permitir cualquier posición
+    const tx = x;
+    const ty = y;
 
     const distance = Math.hypot(
       tx - state.currentPosition.x,
@@ -818,13 +819,41 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     from: { x: number; y: number },
     to: { x: number; y: number },
   ): Promise<PathfindingResult> {
+    const distance = Math.hypot(to.x - from.x, to.y - from.y);
+
+    // Para distancias largas en mundo infinito, usar movimiento directo
+    // El pathfinding complejo solo es útil para distancias cortas con obstáculos
+    const MAX_PATHFINDING_DISTANCE = 500;
+    if (distance > MAX_PATHFINDING_DISTANCE) {
+      return {
+        success: true,
+        path: [from, to],
+        estimatedTime: estimateTravelTime(
+          distance,
+          0,
+          SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
+          SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
+        ),
+        distance,
+      };
+    }
+
+    // Para distancias cortas, usar grid local centrado en el área de movimiento
     const startGrid = worldToGrid(from.x, from.y, this.gridSize);
     const endGrid = worldToGrid(to.x, to.y, this.gridSize);
 
-    startGrid.x = Math.max(0, Math.min(startGrid.x, this.gridWidth - 1));
-    startGrid.y = Math.max(0, Math.min(startGrid.y, this.gridHeight - 1));
-    endGrid.x = Math.max(0, Math.min(endGrid.x, this.gridWidth - 1));
-    endGrid.y = Math.max(0, Math.min(endGrid.y, this.gridHeight - 1));
+    // Mundo infinito: usar coordenadas relativas para el pathfinding local
+    // Offset para convertir a coordenadas locales del grid
+    const minGridX = Math.min(startGrid.x, endGrid.x) - 5;
+    const minGridY = Math.min(startGrid.y, endGrid.y) - 5;
+    const localStartX = startGrid.x - minGridX;
+    const localStartY = startGrid.y - minGridY;
+    const localEndX = endGrid.x - minGridX;
+    const localEndY = endGrid.y - minGridY;
+
+    // Tamaño del grid local (área entre start y end + margen)
+    const localGridWidth = Math.abs(endGrid.x - startGrid.x) + 11;
+    const localGridHeight = Math.abs(endGrid.y - startGrid.y) + 11;
 
     const pathKey = `${startGrid.x},${startGrid.y}->${endGrid.x},${endGrid.y}`;
     const now = Date.now();
@@ -835,15 +864,16 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
     }
 
     return new Promise((resolve) => {
-      const grid = this.getOptimizedGrid();
-      this.pathfinder.setGrid(grid);
+      // Crear grid local para esta área específica
+      const localGrid = this.createLocalGrid(minGridX, minGridY, localGridWidth, localGridHeight);
+      this.pathfinder.setGrid(localGrid);
 
       const startTime = performance.now();
       this.pathfinder.findPath(
-        startGrid.x,
-        startGrid.y,
-        endGrid.x,
-        endGrid.y,
+        localStartX,
+        localStartY,
+        localEndX,
+        localEndY,
         (path) => {
           const duration = performance.now() - startTime;
           performanceMonitor.recordSubsystemExecution(
@@ -853,14 +883,15 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
           );
 
           if (path) {
+            // Convertir path local de vuelta a coordenadas mundiales
             const worldPath = path.map((p) => ({
-              x: p.x * this.gridSize + this.gridSize / 2,
-              y: p.y * this.gridSize + this.gridSize / 2,
+              x: (p.x + minGridX) * this.gridSize + this.gridSize / 2,
+              y: (p.y + minGridY) * this.gridSize + this.gridSize / 2,
             }));
 
-            let distance = 0;
+            let pathDistance = 0;
             for (let i = 0; i < worldPath.length - 1; i++) {
-              distance += Math.hypot(
+              pathDistance += Math.hypot(
                 worldPath[i + 1].x - worldPath[i].x,
                 worldPath[i + 1].y - worldPath[i].y,
               );
@@ -870,86 +901,21 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
               success: true,
               path: worldPath,
               estimatedTime: estimateTravelTime(
-                distance,
+                pathDistance,
                 0,
                 SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
                 SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
               ),
-              distance,
+              distance: pathDistance,
             };
 
             this.pathCache.set(pathKey, { result, timestamp: now });
             resolve(result);
           } else {
-            const grid = this.getOptimizedGrid();
-            const accessiblePos = findAccessibleDestination(
-              grid,
-              endGrid.x,
-              endGrid.y,
-              this.gridWidth,
-              this.gridHeight,
-              5,
-            );
-
-            if (
-              accessiblePos.x !== endGrid.x ||
-              accessiblePos.y !== endGrid.y
-            ) {
-              this.pathfinder.findPath(
-                startGrid.x,
-                startGrid.y,
-                accessiblePos.x,
-                accessiblePos.y,
-                (altPath) => {
-                  if (altPath && altPath.length > 0) {
-                    const worldPath = altPath.map((p) => ({
-                      x: p.x * this.gridSize + this.gridSize / 2,
-                      y: p.y * this.gridSize + this.gridSize / 2,
-                    }));
-
-                    let distance = 0;
-                    for (let i = 0; i < worldPath.length - 1; i++) {
-                      distance += Math.hypot(
-                        worldPath[i + 1].x - worldPath[i].x,
-                        worldPath[i + 1].y - worldPath[i].y,
-                      );
-                    }
-
-                    resolve({
-                      success: true,
-                      path: worldPath,
-                      estimatedTime: estimateTravelTime(
-                        distance,
-                        0,
-                        SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
-                        SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
-                      ),
-                      distance,
-                    });
-                    return;
-                  }
-
-                  const distance = Math.hypot(to.x - from.x, to.y - from.y);
-                  resolve({
-                    success: false,
-                    path: [],
-                    estimatedTime: estimateTravelTime(
-                      distance,
-                      0,
-                      SIM_CONSTANTS.BASE_MOVEMENT_SPEED,
-                      SIM_CONSTANTS.FATIGUE_PENALTY_MULTIPLIER,
-                    ),
-                    distance,
-                  });
-                },
-              );
-              return;
-            }
-
-            const distance = Math.hypot(to.x - from.x, to.y - from.y);
+            // Fallback: movimiento directo si pathfinding falla
             resolve({
-              success: false,
-              path: [],
+              success: true,
+              path: [from, to],
               estimatedTime: estimateTravelTime(
                 distance,
                 0,
@@ -961,7 +927,36 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
           }
         },
       );
+      this.pathfinder.calculate();
     });
+  }
+
+  /**
+   * Crea un grid local para pathfinding en mundo infinito.
+   * Solo incluye obstáculos dentro del área especificada.
+   */
+  private createLocalGrid(
+    offsetX: number,
+    offsetY: number,
+    width: number,
+    height: number,
+  ): number[][] {
+    const grid: number[][] = Array(height)
+      .fill(null)
+      .map(() => Array<number>(width).fill(0));
+
+    // Marcar obstáculos dentro del área local
+    for (const key of this.occupiedTiles) {
+      const [tileX, tileY] = key.split(",").map(Number);
+      const localX = tileX - offsetX;
+      const localY = tileY - offsetY;
+
+      if (localX >= 0 && localX < width && localY >= 0 && localY < height) {
+        grid[localY][localX] = 1;
+      }
+    }
+
+    return grid;
   }
 
   private getOptimizedGrid(): number[][] {

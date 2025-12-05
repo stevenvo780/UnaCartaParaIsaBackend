@@ -145,7 +145,7 @@ export class LifeCycleSystem extends EventEmitter {
    *
    * Kept as no-op for backwards compatibility with tests.
    */
-  private setupDeathListener(): void {}
+  private setupDeathListener(): void { }
 
   public setDependencies(systems: {
     needsSystem?: INeedsPort;
@@ -418,8 +418,8 @@ export class LifeCycleSystem extends EventEmitter {
 
       logger.debug(
         `🍼 [tryCouple] ${father.name}+${mother.name} needs: ` +
-          `father(hunger=${fatherNeeds?.hunger?.toFixed(0)}, energy=${fatherNeeds?.energy?.toFixed(0)}) ` +
-          `mother(hunger=${motherNeeds?.hunger?.toFixed(0)}, energy=${motherNeeds?.energy?.toFixed(0)})`,
+        `father(hunger=${fatherNeeds?.hunger?.toFixed(0)}, energy=${fatherNeeds?.energy?.toFixed(0)}) ` +
+        `mother(hunger=${motherNeeds?.hunger?.toFixed(0)}, energy=${motherNeeds?.energy?.toFixed(0)})`,
       );
 
       if (
@@ -478,15 +478,15 @@ export class LifeCycleSystem extends EventEmitter {
     spec:
       | Partial<AgentProfile>
       | {
-          id?: string;
-          name?: string;
-          sex: Sex;
-          ageYears: number;
-          lifeStage: LifeStage;
-          generation: number;
-          immortal?: boolean;
-          traits?: Partial<AgentTraits>;
-        } = {},
+        id?: string;
+        name?: string;
+        sex: Sex;
+        ageYears: number;
+        lifeStage: LifeStage;
+        generation: number;
+        immortal?: boolean;
+        traits?: Partial<AgentTraits>;
+      } = {},
   ): AgentProfile {
     const partial = spec as Partial<AgentProfile>;
     const id = partial.id ?? `agent_${++this.spawnCounter}`;
@@ -732,13 +732,13 @@ export class LifeCycleSystem extends EventEmitter {
     const removed = this.agentRegistry
       ? this.agentRegistry.removeAgent(id)
       : ((): boolean => {
-          const index = this.gameState.agents!.findIndex((a) => a.id === id);
-          if (index !== -1) {
-            this.gameState.agents!.splice(index, 1);
-            return true;
-          }
-          return false;
-        })();
+        const index = this.gameState.agents!.findIndex((a) => a.id === id);
+        if (index !== -1) {
+          this.gameState.agents!.splice(index, 1);
+          return true;
+        }
+        return false;
+      })();
 
     if (removed) {
       if (this.gameState.entities) {
@@ -789,7 +789,7 @@ export class LifeCycleSystem extends EventEmitter {
     }
 
     if (this._aiSystem) {
-      this._aiSystem.removeAgentState(agentId);
+      this._aiSystem.clearAgent(agentId);
     }
 
     if (this.needsSystem) {
@@ -827,13 +827,13 @@ export class LifeCycleSystem extends EventEmitter {
     const removed = this.agentRegistry
       ? this.agentRegistry.removeAgent(id)
       : ((): boolean => {
-          const index = this.gameState.agents!.findIndex((a) => a.id === id);
-          if (index !== -1) {
-            this.gameState.agents!.splice(index, 1);
-            return true;
-          }
-          return false;
-        })();
+        const index = this.gameState.agents!.findIndex((a) => a.id === id);
+        if (index !== -1) {
+          this.gameState.agents!.splice(index, 1);
+          return true;
+        }
+        return false;
+      })();
 
     if (!removed) return false;
 

@@ -800,31 +800,33 @@ export class WorldQueryService {
   }
 
   /**
-   * Get the direction to the nearest map edge (where water is).
-   * Used by exploration system to guide thirsty agents toward water.
+   * Get the direction to the nearest water source for exploration.
+   * In an infinite world, there are no "edges" - we search for actual water tiles.
+   * If no water is found nearby, suggests a random exploration direction.
    */
   public getDirectionToNearestEdge(
     x: number,
     y: number,
   ): { x: number; y: number; edgeName: string } {
-    const worldSize = this.gameState.worldSize ?? { width: 2000, height: 2000 };
-
-    const distToLeft = x;
-    const distToRight = worldSize.width - x;
-    const distToTop = y;
-    const distToBottom = worldSize.height - y;
-
-    const minDist = Math.min(distToLeft, distToRight, distToTop, distToBottom);
-
-    if (minDist === distToLeft) {
-      return { x: 0, y: y, edgeName: "west" };
-    } else if (minDist === distToRight) {
-      return { x: worldSize.width, y: y, edgeName: "east" };
-    } else if (minDist === distToTop) {
-      return { x: x, y: 0, edgeName: "north" };
-    } else {
-      return { x: x, y: worldSize.height, edgeName: "south" };
+    // En mundo infinito, buscar agua cercana primero
+    const waterTile = this.findNearestWater(x, y);
+    if (waterTile) {
+      return {
+        x: waterTile.worldX,
+        y: waterTile.worldY,
+        edgeName: "water",
+      };
     }
+
+    // Si no hay agua cercana, sugerir dirección aleatoria para exploración
+    // En mundo infinito no hay "bordes" - explorar en cualquier dirección
+    const angle = Math.random() * Math.PI * 2;
+    const exploreDistance = 300;
+    return {
+      x: x + Math.cos(angle) * exploreDistance,
+      y: y + Math.sin(angle) * exploreDistance,
+      edgeName: "explore",
+    };
   }
 
   /**

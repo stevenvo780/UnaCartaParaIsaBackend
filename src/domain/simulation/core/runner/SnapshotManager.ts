@@ -120,37 +120,39 @@ export class SnapshotManager {
       stateSnapshot.agents = stateSnapshot.agents.map((agent) => {
         const needs = this.runner.needsSystem.getNeeds(agent.id);
         const role = this.runner.roleSystem.getAgentRole(agent.id);
-        const aiState = this.runner.aiSystem.getAIState(agent.id);
+        const activeTask = this.runner.aiSystem.getActiveTask(agent.id);
+        const pendingTasks = this.runner.aiSystem.getPendingTasks(agent.id);
+        const memory = this.runner.aiSystem.getAgentMemory(agent.id);
 
         let ai;
-        if (aiState) {
-          const memory = aiState.memory
+        if (activeTask || memory) {
+          const serializedMemory = memory
             ? {
-                ...aiState.memory,
-                visitedZones: Array.from(aiState.memory.visitedZones || []),
-                knownResourceLocations: aiState.memory.knownResourceLocations
-                  ? Object.fromEntries(aiState.memory.knownResourceLocations)
-                  : {},
-                successfulActivities: aiState.memory.successfulActivities
-                  ? Object.fromEntries(aiState.memory.successfulActivities)
-                  : {},
-                failedAttempts: aiState.memory.failedAttempts
-                  ? Object.fromEntries(aiState.memory.failedAttempts)
-                  : {},
-                failedTargets: aiState.memory.failedTargets
-                  ? Object.fromEntries(aiState.memory.failedTargets)
-                  : {},
-              }
+              ...memory,
+              visitedZones: Array.from(memory.visitedZones || []),
+              knownResourceLocations: memory.knownResourceLocations
+                ? Object.fromEntries(memory.knownResourceLocations)
+                : {},
+              successfulActivities: memory.successfulActivities
+                ? Object.fromEntries(memory.successfulActivities)
+                : {},
+              failedAttempts: memory.failedAttempts
+                ? Object.fromEntries(memory.failedAttempts)
+                : {},
+              failedTargets: memory.failedTargets
+                ? Object.fromEntries(memory.failedTargets)
+                : {},
+            }
             : undefined;
 
           ai = {
-            currentGoal: aiState.currentGoal || undefined,
-            goalQueue: aiState.goalQueue || [],
-            currentAction: aiState.currentAction || undefined,
-            offDuty: aiState.offDuty || false,
-            lastDecisionTime: aiState.lastDecisionTime || 0,
-            personality: aiState.personality,
-            memory,
+            currentGoal: activeTask || undefined,
+            goalQueue: [...(pendingTasks || [])],
+            currentAction: activeTask ? { type: activeTask.type, target: activeTask.target } : undefined,
+            offDuty: false,
+            lastDecisionTime: Date.now(),
+            personality: {},
+            memory: serializedMemory,
           };
         }
 
@@ -260,37 +262,39 @@ export class SnapshotManager {
     if (snapshotState.agents) {
       snapshotState.agents = snapshotState.agents.map((agent) => {
         const needs = this.runner.needsSystem.getNeeds(agent.id);
-        const aiState = this.runner.aiSystem.getAIState(agent.id);
+        const activeTask = this.runner.aiSystem.getActiveTask(agent.id);
+        const pendingTasks = this.runner.aiSystem.getPendingTasks(agent.id);
+        const memory = this.runner.aiSystem.getAgentMemory(agent.id);
 
         let ai;
-        if (aiState) {
-          const memory = aiState.memory
+        if (activeTask || memory) {
+          const serializedMemory = memory
             ? {
-                ...aiState.memory,
-                visitedZones: Array.from(aiState.memory.visitedZones || []),
-                knownResourceLocations: aiState.memory.knownResourceLocations
-                  ? Object.fromEntries(aiState.memory.knownResourceLocations)
-                  : {},
-                successfulActivities: aiState.memory.successfulActivities
-                  ? Object.fromEntries(aiState.memory.successfulActivities)
-                  : {},
-                failedAttempts: aiState.memory.failedAttempts
-                  ? Object.fromEntries(aiState.memory.failedAttempts)
-                  : {},
-                failedTargets: aiState.memory.failedTargets
-                  ? Object.fromEntries(aiState.memory.failedTargets)
-                  : {},
-              }
+              ...memory,
+              visitedZones: Array.from(memory.visitedZones || []),
+              knownResourceLocations: memory.knownResourceLocations
+                ? Object.fromEntries(memory.knownResourceLocations)
+                : {},
+              successfulActivities: memory.successfulActivities
+                ? Object.fromEntries(memory.successfulActivities)
+                : {},
+              failedAttempts: memory.failedAttempts
+                ? Object.fromEntries(memory.failedAttempts)
+                : {},
+              failedTargets: memory.failedTargets
+                ? Object.fromEntries(memory.failedTargets)
+                : {},
+            }
             : undefined;
 
           ai = {
-            currentGoal: aiState.currentGoal || undefined,
-            goalQueue: aiState.goalQueue || [],
-            currentAction: aiState.currentAction || undefined,
-            offDuty: aiState.offDuty || false,
-            lastDecisionTime: aiState.lastDecisionTime || 0,
-            personality: aiState.personality,
-            memory,
+            currentGoal: activeTask || undefined,
+            goalQueue: [...(pendingTasks || [])],
+            currentAction: activeTask ? { type: activeTask.type, target: activeTask.target } : undefined,
+            offDuty: false,
+            lastDecisionTime: Date.now(),
+            personality: {},
+            memory: serializedMemory,
           };
         }
 

@@ -59,30 +59,7 @@ export enum StockpileType {
   MATERIALS = "materials",
 }
 
-/**
- * Enumeration of zone IDs used in world configuration.
- */
-export enum ZoneID {
-  FOOD_ZONE_CENTRAL = "food_zone_central",
-  WATER_ZONE_NORTH = "water_zone_north",
-  REST_ZONE_SOUTH = "rest_zone_south",
-  WORK_ZONE_LOGGING = "work_zone_logging",
-  WORK_ZONE_QUARRY = "work_zone_quarry",
-  STORAGE_GRANARY_01 = "storage_granary_01",
-  WATER_WELL_CENTRAL = "water_well_central",
-  FOOD_ZONE_ORCHARD_EAST = "food_zone_orchard_east",
-  FOOD_ZONE_FARM_WEST = "food_zone_farm_west",
-  FOOD_ZONE_GARDEN_SOUTH = "food_zone_garden_south",
-  WATER_ZONE_LAKE_EAST = "water_zone_lake_east",
-  WATER_ZONE_SPRING_WEST = "water_zone_spring_west",
-  DEFENSE_TOWER_NORTH = "defense_tower_north",
-  DIVINE_TEMPLE_CENTER = "divine_temple_center",
-  MEDICAL_ZONE_HOSPITAL = "medical_zone_hospital",
-  TRAINING_ZONE_GYM = "training_zone_gym",
-  KNOWLEDGE_ZONE_LIBRARY = "knowledge_zone_library",
-  SPIRITUAL_ZONE_TEMPLE = "spiritual_zone_temple",
-  MARKET_ZONE_PLAZA = "market_zone_plaza",
-}
+// Identificadores específicos de zonas eliminados por no tener consumidores activos.
 
 /**
  * Type representing all possible zone type values.

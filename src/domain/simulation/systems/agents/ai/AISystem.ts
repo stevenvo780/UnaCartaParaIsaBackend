@@ -164,8 +164,7 @@ export class AISystem extends EventEmitter {
   private needsSystem?: NeedsSystem;
   private worldQueryService?: WorldQueryService;
   private timeSystem?: TimeSystem;
-  /** @deprecated Use systemRegistry.movement instead */
-  private _movementSystem?: MovementSystem;
+
 
   private systemRegistry: SystemRegistry;
 
@@ -182,7 +181,7 @@ export class AISystem extends EventEmitter {
     @inject(TYPES.GameState) gameState: GameState,
     @inject(TYPES.AgentRegistry) @optional() agentRegistry?: AgentRegistry,
     @inject(TYPES.NeedsSystem) @optional() needsSystem?: NeedsSystem,
-    @inject(TYPES.MovementSystem) @optional() movementSystem?: MovementSystem,
+    @inject(TYPES.MovementSystem) @optional() _movementSystem?: MovementSystem,
     @inject(TYPES.WorldQueryService)
     @optional()
     worldQueryService?: WorldQueryService,
@@ -192,7 +191,7 @@ export class AISystem extends EventEmitter {
     this.gameState = gameState;
     this.agentRegistry = agentRegistry;
     this.needsSystem = needsSystem;
-    this._movementSystem = movementSystem;
+
     this.worldQueryService = worldQueryService;
     this.timeSystem = timeSystem;
     this.config = { ...DEFAULT_CONFIG };
@@ -213,7 +212,7 @@ export class AISystem extends EventEmitter {
   public setDependencies(deps: Partial<AISystemDeps>): void {
     if (deps.agentRegistry) this.agentRegistry = deps.agentRegistry;
     if (deps.needsSystem) this.needsSystem = deps.needsSystem;
-    if (deps.movementSystem) this._movementSystem = deps.movementSystem;
+
     if (deps.worldQueryService) this.worldQueryService = deps.worldQueryService;
     if (deps.timeSystem) this.timeSystem = deps.timeSystem;
     if (deps.systemRegistry) this.systemRegistry = deps.systemRegistry;
@@ -294,13 +293,6 @@ export class AISystem extends EventEmitter {
     };
   }
 
-  /**
-   * @deprecated Use systemRegistry.movement instead
-   * Obtiene el MovementSystem legado.
-   */
-  public getMovementSystem(): MovementSystem | undefined {
-    return this._movementSystem;
-  }
 
   /**
    * Emite una tarea para un agente.
@@ -1120,7 +1112,14 @@ export class AISystem extends EventEmitter {
   }
 
   /**
-   * @deprecated Use getStats() instead
+   * @deprecated Use clearAgent()
+   */
+  public removeAgentState(agentId: string): void {
+    this.clearAgent(agentId);
+  }
+
+  /**
+   * @deprecated No longer needed - sync happens automatically
    */
   public syncToGameState(): void { }
 
@@ -1144,13 +1143,6 @@ export class AISystem extends EventEmitter {
   }
 
   /**
-   * @deprecated Use clearAgent()
-   */
-  public removeAgentState(agentId: string): void {
-    this.clearAgent(agentId);
-  }
-
-  /**
    * @deprecated No longer needed
    */
   public restoreAIState(_agentId: string, _state: unknown): void { }
@@ -1159,6 +1151,12 @@ export class AISystem extends EventEmitter {
    * @deprecated Called internally in constructor
    */
   public initialize(): void { }
+
+  /**
+   * @deprecated No longer needed - handled internally
+   */
+  public notifyEntityArrived(_agentId: string, _entityId: string): void { }
+
 
   /**
    * @deprecated Use getActiveTask() + getPendingTasks()
@@ -1244,8 +1242,5 @@ export class AISystem extends EventEmitter {
     }
   }
 
-  /**
-   * @deprecated No longer needed - handled internally
-   */
-  public notifyEntityArrived(_agentId: string, _entityId: string): void { }
+
 }

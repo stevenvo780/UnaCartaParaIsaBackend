@@ -303,7 +303,7 @@ export class SimulationRunner {
     const startTime = performance.now();
     try {
       this.needsSystem.syncToGameState();
-      this.aiSystem.syncToGameState();
+      // AISystem sync is automatic, no longer needed
       this.socialSystem.syncToGameState();
 
       const stateClone = cloneGameState(this.state);
@@ -762,7 +762,7 @@ export class SimulationRunner {
       }
 
       if (agent.ai) {
-        this.aiSystem.restoreAIState(agent.id, agent.ai);
+        // AI state restoration handled automatically by AISystem
       }
 
       if (!this.inventorySystem.getAgentInventory(agent.id)) {
@@ -832,7 +832,7 @@ export class SimulationRunner {
     }
 
     logger.info("🔄 SimulationRunner: Starting simulation scheduler...");
-    this.aiSystem.initialize();
+    // AISystem initializes in constructor
     this.scheduler.start();
     logger.info("🚀 Multi-rate simulation started", {
       rates: { FAST: "50ms", MEDIUM: "250ms", SLOW: "1000ms" },
@@ -944,9 +944,10 @@ export class SimulationRunner {
     }
 
     if (!agent.position) {
+      // Mundo infinito: usar centro del spawn inicial o (0,0)
       agent.position = {
-        x: (this.state.worldSize?.width ?? 2048) / 2,
-        y: (this.state.worldSize?.height ?? 2048) / 2,
+        x: (this.state.worldSize?.width ?? 0) / 2,
+        y: (this.state.worldSize?.height ?? 0) / 2,
       };
       logger.warn(
         `ensureMovementState: Agent ${agentId} had no position, assigned default`,
@@ -989,7 +990,8 @@ export class SimulationRunner {
       const role = this.roleSystem.getAgentRole(entityId);
       const inventory = this.inventorySystem.getAgentInventory(entityId);
       const social = this.socialSystem.getSocialConnections(entityId);
-      const aiState = this.aiSystem.getAIState(entityId);
+      const activeTask = this.aiSystem.getActiveTask(entityId);
+      const pendingTasks = this.aiSystem.getPendingTasks(entityId);
 
       return {
         type: EntityType.AGENT,
@@ -998,14 +1000,14 @@ export class SimulationRunner {
         role,
         inventory,
         social,
-        ai: aiState
+        ai: activeTask
           ? {
-              currentGoal: aiState.currentGoal,
-              goalQueue: aiState.goalQueue,
-              currentAction: aiState.currentAction,
-              offDuty: aiState.offDuty,
-              lastDecisionTime: aiState.lastDecisionTime,
-            }
+            currentGoal: activeTask,
+            goalQueue: pendingTasks,
+            currentAction: { type: activeTask.type, target: activeTask.target },
+            offDuty: false,
+            lastDecisionTime: Date.now(),
+          }
           : null,
       };
     }

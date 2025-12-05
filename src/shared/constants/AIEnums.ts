@@ -93,20 +93,6 @@ export enum GoalDomain {
 }
 
 /**
- * Enumeration of agent priority levels.
- * Determines how agents prioritize their goals and actions.
- */
-export enum AgentPriority {
-  SURVIVAL = "survival",
-  NORMAL = "normal",
-  SOCIAL = "social",
-  WORK = "work",
-  COMBAT = "combat",
-  FLEE = "flee",
-  IDLE = "idle",
-}
-
-/**
  * Enumeration of reasons for goals or actions.
  */
 export enum GoalReason {

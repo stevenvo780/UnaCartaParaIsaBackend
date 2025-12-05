@@ -60,8 +60,10 @@ export class ChunkLoadingSystem {
    */
   private createDefaultInfiniteWorldConfig(): WorldGenConfig {
     return {
-      width: 1000000,
-      height: 1000000,
+      // Mundo infinito: no establecer límites de width/height
+      // El terrain se genera proceduralmente sin límites
+      width: undefined as unknown as number,
+      height: undefined as unknown as number,
       tileSize: 32,
       seed: Date.now(),
       noise: {

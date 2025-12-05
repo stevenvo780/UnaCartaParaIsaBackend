@@ -237,33 +237,37 @@ export interface ISocialPort {
  */
 export interface IAIPort {
   /**
-   * Sets goal for an agent
+   * Emits a task for an agent (replaces setGoal)
    */
-  setGoal(
+  emitTask(
     agentId: string,
-    goal: {
+    task: {
       type: string;
       priority: number;
-      targetId?: string;
-      targetZoneId?: string;
-      data?: Record<string, unknown>;
+      target?: { entityId?: string; zoneId?: string };
+      params?: Record<string, unknown>;
     },
   ): void;
 
   /**
-   * Clears all goals for an agent
+   * Gets active task for agent (replaces getCurrentGoal)
    */
-  clearGoals(agentId: string): void;
+  getActiveTask(agentId: string): unknown;
 
   /**
-   * Gets current goal for agent
+   * Gets pending tasks for agent
    */
-  getCurrentGoal(agentId: string): unknown;
+  getPendingTasks(agentId: string): readonly unknown[];
 
   /**
-   * Removes all AI state for an agent (on death)
+   * Cancels active task for agent (replaces clearGoals)
    */
-  removeAgentState(agentId: string): void;
+  cancelTask(agentId: string): void;
+
+  /**
+   * Clears all AI state for an agent (on death)
+   */
+  clearAgent(agentId: string): void;
 }
 
 /**

@@ -31,7 +31,7 @@ export class EventRegistry {
   private eventCleanups: (() => void)[] = [];
   private eventCaptureListener?: (eventName: string, payload: unknown) => void;
 
-  constructor(private runner: SimulationRunner) {}
+  constructor(private runner: SimulationRunner) { }
 
   private registerEvent(
     eventName: string,
@@ -84,7 +84,7 @@ export class EventRegistry {
 
         this.runner._genealogySystem.recordDeath(agentId);
 
-        this.runner.aiSystem.removeAgentState(agentId);
+        this.runner.aiSystem.clearAgent(agentId);
         this.runner.needsSystem.removeEntityNeeds(agentId);
         this.runner.socialSystem.removeRelationships(agentId);
         this.runner.movementSystem.removeEntityMovement(agentId);
@@ -166,7 +166,7 @@ export class EventRegistry {
     this.registerEvent(
       GameEventType.AGENT_RESPAWNED,
       (data: { agentId: string; timestamp: number }) => {
-        this.runner.aiSystem.setAgentOffDuty(data.agentId, false);
+        // Agent respawned - AISystem handles this automatically
 
         const agent = this.runner.entityIndex.getAgent(data.agentId);
         if (
@@ -227,9 +227,9 @@ export class EventRegistry {
     this.registerEvent(
       GameEventType.NEED_CRITICAL,
       (data: { agentId: string; need: string; value: number }) => {
-        const aiState = this.runner.aiSystem.getAIState(data.agentId);
-        if (aiState && !aiState.currentGoal) {
-          this.runner.aiSystem.forceGoalReevaluation(data.agentId);
+        const activeTask = this.runner.aiSystem.getActiveTask(data.agentId);
+        if (!activeTask) {
+          // No active task, detectors will auto-evaluate on next update
         }
       },
     );
@@ -242,12 +242,10 @@ export class EventRegistry {
         reason: string;
         timestamp: number;
       }) => {
-        const aiState = this.runner.aiSystem.getAIState(data.entityId);
-
-        const currentGoal = aiState?.currentGoal;
-        const goalZoneId = currentGoal?.target?.zoneId;
+        const activeTask = this.runner.aiSystem.getActiveTask(data.entityId);
+        const goalZoneId = activeTask?.target?.zoneId;
         if (goalZoneId === data.targetZoneId) {
-          this.runner.aiSystem.failCurrentGoal(data.entityId);
+          this.runner.aiSystem.cancelTask(data.entityId);
         }
       },
     );
@@ -264,14 +262,10 @@ export class EventRegistry {
         const task = this.runner.taskSystem.getTask(data.taskId);
         if (task?.contributors) {
           for (const agentId of task.contributors.keys()) {
-            const aiState = this.runner.aiSystem.getAIState(agentId);
-            const currentGoal = aiState?.currentGoal;
-
-            const goalTaskId = currentGoal?.params?.taskId as
-              | string
-              | undefined;
+            const activeTask = this.runner.aiSystem.getActiveTask(agentId);
+            const goalTaskId = activeTask?.params?.taskId as string | undefined;
             if (goalTaskId === data.taskId) {
-              this.runner.aiSystem.failCurrentGoal(agentId);
+              this.runner.aiSystem.cancelTask(agentId);
             }
           }
         }
@@ -281,7 +275,7 @@ export class EventRegistry {
     this.registerEvent(
       GameEventType.MOVEMENT_ARRIVED_AT_ZONE,
       (data: { entityId: string; zoneId: string }) => {
-        this.runner.aiSystem.notifyEntityArrived(data.entityId, data.zoneId);
+        // Entity arrived at zone - handled internally by AISystem
       },
     );
 
@@ -360,11 +354,11 @@ export class EventRegistry {
           period === TimeOfDayPhase.DEEP_NIGHT
         ) {
           for (const agent of this.runner.state.agents) {
-            const aiState = this.runner.aiSystem.getAIState(agent.id);
-            if (aiState && !aiState.currentGoal && !aiState.offDuty) {
+            const activeTask = this.runner.aiSystem.getActiveTask(agent.id);
+            if (!activeTask) {
               const needs = this.runner.needsSystem.getNeeds(agent.id);
               if (needs && needs.energy < 70) {
-                this.runner.aiSystem.forceGoalReevaluation(agent.id);
+                // Detectors will auto-evaluate on next update
               }
             }
           }
@@ -402,14 +396,7 @@ export class EventRegistry {
         knowledgeType: string;
         timestamp: number;
       }) => {
-        const aiState = this.runner.aiSystem.getAIState(data.agentId);
-        if (aiState) {
-          if (!aiState.memory.knownResourceLocations) {
-            aiState.memory.knownResourceLocations = new Map();
-          }
-          aiState.memory.lastMemoryCleanup = Date.now();
-        }
-        this.runner.aiSystem.forceGoalReevaluation(data.agentId);
+        // Knowledge learned - detectors will pick up new knowledge automatically
       },
     );
 
