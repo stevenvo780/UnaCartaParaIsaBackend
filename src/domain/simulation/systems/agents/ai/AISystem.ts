@@ -32,6 +32,7 @@ import { ZoneType } from "@/shared/constants/ZoneEnums";
 import { EquipmentSlot } from "@/shared/constants/EquipmentEnums";
 import { WeaponId } from "@/shared/constants/CraftingEnums";
 import { WorldResourceType } from "@/shared/constants/ResourceEnums";
+import { ItemId } from "@/shared/constants/ItemEnums";
 import {
   handleGather,
   handleAttack,
@@ -801,8 +802,8 @@ export class AISystem extends EventEmitter {
               x: centerX,
               y: centerY,
               items: [
-                { itemId: "wood_log", quantity: 1 },
-                { itemId: "stone", quantity: 1 },
+                { itemId: ItemId.WOOD_LOG, quantity: 1 },
+                { itemId: ItemId.STONE, quantity: 1 },
               ],
             });
           }

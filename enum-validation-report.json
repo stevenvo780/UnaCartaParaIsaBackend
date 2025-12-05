@@ -1,268 +1,11 @@
 {
   "summary": {
-    "totalEnums": 126,
+    "totalEnums": 127,
     "unusedEnums": 0,
-    "missingEnumOccurrences": 70
+    "missingEnumOccurrences": 22
   },
   "unusedEnums": [],
   "missingEnumUsages": [
-    {
-      "stringLiteral": "movement",
-      "possibleEnums": [
-        "LogCategory"
-      ],
-      "count": 18,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 207,
-          "lineContent": "case \"movement\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 279,
-          "lineContent": "case \"movement\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1160,
-          "lineContent": "system: \"movement\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1172,
-          "lineContent": "system: \"movement\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1184,
-          "lineContent": "system: \"movement\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1195,
-          "lineContent": "system: \"movement\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1203,
-          "lineContent": "system: \"movement\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1230,
-          "lineContent": "system: \"movement\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1239,
-          "lineContent": "system: \"movement\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1254,
-          "lineContent": "system: \"movement\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1263,
-          "lineContent": "system: \"movement\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1273,
-          "lineContent": "system: \"movement\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1281,
-          "lineContent": "system: \"movement\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1308,
-          "lineContent": "system: \"movement\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1334,
-          "lineContent": "system: \"movement\","
-        },
-        {
-          "file": "src/domain/simulation/systems/conflict/CombatSystem.ts",
-          "line": 869,
-          "lineContent": "system: \"movement\","
-        },
-        {
-          "file": "src/domain/simulation/systems/conflict/CombatSystem.ts",
-          "line": 982,
-          "lineContent": "system: \"movement\","
-        },
-        {
-          "file": "src/domain/simulation/systems/conflict/CombatSystem.ts",
-          "line": 996,
-          "lineContent": "system: \"movement\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "needs",
-      "possibleEnums": [
-        "LogCategory"
-      ],
-      "count": 16,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 213,
-          "lineContent": "case \"needs\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 285,
-          "lineContent": "case \"needs\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 206,
-          "lineContent": "switch (name) {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/AISystem.ts",
-          "line": 627,
-          "lineContent": "const needs: DetectorContext[\"needs\"] = this.needsSystem?.getNeeds("
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/ai/AISystem.ts",
-          "line": 629,
-          "lineContent": ") as DetectorContext[\"needs\"];"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1384,
-          "lineContent": "system: \"needs\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1400,
-          "lineContent": "system: \"needs\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1413,
-          "lineContent": "system: \"needs\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1427,
-          "lineContent": "system: \"needs\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1441,
-          "lineContent": "system: \"needs\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1455,
-          "lineContent": "system: \"needs\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1652,
-          "lineContent": "system: \"needs\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1664,
-          "lineContent": "system: \"needs\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1672,
-          "lineContent": "system: \"needs\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1706,
-          "lineContent": "system: \"needs\","
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/needs/NeedsSystem.ts",
-          "line": 1718,
-          "lineContent": "system: \"needs\","
-        }
-      ]
-    },
-    {
-      "stringLiteral": "building",
-      "possibleEnums": [
-        "EntityType"
-      ],
-      "count": 12,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 225,
-          "lineContent": "case \"building\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 297,
-          "lineContent": "case \"building\":"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/SystemRegistry.ts",
-          "line": 278,
-          "lineContent": "switch (name) {"
-        },
-        {
-          "file": "src/domain/simulation/systems/agents/movement/MovementSystem.ts",
-          "line": 1035,
-          "lineContent": "type === \"building\" ||"
-        },
-        {
-          "file": "src/domain/simulation/systems/structures/BuildingSystem.ts",
-          "line": 937,
-          "lineContent": "system: \"building\","
-        },
-        {
-          "file": "src/domain/simulation/systems/structures/BuildingSystem.ts",
-          "line": 946,
-          "lineContent": "system: \"building\","
-        },
-        {
-          "file": "src/domain/simulation/systems/structures/BuildingSystem.ts",
-          "line": 953,
-          "lineContent": "system: \"building\","
-        },
-        {
-          "file": "src/domain/simulation/systems/structures/BuildingSystem.ts",
-          "line": 969,
-          "lineContent": "system: \"building\","
-        },
-        {
-          "file": "src/domain/simulation/systems/structures/BuildingSystem.ts",
-          "line": 978,
-          "lineContent": "system: \"building\","
-        },
-        {
-          "file": "src/domain/simulation/systems/structures/BuildingSystem.ts",
-          "line": 986,
-          "lineContent": "system: \"building\","
-        },
-        {
-          "file": "src/domain/simulation/systems/structures/BuildingSystem.ts",
-          "line": 995,
-          "lineContent": "system: \"building\","
-        },
-        {
-          "file": "src/domain/simulation/systems/structures/BuildingSystem.ts",
-          "line": 1002,
-          "lineContent": "system: \"building\","
-        }
-      ]
-    },
     {
       "stringLiteral": "craft",
       "possibleEnums": [
@@ -273,12 +16,12 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/agents/ai/AISystem.ts",
-          "line": 749,
+          "line": 737,
           "lineContent": "z.id.includes(\"craft\") ||"
         },
         {
           "file": "src/domain/simulation/systems/agents/ai/AISystem.ts",
-          "line": 749,
+          "line": 737,
           "lineContent": "z.id.includes(\"craft\") ||"
         }
       ]
@@ -292,12 +35,12 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/agents/ai/AISystem.ts",
-          "line": 803,
+          "line": 785,
           "lineContent": "zone.id.includes(\"workbench\") ||"
         },
         {
           "file": "src/domain/simulation/systems/agents/ai/AISystem.ts",
-          "line": 803,
+          "line": 785,
           "lineContent": "zone.id.includes(\"workbench\") ||"
         }
       ]
@@ -312,12 +55,12 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/agents/ai/AISystem.ts",
-          "line": 804,
+          "line": 786,
           "lineContent": "zone.id.includes(\"mine\") ||"
         },
         {
           "file": "src/domain/simulation/systems/agents/ai/AISystem.ts",
-          "line": 804,
+          "line": 786,
           "lineContent": "zone.id.includes(\"mine\") ||"
         }
       ]
@@ -331,13 +74,33 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/systems/agents/ai/AISystem.ts",
-          "line": 805,
+          "line": 787,
           "lineContent": "zone.id.includes(\"forest\") ||"
         },
         {
           "file": "src/domain/simulation/systems/agents/ai/AISystem.ts",
-          "line": 805,
+          "line": 787,
           "lineContent": "zone.id.includes(\"forest\") ||"
+        }
+      ]
+    },
+    {
+      "stringLiteral": "needs",
+      "possibleEnums": [
+        "LogCategory",
+        "SystemName"
+      ],
+      "count": 2,
+      "occurrences": [
+        {
+          "file": "src/domain/simulation/systems/agents/ai/AISystem.ts",
+          "line": 628,
+          "lineContent": "const needs: DetectorContext[\"needs\"] = this.needsSystem?.getNeeds("
+        },
+        {
+          "file": "src/domain/simulation/systems/agents/ai/AISystem.ts",
+          "line": 630,
+          "lineContent": ") as DetectorContext[\"needs\"];"
         }
       ]
     },
@@ -462,7 +225,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/core/runner/CommandProcessor.ts",
-          "line": 465,
+          "line": 463,
           "lineContent": "command: Extract<SimulationCommand, { type: \"TASK_COMMAND\" }>,"
         }
       ]
@@ -476,7 +239,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/core/runner/CommandProcessor.ts",
-          "line": 517,
+          "line": 515,
           "lineContent": "command: Extract<SimulationCommand, { type: \"TIME_COMMAND\" }>,"
         }
       ]
@@ -490,7 +253,7 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/core/runner/CommandProcessor.ts",
-          "line": 552,
+          "line": 550,
           "lineContent": "command: Extract<SimulationCommand, { type: \"CONFLICT_COMMAND\" }>,"
         }
       ]
@@ -505,68 +268,8 @@
       "occurrences": [
         {
           "file": "src/domain/simulation/core/runner/CommandProcessor.ts",
-          "line": 538,
+          "line": 536,
           "lineContent": "private applyResourceDelta(delta: Partial<GameResources[\"materials\"]>): void {"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "wood_log",
-      "possibleEnums": [
-        "ItemId"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/ai/AISystem.ts",
-          "line": 826,
-          "lineContent": "{ itemId: \"wood_log\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "stone",
-      "possibleEnums": [
-        "GatherableResource",
-        "ItemId",
-        "ResourceType",
-        "TileType"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/domain/simulation/systems/agents/ai/AISystem.ts",
-          "line": 827,
-          "lineContent": "{ itemId: \"stone\", quantity: 1 },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "mentalHealth",
-      "possibleEnums": [
-        "NeedType",
-        "EntityStat"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 279,
-          "lineContent": "{ key: \"mentalHealth\", icon: \"🧠\", label: \"Mental\" },"
-        }
-      ]
-    },
-    {
-      "stringLiteral": "socialSkills",
-      "possibleEnums": [
-        "EntityStat"
-      ],
-      "count": 1,
-      "occurrences": [
-        {
-          "file": "src/shared/constants/WorldConfig.ts",
-          "line": 287,
-          "lineContent": "{ key: \"socialSkills\", icon: \"👥\", label: \"Social\" },"
         }
       ]
     }

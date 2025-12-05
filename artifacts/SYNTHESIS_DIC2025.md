@@ -44,16 +44,9 @@ NeedsDetector, SocialDetector, WorkDetector, InventoryDetector, ExploreDetector,
 
 ## ❌ PENDIENTE
 
-### Alta Prioridad
-| Tarea | Acción |
-|-------|--------|
-| 🔴 Spawn de depredadores | Aumentar `wolf.spawnProbability` 0.05 → 0.15 |
-| 🔴 Remover logs diagnóstico | Quitar `nearestStone` de AISystem.ts |
-
 ### Media Prioridad
 | Tarea | Descripción |
 |-------|-------------|
-| LRU Cache | Implementar en MovementSystem/NeedsSystem (memory leak) |
 | Migrar handlers AI | De deps legacy a SystemRegistry |
 | Unificar eventos | EventBus.ts → simulationEvents |
 | RandomUtils | 84 instancias de Math.random() directo |
@@ -65,7 +58,7 @@ NeedsDetector, SocialDetector, WorkDetector, InventoryDetector, ExploreDetector,
 | Métrica | Valor |
 |---------|-------|
 | Agentes vivos | 11 |
-| Animales vivos | 124 |
+| Animales vivos | 99 |
 | Casas | 3/8 |
 | Minas | 1 |
 | Workbenches | 2 |
@@ -85,7 +78,11 @@ NeedsDetector, SocialDetector, WorkDetector, InventoryDetector, ExploreDetector,
 | ✅ | BuildingSystem.ts | Déficit real (resta stockpile) |
 | ✅ | WorkDetector.ts | Balanceo 50/50 wood/stone |
 | ✅ | GenealogySystem.ts | Añadido logging |
-| ✅ | Frontend | Eliminados 12 Client adapters sin backend (~522 líneas) |
+| ✅ | AnimalConfigs.ts | Wolf spawn 0.05 → 0.15 (backend+frontend) |
+| ✅ | AISystem.ts | Eliminados logs diagnóstico nearestStone |
+| ✅ | MovementSystem.ts | LRU cache (máx 500 entries) |
+| ✅ | NeedsSystem.ts | LRU cache (máx 200 entries) |
+| ✅ | Frontend | Eliminados 12 Client adapters (~522 líneas) |
 
 ### Frontend Sincronizado
 24 sistemas alineados Backend ↔ Frontend. Eliminados: ClientReputationSystem, ClientMarketSystem, ClientQuestSystem, ClientNormsSystem, ClientResearchSystem, ClientLivingLegendsSystem, ClientInteractionGameSystem, ClientCardDialogueSystem, ClientBuildingMaintenanceSystem, ClientResourceAttractionSystem, ClientTradeSystem, ClientKnowledgeNetworkSystem.

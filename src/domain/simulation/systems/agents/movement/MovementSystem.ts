@@ -1212,7 +1212,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
 
     return {
       status: HandlerResultStatus.FAILED,
-      system: "movement",
+      system: SystemName.MOVEMENT,
       message: "Failed to start movement",
     };
   }
@@ -1290,7 +1290,7 @@ export class MovementSystem extends EventEmitter implements IMovementSystem {
 
     return {
       status: HandlerResultStatus.FAILED,
-      system: "movement",
+      system: SystemName.MOVEMENT,
       message: "Failed to start movement to zone",
     };
   }

@@ -43,6 +43,7 @@ import { simulationEvents } from "./events";
 import { BatchedEventEmitter } from "./BatchedEventEmitter";
 
 import { EntityType } from "../../../shared/constants/EntityEnums";
+import { SystemName } from "../../../shared/constants/SystemEnums";
 
 import { GPUComputeService } from "./GPUComputeService";
 import { StateDirtyTracker } from "./StateDirtyTracker";
@@ -497,17 +498,17 @@ export class SimulationRunner {
   private registerSystemsInSystemRegistry(): void {
     const registry = this.aiSystem.getSystemRegistry();
 
-    registry.register("movement", this.movementSystem);
-    registry.register("combat", this.combatSystem);
-    registry.register("needs", this.needsSystem);
-    registry.register("inventory", this.inventorySystem);
-    registry.register("social", this.socialSystem);
-    registry.register("crafting", this.enhancedCraftingSystem);
+    registry.register(SystemName.MOVEMENT, this.movementSystem);
+    registry.register(SystemName.COMBAT, this.combatSystem);
+    registry.register(SystemName.NEEDS, this.needsSystem);
+    registry.register(SystemName.INVENTORY, this.inventorySystem);
+    registry.register(SystemName.SOCIAL, this.socialSystem);
+    registry.register(SystemName.CRAFTING, this.enhancedCraftingSystem);
     if (this.buildingSystem) {
-      registry.register("building", this.buildingSystem);
+      registry.register(SystemName.BUILDING, this.buildingSystem);
     }
-    registry.register("trade", this.economySystem);
-    registry.register("worldQuery", this.worldQueryService);
+    registry.register(SystemName.TRADE, this.economySystem);
+    registry.register(SystemName.WORLD_QUERY, this.worldQueryService);
 
     logger.info("🔧 SimulationRunner: Systems registered in SystemRegistry");
   }

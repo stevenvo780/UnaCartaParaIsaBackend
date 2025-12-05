@@ -276,7 +276,7 @@ export const ENTITY_STATS = {
     { key: EntityStat.SLEEPINESS, icon: "😴", label: "Sueño" },
   ],
   MENTAL: [
-    { key: "mentalHealth", icon: "🧠", label: "Mental" },
+    { key: EntityStat.MENTAL_HEALTH, icon: "🧠", label: "Mental" },
     { key: EntityStat.INTELLIGENCE, icon: "🎓", label: "Inteligencia" },
     { key: EntityStat.HAPPINESS, icon: "😊", label: "Felicidad" },
     { key: EntityStat.STRESS, icon: "😰", label: "Estrés" },
@@ -284,7 +284,7 @@ export const ENTITY_STATS = {
     { key: EntityStat.LONELINESS, icon: "💔", label: "Soledad" },
   ],
   SOCIAL: [
-    { key: "socialSkills", icon: "👥", label: "Social" },
+    { key: EntityStat.SOCIAL_SKILLS, icon: "👥", label: "Social" },
     { key: EntityStat.COMFORT, icon: "🛋️", label: "Comodidad" },
     { key: EntityStat.CREATIVITY, icon: "🎨", label: "Creatividad" },
     { key: EntityStat.RESONANCE, icon: "🔗", label: "Resonancia" },
