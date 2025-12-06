@@ -107,7 +107,18 @@ export function detectWork(ctx: DetectorContext): Task[] {
       break;
 
     case RoleType.HUNTER:
-      tasks.push(...detectHuntWork(ctx));
+      if (RandomUtils.chance(0.1)) {
+        logger.debug(
+          `🏹 [WorkDetector] ${ctx.agentId}: hunter detected, hasWeapon=${ctx.hasWeapon}, nearestPrey=${ctx.nearestPrey?.type ?? "none"}`,
+        );
+      }
+      // If hunter has weapon and prey nearby, prioritize hunting
+      if (ctx.hasWeapon && ctx.nearestPrey) {
+        tasks.push(...detectHuntWork(ctx));
+      } else {
+        // Otherwise, gather resources to craft a weapon
+        tasks.push(...detectGatherWork(ctx));
+      }
       break;
 
     case RoleType.BUILDER:
@@ -139,8 +150,41 @@ export function detectWork(ctx: DetectorContext): Task[] {
   return tasks;
 }
 
+/**
+ * Water per-capita threshold below which we prioritize water collection
+ */
+const WATER_SHORTAGE_THRESHOLD = 5;
+
 function detectGatherWork(ctx: DetectorContext): Task[] {
   const tasks: Task[] = [];
+
+  // PRIORITY: Check for water shortage and prioritize water collection
+  const waterStock = ctx.globalStockpile?.water ?? 0;
+  const agents = ctx.totalAgents ?? 1;
+  const waterPerCapita = waterStock / agents;
+
+  if (waterPerCapita < WATER_SHORTAGE_THRESHOLD && ctx.nearestWaterSource) {
+    const priority = calculateWorkPriority(ctx) * 1.5; // High priority for water shortage
+    tasks.push(
+      createTask({
+        agentId: ctx.agentId,
+        type: TaskType.GATHER,
+        priority,
+        target: {
+          entityId: ctx.nearestWaterSource.id,
+          position: ctx.nearestWaterSource,
+        },
+        params: { resourceType: ctx.nearestWaterSource.type },
+        source: "detector:work:gather:water_shortage",
+      }),
+    );
+    if (RandomUtils.chance(0.1)) {
+      logger.debug(
+        `💧 [WorkDetector] ${ctx.agentId}: WATER SHORTAGE, waterPerCapita=${waterPerCapita.toFixed(1)}, prioritizing water collection`,
+      );
+    }
+    return tasks;
+  }
 
   if (ctx.hasBuildingResourceDemand) {
     const needsWood =
@@ -317,7 +361,11 @@ function detectGatherWork(ctx: DetectorContext): Task[] {
 function detectHuntWork(ctx: DetectorContext): Task[] {
   const tasks: Task[] = [];
 
+  // Require weapon to hunt
   if (!ctx.hasWeapon) return tasks;
+
+  // Require a nearby prey target
+  if (!ctx.nearestPrey) return tasks;
 
   const priority = calculateWorkPriority(ctx) * 1.1;
 
@@ -326,10 +374,20 @@ function detectHuntWork(ctx: DetectorContext): Task[] {
       agentId: ctx.agentId,
       type: TaskType.HUNT,
       priority,
-      params: { targetType: "prey" },
+      target: {
+        entityId: ctx.nearestPrey.id,
+        position: { x: ctx.nearestPrey.x, y: ctx.nearestPrey.y },
+      },
+      params: { targetType: ctx.nearestPrey.type },
       source: "detector:work:hunt",
     }),
   );
+
+  if (RandomUtils.chance(0.1)) {
+    logger.debug(
+      `🏹 [WorkDetector] ${ctx.agentId}: creating HUNT task for ${ctx.nearestPrey.type} (${ctx.nearestPrey.id})`,
+    );
+  }
 
   return tasks;
 }

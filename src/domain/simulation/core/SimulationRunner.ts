@@ -509,6 +509,7 @@ export class SimulationRunner {
     }
     registry.register(SystemName.TRADE, this.economySystem);
     registry.register(SystemName.WORLD_QUERY, this.worldQueryService);
+    registry.register(SystemName.ROLE, this.roleSystem);
 
     logger.info("🔧 SimulationRunner: Systems registered in SystemRegistry");
   }

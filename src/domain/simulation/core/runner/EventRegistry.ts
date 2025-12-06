@@ -130,7 +130,16 @@ export class EventRegistry {
       (data: {
         agentId: string;
         position?: { x: number; y: number };
-        inventory: { wood: number; stone: number; food: number; water: number };
+        inventory: {
+          wood: number;
+          stone: number;
+          food: number;
+          water: number;
+          iron_ore?: number;
+          copper_ore?: number;
+          metal?: number;
+          rare_materials?: number;
+        };
         timestamp: number;
       }) => {
         const household = this.runner.householdSystem.getHouseFor(data.agentId);

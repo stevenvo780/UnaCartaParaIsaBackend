@@ -285,6 +285,7 @@ export class WorldResourceSystem {
       WorldResourceType.BERRY_BUSH,
       WorldResourceType.MUSHROOM_PATCH,
       WorldResourceType.WHEAT_CROP,
+      WorldResourceType.WATER_SOURCE,
     ];
     if (!validTypes.includes(type as WorldResourceType)) {
       return null;

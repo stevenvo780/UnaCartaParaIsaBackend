@@ -63,25 +63,13 @@ import type { WorldQueryService } from "../../world/WorldQueryService";
 import { SystemRegistry } from "../SystemRegistry";
 import type { TimeSystem } from "../../core/TimeSystem";
 import { equipmentSystem } from "../EquipmentSystem";
-import { RoleSystem } from "../RoleSystem";
-import type { Container } from "inversify";
 import { RandomUtils } from "@/shared/utils/RandomUtils";
 import {
   WorldContextCache,
   type CachedZoneInfo,
   type ZonesMetadata,
 } from "@/domain/simulation/core/WorldContextCache";
-
-// Lazy import to avoid circular dependency
-let _container: Container | null = null;
-function getContainer(): Container {
-  if (!_container) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    _container = (require("@/config/container") as { container: Container })
-      .container;
-  }
-  return _container!;
-}
+import { getAnimalConfig } from "../../world/config/AnimalConfigs";
 
 export interface AISystemDeps {
   gameState: GameState;
@@ -729,7 +717,16 @@ export class AISystem extends EventEmitter {
     }
 
     let _globalStockpile:
-      | { wood?: number; stone?: number; food?: number }
+      | {
+          wood?: number;
+          stone?: number;
+          food?: number;
+          water?: number;
+          iron_ore?: number;
+          copper_ore?: number;
+          metal?: number;
+          rare_materials?: number;
+        }
       | undefined;
     let _totalAgents = 1;
 
@@ -739,12 +736,17 @@ export class AISystem extends EventEmitter {
         wood: (stats.stockpiled.wood ?? 0) + (stats.inAgents.wood ?? 0),
         stone: (stats.stockpiled.stone ?? 0) + (stats.inAgents.stone ?? 0),
         food: (stats.stockpiled.food ?? 0) + (stats.inAgents.food ?? 0),
+        water: (stats.stockpiled.water ?? 0) + (stats.inAgents.water ?? 0),
+        iron_ore: (stats.stockpiled.iron_ore ?? 0) + (stats.inAgents.iron_ore ?? 0),
+        copper_ore: (stats.stockpiled.copper_ore ?? 0) + (stats.inAgents.copper_ore ?? 0),
+        metal: (stats.stockpiled.metal ?? 0) + (stats.inAgents.metal ?? 0),
+        rare_materials: (stats.stockpiled.rare_materials ?? 0) + (stats.inAgents.rare_materials ?? 0),
       };
     } else {
       const inventorySys = this.systemRegistry?.inventory as unknown as {
         getSystemStats?: () => {
-          stockpiled: { wood: number; stone: number; food: number };
-          inAgents: { wood: number; stone: number; food: number };
+          stockpiled: { wood: number; stone: number; food: number; water: number; iron_ore: number; copper_ore: number; metal: number; rare_materials: number };
+          inAgents: { wood: number; stone: number; food: number; water: number; iron_ore: number; copper_ore: number; metal: number; rare_materials: number };
         };
       };
       if (inventorySys?.getSystemStats) {
@@ -754,6 +756,11 @@ export class AISystem extends EventEmitter {
           wood: (stats.stockpiled.wood ?? 0) + (stats.inAgents.wood ?? 0),
           stone: (stats.stockpiled.stone ?? 0) + (stats.inAgents.stone ?? 0),
           food: (stats.stockpiled.food ?? 0) + (stats.inAgents.food ?? 0),
+          water: (stats.stockpiled.water ?? 0) + (stats.inAgents.water ?? 0),
+          iron_ore: (stats.stockpiled.iron_ore ?? 0) + (stats.inAgents.iron_ore ?? 0),
+          copper_ore: (stats.stockpiled.copper_ore ?? 0) + (stats.inAgents.copper_ore ?? 0),
+          metal: (stats.stockpiled.metal ?? 0) + (stats.inAgents.metal ?? 0),
+          rare_materials: (stats.stockpiled.rare_materials ?? 0) + (stats.inAgents.rare_materials ?? 0),
         };
       }
     }
@@ -778,15 +785,10 @@ export class AISystem extends EventEmitter {
     const maxHealth = 100;
 
     let roleType: string | undefined;
-    try {
-      const roleSystem = getContainer().get<RoleSystem>(TYPES.RoleSystem);
+    const roleSystem = this.systemRegistry?.role;
+    if (roleSystem) {
       const agentRole = roleSystem.getAgentRole(agentId);
       roleType = agentRole?.roleType;
-    } catch (error) {
-      logger.debug("RoleSystem not available for agent context", {
-        agentId,
-        error: error instanceof Error ? error.message : String(error),
-      });
     }
 
     const craftingSystem = this.systemRegistry?.crafting;
@@ -1038,6 +1040,20 @@ export class AISystem extends EventEmitter {
       }
     }
 
+    // Query for nearest WATER_SOURCE resource (for collection)
+    const nearestWaterSource = wqs.findNearestResource(position.x, position.y, {
+      type: WorldResourceType.WATER_SOURCE,
+      excludeDepleted: true,
+    });
+    if (nearestWaterSource && nearestWaterSource.distance < QUERY_RADIUS) {
+      result.nearestWaterSource = {
+        id: nearestWaterSource.id,
+        x: nearestWaterSource.position.x,
+        y: nearestWaterSource.position.y,
+        type: nearestWaterSource.resourceType,
+      };
+    }
+
     const nearestResource = wqs.findNearestResource(position.x, position.y, {
       excludeDepleted: true,
     });
@@ -1087,9 +1103,38 @@ export class AISystem extends EventEmitter {
       }
     }
 
+    // Query: Nearest huntable prey (for hunters)
+    const HUNTING_RADIUS = 500;
+    const preyAnimals = wqs.findAnimalsInRadius(
+      position.x,
+      position.y,
+      HUNTING_RADIUS,
+      { excludeDead: true },
+    );
+    // Filter for huntable (non-hostile) animals using config lookup
+    const huntableAnimals = preyAnimals.filter((a) => {
+      const animal = a.animal;
+      if (!animal) return false;
+      // Only hunt non-hostile animals (prey) - use getAnimalConfig
+      const config = getAnimalConfig(animal.type);
+      return config?.canBeHunted === true && !config?.isPredator;
+    });
+    if (huntableAnimals.length > 0) {
+      // Get the nearest one
+      const nearestPreyAnimal = huntableAnimals.reduce((prev, curr) =>
+        curr.distance < prev.distance ? curr : prev,
+      );
+      result.nearestPrey = {
+        id: nearestPreyAnimal.id,
+        x: nearestPreyAnimal.position.x,
+        y: nearestPreyAnimal.position.y,
+        type: nearestPreyAnimal.animalType,
+      };
+    }
+
     if (RandomUtils.chance(0.02)) {
       logger.debug(
-        `[AISystem] buildSpatial ${agentId}: food=${result.nearestFood ? "found" : "none"}, water=${result.nearestWater ? "found" : "none"}, resource=${result.nearestResource ? "found" : "none"}`,
+        `[AISystem] buildSpatial ${agentId}: food=${result.nearestFood ? "found" : "none"}, water=${result.nearestWater ? "found" : "none"}, resource=${result.nearestResource ? "found" : "none"}, prey=${result.nearestPrey ? "found" : "none"}`,
       );
     }
 

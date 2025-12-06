@@ -50,6 +50,7 @@ export enum SystemName {
   INVENTORY = "inventory",
   WORLD_QUERY = "worldQuery",
   TRADE = "trade",
+  ROLE = "role",
 }
 
 /**

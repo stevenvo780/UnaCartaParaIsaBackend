@@ -156,6 +156,7 @@ import { TYPES } from "../../../../config/Types";
 
 @injectable()
 export class RoleSystem extends EventEmitter {
+  public readonly name: string = "role";
   private gameState: GameState;
   private config: RoleSystemConfig;
   private roles = new Map<string, AgentRole>();

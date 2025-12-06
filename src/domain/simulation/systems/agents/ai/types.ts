@@ -209,6 +209,13 @@ export interface DetectorContext {
 
   readonly nearestFood?: { id: string; x: number; y: number };
   readonly nearestWater?: { id: string; x: number; y: number };
+  /** Fuente de agua más cercana (recurso WATER_SOURCE para recolectar) */
+  readonly nearestWaterSource?: {
+    id: string;
+    x: number;
+    y: number;
+    type: string;
+  };
   readonly nearestResource?: {
     id: string;
     x: number;
@@ -250,6 +257,7 @@ export interface DetectorContext {
     wood?: number;
     stone?: number;
     food?: number;
+    water?: number;
   }>;
   /** Total de agentes vivos para calcular recursos per-cápita */
   readonly totalAgents?: number;
@@ -263,6 +271,13 @@ export interface DetectorContext {
   readonly nearbyInspectable?: {
     id: string;
     position: { x: number; y: number };
+  };
+  /** Animal cazable más cercano (para hunters) */
+  readonly nearestPrey?: {
+    id: string;
+    x: number;
+    y: number;
+    type: string;
   };
 
   readonly personality?: Readonly<{

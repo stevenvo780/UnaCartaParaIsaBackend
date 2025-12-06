@@ -182,6 +182,17 @@ export interface IWorldQuerySystem extends ISystem {
   hasWaterAt(x: number, y: number): boolean;
 }
 
+/**
+ * Sistema de roles
+ */
+export interface IRoleSystem extends ISystem {
+  getAgentRole(
+    agentId: string,
+  ): { agentId: string; roleType: string } | undefined;
+  getPreferredResourceForRole(roleType: string): string | undefined;
+  getRoleConfig(roleType: string): unknown | undefined;
+}
+
 @injectable()
 export class SystemRegistry {
   private systems = new Map<string, ISystem>();
@@ -195,6 +206,7 @@ export class SystemRegistry {
   public building?: IBuildingSystem;
   public trade?: ITradeSystem;
   public worldQuery?: IWorldQuerySystem;
+  public role?: IRoleSystem;
 
   constructor() {
     logger.info("🔧 SystemRegistry: Initialized");
@@ -233,6 +245,9 @@ export class SystemRegistry {
         break;
       case SystemName.WORLD_QUERY:
         this.worldQuery = system as unknown as IWorldQuerySystem;
+        break;
+      case SystemName.ROLE:
+        this.role = system as unknown as IRoleSystem;
         break;
     }
 

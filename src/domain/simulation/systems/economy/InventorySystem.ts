@@ -18,6 +18,7 @@ import { SystemProperty } from "../../../../shared/constants/SystemEnums";
 import { EntityType } from "../../../../shared/constants/EntityEnums";
 import { ResourceState } from "../../../../shared/constants/ResourceEnums";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
+import { getResourceConfig } from "../world/config/WorldResourceConfigs";
 
 /**
  * System for managing agent inventories and zone stockpiles.
@@ -339,7 +340,9 @@ export class InventorySystem implements IInventorySystem {
         sp.inventory.food +
         sp.inventory.water +
         sp.inventory.rare_materials +
-        sp.inventory.metal;
+        sp.inventory.metal +
+        sp.inventory.iron_ore +
+        sp.inventory.copper_ore;
       const availableSpace = sp.capacity - currentLoad;
 
       if (availableSpace <= 0) {
@@ -364,10 +367,24 @@ export class InventorySystem implements IInventorySystem {
       transferred.wood +
       transferred.stone +
       transferred.food +
-      transferred.water;
+      transferred.water +
+      transferred.metal +
+      transferred.iron_ore +
+      transferred.copper_ore +
+      transferred.rare_materials;
     if (total > 0) {
+      // Build a dynamic message showing only non-zero resources
+      const parts: string[] = [];
+      if (transferred.wood > 0) parts.push(`wood=${transferred.wood}`);
+      if (transferred.stone > 0) parts.push(`stone=${transferred.stone}`);
+      if (transferred.food > 0) parts.push(`food=${transferred.food}`);
+      if (transferred.water > 0) parts.push(`water=${transferred.water}`);
+      if (transferred.metal > 0) parts.push(`metal=${transferred.metal}`);
+      if (transferred.iron_ore > 0) parts.push(`iron_ore=${transferred.iron_ore}`);
+      if (transferred.copper_ore > 0) parts.push(`copper_ore=${transferred.copper_ore}`);
+      if (transferred.rare_materials > 0) parts.push(`rare_materials=${transferred.rare_materials}`);
       logger.info(
-        `📦 [TRANSFER] ${agentId} deposited: wood=${transferred.wood}, stone=${transferred.stone}, food=${transferred.food}`,
+        `📦 [TRANSFER] ${agentId} deposited: ${parts.join(", ")}`,
       );
     }
 
@@ -664,6 +681,7 @@ export class InventorySystem implements IInventorySystem {
   /**
    * Request to gather a resource.
    * Returns HandlerResult for ECS handler compatibility.
+   * Now uses WorldResourceConfig to process primary and secondary yields (e.g., iron_ore from rocks).
    */
   public requestGather(
     agentId: string,
@@ -702,32 +720,108 @@ export class InventorySystem implements IInventorySystem {
       inventory = this.initializeAgentInventory(agentId);
     }
 
-    const resourceTypeMap: Record<string, ResourceType> = {
-      tree: ResourceType.WOOD,
-      wood: ResourceType.WOOD,
-      rock: ResourceType.STONE,
-      stone: ResourceType.STONE,
-      food_source: ResourceType.FOOD,
-      food: ResourceType.FOOD,
-      water_source: ResourceType.WATER,
-      water: ResourceType.WATER,
-      berry_bush: ResourceType.FOOD,
-    };
+    // Try to get configuration from WorldResourceConfigs for proper yield processing
+    const config = getResourceConfig(resource.type);
 
-    const resourceType =
-      resourceTypeMap[resource.type?.toLowerCase()] || ResourceType.WOOD;
+    if (config) {
+      // Use config-based yield processing
+      const stateKey =
+        resource.state === ResourceState.HARVESTED_PARTIAL
+          ? "harvested_partial"
+          : "pristine";
+      const yieldConfig =
+        config.yields[stateKey] || config.yields.pristine;
 
-    const actualQuantity = quantity;
+      // Add primary resource
+      const primaryType = yieldConfig.resourceType;
+      const primaryAmount = Math.min(
+        quantity,
+        RandomUtils.intRange(yieldConfig.amountMin, yieldConfig.amountMax),
+      );
 
-    const success = this.addResource(agentId, resourceType, actualQuantity);
+      const primarySuccess = this.addResource(
+        agentId,
+        primaryType,
+        primaryAmount,
+      );
 
-    if (success) {
-      return {
-        status: HandlerResultStatus.COMPLETED,
-        system: SystemProperty.INVENTORY,
-        message: `Gathered ${actualQuantity} ${resourceType}`,
-        data: { resourceId, resourceType, quantity: actualQuantity },
+      // Process secondary yields (e.g., iron_ore, copper_ore from rocks)
+      const secondaryGathered: Array<{
+        type: ResourceType;
+        amount: number;
+      }> = [];
+
+      if (yieldConfig.secondaryYields && yieldConfig.secondaryYields.length > 0) {
+        for (const secondary of yieldConfig.secondaryYields) {
+          const chance = secondary.rareMaterialsChance ?? 0.15;
+          if (RandomUtils.float() < chance) {
+            const secondaryAmount = RandomUtils.intRange(
+              secondary.amountMin,
+              secondary.amountMax,
+            );
+            if (secondaryAmount > 0) {
+              const secondarySuccess = this.addResource(
+                agentId,
+                secondary.resourceType,
+                secondaryAmount,
+              );
+              if (secondarySuccess) {
+                secondaryGathered.push({
+                  type: secondary.resourceType,
+                  amount: secondaryAmount,
+                });
+              }
+            }
+          }
+        }
+      }
+
+      if (primarySuccess) {
+        const secondaryMsg =
+          secondaryGathered.length > 0
+            ? ` + ${secondaryGathered.map((s) => `${s.amount} ${s.type}`).join(", ")}`
+            : "";
+        return {
+          status: HandlerResultStatus.COMPLETED,
+          system: SystemProperty.INVENTORY,
+          message: `Gathered ${primaryAmount} ${primaryType}${secondaryMsg}`,
+          data: {
+            resourceId,
+            resourceType: primaryType,
+            quantity: primaryAmount,
+            secondaryYields: secondaryGathered,
+          },
+        };
+      }
+    } else {
+      // Fallback to hardcoded mapping if no config found
+      const resourceTypeMap: Record<string, ResourceType> = {
+        tree: ResourceType.WOOD,
+        wood: ResourceType.WOOD,
+        rock: ResourceType.STONE,
+        stone: ResourceType.STONE,
+        food_source: ResourceType.FOOD,
+        food: ResourceType.FOOD,
+        water_source: ResourceType.WATER,
+        water: ResourceType.WATER,
+        berry_bush: ResourceType.FOOD,
       };
+
+      const resourceType =
+        resourceTypeMap[resource.type?.toLowerCase()] || ResourceType.WOOD;
+
+      const actualQuantity = quantity;
+
+      const success = this.addResource(agentId, resourceType, actualQuantity);
+
+      if (success) {
+        return {
+          status: HandlerResultStatus.COMPLETED,
+          system: SystemProperty.INVENTORY,
+          message: `Gathered ${actualQuantity} ${resourceType}`,
+          data: { resourceId, resourceType, quantity: actualQuantity },
+        };
+      }
     }
 
     return {
@@ -788,6 +882,10 @@ export class InventorySystem implements IInventorySystem {
         stone: inventory.stone,
         food: inventory.food,
         water: inventory.water,
+        metal: inventory.metal,
+        iron_ore: inventory.iron_ore,
+        copper_ore: inventory.copper_ore,
+        rare_materials: inventory.rare_materials,
       });
 
       const totalTransferred = Object.values(transferred).reduce(

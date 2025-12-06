@@ -94,12 +94,14 @@ export function handleGather(ctx: HandlerContext): HandlerExecutionResult {
     if (ctx.memory && resourceType && target.position) {
       ctx.memory.recordKnownResource(resourceType, target.position);
     }
+    // Log the actual message from InventorySystem which includes secondaryYields
     logger.info(
-      `🌲 [GatherHandler] ${agentId}: GATHERED ${quantity} from ${resourceId}`,
+      `🌲 [GatherHandler] ${agentId}: ${result.message ?? `GATHERED ${quantity} from ${resourceId}`}`,
     );
     return successResult({
       gathered: resourceId,
       quantity,
+      secondaryYields: (result.data as Record<string, unknown>)?.secondaryYields,
     });
   }
 

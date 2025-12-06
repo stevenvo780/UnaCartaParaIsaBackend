@@ -371,17 +371,24 @@ export class EnhancedCraftingSystem implements ICraftingSystem {
    */
   public getAllKnownRecipes(): Record<string, string[]> {
     const result: Record<string, string[]> = {};
+    const agents = this.state.agents || [];
 
     if (this.recipeDiscovery) {
-      const agents = this.state.agents || [];
       for (const agent of agents) {
         const known = this.recipeDiscovery.getAgentRecipes(agent.id);
-        result[agent.id] = known.map((r) => r.recipeId);
+        // If agent has discovered recipes, use those
+        if (known.length > 0) {
+          result[agent.id] = known.map((r) => r.recipeId);
+        } else {
+          // Fallback to basic recipes if no discoveries yet
+          const basicMap = this.getOrCreateRecipeMap(agent.id);
+          result[agent.id] = Array.from(basicMap.keys());
+        }
       }
       return result;
     }
 
-    const agents = this.state.agents || [];
+    // No recipeDiscovery system, use local state
     for (const agent of agents) {
       if (!this.knownRecipes.has(agent.id)) {
         this.getOrCreateRecipeMap(agent.id);

@@ -43,6 +43,7 @@ import {
 import { AnimalType } from "../../../../shared/constants/AnimalEnums";
 import { BiomeType } from "../../../../shared/constants/BiomeEnums";
 import { EntityType } from "../../../../shared/constants/EntityEnums";
+import { getAnimalConfig } from "./config/AnimalConfigs";
 
 /**
  * Base interface for all query results
@@ -372,6 +373,13 @@ export class WorldQueryService {
       .filter((animal) => {
         if (options.type && animal.type !== options.type) return false;
         if (options.excludeDead && animal.isDead) return false;
+        // Filter by hostile (isPredator) if requested
+        if (options.hostile !== undefined) {
+          const config = getAnimalConfig(animal.type);
+          const isPredator = config?.isPredator ?? false;
+          if (options.hostile && !isPredator) return false;
+          if (!options.hostile && isPredator) return false;
+        }
         return true;
       })
       .map((animal) => {
