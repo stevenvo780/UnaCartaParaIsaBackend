@@ -17,6 +17,7 @@ import { RoleType } from "../../../../../../shared/constants/RoleEnums";
 import { SocialStatus } from "../../../../../../shared/constants/AgentEnums";
 import { ItemCategory } from "../../../../../../shared/constants/ItemEnums";
 import { WeaponId } from "@/shared/constants/CraftingEnums";
+
 /**
  * Detecta necesidad de craftear
  */
@@ -32,7 +33,8 @@ export function detectCraft(ctx: DetectorContext): Task[] {
 }
 
 function detectWeaponNeed(ctx: DetectorContext): Task | null {
-  if (ctx.hasWeapon || ctx.equippedWeapon !== WeaponId.UNARMED) return null;
+  // FIX: Solo verificar hasWeapon para evitar que undefined !== UNARMED bloquee el craft
+  if (ctx.hasWeapon) return null;
 
   // Primitive weapons (wooden_club, stone_dagger) can be crafted anywhere
   // Advanced weapons require a craft zone
