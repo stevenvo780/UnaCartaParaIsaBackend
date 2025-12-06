@@ -143,9 +143,9 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     this.terrainSystem = terrainSystem;
     this.config = {
       decayRates: {
-        [NeedType.HUNGER]: 0.2,
-        [NeedType.THIRST]: 0.3,
-        [NeedType.ENERGY]: 0.15,
+        [NeedType.HUNGER]: 0.12, // Reduced from 0.2 to prevent starvation
+        [NeedType.THIRST]: 0.15, // Reduced from 0.3 to prevent mass dehydration
+        [NeedType.ENERGY]: 0.12, // Reduced from 0.15
         [NeedType.HYGIENE]: 0.1,
         [NeedType.SOCIAL]: 0.15,
         [NeedType.FUN]: 0.15,
@@ -529,6 +529,38 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
           newValue: needs.thirst,
           timestamp: Date.now(),
         });
+      }
+    }
+
+    // FALLBACK: If thirst is critical and no water in inventory, try to gather from nearby water
+    if (needs.thirst < THIRST_CRITICAL && inv.water === 0) {
+      const gatherResult = this.tryGatherFromNearbyResource(entityId, NeedType.THIRST);
+      if (gatherResult.gathered) {
+        // Immediately consume the gathered water
+        const removed = this.inventorySystem.removeFromAgent(entityId, ResourceType.WATER, 1);
+        if (removed > 0) {
+          const thirstRestore = 25;
+          needs.thirst = Math.min(100, needs.thirst + thirstRestore);
+          logger.debug(
+            `💧 ${entityId} gathered and drank water from ${gatherResult.resourceId} → thirst: ${needs.thirst.toFixed(1)}`,
+          );
+        }
+      }
+    }
+
+    // FALLBACK: If hunger is critical and no food in inventory, try to gather from nearby food
+    if (needs.hunger < HUNGER_CRITICAL && inv.food === 0) {
+      const gatherResult = this.tryGatherFromNearbyResource(entityId, NeedType.HUNGER);
+      if (gatherResult.gathered) {
+        // Immediately consume the gathered food
+        const removed = this.inventorySystem.removeFromAgent(entityId, ResourceType.FOOD, 1);
+        if (removed > 0) {
+          const hungerRestore = 20;
+          needs.hunger = Math.min(100, needs.hunger + hungerRestore);
+          logger.debug(
+            `🍎 ${entityId} gathered and ate food from ${gatherResult.resourceId} → hunger: ${needs.hunger.toFixed(1)}`,
+          );
+        }
       }
     }
 
@@ -1497,7 +1529,9 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
 
     const agentPos = { x: agent.position.x, y: agent.position.y };
 
-    const GATHER_RANGE = 100;
+    // Significantly increased range to allow agents to find resources more easily
+    // Agents that wander too far should still be able to find water/food
+    const GATHER_RANGE = 2000;
 
     if (needType === NeedType.THIRST || needType === ResourceType.WATER) {
       if (this.worldQueryService) {

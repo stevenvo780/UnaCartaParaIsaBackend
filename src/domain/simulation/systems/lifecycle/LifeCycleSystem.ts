@@ -411,16 +411,18 @@ export class LifeCycleSystem extends EventEmitter {
           `mother(hunger=${motherNeeds?.hunger?.toFixed(0)}, energy=${motherNeeds?.energy?.toFixed(0)})`,
       );
 
+      // Lowered thresholds: hunger >= 40 (was 60), energy >= 40 (was 50)
+      // This allows reproduction when agents are moderately fed instead of very well fed
       if (
         !motherNeeds ||
         !fatherNeeds ||
-        motherNeeds.hunger < 60 ||
-        fatherNeeds.hunger < 60 ||
-        motherNeeds.energy < 50 ||
-        fatherNeeds.energy < 50
+        motherNeeds.hunger < 40 ||
+        fatherNeeds.hunger < 40 ||
+        motherNeeds.energy < 40 ||
+        fatherNeeds.energy < 40
       ) {
         logger.debug(
-          `🍼 [tryCouple] ${father.name}+${mother.name} SKIP: needs too low (req: hunger>=60, energy>=50)`,
+          `🍼 [tryCouple] ${father.name}+${mother.name} SKIP: needs too low (req: hunger>=40, energy>=40)`,
         );
         return;
       }

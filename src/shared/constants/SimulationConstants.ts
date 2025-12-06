@@ -135,8 +135,8 @@ export const SIMULATION_CONSTANTS = {
     LOW_THRESHOLD: 30,
     /** Satisfied threshold for needs (70%). */
     SATISFIED_THRESHOLD: 70,
-    /** Urgent threshold (triggers action) = 50% */
-    URGENT_THRESHOLD: 50,
+    /** Urgent threshold (triggers action) = 60% - raised from 50 to give agents more time to find resources */
+    URGENT_THRESHOLD: 60,
     /** Minimum priority threshold for AI goals. */
     MIN_PRIORITY_THRESHOLD: 0.1,
   } as const,

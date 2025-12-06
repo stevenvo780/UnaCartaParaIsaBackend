@@ -430,12 +430,33 @@ export class AISystem extends EventEmitter {
 
     this.taskQueue.cleanExpired(agentId);
 
+    // Check if we should preempt the current task for a higher priority one
+    const currentTask = this.activeTask.get(agentId);
+    const nextTask = this.taskQueue.peek(agentId);
+    
+    // Preempt if there's a CRITICAL priority task waiting and current task is lower priority
+    // This ensures agents stop exploring/socializing when they're about to die
+    if (currentTask && nextTask) {
+      const PREEMPT_THRESHOLD = TASK_PRIORITIES.URGENT; // 0.8 - preempt for urgent+ tasks
+      const priorityDiff = nextTask.priority - currentTask.priority;
+      
+      // Preempt if: next task is urgent+ AND significantly higher priority (>0.3 diff)
+      if (nextTask.priority >= PREEMPT_THRESHOLD && priorityDiff > 0.3) {
+        logger.debug(
+          `[AISystem] ${agentId} PREEMPTING ${currentTask.type} (${currentTask.priority.toFixed(2)}) for ${nextTask.type} (${nextTask.priority.toFixed(2)})`,
+        );
+        // Mark current task as cancelled, not failed
+        currentTask.status = TaskStatus.CANCELLED;
+        this.activeTask.delete(agentId);
+      }
+    }
+
     if (!this.activeTask.has(agentId)) {
-      const nextTask = this.taskQueue.dequeue(agentId);
-      if (nextTask) {
-        this.activeTask.set(agentId, nextTask);
-        nextTask.status = TaskStatus.ACTIVE;
-        logger.debug(`[AISystem] ${agentId} ACTIVATED task: ${nextTask.type}`);
+      const dequeued = this.taskQueue.dequeue(agentId);
+      if (dequeued) {
+        this.activeTask.set(agentId, dequeued);
+        dequeued.status = TaskStatus.ACTIVE;
+        logger.debug(`[AISystem] ${agentId} ACTIVATED task: ${dequeued.type}`);
       }
     }
 

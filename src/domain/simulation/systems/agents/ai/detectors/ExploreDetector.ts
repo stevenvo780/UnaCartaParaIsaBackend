@@ -17,19 +17,37 @@ import {
 } from "../types";
 import { RandomUtils } from "@/shared/utils/RandomUtils";
 import { logger } from "@/infrastructure/utils/logger";
+import { SIMULATION_CONSTANTS } from "@/shared/constants/SimulationConstants";
 
 import { GoalType } from "@/shared/constants/AIEnums";
+
 /** Tiempo mínimo entre exploraciones (ms) */
 const EXPLORE_COOLDOWN = 60000;
 /** Tiempo largo sin explorar aumenta urgencia */
 const EXPLORE_URGENCY_TIME = 300000;
 /** Cooldown más corto cuando hay urgencia de recursos */
 const RESOURCE_SEARCH_COOLDOWN = 10000;
+/** Maximum distance from map center for exploration (prevents agents from getting lost) */
+const MAX_EXPLORE_DISTANCE = 1500;
+
+/** Threshold below which agents should NOT explore (prioritize survival) */
+const SURVIVAL_THRESHOLD = SIMULATION_CONSTANTS.NEEDS.LOW_THRESHOLD; // 30
 
 /**
  * Detecta necesidad de explorar
+ * IMPORTANTE: No genera tareas de exploración si las necesidades están bajas
+ * para evitar que agentes mueran explorando lejos de recursos
  */
 export function detectExplore(ctx: DetectorContext): Task[] {
+  // If needs are low, don't explore - prioritize survival
+  const hunger = ctx.needs?.hunger ?? 100;
+  const thirst = ctx.needs?.thirst ?? 100;
+  const energy = ctx.needs?.energy ?? 100;
+  
+  if (hunger < SURVIVAL_THRESHOLD || thirst < SURVIVAL_THRESHOLD || energy < SURVIVAL_THRESHOLD) {
+    return []; // Don't generate explore tasks when survival is at stake
+  }
+
   const tasks: Task[] = [];
 
   const urgentResourceSearch = detectUrgentResourceSearch(ctx);
@@ -73,6 +91,12 @@ function detectUrgentResourceSearch(ctx: DetectorContext): Task | null {
   if (timeSinceExplore < RESOURCE_SEARCH_COOLDOWN) return null;
 
   const distFromCenter = Math.hypot(ctx.position.x, ctx.position.y);
+  
+  // If already too far, don't explore further - return toward center instead
+  if (distFromCenter > MAX_EXPLORE_DISTANCE) {
+    return null;
+  }
+  
   const exploreDistance = 300;
 
   let targetX = ctx.position.x;
@@ -86,6 +110,14 @@ function detectUrgentResourceSearch(ctx: DetectorContext): Task | null {
     const angle = RandomUtils.floatRange(0, Math.PI * 2);
     targetX = ctx.position.x + Math.cos(angle) * exploreDistance;
     targetY = ctx.position.y + Math.sin(angle) * exploreDistance;
+  }
+  
+  // Clamp target to MAX_EXPLORE_DISTANCE
+  const targetDist = Math.hypot(targetX, targetY);
+  if (targetDist > MAX_EXPLORE_DISTANCE) {
+    const scale = MAX_EXPLORE_DISTANCE / targetDist;
+    targetX *= scale;
+    targetY *= scale;
   }
 
   if (RandomUtils.chance(0.1)) {
@@ -132,6 +164,12 @@ function detectCuriosityExplore(ctx: DetectorContext): Task | null {
   const timeSinceExplore = ctx.now - lastExplore;
 
   if (timeSinceExplore < EXPLORE_COOLDOWN) return null;
+
+  // Don't explore if already too far from map center (prevents getting lost)
+  const distFromCenter = Math.hypot(ctx.position.x, ctx.position.y);
+  if (distFromCenter > MAX_EXPLORE_DISTANCE) {
+    return null; // Agent is too far, should return to resources instead
+  }
 
   const curiosity = ctx.personality?.curiosity ?? 0.5;
 

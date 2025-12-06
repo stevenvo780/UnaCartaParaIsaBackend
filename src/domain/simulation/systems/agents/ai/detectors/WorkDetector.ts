@@ -20,8 +20,12 @@ import { SocialStatus } from "../../../../../../shared/constants/AgentEnums";
 import { SIMULATION_CONSTANTS } from "../../../../../../shared/constants/SimulationConstants";
 import { logger } from "@/infrastructure/utils/logger";
 
-/** No trabajar si necesidades críticas - usa constante centralizada */
-const CRITICAL_NEED_THRESHOLD = SIMULATION_CONSTANTS.NEEDS.CRITICAL_THRESHOLD;
+/** 
+ * Stop working/exploring if needs are below this threshold.
+ * Uses LOW_THRESHOLD (30%) to give agents time to find resources before critical.
+ * Previously used CRITICAL_THRESHOLD (20%) which was too late.
+ */
+const STOP_WORK_NEED_THRESHOLD = SIMULATION_CONSTANTS.NEEDS.LOW_THRESHOLD;
 
 /**
  * Recursos per-cápita mínimos para considerar "saturado"
@@ -94,7 +98,8 @@ export function detectWork(ctx: DetectorContext): Task[] {
 
   const hunger = ctx.needs?.hunger ?? 100;
   const energy = ctx.needs?.energy ?? 100;
-  if (hunger < CRITICAL_NEED_THRESHOLD || energy < CRITICAL_NEED_THRESHOLD) {
+  // Stop work/exploration earlier (30%) to give agents time to find resources
+  if (hunger < STOP_WORK_NEED_THRESHOLD || energy < STOP_WORK_NEED_THRESHOLD) {
     return tasks;
   }
 
