@@ -34,7 +34,12 @@ export function detectCraft(ctx: DetectorContext): Task[] {
 function detectWeaponNeed(ctx: DetectorContext): Task | null {
   if (ctx.hasWeapon || ctx.equippedWeapon !== WeaponId.UNARMED) return null;
 
-  if (!ctx.craftZoneId) return null;
+  // Primitive weapons (wooden_club, stone_dagger) can be crafted anywhere
+  // Advanced weapons require a craft zone
+  const isPrimitiveWeapon = ctx.canCraftClub || ctx.canCraftDagger;
+  const needsCraftZone = !isPrimitiveWeapon;
+
+  if (needsCraftZone && !ctx.craftZoneId) return null;
 
   const role = (ctx.roleType ?? "").toLowerCase();
   const needsWeaponForRole =
@@ -59,7 +64,8 @@ function detectWeaponNeed(ctx: DetectorContext): Task | null {
     priority: needsWeaponForRole
       ? TASK_PRIORITIES.URGENT
       : TASK_PRIORITIES.NORMAL,
-    target: { zoneId: ctx.craftZoneId },
+    // For primitive weapons, target is optional (can craft anywhere)
+    target: ctx.craftZoneId ? { zoneId: ctx.craftZoneId } : undefined,
     params: {
       itemType: ItemCategory.WEAPON,
       itemId: weaponToCraft,

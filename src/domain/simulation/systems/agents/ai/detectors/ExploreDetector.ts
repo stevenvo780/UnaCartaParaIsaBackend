@@ -239,6 +239,7 @@ function detectResourceScout(ctx: DetectorContext): Task | null {
 /**
  * Encuentra una zona no visitada para explorar.
  * Prioriza zonas cercanas que no estén en visitedZones.
+ * Aplica límite de distancia para evitar que agentes se alejen demasiado.
  */
 function findUnexploredZone(
   ctx: DetectorContext,
@@ -248,14 +249,23 @@ function findUnexploredZone(
 
   if (!allZones || allZones.length === 0) return null;
 
-  const unvisited = allZones.filter((z) => !visitedZones?.has(z.id));
+  const agentPos = ctx.position;
+
+  // Filter zones by distance - only consider zones within reasonable range
+  const zonesInRange = allZones.filter((z) => {
+    const dist = Math.hypot(z.x - agentPos.x, z.y - agentPos.y);
+    return dist <= MAX_EXPLORE_DISTANCE;
+  });
+
+  if (zonesInRange.length === 0) return null;
+
+  const unvisited = zonesInRange.filter((z) => !visitedZones?.has(z.id));
 
   if (unvisited.length === 0) {
-    const randomIndex = RandomUtils.intRange(0, allZones.length - 1);
-    return allZones[randomIndex];
+    const randomIndex = RandomUtils.intRange(0, zonesInRange.length - 1);
+    return zonesInRange[randomIndex];
   }
 
-  const agentPos = ctx.position;
   unvisited.sort((a, b) => {
     const distA = Math.hypot(a.x - agentPos.x, a.y - agentPos.y);
     const distB = Math.hypot(b.x - agentPos.x, b.y - agentPos.y);

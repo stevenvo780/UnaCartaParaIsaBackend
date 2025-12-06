@@ -92,6 +92,11 @@ export interface INeedsPort {
    * Checks if an entity has critical needs
    */
   hasCriticalNeeds(entityId: string): boolean;
+
+  /**
+   * Modifies a need by a delta amount (can be negative for costs)
+   */
+  modifyNeed(entityId: string, needType: string, delta: number): boolean;
 }
 
 /**

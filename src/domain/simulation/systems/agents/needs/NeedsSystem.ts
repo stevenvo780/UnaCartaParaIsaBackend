@@ -25,6 +25,7 @@ import { FoodCatalog } from "../../../../data/FoodCatalog";
 import {
   ResourceType,
   RestoreSource,
+  WorldResourceType,
 } from "../../../../../shared/constants/ResourceEnums";
 import { ZoneType } from "../../../../../shared/constants/ZoneEnums";
 import { NeedType, ActionType } from "../../../../../shared/constants/AIEnums";
@@ -793,18 +794,70 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     needs.fun = 70;
     needs.mentalHealth = 80;
 
+    // Find a valid respawn position - near water if possible
+    const worldWidth = this.gameState.worldSize?.width ?? 3000;
+    const worldHeight = this.gameState.worldSize?.height ?? 3000;
+    let respawnPosition = { x: worldWidth / 2, y: worldHeight / 2 }; // Fallback to center
+
+    // Try to find position near water source for survival advantage
+    if (this.worldQueryService) {
+      try {
+        const waterSources =
+          this.worldQueryService.findResourcesByType(WorldResourceType.WATER_SOURCE);
+        if (waterSources.length > 0) {
+          const randomWater =
+            waterSources[Math.floor(Math.random() * waterSources.length)];
+          if (randomWater?.position) {
+            // Spawn 50-100 units away from water
+            const offsetX = (Math.random() - 0.5) * 100;
+            const offsetY = (Math.random() - 0.5) * 100;
+            respawnPosition = {
+              x: Math.max(
+                50,
+                Math.min(randomWater.position.x + offsetX, worldWidth - 50),
+              ),
+              y: Math.max(
+                50,
+                Math.min(randomWater.position.y + offsetY, worldHeight - 50),
+              ),
+            };
+          }
+        }
+      } catch {
+        // Ignore errors - use fallback position
+      }
+    }
+
     if (this.gameState.agents) {
       const agent = this.gameState.agents.find((a) => a.id === entityId);
       if (agent) {
         agent.isDead = false;
+        // CRITICAL: Reset position to valid coordinates (fixes NaN stuck agents)
+        const oldPos = agent.position;
+        const positionIsInvalid =
+          !oldPos ||
+          !Number.isFinite(oldPos.x) ||
+          !Number.isFinite(oldPos.y) ||
+          oldPos.x < 0 ||
+          oldPos.y < 0;
+
+        if (positionIsInvalid) {
+          agent.position = respawnPosition;
+          logger.warn(
+            `🔧 Entity ${entityId} had invalid position (${oldPos?.x}, ${oldPos?.y}), reset to (${respawnPosition.x.toFixed(0)}, ${respawnPosition.y.toFixed(0)})`,
+          );
+        }
       }
     }
 
-    logger.info(`✨ Entity ${entityId} respawned`);
+    logger.info(
+      `✨ Entity ${entityId} respawned at (${respawnPosition.x.toFixed(0)}, ${respawnPosition.y.toFixed(0)})`,
+    );
 
     simulationEvents.emit(GameEventType.AGENT_RESPAWNED, {
       agentId: entityId,
       timestamp: Date.now(),
+      position: respawnPosition, // Include valid position for movement system
     });
   }
 

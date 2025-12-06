@@ -174,17 +174,46 @@ export class EventRegistry {
 
     this.registerEvent(
       GameEventType.AGENT_RESPAWNED,
-      (data: { agentId: string; timestamp: number }) => {
+      (data: {
+        agentId: string;
+        timestamp: number;
+        position?: { x: number; y: number };
+      }) => {
         // Agent respawned - AISystem handles this automatically
-
         const agent = this.runner.entityIndex.getAgent(data.agentId);
-        if (
-          agent?.position &&
-          !this.runner.movementSystem.hasMovementState(data.agentId)
-        ) {
+
+        // Use position from event if provided (validated), otherwise try agent position
+        let validPosition = data.position;
+        if (!validPosition && agent?.position) {
+          // Validate agent position is not NaN
+          const pos = agent.position;
+          if (
+            Number.isFinite(pos.x) &&
+            Number.isFinite(pos.y) &&
+            pos.x >= 0 &&
+            pos.y >= 0
+          ) {
+            validPosition = pos;
+          }
+        }
+
+        // Fallback to center of world if no valid position
+        if (!validPosition) {
+          const world = this.runner.state?.worldSize;
+          validPosition = {
+            x: (world?.width ?? 3000) / 2,
+            y: (world?.height ?? 3000) / 2,
+          };
+          // Also update agent position if it was invalid
+          if (agent) {
+            agent.position = validPosition;
+          }
+        }
+
+        if (!this.runner.movementSystem.hasMovementState(data.agentId)) {
           this.runner.movementSystem.initializeEntityMovement(
             data.agentId,
-            agent.position,
+            validPosition,
           );
         }
       },

@@ -100,13 +100,13 @@ export class LifeCycleSystem extends EventEmitter {
       adultAge: 16,
       elderAge: 55,
       maxAge: 85,
-      reproductionCooldownSec: 30,
-      maxPopulation: 50,
+      reproductionCooldownSec: 60, // Cooldown between births for same pair
+      maxPopulation: Infinity, // No artificial limit - resources are the limit
       fertilityMinAge: 18,
       fertilityMaxAge: 45,
       godMaxChildren: 6,
       godInterbirthSec: 600,
-      mortalInterbirthSec: 240,
+      mortalInterbirthSec: 180, // 3 minutes minimum between children for same pair
     };
   }
 
@@ -332,7 +332,7 @@ export class LifeCycleSystem extends EventEmitter {
   }
 
   private lastBreedingCheck = 0;
-  private readonly BREEDING_CHECK_INTERVAL = 60000;
+  private readonly BREEDING_CHECK_INTERVAL = 30000; // Reduced from 60000 to check more frequently
 
   private async tryBreeding(now: number): Promise<void> {
     if (now - this.lastBreedingCheck < this.BREEDING_CHECK_INTERVAL) return;
@@ -366,13 +366,13 @@ export class LifeCycleSystem extends EventEmitter {
       return;
     }
 
-    if (RandomUtils.chance(0.6)) {
-      const father = RandomUtils.element(males);
-      const mother = RandomUtils.element(females);
+    // Natural reproduction: one random pairing per cycle
+    // The real limitation is the needs requirements and energy cost in tryCouple
+    const father = RandomUtils.element(males);
+    const mother = RandomUtils.element(females);
 
-      if (father && mother) {
-        await this.tryCouple(father.id, mother.id, now);
-      }
+    if (father && mother) {
+      await this.tryCouple(father.id, mother.id, now);
     }
   }
 
@@ -411,18 +411,22 @@ export class LifeCycleSystem extends EventEmitter {
           `mother(hunger=${motherNeeds?.hunger?.toFixed(0)}, energy=${motherNeeds?.energy?.toFixed(0)})`,
       );
 
-      // Lowered thresholds: hunger >= 40 (was 60), energy >= 40 (was 50)
-      // This allows reproduction when agents are moderately fed instead of very well fed
+      // REALISTIC REQUIREMENTS: Both parents must be well-fed to reproduce
+      // High thresholds ensure reproduction only happens when resources are abundant
+      const REPRODUCTION_HUNGER_REQ = 60; // Must be well-fed
+      const REPRODUCTION_ENERGY_REQ = 50; // Must have good energy
+      
       if (
         !motherNeeds ||
         !fatherNeeds ||
-        motherNeeds.hunger < 40 ||
-        fatherNeeds.hunger < 40 ||
-        motherNeeds.energy < 40 ||
-        fatherNeeds.energy < 40
+        motherNeeds.hunger < REPRODUCTION_HUNGER_REQ ||
+        fatherNeeds.hunger < REPRODUCTION_HUNGER_REQ ||
+        motherNeeds.energy < REPRODUCTION_ENERGY_REQ ||
+        fatherNeeds.energy < REPRODUCTION_ENERGY_REQ
       ) {
         logger.debug(
-          `🍼 [tryCouple] ${father.name}+${mother.name} SKIP: needs too low (req: hunger>=40, energy>=40)`,
+          `🍼 [tryCouple] ${father.name}+${mother.name} SKIP: needs too low ` +
+            `(req: hunger>=${REPRODUCTION_HUNGER_REQ}, energy>=${REPRODUCTION_ENERGY_REQ})`,
         );
         return;
       }
@@ -452,6 +456,42 @@ export class LifeCycleSystem extends EventEmitter {
       sex: RandomUtils.chance(0.5) ? Sex.MALE : Sex.FEMALE,
       position: childPosition,
     });
+
+    // REPRODUCTION COST: Both parents pay an energy/hunger cost
+    // This prevents unlimited reproduction and makes resources matter
+    const REPRODUCTION_ENERGY_COST = 25; // Significant but not crippling
+    const REPRODUCTION_HUNGER_COST = 15; // Mother pays more (pregnancy simulation)
+
+    if (this.needsSystem) {
+      // Father pays energy cost
+      this.needsSystem.modifyNeed(
+        fatherId,
+        "energy",
+        -REPRODUCTION_ENERGY_COST,
+      );
+      this.needsSystem.modifyNeed(
+        fatherId,
+        "hunger",
+        -REPRODUCTION_HUNGER_COST * 0.5,
+      );
+
+      // Mother pays higher cost (carrying the child)
+      this.needsSystem.modifyNeed(
+        motherId,
+        "energy",
+        -REPRODUCTION_ENERGY_COST,
+      );
+      this.needsSystem.modifyNeed(
+        motherId,
+        "hunger",
+        -REPRODUCTION_HUNGER_COST,
+      );
+
+      logger.info(
+        `🍼 [tryCouple] ${father.name}+${mother.name} paid reproduction cost: ` +
+          `energy=-${REPRODUCTION_ENERGY_COST}, hunger=-${REPRODUCTION_HUNGER_COST}`,
+      );
+    }
 
     this.reproductionCooldown.set(
       pairKey,
