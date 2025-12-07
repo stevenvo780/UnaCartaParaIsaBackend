@@ -106,6 +106,30 @@ export function moveToPosition(
 ): HandlerExecutionResult {
   const { systems, agentId, position } = ctx;
 
+  // Validate target coordinates to prevent NaN propagation
+  if (
+    !target ||
+    !Number.isFinite(target.x) ||
+    !Number.isFinite(target.y)
+  ) {
+    logger.warn(
+      `[MoveHandler] ${agentId}: invalid target coordinates (${target?.x}, ${target?.y}), aborting move`,
+    );
+    return errorResult("Invalid target coordinates");
+  }
+
+  // Validate current position
+  if (
+    !position ||
+    !Number.isFinite(position.x) ||
+    !Number.isFinite(position.y)
+  ) {
+    logger.warn(
+      `[MoveHandler] ${agentId}: invalid current position (${position?.x}, ${position?.y}), aborting move`,
+    );
+    return errorResult("Invalid current position");
+  }
+
   if (!systems.movement) {
     return errorResult("MovementSystem not available");
   }

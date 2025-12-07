@@ -1182,6 +1182,20 @@ export class AISystem extends EventEmitter {
   ): Record<string, unknown> {
     if (!this.worldQueryService) return {};
 
+    // Early validation: ensure position is valid
+    if (
+      !position ||
+      position.x == null ||
+      position.y == null ||
+      !Number.isFinite(position.x) ||
+      !Number.isFinite(position.y)
+    ) {
+      logger.warn(
+        `[AISystem] buildSpatialContext: invalid position for ${agentId}: x=${position?.x}, y=${position?.y}`,
+      );
+      return {};
+    }
+
     const wqs = this.worldQueryService;
     const QUERY_RADIUS = 300;
     const result: Record<string, unknown> = {};

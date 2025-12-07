@@ -167,6 +167,12 @@ export class WorldResourceSystem {
     y: number,
     type?: WorldResourceType,
   ): WorldResourceInstance | undefined {
+    // Early validation for null/undefined coordinates
+    if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) {
+      logger.warn(`[WorldRes] getNearestResource called with invalid coords: x=${x}, y=${y}`);
+      return undefined;
+    }
+
     const searchRadii = [200, 500, 1000, 2000];
 
     if (type === WorldResourceType.WATER_SOURCE) {

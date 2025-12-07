@@ -96,6 +96,15 @@ export function handleExplore(ctx: HandlerContext): HandlerExecutionResult {
       edgeTarget.y - position.y,
     );
 
+    // Prevent division by zero which causes NaN positions
+    if (distanceToEdge < 1) {
+      logger.debug(
+        `[ExploreHandler] ${agentId}: already at edge, generating random explore target`,
+      );
+      const randomTarget = generateExploreTarget(position);
+      return moveToPosition(ctx, randomTarget);
+    }
+
     const stepDistance = Math.min(150, distanceToEdge);
     const ratio = stepDistance / distanceToEdge;
 
@@ -103,6 +112,15 @@ export function handleExplore(ctx: HandlerContext): HandlerExecutionResult {
       x: position.x + (edgeTarget.x - position.x) * ratio,
       y: position.y + (edgeTarget.y - position.y) * ratio,
     };
+
+    // Validate stepTarget to prevent NaN propagation
+    if (!Number.isFinite(stepTarget.x) || !Number.isFinite(stepTarget.y)) {
+      logger.warn(
+        `[ExploreHandler] ${agentId}: invalid stepTarget (${stepTarget.x}, ${stepTarget.y}), using random target`,
+      );
+      const randomTarget = generateExploreTarget(position);
+      return moveToPosition(ctx, randomTarget);
+    }
 
     logger.debug(
       `[ExploreHandler] ${agentId}: searching water, moving toward ${edgeTarget.edgeName} edge (${Math.round(stepTarget.x)}, ${Math.round(stepTarget.y)})`,
