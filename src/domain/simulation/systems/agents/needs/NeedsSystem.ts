@@ -1587,12 +1587,18 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
     const GATHER_RANGE = 500;
 
     if (needType === NeedType.THIRST || needType === ResourceType.WATER) {
+      logger.debug(
+        `[NeedsSystem] tryGatherFromNearbyResource: ${agentId} seeking water, worldQueryService=${!!this.worldQueryService}`,
+      );
       if (this.worldQueryService) {
         // Use optimized cached water tile lookup instead of expensive findWaterTilesNear
         const nearestTile = this.worldQueryService.findNearestWaterTile(
           agentPos.x,
           agentPos.y,
           GATHER_RANGE,
+        );
+        logger.debug(
+          `[NeedsSystem] tryGatherFromNearbyResource: ${agentId} at (${agentPos.x}, ${agentPos.y}), nearestTile=${!!nearestTile}`,
         );
 
         if (nearestTile) {

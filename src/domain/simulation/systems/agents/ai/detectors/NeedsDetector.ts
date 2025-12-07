@@ -112,6 +112,14 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
   const thirst = ctx.needs.thirst ?? 100;
   if (thirst < THRESHOLDS.LOW) {
     const waterTarget = getBestResourceTarget(ctx, ResourceType.WATER);
+    
+    // Debug log for water target resolution
+    if (thirst < THRESHOLDS.CRITICAL) {
+      logger.debug(
+        `[NeedsDetector] ${ctx.agentId}: CRITICAL thirst=${thirst.toFixed(0)}, ` +
+        `waterTarget=${!!waterTarget}, nearestWater=${!!ctx.nearestWater}, knownResources=${!!ctx.knownResources?.get(ResourceType.WATER)}`
+      );
+    }
 
     if (waterTarget) {
       tasks.push(
@@ -129,6 +137,9 @@ export function detectNeeds(ctx: DetectorContext): Task[] {
         }),
       );
     } else {
+      logger.debug(
+        `[NeedsDetector] ${ctx.agentId}: NO WATER TARGET, creating EXPLORE task with preferEdge=true`
+      );
       tasks.push(
         createTask({
           agentId: ctx.agentId,

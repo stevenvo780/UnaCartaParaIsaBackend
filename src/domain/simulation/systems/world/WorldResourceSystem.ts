@@ -358,6 +358,33 @@ export class WorldResourceSystem {
         const pixelX = tile.x * tileSize;
         const pixelY = tile.y * tileSize;
 
+        // Spawn WATER_SOURCE on water tiles (ocean, lake, wetland, or water terrain)
+        const isWaterTile =
+          tile.biome === BiomeType.OCEAN ||
+          tile.biome === BiomeType.LAKE ||
+          tile.biome === BiomeType.WETLAND ||
+          tile.assets.terrain.includes("water");
+
+        if (isWaterTile) {
+          // Spawn water source with high probability on water tiles
+          if (RandomUtils.chance(0.3)) {
+            const resource = this.spawnResource(
+              WorldResourceType.WATER_SOURCE,
+              {
+                x: pixelX + tileSize / 2,
+                y: pixelY + tileSize / 2,
+              },
+              tile.biome || "ocean",
+            );
+            if (resource) {
+              // Link the water resource to its terrain tile for regeneration
+              resource.linkedTileX = tile.x;
+              resource.linkedTileY = tile.y;
+              spawnedCount++;
+            }
+          }
+        }
+
         if (tile.assets.vegetation) {
           for (const asset of tile.assets.vegetation) {
             const resourceType = this.mapAssetToResource(asset);

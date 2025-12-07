@@ -188,6 +188,16 @@ export class WorldQueryService {
     if (this.gameState.world?.config?.tileSize) {
       this.tileSize = this.gameState.world.config.tileSize;
     }
+    
+    // Pre-warm water tiles cache after a short delay to ensure terrain is loaded
+    setTimeout(() => {
+      if (this.terrainSystem) {
+        logger.info('[WorldQueryService] Pre-warming water tiles cache...');
+        this.refreshWaterTilesCache();
+      } else {
+        logger.warn('[WorldQueryService] terrainSystem not available for pre-warming cache');
+      }
+    }, 5000);
   }
 
   /**
@@ -632,6 +642,8 @@ export class WorldQueryService {
     y: number,
     maxDistance: number = 500,
   ): TileQueryResult | null {
+    logger.debug(`[WorldQueryService] findNearestWaterTile called at (${x}, ${y}), cache has ${this.waterTilesCache.length} tiles`);
+    
     // Refresh cache if expired
     const now = Date.now();
     if (
@@ -694,11 +706,39 @@ export class WorldQueryService {
     // Use a grid sampling to avoid checking every single tile (every 2nd tile)
     const waterTiles: TileQueryResult[] = [];
 
-    const tilesPerRow = Math.ceil(mapWidth / tileSize);
-    const tilesPerCol = Math.ceil(mapHeight / tileSize);
+    // Calculate tiles from world dimensions
+    const tilesPerRowCalc = Math.ceil(mapWidth / tileSize);
+    const tilesPerColCalc = Math.ceil(mapHeight / tileSize);
+    
+    // Also get terrain dimensions directly
+    const terrainRows = this.gameState.world?.terrain?.length ?? 0;
+    const terrainCols = this.gameState.world?.terrain?.[0]?.length ?? 0;
 
-    for (let tileX = 0; tileX < tilesPerRow; tileX += 2) {
-      for (let tileY = 0; tileY < tilesPerCol; tileY += 2) {
+    logger.debug(
+      `[WorldQueryService] 💧 Cache debug: mapWidth=${mapWidth}, mapHeight=${mapHeight}, tileSize=${tileSize}, ` +
+      `tilesCalc=${tilesPerRowCalc}x${tilesPerColCalc}, terrainActual=${terrainCols}x${terrainRows}`,
+    );
+
+    // Use terrain dimensions directly (not world config pixels)
+    const tilesPerRow = terrainCols;
+    const tilesPerCol = terrainRows;
+
+    // Sample first 10 tiles to debug biome values
+    let sampleCount = 0;
+    for (let tileX = 0; tileX < Math.min(tilesPerRow, 15); tileX++) {
+      for (let tileY = 0; tileY < Math.min(tilesPerCol, 15); tileY++) {
+        const tile = this.terrainSystem.getTile(tileX, tileY);
+        if (tile && sampleCount < 10) {
+          logger.debug(
+            `[WorldQueryService] 💧 Tile(${tileX},${tileY}) biome=${tile.biome} (LAKE=${BiomeType.LAKE})`,
+          );
+          sampleCount++;
+        }
+      }
+    }
+
+    for (let tileX = 0; tileX < tilesPerRow; tileX++) {
+      for (let tileY = 0; tileY < tilesPerCol; tileY++) {
         const tile = this.terrainSystem.getTile(tileX, tileY);
 
         if (
@@ -919,15 +959,16 @@ export class WorldQueryService {
 
   /**
    * Get the direction to the nearest water source for exploration.
-   * In an infinite world, there are no "edges" - we search for actual water tiles.
-   * If no water is found nearby, suggests a random exploration direction.
+   * Uses the global water tiles cache to find ANY water on the map.
+   * If no water exists, suggests a random exploration direction.
    */
   public getDirectionToNearestEdge(
     x: number,
     y: number,
   ): { x: number; y: number; edgeName: string } {
-    // En mundo infinito, buscar agua cercana primero
-    const waterTile = this.findNearestWater(x, y);
+    // OPTIMIZATION: Use cached water tiles to find ANY water on map (no radius limit)
+    // This allows agents to navigate toward water even if far away
+    const waterTile = this.findNearestWaterTile(x, y, Infinity);
     if (waterTile) {
       return {
         x: waterTile.worldX,
@@ -936,8 +977,7 @@ export class WorldQueryService {
       };
     }
 
-    // Si no hay agua cercana, sugerir dirección aleatoria para exploración
-    // En mundo infinito no hay "bordes" - explorar en cualquier dirección
+    // Si no hay agua en todo el mapa, sugerir dirección aleatoria para exploración
     const angle = Math.random() * Math.PI * 2;
     const exploreDistance = 300;
     return {
