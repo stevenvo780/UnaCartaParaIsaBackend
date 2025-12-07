@@ -101,7 +101,14 @@ export class EconomySystem implements ITradeSystem {
   private agentRegistry?: AgentRegistry;
 
   private recentTrades = new Map<string, number>();
-  private readonly TRADE_COOLDOWN_MS = 30000;
+  private readonly TRADE_COOLDOWN_MS = 60000; // Increased from 30s to 60s for scalability
+
+  /** Throttle auto-trading to run every N ms instead of every tick */
+  private lastAutoTradeTime = 0;
+  private readonly AUTO_TRADE_INTERVAL_MS = 30000; // Trade every 30 seconds for scalability
+
+  /** Maximum cells to process per auto-trade cycle for scalability */
+  private readonly MAX_CELLS_PER_TRADE = 5;
 
   constructor(
     @inject(TYPES.GameState) state: GameState,
@@ -174,7 +181,12 @@ export class EconomySystem implements ITradeSystem {
   }
 
   private updateMarket(): void {
-    this.autoTradeAmongAgents();
+    // Throttle auto-trading to reduce tick impact with 1000+ agents
+    const now = Date.now();
+    if (now - this.lastAutoTradeTime >= this.AUTO_TRADE_INTERVAL_MS) {
+      this.autoTradeAmongAgents();
+      this.lastAutoTradeTime = now;
+    }
 
     if (!this.state.market) {
       this.state.market = {
@@ -327,8 +339,17 @@ export class EconomySystem implements ITradeSystem {
     }
 
     // Trade only within cells and adjacent cells
+    // Limit cells processed per cycle for scalability
+    let cellsProcessed = 0;
+    let tradesAttempted = 0;
+    const MAX_TRADES_ATTEMPTS = 50; // Hard limit on trade attempts
+    const MAX_SELLERS_PER_CELL = 5; // Only check first N sellers per cell
+    
     for (const [cellKey, cellAgents] of spatialGrid) {
+      if (cellsProcessed >= this.MAX_CELLS_PER_TRADE) break;
+      if (tradesAttempted >= MAX_TRADES_ATTEMPTS) break;
       if (cellAgents.length < 2) continue;
+      cellsProcessed++;
 
       const [cellX, cellY] = cellKey.split(",").map(Number);
 
@@ -346,12 +367,17 @@ export class EconomySystem implements ITradeSystem {
       }
 
       // Trade within nearby agents (reduced search space)
-      for (let i = 0; i < cellAgents.length; i++) {
+      // Limit sellers checked per cell for scalability
+      const sellersToCheck = Math.min(cellAgents.length, MAX_SELLERS_PER_CELL);
+      for (let i = 0; i < sellersToCheck; i++) {
+        if (tradesAttempted >= MAX_TRADES_ATTEMPTS) break;
         const seller = cellAgents[i];
         if (!seller || !seller.id) continue;
 
         const sellerInv = this.inventorySystem.getAgentInventory(seller.id);
         if (!sellerInv) continue;
+        
+        tradesAttempted++; // Count each seller evaluation
 
         for (const resource of [
           ResourceTypeEnum.WOOD,

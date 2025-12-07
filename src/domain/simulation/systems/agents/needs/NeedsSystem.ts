@@ -1582,25 +1582,20 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
 
     const agentPos = { x: agent.position.x, y: agent.position.y };
 
-    // Significantly increased range to allow agents to find resources more easily
-    // Agents that wander too far should still be able to find water/food
-    const GATHER_RANGE = 2000;
+    // OPTIMIZED: Reduced range from 2000 to 500 and using cached water tiles
+    // The new findNearestWaterTile uses a global cache instead of expensive spatial queries
+    const GATHER_RANGE = 500;
 
     if (needType === NeedType.THIRST || needType === ResourceType.WATER) {
       if (this.worldQueryService) {
-        const waterTiles = this.worldQueryService.findWaterTilesNear(
+        // Use optimized cached water tile lookup instead of expensive findWaterTilesNear
+        const nearestTile = this.worldQueryService.findNearestWaterTile(
           agentPos.x,
           agentPos.y,
           GATHER_RANGE,
         );
 
-        logger.debug(
-          `[NeedsSystem] 🔍 ${agentId} at (${agentPos.x.toFixed(0)}, ${agentPos.y.toFixed(0)}) searching water r=${GATHER_RANGE}: found ${waterTiles.length} tiles`,
-        );
-
-        if (waterTiles.length > 0) {
-          const nearestTile = waterTiles[0];
-
+        if (nearestTile) {
           if (this.terrainSystem) {
             const consumed = this.terrainSystem.consumeWaterFromTile(
               nearestTile.tileX,
@@ -1608,8 +1603,8 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
             );
 
             if (consumed > 0) {
-              logger.info(
-                `[NeedsSystem] 💧 Agent ${agentId} drinking from OCEAN tile at (${nearestTile.worldX}, ${nearestTile.worldY}), consumed ${consumed} water`,
+              logger.debug(
+                `[NeedsSystem] 💧 Agent ${agentId} drinking from water tile at (${nearestTile.worldX}, ${nearestTile.worldY})`,
               );
 
               if (this.inventorySystem) {
@@ -1621,12 +1616,12 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
               }
               return {
                 gathered: true,
-                resourceId: `ocean_tile_${nearestTile.tileX}_${nearestTile.tileY}`,
+                resourceId: `water_tile_${nearestTile.tileX}_${nearestTile.tileY}`,
               };
             }
           } else {
-            logger.info(
-              `[NeedsSystem] 💧 Agent ${agentId} drinking from OCEAN tile at (${nearestTile.worldX}, ${nearestTile.worldY})`,
+            logger.debug(
+              `[NeedsSystem] 💧 Agent ${agentId} drinking from water tile at (${nearestTile.worldX}, ${nearestTile.worldY})`,
             );
 
             if (this.inventorySystem) {
@@ -1634,7 +1629,7 @@ export class NeedsSystem extends EventEmitter implements INeedsSystem {
             }
             return {
               gathered: true,
-              resourceId: `ocean_tile_${nearestTile.tileX}_${nearestTile.tileY}`,
+              resourceId: `water_tile_${nearestTile.tileX}_${nearestTile.tileY}`,
             };
           }
         }

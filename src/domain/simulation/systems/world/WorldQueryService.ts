@@ -164,6 +164,11 @@ export class WorldQueryService {
   public readonly name = "worldQuery";
   private tileSize: number = 64;
   private _lastWaterDebugLog = 0;
+  
+  // Global water tiles cache - refreshed periodically
+  private waterTilesCache: TileQueryResult[] = [];
+  private waterTilesCacheTime = 0;
+  private readonly WATER_CACHE_TTL = 30000; // 30 seconds
 
   constructor(
     @inject(TYPES.GameState) private gameState: GameState,
@@ -612,6 +617,114 @@ export class WorldQueryService {
       const distB = Math.hypot(b.worldX - x, b.worldY - y);
       return distA - distB;
     });
+  }
+
+  /**
+   * OPTIMIZED: Find the nearest water tile using cached global water map.
+   * Instead of doing expensive spatial queries per-agent, we cache all water tiles
+   * and find the nearest one by simple distance calculation.
+   *
+   * Performance: O(n) where n = cached water tiles, but with early exit and
+   * no expensive spatial queries. Cache is refreshed every 30 seconds.
+   */
+  public findNearestWaterTile(
+    x: number,
+    y: number,
+    maxDistance: number = 500,
+  ): TileQueryResult | null {
+    // Refresh cache if expired
+    const now = Date.now();
+    if (
+      now - this.waterTilesCacheTime > this.WATER_CACHE_TTL ||
+      this.waterTilesCache.length === 0
+    ) {
+      this.refreshWaterTilesCache();
+    }
+
+    // If cache is empty, no water tiles exist
+    if (this.waterTilesCache.length === 0) {
+      return null;
+    }
+
+    // Simple O(n) search with early-exit for nearby tiles
+    let nearestTile: TileQueryResult | null = null;
+    let nearestDistSq = maxDistance * maxDistance;
+
+    for (const tile of this.waterTilesCache) {
+      const dx = tile.worldX - x;
+      const dy = tile.worldY - y;
+      const distSq = dx * dx + dy * dy;
+
+      // Early exit if we find a very close tile (within 100 units)
+      // 100^2 = 10000
+      if (distSq < 10000) {
+        return tile;
+      }
+
+      if (distSq < nearestDistSq) {
+        nearestDistSq = distSq;
+        nearestTile = tile;
+      }
+    }
+
+    return nearestTile;
+  }
+
+  /**
+   * Refreshes the global water tiles cache by scanning the entire map once.
+   * This is expensive but only runs every 30 seconds.
+   */
+  private refreshWaterTilesCache(): void {
+    if (!this.terrainSystem) {
+      this.waterTilesCache = [];
+      return;
+    }
+
+    const worldConfig = this.gameState.world?.config;
+    if (!worldConfig) {
+      this.waterTilesCache = [];
+      return;
+    }
+
+    const mapWidth = worldConfig.width || 4096;
+    const mapHeight = worldConfig.height || 4096;
+    const tileSize = this.tileSize;
+
+    // Sample water tiles at intervals to build cache
+    // Use a grid sampling to avoid checking every single tile (every 2nd tile)
+    const waterTiles: TileQueryResult[] = [];
+
+    const tilesPerRow = Math.ceil(mapWidth / tileSize);
+    const tilesPerCol = Math.ceil(mapHeight / tileSize);
+
+    for (let tileX = 0; tileX < tilesPerRow; tileX += 2) {
+      for (let tileY = 0; tileY < tilesPerCol; tileY += 2) {
+        const tile = this.terrainSystem.getTile(tileX, tileY);
+
+        if (
+          tile &&
+          (tile.biome === BiomeType.OCEAN || tile.biome === BiomeType.LAKE)
+        ) {
+          waterTiles.push({
+            entityType: EntityType.TILE,
+            tileX,
+            tileY,
+            worldX: tileX * tileSize + tileSize / 2,
+            worldY: tileY * tileSize + tileSize / 2,
+            biome: tile.biome,
+            isWalkable: false,
+            tile,
+          });
+        }
+      }
+    }
+
+    this.waterTilesCache = waterTiles;
+    this.waterTilesCacheTime = Date.now();
+
+    logger.debug(
+      `[WorldQueryService] 💧 Refreshed water tiles cache: ${waterTiles.length} tiles (sampled from ${mapWidth}x${mapHeight} map)`,
+    );
   }
 
   /**

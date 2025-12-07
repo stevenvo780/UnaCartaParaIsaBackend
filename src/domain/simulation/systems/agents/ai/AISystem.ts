@@ -115,10 +115,28 @@ export interface AIAgentMemory {
 }
 
 const DEFAULT_CONFIG: AISystemConfig = {
-  updateInterval: 100,
+  updateInterval: 150, // Base interval - agents with urgent needs update faster
   priorityBoost: 0.1,
   maxTasksPerAgent: 10,
   debug: false,
+};
+
+/**
+ * Maximum agents to process per update tick for scalability.
+ * Increased from 30 to 100 with lighter processing per agent.
+ */
+const MAX_AGENTS_PER_TICK = 100;
+
+/**
+ * Interval multipliers for priority-based updates.
+ * Agents with critical needs update at base interval.
+ * Idle/low-priority agents update less frequently.
+ */
+const PRIORITY_INTERVALS = {
+  CRITICAL: 1.0, // 150ms - agent has urgent needs (hunger/thirst > 0.7)
+  HIGH: 2.0, // 300ms - agent has active task
+  NORMAL: 3.0, // 450ms - agent is idle but healthy
+  LOW: 5.0, // 750ms - agent is far from any action
 };
 
 /**
@@ -162,12 +180,15 @@ export class AISystem extends EventEmitter {
   /** Memoria persistente por agente */
   private agentMemories = new Map<string, AIAgentMemory>();
 
-  /** Caché de contextos de detección con TTL de 500ms */
+  /**
+   * Caché de contextos de detección con TTL de 2000ms
+   * Increased from 500ms for better scalability with 1000+ agents
+   */
   private contextCache = new Map<
     string,
     { context: DetectorContext; timestamp: number }
   >();
-  private readonly CONTEXT_CACHE_TTL = 500; // ms
+  private readonly CONTEXT_CACHE_TTL = 2000; // ms - increased for scalability
 
   constructor(
     @inject(TYPES.GameState) gameState: GameState,
@@ -386,8 +407,52 @@ export class AISystem extends EventEmitter {
   }
 
   /**
-   * Actualiza la IA de todos los agentes con batch processing.
-   * Procesa agentes en batches pequeños para reducir latencia y evitar bloqueo.
+   * Gets dynamic update interval based on agent state.
+   * Agents with urgent needs update more frequently.
+   */
+  private getAgentUpdateInterval(agentId: string): number {
+    const baseInterval = this.config.updateInterval;
+
+    // Check for urgent needs - these agents need fast updates
+    if (this.hasUrgentNeeds(agentId)) {
+      return baseInterval * PRIORITY_INTERVALS.CRITICAL;
+    }
+
+    // Check if agent has an active high-priority task
+    const activeTask = this.activeTask.get(agentId);
+    if (activeTask && activeTask.priority >= TASK_PRIORITIES.HIGH) {
+      return baseInterval * PRIORITY_INTERVALS.HIGH;
+    }
+
+    // Idle agents with no pending tasks can update less frequently
+    if (!activeTask && this.taskQueue?.getTaskCount(agentId) === 0) {
+      return baseInterval * PRIORITY_INTERVALS.LOW;
+    }
+
+    return baseInterval * PRIORITY_INTERVALS.NORMAL;
+  }
+
+  /**
+   * Checks if agent has urgent needs (hunger/thirst > 0.7).
+   */
+  private hasUrgentNeeds(agentId: string): boolean {
+    if (!this.needsSystem) return false;
+
+    const needs = this.needsSystem.getEntityNeeds(agentId);
+    if (!needs) return false;
+
+    const URGENT_THRESHOLD = 0.7;
+    return (
+      needs.hunger > URGENT_THRESHOLD ||
+      needs.thirst > URGENT_THRESHOLD ||
+      needs.energy < 0.2 // Low energy is also urgent
+    );
+  }
+
+  /**
+   * Actualiza la IA de todos los agentes con batch processing y límite por tick.
+   * Procesa solo MAX_AGENTS_PER_TICK agentes por tick para mantener el tick bajo control.
+   * Los agentes se distribuyen mediante stagger individual en updateAgent.
    */
   public async update(deltaTimeMs: number): Promise<void> {
     const agents = this.gameState.agents ?? [];
@@ -399,18 +464,34 @@ export class AISystem extends EventEmitter {
       );
     }
 
-    // Process in batches to avoid long blocking
+    // Limit agents processed per tick for scalability
+    // Each agent has its own lastUpdate timestamp, so they naturally stagger
+    // We just need to iterate through all and let updateAgent's throttle handle it
     const BATCH_SIZE = 50;
-    for (let i = 0; i < aliveAgents.length; i += BATCH_SIZE) {
-      const batch = aliveAgents.slice(i, i + BATCH_SIZE);
+    let processed = 0;
 
-      // Process batch sequentially (async handlers need sequential execution)
+    for (
+      let i = 0;
+      i < aliveAgents.length && processed < MAX_AGENTS_PER_TICK;
+      i += BATCH_SIZE
+    ) {
+      const batch = aliveAgents.slice(
+        i,
+        Math.min(i + BATCH_SIZE, aliveAgents.length),
+      );
+
       for (const agent of batch) {
+        // updateAgent will skip if not enough time has passed (stagger)
         this.updateAgent(agent.id, deltaTimeMs);
+        processed++;
+        if (processed >= MAX_AGENTS_PER_TICK) break;
       }
 
       // Yield to event loop after each batch to prevent blocking
-      if (i + BATCH_SIZE < aliveAgents.length) {
+      if (
+        processed < MAX_AGENTS_PER_TICK &&
+        i + BATCH_SIZE < aliveAgents.length
+      ) {
         await new Promise((resolve) => setImmediate(resolve));
       }
     }
@@ -418,28 +499,50 @@ export class AISystem extends EventEmitter {
 
   /**
    * Actualiza la IA de un agente específico.
+   * Usa jitter inicial para distribuir updates y evitar sincronización.
    */
   public updateAgent(agentId: string, _deltaTimeMs: number): void {
     const now = Date.now();
-    const last = this.lastUpdate.get(agentId) ?? 0;
+    let last = this.lastUpdate.get(agentId);
 
-    if (now - last < this.config.updateInterval) return;
+    // Initialize with random offset to stagger agent updates
+    // This prevents all agents from updating on the same tick
+    if (last === undefined) {
+      const stagger = Math.floor(Math.random() * this.config.updateInterval);
+      last = now - stagger;
+      this.lastUpdate.set(agentId, last);
+    }
+
+    // Dynamic interval based on agent priority
+    const interval = this.getAgentUpdateInterval(agentId);
+    if (now - last < interval) return;
     this.lastUpdate.set(agentId, now);
 
-    this.runDetectors(agentId);
+    // Fast path: if agent has active non-urgent task, skip full detector run
+    const existingTask = this.activeTask.get(agentId);
+    const needsFullUpdate =
+      !existingTask ||
+      existingTask.priority >= TASK_PRIORITIES.HIGH ||
+      this.hasUrgentNeeds(agentId);
+
+    if (needsFullUpdate) {
+      this.runDetectors(agentId);
+    }
+    // else: agent has low-priority active task and no urgent needs
+    // Skip detector run entirely - task will continue and detectors run next full cycle
 
     this.taskQueue.cleanExpired(agentId);
 
     // Check if we should preempt the current task for a higher priority one
     const currentTask = this.activeTask.get(agentId);
     const nextTask = this.taskQueue.peek(agentId);
-    
+
     // Preempt if there's a CRITICAL priority task waiting and current task is lower priority
     // This ensures agents stop exploring/socializing when they're about to die
     if (currentTask && nextTask) {
       const PREEMPT_THRESHOLD = TASK_PRIORITIES.URGENT; // 0.8 - preempt for urgent+ tasks
       const priorityDiff = nextTask.priority - currentTask.priority;
-      
+
       // Preempt if: next task is urgent+ AND significantly higher priority (>0.3 diff)
       if (nextTask.priority >= PREEMPT_THRESHOLD && priorityDiff > 0.3) {
         logger.debug(
@@ -657,11 +760,25 @@ export class AISystem extends EventEmitter {
     const position = this.agentRegistry?.getPosition(agentId);
     if (!position) return null;
 
+    // Pre-calculate hasWeapon early for spatial query optimization
+    const equippedWeaponEarly = equipmentSystem.getEquippedItem(
+      agentId,
+      EquipmentSlot.MAIN_HAND,
+    );
+    const hasWeaponEarly =
+      equippedWeaponEarly !== undefined &&
+      equippedWeaponEarly !== WeaponId.UNARMED;
+
     const needs: DetectorContext["needs"] = this.needsSystem?.getNeeds(
       agentId,
     ) as DetectorContext["needs"];
 
-    const spatialContext = this.buildSpatialContext(position, agentId);
+    const spatialContext = this.buildSpatialContext(
+      position,
+      agentId,
+      needs,
+      hasWeaponEarly,
+    );
 
     const memory = this.getAgentMemory(agentId);
     const explorationContext: Record<string, unknown> = {
@@ -758,16 +875,38 @@ export class AISystem extends EventEmitter {
         stone: (stats.stockpiled.stone ?? 0) + (stats.inAgents.stone ?? 0),
         food: (stats.stockpiled.food ?? 0) + (stats.inAgents.food ?? 0),
         water: (stats.stockpiled.water ?? 0) + (stats.inAgents.water ?? 0),
-        iron_ore: (stats.stockpiled.iron_ore ?? 0) + (stats.inAgents.iron_ore ?? 0),
-        copper_ore: (stats.stockpiled.copper_ore ?? 0) + (stats.inAgents.copper_ore ?? 0),
+        iron_ore:
+          (stats.stockpiled.iron_ore ?? 0) + (stats.inAgents.iron_ore ?? 0),
+        copper_ore:
+          (stats.stockpiled.copper_ore ?? 0) + (stats.inAgents.copper_ore ?? 0),
         metal: (stats.stockpiled.metal ?? 0) + (stats.inAgents.metal ?? 0),
-        rare_materials: (stats.stockpiled.rare_materials ?? 0) + (stats.inAgents.rare_materials ?? 0),
+        rare_materials:
+          (stats.stockpiled.rare_materials ?? 0) +
+          (stats.inAgents.rare_materials ?? 0),
       };
     } else {
       const inventorySys = this.systemRegistry?.inventory as unknown as {
         getSystemStats?: () => {
-          stockpiled: { wood: number; stone: number; food: number; water: number; iron_ore: number; copper_ore: number; metal: number; rare_materials: number };
-          inAgents: { wood: number; stone: number; food: number; water: number; iron_ore: number; copper_ore: number; metal: number; rare_materials: number };
+          stockpiled: {
+            wood: number;
+            stone: number;
+            food: number;
+            water: number;
+            iron_ore: number;
+            copper_ore: number;
+            metal: number;
+            rare_materials: number;
+          };
+          inAgents: {
+            wood: number;
+            stone: number;
+            food: number;
+            water: number;
+            iron_ore: number;
+            copper_ore: number;
+            metal: number;
+            rare_materials: number;
+          };
         };
       };
       if (inventorySys?.getSystemStats) {
@@ -778,10 +917,15 @@ export class AISystem extends EventEmitter {
           stone: (stats.stockpiled.stone ?? 0) + (stats.inAgents.stone ?? 0),
           food: (stats.stockpiled.food ?? 0) + (stats.inAgents.food ?? 0),
           water: (stats.stockpiled.water ?? 0) + (stats.inAgents.water ?? 0),
-          iron_ore: (stats.stockpiled.iron_ore ?? 0) + (stats.inAgents.iron_ore ?? 0),
-          copper_ore: (stats.stockpiled.copper_ore ?? 0) + (stats.inAgents.copper_ore ?? 0),
+          iron_ore:
+            (stats.stockpiled.iron_ore ?? 0) + (stats.inAgents.iron_ore ?? 0),
+          copper_ore:
+            (stats.stockpiled.copper_ore ?? 0) +
+            (stats.inAgents.copper_ore ?? 0),
           metal: (stats.stockpiled.metal ?? 0) + (stats.inAgents.metal ?? 0),
-          rare_materials: (stats.stockpiled.rare_materials ?? 0) + (stats.inAgents.rare_materials ?? 0),
+          rare_materials:
+            (stats.stockpiled.rare_materials ?? 0) +
+            (stats.inAgents.rare_materials ?? 0),
         };
       }
     }
@@ -1028,11 +1172,13 @@ export class AISystem extends EventEmitter {
    *
    * NOTA: Este método hace múltiples queries espaciales. La mayoría de estos datos
    * son cacheados por buildDetectorContext (TTL 500ms) para evitar recomputación.
-   * Optimización futura: combinar queries de recursos en una sola llamada.
+   * Optimización: queries condicionales basadas en necesidades del agente.
    */
   private buildSpatialContext(
     position: { x: number; y: number },
     agentId: string,
+    needs?: DetectorContext["needs"],
+    hasWeapon?: boolean,
   ): Record<string, unknown> {
     if (!this.worldQueryService) return {};
 
@@ -1040,39 +1186,50 @@ export class AISystem extends EventEmitter {
     const QUERY_RADIUS = 300;
     const result: Record<string, unknown> = {};
 
-    // Query 1: Nearest food
-    const nearestFood = wqs.findNearestFood(position.x, position.y);
-    if (nearestFood && "id" in nearestFood) {
-      result.nearestFood = {
-        id: nearestFood.id,
-        x: nearestFood.position.x,
-        y: nearestFood.position.y,
-      };
-    }
-
-    const nearestWater = wqs.findNearestWater(position.x, position.y);
-    if (nearestWater) {
-      if ("worldX" in nearestWater) {
-        result.nearestWater = {
-          id: `tile_${nearestWater.tileX}_${nearestWater.tileY}`,
-          x: nearestWater.worldX,
-          y: nearestWater.worldY,
+    // Only query food if hungry (< 70) - optimization
+    const hungerLevel = needs?.hunger ?? 0;
+    if (hungerLevel < 70) {
+      const nearestFood = wqs.findNearestFood(position.x, position.y);
+      if (nearestFood && "id" in nearestFood) {
+        result.nearestFood = {
+          id: nearestFood.id,
+          x: nearestFood.position.x,
+          y: nearestFood.position.y,
         };
       }
     }
 
-    // Query for nearest WATER_SOURCE resource (for collection)
-    const nearestWaterSource = wqs.findNearestResource(position.x, position.y, {
-      type: WorldResourceType.WATER_SOURCE,
-      excludeDepleted: true,
-    });
-    if (nearestWaterSource && nearestWaterSource.distance < QUERY_RADIUS) {
-      result.nearestWaterSource = {
-        id: nearestWaterSource.id,
-        x: nearestWaterSource.position.x,
-        y: nearestWaterSource.position.y,
-        type: nearestWaterSource.resourceType,
-      };
+    // Only query water if thirsty (< 70) - optimization
+    const thirstLevel = needs?.thirst ?? 0;
+    if (thirstLevel < 70) {
+      const nearestWater = wqs.findNearestWater(position.x, position.y);
+      if (nearestWater) {
+        if ("worldX" in nearestWater) {
+          result.nearestWater = {
+            id: `tile_${nearestWater.tileX}_${nearestWater.tileY}`,
+            x: nearestWater.worldX,
+            y: nearestWater.worldY,
+          };
+        }
+      }
+
+      // Query for nearest WATER_SOURCE resource (for collection)
+      const nearestWaterSource = wqs.findNearestResource(
+        position.x,
+        position.y,
+        {
+          type: WorldResourceType.WATER_SOURCE,
+          excludeDepleted: true,
+        },
+      );
+      if (nearestWaterSource && nearestWaterSource.distance < QUERY_RADIUS) {
+        result.nearestWaterSource = {
+          id: nearestWaterSource.id,
+          x: nearestWaterSource.position.x,
+          y: nearestWaterSource.position.y,
+          type: nearestWaterSource.resourceType,
+        };
+      }
     }
 
     const nearestResource = wqs.findNearestResource(position.x, position.y, {
@@ -1124,34 +1281,36 @@ export class AISystem extends EventEmitter {
       }
     }
 
-    // Query: Nearest huntable prey (for hunters)
-    const HUNTING_RADIUS = 500;
-    const preyAnimals = wqs.findAnimalsInRadius(
-      position.x,
-      position.y,
-      HUNTING_RADIUS,
-      { excludeDead: true },
-    );
-    // Filter for huntable (non-hostile) animals using config lookup
-    const huntableAnimals = preyAnimals.filter((a) => {
-      const animal = a.animal;
-      if (!animal) return false;
-      // Only hunt non-hostile animals (prey) - use getAnimalConfig
-      const config = getAnimalConfig(animal.type);
-      return config?.canBeHunted === true && !config?.isPredator;
-    });
-    if (huntableAnimals.length > 0) {
-      // Get the nearest one
-      const nearestPreyAnimal = huntableAnimals.reduce((prev, curr) =>
-        curr.distance < prev.distance ? curr : prev,
+    // Query: Nearest huntable prey - ONLY if agent has weapon (optimization)
+    if (hasWeapon) {
+      const HUNTING_RADIUS = 500;
+      const preyAnimals = wqs.findAnimalsInRadius(
+        position.x,
+        position.y,
+        HUNTING_RADIUS,
+        { excludeDead: true },
       );
-      result.nearestPrey = {
-        id: nearestPreyAnimal.id,
-        x: nearestPreyAnimal.position.x,
-        y: nearestPreyAnimal.position.y,
-        type: nearestPreyAnimal.animalType,
-      };
-    }
+      // Filter for huntable (non-hostile) animals using config lookup
+      const huntableAnimals = preyAnimals.filter((a) => {
+        const animal = a.animal;
+        if (!animal) return false;
+        // Only hunt non-hostile animals (prey) - use getAnimalConfig
+        const config = getAnimalConfig(animal.type);
+        return config?.canBeHunted === true && !config?.isPredator;
+      });
+      if (huntableAnimals.length > 0) {
+        // Get the nearest one
+        const nearestPreyAnimal = huntableAnimals.reduce((prev, curr) =>
+          curr.distance < prev.distance ? curr : prev,
+        );
+        result.nearestPrey = {
+          id: nearestPreyAnimal.id,
+          x: nearestPreyAnimal.position.x,
+          y: nearestPreyAnimal.position.y,
+          type: nearestPreyAnimal.animalType,
+        };
+      }
+    } // end hasWeapon
 
     if (RandomUtils.chance(0.02)) {
       logger.debug(
@@ -1189,7 +1348,8 @@ export class AISystem extends EventEmitter {
 
         if (potentialMates.length > 0) {
           // Randomize selection to avoid all agents picking the same mate
-          const potentialMate = potentialMates[RandomUtils.intRange(0, potentialMates.length - 1)];
+          const potentialMate =
+            potentialMates[RandomUtils.intRange(0, potentialMates.length - 1)];
           result.potentialMate = {
             id: potentialMate.id,
             x: potentialMate.position.x,
@@ -1210,7 +1370,8 @@ export class AISystem extends EventEmitter {
         });
 
         if (agentsInNeed.length > 0) {
-          const agentInNeed = agentsInNeed[RandomUtils.intRange(0, agentsInNeed.length - 1)];
+          const agentInNeed =
+            agentsInNeed[RandomUtils.intRange(0, agentsInNeed.length - 1)];
           const needs = agentInNeed.agent?.needs;
           const criticalNeed = needs
             ? needs.thirst < 30
