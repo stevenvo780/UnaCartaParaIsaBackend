@@ -256,21 +256,55 @@ export class BuildingSystem implements IBuildingSystem {
     }
   }
 
+  /**
+   * Calcula límites de edificios dinámicos basados en población.
+   * Los límites base escalan proporcionalmente con la población.
+   */
+  private getDynamicBuildingLimits(): {
+    maxHouses: number;
+    maxMines: number;
+    maxWorkbenches: number;
+    maxFarms: number;
+  } {
+    const population = this.state.agents?.length ?? 10;
+    // 1 casa por cada 4 agentes (mínimo 8)
+    const maxHouses = Math.max(
+      this.config.maxHouses,
+      Math.floor(population / 4),
+    );
+    // 1 mina por cada 15 agentes (mínimo 4)
+    const maxMines = Math.max(
+      this.config.maxMines,
+      Math.floor(population / 15),
+    );
+    // 1 workbench por cada 20 agentes (mínimo 3)
+    const maxWorkbenches = Math.max(
+      this.config.maxWorkbenches,
+      Math.floor(population / 20),
+    );
+    // 1 farm por cada 12 agentes (mínimo 4)
+    const maxFarms = Math.max(
+      this.config.maxFarms,
+      Math.floor(population / 12),
+    );
+
+    return { maxHouses, maxMines, maxWorkbenches, maxFarms };
+  }
+
   private pickNextConstruction(): BuildingLabel | null {
     const zones = (this.state.zones || []) as MutableZone[];
+    const limits = this.getDynamicBuildingLimits();
     const houses = zones.filter((z) => z.type === ZoneType.REST).length;
 
     if (RandomUtils.chance(0.15)) {
+      const population = this.state.agents?.length ?? 0;
       logger.debug(
-        `🏗️ [BUILDING] Status: houses=${houses}/${this.config.maxHouses}, ` +
+        `🏗️ [BUILDING] Status: pop=${population}, houses=${houses}/${limits.maxHouses}, ` +
           `zones=${zones.length}, activeJobs=${this.constructionJobs.size}`,
       );
     }
 
-    if (
-      houses < this.config.maxHouses &&
-      !this.hasActiveJob(BuildingType.HOUSE)
-    ) {
+    if (houses < limits.maxHouses && !this.hasActiveJob(BuildingType.HOUSE)) {
       return BuildingType.HOUSE;
     }
 
@@ -279,7 +313,7 @@ export class BuildingSystem implements IBuildingSystem {
         z.metadata?.building === BuildingType.MINE &&
         z.metadata?.underConstruction !== true,
     ).length;
-    if (mines < this.config.maxMines && !this.hasActiveJob(BuildingType.MINE)) {
+    if (mines < limits.maxMines && !this.hasActiveJob(BuildingType.MINE)) {
       return BuildingType.MINE;
     }
 
@@ -287,7 +321,7 @@ export class BuildingSystem implements IBuildingSystem {
       (z) => z.metadata?.craftingStation === true,
     ).length;
     if (
-      workbenches < this.config.maxWorkbenches &&
+      workbenches < limits.maxWorkbenches &&
       !this.hasActiveJob(BuildingType.WORKBENCH)
     ) {
       return BuildingType.WORKBENCH;
@@ -298,7 +332,7 @@ export class BuildingSystem implements IBuildingSystem {
         z.metadata?.building === BuildingType.FARM &&
         z.metadata?.underConstruction !== true,
     ).length;
-    if (farms < this.config.maxFarms && !this.hasActiveJob(BuildingType.FARM)) {
+    if (farms < limits.maxFarms && !this.hasActiveJob(BuildingType.FARM)) {
       return BuildingType.FARM;
     }
 

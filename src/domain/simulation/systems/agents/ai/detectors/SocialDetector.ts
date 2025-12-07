@@ -24,6 +24,12 @@ import { logger } from "@/infrastructure/utils/logger";
 const REPRODUCTION_WELLNESS_THRESHOLD =
   SIMULATION_CONSTANTS.SOCIAL.REPRODUCTION_WELLNESS_THRESHOLD;
 
+/** 
+ * Probabilidad base de intentar reproducción por tick.
+ * Reducido para evitar spam de tareas sociales cuando hay muchos agentes.
+ */
+const REPRODUCTION_ATTEMPT_CHANCE = 0.15; // 15% por tick
+
 /**
  * Detecta necesidades y oportunidades sociales
  */
@@ -51,6 +57,11 @@ export function detectSocial(ctx: DetectorContext): Task[] {
 
 function detectReproduction(ctx: DetectorContext): Task | null {
   if (!ctx.needs) return null;
+
+  // Probabilidad aleatoria para reducir spam de tareas de reproducción
+  if (!RandomUtils.chance(REPRODUCTION_ATTEMPT_CHANCE)) {
+    return null;
+  }
 
   const wellness = calculateWellness(ctx);
   if (wellness < REPRODUCTION_WELLNESS_THRESHOLD) return null;

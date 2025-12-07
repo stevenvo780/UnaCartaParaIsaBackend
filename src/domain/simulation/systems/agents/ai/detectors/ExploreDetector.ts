@@ -21,17 +21,26 @@ import { SIMULATION_CONSTANTS } from "@/shared/constants/SimulationConstants";
 
 import { GoalType } from "@/shared/constants/AIEnums";
 
-/** Tiempo mínimo entre exploraciones (ms) */
-const EXPLORE_COOLDOWN = 60000;
-/** Tiempo largo sin explorar aumenta urgencia */
-const EXPLORE_URGENCY_TIME = 300000;
-/** Cooldown más corto cuando hay urgencia de recursos */
-const RESOURCE_SEARCH_COOLDOWN = 10000;
+/** Base tiempo mínimo entre exploraciones (ms) - actual value will have ±25% jitter */
+const EXPLORE_COOLDOWN_BASE = 60000;
+/** Base tiempo largo sin explorar aumenta urgencia - actual value will have ±25% jitter */
+const EXPLORE_URGENCY_TIME_BASE = 300000;
+/** Base cooldown más corto cuando hay urgencia de recursos */
+const RESOURCE_SEARCH_COOLDOWN_BASE = 10000;
 /** Maximum distance from map center for exploration (prevents agents from getting lost) */
 const MAX_EXPLORE_DISTANCE = 1500;
 
 /** Threshold below which agents should NOT explore (prioritize survival) */
 const SURVIVAL_THRESHOLD = SIMULATION_CONSTANTS.NEEDS.LOW_THRESHOLD; // 30
+
+/**
+ * Applies ±25% jitter to a cooldown value for behavioral variety
+ */
+function getJitteredCooldown(baseValue: number): number {
+  const jitter = 0.25; // ±25%
+  const multiplier = 1 + RandomUtils.floatRange(-jitter, jitter);
+  return Math.round(baseValue * multiplier);
+}
 
 /**
  * Detecta necesidad de explorar
@@ -88,7 +97,8 @@ function detectUrgentResourceSearch(ctx: DetectorContext): Task | null {
 
   const lastExplore = ctx.lastExploreTime ?? 0;
   const timeSinceExplore = ctx.now - lastExplore;
-  if (timeSinceExplore < RESOURCE_SEARCH_COOLDOWN) return null;
+  // Use jittered cooldown for variety
+  if (timeSinceExplore < getJitteredCooldown(RESOURCE_SEARCH_COOLDOWN_BASE)) return null;
 
   const distFromCenter = Math.hypot(ctx.position.x, ctx.position.y);
   
@@ -163,7 +173,8 @@ function detectCuriosityExplore(ctx: DetectorContext): Task | null {
   const lastExplore = ctx.lastExploreTime ?? 0;
   const timeSinceExplore = ctx.now - lastExplore;
 
-  if (timeSinceExplore < EXPLORE_COOLDOWN) return null;
+  // Use jittered cooldown for variety
+  if (timeSinceExplore < getJitteredCooldown(EXPLORE_COOLDOWN_BASE)) return null;
 
   // Don't explore if already too far from map center (prevents getting lost)
   const distFromCenter = Math.hypot(ctx.position.x, ctx.position.y);
@@ -175,7 +186,8 @@ function detectCuriosityExplore(ctx: DetectorContext): Task | null {
 
   let priority = TASK_PRIORITIES.LOWEST + curiosity * 0.1;
 
-  if (timeSinceExplore > EXPLORE_URGENCY_TIME) {
+  // Use jittered urgency time
+  if (timeSinceExplore > getJitteredCooldown(EXPLORE_URGENCY_TIME_BASE)) {
     priority += 0.15;
   }
 
@@ -206,7 +218,8 @@ function detectCuriosityExplore(ctx: DetectorContext): Task | null {
 function detectResourceScout(ctx: DetectorContext): Task | null {
   const lastExplore = ctx.lastExploreTime ?? 0;
   const timeSinceExplore = ctx.now - lastExplore;
-  if (timeSinceExplore < EXPLORE_COOLDOWN) return null;
+  // Use jittered cooldown for variety
+  if (timeSinceExplore < getJitteredCooldown(EXPLORE_COOLDOWN_BASE)) return null;
 
   if (!ctx.inventoryCapacity) return null;
 
@@ -240,6 +253,7 @@ function detectResourceScout(ctx: DetectorContext): Task | null {
  * Encuentra una zona no visitada para explorar.
  * Prioriza zonas cercanas que no estén en visitedZones.
  * Aplica límite de distancia para evitar que agentes se alejen demasiado.
+ * Adds randomization to avoid all agents exploring the same zones.
  */
 function findUnexploredZone(
   ctx: DetectorContext,
@@ -266,11 +280,22 @@ function findUnexploredZone(
     return zonesInRange[randomIndex];
   }
 
+  // Sort by distance
   unvisited.sort((a, b) => {
     const distA = Math.hypot(a.x - agentPos.x, a.y - agentPos.y);
     const distB = Math.hypot(b.x - agentPos.x, b.y - agentPos.y);
     return distA - distB;
   });
 
-  return unvisited[0];
+  // VARIABILITY: 70% choose from top 3 closest, 30% choose random from all unvisited
+  // This prevents all agents from converging on the exact same zone
+  if (RandomUtils.chance(0.3) && unvisited.length > 3) {
+    const randomIndex = RandomUtils.intRange(0, unvisited.length - 1);
+    return unvisited[randomIndex];
+  }
+
+  // Choose from top 3 closest (or less if fewer available)
+  const topCandidates = unvisited.slice(0, Math.min(3, unvisited.length));
+  const selectedIndex = RandomUtils.intRange(0, topCandidates.length - 1);
+  return topCandidates[selectedIndex];
 }

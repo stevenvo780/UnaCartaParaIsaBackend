@@ -1176,7 +1176,8 @@ export class AISystem extends EventEmitter {
 
       const currentAgent = this.agentRegistry?.getProfile(agentId);
       if (currentAgent) {
-        const potentialMate = otherAgents.find((a) => {
+        // Filter ALL potential mates, then pick one randomly for behavioral variety
+        const potentialMates = otherAgents.filter((a) => {
           const agent = a.agent;
           if (!agent || agent.sex === currentAgent.sex) return false;
           if (agent.lifeStage !== LifeStage.ADULT) return false;
@@ -1186,7 +1187,9 @@ export class AISystem extends EventEmitter {
           return wellness > 0.6;
         });
 
-        if (potentialMate) {
+        if (potentialMates.length > 0) {
+          // Randomize selection to avoid all agents picking the same mate
+          const potentialMate = potentialMates[RandomUtils.intRange(0, potentialMates.length - 1)];
           result.potentialMate = {
             id: potentialMate.id,
             x: potentialMate.position.x,
@@ -1194,18 +1197,20 @@ export class AISystem extends EventEmitter {
           };
           if (RandomUtils.chance(0.1)) {
             logger.debug(
-              `💕 [SocialContext] ${agentId} found potentialMate: ${potentialMate.id}`,
+              `💕 [SocialContext] ${agentId} found potentialMate: ${potentialMate.id} (from ${potentialMates.length} candidates)`,
             );
           }
         }
 
-        const agentInNeed = otherAgents.find((a) => {
+        // Filter ALL agents in need, then pick one randomly
+        const agentsInNeed = otherAgents.filter((a) => {
           const needs = a.agent?.needs;
           if (!needs) return false;
           return needs.hunger < 30 || needs.thirst < 30 || needs.energy < 20;
         });
 
-        if (agentInNeed) {
+        if (agentsInNeed.length > 0) {
+          const agentInNeed = agentsInNeed[RandomUtils.intRange(0, agentsInNeed.length - 1)];
           const needs = agentInNeed.agent?.needs;
           const criticalNeed = needs
             ? needs.thirst < 30
