@@ -540,9 +540,11 @@ export class SimulationRunner {
       enabled: true,
     });
 
+    // AISystem moved to SLOW rate for scalability with 50+ agents
+    // Agent updates have internal throttling with stagger, so 1s interval is fine
     this.scheduler.registerSystem({
       name: "AISystem",
-      rate: TickRate.MEDIUM,
+      rate: TickRate.SLOW,
       update: (delta: number) => this.aiSystem.update(delta),
       enabled: true,
     });

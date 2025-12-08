@@ -27,11 +27,15 @@ const EXPLORE_COOLDOWN_BASE = 60000;
 const EXPLORE_URGENCY_TIME_BASE = 300000;
 /** Base cooldown más corto cuando hay urgencia de recursos */
 const RESOURCE_SEARCH_COOLDOWN_BASE = 10000;
-/** Maximum distance from map center for exploration (prevents agents from getting lost) */
-const MAX_EXPLORE_DISTANCE = 1500;
+/** Maximum distance from CURRENT POSITION for exploration targets (not from map center) */
+const MAX_EXPLORE_RADIUS = 2000;
 
-/** Threshold below which agents should NOT explore (prioritize survival) */
-const SURVIVAL_THRESHOLD = SIMULATION_CONSTANTS.NEEDS.LOW_THRESHOLD; // 30
+/** 
+ * Threshold below which agents should NOT explore (prioritize survival).
+ * Increased to 50 to give agents more safety margin before exploring.
+ * Agents need sufficient resources to make the journey and return.
+ */
+const SURVIVAL_THRESHOLD = 50;
 
 /**
  * Applies ±25% jitter to a cooldown value for behavioral variety
@@ -100,35 +104,16 @@ function detectUrgentResourceSearch(ctx: DetectorContext): Task | null {
   // Use jittered cooldown for variety
   if (timeSinceExplore < getJitteredCooldown(RESOURCE_SEARCH_COOLDOWN_BASE)) return null;
 
-  const distFromCenter = Math.hypot(ctx.position.x, ctx.position.y);
-  
-  // If already too far, don't explore further - return toward center instead
-  if (distFromCenter > MAX_EXPLORE_DISTANCE) {
-    return null;
-  }
-  
+  // Explore in a direction away from current position to find new resources
   const exploreDistance = 300;
 
   let targetX = ctx.position.x;
   let targetY = ctx.position.y;
 
-  if (distFromCenter > 10) {
-    const angle = Math.atan2(ctx.position.y, ctx.position.x);
-    targetX = ctx.position.x + Math.cos(angle) * exploreDistance;
-    targetY = ctx.position.y + Math.sin(angle) * exploreDistance;
-  } else {
-    const angle = RandomUtils.floatRange(0, Math.PI * 2);
-    targetX = ctx.position.x + Math.cos(angle) * exploreDistance;
-    targetY = ctx.position.y + Math.sin(angle) * exploreDistance;
-  }
-  
-  // Clamp target to MAX_EXPLORE_DISTANCE
-  const targetDist = Math.hypot(targetX, targetY);
-  if (targetDist > MAX_EXPLORE_DISTANCE) {
-    const scale = MAX_EXPLORE_DISTANCE / targetDist;
-    targetX *= scale;
-    targetY *= scale;
-  }
+  // Move outward from current position in a random direction
+  const angle = RandomUtils.floatRange(0, Math.PI * 2);
+  targetX = ctx.position.x + Math.cos(angle) * exploreDistance;
+  targetY = ctx.position.y + Math.sin(angle) * exploreDistance;
 
   if (RandomUtils.chance(0.1)) {
     logger.debug(
@@ -176,11 +161,7 @@ function detectCuriosityExplore(ctx: DetectorContext): Task | null {
   // Use jittered cooldown for variety
   if (timeSinceExplore < getJitteredCooldown(EXPLORE_COOLDOWN_BASE)) return null;
 
-  // Don't explore if already too far from map center (prevents getting lost)
-  const distFromCenter = Math.hypot(ctx.position.x, ctx.position.y);
-  if (distFromCenter > MAX_EXPLORE_DISTANCE) {
-    return null; // Agent is too far, should return to resources instead
-  }
+  // No distance limit - infinite procedural world allows exploration anywhere
 
   const curiosity = ctx.personality?.curiosity ?? 0.5;
 
@@ -265,19 +246,20 @@ function findUnexploredZone(
 
   const agentPos = ctx.position;
 
-  // Filter zones by distance - only consider zones within reasonable range
+  // Filter zones by distance from AGENT (not from center) - use MAX_EXPLORE_RADIUS
   const zonesInRange = allZones.filter((z) => {
     const dist = Math.hypot(z.x - agentPos.x, z.y - agentPos.y);
-    return dist <= MAX_EXPLORE_DISTANCE;
+    return dist <= MAX_EXPLORE_RADIUS;
   });
 
   if (zonesInRange.length === 0) return null;
 
   const unvisited = zonesInRange.filter((z) => !visitedZones?.has(z.id));
 
+  // If all zones are visited, return null to trigger random exploration outward
+  // This pushes agents to discover new chunks instead of revisiting known zones
   if (unvisited.length === 0) {
-    const randomIndex = RandomUtils.intRange(0, zonesInRange.length - 1);
-    return zonesInRange[randomIndex];
+    return null;
   }
 
   // Sort by distance

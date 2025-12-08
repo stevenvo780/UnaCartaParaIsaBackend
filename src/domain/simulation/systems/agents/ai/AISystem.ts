@@ -115,7 +115,7 @@ export interface AIAgentMemory {
 }
 
 const DEFAULT_CONFIG: AISystemConfig = {
-  updateInterval: 150, // Base interval - agents with urgent needs update faster
+  updateInterval: 500, // Base interval - higher for better scalability with 50+ agents
   priorityBoost: 0.1,
   maxTasksPerAgent: 10,
   debug: false,
@@ -123,20 +123,21 @@ const DEFAULT_CONFIG: AISystemConfig = {
 
 /**
  * Maximum agents to process per update tick for scalability.
- * Increased from 30 to 100 with lighter processing per agent.
+ * Set low to ensure tick doesn't exceed 400ms target.
  */
-const MAX_AGENTS_PER_TICK = 100;
+const MAX_AGENTS_PER_TICK = 15;
 
 /**
  * Interval multipliers for priority-based updates.
  * Agents with critical needs update at base interval.
  * Idle/low-priority agents update less frequently.
+ * Increased multipliers for better scalability with 50+ agents.
  */
 const PRIORITY_INTERVALS = {
-  CRITICAL: 1.0, // 150ms - agent has urgent needs (hunger/thirst > 0.7)
-  HIGH: 2.0, // 300ms - agent has active task
-  NORMAL: 3.0, // 450ms - agent is idle but healthy
-  LOW: 5.0, // 750ms - agent is far from any action
+  CRITICAL: 1.0, // 300ms - agent has urgent needs (hunger/thirst > 0.7)
+  HIGH: 1.5, // 450ms - agent has active high-priority task
+  NORMAL: 3.0, // 900ms - agent is idle but healthy
+  LOW: 5.0, // 1500ms - agent is far from any action
 };
 
 /**

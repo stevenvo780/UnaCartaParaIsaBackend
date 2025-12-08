@@ -20,7 +20,9 @@ import { moveToPosition, isAtTarget } from "./MoveHandler";
 import { HandlerResultStatus } from "@/shared/constants/StatusEnums";
 
 /** Radio de exploración al hacer movimientos aleatorios - aumentado para encontrar nuevos chunks */
-const EXPLORE_RADIUS = 200;
+// Moderate radius for exploration - not too large to prevent deaths from starvation
+// Agents should explore in smaller steps, returning to base for resources
+const EXPLORE_RADIUS = 300;
 
 /**
  * Maneja la exploración usando MovementSystem.
